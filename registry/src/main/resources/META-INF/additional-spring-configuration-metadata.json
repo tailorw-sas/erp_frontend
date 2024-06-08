@@ -1,0 +1,22 @@
+{"properties": [
+  {
+    "name": "eureka.shouldUseDelta",
+    "type": "java.lang.String",
+    "description": "A description for 'eureka.shouldUseDelta'"
+  },
+  {
+    "name": "eureka.enableSelfPreservation",
+    "type": "java.lang.String",
+    "description": "A description for 'eureka.enableSelfPreservation'"
+  },
+  {
+    "name": "eureka.client.server.wait-time-in-ms-when-sync-empty",
+    "type": "java.lang.String",
+    "description": "A description for 'eureka.client.server.wait-time-in-ms-when-sync-empty'"
+  },
+  {
+    "name": "eureka.client.server.enable-self-preservation",
+    "type": "java.lang.String",
+    "description": "A description for 'eureka.client.server.enable-self-preservation'"
+  }
+]}

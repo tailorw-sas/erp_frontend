@@ -1,0 +1,9 @@
+FROM openjdk:17-jre-slim
+
+WORKDIR /app
+
+COPY target/com.quipux.gateway-1.0.0.jar /app
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "com.quipux.gateway-1.0.0.jar"]

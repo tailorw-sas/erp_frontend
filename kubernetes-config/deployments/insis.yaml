@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insis
+  namespace: finamer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: apps.deployment-finamer-insis
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: insis
+        workload.user.cattle.io/workloadselector: apps.deployment-finamer-insis
+    spec:
+      containers:
+        - name: insis
+          image: kmontes2020/fin-insis:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9905
+              name: http
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: insis-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: dokcer-hub
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

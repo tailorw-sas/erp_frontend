@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+  namespace: finamer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: apps.deployment-finamer-registry
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: finamer-registry
+        workload.user.cattle.io/workloadselector: apps.deployment-finamer-registry
+    spec:
+      containers:
+        - image: kmontes2020/fin-registry:v1
+          imagePullPolicy: Always
+          name: finamer-registry
+          ports:
+            - containerPort: 8761
+              protocol: TCP
+      imagePullSecrets:
+        - name: dokcer-hub
+      restartPolicy: Always

@@ -1,0 +1,9 @@
+kubectl apply -f namespace.yaml
+kubectl apply -f deployments/secrets/
+kubectl apply -f deployments/
+kubectl apply -f Services/
+
+
+
+jdbc:postgresql://zeus-ro.postgres-prod.svc.cluster.local:5432/finamer-treatment
+jdbc:postgresql://zeus-rw.postgres-prod.svc.cluster.local:5432/finamer-treatment

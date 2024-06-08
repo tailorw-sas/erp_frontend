@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.kynsof</groupId>
+    <artifactId>proyect</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+    <dependencies>
+    </dependencies>
+    <modules>
+        <module>config</module>
+        <module>gateway</module>
+        <module>registry</module>
+        <module>share</module>
+        <module>identity</module>
+        <module>cloudBridges</module>
+        <module>report</module>
+        <module>settings</module>
+        <module>payment</module>
+        <module>invoicing</module>
+        <module>insis</module>
+    </modules>
+    <build>
+    </build>
+
+</project>

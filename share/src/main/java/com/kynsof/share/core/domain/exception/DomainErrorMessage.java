@@ -1,0 +1,315 @@
+package com.kynsof.share.core.domain.exception;
+
+import jakarta.annotation.Nullable;
+
+public enum DomainErrorMessage implements IDomainErrorMessage {
+    PATIENTS_NOT_FOUND(601, Series.DOMAIN_ERROR, "Patients not found."),
+    QUALIFICATION_NOT_FOUND(602, Series.DOMAIN_ERROR, "Qualification not found."),
+    QUALIFICATION_OR_ID_NULL(603, Series.DOMAIN_ERROR, "Qualification DTO or ID cannot be null."),
+    BUSINESS_NOT_FOUND(604, Series.DOMAIN_ERROR, "Business not found."),
+    BUSINESS_OR_ID_NULL(605, Series.DOMAIN_ERROR, "Business DTO or ID cannot be null."),
+    EXISTS_SCHEDULE_SOME_DATE_WHOSE_TIME_RANGE(606, Series.DOMAIN_ERROR, "There exists a schedule on the same date, whose time range coincides at some moment with what you want to create."),
+    EXISTS_SCHEDULE_WITH_DATE_STARTTIME_ENDTIME(607, Series.DOMAIN_ERROR, "There exists a schedule with the same date, start time, and end time."),
+    SCHEDULE_NOT_FOUND(608, Series.DOMAIN_ERROR, "Schedule not found."),
+    SCHEDULE_CANNOT_BE_EQUALS_STARTTIME_ENDTIME(609, Series.DOMAIN_ERROR, "The start time and end time cannot be equal."),
+    SCHEDULE_DATE_LESS_THAN_CURRENT_DATE(610, Series.DOMAIN_ERROR, "The provided date is less than the current date."),
+    SCHEDULE_INITIAL_TIME_IS_PASSED(611, Series.DOMAIN_ERROR, "The initial time has passed."),
+    SCHEDULE_END_TIME_IS_LESS_THAN(612, Series.DOMAIN_ERROR, "The provided end time is less than the start time."),
+    SCHEDULE_EXISTS_SOME_TIME_STARTTIME_EDNTIME(613, Series.DOMAIN_ERROR, "There exists a schedule with the same date, start time, and end time."),
+    RESOURCE_NOT_FOUND(614, Series.DOMAIN_ERROR, "Resource not found."),
+    RECEIPT_NOT_FOUND(615, Series.DOMAIN_ERROR, "Receipt not found."),
+    STATUS_NOT_ACCEPTED(616, Series.DOMAIN_ERROR, "Status not accepted, the appointment was attended."),
+    SCHEDULE_IS_NOT_AVAIBLE(617, Series.DOMAIN_ERROR, "The selected schedule is not available."),
+    COLUMN_UNIQUE(618, Series.DOMAIN_ERROR, "Duplicate key value violates unique constraint."),
+    QUALIFICATION_DESCRIPTION_NOT_NULL(619, Series.DOMAIN_ERROR, "Qualification description not null!"),
+    QUALIFICATION_DESCRIPTION_UNIQUE(620, Series.DOMAIN_ERROR, "Qualification description unique!"),
+    PERMISSION_NOT_FOUND(621, Series.DOMAIN_ERROR, "Permission not found."),
+    PERMISSION_OR_ID_NULL(622, Series.DOMAIN_ERROR, "Permission DTO or ID cannot be null."),
+    ROLE_PERMISSION_NOT_FOUND(623, Series.DOMAIN_ERROR, "RolPermission not found."),
+    RELATIONSHIP_MUST_BE_UNIQUE(624, Series.DOMAIN_ERROR, "Existing relationship."),
+    OBJECT_NOT_NULL(625, Series.DOMAIN_ERROR, "Object not null."),
+    USER_ROLE_BUSINESS_NOT_FOUND(626, Series.DOMAIN_ERROR, "UserRoleBusiness not found."),
+    ROLE_NOT_FOUND(627, Series.DOMAIN_ERROR, "Role not found."),
+    ROLE_EXIT(628, Series.DOMAIN_ERROR, "Role not found."),
+    BUSINESS_MODULE_NOT_FOUND(629, Series.DOMAIN_ERROR, "BusinessModule not found."),
+    MODULE_PERMISSION_NOT_FOUND(630, Series.DOMAIN_ERROR, "ModulepPermission not found."),
+    BUSINESS_RUC(631, Series.DOMAIN_ERROR, "The business's RUC must have thirteen characters."),
+    BUSINESS_RUC_MUST_BY_UNIQUE(632, Series.DOMAIN_ERROR, "The business ruc must be unique."),
+    BUSINESS_NAME_MUST_BY_UNIQUE(633, Series.DOMAIN_ERROR, "The business name must be unique."),
+    SCHEDULED_TASK_ALREADY_EXISTS(634, Series.DOMAIN_ERROR, "A scheduled task for this service already exists."),
+    MODULE_NAME_CANNOT_BE_EMPTY(635, Series.DOMAIN_ERROR, "The name of the module cannot be empty."),
+    MODULE_DESCRIPTION_CANNOT_BE_EMPTY(636, Series.DOMAIN_ERROR, "The description of the module cannot be empty."),
+    MODULE_NAME_MUST_BY_UNIQUE(637, Series.DOMAIN_ERROR, "The module name must be unique."),
+    MODULE_NOT_FOUND(638, Series.DOMAIN_ERROR, "The module not found."),
+    GEOGRAPHIC_LOCATION_NOT_FOUND(639, Series.DOMAIN_ERROR, "GeographicLocation not found."),
+    USER_NOT_FOUND(640, Series.DOMAIN_ERROR, "User not found."),
+    USER_PERMISSION_BUSINESS_NOT_FOUND(641, Series.DOMAIN_ERROR, "UserPermissionBusiness not found."),
+    PERMISSION_CODE_MUST_BY_UNIQUE(642, Series.DOMAIN_ERROR, "The permission code must be unique."),
+    PERMISSION_CODE_CANNOT_BE_EMPTY(643, Series.DOMAIN_ERROR, "The code of the permission cannot be empty."),
+    DEVICE_NOT_FOUND(644, Series.DOMAIN_ERROR, "Device not found."),
+    DEVICE_IP_VALIDATE(645, Series.DOMAIN_ERROR, "La direccion ip no es correcta."),
+    DEVICE_SERIAL_CANNOT_BE_EMPTY(646, Series.DOMAIN_ERROR, "The serial of the device cannot be empty."),
+    DEVICE_EMAIL_VALIDATE(647, Series.DOMAIN_ERROR, "Direccion de correo incorrecta."),
+    CUSTOMER_NOT_FOUND(648, Series.DOMAIN_ERROR, "Customer not found."),
+    PATIENT_IDENTIFICATION_MUST_BY_UNIQUE(649, Series.DOMAIN_ERROR, "The patient identification must be unique."),
+    SERVICE_TYPE_NAME_MUST_BY_UNIQUE(650, Series.DOMAIN_ERROR, "The service type name must be unique."),
+    SERVICE_NAME_MUST_BY_UNIQUE(651, Series.DOMAIN_ERROR, "The service name must be unique."),
+    VACCINE_MUST_BY_UNIQUE(652, Series.DOMAIN_ERROR, "The vaccine name must be unique."),
+    PROCEDURE_NOT_FOUND(653, Series.DOMAIN_ERROR, "Procedure not found."),
+    PROCEDURE_CODE_MUST_BY_UNIQUE(654, Series.DOMAIN_ERROR, "The procedure code must be unique."),
+    TREATMENT_NOT_FOUND(654, Series.DOMAIN_ERROR, "Procedure not found."),
+    DIAGNOSIS_NOT_FOUND(655, Series.DOMAIN_ERROR, "Diagnosis not found."),
+    EXAM_NOT_FOUND(656, Series.DOMAIN_ERROR, "Exam not found."),
+    INSURANCE_NOT_FOUND(657, Series.DOMAIN_ERROR, "Insurance not found."),
+    SERVICE_TYPE_NOT_FOUND(658, Series.DOMAIN_ERROR, "Service Type not found."),
+    SERVICE_NOT_FOUND(659, Series.DOMAIN_ERROR, "Service not found."),
+    SCHEDULED_DATE_IS_NOT_PRESENT(660, Series.DOMAIN_ERROR, "The date must be present."),
+    CONTACT_INFO_NOT_FOUND(661, Series.DOMAIN_ERROR, "Contact Info not found."),
+    MEDICAL_INFO_NOT_FOUND(662, Series.DOMAIN_ERROR, "Medical Info not found."),
+    MEDICINES_NOT_FOUND(663, Series.DOMAIN_ERROR, "Medicines not found."),
+    EXAM_ORDER_NOT_FOUND(664, Series.DOMAIN_ERROR, "Exam Order not found."),
+    VACCINE_NOT_FOUND(665, Series.DOMAIN_ERROR, "Vaccine not found."),
+    PATIENT_VACCINE_NOT_FOUND(666, Series.DOMAIN_ERROR, "Relationship not found."),
+    EXTERNAL_CONSULTATION_NOT_FOUND(667, Series.DOMAIN_ERROR, "External Consultation not found."),
+    DOCTOR_NOT_FOUND(668, Series.DOMAIN_ERROR, "Doctor not found."),
+    CIE10_NOT_FOUND(669, Series.DOMAIN_ERROR, "Cie10 not found."),
+    TEST_NOT_FOUND(670, Series.DOMAIN_ERROR, "Test not found."),
+    MANAGER_BANK_NOT_FOUND(671, Series.DOMAIN_ERROR, "Manager Bank not found."),
+    MANAGER_BANK_CODE_SIZE(672, Series.DOMAIN_ERROR, "The manager bank code is not accepted."),
+    MANAGER_BANK_CODE_MUST_BY_UNIQUE(673, Series.DOMAIN_ERROR, "The manager bank code must be unique."),
+    MANAGER_B2BPARTNER_CODE_SIZE(674, Series.DOMAIN_ERROR, "The manager B2BPartener code is not accepted."),
+    MANAGER_B2BPARTNER_CODE_MUST_BY_UNIQUE(675, Series.DOMAIN_ERROR, "The manager B2BPartener code must be unique."),
+    MANAGER_B2BPARTNER_NAME_CANNOT_BE_EMPTY(676, Series.DOMAIN_ERROR, "The name of the B2B Partner cannot be empty."),
+    MANAGER_BANK_NAME_CANNOT_BE_EMPTY(677, Series.DOMAIN_ERROR, "The name of the Bank cannot be empty."),
+    MANAGER_CURRENCY_NOT_FOUND(678, Series.DOMAIN_ERROR, "Manager Currency not found."),
+    MANAGER_CURRENCY_CODE_MUST_BY_UNIQUE(679, Series.DOMAIN_ERROR, "The manager currency code must be unique."),
+    MANAGER_CURRENCY_CODE_SIZE(680, Series.DOMAIN_ERROR, "The manager currency code is not accepted."),
+    MANAGER_CURRENCY_NAME_CANNOT_BE_EMPTY(681, Series.DOMAIN_ERROR, "The name of the currency cannot be empty."),
+    MANAGER_B2BPARTNER_NOT_FOUND(682, Series.DOMAIN_ERROR, "Manager B2BPartner not found."),
+    MANAGER_MERCHANT_NOT_FOUND(683, Series.DOMAIN_ERROR, "Manager Merchant not found."),
+    MANAGE_PAYMENT_SOURCE_NOT_FOUND(684, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_PAYMENT_SOURCE_CODE_MUST_BY_UNIQUE(685, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_PAYMENT_SOURCE_CODE_SIZE(686, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_PAYMENT_SOURCE_NAME_CANNOT_BE_EMPTY(687, Series.DOMAIN_ERROR, "The name of the payment source cannot be empty."),
+    MANAGER_LANGUAGE_CODE_MUST_BY_UNIQUE(688, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGER_LANGUAGE_CODE_SIZE(689, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGER_LANGUAGE_NAME_CANNOT_BE_EMPTY(690, Series.DOMAIN_ERROR, "The name of the language cannot be empty."),
+    MANAGER_LANGUAGE_NOT_FOUND(691, Series.DOMAIN_ERROR, "Manager language not found."),
+    MANAGER_MERCHANT_CURRENCY_NOT_FOUND(687, Series.DOMAIN_ERROR, "Manager Merchant Currency not found."),
+    MANAGER_MERCHANT_CURRENCY_MUST_BY_UNIQUE(688, Series.DOMAIN_ERROR, "Item already exists."),
+    ALERT_CODE_CANNOT_BE_EMPTY(690, Series.DOMAIN_ERROR, "Alert code cannot be empty"),
+    ALERT_NAME_CANNOT_BE_EMPTY(691, Series.DOMAIN_ERROR, "Alert name cannot be empty"),
+    ALERT_NOT_FOUND(692, Series.DOMAIN_ERROR, "Alert code not found"),
+    ALERT_CODE_MUST_BE_UNIQUE(693, Series.DOMAIN_ERROR, "Alert code must be unique"),
+    MANAGER_ACCOUNT_TYPE_NAME_CANNOT_BE_EMPTY(694, Series.DOMAIN_ERROR, "The name of the Manager Account Type cannot be empty."),
+    MANAGER_ACCOUNT_TYPE_CODE_SIZE(695, Series.DOMAIN_ERROR, "The Manager Account Type code is not accepted."),
+    MANAGER_ACCOUNT_TYPE_CODE_MUST_BY_UNIQUE(696, Series.DOMAIN_ERROR, "The Manager Account Type code must be unique."),
+    MANAGER_ACCOUNT_TYPE_NOT_FOUND(697, Series.DOMAIN_ERROR, "Manager Account Type not found."),
+    MANAGER_COUNTRY_NOT_FOUND(698, Series.DOMAIN_ERROR, "Manager Country not found."),
+    MANAGER_COUNTRY_CODE_SIZE(699, Series.DOMAIN_ERROR, "The manager Country code is not accepted."),
+    MANAGER_COUNTRY_NAME_CANNOT_BE_EMPTY(700, Series.DOMAIN_ERROR, "The name of the country cannot be empty."),
+    MANAGER_COUNTRY_CODE_MUST_BY_UNIQUE(701, Series.DOMAIN_ERROR, "The manager country code must be unique."),
+    MANAGER_COUNTRY_DIAL_CODE_SIZE(702, Series.DOMAIN_ERROR, "The manager country dial code is not accepted."),
+    MANAGER_TIME_ZONE_NOT_FOUND(703, Series.DOMAIN_ERROR, "Manager Time Zone not found."),
+    MANAGER_TIME_ZONE_CODE_SIZE(704, Series.DOMAIN_ERROR, "The manager time zone code is not accepted."),
+    MANAGER_TIME_ZONE_NAME_CANNOT_BE_EMPTY(705, Series.DOMAIN_ERROR, "The name of the time zone cannot be empty."),
+    MANAGER_TIME_ZONE_CODE_MUST_BY_UNIQUE(706, Series.DOMAIN_ERROR, "The manager bank code must be unique."),
+    MANAGER_CREDIT_CARD_TYPE_CODE_SIZE(707, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGER_CREDIT_CARD_TYPE_NAME_CANNOT_BE_EMPTY(708, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGER_CREDIT_CARD_TYPE_CODE_MUST_BY_UNIQUE(709, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_INVOICE_TYPE_CODE_MUST_BY_UNIQUE(710, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_INVOICE_TYPE_CODE_SIZE(711, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_INVOICE_TYPE_NAME_CANNOT_BE_EMPTY(712, Series.DOMAIN_ERROR, "The name of the invoice type cannot be empty."),
+    MANAGE_INVOICE_TYPE_NOT_FOUND(713, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGER_TRANSACTION_STATUS_CODE_SIZE(714, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGER_TRANSACTION_STATUS_NAME_CANNOT_BE_EMPTY(715, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGER_TRANSACTION_STATUS_NAVIGATE_CANNOT_BE_EMPTY(716, Series.DOMAIN_ERROR, "The navigate cannot be empty."),
+    MANAGER_TRANSACTION_STATUS_CODE_MUST_BY_UNIQUE(717, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_INVOICE_STATUS_NOT_FOUND(718, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_INVOICE_STATUS_CODE_MUST_BY_UNIQUE(719, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_INVOICE_STATUS_CODE_SIZE(720, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_INVOICE_STATUS_NAME_CANNOT_BE_EMPTY(721, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGER_CHARGE_TYPE_CODE_SIZE(722, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGER_CHARGE_TYPE_NAME_CANNOT_BE_EMPTY(723, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGER_CHARGE_TYPE_CODE_MUST_BY_UNIQUE(724, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_INVOICE_TRANSACTION_TYPE_NOT_FOUND(725, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_INVOICE_TRANSACTION_TYPE_CODE_MUST_BY_UNIQUE(726, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_INVOICE_TRANSACTION_TYPE_CODE_SIZE(727, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_INVOICE_TRANSACTION_TYPE_NAME_CANNOT_BE_EMPTY(728, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGER_PAYMENT_STATUS_CODE_SIZE(729, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGER_PAYMENT_STATUS_MUST_BE_UNIQUE(730, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGER_PAYMENT_STATUS_NAME_CANT_BE_NULL(731, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_CITY_STATE_NOT_FOUND(732, Series.DOMAIN_ERROR, "Manage City State not found."),
+    MANAGER_CITY_STATE_CODE_SIZE(733, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGER_CITY_STATE_NAME_CANNOT_BE_EMPTY(734, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGER_CITY_STATE_CODE_MUST_BY_UNIQUE(735, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_REPORT_PARAM_TYPE_NOT_FOUND(736, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_REPORT_PARAM_TYPE_NAME_MUST_BY_UNIQUE(737, Series.DOMAIN_ERROR, "The name must be unique."),
+    MANAGE_REPORT_PARAM_TYPE_NAME_CANNOT_BE_EMPTY(738, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGER_CLIENT_NOT_FOUND(739, Series.DOMAIN_ERROR, "Manage Client not found."),
+    MANAGER_CLIENT_CODE_MUST_BY_UNIQUE(740, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGER_CLIENT_CODE_SIZE(741, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGER_CLIENT_NAME_CANNOT_BE_EMPTY(742, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_ACTION_LOG_NOT_FOUND(743, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_ACTION_LOG_NAME_CANNOT_BE_EMPTY(744, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_ACTION_LOG_CODE_SIZE(745, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_ACTION_LOG_CODE_MUST_BY_UNIQUE(746, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_RATE_PLAN_NOT_FOUND(747, Series.DOMAIN_ERROR, "Manage Rate Plan not found."),
+    MANAGE_RATE_PLAN_CODE_SIZE(748, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_RATE_PLAN_NAME_CANNOT_BE_EMPTY(749, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_RATE_PLAN_CODE_MUST_BY_UNIQUE(750, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGER_PERMISSION_MODULE_NOT_FOUND(751, Series.DOMAIN_ERROR, "Manage Permission Group not found."),
+    MANAGER_PERMISSION_MODULE_CODE_MUST_BY_UNIQUE(752, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGER_PERMISSION_MODULE_CODE_SIZE(753, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGER_PERMISSION_MODULE_NAME_CANNOT_BE_EMPTY(754, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_AGENCY_TYPE_NOT_FOUND(755, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_AGENCY_TYPE_NAME_CANNOT_BE_EMPTY(756, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_AGENCY_TYPE_CODE_SIZE(757, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_AGENCY_TYPE_CODE_MUST_BY_UNIQUE(758, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_EMPLOYEE_GROUP_NOT_FOUND(759, Series.DOMAIN_ERROR, "The employee group is not found."),
+    MANAGE_EMPLOYEE_GROUP_CODE_MUST_BY_UNIQUE(760, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_EMPLOYEE_GROUP_CODE_SIZE(761, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_EMPLOYEE_GROUP_NAME_CANNOT_BE_EMPTY(762, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_DEPARTMENT_GROUP_NOT_FOUND(763, Series.DOMAIN_ERROR, "The department group was not found."),
+    MANAGE_DEPARTMENT_GROUP_NAME_CANNOT_BE_EMPTY(764, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_DEPARTMENT_GROUP_CODE_SIZE(765, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_DEPARTMENT_GROUP_CODE_MUST_BY_UNIQUE(766, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGER_MERCHANT_COMMISSION_NOT_FOUND(767, Series.DOMAIN_ERROR, "Manage Merchant Commission not found."),
+    MANAGER_MERCHANT_COMMISSION_FROM_DATE_CANNOT_BE_EMPTY(768, Series.DOMAIN_ERROR, "The fromDate cannot be empty."),
+    MANAGER_MERCHANT_COMMISSION_COMMISSION_CANNOT_BE_EMPTY(769, Series.DOMAIN_ERROR, "The commission cannot be empty."),
+    MANAGE_ATTACHMENT_TYPE_NOT_FOUND(770, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_ATTACHMENT_TYPE_NAME_CANNOT_BE_EMPTY(771, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_ATTACHMENT_TYPE_CODE_SIZE(772, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_ATTACHMENT_TYPE_CODE_MUST_BY_UNIQUE(773, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_TRADING_COMPANIES_TYPE_NOT_FOUND(774, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_TRADING_COMPANIES_NAME_CANNOT_BE_EMPTY(775, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_TRADING_COMPANIES_CODE_SIZE(776, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_TRADING_COMPANIES_CODE_MUST_BY_UNIQUE(777, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_EMPLOYEE_NOT_FOUND(778, Series.DOMAIN_ERROR, "Manage Employee not found."),
+    MANAGE_EMPLOYEE_EMAIL_MUST_BY_UNIQUE(779, Series.DOMAIN_ERROR, "The email must be unique."),
+    MANAGE_EMPLOYEE_LOGIN_NAME_MUST_BY_UNIQUE(780, Series.DOMAIN_ERROR, "The loginName must be unique."),
+    MANAGE_EMPLOYEE_EMAIL_SIZE(781, Series.DOMAIN_ERROR, "The email is not accepted."),
+    MANAGER_PAYMENT_ATTACHMENT_STATUS_NOT_FOUND(782, Series.DOMAIN_ERROR, "Payment Attachment Status code not found."),
+    MANAGER_PAYMENT_STATUS_NOT_FOUND(783, Series.DOMAIN_ERROR, "Payment Status code not found."),
+    MANAGE_PAYMENT_ATTACHMENT_STATUS_MUST_BE_UNIQUE(784, Series.DOMAIN_ERROR, "Payment Status code must be unique."),
+    MANAGE_PAYMENT_ATTACHMENT_STATUS_CODE_SIZE(785, Series.DOMAIN_ERROR, "Payment Status code is not accepted."),
+    MANAGE_PAYMENT_ATTACHMENT_STATUS_NAME_CANT_BE_NULL(786, Series.DOMAIN_ERROR, "Name can't be empty."),
+    MANAGER_MERCHANT_BANK_ACCOUNT_NOT_FOUND(787, Series.DOMAIN_ERROR, "Manage Merchant Bank Account not found."),
+    MANAGER_COUNTRY_NAME_MUST_BY_UNIQUE(788, Series.DOMAIN_ERROR, "The manager country name must be unique."),
+    MANAGE_CONTACT_NOT_FOUND(789, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_CONTACT_NAME_CANNOT_BE_EMPTY(790, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_CONTACT_CODE_SIZE(791, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_CONTACT_CODE_MUST_BY_UNIQUE(792, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_CONTACT_EMAIL_INVALID(793, Series.DOMAIN_ERROR, "The email is not accepted."),
+    MANAGE_CONTACT_PHONE_INVALID(794, Series.DOMAIN_ERROR, "The phone is not accepted."),
+    MANAGE_HOTEL_NOT_FOUND(795, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_HOTEL_NAME_CANNOT_BE_EMPTY(796, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_HOTEL_CODE_SIZE(797, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_HOTEL_CODE_MUST_BY_UNIQUE(798, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_REGION_NOT_FOUND(799, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_REGION_NAME_CANNOT_BE_EMPTY(800, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    MANAGE_REGION_CODE_SIZE(801, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_REGION_CODE_MUST_BY_UNIQUE(802, Series.DOMAIN_ERROR, "The code must be unique."),
+
+    MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND(802, Series.DOMAIN_ERROR, "The payment transaction type is not found."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CODE_MUST_BY_UNIQUE(803, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CODE_SIZE(804, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_NAME_CANNOT_BE_EMPTY(805, Series.DOMAIN_ERROR, "The name of the payment transaction type cannot be empty."),
+    NAME_CANNOT_BE_EMPTY(1000, Series.DOMAIN_ERROR, "The name cannot be empty."),
+    ITEM_ALREADY_EXITS(1001, Series.DOMAIN_ERROR, "Item already exists."),
+    NOT_FOUND(1002, Series.DOMAIN_ERROR, "Not found."),
+    CODE_SIZE(1003, Series.DOMAIN_ERROR, "The code is not accepted.");
+
+
+  
+
+    private static final DomainErrorMessage[] VALUES;
+
+    static {
+        VALUES = values();
+    }
+
+    private final int value;
+
+    private final Series series;
+
+    private final String reasonPhrase;
+
+    DomainErrorMessage(int value, Series series, String reasonPhrase) {
+        this.value = value;
+        this.series = series;
+        this.reasonPhrase = reasonPhrase;
+    }
+
+    @Override
+    public int value() {
+        return this.value;
+    }
+
+    /**
+     * Return the status series of this status code.
+     */
+    public Series series() {
+        return this.series;
+    }
+
+    /**
+     * Return the reason phrase of this status code.
+     */
+    public String getReasonPhrase() {
+        return this.reasonPhrase;
+    }
+
+    /**
+     * Return a string representation of this status code.
+     */
+    @Override
+    public String toString() {
+        return this.value + " " + name();
+    }
+
+    /**
+     * Return the {@code ApiErrorStatus} enum constant with the specified
+     * numeric value.
+     *
+     * @param statusCode the numeric value of the enum to be returned
+     * @return the enum constant with the specified numeric value
+     * @throws IllegalArgumentException if this enum has no constant for the
+     *                                  specified numeric value
+     */
+    public static DomainErrorMessage valueOf(int statusCode) {
+        DomainErrorMessage status = resolve(statusCode);
+        if (status == null) {
+            throw new IllegalArgumentException("No matching constant for [" + statusCode + "]");
+        }
+        return status;
+    }
+
+    /**
+     * Resolve the given status code to an {@code ApiErrorStatus}, if possible.
+     *
+     * @param statusCode the ApiError status code (potentially non-standard)
+     * @return the corresponding {@code ApiErrorStatus}, or {@code null} if not
+     * found
+     */
+    @Nullable
+    public static DomainErrorMessage resolve(int statusCode) {
+        // Use cached VALUES instead of values() to prevent array allocation.
+        for (DomainErrorMessage status : VALUES) {
+            if (status.value == statusCode) {
+                return status;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Enumeration of ApiError status series.
+     * <p>
+     * Retrievable via {@link DomainErrorMessage#series()}.
+     */
+    public enum Series {
+        DOMAIN_ERROR
+    }
+
+}

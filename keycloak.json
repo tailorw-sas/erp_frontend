@@ -1,0 +1,12 @@
+{
+  "realm": "kynsoft",
+  "auth-server-url": "https://auth.chevere.ddns.net/",
+  "ssl-required": "external",
+  "resource": "medinec",
+  "verify-token-audience": true,
+  "credentials": {
+    "secret": "THhwfsqg3uuCII9RuYMDWLEF24nKxknt"
+  },
+  "use-resource-role-mappings": true,
+  "confidential-port": 0
+}

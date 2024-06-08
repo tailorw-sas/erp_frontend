@@ -1,0 +1,70 @@
+name: ci-config
+
+env:
+  SERVICE_NAME: 'config'
+  SERVICE_PATH: 'config'
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'dev'
+    paths:
+      - .github/workflows/ci-config.yml
+      - 'config/**'
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - 
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          build-args: |
+            "PACKAGE_TOKEN=${{secrets.PACKAGE_TOKEN}}"
+          context: "{{defaultContext}}:${{ env.SERVICE_PATH }}"
+          push: true
+          tags: kmontes2020/fin-config:v1
+
+  deploy:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install OpenVPN
+        run: |
+          sudo apt update
+          sudo apt install -y openvpn openvpn-systemd-resolved
+
+      - name: Connect to OpenVPN
+        uses: kota65535/github-openvpn-connect-action@v3
+        with:
+          config_file: vpnconfig/vpnserver1.ovpn
+          username: ${{ secrets.OVPN_USERNAME }}
+          password: ${{ secrets.OVPN_PASSWORD }}
+
+      - name: Enable kubectl
+        uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Redeploy
+        run: |
+          kubectl -n ${{ vars.K8S_NAMESPACE }} patch deployment ${{  env.SERVICE_NAME }} -p "{\"spec\": {\"template\": {\"metadata\": { \"labels\": {  \"redeploy\": \"$(date +%s)\"}}}}}"

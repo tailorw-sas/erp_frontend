@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config
+  namespace: finamer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: apps.deployment-finamer-config
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: config
+        workload.user.cattle.io/workloadselector: apps.deployment-finamer-config
+    spec:
+      containers:
+        - name: config
+          image: kmontes2020/fin-config:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: config-secret
+      imagePullSecrets:
+        - name: dokcer-hub
+      restartPolicy: Always

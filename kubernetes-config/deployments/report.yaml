@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: report
+  namespace: finamer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: apps.deployment-finamer-report
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: report
+        workload.user.cattle.io/workloadselector: apps.deployment-finamer-report
+    spec:
+      containers:
+        - name: report
+          image: kmontes2020/fin-report:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9908
+              name: http
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: report-secret
+      imagePullSecrets:
+        - name: dokcer-hub
+      restartPolicy: Always

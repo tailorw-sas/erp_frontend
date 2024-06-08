@@ -1,0 +1,207 @@
+{"properties": [
+  {
+    "name": "eureka.client.register-with-eureka",
+    "type": "java.lang.String",
+    "description": "A description for 'eureka.client.register-with-eureka'"
+  },
+  {
+    "name": "jwt.auth.converter.resource-id",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.auth.converter.resource-id'"
+  },
+  {
+    "name": "jwt.auth.converter.principle-attribute",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.auth.converter.principle-attribute'"
+  },
+  {
+    "name": "keycloak.provider.client-secret",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.client-secret'"
+  },
+  {
+    "name": "keycloak.provider.password-console",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.password-console'"
+  },
+  {
+    "name": "keycloak.provider.user-console",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.user-console'"
+  },
+  {
+    "name": "keycloak.provider.admin-clic",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.admin-clic'"
+  },
+  {
+    "name": "keycloak.provider.realm-master",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.realm-master'"
+  },
+  {
+    "name": "keycloak.provider.realm-name",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.realm-name'"
+  },
+  {
+    "name": "keycloak.provider.server-url",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.server-url'"
+  },
+  {
+    "name": "keycloak.provider.client-id",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.client-id'"
+  },
+  {
+    "name": "keycloak.provider.grant_type",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.grant_type'"
+  },
+  {
+    "name": "spring.security.client.provider.keycloak.token-uri",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.security.client.provider.keycloak.token-uri'"
+  },
+  {
+    "name": "springdoc.enable-native-support",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.enable-native-support'"
+  },
+  {
+    "name": "springdoc.api-docs.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.api-docs.enabled'"
+  },
+  {
+    "name": "springdoc.swagger-ui.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.swagger-ui.enabled'"
+  },
+  {
+    "name": "springdoc.swagger-ui.config-url",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.swagger-ui.config-url'"
+  },
+  {
+    "name": "springdoc.swagger-ui.path",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.swagger-ui.path'"
+  },
+  {
+    "name": "springdoc.swagger-ui.urls",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.swagger-ui.urls'"
+  },
+  {
+    "name": "springfox.documentation.swagger.v2.path",
+    "type": "java.lang.String",
+    "description": "A description for 'springfox.documentation.swagger.v2.path'"
+  },
+  {
+    "name": "http.cors-enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'http.cors-enabled'"
+  },
+  {
+    "name": "keycloak.provider.default-user",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.default-user'"
+  },
+  {
+    "name": "http.cors.allowed-origins",
+    "type": "java.lang.String",
+    "description": "A description for 'http.cors.allowed-origins'"
+  },
+  {
+    "name": "http.cors.allowed-methods",
+    "type": "java.lang.String",
+    "description": "A description for 'http.cors.allowed-methods'"
+  },
+  {
+    "name": "http.cors.allowed-headers",
+    "type": "java.lang.String",
+    "description": "A description for 'http.cors.allowed-headers'"
+  },
+  {
+    "name": "http.cors.exposed-headers",
+    "type": "java.lang.String",
+    "description": "A description for 'http.cors.exposed-headers'"
+  },
+  {
+    "name": "http.cors.allow-credentials",
+    "type": "java.lang.String",
+    "description": "A description for 'http.cors.allow-credentials'"
+  },
+  {
+    "name": "http.cors.max-age",
+    "type": "java.lang.String",
+    "description": "A description for 'http.cors.max-age'"
+  },
+  {
+    "name": "keycloak.provider.default-role",
+    "type": "java.lang.String",
+    "description": "A description for 'keycloak.provider.default-role'"
+  },
+  {
+    "name": "springdoc.swagger-ui.groups-enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.swagger-ui.groups-enabled'"
+  },
+  {
+    "name": "springdoc.swagger-ui.use-browser-preset",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.swagger-ui.use-browser-preset'"
+  },
+  {
+    "name": "locator.config.refreshrate",
+    "type": "java.lang.String",
+    "description": "A description for 'locator.config.refreshrate'"
+  },
+  {
+    "name": "spring.cloud.config.config.server.bootstrap",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.cloud.config.config.server.bootstrap'"
+  },
+  {
+    "name": "locator.config.initialdelay",
+    "type": "java.lang.String",
+    "description": "A description for 'locator.config.initialdelay'"
+  },
+  {
+    "name": "schedule.config.initialdelay",
+    "type": "java.lang.String",
+    "description": "A description for 'schedule.config.initialdelay'"
+  },
+  {
+    "name": "scheduler.config.initialdelay",
+    "type": "java.lang.String",
+    "description": "A description for 'scheduler.config.initialdelay'"
+  },
+  {
+    "name": "scheduler.config.refreshrate",
+    "type": "java.lang.String",
+    "description": "A description for 'scheduler.config.refreshrate'"
+  },
+  {
+    "name": "scheduler.config.disabled",
+    "type": "java.lang.String",
+    "description": "A description for 'scheduler.config.disabled'"
+  },
+  {
+    "name": "scheduler.config.cron",
+    "type": "java.lang.String",
+    "description": "A description for 'scheduler.config.cron'"
+  },
+  {
+    "name": "scheduler.config.isEnable",
+    "type": "java.lang.String",
+    "description": "A description for 'scheduler.config.isEnable'"
+  },
+  {
+    "name": "scheduler.config.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'scheduler.config.enabled'"
+  }
+]}

@@ -1,0 +1,13 @@
+{
+  "properties": [
+    {
+      "name": "spring.cloud.config.server.git.username",
+      "type": "java.lang.String",
+      "description": "Description for spring.cloud.config.server.git.username."
+    },
+    {
+      "name": "spring.cloud.config.server.git.password",
+      "type": "java.lang.String",
+      "description": "Description for spring.cloud.config.server.git.password."
+    }
+  ] }

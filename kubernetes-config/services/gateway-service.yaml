@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  namespace: finamer
+spec:
+  type: ClusterIP  # O cambia a NodePort o LoadBalancer si necesitas exponer el servicio fuera del cluster
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: gateway
