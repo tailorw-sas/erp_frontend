@@ -14,11 +14,14 @@ pipeline {
         }
 
 	stage ('Create docker image'){
-		sh 'cd gateway'
-		sh 'docker build -t tailorw/fin-gateway:v1 -f .'
-		withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
-                	sh 'docker push tailorw/fin-gateway:v1'
-                }
+		steps {
+			dir(gateway){
+				sh 'docker build -t tailorw/fin-gateway:v1 -f .'
+				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
+                			sh 'docker push tailorw/fin-gateway:v1'
+                		}
+			}
+		}
 	}
     }
 }
