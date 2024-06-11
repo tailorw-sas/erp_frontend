@@ -16,7 +16,7 @@ pipeline {
 	stage ('Create docker image'){
 		steps {
 			dir('gateway'){
-				sh 'docker build -t tailorw/fin-gateway:v1 -f .'
+				sh 'docker build -t tailorw/fin-gateway:v1 .'
 				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
                 			sh 'docker push tailorw/fin-gateway:v1'
                 		}
