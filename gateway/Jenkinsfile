@@ -12,5 +12,14 @@ pipeline {
                 echo 'Initializing..'
             }
         }
+
+	stage ('Create docker image'){
+		dir('gateway') {
+    			// some block
+			sh 'docker build -t tailorw/fin-gateway:v1 -f .'
+			withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
+                    		sh 'docker push tailorw/fin-gateway:v1'
+                	}
+		}
     }
 }
