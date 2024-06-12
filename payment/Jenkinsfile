@@ -15,7 +15,7 @@ pipeline {
 
 	stage ('Create docker image'){
 		steps {
-			dir('payments'){
+			dir('payment'){
 				sh 'docker build -t tailorw/fin-payments:v1 .'
 				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
                 			sh 'docker push tailorw/fin-payments:v1'
