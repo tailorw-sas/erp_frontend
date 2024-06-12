@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: settings
-          image: kmontes2020/fin-settings:v1
+          image: tailorw/fin-settings:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 9905
