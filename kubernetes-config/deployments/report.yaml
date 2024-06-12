@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: report
-          image: kmontes2020/fin-report:v1
+          image: tailorw/fin-report:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 9908
