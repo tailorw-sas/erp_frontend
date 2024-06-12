@@ -27,7 +27,7 @@ pipeline {
 	stage ('Publish to Kubernetes') {
             steps {
                 withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'KubernetesCredential', namespace: 'finamer', restrictKubeConfigAccess: false, serverUrl: 'https://172.20.1.140:6443') {
-                    sh 'kubectl apply -f kubernetes-config/deployments/cloudBridges.yaml'
+                    sh 'kubectl apply -f kubernetes-config/deployments/cloudbridges.yaml'
                 }
             }
         }
