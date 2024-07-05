@@ -23,15 +23,13 @@ public class ConsumerReplicateManageRatePlanService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-rate-plan", groupId = "invoicing-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManageRatePlanKafka objKafka) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
 
-            ReplicateManageRatePlanKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageRatePlanKafka.class);
-            CreateManageRatePlanCommand command = new CreateManageRatePlanCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName());
+            CreateManageRatePlanCommand command = new CreateManageRatePlanCommand(objKafka.getId(), objKafka.getCode(),
+                    objKafka.getName());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageRatePlanService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

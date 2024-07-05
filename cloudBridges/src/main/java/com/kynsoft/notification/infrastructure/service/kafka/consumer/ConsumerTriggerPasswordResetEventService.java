@@ -29,18 +29,18 @@ public class ConsumerTriggerPasswordResetEventService {
     }
 
     @KafkaListener(topics = "finamer-otp", groupId = "otp")
-    public void listen(String event) {
+    public void listen(UserOtpKafka otpKafka) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
-
-            UserOtpKafka otpKafka = objectMapper.treeToValue(rootNode.get("data"), UserOtpKafka.class);
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            JsonNode rootNode = objectMapper.readTree(event);
+//
+//            UserOtpKafka otpKafka = objectMapper.treeToValue(rootNode.get("data"), UserOtpKafka.class);
             List<MailJetRecipient> mailJetRecipients = new ArrayList<>();
             mailJetRecipients.add(new MailJetRecipient(otpKafka.getEmail(),otpKafka.getName()));
 
             SendMailJetEMailCommand command = getSendMailJetEMailCommand(otpKafka, mailJetRecipients);
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerTriggerPasswordResetEventService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

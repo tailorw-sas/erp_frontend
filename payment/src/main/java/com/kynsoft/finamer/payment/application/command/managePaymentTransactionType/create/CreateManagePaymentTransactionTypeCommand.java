@@ -14,18 +14,20 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
+    private String status;
     private Boolean cash;
     private Boolean deposit;
     private Boolean applyDeposit;
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
 
-    public CreateManagePaymentTransactionTypeCommand(UUID id, String code, String name, 
+    public CreateManagePaymentTransactionTypeCommand(UUID id, String code, String name, String status,
                                                      Boolean cash, Boolean deposit, Boolean applyDeposit, 
                                                      Boolean remarkRequired, Integer minNumberOfCharacter) {
         this.id = id;
         this.code = code;
         this.name = name;
+        this.status = status;
         this.cash = cash;
         this.deposit = deposit;
         this.applyDeposit = applyDeposit;

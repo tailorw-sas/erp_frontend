@@ -16,7 +16,7 @@ public interface ManagerMerchantHotelEnrolleReadDataJPARepository extends JpaRep
 
     Page<ManageMerchantHotelEnrolle> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManageMerchantHotelEnrolle b WHERE b.managerMerchant.id = :managerMerchant AND b.managerCurrency.id = :managerCurrency AND b.managerHotel.id = :managerHotel AND b.enrrolle = :enrrolle AND b.id <> :id")
-    Long countByManageMerchantAndManageCurrencyAndManageHotelAndEnrolleIdNotId(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("managerCurrency") UUID managerCurrency, @Param("managerHotel") UUID managerHotel, @Param("enrrolle") String enrrolle);
+    @Query("SELECT COUNT(b) FROM ManageMerchantHotelEnrolle b WHERE b.managerMerchant.id = :managerMerchant AND b.managerHotel.id = :managerHotel AND b.id <> :id")
+    Long countByManageMerchantAndManageHotelNotId(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("managerHotel") UUID managerHotel);
 
 }

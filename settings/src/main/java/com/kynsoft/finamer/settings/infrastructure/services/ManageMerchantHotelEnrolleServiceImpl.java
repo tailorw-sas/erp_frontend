@@ -99,8 +99,8 @@ public class ManageMerchantHotelEnrolleServiceImpl implements IManageMerchantHot
     }
 
     @Override
-    public Long countByManageMerchantAndManageCurrencyAndManageHotelAndEnrolleIdNotId(UUID id, UUID managerMerchant, UUID managerCurrency, UUID managerHotel, String enrrolle) {
-        return this.repositoryQuery.countByManageMerchantAndManageCurrencyAndManageHotelAndEnrolleIdNotId(id, managerMerchant, managerCurrency, managerHotel, enrrolle);
+    public Long countByManageMerchantAndManageHotelNotId(UUID id, UUID managerMerchant, UUID managerHotel) {
+        return this.repositoryQuery.countByManageMerchantAndManageHotelNotId(id, managerMerchant, managerHotel);
     }
 
 }

@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.managerMerchantHotelEnr
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageMerchantHotelEnrolleKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -15,6 +16,7 @@ import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import com.kynsoft.finamer.settings.domain.services.IManageMerchantHotelEnrolleService;
 import com.kynsoft.finamer.settings.domain.services.IManagerCurrencyService;
 import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantHotelEnrolle.ProducerUpdateManageMerchantHotelEnrolleService;
 import java.util.UUID;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
@@ -26,15 +28,18 @@ public class UpdateManagerMerchantHotelEnrolleCommandHandler implements ICommand
     private final IManagerCurrencyService serviceCurrencyService;
     private final IManageHotelService serviceHotel;
     private final IManageMerchantHotelEnrolleService service;
+    private final ProducerUpdateManageMerchantHotelEnrolleService producerUpdateManageMerchantHotelEnrolleService;
 
     public UpdateManagerMerchantHotelEnrolleCommandHandler(IManagerMerchantService serviceMerchantService,
                                                        IManagerCurrencyService serviceCurrencyService,
                                                        IManageHotelService serviceHotel,
-                                                       IManageMerchantHotelEnrolleService service) {
+                                                       IManageMerchantHotelEnrolleService service,
+                                                       ProducerUpdateManageMerchantHotelEnrolleService producerUpdateManageMerchantHotelEnrolleService) {
         this.serviceMerchantService = serviceMerchantService;
         this.serviceCurrencyService = serviceCurrencyService;
         this.serviceHotel = serviceHotel;
         this.service = service;
+        this.producerUpdateManageMerchantHotelEnrolleService = producerUpdateManageMerchantHotelEnrolleService;
     }
 
     @Override
@@ -61,6 +66,7 @@ public class UpdateManagerMerchantHotelEnrolleCommandHandler implements ICommand
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
+            this.producerUpdateManageMerchantHotelEnrolleService.update(new UpdateManageMerchantHotelEnrolleKafka(test.getId(), test.getManagerMerchant().getId(), test.getManagerHotel().getId(), test.getEnrrolle()));
         }
 
     }

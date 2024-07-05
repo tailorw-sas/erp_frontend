@@ -27,7 +27,10 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
     private final ProducerReplicateManageAgencyService producerReplicateManageAgencyService;
 
     @Autowired
-    public CreateManageAgencyCommandHandler(IManageAgencyService service, IManagerCountryService countryService, IManageCityStateService cityStateService, IManageAgencyTypeService agencyTypeService, IManagerB2BPartnerService managerB2BPartnerService, IManagerClientService managerClientService, ProducerReplicateManageAgencyService producerReplicateManageAgencyService) {
+    public CreateManageAgencyCommandHandler(IManageAgencyService service, IManagerCountryService countryService,
+            IManageCityStateService cityStateService, IManageAgencyTypeService agencyTypeService,
+            IManagerB2BPartnerService managerB2BPartnerService, IManagerClientService managerClientService,
+            ProducerReplicateManageAgencyService producerReplicateManageAgencyService) {
         this.service = service;
         this.countryService = countryService;
         this.cityStateService = cityStateService;
@@ -43,27 +46,30 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
         RulesChecker.checkRule(new ManageAgencyNameMustBeNull(command.getName()));
         RulesChecker.checkRule(new ManageAgencyCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
-
         ManageAgencyTypeDto agencyTypeDto = this.agencyTypeService.findById(command.getAgencyType());
         ManagerCountryDto countryDto = this.countryService.findById(command.getCountry());
         ManageCityStateDto cityStateDto = this.cityStateService.findById(command.getCityState());
         ManagerB2BPartnerDto b2BPartnerDto = this.managerB2BPartnerService.findById(command.getSentB2BPartner());
         ManageClientDto clientDto = this.managerClientService.findById(command.getClient());
 
-
         service.create(new ManageAgencyDto(
                 command.getId(),
                 command.getCode(),
                 command.getStatus(),
                 command.getName(),
-                command.getCif(), command.getAgencyAlias(), command.getAudit(), command.getZipCode(), command.getAddress(), command.getMailingAddress(), command.getPhone(), command.getAlternativePhone(), command.getEmail(), command.getAlternativeEmail(), command.getContactName(), command.getAutoReconcile(), command.getCreditDay(), command.getRfc(), command.getValidateCheckout(), command.getBookingCouponFormat(), command.getDescription(), command.getCity(), command.getGenerationType(), command.getSentFileFormat(),
+                command.getCif(), command.getAgencyAlias(), command.getAudit(), command.getZipCode(),
+                command.getAddress(), command.getMailingAddress(), command.getPhone(), command.getAlternativePhone(),
+                command.getEmail(), command.getAlternativeEmail(), command.getContactName(), command.getAutoReconcile(),
+                command.getCreditDay(), command.getRfc(), command.getValidateCheckout(),
+                command.getBookingCouponFormat(), command.getDescription(), command.getCity(),
+                command.getGenerationType(), command.getSentFileFormat(),
                 agencyTypeDto,
                 clientDto,
                 b2BPartnerDto,
                 countryDto,
-                cityStateDto
-        ));
+                cityStateDto));
 
-        this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(command.getId(), command.getCode(), command.getName()));
+        this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(command.getId(),
+                command.getCode(), command.getName(), command.getClient()));
     }
 }

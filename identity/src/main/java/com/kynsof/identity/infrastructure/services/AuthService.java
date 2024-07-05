@@ -62,7 +62,6 @@ public class AuthService implements IAuthService {
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, createHeaders());
 
         try {
-            System.out.println(keycloakProvider.getTokenUri().toString());//djacomee
             ResponseEntity<TokenResponse> response = restTemplate.exchange(
                     keycloakProvider.getTokenUri(),
                     HttpMethod.POST,

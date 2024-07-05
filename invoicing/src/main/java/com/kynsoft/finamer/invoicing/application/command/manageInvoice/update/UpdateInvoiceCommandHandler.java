@@ -25,43 +25,44 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
     private final IManageHotelService hotelService;
     private final IManageInvoiceTypeService iManageInvoiceTypeService;
 
-    public UpdateInvoiceCommandHandler(IManageInvoiceService service, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService) {
+    public UpdateInvoiceCommandHandler(IManageInvoiceService service, IManageAgencyService agencyService,
+            IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService) {
         this.service = service;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.iManageInvoiceTypeService = iManageInvoiceTypeService;
     }
+
     @Override
     public void handle(UpdateInvoiceCommand command) {
-
 
         ManageInvoiceDto dto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateBoolean(dto::setIsManual, command.getIsManual(), dto.getIsManual(), update::setUpdate);
-        UpdateIfNotNull.updateDouble(dto::setInvoiceAmount, command.getInvoiceAmount(), dto.getInvoiceAmount(), update::setUpdate);
-        this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(), update::setUpdate);
-        this.updateAgency(dto::setAgency, command.getAgency(),dto.getAgency().getId(), update::setUpdate);
-        this.updateHotel(dto::setHotel, command.getHotel(),dto.getHotel().getId(), update::setUpdate);
-        this.updateInvoiceType(dto::setInvoiceType, command.getInvoiceType(),dto.getInvoiceType().getId(), update::setUpdate);
+        UpdateIfNotNull.updateDouble(dto::setInvoiceAmount, command.getInvoiceAmount(), dto.getInvoiceAmount(),
+                update::setUpdate);
+        this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(),
+                update::setUpdate);
+        this.updateAgency(dto::setAgency, command.getAgency(), dto.getAgency().getId(), update::setUpdate);
+        this.updateHotel(dto::setHotel, command.getHotel(), dto.getHotel().getId(), update::setUpdate);
 
-
-        
         if (update.getUpdate() > 0) {
             this.service.update(dto);
         }
 
     }
 
-    public void updateLocalDateTime(Consumer<LocalDateTime> setter, LocalDateTime newValue, LocalDateTime oldValue, Consumer<Integer> update){
-        if(newValue != null && !newValue.equals(oldValue)){
+    public void updateLocalDateTime(Consumer<LocalDateTime> setter, LocalDateTime newValue, LocalDateTime oldValue,
+            Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
             setter.accept(newValue);
             update.accept(1);
         }
     }
 
-    public void updateAgency(Consumer<ManageAgencyDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update){
+    public void updateAgency(Consumer<ManageAgencyDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             ManageAgencyDto agencyDto = this.agencyService.findById(newValue);
             setter.accept(agencyDto);
@@ -69,7 +70,8 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
 
         }
     }
-    public void updateHotel(Consumer<ManageHotelDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update){
+
+    public void updateHotel(Consumer<ManageHotelDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             ManageHotelDto hotelDto = this.hotelService.findById(newValue);
             setter.accept(hotelDto);
@@ -77,7 +79,9 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
 
         }
     }
-    public void updateInvoiceType(Consumer<ManageInvoiceTypeDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update){
+
+    public void updateInvoiceType(Consumer<ManageInvoiceTypeDto> setter, UUID newValue, UUID oldValue,
+            Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findById(newValue);
             setter.accept(invoiceTypeDto);
@@ -85,6 +89,5 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
 
         }
     }
-
 
 }

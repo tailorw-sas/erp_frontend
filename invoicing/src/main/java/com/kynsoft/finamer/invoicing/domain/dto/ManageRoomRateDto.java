@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -26,6 +27,6 @@ public class ManageRoomRateDto {
     private Double hotelAmount;
     private String remark;
     private ManageBookingDto booking;
-
+    private List<ManageAdjustmentDto> adjustments;
 
 }

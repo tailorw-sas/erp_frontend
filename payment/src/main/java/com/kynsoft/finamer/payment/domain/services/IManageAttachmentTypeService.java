@@ -1,16 +1,25 @@
 package com.kynsoft.finamer.payment.domain.services;
 
-import com.kynsoft.finamer.payment.domain.dto.ManageAttachmentTypeDto;
+import com.kynsof.share.core.domain.request.FilterCriteria;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
+import java.util.List;
 
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 
 public interface IManageAttachmentTypeService {
-    UUID create(ManageAttachmentTypeDto dto);
+    UUID create(AttachmentTypeDto dto);
 
-    void update(ManageAttachmentTypeDto dto);
+    void update(AttachmentTypeDto dto);
 
-    void delete(ManageAttachmentTypeDto dto);
+    void delete(AttachmentTypeDto dto);
 
-    ManageAttachmentTypeDto findById(UUID id);
+    AttachmentTypeDto findById(UUID id);
 
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    Long countByCodeAndNotId(String code, UUID id);
+
+    Long countByDefaultAndNotId(UUID id);
 }

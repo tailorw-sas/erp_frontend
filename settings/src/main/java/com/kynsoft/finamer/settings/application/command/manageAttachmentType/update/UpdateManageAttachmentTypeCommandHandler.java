@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageAttachmentType.up
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageAttachmentTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageAttachmentTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAttachmentType.ProducerUpdateManageAttachmentTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -16,9 +18,12 @@ import java.util.function.Consumer;
 public class UpdateManageAttachmentTypeCommandHandler implements ICommandHandler<UpdateManageAttachmentTypeCommand> {
 
     private final IManageAttachmentTypeService service;
+    private final ProducerUpdateManageAttachmentTypeService producerUpdateManageAttachmentTypeService;
 
-    public UpdateManageAttachmentTypeCommandHandler(IManageAttachmentTypeService service) {
+    public UpdateManageAttachmentTypeCommandHandler(IManageAttachmentTypeService service,
+                                                    ProducerUpdateManageAttachmentTypeService producerUpdateManageAttachmentTypeService) {
         this.service = service;
+        this.producerUpdateManageAttachmentTypeService = producerUpdateManageAttachmentTypeService;
     }
 
     @Override
@@ -35,6 +40,7 @@ public class UpdateManageAttachmentTypeCommandHandler implements ICommandHandler
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerUpdateManageAttachmentTypeService.update(new UpdateManageAttachmentTypeKafka(dto.getId(), dto.getName()));
         }
     }
 

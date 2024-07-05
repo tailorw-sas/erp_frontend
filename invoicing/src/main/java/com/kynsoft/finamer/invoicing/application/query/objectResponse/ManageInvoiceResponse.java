@@ -6,6 +6,8 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,14 +24,14 @@ import java.util.UUID;
 public class ManageInvoiceResponse implements IResponse {
     private UUID id;
     private Long invoice_id;
-    private Long invoiceNumber;
+    private String invoiceNumber;
     private LocalDateTime invoiceDate;
     private Boolean isManual;
     private Double invoiceAmount;
     private ManageHotelDto hotel;
     private ManageAgencyDto agency;
-    private ManageInvoiceTypeDto invoiceType;
-    private ManageInvoiceStatusDto status;
+    private EInvoiceType invoiceType;;
+    private EInvoiceStatus status;
     private boolean autoRec;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {

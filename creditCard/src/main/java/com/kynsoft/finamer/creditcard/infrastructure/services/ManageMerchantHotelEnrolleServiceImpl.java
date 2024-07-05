@@ -3,7 +3,11 @@ package com.kynsoft.finamer.creditcard.infrastructure.services;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
+import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMerchantHotelEnrolleResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantHotelEnrolleDto;
@@ -11,14 +15,20 @@ import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantHotelEnroll
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageHotel;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageMerchant;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageMerchantHotelEnrolle;
+import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageMerchantHotelEnrolle;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageMerchantHotelEnrolleWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageMerchantHotelEnrolleReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageMerchantHotelEnrolleServiceImpl implements IManageMerchantHotelEnrolleService {
@@ -77,5 +87,27 @@ public class ManageMerchantHotelEnrolleServiceImpl implements IManageMerchantHot
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "Manage Merchant Hotel Enrolle not found.")));
+    }
+
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        GenericSpecificationsBuilder<ManageMerchantHotelEnrolle> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageMerchantHotelEnrolle> data = this.repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    @Override
+    public List<ManageHotelDto> findHotelsByManageMerchant(ManageMerchantDto manageMerchant) {
+        return this.repositoryQuery.findHotelsByManageMerchant(new ManageMerchant(manageMerchant)).stream().map(ManageHotel::toAggregate).collect(Collectors.toList());
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageMerchantHotelEnrolle> data) {
+        List<ManageMerchantHotelEnrolleResponse> responses = new ArrayList<>();
+        for (ManageMerchantHotelEnrolle p : data.getContent()) {
+            responses.add(new ManageMerchantHotelEnrolleResponse(p.toAggregate()));
+        }
+        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 }

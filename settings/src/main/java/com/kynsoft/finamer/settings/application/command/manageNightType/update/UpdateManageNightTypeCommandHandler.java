@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageNightType.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageNightTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageNightTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageNightTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageNightType.ProducerUpdateManageNightTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -16,9 +18,12 @@ import java.util.function.Consumer;
 public class UpdateManageNightTypeCommandHandler implements ICommandHandler<UpdateManageNightTypeCommand> {
 
     private final IManageNightTypeService service;
+    private final ProducerUpdateManageNightTypeService producerUpdateManageNightTypeService;
 
-    public UpdateManageNightTypeCommandHandler(IManageNightTypeService service) {
+    public UpdateManageNightTypeCommandHandler(IManageNightTypeService service,
+                                               ProducerUpdateManageNightTypeService producerUpdateManageNightTypeService) {
         this.service = service;
+        this.producerUpdateManageNightTypeService = producerUpdateManageNightTypeService;
     }
 
     @Override
@@ -34,6 +39,7 @@ public class UpdateManageNightTypeCommandHandler implements ICommandHandler<Upda
         dto.setDescription(command.getDescription());
 
         service.update(dto);
+        this.producerUpdateManageNightTypeService.update(new UpdateManageNightTypeKafka(dto.getId(), dto.getName()));
 
         // if (update.getUpdate() > 0) {
         // }

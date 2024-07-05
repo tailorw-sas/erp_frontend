@@ -28,7 +28,8 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     @Autowired
     private final ManageHotelReadDataJPARepository repositoryQuery;
 
-    public ManageHotelServiceImpl(ManageHotelWriteDataJPARepository repositoryCommand, ManageHotelReadDataJPARepository repositoryQuery) {
+    public ManageHotelServiceImpl(ManageHotelWriteDataJPARepository repositoryCommand,
+            ManageHotelReadDataJPARepository repositoryQuery) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
     }
@@ -37,7 +38,7 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     public UUID create(ManageHotelDto dto) {
         ManageHotel entity = new ManageHotel(dto);
 
-        return repositoryCommand.save(entity).getId();
+        return repositoryCommand.saveAndFlush(entity).getId();
     }
 
     @Override
@@ -54,7 +55,7 @@ public class ManageHotelServiceImpl implements IManageHotelService {
         ManageHotel delete = new ManageHotel(dto);
 
         delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
+        delete.setCode(delete.getCode() + "-" + UUID.randomUUID());
         delete.setDeletedAt(LocalDateTime.now());
 
         repositoryCommand.save(delete);
@@ -64,18 +65,17 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     public ManageHotelDto findById(UUID id) {
         Optional<ManageHotel> optionalEntity = repositoryQuery.findById(id);
 
-        if(optionalEntity.isPresent()){
+        if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND, new ErrorField("id", "Manage Hotel not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND,
+                new ErrorField("id", "Manage Hotel not found.")));
     }
-
-
 
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
-        return repositoryQuery.countByCodeAndNotId(code,id);
+        return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
     @Override
@@ -96,6 +96,5 @@ public class ManageHotelServiceImpl implements IManageHotelService {
             }
         }
     }
-
 
 }

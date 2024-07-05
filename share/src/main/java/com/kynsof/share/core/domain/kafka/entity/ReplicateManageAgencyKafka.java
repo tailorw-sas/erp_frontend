@@ -13,11 +13,13 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReplicateManageAgencyKafka  implements Serializable {
+public class ReplicateManageAgencyKafka implements Serializable {
     @JsonProperty("id")
     private UUID id;
     @JsonProperty("code")
     private String code;
     @JsonProperty("name")
     private String name;
+    @JsonProperty("client")
+    private UUID client;
 }

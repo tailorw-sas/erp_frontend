@@ -23,18 +23,15 @@ public class ConsumerReplicateManageInvoiceStatusService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-invoice-status", groupId = "invoicing-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManageInvoiceStatusKafka objKafka) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
 
-            ReplicateManageInvoiceStatusKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageInvoiceStatusKafka.class);
-            CreateManageInvoiceStatusCommand command = new CreateManageInvoiceStatusCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName());
+            CreateManageInvoiceStatusCommand command = new CreateManageInvoiceStatusCommand(objKafka.getId(),
+                    objKafka.getCode(), objKafka.getName());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageInvoiceStatusService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 
 }

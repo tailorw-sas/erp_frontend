@@ -17,6 +17,7 @@ public class ReplicateManagePaymentTransactionTypeKafka implements Serializable 
     private String code;
     @JsonProperty("name")
     private String name;
+    private String status;
     private Boolean deposit;
     private Boolean applyDeposit;
     private Boolean cash;

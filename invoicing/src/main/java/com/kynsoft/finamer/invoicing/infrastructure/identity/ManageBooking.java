@@ -9,9 +9,12 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
+import org.hibernate.generator.EventType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,9 +27,8 @@ public class ManageBooking {
     @Column(name = "id")
     private UUID id;
 
-
-    @Column(columnDefinition="serial", name = "booking_gen_id")
-    @Generated(GenerationTime.INSERT)
+    @Column(columnDefinition = "serial", name = "booking_gen_id")
+    @Generated(event = EventType.INSERT)
     private Long booking_id;
 
     private LocalDateTime hotelCreationDate;
@@ -34,7 +36,7 @@ public class ManageBooking {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
-    private Integer hotelBookingNumber;
+    private String hotelBookingNumber;
     private String firstName;
     private String lastName;
     private Double invoiceAmount;
@@ -48,8 +50,6 @@ public class ManageBooking {
     private String folioNumber;
     private Double hotelAmount;
     private String description;
-
-
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_invoice", nullable = true)
@@ -71,10 +71,11 @@ public class ManageBooking {
     @JoinColumn(name = "manage_room_category", nullable = true)
     private ManageRoomCategory roomCategory;
 
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "booking")
+    private List<ManageRoomRate> roomRates;
+
     @Column(nullable = true)
     private Boolean deleted = false;
-
-
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -106,14 +107,39 @@ public class ManageBooking {
         this.folioNumber = dto.getFolioNumber();
         this.hotelAmount = dto.getHotelAmount();
         this.description = dto.getDescription();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()): null;
-        this.ratePlan = dto.getRatePlan() != null ? new ManageRatePlan(dto.getRatePlan()): null;
-        this.nightType = dto.getNightType() != null ? new ManageNightType(dto.getNightType()): null;
-        this.roomType = dto.getRoomType() != null ? new ManageRoomType(dto.getRoomType()): null ;
-        this.roomCategory = dto.getRoomCategory() != null ? new ManageRoomCategory(dto.getRoomCategory()): null ;
+        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.ratePlan = dto.getRatePlan() != null ? new ManageRatePlan(dto.getRatePlan()) : null;
+        this.nightType = dto.getNightType() != null ? new ManageNightType(dto.getNightType()) : null;
+        this.roomType = dto.getRoomType() != null ? new ManageRoomType(dto.getRoomType()) : null;
+        this.roomCategory = dto.getRoomCategory() != null ? new ManageRoomCategory(dto.getRoomCategory()) : null;
+        this.roomRates = dto.getRoomRates() != null ? dto.getRoomRates().stream().map(r -> {
+            ManageRoomRate roomRate = new ManageRoomRate(r);
+            roomRate.setBooking(this);
+            return roomRate;
+        }).collect(Collectors.toList()) : null;
     }
 
     public ManageBookingDto toAggregate() {
-        return new ManageBookingDto(id, booking_id, hotelCreationDate,bookingDate,checkIn,checkOut,hotelBookingNumber,firstName,lastName,invoiceAmount,roomNumber,couponNumber,adults,children,rateAdult,rateChild,hotelInvoiceNumber,folioNumber,hotelAmount,description, invoice !=null ? invoice.toAggregate(): null, ratePlan !=null ? ratePlan.toAggregate(): null, nightType !=null ? nightType.toAggregate() : null, roomType !=null ? roomType.toAggregate() : null, roomCategory !=null ? roomCategory.toAggregate() : null);
+        return new ManageBookingDto(id, booking_id, hotelCreationDate, bookingDate, checkIn, checkOut,
+                hotelBookingNumber, firstName, lastName, invoiceAmount, roomNumber, couponNumber, adults, children,
+                rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
+                invoice != null ? invoice.toAggregate() : null, ratePlan != null ? ratePlan.toAggregate() : null,
+                nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
+                roomCategory != null ? roomCategory.toAggregate() : null,
+                roomRates != null ? roomRates.stream().map(b -> {
+                    return b.toAggregateSample();
+                }).collect(Collectors.toList()) : null);
+    }
+
+    public ManageBookingDto toAggregateSample() {
+        return new ManageBookingDto(id, booking_id, hotelCreationDate, bookingDate, checkIn, checkOut,
+                hotelBookingNumber, firstName, lastName, invoiceAmount, roomNumber, couponNumber, adults, children,
+                rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
+                null, ratePlan != null ? ratePlan.toAggregate() : null,
+                nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
+                roomCategory != null ? roomCategory.toAggregate() : null,
+                roomRates != null ? roomRates.stream().map(b -> {
+                    return b.toAggregateSample();
+                }).collect(Collectors.toList()) : null);
     }
 }

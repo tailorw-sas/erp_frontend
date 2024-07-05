@@ -14,8 +14,9 @@ public class UpdateManageHotelCommand implements ICommand {
 
     private UUID id;
     private String name;
+    private UUID tradingCompany;
 
-    public UpdateManageHotelCommand(UUID id, String name) {
+    public UpdateManageHotelCommand(UUID id, String name, UUID tradingCompany) {
         this.id = id;
         this.name = name;
     }

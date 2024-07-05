@@ -12,16 +12,7 @@ import java.util.UUID;
 public class UpdateManageRoomTypeCommand implements ICommand {
 
     private UUID id;
-    private String description;
     private String name;
-    private UUID manageHotel;
-
-    public static UpdateManageRoomTypeCommand fromRequest(UpdateManageRoomTypeRequest request, UUID id){
-        return new UpdateManageRoomTypeCommand(
-                id, request.getDescription(), request.getName(),
-                request.getManageHotel()
-        );
-    }
 
     @Override
     public ICommandMessage getMessage() {

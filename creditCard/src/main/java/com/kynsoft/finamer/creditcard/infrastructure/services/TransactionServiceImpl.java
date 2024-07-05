@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class TransactionServiceImpl implements ITransactionService {
@@ -78,6 +79,11 @@ public class TransactionServiceImpl implements ITransactionService {
         Page<Transaction> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public Long countByReservationNumberAndManageHotelIdAndNotId(String reservationNumber, UUID hotel) {
+        return this.repositoryQuery.countByReservationNumberAndManageHotelIdAndNotId(reservationNumber, hotel);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

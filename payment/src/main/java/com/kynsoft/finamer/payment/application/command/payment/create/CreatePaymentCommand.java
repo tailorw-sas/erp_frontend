@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.payment.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import java.time.LocalDate;
 import lombok.Getter;
@@ -27,6 +28,8 @@ public class CreatePaymentCommand implements ICommand {
     private Double paymentAmount;
     private String remark;
     private Status status;
+
+    private PaymentDto payment;
 
     public CreatePaymentCommand(Status status, UUID paymentSource, String reference, LocalDate transactionDate, 
                                 UUID paymentStatus, UUID client, UUID agency, UUID hotel, UUID bankAccount, 
@@ -65,6 +68,6 @@ public class CreatePaymentCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new CreatePaymentMessage(id);
+        return new CreatePaymentMessage(payment);
     }
 }

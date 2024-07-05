@@ -14,15 +14,14 @@ public class CreateManageHotelCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
+    private UUID manageTradingCompany;
 
-
-    public CreateManageHotelCommand(UUID id, String code, String name) {
+    public CreateManageHotelCommand(UUID id, String code, String name, UUID manageTradingCompany) {
         this.id = id;
         this.code = code;
         this.name = name;
+        this.manageTradingCompany = manageTradingCompany;
     }
-
-
 
     @Override
     public ICommandMessage getMessage() {

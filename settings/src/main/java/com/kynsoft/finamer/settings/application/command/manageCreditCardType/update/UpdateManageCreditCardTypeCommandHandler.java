@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageCreditCardType.up
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageCreditCardTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -9,6 +10,7 @@ import com.kynsoft.finamer.settings.domain.dto.ManageCreditCardTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.manageCreditCardType.ManageCreditCardTypeFirstDigitMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageCreditCardTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCreditCardType.ProducerUpdateManageCreditCardTypeService;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
@@ -17,8 +19,12 @@ public class UpdateManageCreditCardTypeCommandHandler implements ICommandHandler
 
     private final IManageCreditCardTypeService service;
 
-    public UpdateManageCreditCardTypeCommandHandler(IManageCreditCardTypeService service) {
+    private final ProducerUpdateManageCreditCardTypeService producerUpdateManageCreditCardTypeService;
+
+    public UpdateManageCreditCardTypeCommandHandler(IManageCreditCardTypeService service,
+                                                    ProducerUpdateManageCreditCardTypeService producerUpdateManageCreditCardTypeService) {
         this.service = service;
+        this.producerUpdateManageCreditCardTypeService = producerUpdateManageCreditCardTypeService;
     }
 
     @Override
@@ -40,6 +46,7 @@ public class UpdateManageCreditCardTypeCommandHandler implements ICommandHandler
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
+            this.producerUpdateManageCreditCardTypeService.update(new UpdateManageCreditCardTypeKafka(test.getId(), test.getName()));
         }
 
     }

@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageRatePlan.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageRatePlanKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -10,6 +11,7 @@ import com.kynsoft.finamer.settings.domain.dto.ManageRatePlanDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import com.kynsoft.finamer.settings.domain.services.IManageRatePlanService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRatePlan.ProducerUpdateManageRatePlanService;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -22,9 +24,13 @@ public class UpdateManageRatePlanCommandHandler implements ICommandHandler<Updat
 
     private final IManageHotelService hotelService;
 
-    public UpdateManageRatePlanCommandHandler(IManageRatePlanService service, IManageHotelService hotelService) {
+    private final ProducerUpdateManageRatePlanService producerUpdateManageRatePlanService;
+
+    public UpdateManageRatePlanCommandHandler(IManageRatePlanService service, IManageHotelService hotelService,
+                                              ProducerUpdateManageRatePlanService producerUpdateManageRatePlanService) {
         this.service = service;
         this.hotelService = hotelService;
+        this.producerUpdateManageRatePlanService = producerUpdateManageRatePlanService;
     }
 
     @Override
@@ -43,6 +49,7 @@ public class UpdateManageRatePlanCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
+            this.producerUpdateManageRatePlanService.update(new UpdateManageRatePlanKafka(test.getId(), test.getName()));
         }
 
     }

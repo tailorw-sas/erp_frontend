@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.managePaymentSource;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentSourceKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.managePaymentSource.create.CreateManagePaymentSourceCommand;
@@ -23,15 +20,11 @@ public class ConsumerReplicateManagePaymentSourceService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-payment-source", groupId = "payment-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManagePaymentSourceKafka objKafka) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
-
-            ReplicateManagePaymentSourceKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManagePaymentSourceKafka.class);
             CreateManagePaymentSourceCommand command = new CreateManagePaymentSourceCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManagePaymentSourceService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

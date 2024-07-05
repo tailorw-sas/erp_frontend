@@ -13,6 +13,7 @@ import java.util.UUID;
 @Setter
 public class CreateManualTransactionCommand implements ICommand {
 
+    private Long id;
     private UUID merchant;
     private MethodType methodType;
     private UUID hotel;
@@ -57,6 +58,6 @@ public class CreateManualTransactionCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new CreateManualTransactionMessage();
+        return new CreateManualTransactionMessage(id);
     }
 }

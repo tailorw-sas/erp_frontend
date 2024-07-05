@@ -3,16 +3,23 @@ package com.kynsoft.finamer.creditcard.infrastructure.services;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
+import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageAgencyResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageAgencyWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageAgencyReadDataJPARepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -66,7 +73,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
         if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "Manage Agency not found.")));
     }
 
     @Override
@@ -77,5 +84,22 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     @Override
     public List<ManageAgencyDto> findAll() {
         return repositoryQuery.findAll().stream().map(ManageAgency::toAggregate).collect(Collectors.toList());
+    }
+
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageAgency> data = repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageAgency> data) {
+        List<ManageAgencyResponse> responseList = new ArrayList<>();
+        for (ManageAgency entity : data.getContent()) {
+            responseList.add(new ManageAgencyResponse(entity.toAggregate()));
+        }
+        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 }

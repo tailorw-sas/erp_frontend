@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.managePaymentAttachmentStatus;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentAttachmentStatusKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.managePaymentAttachmentStatus.create.CreateManagePaymentAttachmentStatusCommand;
@@ -23,15 +20,11 @@ public class ConsumerReplicateManagePaymentAttachmentStatusService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-payment-attachment-status", groupId = "payment-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManagePaymentAttachmentStatusKafka objKafka) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
-
-            ReplicateManagePaymentAttachmentStatusKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManagePaymentAttachmentStatusKafka.class);
             CreateManagePaymentAttachmentStatusCommand command = new CreateManagePaymentAttachmentStatusCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManagePaymentAttachmentStatusService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

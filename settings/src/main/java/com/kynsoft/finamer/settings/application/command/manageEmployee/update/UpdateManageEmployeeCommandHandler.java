@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageEmployee.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageEmployeeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -13,6 +14,7 @@ import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmployeePh
 import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmproyeeEmailMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmproyeeLoginNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.*;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageEmployee.ProducerUpdateManageEmployeeService;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Component;
 public class UpdateManageEmployeeCommandHandler implements ICommandHandler<UpdateManageEmployeeCommand> {
     
     private final IManageEmployeeService service;
+
     private final IManageDepartmentGroupService serviceDepartment;
 
     private final IManagePermissionService permissionService;
@@ -36,12 +39,16 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
 
     private final IManageReportService reportService;
 
+    private final ProducerUpdateManageEmployeeService producerUpdateManageEmployeeService;
+
     public UpdateManageEmployeeCommandHandler(IManageEmployeeService service,
                                               IManageDepartmentGroupService serviceDepartment,
                                               IManagePermissionService permissionService,
                                               IManageAgencyService agencyService,
                                               IManageHotelService hotelService,
-                                              IManageTradingCompaniesService tradingCompaniesService, IManageReportService reportService) {
+                                              IManageTradingCompaniesService tradingCompaniesService, 
+                                              IManageReportService reportService,
+                                              ProducerUpdateManageEmployeeService producerUpdateManageEmployeeService) {
         this.service = service;
         this.serviceDepartment = serviceDepartment;
         this.permissionService = permissionService;
@@ -49,6 +56,7 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
         this.hotelService = hotelService;
         this.tradingCompaniesService = tradingCompaniesService;
         this.reportService = reportService;
+        this.producerUpdateManageEmployeeService = producerUpdateManageEmployeeService;
     }
 
     @Override
@@ -87,6 +95,7 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
+            this.producerUpdateManageEmployeeService.update(new UpdateManageEmployeeKafka(test.getId(), test.getFirstName(), test.getLastName(), test.getEmail()));
         }
 
     }

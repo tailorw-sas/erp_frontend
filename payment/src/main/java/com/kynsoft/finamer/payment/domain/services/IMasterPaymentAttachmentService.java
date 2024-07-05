@@ -19,4 +19,5 @@ public interface IMasterPaymentAttachmentService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    Long countByResourceAndAttachmentTypeIsDefault(UUID resource);
 }

@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
+import org.hibernate.generator.EventType;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -25,8 +26,8 @@ public class ManageAdjustment {
     @Column(name = "id")
     private UUID id;
 
-    @Column(columnDefinition="serial", name = "adjustment_gen_id")
-    @Generated(GenerationTime.INSERT)
+    @Column(columnDefinition = "serial", name = "adjustment_gen_id")
+    @Generated(event = EventType.INSERT)
     private Long adjustment_id;
 
     private Double amount;
@@ -37,14 +38,12 @@ public class ManageAdjustment {
     @JoinColumn(name = "manage_transaction_type", nullable = true)
     private ManageInvoiceTransactionType transaction;
 
-    @ManyToOne(fetch = FetchType.EAGER )
-    @JoinColumn(name = "manage_room_rate" , nullable = true)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_room_rate", nullable = true)
     private ManageRoomRate roomRate;
 
     @Column(nullable = true)
     private Boolean deleted = false;
-
-
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -61,11 +60,19 @@ public class ManageAdjustment {
         this.amount = dto.getAmount();
         this.date = dto.getDate();
         this.description = dto.getDescription();
-        this.transaction = dto.getTransaction() != null ? new ManageInvoiceTransactionType(dto.getTransaction()): null;
-        this.roomRate = dto.getRoomRate() != null ? new ManageRoomRate(dto.getRoomRate()): null;
+        this.transaction = dto.getTransaction() != null ? new ManageInvoiceTransactionType(dto.getTransaction()) : null;
+        this.roomRate = dto.getRoomRate() != null ? new ManageRoomRate(dto.getRoomRate()) : null;
     }
 
-    public ManageAdjustmentDto toAggregate(){
-        return new ManageAdjustmentDto(id, adjustment_id, amount, date,description,transaction != null ? transaction.toAggregate(): null, roomRate != null ? roomRate.toAggregate(): null);
+    public ManageAdjustmentDto toAggregate() {
+        return new ManageAdjustmentDto(id, adjustment_id, amount, date, description,
+                transaction != null ? transaction.toAggregate() : null,
+                roomRate != null ? roomRate.toAggregate() : null);
+    }
+
+    public ManageAdjustmentDto toAggregateSample() {
+        return new ManageAdjustmentDto(id, adjustment_id, amount, date, description,
+                transaction != null ? transaction.toAggregate() : null,
+                null);
     }
 }

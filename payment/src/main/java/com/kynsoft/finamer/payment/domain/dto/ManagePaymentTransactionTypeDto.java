@@ -16,6 +16,7 @@ public class ManagePaymentTransactionTypeDto {
     private UUID id;
     private String code;
     private String name;
+    private String status;
     private Boolean cash;
     private Boolean deposit;
     private Boolean applyDeposit;

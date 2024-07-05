@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
@@ -40,20 +41,22 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
-        ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findById(command.getInvoiceType());
 
-        ManageInvoiceStatusDto invoiceStatusDto = this.manageInvoiceStatusService.findByCode("PRO");
+        String invoiceNumber = "";
 
-        if (invoiceStatusDto == null) {
-            ManageInvoiceStatusDto newInvoiceStatusDto = new ManageInvoiceStatusDto(UUID.randomUUID(), "PRO",
-                    "Procesed");
-            this.manageInvoiceStatusService.create(newInvoiceStatusDto);
-            invoiceStatusDto = newInvoiceStatusDto;
+        if (hotelDto.getManageTradingCompanies() != null && hotelDto.getManageTradingCompanies().getIsApplyInvoice()) {
+            invoiceNumber += hotelDto.getManageTradingCompanies().getCode()
+                    + hotelDto.getManageTradingCompanies().getAutogen_code();
+        } else {
+            invoiceNumber += hotelDto.getCode() + hotelDto.getAutogen_code();
         }
 
         System.err.println("INVOICE COMMAND ID " + command.getId().toString());
 
-        service.create(new ManageInvoiceDto(command.getId(), 0L, 0L, command.getInvoiceDate(), command.getIsManual(),
-                command.getInvoiceAmount(), hotelDto, agencyDto, invoiceTypeDto, invoiceStatusDto, false));
+        service.create(new ManageInvoiceDto(command.getId(), 0L,
+                invoiceNumber, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),
+                command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCECSED,
+                false,
+                null, null));
     }
 }

@@ -19,8 +19,8 @@ public class MasterPaymentAttachmentResponse implements IResponse {
     private UUID id;
     private Status status;
     private UUID resource;
-    private ManageResourceTypeResponse resourceType;
-    private ManageAttachmentTypeResponse attachmentType;
+    private ResourceTypeResponse resourceType;
+    private AttachmentTypeResponse attachmentType;
     private String fileName;
     private String path;
     private String remark;
@@ -29,8 +29,8 @@ public class MasterPaymentAttachmentResponse implements IResponse {
         this.id = dto.getId();
         this.status = dto.getStatus();
         this.resource = dto.getResource() != null ? dto.getResource().getId() : null;
-        this.resourceType = dto.getResourceType() != null ? new ManageResourceTypeResponse(dto.getResourceType()) : null;
-        this.attachmentType = dto.getAttachmentType() != null ? new ManageAttachmentTypeResponse(dto.getAttachmentType()) : null;
+        this.resourceType = dto.getResourceType() != null ? new ResourceTypeResponse(dto.getResourceType()) : null;
+        this.attachmentType = dto.getAttachmentType() != null ? new AttachmentTypeResponse(dto.getAttachmentType()) : null;
         this.fileName = dto.getFileName();
         this.path = dto.getPath();
         this.remark = dto.getRemark();

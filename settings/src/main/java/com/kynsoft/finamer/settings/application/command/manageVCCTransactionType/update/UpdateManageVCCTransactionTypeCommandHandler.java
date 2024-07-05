@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageVCCTransactionTyp
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageVCCTransactionTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageVCCTransactionTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerUpdateManageVCCTransactionTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -16,9 +18,12 @@ import java.util.function.Consumer;
 public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHandler<UpdateManageVCCTransactionTypeCommand> {
 
     private final IManageVCCTransactionTypeService service;
+    private final ProducerUpdateManageVCCTransactionTypeService producerUpdateManageVCCTransactionTypeService;
 
-    public UpdateManageVCCTransactionTypeCommandHandler(IManageVCCTransactionTypeService service) {
+    public UpdateManageVCCTransactionTypeCommandHandler(IManageVCCTransactionTypeService service,
+                                                        ProducerUpdateManageVCCTransactionTypeService producerUpdateManageVCCTransactionTypeService) {
         this.service = service;
+        this.producerUpdateManageVCCTransactionTypeService = producerUpdateManageVCCTransactionTypeService;
     }
 
     @Override
@@ -30,8 +35,6 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-
-    
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
@@ -49,6 +52,7 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerUpdateManageVCCTransactionTypeService.update(new UpdateManageVCCTransactionTypeKafka(dto.getId(), dto.getName()));
         }
     }
 

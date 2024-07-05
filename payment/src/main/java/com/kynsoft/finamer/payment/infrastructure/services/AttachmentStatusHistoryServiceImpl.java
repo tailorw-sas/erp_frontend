@@ -64,7 +64,7 @@ public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHist
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "Attachment Status History not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ATTACHMENT_STATUS_HISTORY_NOT_FOUND, new ErrorField("id", DomainErrorMessage.ATTACHMENT_STATUS_HISTORY_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override

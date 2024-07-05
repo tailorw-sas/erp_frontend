@@ -18,7 +18,7 @@ public class UpdateBookingCommand implements ICommand {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
-    private Integer hotelBookingNumber;
+    private String hotelBookingNumber;
     private String firstName;
     private String lastName;
     private Double invoiceAmount;
@@ -39,7 +39,12 @@ public class UpdateBookingCommand implements ICommand {
     private UUID roomType;
     private UUID roomCategory;
 
-    public UpdateBookingCommand(UUID id, LocalDateTime hotelCreationDate, LocalDateTime bookingDate, LocalDateTime checkIn, LocalDateTime checkOut, Integer hotelBookingNumber, String firstName, String lastName, Double invoiceAmount, String roomNumber, String couponNumber, Integer adults, Integer children, Double rateAdult, Double rateChild, String hotelInvoiceNumber, String folioNumber, Double hotelAmount, String description, UUID invoice, UUID ratePlan, UUID nightType, UUID roomType, UUID roomCategory) {
+    public UpdateBookingCommand(UUID id, LocalDateTime hotelCreationDate, LocalDateTime bookingDate,
+            LocalDateTime checkIn, LocalDateTime checkOut, String hotelBookingNumber, String firstName,
+            String lastName, Double invoiceAmount, String roomNumber, String couponNumber, Integer adults,
+            Integer children, Double rateAdult, Double rateChild, String hotelInvoiceNumber, String folioNumber,
+            Double hotelAmount, String description, UUID invoice, UUID ratePlan, UUID nightType, UUID roomType,
+            UUID roomCategory) {
         this.id = id;
         this.hotelCreationDate = hotelCreationDate;
         this.bookingDate = bookingDate;
@@ -91,8 +96,7 @@ public class UpdateBookingCommand implements ICommand {
                 request.getRatePlan(),
                 request.getNightType(),
                 request.getRoomType(),
-                request.getRoomCategory()
-        );
+                request.getRoomCategory());
     }
 
     @Override

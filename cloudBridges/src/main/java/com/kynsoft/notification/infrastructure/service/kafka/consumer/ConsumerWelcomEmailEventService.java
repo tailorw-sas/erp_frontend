@@ -30,19 +30,19 @@ public class ConsumerWelcomEmailEventService {
     }
 
     @KafkaListener(topics = "finamer-welcom-email", groupId = "notification-welcom")
-    public void listen(String event) {
+    public void listen(UserWelcomKafka otpKafka) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            JsonNode rootNode = objectMapper.readTree(event);
 
             //TODO yannier capturar el evento con el nombre del usuario, el usuario y la contraseña para enviar por correo
-            UserWelcomKafka otpKafka = objectMapper.treeToValue(rootNode, UserWelcomKafka.class);
+            //UserWelcomKafka otpKafka = objectMapper.treeToValue(rootNode, UserWelcomKafka.class);
             List<MailJetRecipient> mailJetRecipients = new ArrayList<>();
             mailJetRecipients.add(new MailJetRecipient(otpKafka.getEmail(),otpKafka.getFullName()));
 
             SendMailJetEMailCommand command = getSendMailJetEMailCommand(otpKafka, mailJetRecipients);
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerWelcomEmailEventService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

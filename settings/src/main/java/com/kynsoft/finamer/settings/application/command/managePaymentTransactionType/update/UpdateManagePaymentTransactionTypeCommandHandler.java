@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.managePaymentTransactio
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManagePaymentTransactionTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -9,6 +10,7 @@ import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransactionTypeDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerUpdateManagePaymentTransactionTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -17,9 +19,12 @@ import java.util.function.Consumer;
 public class UpdateManagePaymentTransactionTypeCommandHandler implements ICommandHandler<UpdateManagePaymentTransactionTypeCommand> {
 
     private final IManagePaymentTransactionTypeService service;
+    private final ProducerUpdateManagePaymentTransactionTypeService producerUpdateManagePaymentTransactionTypeService;
 
-    public UpdateManagePaymentTransactionTypeCommandHandler(IManagePaymentTransactionTypeService service) {
+    public UpdateManagePaymentTransactionTypeCommandHandler(IManagePaymentTransactionTypeService service,
+                                                            ProducerUpdateManagePaymentTransactionTypeService producerUpdateManagePaymentTransactionTypeService) {
         this.service = service;
+        this.producerUpdateManagePaymentTransactionTypeService = producerUpdateManagePaymentTransactionTypeService;
     }
 
     @Override
@@ -50,6 +55,16 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerUpdateManagePaymentTransactionTypeService.update(new UpdateManagePaymentTransactionTypeKafka(
+                    dto.getId(), 
+                    dto.getName(), 
+                    dto.getStatus().name(),
+                    dto.getDeposit(), 
+                    dto.getApplyDeposit(), 
+                    dto.getCash(), 
+                    dto.getRemarkRequired(), 
+                    dto.getMinNumberOfCharacter()
+            ));
         }
     }
 

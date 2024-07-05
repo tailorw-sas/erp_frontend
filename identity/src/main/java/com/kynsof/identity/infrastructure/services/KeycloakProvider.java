@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component;
 @Getter
 public class KeycloakProvider {
 
-    @Value("${keycloak.provider.server-url:https://authqa.tailorw.net/}")
+    @Value("${keycloak.provider.server-url:https://auth.chevere.ddns.net/}")
     private String server_url;
 
-    @Value("${keycloak.provider.realm-name:TailorwRealm}")
+    @Value("${keycloak.provider.realm-name:kynsoft}")
     private String realm_name;
 
     @Value("${keycloak.provider.realm-master:master}")
@@ -33,7 +33,7 @@ public class KeycloakProvider {
 
     @Value("${keycloak.provider.client-secret:7i6w6w9yRbv2VOi0ksbLfdd1TnW5TTlb}")
     private String client_secret;
-    @Value("${spring.security.oauth2.client.provider.keycloak.token-uri:https://authqa.tailorw.net/realms/TailorwRealm/protocol/openid-connect/token}")
+    @Value("${spring.security.oauth2.client.provider.keycloak.token-uri:https://auth.chevere.ddns.net/realms/kynsoft/protocol/openid-connect/token}")
     private String tokenUri;
 
     @Value("${keycloak.provider.client-id:medinec}")

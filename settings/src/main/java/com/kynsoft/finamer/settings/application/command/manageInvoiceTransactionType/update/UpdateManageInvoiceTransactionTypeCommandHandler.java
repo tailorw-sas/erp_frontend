@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageInvoiceTransactio
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageInvoiceTransactionTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTransactionTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceTransactionType.ProducerUpdateManageInvoiceTransactionTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -17,8 +19,12 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
 
     private final IManageInvoiceTransactionTypeService service;
 
-    public UpdateManageInvoiceTransactionTypeCommandHandler(IManageInvoiceTransactionTypeService service) {
+    private final ProducerUpdateManageInvoiceTransactionTypeService producerUpdateManageInvoiceTransactionTypeService;
+
+    public UpdateManageInvoiceTransactionTypeCommandHandler(IManageInvoiceTransactionTypeService service,
+                                                            ProducerUpdateManageInvoiceTransactionTypeService producerUpdateManageInvoiceTransactionTypeService) {
         this.service = service;
+        this.producerUpdateManageInvoiceTransactionTypeService = producerUpdateManageInvoiceTransactionTypeService;
     }
 
     @Override
@@ -41,6 +47,7 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerUpdateManageInvoiceTransactionTypeService.update(new UpdateManageInvoiceTransactionTypeKafka(dto.getId(), dto.getName()));
         }
     }
 

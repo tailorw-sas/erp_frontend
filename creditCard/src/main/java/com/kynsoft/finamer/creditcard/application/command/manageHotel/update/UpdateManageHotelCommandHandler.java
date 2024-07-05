@@ -18,6 +18,8 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
     @Override
     public void handle(UpdateManageHotelCommand command) {
         ManageHotelDto dto = service.findById(command.getId());
+        dto.setName(command.getName());
+        dto.setIsApplyByVCC(command.getIsApplyByVCC());
         this.service.update(dto);
     }
 }

@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageCreditCardType;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageCreditCardTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageCreditCardType.create.CreateManageCreditCardTypeCommand;
@@ -22,15 +19,11 @@ public class ConsumerReplicateManageCreditCardTypeService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-credit-card-type", groupId = "vcc-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManageCreditCardTypeKafka entity) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
-
-            ReplicateManageCreditCardTypeKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageCreditCardTypeKafka.class);
-            CreateManageCreditCardTypeCommand command = new CreateManageCreditCardTypeCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName());
+            CreateManageCreditCardTypeCommand command = new CreateManageCreditCardTypeCommand(entity.getId(), entity.getCode(), entity.getName());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageCreditCardTypeService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

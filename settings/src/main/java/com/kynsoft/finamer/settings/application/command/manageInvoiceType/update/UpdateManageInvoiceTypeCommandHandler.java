@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageInvoiceType.updat
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageInvoiceTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceType.ProducerUpdateManageInvoiceTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -17,8 +19,12 @@ public class UpdateManageInvoiceTypeCommandHandler implements ICommandHandler<Up
 
     private final IManageInvoiceTypeService service;
 
-    public UpdateManageInvoiceTypeCommandHandler(IManageInvoiceTypeService service) {
+    private final ProducerUpdateManageInvoiceTypeService producerUpdateManageInvoiceTypeService;
+
+    public UpdateManageInvoiceTypeCommandHandler(IManageInvoiceTypeService service,
+                                                 ProducerUpdateManageInvoiceTypeService producerUpdateManageInvoiceTypeService) {
         this.service = service;
+        this.producerUpdateManageInvoiceTypeService = producerUpdateManageInvoiceTypeService;
     }
 
     @Override
@@ -36,6 +42,7 @@ public class UpdateManageInvoiceTypeCommandHandler implements ICommandHandler<Up
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerUpdateManageInvoiceTypeService.update(new UpdateManageInvoiceTypeKafka(dto.getId(), dto.getName()));
         }
     }
 

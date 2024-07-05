@@ -3,15 +3,23 @@ package com.kynsoft.finamer.creditcard.infrastructure.services;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
+import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageVCCTransactionTypeResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageVCCTransactionTypeService;
+import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageVCCTransactionType;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageVCCTransactionType;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageVCCTransactionTypeWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageVCCTransactionTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -66,5 +74,22 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
     @Override
     public List<ManageVCCTransactionTypeDto> findAll() {
         return repositoryQuery.findAll().stream().map(ManageVCCTransactionType::toAggregate).collect(Collectors.toList());
+    }
+
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        GenericSpecificationsBuilder<ManageVCCTransactionType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageVCCTransactionType> data = this.repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageVCCTransactionType> data) {
+        List<ManageVCCTransactionTypeResponse> responses = new ArrayList<>();
+        for (ManageVCCTransactionType p : data.getContent()) {
+            responses.add(new ManageVCCTransactionTypeResponse(p.toAggregate()));
+        }
+        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 }

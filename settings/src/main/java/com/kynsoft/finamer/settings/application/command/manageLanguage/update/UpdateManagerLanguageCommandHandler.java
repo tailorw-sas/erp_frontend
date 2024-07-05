@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageLanguage.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageLanguageKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagerLanguageDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerLanguageService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageLanguage.ProducerUpdateManageLanguageService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -17,8 +19,12 @@ public class UpdateManagerLanguageCommandHandler implements ICommandHandler<Upda
 
     private final IManagerLanguageService service;
 
-    public UpdateManagerLanguageCommandHandler(IManagerLanguageService service) {
+    private final ProducerUpdateManageLanguageService producerUpdateManageLanguageService;
+
+    public UpdateManagerLanguageCommandHandler(IManagerLanguageService service,
+                                               ProducerUpdateManageLanguageService producerUpdateManageLanguageService) {
         this.service = service;
+        this.producerUpdateManageLanguageService = producerUpdateManageLanguageService;
     }
 
     @Override
@@ -36,6 +42,7 @@ public class UpdateManagerLanguageCommandHandler implements ICommandHandler<Upda
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerUpdateManageLanguageService.update(new UpdateManageLanguageKafka(dto.getId(), dto.getName()));
         }
 
     }

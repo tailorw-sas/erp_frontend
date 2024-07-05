@@ -87,7 +87,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGER_CURRENCY_NAME_CANNOT_BE_EMPTY(681, Series.DOMAIN_ERROR, "The name of the currency cannot be empty."),
     MANAGER_B2BPARTNER_NOT_FOUND(682, Series.DOMAIN_ERROR, "Manager B2BPartner not found."),
     MANAGER_MERCHANT_NOT_FOUND(683, Series.DOMAIN_ERROR, "Manager Merchant not found."),
-    MANAGE_PAYMENT_SOURCE_NOT_FOUND(684, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_PAYMENT_SOURCE_NOT_FOUND(684, Series.DOMAIN_ERROR, "The manage payment source not found."),
     MANAGE_PAYMENT_SOURCE_CODE_MUST_BY_UNIQUE(685, Series.DOMAIN_ERROR, "The code must be unique."),
     MANAGE_PAYMENT_SOURCE_CODE_SIZE(686, Series.DOMAIN_ERROR, "The code is not accepted."),
     MANAGE_PAYMENT_SOURCE_NAME_CANNOT_BE_EMPTY(687, Series.DOMAIN_ERROR, "The name of the payment source cannot be empty."),
@@ -189,7 +189,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_EMPLOYEE_EMAIL_MUST_BY_UNIQUE(779, Series.DOMAIN_ERROR, "The email must be unique."),
     MANAGE_EMPLOYEE_LOGIN_NAME_MUST_BY_UNIQUE(780, Series.DOMAIN_ERROR, "The loginName must be unique."),
     MANAGE_EMPLOYEE_EMAIL_SIZE(781, Series.DOMAIN_ERROR, "The email is not accepted."),
-    MANAGER_PAYMENT_ATTACHMENT_STATUS_NOT_FOUND(782, Series.DOMAIN_ERROR, "Payment Attachment Status code not found."),
+    MANAGER_PAYMENT_ATTACHMENT_STATUS_NOT_FOUND(782, Series.DOMAIN_ERROR, "Payment Attachment Status not found."),
     MANAGER_PAYMENT_STATUS_NOT_FOUND(783, Series.DOMAIN_ERROR, "Payment Status code not found."),
     MANAGE_PAYMENT_ATTACHMENT_STATUS_MUST_BE_UNIQUE(784, Series.DOMAIN_ERROR, "Payment Status code must be unique."),
     MANAGE_PAYMENT_ATTACHMENT_STATUS_CODE_SIZE(785, Series.DOMAIN_ERROR, "Payment Status code is not accepted."),
@@ -235,7 +235,15 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     CHECK_PAYMENT_AMOUNT_GREATER_THAN_ZERO(1017, Series.DOMAIN_ERROR, "The entered payment amount is invalid. Please enter an amount strictly greater than zero."),
     CHECK_AMOUNT_IF_DEPOSIT_BALANCE_GREATER_THAN_ZERO(1018, Series.DOMAIN_ERROR, "Cannot create Apply Deposit payment details because the Deposit check transaction has insufficient balance."),
     AMOUNT_GREATER_THAN_ZERO(1019, Series.DOMAIN_ERROR, "The amount must be greater than 0."),
-    RESERVATION_NUMBER(1020, Series.DOMAIN_ERROR, "The reservation number is not accepted.");
+    RESERVATION_NUMBER(1020, Series.DOMAIN_ERROR, "The reservation number is not accepted."),
+    RESOURCE_TYPE_NOT_FOUND(1021, Series.DOMAIN_ERROR, "Resource Type not found."),
+    PAYMENT_NOT_FOUND(1022, Series.DOMAIN_ERROR, "Payment not found."),
+    PAYMENT_DETAIL_NOT_FOUND(1023, Series.DOMAIN_ERROR, "Payment Detail not found."),
+    MASTER_PAYMENT_ATTACHMENT_NOT_FOUND(1024, Series.DOMAIN_ERROR, "Master Payment Attachment not found."),
+    MANAGE_BANK_ACCOUNT_NOT_FOUND(1025, Series.DOMAIN_ERROR, "Manage Bank Account not found."),
+    ATTACHMENT_TYPE_NOT_FOUND(1026, Series.DOMAIN_ERROR, "Attachment Type not found."),
+    ATTACHMENT_STATUS_HISTORY_NOT_FOUND(1027, Series.DOMAIN_ERROR, "Attachment Status History not found."),
+    ATTACHMENT_TYPE_CHECK_DEFAULT(1028, Series.DOMAIN_ERROR, "Another item already exists with default.");
 
     private static final DomainErrorMessage[] VALUES;
 

@@ -6,7 +6,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,7 +26,7 @@ public class ManageBookingDto {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
-    private Integer hotelBookingNumber;
+    private String hotelBookingNumber;
     private String firstName;
     private String lastName;
     private Double invoiceAmount;
@@ -42,4 +45,5 @@ public class ManageBookingDto {
     private ManageNightTypeDto nightType;
     private ManageRoomTypeDto roomType;
     private ManageRoomCategoryDto roomCategory;
+    private List<ManageRoomRateDto> roomRates;
 }

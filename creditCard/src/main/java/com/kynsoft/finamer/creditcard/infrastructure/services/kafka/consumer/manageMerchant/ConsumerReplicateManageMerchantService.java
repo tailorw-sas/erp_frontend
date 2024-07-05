@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageMerchant;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageMerchantKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageMerchant.create.CreateManageMerchantCommand;
@@ -22,15 +19,11 @@ public class ConsumerReplicateManageMerchantService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-merchant", groupId = "vcc-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManageMerchantKafka entity) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
-
-            ReplicateManageMerchantKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageMerchantKafka.class);
-            CreateManageMerchantCommand command = new CreateManageMerchantCommand(objKafka.getId(), objKafka.getCode());
+            CreateManageMerchantCommand command = new CreateManageMerchantCommand(entity.getId(), entity.getCode());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageMerchant.ConsumerReplicateManageMerchantService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

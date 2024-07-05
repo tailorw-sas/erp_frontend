@@ -32,6 +32,8 @@ public class ManageHotel implements Serializable {
 
     private String name;
 
+    private Boolean isApplyByVcc;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -43,13 +45,15 @@ public class ManageHotel implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.isApplyByVcc = dto.getIsApplyByVCC();
     }
 
     public ManageHotelDto toAggregate(){
         return new ManageHotelDto(
                 id,
                 code,
-                name
+                name,
+                isApplyByVcc
         );
     }
 }

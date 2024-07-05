@@ -6,6 +6,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface ITransactionService {
 
@@ -18,4 +19,6 @@ public interface ITransactionService {
     TransactionDto findById(Long id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    Long countByReservationNumberAndManageHotelIdAndNotId(String reservationNumber, UUID hotel);
 }

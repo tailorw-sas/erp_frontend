@@ -15,13 +15,7 @@ public class UpdateManageAgencyCommand implements ICommand {
 
     private UUID id;
     private String name;
-    
-
-    public static UpdateManageAgencyCommand fromRequest(UpdateManageAgencyRequest request, UUID id) {
-        return new UpdateManageAgencyCommand(
-                id, request.getName()
-        );
-    }
+    private UUID client;
 
     @Override
     public ICommandMessage getMessage() {

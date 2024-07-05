@@ -16,7 +16,7 @@ public class CreateManageHotelCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
-
+    private Boolean isApplyByVCC;
 
     @Override
     public ICommandMessage getMessage() {

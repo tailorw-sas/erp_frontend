@@ -23,18 +23,15 @@ public class ConsumerReplicateManageHotelService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-hotel", groupId = "invoicing-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManageHotelKafka objKafka) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
 
-            ReplicateManageHotelKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageHotelKafka.class);
-            CreateManageHotelCommand command = new CreateManageHotelCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName());
+            CreateManageHotelCommand command = new CreateManageHotelCommand(objKafka.getId(), objKafka.getCode(),
+                    objKafka.getName(), objKafka.getManageTradingCompany());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageHotelService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 
 }

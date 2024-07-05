@@ -68,5 +68,6 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         if (updatePayment.getUpdate() > 0) {
             this.paymentService.update(paymentDto);
         }
+        command.setPaymentResponse(paymentDto);
     }
 }

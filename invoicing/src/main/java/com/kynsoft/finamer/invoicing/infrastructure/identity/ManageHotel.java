@@ -3,13 +3,19 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
+import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -33,8 +39,13 @@ public class ManageHotel implements Serializable {
     @Column(nullable = true)
     private Boolean deleted = false;
 
+    @Column(columnDefinition = "serial", name = "autogen_code")
+    @Generated(event = EventType.INSERT)
+    private Long autogen_code;
 
-
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "trading_company_id")
+    private ManageTradingCompanies manageTradingCompanies;
 
     private String name;
 
@@ -48,19 +59,19 @@ public class ManageHotel implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
-
-
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
 
         this.name = dto.getName();
+        this.manageTradingCompanies = dto.getManageTradingCompanies() != null
+                ? new ManageTradingCompanies(dto.getManageTradingCompanies())
+                : null;
 
     }
 
-    public ManageHotelDto toAggregate(){
+    public ManageHotelDto toAggregate() {
         return new ManageHotelDto(
-                id, code, name
-        );
+                id, code, name, manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null, null);
     }
 }

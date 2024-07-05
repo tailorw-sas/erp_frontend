@@ -20,6 +20,7 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
                 command.getId(),
                 command.getCode(),
                 command.getName(),
+                command.getStatus(),
                 command.getCash(),
                 command.getDeposit(),
                 command.getApplyDeposit(),

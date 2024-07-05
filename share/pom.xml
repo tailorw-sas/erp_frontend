@@ -120,5 +120,13 @@
             <artifactId>spring-web</artifactId>
         </dependency>        
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub OWNER Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/kmontes198910/finamer-backend</url>
+        </repository>
+    </distributionManagement>
 </project>
 

@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.managePaymentSource.upd
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManagePaymentSourceKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentSourceDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentSourceService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentSource.ProducerUpdateManagePaymentSourceService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -16,9 +18,12 @@ import java.util.function.Consumer;
 public class UpdateManagePaymentSourceCommandHandler implements ICommandHandler<UpdateManagePaymentSourceCommand> {
 
     private final IManagePaymentSourceService service;
+    private final ProducerUpdateManagePaymentSourceService producerUpdateManagePaymentSourceService;
 
-    public UpdateManagePaymentSourceCommandHandler(IManagePaymentSourceService service) {
+    public UpdateManagePaymentSourceCommandHandler(IManagePaymentSourceService service,
+                                                   ProducerUpdateManagePaymentSourceService producerUpdateManagePaymentSourceService) {
         this.service = service;
+        this.producerUpdateManagePaymentSourceService = producerUpdateManagePaymentSourceService;
     }
 
     @Override
@@ -37,6 +42,7 @@ public class UpdateManagePaymentSourceCommandHandler implements ICommandHandler<
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerUpdateManagePaymentSourceService.update(new UpdateManagePaymentSourceKafka(dto.getId(), dto.getName()));
         }
     }
 

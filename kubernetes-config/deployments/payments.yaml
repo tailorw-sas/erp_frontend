@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: payments
-          image: tailorw/fin-payments:v1
+          image: kmontes2020/fin-payments:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 9905

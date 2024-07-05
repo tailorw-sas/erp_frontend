@@ -16,4 +16,6 @@ public interface IManageClientService {
     void delete(ManageClientDto dto);
 
     ManageClientDto findById(UUID id);
+
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

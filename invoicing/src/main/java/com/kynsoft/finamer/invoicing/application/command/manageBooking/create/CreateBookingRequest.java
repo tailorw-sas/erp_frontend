@@ -19,7 +19,7 @@ public class CreateBookingRequest {
     private LocalDateTime bookingDate;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
-    private Integer hotelBookingNumber;
+    private String hotelBookingNumber;
     private String firstName;
     private String lastName;
     private Double invoiceAmount;

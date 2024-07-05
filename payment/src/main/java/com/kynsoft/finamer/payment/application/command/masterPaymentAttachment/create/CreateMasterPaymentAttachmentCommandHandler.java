@@ -1,13 +1,15 @@
 package com.kynsoft.finamer.payment.application.command.masterPaymentAttachment.create;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageAttachmentTypeDto;
+import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageResourceTypeDto;
+import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.rules.masterPaymentAttachment.MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.IAttachmentStatusHistoryService;
 import com.kynsoft.finamer.payment.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
@@ -46,8 +48,12 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
     public void handle(CreateMasterPaymentAttachmentCommand command) {
 
         PaymentDto resource = this.paymentService.findById(command.getResource());
-        ManageAttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(command.getAttachmentType());
-        ManageResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(command.getResourceType());
+        AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(command.getAttachmentType());
+        ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(command.getResourceType());
+
+        if(manageAttachmentTypeDto.getDefaults()) {
+            RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, resource.getId()));
+        }
 
         this.masterPaymentAttachmentService.create(new MasterPaymentAttachmentDto(
                 command.getId(),

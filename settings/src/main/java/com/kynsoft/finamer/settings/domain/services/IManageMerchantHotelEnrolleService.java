@@ -19,5 +19,5 @@ public interface IManageMerchantHotelEnrolleService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-    Long countByManageMerchantAndManageCurrencyAndManageHotelAndEnrolleIdNotId(UUID id, UUID managerMerchant, UUID managerCurrency, UUID managerHotel, String enrrolle);
+    Long countByManageMerchantAndManageHotelNotId(UUID id, UUID managerMerchant, UUID managerHotel);
 }

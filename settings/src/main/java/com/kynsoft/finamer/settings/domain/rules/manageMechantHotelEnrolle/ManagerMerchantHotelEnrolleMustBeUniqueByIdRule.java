@@ -37,7 +37,7 @@ public class ManagerMerchantHotelEnrolleMustBeUniqueByIdRule extends BusinessRul
 
     @Override
     public boolean isBroken() {
-        return this.service.countByManageMerchantAndManageCurrencyAndManageHotelAndEnrolleIdNotId(id, managerMerchant, managerCurrency, managerHotel, enrrolle) > 0;
+        return this.service.countByManageMerchantAndManageHotelNotId(id, managerMerchant,managerHotel) > 0;
     }
 
 }

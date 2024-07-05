@@ -21,13 +21,13 @@ public class ConsumerReplicateManageNightTypeService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-night-type", groupId = "invoicing-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManageNightTypeKafka objKafka) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            ReplicateManageNightTypeKafka objKafka = objectMapper.readValue(event, ReplicateManageNightTypeKafka.class);
-            CreateManageNightTypeCommand command = new CreateManageNightTypeCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName());
+
+            CreateManageNightTypeCommand command = new CreateManageNightTypeCommand(objKafka.getId(),
+                    objKafka.getCode(), objKafka.getName());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageNightTypeService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

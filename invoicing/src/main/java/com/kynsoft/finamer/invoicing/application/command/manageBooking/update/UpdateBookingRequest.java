@@ -20,7 +20,7 @@ public class UpdateBookingRequest {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
-    private Integer hotelBookingNumber;
+    private String hotelBookingNumber;
     private String firstName;
     private String lastName;
     private Double invoiceAmount;

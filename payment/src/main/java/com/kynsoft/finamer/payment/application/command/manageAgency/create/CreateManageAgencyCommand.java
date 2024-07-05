@@ -15,7 +15,6 @@ public class CreateManageAgencyCommand implements ICommand {
     private String code;
     private String name;
 
-
     public CreateManageAgencyCommand(UUID id, String code, String name) {
         this.id = id;
         this.code = code;

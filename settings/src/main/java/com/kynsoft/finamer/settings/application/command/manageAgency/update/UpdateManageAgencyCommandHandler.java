@@ -2,11 +2,13 @@ package com.kynsoft.finamer.settings.application.command.manageAgency.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageAgencyKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.services.*;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerUpdateManageAgencyService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -21,19 +23,22 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     private final IManageAgencyTypeService agencyTypeService;
     private final IManagerB2BPartnerService managerB2BPartnerService;
     private final IManagerClientService managerClientService;
+    private final ProducerUpdateManageAgencyService producerUpdateManageAgencyService;
 
     public UpdateManageAgencyCommandHandler(IManageAgencyService service,
                                             IManagerCountryService countryService,
                                             IManageCityStateService cityStateService,
                                             IManageAgencyTypeService agencyTypeService,
                                             IManagerB2BPartnerService managerB2BPartnerService,
-                                            IManagerClientService managerClientService) {
+                                            IManagerClientService managerClientService,
+                                            ProducerUpdateManageAgencyService producerUpdateManageAgencyService) {
         this.service = service;
         this.countryService = countryService;
         this.cityStateService = cityStateService;
         this.agencyTypeService = agencyTypeService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerClientService = managerClientService;
+        this.producerUpdateManageAgencyService = producerUpdateManageAgencyService;
     }
 
     @Override
@@ -48,6 +53,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 
         if (update.getUpdate() > 0) {
             service.update(dto);
+            producerUpdateManageAgencyService.update(new UpdateManageAgencyKafka(dto.getId(), dto.getName(), dto.getClient().getId()));
         }
     }
 

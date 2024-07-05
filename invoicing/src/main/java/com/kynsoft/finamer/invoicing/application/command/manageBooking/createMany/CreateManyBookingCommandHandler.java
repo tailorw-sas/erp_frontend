@@ -17,7 +17,9 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
     private final IManageRoomTypeService roomTypeService;
     private final IManageRoomCategoryService roomCategoryService;
 
-    public CreateManyBookingCommandHandler(IManageBookingService bookingService, IManageInvoiceService invoiceService, IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService) {
+    public CreateManyBookingCommandHandler(IManageBookingService bookingService, IManageInvoiceService invoiceService,
+            IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
+            IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService) {
         this.bookingService = bookingService;
         this.invoiceService = invoiceService;
         this.ratePlanService = ratePlanService;
@@ -32,12 +34,21 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
         for (int i = 0; i < command.getBookings().size(); i++) {
             CreateBookingCommand element = command.getBookings().get(i);
 
-            ManageInvoiceDto invoiceDto = element.getInvoice() != null ? this.invoiceService.findById(element.getInvoice()) : null;
-            ManageRatePlanDto ratePlanDto = element.getRatePlan() != null ? this.ratePlanService.findById(element.getRatePlan()) : null;
-            ManageNightTypeDto nightTypeDto = element.getNightType() != null ? this.nightTypeService.findById(element.getNightType()) : null;
-            ManageRoomTypeDto roomTypeDto = element.getRoomType() != null ? this.roomTypeService.findById(element.getRoomType()) : null;
-            ManageRoomCategoryDto roomCategoryDto = element.getRoomCategory() != null ? this.roomCategoryService.findById(element.getRoomCategory()) : null;
-
+            ManageInvoiceDto invoiceDto = element.getInvoice() != null
+                    ? this.invoiceService.findById(element.getInvoice())
+                    : null;
+            ManageRatePlanDto ratePlanDto = element.getRatePlan() != null
+                    ? this.ratePlanService.findById(element.getRatePlan())
+                    : null;
+            ManageNightTypeDto nightTypeDto = element.getNightType() != null
+                    ? this.nightTypeService.findById(element.getNightType())
+                    : null;
+            ManageRoomTypeDto roomTypeDto = element.getRoomType() != null
+                    ? this.roomTypeService.findById(element.getRoomType())
+                    : null;
+            ManageRoomCategoryDto roomCategoryDto = element.getRoomCategory() != null
+                    ? this.roomCategoryService.findById(element.getRoomCategory())
+                    : null;
 
             bookingService.create(new ManageBookingDto(
                     element.getId(),
@@ -64,11 +75,10 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
                     ratePlanDto,
                     nightTypeDto,
                     roomTypeDto,
-                    roomCategoryDto
-            ));
+                    roomCategoryDto,
+                    null));
 
         }
-
 
     }
 }

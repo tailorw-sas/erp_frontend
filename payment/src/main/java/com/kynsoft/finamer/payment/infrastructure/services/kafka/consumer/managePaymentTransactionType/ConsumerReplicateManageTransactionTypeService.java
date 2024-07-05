@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.managePaymentTransactionType;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentTransactionTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.managePaymentTransactionType.create.CreateManagePaymentTransactionTypeCommand;
@@ -22,16 +19,13 @@ public class ConsumerReplicateManageTransactionTypeService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-payment-transaction-type", groupId = "payment-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManagePaymentTransactionTypeKafka objKafka) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
-
-            ReplicateManagePaymentTransactionTypeKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManagePaymentTransactionTypeKafka.class);
             CreateManagePaymentTransactionTypeCommand command = new CreateManagePaymentTransactionTypeCommand(
                     objKafka.getId(), 
                     objKafka.getCode(), 
                     objKafka.getName(),
+                    objKafka.getStatus(),
                     objKafka.getCash(),
                     objKafka.getDeposit(),
                     objKafka.getApplyDeposit(),
@@ -39,7 +33,7 @@ public class ConsumerReplicateManageTransactionTypeService {
                     objKafka.getMinNumberOfCharacter()
             );
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageTransactionTypeService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

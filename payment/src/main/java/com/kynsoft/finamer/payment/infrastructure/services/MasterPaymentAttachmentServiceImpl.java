@@ -65,7 +65,7 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "Master Payment Attachment not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MASTER_PAYMENT_ATTACHMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MASTER_PAYMENT_ATTACHMENT_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override
@@ -99,6 +99,12 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public Long countByResourceAndAttachmentTypeIsDefault(UUID resource) {
+        Long cant = this.repositoryQuery.countByResourceAndAttachmentTypeIsDefault(resource);
+        return cant;
     }
 
 }

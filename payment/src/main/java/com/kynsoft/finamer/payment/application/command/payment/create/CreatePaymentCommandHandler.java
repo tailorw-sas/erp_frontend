@@ -66,7 +66,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         ManageBankAccountDto bankAccountDto = this.bankAccountService.findById(command.getBankAccount());
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findById(command.getAttachmentStatus());
 
-        this.paymentService.create(new PaymentDto(
+        PaymentDto payment = new PaymentDto(
                 command.getId(), 
                 Long.MIN_VALUE,
                 command.getStatus(), 
@@ -87,6 +87,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 0.0, 
                 command.getPaymentAmount(), 
                 command.getRemark()
-        ));
+        );
+
+        this.paymentService.create(payment);
+        command.setPayment(payment);
     }
 }

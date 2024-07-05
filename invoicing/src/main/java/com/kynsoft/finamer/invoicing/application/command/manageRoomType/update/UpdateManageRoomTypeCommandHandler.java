@@ -29,42 +29,19 @@ public class UpdateManageRoomTypeCommandHandler implements ICommandHandler<Updat
 
     @Override
     public void handle(UpdateManageRoomTypeCommand command) {
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Room Type ID cannot be null."));
+        RulesChecker.checkRule(
+                new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Room Type ID cannot be null."));
 
         ManageRoomTypeDto dto = service.findById(command.getId());
 
-
-        ManageHotelDto hotelDto = hotelService.findById(command.getManageHotel());
-
         ConsumerUpdate update = new ConsumerUpdate();
 
-
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
-
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(),
+                update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
         }
     }
 
-    private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
-        if (newValue != null && !newValue.equals(oldValue)) {
-            setter.accept(newValue);
-            update.accept(1);
-
-            return true;
-        }
-        return false;
-    }
-
-    private boolean updateHotel(Consumer<ManageHotelDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
-        if (newValue != null && !newValue.equals(oldValue)) {
-            ManageHotelDto hotelDto = hotelService.findById(newValue);
-            setter.accept(hotelDto);
-            update.accept(1);
-
-            return true;
-        }
-        return false;
-    }
 }

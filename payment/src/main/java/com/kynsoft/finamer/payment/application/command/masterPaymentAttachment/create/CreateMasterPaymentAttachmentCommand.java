@@ -16,7 +16,7 @@ public class CreateMasterPaymentAttachmentCommand implements ICommand {
     private Status status;
     private UUID resource;
     private UUID resourceType;
-    private UUID attachmentType;  
+    private UUID attachmentType;
     private String fileName;
     private String path;
     private String remark;

@@ -18,7 +18,7 @@ public class CreateBookingCommand implements ICommand {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
-    private Integer hotelBookingNumber;
+    private String hotelBookingNumber;
     private String firstName;
     private String lastName;
     private Double invoiceAmount;
@@ -39,7 +39,11 @@ public class CreateBookingCommand implements ICommand {
     private UUID roomType;
     private UUID roomCategory;
 
-    public CreateBookingCommand(UUID id, LocalDateTime hotelCreationDate, LocalDateTime bookingDate, LocalDateTime checkIn, LocalDateTime checkOut, Integer hotelBookingNumber, String firstName, String lastName, Double invoiceAmount, String roomNumber, String couponNumber, Integer adults, Integer children, Double rateAdult, Double rateChild, String hotelInvoiceNumber, String folioNumber, Double hotelAmount, String description, UUID invoice, UUID ratePlan, UUID nightType, UUID roomType, UUID roomCategory) {
+    public CreateBookingCommand(UUID id, LocalDateTime hotelCreationDate, LocalDateTime bookingDate,
+            LocalDateTime checkIn, LocalDateTime checkOut, String hotelBookingNumber, String firstName, String lastName,
+            Double invoiceAmount, String roomNumber, String couponNumber, Integer adults, Integer children,
+            Double rateAdult, Double rateChild, String hotelInvoiceNumber, String folioNumber, Double hotelAmount,
+            String description, UUID invoice, UUID ratePlan, UUID nightType, UUID roomType, UUID roomCategory) {
         this.id = id;
         this.hotelCreationDate = hotelCreationDate;
         this.bookingDate = bookingDate;
@@ -69,7 +73,7 @@ public class CreateBookingCommand implements ICommand {
 
     public static CreateBookingCommand fromRequest(CreateBookingRequest request) {
         return new CreateBookingCommand(
-                request.getId() == null ?  UUID.randomUUID() : request.getId(),
+                request.getId() == null ? UUID.randomUUID() : request.getId(),
                 request.getHotelCreationDate(),
                 request.getBookingDate(),
                 request.getCheckIn(),
@@ -88,12 +92,20 @@ public class CreateBookingCommand implements ICommand {
                 request.getFolioNumber(),
                 request.getHotelAmount(),
                 request.getDescription(),
-                request.getInvoice() != null && !request.getInvoice().isEmpty() ? UUID.fromString(request.getInvoice()): null,
-                request.getRatePlan() != null && !request.getRatePlan().isEmpty() ? UUID.fromString(request.getRatePlan()): null,
-                request.getNightType() != null && !request.getNightType().isEmpty() ? UUID.fromString(request.getNightType()): null,
-                request.getRoomType() != null && !request.getRoomType().isEmpty() ? UUID.fromString(request.getRoomType()): null,
-                request.getRoomCategory() != null && !request.getRoomCategory().isEmpty() ? UUID.fromString(request.getRoomCategory()): null
-        );
+                request.getInvoice() != null && !request.getInvoice().isEmpty() ? UUID.fromString(request.getInvoice())
+                        : null,
+                request.getRatePlan() != null && !request.getRatePlan().isEmpty()
+                        ? UUID.fromString(request.getRatePlan())
+                        : null,
+                request.getNightType() != null && !request.getNightType().isEmpty()
+                        ? UUID.fromString(request.getNightType())
+                        : null,
+                request.getRoomType() != null && !request.getRoomType().isEmpty()
+                        ? UUID.fromString(request.getRoomType())
+                        : null,
+                request.getRoomCategory() != null && !request.getRoomCategory().isEmpty()
+                        ? UUID.fromString(request.getRoomCategory())
+                        : null);
     }
 
     @Override

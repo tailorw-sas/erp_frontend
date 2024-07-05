@@ -37,7 +37,6 @@ public class TransactionResponse implements IResponse {
     private ManageTransactionStatusDto status;
     private TransactionBasicResponse parent;
     private LocalDate transactionDate;
-    private Long transactionId;
 
     public TransactionResponse(TransactionDto dto){
         this.id = dto.getId();

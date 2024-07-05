@@ -1,13 +1,13 @@
 package com.kynsoft.finamer.payment.application.query.manageResourceType.getById;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
-import com.kynsoft.finamer.payment.application.query.objectResponse.ManageResourceTypeResponse;
-import com.kynsoft.finamer.payment.domain.dto.ManageResourceTypeDto;
+import com.kynsoft.finamer.payment.application.query.objectResponse.ResourceTypeResponse;
+import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FindManageResourceTypeByIdQueryHandler implements IQueryHandler<FindManageResourceTypeByIdQuery, ManageResourceTypeResponse>  {
+public class FindManageResourceTypeByIdQueryHandler implements IQueryHandler<FindManageResourceTypeByIdQuery, ResourceTypeResponse>  {
 
     private final IManageResourceTypeService service;
 
@@ -16,9 +16,9 @@ public class FindManageResourceTypeByIdQueryHandler implements IQueryHandler<Fin
     }
 
     @Override
-    public ManageResourceTypeResponse handle(FindManageResourceTypeByIdQuery query) {
-        ManageResourceTypeDto response = service.findById(query.getId());
+    public ResourceTypeResponse handle(FindManageResourceTypeByIdQuery query) {
+        ResourceTypeDto response = service.findById(query.getId());
 
-        return new ManageResourceTypeResponse(response);
+        return new ResourceTypeResponse(response);
     }
 }

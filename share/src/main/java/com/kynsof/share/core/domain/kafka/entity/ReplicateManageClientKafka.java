@@ -14,10 +14,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReplicateManageClientKafka  implements Serializable {
-    @JsonProperty("id")
+
     private UUID id;
-    @JsonProperty("code")
     private String code;
-    @JsonProperty("name")
     private String name;
 }

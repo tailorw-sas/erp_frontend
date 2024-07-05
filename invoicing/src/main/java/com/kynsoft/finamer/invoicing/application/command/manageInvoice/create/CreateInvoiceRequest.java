@@ -8,6 +8,8 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -15,10 +17,11 @@ import java.util.UUID;
 public class CreateInvoiceRequest {
     private UUID id;
     private LocalDateTime invoiceDate;
+    private LocalDateTime dueDate;
     private Boolean isManual;
     private Double invoiceAmount;
     private UUID hotel;
     private UUID agency;
-    private UUID invoiceType;
+    private EInvoiceType invoiceType;
 
 }

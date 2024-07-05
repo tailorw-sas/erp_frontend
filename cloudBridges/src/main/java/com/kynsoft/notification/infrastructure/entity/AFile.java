@@ -8,7 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -23,14 +25,11 @@ public class AFile extends BaseEntity {
     private String url;
 
     @Column(nullable = true)
-    private Boolean deleted = false;
+    private Boolean isConfirm = false;
 
-    public AFile(UUID id, String name, String microServiceName, String url) {
-        this.id = id;
-        this.name = name;
-        this.microServiceName = microServiceName;
-        this.url = url;
-    }
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     public AFile(AFileDto file) {
         this.id = file.getId();

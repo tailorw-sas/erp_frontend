@@ -13,19 +13,16 @@ import java.util.UUID;
 public class UpdateMasterPaymentAttachmentCommand implements ICommand {
     private UUID id;
     private Status status;
-    private UUID resource;
     private UUID resourceType;
     private UUID attachmentType;
     private String fileName;
     private String path;
     private String remark;
 
-    public UpdateMasterPaymentAttachmentCommand(UUID id, Status status, UUID resource, 
-                                                UUID resourceType, UUID attachmentType, 
+    public UpdateMasterPaymentAttachmentCommand(UUID id, Status status, UUID resourceType, UUID attachmentType, 
                                                 String fileName, String path, String remark) {
         this.id = id;
         this.status = status;
-        this.resource = resource;
         this.resourceType = resourceType;
         this.attachmentType = attachmentType;
         this.fileName = fileName;
@@ -37,7 +34,6 @@ public class UpdateMasterPaymentAttachmentCommand implements ICommand {
         return new UpdateMasterPaymentAttachmentCommand(
                 id,
                 request.getStatus(),
-                request.getResource(),
                 request.getResourceType(),
                 request.getAttachmentType(),
                 request.getFileName(),

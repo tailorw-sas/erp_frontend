@@ -14,18 +14,13 @@ public class CreateManageAgencyCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
+    private UUID client;
 
-
-    public CreateManageAgencyCommand(UUID id, String code, String name) {
+    public CreateManageAgencyCommand(UUID id, String code, String name, UUID client) {
         this.id = id;
         this.code = code;
         this.name = name;
-    }
-
-    public static CreateManageAgencyCommand fromRequest(CreateManageAgencyRequest request) {
-        return new CreateManageAgencyCommand(
-               request.getId(),  request.getCode(),  request.getName()
-        );
+        this.client = client;
     }
 
     @Override

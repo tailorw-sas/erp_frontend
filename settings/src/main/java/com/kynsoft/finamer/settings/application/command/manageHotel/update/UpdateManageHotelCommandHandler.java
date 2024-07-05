@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageHotel.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageHotelKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.*;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageHotel.ProducerUpdateManageHotelService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -28,14 +30,22 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
 
     private final IManageRegionService regionService;
 
+    private final ProducerUpdateManageHotelService producerUpdateManageHotelService;
 
-    public UpdateManageHotelCommandHandler(IManageHotelService service, IManagerCountryService countryService, IManageCityStateService cityStateService, IManagerCurrencyService currencyService, IManageTradingCompaniesService tradingCompaniesService, IManageRegionService regionService) {
+    public UpdateManageHotelCommandHandler(IManageHotelService service, 
+                                           IManagerCountryService countryService, 
+                                           IManageCityStateService cityStateService, 
+                                           IManagerCurrencyService currencyService, 
+                                           IManageTradingCompaniesService tradingCompaniesService, 
+                                           IManageRegionService regionService,
+                                           ProducerUpdateManageHotelService producerUpdateManageHotelService) {
         this.service = service;
         this.countryService = countryService;
         this.cityStateService = cityStateService;
         this.currencyService = currencyService;
         this.tradingCompaniesService = tradingCompaniesService;
         this.regionService = regionService;
+        this.producerUpdateManageHotelService = producerUpdateManageHotelService;
     }
 
     @Override
@@ -68,7 +78,6 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
             update.setUpdate(1);
         }
 
-
         UpdateIfNotNull.updateBoolean(dto::setApplyByTradingCompany, command.getApplyByTradingCompany(), dto.getApplyByTradingCompany(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setPrefixToInvoice, command.getPrefixToInvoice(), dto.getPrefixToInvoice(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsVirtual, command.getIsVirtual(), dto.getIsVirtual(), update::setUpdate);
@@ -78,6 +87,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerUpdateManageHotelService.update(new UpdateManageHotelKafka(dto.getId(), dto.getName(), dto.getIsApplyByVCC(), dto.getManageTradingCompanies().getId()));
         }
     }
 

@@ -17,8 +17,8 @@ public class MasterPaymentAttachmentDto {
     private UUID id;
     private Status status;
     private PaymentDto resource;
-    private ManageResourceTypeDto resourceType;
-    private ManageAttachmentTypeDto attachmentType;
+    private ResourceTypeDto resourceType;
+    private AttachmentTypeDto attachmentType;
     private String fileName;
     private String path;
     private String remark;

@@ -35,7 +35,7 @@ public class CreateRoomRateCommandHandler implements ICommandHandler<CreateRoomR
                 command.getRateChild(),
                 command.getHotelAmount(),
                 command.getRemark(),
-                bookingDto
-        ));
+                bookingDto,
+                null));
     }
 }

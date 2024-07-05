@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageLanguage;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageLanguageKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageLanguage.create.CreateManageLanguageCommand;
@@ -22,15 +19,11 @@ public class ConsumerReplicateManageLanguageService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-language", groupId = "vcc-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManageLanguageKafka entity) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
-
-            ReplicateManageLanguageKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageLanguageKafka.class);
-            CreateManageLanguageCommand command = new CreateManageLanguageCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName());
+            CreateManageLanguageCommand command = new CreateManageLanguageCommand(entity.getId(), entity.getCode(), entity.getName());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageLanguageService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

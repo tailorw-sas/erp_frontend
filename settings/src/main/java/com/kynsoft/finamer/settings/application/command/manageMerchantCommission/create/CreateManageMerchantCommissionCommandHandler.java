@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageMerchantCommissio
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageMerchantCommissionKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.settings.domain.dto.ManageCreditCardTypeDto;
 import com.kynsoft.finamer.settings.domain.dto.ManageMerchantCommissionDto;
@@ -11,6 +12,8 @@ import com.kynsoft.finamer.settings.domain.services.IManageCreditCardTypeService
 import com.kynsoft.finamer.settings.domain.services.IManageMerchantCommissionService;
 import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
 import java.time.LocalDate;
+
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantCommission.ProducerReplicateManageMerchantCommissionService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,12 +23,14 @@ public class CreateManageMerchantCommissionCommandHandler implements ICommandHan
     private final IManageCreditCardTypeService serviceCurrencyService;
     private final IManageMerchantCommissionService service;
 
+    private final ProducerReplicateManageMerchantCommissionService producerService;
     public CreateManageMerchantCommissionCommandHandler(IManagerMerchantService serviceMerchantService,
                                                         IManageCreditCardTypeService serviceCurrencyService,
-                                                        IManageMerchantCommissionService service) {
+                                                        IManageMerchantCommissionService service, ProducerReplicateManageMerchantCommissionService producerService) {
         this.serviceMerchantService = serviceMerchantService;
         this.serviceCurrencyService = serviceCurrencyService;
         this.service = service;
+        this.producerService = producerService;
     }
 
     @Override
@@ -56,5 +61,6 @@ public class CreateManageMerchantCommissionCommandHandler implements ICommandHan
 
         // Save new commission
         service.create(commissionDto);
+        this.producerService.create(new ReplicateManageMerchantCommissionKafka(command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getCommission(), command.getCalculationType()));
     }
 }

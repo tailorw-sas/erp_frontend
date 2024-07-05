@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.managePaymentAttachment
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManagePaymentAttachmentStatusKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -11,6 +12,7 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageModuleService;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentAttachmentStatusService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentAttachmentStatus.ProducerUpdateManagePaymentAttachmentStatusService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -24,9 +26,13 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
 
     private final IManageModuleService moduleService;
 
-    public UpdateManagePaymentAttachmentStatusCommandHandler(final IManagePaymentAttachmentStatusService service, IManageModuleService moduleService) {
+    private final ProducerUpdateManagePaymentAttachmentStatusService producerUpdateManagePaymentAttachmentStatusService;
+
+    public UpdateManagePaymentAttachmentStatusCommandHandler(final IManagePaymentAttachmentStatusService service, IManageModuleService moduleService,
+                                                             ProducerUpdateManagePaymentAttachmentStatusService producerUpdateManagePaymentAttachmentStatusService) {
         this.service = service;
         this.moduleService = moduleService;
+        this.producerUpdateManagePaymentAttachmentStatusService = producerUpdateManagePaymentAttachmentStatusService;
     }
 
     @Override
@@ -48,6 +54,7 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         this.updateModule(dto::setModule, command.getModule(), dto.getModule().getId(), update::setUpdate);
 
         this.service.update(dto);
+        this.producerUpdateManagePaymentAttachmentStatusService.update(new UpdateManagePaymentAttachmentStatusKafka(dto.getId(), dto.getName()));
 //        if (update.getUpdate() > 0) {
 //        }
     }

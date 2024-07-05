@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageMerchantHotelEnrolle;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageMerchantHotelEnrolleKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageMerchantHotelEnrolle.create.CreateManageMerchantHotelEnrolleCommand;
@@ -22,15 +19,11 @@ public class ConsumerReplicateManageMerchantHotelEnrolleService {
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-merchant-hotel-enrolle", groupId = "vcc-entity-replica")
-    public void listen(String event) {
+    public void listen(ReplicateManageMerchantHotelEnrolleKafka entity) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
-
-            ReplicateManageMerchantHotelEnrolleKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageMerchantHotelEnrolleKafka.class);
-            CreateManageMerchantHotelEnrolleCommand command = new CreateManageMerchantHotelEnrolleCommand(objKafka.getId(), objKafka.getManagerMerchant(), objKafka.getManagerHotel(), objKafka.getEnrrolle());
+            CreateManageMerchantHotelEnrolleCommand command = new CreateManageMerchantHotelEnrolleCommand(entity.getId(), entity.getManagerMerchant(), entity.getManagerHotel(), entity.getEnrrolle());
             mediator.send(command);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageMerchantHotelEnrolleService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

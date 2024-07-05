@@ -54,46 +54,12 @@ public class InvoiceController {
     }
 
     @PostMapping("bulk")
-
     public ResponseEntity<CreateBulkInvoiceMessage> createBulk(@RequestBody CreateBulkInvoiceRequest request) {
 
         CreateBulkInvoiceCommand command = CreateBulkInvoiceCommand.fromRequest(request);
-        CreateInvoiceMessage message = this.mediator.send(command.getInvoiceCommand());
 
-        List<CreateBookingMessage> bookingResponse = new LinkedList<>();
-        List<CreateRoomRateMessage> roomRateMessages = new LinkedList<>();
-        List<CreateAdjustmentMessage> adjustmentMessages = new LinkedList<>();
-
-        for (int i = 0; i < command.getBookingCommands().size(); i++) {
-
-            CreateBookingCommand bookingCommand = command.getBookingCommands().get(i);
-
-            CreateBookingMessage resp = this.mediator.send(bookingCommand);
-
-            bookingResponse.add(resp);
-
-        }
-
-        for (int i = 0; i < command.getRoomRateCommands().size(); i++) {
-
-            CreateRoomRateCommand roomRateCommand = command.getRoomRateCommands().get(i);
-
-            CreateRoomRateMessage resp = this.mediator.send(roomRateCommand);
-            roomRateMessages.add(resp);
-
-        }
-
-        for (int i = 0; i < command.getAdjustmentCommands().size(); i++) {
-
-            CreateAdjustmentCommand adjustmentCommand = command.getAdjustmentCommands().get(i);
-
-            CreateAdjustmentMessage resp = this.mediator.send(adjustmentCommand);
-            adjustmentMessages.add(resp);
-
-        }
-
-        return ResponseEntity.ok(new CreateBulkInvoiceMessage(
-                message.getId(), bookingResponse, roomRateMessages, adjustmentMessages));
+        CreateBulkInvoiceMessage message = this.mediator.send(command);
+        return ResponseEntity.ok(message);
 
     }
 

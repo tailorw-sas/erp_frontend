@@ -9,10 +9,16 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface MasterPaymentAttachmentReadDataJPARepository extends JpaRepository<MasterPaymentAttachment, UUID>,
         JpaSpecificationExecutor<MasterPaymentAttachment> {
 
     Page<MasterPaymentAttachment> findAll(Specification specification, Pageable pageable);
+
+    @Query("SELECT COUNT(mpa) FROM MasterPaymentAttachment mpa WHERE mpa.resource.id = :resource AND mpa.attachmentType.defaults = true")
+    Long countByResourceAndAttachmentTypeIsDefault(@Param("resource") UUID resource);
+
 }

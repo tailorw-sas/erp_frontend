@@ -7,6 +7,5 @@ import com.kynsof.share.core.domain.bus.query.IResponse;
 
 public interface IMediator {
     <M extends ICommandMessage> M send(ICommand command);
-
     <R extends IResponse> R send(IQuery query);
 }
