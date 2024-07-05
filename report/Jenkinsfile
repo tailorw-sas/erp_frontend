@@ -16,9 +16,9 @@ pipeline {
 	stage ('Create docker image'){
 		steps {
 			dir('report'){
-				sh 'docker build -t tailorw/fin-report:v1 .'
+				sh 'docker build -t tailorw/fin-report:dev .'
 				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
-                			sh 'docker push tailorw/fin-report:v1'
+                			sh 'docker push tailorw/fin-report:dev'
                 		}
 			}
 		}
@@ -26,7 +26,7 @@ pipeline {
 
 	stage ('Publish to Kubernetes') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'KubernetesCredential', namespace: 'finamer', restrictKubeConfigAccess: false, serverUrl: 'https://172.20.1.150:5443') {
+                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'KubernetesCredential', namespace: 'finamer', restrictKubeConfigAccess: false, serverUrl: 'https://172.20.41.100:5443') {
                     sh 'kubectl apply -f kubernetes-config/deployments/report.yaml'
                 }
             }
