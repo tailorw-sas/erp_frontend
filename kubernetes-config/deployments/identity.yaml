@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: identity
-          image: kmontes2020/fin-identity:v1
+          image: tailorw/fin-identity:dev
           imagePullPolicy: Always
           ports:
             - containerPort: 9905
