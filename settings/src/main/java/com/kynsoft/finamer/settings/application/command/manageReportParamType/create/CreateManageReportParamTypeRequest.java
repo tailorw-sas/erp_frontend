@@ -13,4 +13,5 @@ public class CreateManageReportParamTypeRequest {
     private String label;
     private Boolean hotel;
     private String source;
+    private String description;
 }

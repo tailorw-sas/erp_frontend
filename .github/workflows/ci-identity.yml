@@ -12,12 +12,12 @@ on:
     paths:
       - .github/workflows/ci-identity.yml
       - 'identity/**'
-      - 'share/**'
+#      - 'share/**'
 jobs:
   build-push:
     runs-on: ubuntu-latest
     steps:
-      - 
+      -
         name: Checkout
         uses: actions/checkout@v4
       -

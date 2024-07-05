@@ -6,10 +6,11 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageTransactionStatusDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.NavigateTransactionStatus;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageTransactionStatusService;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
@@ -27,41 +28,25 @@ public class UpdateManageTransactionStatusCommandHandler implements ICommandHand
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Transaction Status ID cannot be null."));
 
-        ManageTransactionStatusDto test = this.service.findById(command.getId());
+        ManageTransactionStatusDto dto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(test::setEnablePayment, command.getEnablePayment(), test.getEnablePayment(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(test::setVisible, command.getVisible(), test.getVisible(), update::setUpdate);
-        this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
-        this.updateSet(test::setNavigate, command.getNavigate(), update::setUpdate);
-
-        if (update.getUpdate() > 0) {
-            this.service.update(test);
-        }
-
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setEnablePayment, command.getEnablePayment(), dto.getEnablePayment(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setVisible, command.getVisible(), dto.getVisible(), update::setUpdate);
+        this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
+        List<ManageTransactionStatusDto> navigate = this.service.findByIds(command.getNavigate().stream().toList());
+        dto.setNavigate(navigate);
+        this.service.update(dto);
     }
 
-    private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
+    private void updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             setter.accept(newValue);
             update.accept(1);
 
-            return true;
         }
-        return false;
     }
-
-    private boolean updateSet(Consumer<Set<NavigateTransactionStatus>> setter, Set<NavigateTransactionStatus> newValue, Consumer<Integer> update) {
-        if (newValue != null && !newValue.isEmpty()) {
-            setter.accept(newValue);
-            update.accept(1);
-
-            return true;
-        }
-        return false;
-    }
-
 }

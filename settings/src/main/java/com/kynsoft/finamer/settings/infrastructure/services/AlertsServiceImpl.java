@@ -49,13 +49,11 @@ public class AlertsServiceImpl implements IAlertsService {
 
     @Override
     public void delete(ManageAlertsDto dto) {
-        ManageAlerts data = new ManageAlerts(dto);
-        data.setDeleted(Boolean.TRUE);
-        data.setCode(data.getCode() + "-" + UUID.randomUUID());
-        data.setName(data.getName() + "-" + UUID.randomUUID());
-        data.setDeletedAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(data);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -78,6 +76,11 @@ public class AlertsServiceImpl implements IAlertsService {
     @Override
     public Long countByCode(String code) {
         return this.repositoryQuery.countByCode(code);
+    }
+
+    @Override
+    public Long countByName(String code) {
+        return this.repositoryQuery.countByName(code);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageAlerts> data) {

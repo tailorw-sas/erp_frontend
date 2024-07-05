@@ -114,6 +114,12 @@ public class GlobalExceptionHandler {
         ApiError apiError = new ApiError(ex.getMessage(),
                 List.of(ex.getErrorField()));
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.fail(apiError));
-       // return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(UserChangePasswordException.class)
+    public ResponseEntity<ApiResponse<?>> handleUserChangePasswordException(UserChangePasswordException ex) {
+        ApiError apiError = new ApiError(ex.getMessage(),
+                List.of(ex.getErrorField()));
+        return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED).body(ApiResponse.fail(apiError));
     }
 }

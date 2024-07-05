@@ -16,6 +16,9 @@ import com.kynsof.identity.application.command.user.delete.DeleteUserSystemsMess
 import com.kynsof.identity.application.command.user.deleteAll.DeleteAllUserSystemRequest;
 import com.kynsof.identity.application.command.user.deleteAll.DeleteAllUserSystemsCommand;
 import com.kynsof.identity.application.command.user.deleteAll.DeleteAllUserSystemsMessage;
+import com.kynsof.identity.application.command.user.sendPassword.SendPasswordCommand;
+import com.kynsof.identity.application.command.user.sendPassword.SendPasswordMessage;
+import com.kynsof.identity.application.command.user.sendPassword.SendPasswordRequest;
 import com.kynsof.identity.application.command.user.update.UpdateUserSystemCommand;
 import com.kynsof.identity.application.command.user.update.UpdateUserSystemMessage;
 import com.kynsof.identity.application.command.user.update.UpdateUserSystemRequest;
@@ -139,6 +142,13 @@ public class UserSystemController {
         DeleteAllUserSystemsMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping(path = "/send-password")
+    public ResponseEntity<?> generatePassword(@RequestBody SendPasswordRequest request) {
+        SendPasswordCommand command =  SendPasswordCommand.fromRequest(request);
+        SendPasswordMessage response = mediator.send(command);
+        return ResponseEntity.ok(ApiResponse.success(response.getResult()));
     }
 
     @PatchMapping(path = "/{id}/business")

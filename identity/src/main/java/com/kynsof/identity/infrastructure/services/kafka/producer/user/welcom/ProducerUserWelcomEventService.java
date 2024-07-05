@@ -14,9 +14,9 @@ import java.util.logging.Logger;
 
 @Service
 public class ProducerUserWelcomEventService {
-    private final KafkaTemplate<String, String> producer;
+    private final KafkaTemplate<String, Object> producer;
 
-    public ProducerUserWelcomEventService(KafkaTemplate<String, String> producer) {
+    public ProducerUserWelcomEventService(KafkaTemplate<String, Object> producer) {
         this.producer = producer;
     }
 
@@ -24,10 +24,10 @@ public class ProducerUserWelcomEventService {
     public void create(UserWelcomKafka entity) {
 
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            String json = objectMapper.writeValueAsString(new CreateEvent<>(entity, EventType.CREATED));
-            this.producer.send("finamer_welcom-email", json);
-        } catch (JsonProcessingException ex) {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            String json = objectMapper.writeValueAsString(new CreateEvent<>(entity, EventType.CREATED));
+            this.producer.send("finamer-welcom-email", entity);
+        } catch (Exception ex) {
             Logger.getLogger(ProducerUserWelcomEventService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

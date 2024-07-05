@@ -12,7 +12,7 @@ public class ManageCityStateCodeSizeRule extends BusinessRule {
 
     public ManageCityStateCodeSizeRule(String code) {
         super(
-                DomainErrorMessage.MANAGER_CITY_STATE_CODE_SIZE, 
+                DomainErrorMessage.MANAGER_CITY_STATE_CODE_SIZE,
                 new ErrorField("code", "The code is not accepted.")
         );
         this.code = code;

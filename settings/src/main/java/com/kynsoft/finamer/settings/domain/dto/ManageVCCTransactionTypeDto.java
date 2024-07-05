@@ -19,5 +19,13 @@ public class ManageVCCTransactionTypeDto {
     private Status status;
     private String name;
     private Boolean isActive;
+    private Boolean negative;
+    private Boolean isDefault;
+    private Boolean subcategory;
+    private Boolean onlyApplyNet;
+    private Boolean policyCredit;
+    private Boolean remarkRequired;
+    private Integer minNumberOfCharacter;
+    private String defaultRemark;
 
 }

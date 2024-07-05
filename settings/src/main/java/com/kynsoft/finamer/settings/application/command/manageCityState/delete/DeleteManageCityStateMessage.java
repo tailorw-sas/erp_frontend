@@ -10,7 +10,7 @@ public class DeleteManageCityStateMessage implements ICommandMessage {
 
     private final UUID id;
 
-    private final String command = "DELETE_MANAGE_CITY_STATE";
+    private final String command = "DELETE_MANAGE_AGENCY";
 
     public DeleteManageCityStateMessage(UUID id) {
         this.id = id;

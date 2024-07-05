@@ -3,6 +3,8 @@ package com.kynsoft.finamer.settings.application.command.manageMerchantCommissio
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import java.time.LocalDate;
+
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,16 +14,20 @@ import java.util.UUID;
 @Setter
 public class CreateManageMerchantCommissionCommand implements ICommand {
 
-    private UUID id;
-    private UUID managerMerchant;
-    private UUID manageCreditCartType;
-    private Double commission;
-    private String calculationType;
-    private String description;
-    private LocalDate fromDate;
-    private LocalDate toDate;
+    private final UUID id;
+    private final UUID managerMerchant;
+    private final UUID manageCreditCartType;
+    private final Double commission;
+    private final String calculationType;
+    private final String description;
+    private final LocalDate fromDate;
+    private final LocalDate toDate;
+    private final Status status;
 
-    public CreateManageMerchantCommissionCommand(UUID managerMerchant, UUID manageCreditCartType, Double commission, String calculationType, String description, LocalDate fromDate, LocalDate toDate) {
+    public CreateManageMerchantCommissionCommand(UUID managerMerchant, UUID manageCreditCartType, Double commission,
+                                                 String calculationType, String description, LocalDate fromDate,
+                                                 LocalDate toDate, Status status) {
+        this.status = status;
         this.id = UUID.randomUUID();
         this.managerMerchant = managerMerchant;
         this.manageCreditCartType = manageCreditCartType;
@@ -40,7 +46,8 @@ public class CreateManageMerchantCommissionCommand implements ICommand {
                 request.getCalculationType(),
                 request.getDescription(),
                 request.getFromDate(),
-                request.getToDate()
+                request.getToDate(),
+                request.getStatus()
         );
     }
 

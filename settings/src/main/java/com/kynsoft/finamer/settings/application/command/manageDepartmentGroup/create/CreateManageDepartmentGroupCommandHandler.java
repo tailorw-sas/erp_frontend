@@ -27,8 +27,7 @@ public class CreateManageDepartmentGroupCommandHandler implements ICommandHandle
                 command.getCode(),
                 command.getDescription(),
                 command.getStatus(),
-                command.getName(),
-                command.getIsActive()
+                command.getName()
         ));
     }
 }

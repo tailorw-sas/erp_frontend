@@ -3,7 +3,6 @@ package com.kynsoft.finamer.settings.application.query.objectResponse;
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManageB2BPartnerType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,7 +21,6 @@ public class ManagerB2BPartnerResponse implements IResponse {
     private Status status;
     private String url;
     private String ip;
-    private String useViewCode;
     private String userName;
     private String password;
     private String token;

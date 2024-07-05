@@ -8,6 +8,8 @@ import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionStatus.
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionStatusService;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class CreateManagePaymentTransactionStatusCommandHandler implements ICommandHandler<CreateManagePaymentTransactionStatusCommand> {
 
@@ -22,12 +24,16 @@ public class CreateManagePaymentTransactionStatusCommandHandler implements IComm
         RulesChecker.checkRule(new ManagePaymentTransactionStatusCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManagePaymentTransactionStatusCodeMustBeUniqueRule(service, command.getCode(), command.getId()));
 
+        List<ManagePaymentTransactionStatusDto> managePaymentTransactionStatusDtoList = service.findByIds(command.getNavigate());
+
         service.create(new ManagePaymentTransactionStatusDto(
                 command.getId(),
                 command.getCode(),
                 command.getDescription(),
                 command.getStatus(),
-                command.getName()
+                command.getName(),
+                command.getRequireValidation(),
+                managePaymentTransactionStatusDtoList
         ));
     }
 }

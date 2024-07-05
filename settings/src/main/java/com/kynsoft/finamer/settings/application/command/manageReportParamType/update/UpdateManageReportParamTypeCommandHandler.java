@@ -35,6 +35,7 @@ public class UpdateManageReportParamTypeCommandHandler implements ICommandHandle
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setLabel, command.getLabel(), dto.getLabel(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setSource, command.getSource(), dto.getSource(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setHotel, command.getHotel(), dto.getHotel(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 

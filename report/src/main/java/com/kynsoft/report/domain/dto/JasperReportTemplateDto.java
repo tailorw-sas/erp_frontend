@@ -1,5 +1,6 @@
 package com.kynsoft.report.domain.dto;
 
+import com.kynsoft.report.domain.dto.status.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,22 +15,55 @@ import java.util.UUID;
 @NoArgsConstructor
 public class JasperReportTemplateDto {
     private  UUID id;
-    private  String templateCode;
-    private  String templateName;
-    private  String templateDescription;
-    private  String templateContentUrl;
+    private  String code;
+    private  String name;
+    private  String description;
+    private  String file;
     private  JasperReportTemplateType type;
+    private Status status;
     private  String parameters;
     private LocalDateTime createdAt;
 
-    public JasperReportTemplateDto(UUID id, String templateCode, String templateName, String templateDescription,
-                                   String templateContentUrl, JasperReportTemplateType type, String parameters) {
+    private Double parentIndex;
+    private Double menuPosition;
+    private String lanPath;
+    private Boolean web;
+    private Boolean subMenu;
+    private Boolean sendEmail;
+    private Boolean internal;
+    private Boolean highRisk;
+    private Boolean visible;
+    private Boolean cancel;
+    private String rootIndex;
+    private String language;
+
+    public JasperReportTemplateDto(UUID id, String templateCode, String templateName, 
+                                   String templateDescription, String templateContentUrl, 
+                                   JasperReportTemplateType type, String parameters, 
+                                   Double parentIndex, Double menuPosition, 
+                                   String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
+                                   Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
+                                   String rootIndex, String language, Status status) {
         this.id = id;
-        this.templateCode = templateCode;
-        this.templateName = templateName;
-        this.templateDescription = templateDescription;
-        this.templateContentUrl = templateContentUrl;
+        this.code = templateCode;
+        this.name = templateName;
+        this.description = templateDescription;
+        this.file = templateContentUrl;
         this.type = type;
         this.parameters = parameters;
+        this.parentIndex = parentIndex;
+        this.menuPosition = menuPosition;
+        this.lanPath = lanPath;
+        this.web = web;
+        this.subMenu = subMenu;
+        this.sendEmail = sendEmail;
+        this.internal = internal;
+        this.highRisk = highRisk;
+        this.visible = visible;
+        this.cancel = cancel;
+        this.rootIndex = rootIndex;
+        this.language = language;
+        this.status = status;
     }
+
 }

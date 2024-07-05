@@ -14,7 +14,6 @@ import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionSta
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagePaymentTransactionStatus;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagePaymentTransactionStatusWriteDataJpaRepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManagePaymentTransactionStatusReadDataJpaRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,12 +48,11 @@ public class ManagePaymentTransactionStatusImpl implements IManagePaymentTransac
 
     @Override
     public void delete(ManagePaymentTransactionStatusDto dto) {
-       ManagePaymentTransactionStatus delete = new ManagePaymentTransactionStatus(dto);
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -83,6 +81,12 @@ public class ManagePaymentTransactionStatusImpl implements IManagePaymentTransac
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManagePaymentTransactionStatusDto> findByIds(List<UUID> ids) {
+        return repositoryQuery.findAllById(ids).stream().map(ManagePaymentTransactionStatus::toAggregate).toList();
+    }
+
 
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {

@@ -5,6 +5,9 @@ import com.kynsof.identity.application.command.auth.autenticate.AuthenticateComm
 import com.kynsof.identity.application.command.auth.autenticate.AuthenticateMessage;
 import com.kynsof.identity.application.command.auth.autenticate.LoginRequest;
 import com.kynsof.identity.application.command.auth.autenticate.TokenResponse;
+import com.kynsof.identity.application.command.auth.firstsChangePassword.FirstsChangePasswordCommand;
+import com.kynsof.identity.application.command.auth.firstsChangePassword.FirstsChangePasswordMessage;
+import com.kynsof.identity.application.command.auth.firstsChangePassword.FirstsChangePasswordRequest;
 import com.kynsof.identity.application.command.auth.forwardPassword.ForwardPasswordCommand;
 import com.kynsof.identity.application.command.auth.forwardPassword.ForwardPasswordMessage;
 import com.kynsof.identity.application.command.auth.forwardPassword.PasswordChangeRequest;
@@ -39,6 +42,14 @@ public class AuthController {
         AuthenticateCommand authenticateCommand = new AuthenticateCommand(loginDTO.getUsername(), loginDTO.getPassword());
         AuthenticateMessage response = mediator.send(authenticateCommand);
         return Mono.just(ResponseEntity.ok(response.getTokenResponse()));
+    }
+
+    @PreAuthorize("permitAll()")
+    @PostMapping("/firsts-change-password")
+    public Mono<ResponseEntity<?>> firstsChangePassword(@RequestBody FirstsChangePasswordRequest request) {
+        FirstsChangePasswordCommand authenticateCommand = FirstsChangePasswordCommand.fromRequest(request);
+        FirstsChangePasswordMessage response = mediator.send(authenticateCommand);
+        return Mono.just(ResponseEntity.ok(response.getResult()));
     }
 
     // @PreAuthorize("permitAll()")

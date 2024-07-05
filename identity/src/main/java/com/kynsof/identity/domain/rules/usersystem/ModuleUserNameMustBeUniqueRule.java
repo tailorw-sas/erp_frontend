@@ -17,7 +17,7 @@ public class ModuleUserNameMustBeUniqueRule extends BusinessRule {
 
     public ModuleUserNameMustBeUniqueRule(IUserSystemService service, String username, UUID id) {
         super(
-                DomainErrorMessage.MODULE_NAME_MUST_BY_UNIQUE, 
+                DomainErrorMessage.ITEM_ALREADY_EXITS,
                 new ErrorField("username", "The user username must be unique.")
         );
         this.service = service;

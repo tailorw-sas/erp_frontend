@@ -52,14 +52,11 @@ public class ManagePaymentSourceServiceImpl implements IManagePaymentSourceServi
 
     @Override
     public void delete(ManagePaymentSourceDto dto) {
-        ManagePaymentSource delete = new ManagePaymentSource(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeletedAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

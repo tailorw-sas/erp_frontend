@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageMerchantCommissionDto;
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ public class ManageMerchantCommissionResponse implements IResponse {
     private String description;
     private LocalDate fromDate;
     private LocalDate toDate;
+    private Status status;
 
     public ManageMerchantCommissionResponse(ManageMerchantCommissionDto dto) {
         this.id = dto.getId();
@@ -34,6 +36,7 @@ public class ManageMerchantCommissionResponse implements IResponse {
         this.description = dto.getDescription();
         this.fromDate = dto.getFromDate();
         this.toDate = dto.getToDate().equals(LocalDate.parse("4000-12-31")) ? null : dto.getToDate();
+        this.status = dto.getStatus();
     }
 
 }

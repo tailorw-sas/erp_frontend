@@ -26,7 +26,7 @@ public class ConsumerEmailEventService {
         this.mediator = service;
     }
 
-    @KafkaListener(topics = "finamer_email_confirmation_cite", groupId = "cloud_bridges")
+    @KafkaListener(topics = "finamer-email-confirmation-cite", groupId = "cloud-bridges")
     public void listen(String event) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();

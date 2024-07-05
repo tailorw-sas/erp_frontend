@@ -28,9 +28,6 @@ public class ManageRegion implements Serializable {
     @Column(unique = true)
     private String code;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -44,9 +41,6 @@ public class ManageRegion implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
 
     public ManageRegion(ManageRegionDto dto){
         this.id = dto.getId();

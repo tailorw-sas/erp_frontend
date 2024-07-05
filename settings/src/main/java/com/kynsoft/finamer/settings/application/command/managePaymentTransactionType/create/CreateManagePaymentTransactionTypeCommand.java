@@ -25,8 +25,15 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
     private String defaultRemark;
+    private Boolean deposit;
+    private Boolean applyDeposit;
+    private Boolean defaults;
 
-    public CreateManagePaymentTransactionTypeCommand(String code, Status status, String name, String description, Boolean cash, Boolean agencyRateAmount, Boolean negative, Boolean policyCredit, Boolean remarkRequired, Integer minNumberOfCharacter, String defaultRemark) {
+    public CreateManagePaymentTransactionTypeCommand(String code, Status status,
+            String name, String description, Boolean cash, Boolean agencyRateAmount,
+            Boolean negative, Boolean policyCredit, Boolean remarkRequired,
+            Integer minNumberOfCharacter, String defaultRemark, Boolean deposit, Boolean applyDeposit,
+            Boolean defaults) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.status = status;
@@ -39,13 +46,19 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
         this.remarkRequired = remarkRequired;
         this.minNumberOfCharacter = minNumberOfCharacter;
         this.defaultRemark = defaultRemark;
+        this.deposit = deposit;
+        this.applyDeposit = applyDeposit;
+        this.defaults = defaults;
 
     }
 
     public static CreateManagePaymentTransactionTypeCommand fromRequest(CreateManagePaymentTransactionTypeRequest request) {
         return new CreateManagePaymentTransactionTypeCommand(request.getCode(),
-
-                request.getStatus(), request.getName(), request.getDescription(), request.getCash(), request.getAgencyRateAmount(), request.getNegative(), request.getPolicyCredit(), request.getRemarkRequired(), request.getMinNumberOfCharacter(), request.getDefaultRemark());
+                request.getStatus(), request.getName(), request.getDescription(), 
+                request.getCash(), request.getAgencyRateAmount(), request.getNegative(), 
+                request.getPolicyCredit(), request.getRemarkRequired(), 
+                request.getMinNumberOfCharacter(), request.getDefaultRemark(), request.getDeposit(), 
+                request.getApplyDeposit(), request.getDefaults());
     }
 
     @Override

@@ -56,14 +56,11 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
 
     @Override
     public void delete(ManageAttachmentTypeDto dto) {
-        ManageAttachmentType delete = new ManageAttachmentType(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeletedAt(LocalDateTime.now());
-
-        repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

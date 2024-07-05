@@ -12,19 +12,19 @@ import com.kynsoft.finamer.settings.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageEmployee;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManagerBank;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageEmployeeWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
-import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageEmployeeServiceImpl implements IManageEmployeeService {
@@ -52,15 +52,11 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
 
     @Override
     public void delete(ManageEmployeeDto dto) {
-        ManageEmployee delete = new ManageEmployee(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setLoginName(delete.getLoginName() + "-" + UUID.randomUUID());
-        delete.setEmail(delete.getEmail() + "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeleteAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -113,6 +109,16 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
     @Override
     public Long countByEmailAndNotId(String email, UUID id) {
         return this.repositoryQuery.countByEmailAndNotId(email, id);
+    }
+
+    @Override
+    public List<ManageEmployeeDto> finAllByIds(List<UUID> ids) {
+        return repositoryQuery.findAllById(ids).stream().map(ManageEmployee::toAggregate).collect(Collectors.toList());
+    }
+
+    @Override
+    public void saveAll(List<ManageEmployeeDto> dtos) {
+        repositoryCommand.saveAll(dtos.stream().map(ManageEmployee::new).collect(Collectors.toList()));
     }
 
 }

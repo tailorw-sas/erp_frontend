@@ -11,7 +11,7 @@ import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerCoun
 import com.kynsoft.finamer.settings.domain.dto.ManagerCountryDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerCountryService;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManagerCountry;
+import com.kynsoft.finamer.settings.infrastructure.identity.ManageCountry;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagerCountryWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManagerCountryReadDataJPARepository;
 import java.time.LocalDateTime;
@@ -36,13 +36,13 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
 
     @Override
     public UUID create(ManagerCountryDto dto) {
-        ManagerCountry data = new ManagerCountry(dto);
+        ManageCountry data = new ManageCountry(dto);
         return this.repositoryCommand.save(data).getId();
     }
 
     @Override
     public void update(ManagerCountryDto dto) {
-        ManagerCountry update = new ManagerCountry(dto);
+        ManageCountry update = new ManageCountry(dto);
 
         update.setUpdateAt(LocalDateTime.now());
 
@@ -51,19 +51,16 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
 
     @Override
     public void delete(ManagerCountryDto dto) {
-        ManagerCountry delete = new ManagerCountry(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeleteAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
     public ManagerCountryDto findById(UUID id) {
-        Optional<ManagerCountry> userSystem = this.repositoryQuery.findById(id);
+        Optional<ManageCountry> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -74,8 +71,8 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<ManagerCountry> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManagerCountry> data = this.repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<ManageCountry> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageCountry> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -94,9 +91,9 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManagerCountry> data) {
+    private PaginatedResponse getPaginatedResponse(Page<ManageCountry> data) {
         List<ManagerCountryResponse> userSystemsResponses = new ArrayList<>();
-        for (ManagerCountry p : data.getContent()) {
+        for (ManageCountry p : data.getContent()) {
             userSystemsResponses.add(new ManagerCountryResponse(p.toAggregate()));
         }
         return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),

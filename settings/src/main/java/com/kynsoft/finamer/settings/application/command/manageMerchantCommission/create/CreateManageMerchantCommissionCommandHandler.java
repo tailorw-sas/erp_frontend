@@ -6,10 +6,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.settings.domain.dto.ManageCreditCardTypeDto;
 import com.kynsoft.finamer.settings.domain.dto.ManageMerchantCommissionDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
-import com.kynsoft.finamer.settings.domain.rules.manageMerchantCommission.ManageMerchantCommissionFromDateMustBeNullRule;
-import com.kynsoft.finamer.settings.domain.rules.manageMerchantCommission.ManageMerchantCommissionCommissionMustBeNullRule;
-import com.kynsoft.finamer.settings.domain.rules.manageMerchantCommission.ManageMerchantCommissionFromDateAndToDateRule;
-import com.kynsoft.finamer.settings.domain.rules.manageMerchantCommission.ManageMerchantCommissionMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.manageMerchantCommission.*;
 import com.kynsoft.finamer.settings.domain.services.IManageCreditCardTypeService;
 import com.kynsoft.finamer.settings.domain.services.IManageMerchantCommissionService;
 import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
@@ -24,8 +21,8 @@ public class CreateManageMerchantCommissionCommandHandler implements ICommandHan
     private final IManageMerchantCommissionService service;
 
     public CreateManageMerchantCommissionCommandHandler(IManagerMerchantService serviceMerchantService,
-                                                       IManageCreditCardTypeService serviceCurrencyService,
-                                                       IManageMerchantCommissionService service) {
+                                                        IManageCreditCardTypeService serviceCurrencyService,
+                                                        IManageMerchantCommissionService service) {
         this.serviceMerchantService = serviceMerchantService;
         this.serviceCurrencyService = serviceCurrencyService;
         this.service = service;
@@ -33,28 +30,31 @@ public class CreateManageMerchantCommissionCommandHandler implements ICommandHan
 
     @Override
     public void handle(CreateManageMerchantCommissionCommand command) {
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerMerchant(), "managerMerchant", "Manage Merchant ID cannot be null."));
+        // Validate non-null fields
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerMerchant(), "manageMerchant", "Manage Merchant ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageCreditCartType(), "manageCreditCartType", "Manage Credit Cart Type ID cannot be null."));
-
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getFromDate(), "fromDate", "From Date cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getCommission(), "commission", "Commission cannot be null."));
+        LocalDate toDate = command.getToDate() != null ? command.getToDate() : LocalDate.parse("4000-12-31");
+        // Retrieve related DTOs
         ManageCreditCardTypeDto manageCreditCardTypeDto = this.serviceCurrencyService.findById(command.getManageCreditCartType());
         ManagerMerchantDto managerMerchantDto = this.serviceMerchantService.findById(command.getManagerMerchant());
 
-        LocalDate toDate = command.getToDate() != null ? command.getToDate() : LocalDate.parse("4000-12-31");
-        RulesChecker.checkRule(new ManageMerchantCommissionFromDateMustBeNullRule(command.getFromDate()));
-        RulesChecker.checkRule(new ManageMerchantCommissionCommissionMustBeNullRule(command.getCommission()));
-        RulesChecker.checkRule(new ManageMerchantCommissionFromDateAndToDateRule(command.getFromDate(), toDate));
+        RulesChecker.checkRule(new ManageMerchantCommissionMustNotOverlapRule(this.service,command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getFromDate(), toDate));
 
-        RulesChecker.checkRule(new ManageMerchantCommissionMustBeUniqueRule(this.service, command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getFromDate(), toDate));
+        ManageMerchantCommissionDto commissionDto = new ManageMerchantCommissionDto(
+                command.getId(),
+                managerMerchantDto,
+                manageCreditCardTypeDto,
+                command.getCommission(),
+                command.getCalculationType(),
+                command.getDescription(),
+                command.getFromDate(),
+                toDate,
+                command.getStatus()
+        );
 
-        service.create(new ManageMerchantCommissionDto(
-                command.getId(), 
-                managerMerchantDto, 
-                manageCreditCardTypeDto, 
-                command.getCommission(), 
-                command.getCalculationType(), 
-                command.getDescription(), 
-                command.getFromDate(), 
-                toDate
-        ));
+        // Save new commission
+        service.create(commissionDto);
     }
 }

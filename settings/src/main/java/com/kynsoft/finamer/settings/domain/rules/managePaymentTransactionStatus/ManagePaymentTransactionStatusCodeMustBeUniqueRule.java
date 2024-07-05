@@ -18,7 +18,7 @@ public class ManagePaymentTransactionStatusCodeMustBeUniqueRule extends Business
     public ManagePaymentTransactionStatusCodeMustBeUniqueRule(IManagePaymentTransactionStatusService service,
             String code, UUID id) {
         super(
-                DomainErrorMessage.MANAGE_PAYMENT_SOURCE_CODE_MUST_BY_UNIQUE,
+                DomainErrorMessage.ITEM_ALREADY_EXITS,
                 new ErrorField("code", "The code must be unique."));
         this.service = service;
         this.code = code;

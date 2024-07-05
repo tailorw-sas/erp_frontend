@@ -24,6 +24,10 @@ public class PermissionSearchResponse implements IResponse {
     private String action;
     private String moduleName;
     private LocalDate createdAt;
+    private Boolean isHighRisk;
+    private Boolean isIT;
+    private String name;
+
     public PermissionSearchResponse(PermissionDto response) {
         this.id = response.getId();
         this.code = response.getCode();
@@ -32,6 +36,9 @@ public class PermissionSearchResponse implements IResponse {
         this.action = response.getAction();
         this.moduleName = response.getModule().getName();
         this.createdAt = response.getCreatedAt().toLocalDate();
+        this.isHighRisk = response.getIsHighRisk();
+        this.isIT = response.getIsIT();
+        this.name = response.getName();
     }
 
 }

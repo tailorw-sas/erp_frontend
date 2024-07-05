@@ -23,16 +23,14 @@ public class CreateUserSystemCommandHandler implements ICommandHandler<CreateUse
     private final IUserSystemService userSystemService;
     private final IAuthService authService;
 
-    @Autowired
-    private ProducerUserWelcomEventService producerUserWelcomEventService;
+    private final ProducerUserWelcomEventService producerUserWelcomEventService;
 
     @Autowired
-    private ProducerRegisterUserSystemEventService registerUserSystemEventService;
-
-    @Autowired
-    public CreateUserSystemCommandHandler(IUserSystemService userSystemService, IAuthService authService) {
+    public CreateUserSystemCommandHandler(IUserSystemService userSystemService, IAuthService authService,
+                                          ProducerUserWelcomEventService producerUserWelcomEventService) {
         this.userSystemService = userSystemService;
         this.authService = authService;
+        this.producerUserWelcomEventService = producerUserWelcomEventService;
     }
 
     @Override
@@ -63,7 +61,6 @@ public class CreateUserSystemCommandHandler implements ICommandHandler<CreateUse
         userDto.setUserType(command.getUserType());
 
         UUID id = userSystemService.create(userDto);
-        this.registerUserSystemEventService.create(userSystemRequest, id.toString(), command.getImage());
         this.producerUserWelcomEventService.create(new UserWelcomKafka(userDto.getEmail(), 
                                                                      command.getPassword(),
                                                                      command.getUserName(), 

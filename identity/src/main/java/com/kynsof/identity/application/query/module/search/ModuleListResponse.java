@@ -1,6 +1,7 @@
 package com.kynsof.identity.application.query.module.search;
 
 import com.kynsof.identity.domain.dto.ModuleDto;
+import com.kynsof.identity.domain.dto.enumType.ModuleStatus;
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,6 +19,8 @@ public class ModuleListResponse implements IResponse {
     private String description;
     private String image;
     private LocalDate createdAt;
+    private ModuleStatus status;
+    private String code;
 
 
     public ModuleListResponse(ModuleDto object) {
@@ -26,6 +29,8 @@ public class ModuleListResponse implements IResponse {
         this.description = object.getDescription();
         this.image = object.getImage();
         this.createdAt = object.getCreatedAt().toLocalDate();
+        this.status = object.getStatus();
+        this.code = object.getCode();
     }
 
 }

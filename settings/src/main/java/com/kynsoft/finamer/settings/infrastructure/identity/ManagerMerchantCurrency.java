@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantCurrencyDto;
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,8 +36,8 @@ public class ManagerMerchantCurrency implements Serializable {
     private Double value;
     private String description;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -45,9 +46,6 @@ public class ManagerMerchantCurrency implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
-
 
     public ManagerMerchantCurrency(ManagerMerchantCurrencyDto dto) {
         this.id = dto.getId();
@@ -55,10 +53,13 @@ public class ManagerMerchantCurrency implements Serializable {
         this.managerCurrency = new ManagerCurrency(dto.getManagerCurrency());
         this.value = dto.getValue();
         this.description = dto.getDescription();
+        this.status = dto.getStatus();
     }
 
     public ManagerMerchantCurrencyDto toAggregate() {
-        return new ManagerMerchantCurrencyDto(id, managerMerchant.toAggregate(), managerCurrency.toAggregate(), value, description);
+        return new ManagerMerchantCurrencyDto(id,
+                managerMerchant != null ? managerMerchant.toAggregate() : null,
+                managerCurrency != null ? managerCurrency.toAggregate() : null, value, description, status);
     }
 
 }

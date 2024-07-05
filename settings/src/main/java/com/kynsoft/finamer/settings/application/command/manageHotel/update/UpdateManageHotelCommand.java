@@ -31,6 +31,7 @@ public class UpdateManageHotelCommand implements ICommand {
     private Boolean isVirtual;
     private Boolean requiresFlatRate;
     private Boolean isApplyByVCC;
+    private Boolean isNightType;
 
     public static UpdateManageHotelCommand fromRequest(UpdateManageHotelRequest request, UUID id){
         return new UpdateManageHotelCommand(
@@ -39,7 +40,7 @@ public class UpdateManageHotelCommand implements ICommand {
                 request.getCity(), request.getAddress(), request.getManageCurrency(), request.getManageRegion(),
                 request.getManageTradingCompanies(), request.getApplyByTradingCompany(),
                 request.getPrefixToInvoice(), request.getIsVirtual(), request.getRequiresFlatRate(),
-                request.getIsApplyByVCC()
+                request.getIsApplyByVCC(), request.getIsNightType()
         );
     }
     @Override

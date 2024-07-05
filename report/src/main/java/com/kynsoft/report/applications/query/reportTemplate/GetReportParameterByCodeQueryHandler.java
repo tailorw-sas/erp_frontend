@@ -21,7 +21,7 @@ public class GetReportParameterByCodeQueryHandler implements IQueryHandler<GetRe
     @Override
     public GetReportParameterByCodeResponse handle(GetReportParameterByCodeQuery query) {
         JasperReportTemplateDto jasperReportTemplateDto = jasperReportTemplateService.findByTemplateCode(query.getReportCode());
-        String response = reportService.getReportParameters(jasperReportTemplateDto.getTemplateContentUrl());
+        String response = reportService.getReportParameters(jasperReportTemplateDto.getFile());
         return  new GetReportParameterByCodeResponse(response);
     }
 }

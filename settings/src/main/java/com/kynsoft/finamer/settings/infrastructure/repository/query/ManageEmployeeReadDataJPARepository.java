@@ -16,10 +16,10 @@ public interface ManageEmployeeReadDataJPARepository extends JpaRepository<Manag
 
     Page<ManageEmployee> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManageEmployee b WHERE b.loginName = :loginName AND b.id <> :id AND b.deleted = false")
+    @Query("SELECT COUNT(b) FROM ManageEmployee b WHERE b.loginName = :loginName AND b.id <> :id")
     Long countByLoginNameAndNotId(@Param("loginName") String loginName, @Param("id") UUID id);
 
-    @Query("SELECT COUNT(b) FROM ManageEmployee b WHERE b.email = :email AND b.id <> :id AND b.deleted = false")
+    @Query("SELECT COUNT(b) FROM ManageEmployee b WHERE b.email = :email AND b.id <> :id")
     Long countByEmailAndNotId(@Param("email") String email, @Param("id") UUID id);
 
 }

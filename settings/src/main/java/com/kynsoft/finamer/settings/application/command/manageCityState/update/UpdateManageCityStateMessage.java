@@ -10,7 +10,7 @@ public class UpdateManageCityStateMessage implements ICommandMessage {
 
     private final UUID id;
 
-    private final String command = "UPDATE_MANAGE_CITY_STATE";
+    private final String command = "UPDATE_MANAGE_AGENCY";
 
     public UpdateManageCityStateMessage(UUID id) {
         this.id = id;

@@ -17,8 +17,8 @@ public class ManageEmproyeeEmailMustBeUniqueRule extends BusinessRule {
 
     public ManageEmproyeeEmailMustBeUniqueRule(IManageEmployeeService service, String email, UUID id) {
         super(
-                DomainErrorMessage.MANAGE_EMPLOYEE_EMAIL_MUST_BY_UNIQUE, 
-                new ErrorField("email", "The email must be unique.")
+                DomainErrorMessage.EMAIL_ALREADY_EXISTS,
+                new ErrorField("email", DomainErrorMessage.EMAIL_ALREADY_EXISTS.getReasonPhrase())
         );
         this.service = service;
         this.email = email;

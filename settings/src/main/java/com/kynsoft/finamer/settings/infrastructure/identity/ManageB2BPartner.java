@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -39,12 +40,9 @@ public class ManageB2BPartner implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "b2b_partner_type_id", nullable = false)
     private ManageB2BPartnerType b2bPartnerType;
-
-    @Column(nullable = true)
-    private Boolean deleted = false;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -52,9 +50,8 @@ public class ManageB2BPartner implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
+    @OneToMany(mappedBy = "sentB2BPartner", fetch = FetchType.EAGER)
+    private List<ManageAgency> agencies;
 
     public ManageB2BPartner(ManagerB2BPartnerDto dto) {
         this.id = dto.getId();
@@ -71,8 +68,9 @@ public class ManageB2BPartner implements Serializable {
     }
 
     public ManagerB2BPartnerDto toAggregate() {
-        return new ManagerB2BPartnerDto(id, code, name, description, status, url, ip, userName, password,
-                token,b2bPartnerType.getId(), b2bPartnerType.toAggregate());
+        return new ManagerB2BPartnerDto(
+                id, code, name, description, status, url, ip, userName, password, token,
+                b2bPartnerType != null ? b2bPartnerType.toAggregate() : null);
     }
 
 }

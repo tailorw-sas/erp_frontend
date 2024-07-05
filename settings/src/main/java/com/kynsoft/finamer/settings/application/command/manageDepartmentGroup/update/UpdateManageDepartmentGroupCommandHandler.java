@@ -33,7 +33,6 @@ public class UpdateManageDepartmentGroupCommandHandler implements ICommandHandle
     
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(dto::setIsActive, command.getIsActive(), dto.getIsActive(), update::setUpdate);
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 

@@ -32,7 +32,7 @@ public class ManageCityState implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_country_id")
-    private ManagerCountry country;
+    private ManageCountry country;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_time_zone_id")
@@ -41,9 +41,6 @@ public class ManageCityState implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,21 +48,21 @@ public class ManageCityState implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
-
     public ManageCityState(ManageCityStateDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.description = dto.getDescription();
-        this.country = dto.getCountry() != null ? new ManagerCountry(dto.getCountry()) : null;
+        this.country = dto.getCountry() != null ? new ManageCountry(dto.getCountry()) : null;
         this.timeZone = dto.getTimeZone() != null ? new ManagerTimeZone(dto.getTimeZone()) : null;
         this.status = dto.getStatus();
     }
 
     public ManageCityStateDto toAggregate() {
-        return new ManageCityStateDto(id, code, name, description, status, country.toAggregate(), timeZone.toAggregate());
+        return new ManageCityStateDto(
+                id, code, name, description, status,
+                country != null ? country.toAggregate() : null,
+                timeZone != null ? timeZone.toAggregate() : null);
     }
 
 }

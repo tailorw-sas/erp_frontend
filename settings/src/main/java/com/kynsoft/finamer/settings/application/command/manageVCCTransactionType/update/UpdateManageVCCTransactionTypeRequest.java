@@ -12,5 +12,13 @@ public class UpdateManageVCCTransactionTypeRequest {
     private String name;
     private String description;
     private Boolean isActive;
+    private Boolean negative;
+    private Boolean isDefault;
+    private Boolean subcategory;
+    private Boolean onlyApplyNet;
+    private Boolean policyCredit;
+    private Boolean remarkRequired;
+    private Integer minNumberOfCharacter;
+    private String defaultRemark;
 
 }

@@ -17,8 +17,8 @@ public class ModuleEmailMustBeUniqueRule extends BusinessRule {
 
     public ModuleEmailMustBeUniqueRule(IUserSystemService service, String email, UUID id) {
         super(
-                DomainErrorMessage.MODULE_NAME_MUST_BY_UNIQUE, 
-                new ErrorField("email", "The user email must be unique.")
+                DomainErrorMessage.EMAIL_ALREADY_EXISTS,
+                new ErrorField("email", DomainErrorMessage.EMAIL_ALREADY_EXISTS.getReasonPhrase())
         );
         this.service = service;
         this.email = email;

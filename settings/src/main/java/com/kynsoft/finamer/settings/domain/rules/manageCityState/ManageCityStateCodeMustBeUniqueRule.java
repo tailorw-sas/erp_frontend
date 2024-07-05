@@ -17,8 +17,8 @@ public class ManageCityStateCodeMustBeUniqueRule extends BusinessRule {
 
     public ManageCityStateCodeMustBeUniqueRule(IManageCityStateService service, String code, UUID id) {
         super(
-                DomainErrorMessage.MANAGER_CITY_STATE_CODE_MUST_BY_UNIQUE, 
-                new ErrorField("code", "The code must be unique.")
+                DomainErrorMessage.ITEM_ALREADY_EXITS,
+                new ErrorField("code", DomainErrorMessage.ITEM_ALREADY_EXITS.toString())
         );
         this.service = service;
         this.code = code;

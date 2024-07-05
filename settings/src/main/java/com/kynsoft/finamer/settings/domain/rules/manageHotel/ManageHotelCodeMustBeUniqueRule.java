@@ -17,8 +17,8 @@ public class ManageHotelCodeMustBeUniqueRule extends BusinessRule {
 
     public ManageHotelCodeMustBeUniqueRule(IManageHotelService service, String code, UUID id) {
         super(
-                DomainErrorMessage.MANAGE_HOTEL_CODE_MUST_BY_UNIQUE,
-                new ErrorField("code", "The code must be unique.")
+                DomainErrorMessage.ITEM_ALREADY_EXITS,
+                new ErrorField("code", DomainErrorMessage.ITEM_ALREADY_EXITS.toString())
         );
         this.service = service;
         this.code = code;

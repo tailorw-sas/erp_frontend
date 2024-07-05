@@ -65,7 +65,10 @@ public class BusinessModuleServiceImpl implements IBusinessModuleService {
                             null,
                             permission.getStatus(),
                             permission.getAction(),
-                            permission.getCreatedAt()
+                            permission.getCreatedAt(),
+                            permission.getIsHighRisk(),
+                            permission.getIsIT(),
+                            permission.getName()
                     )
             ));
 

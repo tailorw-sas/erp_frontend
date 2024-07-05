@@ -28,9 +28,6 @@ public class ManageTradingCompanies implements Serializable {
     @Column(unique = true)
     private String code;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -45,16 +42,13 @@ public class ManageTradingCompanies implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
-
-    private Long cif;
+    private String cif;
 
     private String address;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id")
-    private ManagerCountry country;
+    private ManageCountry country;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "city_state_id")
@@ -76,7 +70,7 @@ public class ManageTradingCompanies implements Serializable {
         this.company = dto.getCompany();
         this.cif = dto.getCif();
         this.address = dto.getAddress();
-        this.country = new ManagerCountry(dto.getCountry());
+        this.country = new ManageCountry(dto.getCountry());
         this.cityState = new ManageCityState(dto.getCityState());
         this.city = dto.getCity();
         this.zipCode = dto.getZipCode();
@@ -86,8 +80,10 @@ public class ManageTradingCompanies implements Serializable {
 
     public ManageTradingCompaniesDto toAggregate(){
         return new ManageTradingCompaniesDto(
-                id,code, description, status, company, cif, address, country.toAggregate(),
-                cityState.toAggregate(), city, zipCode, innsistCode, isApplyInvoice
+                id,code, description, status, company, cif, address,
+                country != null ? country.toAggregate() : null,
+                cityState != null ? cityState.toAggregate() : null,
+                city, zipCode, innsistCode, isApplyInvoice
         );
     }
 }

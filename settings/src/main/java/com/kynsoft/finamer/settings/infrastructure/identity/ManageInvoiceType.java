@@ -28,9 +28,6 @@ public class ManageInvoiceType implements Serializable {
     @Column(unique = true)
     private String code;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -46,9 +43,6 @@ public class ManageInvoiceType implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
 
     public ManageInvoiceType(ManageInvoiceTypeDto dto){
         this.id = dto.getId();

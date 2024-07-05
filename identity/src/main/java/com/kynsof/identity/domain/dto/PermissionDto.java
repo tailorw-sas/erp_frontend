@@ -21,6 +21,10 @@ public class PermissionDto {
     private String action;
     private boolean deleted = false;
     private LocalDateTime createdAt;
+    private Boolean isHighRisk;
+    private Boolean isIT;
+    private String name;
+
     /**
      * Usar este constructor en el create.
      *
@@ -29,12 +33,17 @@ public class PermissionDto {
      * @param description
      * @param module
      */
-    public PermissionDto(UUID id, String code, String description, ModuleDto module, String action) {
+    public PermissionDto(UUID id, String code, String description, 
+                         ModuleDto module, String action, Boolean isHighRisk, 
+                         Boolean isIT, String name) {
         this.id = id;
         this.code = code;
         this.description = description;
         this.module = module;
         this.action = action;
+        this.isHighRisk = isHighRisk;
+        this.isIT = isIT;
+        this.name = name;
     }
 
     public PermissionDto(UUID id, String code, String description) {
@@ -53,7 +62,10 @@ public class PermissionDto {
      * @param module
      * @param status
      */
-    public PermissionDto(UUID id, String code, String description, ModuleDto module, PermissionStatusEnm status, String action,  LocalDateTime createdAt) {
+    public PermissionDto(UUID id, String code, String description, 
+                         ModuleDto module, PermissionStatusEnm status, 
+                         String action,  LocalDateTime createdAt, Boolean isHighRisk, 
+                         Boolean isIT, String name) {
         this.id = id;
         this.code = code;
         this.description = description;
@@ -61,6 +73,9 @@ public class PermissionDto {
         this.status = status;
         this.action = action;
         this.createdAt = createdAt;
+        this.isHighRisk = isHighRisk;
+        this.isIT = isIT;
+        this.name = name;
     }
 
 }

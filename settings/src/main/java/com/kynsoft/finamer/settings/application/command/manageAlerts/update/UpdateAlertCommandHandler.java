@@ -8,6 +8,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageAlertsDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.manageAlerts.AlertCodeMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.manageAlerts.AlertNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IAlertsService;
 import org.springframework.stereotype.Component;
 
@@ -31,9 +32,13 @@ public class UpdateAlertCommandHandler implements ICommandHandler<UpdateAlertCom
             RulesChecker.checkRule(new AlertCodeMustBeUniqueRule(this.service, command.getCode()));
         }
 
+        if(UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(alertsDTO::setName, command.getName(), alertsDTO.getName(), update::setUpdate)){
+            RulesChecker.checkRule(new AlertNameMustBeUniqueRule(this.service, command.getName()));
+        }
+
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(alertsDTO::setDescription, command.getDescription(), alertsDTO.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(alertsDTO::setPopup, command.getPopup(), command.getPopup(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(alertsDTO::setName, command.getName(), alertsDTO.getName(), update::setUpdate);
+
         UpdateIfNotNull.updateBoolean(alertsDTO::setPopup, command.getPopup(), alertsDTO.getPopup(), update::setUpdate);
         
         this.updateStatus(alertsDTO::setStatus, command.getStatus(), alertsDTO.getStatus(), update::setUpdate);

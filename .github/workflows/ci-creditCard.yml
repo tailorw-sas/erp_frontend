@@ -12,7 +12,7 @@ on:
     paths:
       - .github/workflows/ci-creditCard.yml
       - 'creditCard/**'
-      - 'share/**'
+#      - 'share/**'
 jobs:
   build-push:
     runs-on: ubuntu-latest

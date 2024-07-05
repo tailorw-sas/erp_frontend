@@ -51,14 +51,11 @@ public class ManagerBankServiceImpl implements IManagerBankService {
 
     @Override
     public void delete(ManagerBankDto dto) {
-        ManagerBank delete = new ManagerBank(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeleteAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

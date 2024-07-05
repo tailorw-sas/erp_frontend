@@ -49,11 +49,11 @@ public class ManagerMerchantCurrencyServiceImpl implements IManagerMerchantCurre
 
     @Override
     public void delete(ManagerMerchantCurrencyDto dto) {
-        ManagerMerchantCurrency delete = new ManagerMerchantCurrency(dto);
-        delete.setDeleted(Boolean.TRUE);
-        delete.setDeleteAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -85,12 +85,12 @@ public class ManagerMerchantCurrencyServiceImpl implements IManagerMerchantCurre
 
     @Override
     public Long countByCodeAndNotId(UUID managerMerchant, UUID managerCurrency) {
-        return this.repositoryQuery.countByCodeAndNotId(managerMerchant, managerCurrency);
+        return this.repositoryQuery.countByManagerMerchantAndManagerCurrency(managerMerchant, managerCurrency);
     }
 
     @Override
     public Long countByManagerMerchantANDManagerCurrencyIdNotId(UUID id, UUID managerMerchant, UUID managerCurrency) {
-        return this.repositoryQuery.countByManagerMerchantANDManagerCurrencyIdNotId(id, managerMerchant, managerCurrency);
+        return this.repositoryQuery.countByManagerMerchantAndManagerCurrencyNotId(id, managerMerchant, managerCurrency);
     }
 
 }

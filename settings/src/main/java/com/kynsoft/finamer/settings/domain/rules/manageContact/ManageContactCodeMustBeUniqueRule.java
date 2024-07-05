@@ -13,20 +13,23 @@ public class ManageContactCodeMustBeUniqueRule extends BusinessRule {
 
     private final String code;
 
+    private final UUID manageHotelId;
+
     private final UUID id;
 
-    public ManageContactCodeMustBeUniqueRule(IManageContactService service, String code, UUID id) {
+    public ManageContactCodeMustBeUniqueRule(IManageContactService service, String code, UUID manageHotelId, UUID id) {
         super(
                 DomainErrorMessage.ITEM_ALREADY_EXITS,
                 new ErrorField("code", DomainErrorMessage.ITEM_ALREADY_EXITS.toString())
         );
         this.service = service;
         this.code = code;
+        this.manageHotelId = manageHotelId;
         this.id = id;
     }
 
     @Override
     public boolean isBroken() {
-        return this.service.countByCodeAndNotId(code, id) > 0;
+        return this.service.countByCodeAndManageHotelIdAndNotId(code, manageHotelId, id) > 0;
     }
 }

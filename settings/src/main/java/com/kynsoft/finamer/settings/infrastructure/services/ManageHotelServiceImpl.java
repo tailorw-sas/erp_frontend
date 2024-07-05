@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageHotelServiceImpl implements IManageHotelService {
@@ -57,14 +58,11 @@ public class ManageHotelServiceImpl implements IManageHotelService {
 
     @Override
     public void delete(ManageHotelDto dto) {
-        ManageHotel delete = new ManageHotel(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeletedAt(LocalDateTime.now());
-
-        repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -75,7 +73,7 @@ public class ManageHotelServiceImpl implements IManageHotelService {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND, new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND, new ErrorField("id", "Manage Hotel not found.")));
     }
 
     @Override
@@ -91,6 +89,16 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code,id);
+    }
+
+    @Override
+    public List<ManageHotelDto> findByIds(List<UUID> ids) {
+        return repositoryQuery.findAllById(ids).stream().map(ManageHotel::toAggregate).toList();
+    }
+
+    @Override
+    public List<ManageHotelDto> findAll() {
+        return repositoryQuery.findAll().stream().map(ManageHotel::toAggregate).collect(Collectors.toList());
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

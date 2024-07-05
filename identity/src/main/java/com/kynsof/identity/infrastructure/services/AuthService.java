@@ -10,10 +10,7 @@ import com.kynsof.identity.domain.interfaces.service.IRedisService;
 import com.kynsof.identity.infrastructure.services.kafka.producer.ProducerTriggerPasswordResetEventService;
 import com.kynsof.identity.infrastructure.services.kafka.producer.user.ProducerRegisterUserEventService;
 import com.kynsof.identity.infrastructure.services.kafka.producer.user.ProducerRegisterUserSystemEventService;
-import com.kynsof.share.core.domain.exception.AlreadyExistsException;
-import com.kynsof.share.core.domain.exception.AuthenticateNotFoundException;
-import com.kynsof.share.core.domain.exception.CustomUnauthorizedException;
-import com.kynsof.share.core.domain.exception.UserNotFoundException;
+import com.kynsof.share.core.domain.exception.*;
 import com.kynsof.share.core.domain.kafka.entity.UserKafka;
 import com.kynsof.share.core.domain.kafka.entity.UserOtpKafka;
 import com.kynsof.share.core.domain.response.ErrorField;
@@ -61,46 +58,32 @@ public class AuthService implements IAuthService {
 
     @Override
     public TokenResponse authenticate(LoginRequest loginDTO) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        MultiValueMap<String, String> map = createAuthRequestMap(loginDTO.getUsername(), loginDTO.getPassword());
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, createHeaders());
 
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.add("client_id", keycloakProvider.getClient_id());
-        map.add("grant_type", keycloakProvider.getGrant_type());
-        map.add("username", loginDTO.getUsername());
-        map.add("password", loginDTO.getPassword());
-        map.add("client_secret", keycloakProvider.getClient_secret());
-
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
         try {
+            System.out.println(keycloakProvider.getTokenUri().toString());//djacomee
             ResponseEntity<TokenResponse> response = restTemplate.exchange(
                     keycloakProvider.getTokenUri(),
                     HttpMethod.POST,
                     entity,
                     TokenResponse.class);
-            if (response.getStatusCode() == HttpStatus.OK) {
-                return response.getBody();
-            } else {
-                throw new AuthenticateNotFoundException("El nombre de usuario o la contraseña no son correctos. Por favor, inténtalo de nuevo.", new ErrorField("email/password", "El nombre de usuario o la contraseña no son correctos. Por favor, inténtalo de nuevo."));
-            }
-
-        } catch (Exception e) {
-            throw new AuthenticateNotFoundException("El nombre de usuario o la contraseña no son correctos. Por favor, inténtalo de nuevo.", new ErrorField("email/password", "El nombre de usuario o la contraseña no son correctos. Por favor, inténtalo de nuevo."));
+            return handleAuthResponse(response);
+        } catch (HttpClientErrorException e) {
+            handleAuthException(e);
+            return null; // Esto no se ejecutará, ya que handleAuthException lanza una excepción
         }
     }
 
     @Override
     public TokenResponse refreshToken(String refreshToken) throws CustomUnauthorizedException {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.add("client_id", keycloakProvider.getClient_id());
         map.add("grant_type", "refresh_token");
         map.add("refresh_token", refreshToken);
         map.add("client_secret", keycloakProvider.getClient_secret());
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, createHeaders());
 
         try {
             ResponseEntity<TokenResponse> response = restTemplate.exchange(
@@ -110,87 +93,39 @@ public class AuthService implements IAuthService {
                     TokenResponse.class);
             return response.getBody();
         } catch (HttpClientErrorException ex) {
-
             throw new CustomUnauthorizedException("Unauthorized: Refresh token is invalid or expired.",
                     new ErrorField("token", "Refresh token not found"));
-
         }
     }
 
     @Override
     public String registerUser(@NonNull UserRequest userRequest, boolean isSystemUser) {
-        UsersResource usersResource = keycloakProvider.getUserResource();
+        String userId = createUser(userRequest.getName(), userRequest.getLastName(), userRequest.getEmail(), userRequest.getUserName(), userRequest.getPassword());
 
-        UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setFirstName(userRequest.getName());
-        userRepresentation.setLastName(userRequest.getLastName());
-        userRepresentation.setEmail(userRequest.getEmail());
-        userRepresentation.setUsername(userRequest.getUserName());
-        userRepresentation.setEnabled(true);
-        userRepresentation.setEmailVerified(true);
+        producerRegisterUserEvent.create(new UserKafka(
+                userId,
+                userRequest.getUserName(),
+                userRequest.getEmail(),
+                userRequest.getName(),
+                userRequest.getLastName(),
+                "",
+                "",
+                "",
+                ""
+        ));
 
-        Response response = usersResource.create(userRepresentation);
-
-        if (response.getStatus() == 201) {
-            String userId = extractUserIdFromLocation(response.getLocation().getPath());
-
-            setNewUserPassword(userRequest.getPassword(), userId, usersResource);
-
-            producerRegisterUserEvent.create(new UserKafka(
-                    userId,
-                    userRequest.getUserName(),
-                    userRequest.getEmail(),
-                    userRequest.getName(),
-                    userRequest.getLastName(),
-                    "",
-                    "",
-                    "",
-                    ""
-            ));
-
-            return userId;
-        } else if (response.getStatus() == 409) {
-            throw new AlreadyExistsException("User already exists", new ErrorField("email", "Email is already in use"));
-
-        } else {
-            return null;
-        }
+        return userId;
     }
 
     @Override
     public String registerUserSystem(@NonNull UserSystemKycloackRequest userRequest, boolean isSystemUser) {
-        UsersResource usersResource = keycloakProvider.getUserResource();
-
-        UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setFirstName(userRequest.getName());
-        userRepresentation.setLastName(userRequest.getLastName());
-        userRepresentation.setEmail(userRequest.getEmail());
-        userRepresentation.setUsername(userRequest.getUserName());
-        userRepresentation.setEnabled(true);
-        userRepresentation.setEmailVerified(true);
-
-        jakarta.ws.rs.core.Response response = usersResource.create(userRepresentation);
-
-        if (response.getStatus() == 201) {
-            String userId = extractUserIdFromLocation(response.getLocation().getPath());
-
-            setNewUserPassword(userRequest.getPassword(), userId, usersResource);
-            //  assignRolesToUser(null, userId);
-            // this.producerRegisterUserSystemEvent.create(userRequest, userId, null);
-            return userId;
-        } else if (response.getStatus() == 409) {
-            throw new AlreadyExistsException("User already exists", new ErrorField("email", "Email is already in use"));
-
-        } else {
-            return null;
-        }
+        return createUser(userRequest.getName(), userRequest.getLastName(), userRequest.getEmail(), userRequest.getUserName(), userRequest.getPassword());
     }
 
     @Override
     public Boolean sendPasswordRecoveryOtp(String email) {
         UsersResource userResource = keycloakProvider.getRealmResource().users();
-        List<UserRepresentation> users = userResource
-                .searchByEmail(email, true);
+        List<UserRepresentation> users = userResource.searchByEmail(email, true);
 
         if (!users.isEmpty()) {
             UserRepresentation user = users.get(0);
@@ -218,8 +153,7 @@ public class AuthService implements IAuthService {
             credential.setTemporary(false);
             credential.setValue(changeRequest.getNewPassword());
 
-            String userId = user.getId();
-            userResource.get(userId).resetPassword(credential);
+            userResource.get(user.getId()).resetPassword(credential);
             return true;
         }
         throw new UserNotFoundException("User not found", new ErrorField("email/password", "Change Password not found"));
@@ -234,12 +168,83 @@ public class AuthService implements IAuthService {
             credential.setValue(newPassword);
             credential.setTemporary(false); // True si quieres que sea una contraseña temporal
 
-            user.setCredentials(List.of(credential));
-
             keycloakProvider.getRealmResource().users().get(userId).resetPassword(credential);
             return true;
         }
         throw new UserNotFoundException("User not found", new ErrorField("email/password", "Change Password not found"));
+    }
+
+    @Override
+    public Boolean firstChangePassword(String userId, String email, String newPassword, String oldPassword) {
+        try {
+            LoginRequest loginDTO = new LoginRequest(email, oldPassword);
+            authenticate(loginDTO);
+        } catch (UserChangePasswordException exception) {
+            changePassword(userId, newPassword);
+            return true;
+        }
+        return false;
+    }
+
+    private HttpHeaders createHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        return headers;
+    }
+
+    private MultiValueMap<String, String> createAuthRequestMap(String username, String password) {
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.add("client_id", keycloakProvider.getClient_id());
+        map.add("grant_type", keycloakProvider.getGrant_type());
+        map.add("username", username);
+        map.add("password", password);
+        map.add("client_secret", keycloakProvider.getClient_secret());
+        return map;
+    }
+
+    private TokenResponse handleAuthResponse(ResponseEntity<TokenResponse> response) {
+        if (response.getStatusCode() == HttpStatus.OK) {
+            return response.getBody();
+        } else {
+            throw new AuthenticateNotFoundException("The username or password is incorrect. Please try again.",
+                    new ErrorField("email/password", "The username or password is incorrect. Please try again."));
+        }
+    }
+
+    private void handleAuthException(HttpClientErrorException e) {
+        if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+            String errorResponse = e.getResponseBodyAsString();
+            if (errorResponse.contains("invalid_grant")) {
+                throw new UserChangePasswordException("You must change your password before continuing.",
+                        new ErrorField("password", "You must change your password before continuing."));
+            }
+        }
+        throw new AuthenticateNotFoundException("The username or password is incorrect. Please try again.", new ErrorField("email/password", "The username or password is incorrect. Please try again."));
+    }
+
+    private String createUser(String firstName, String lastName, String email, String username, String password) {
+        UsersResource usersResource = keycloakProvider.getUserResource();
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setFirstName(firstName);
+        userRepresentation.setLastName(lastName);
+        userRepresentation.setEmail(email);
+        userRepresentation.setUsername(username);
+        userRepresentation.setEnabled(true);
+        userRepresentation.setEmailVerified(true);
+
+        Response response = usersResource.create(userRepresentation);
+
+        if (response.getStatus() == 201) {
+            String userId = extractUserIdFromLocation(response.getLocation().getPath());
+            setNewUserPassword(password, userId, usersResource);
+            return userId;
+        } else if (response.getStatus() == 409) {
+            throw new AlreadyExistsException("User already exists", new ErrorField("email", "Email is already in use"));
+        } else {
+            throw new RuntimeException("Failed to create user");
+        }
     }
 
     private String extractUserIdFromLocation(String path) {
@@ -248,7 +253,7 @@ public class AuthService implements IAuthService {
 
     private void setNewUserPassword(String password, String userId, UsersResource usersResource) {
         CredentialRepresentation credential = new CredentialRepresentation();
-        credential.setTemporary(false);
+        credential.setTemporary(true);
         credential.setType(CredentialRepresentation.PASSWORD);
         credential.setValue(password);
         usersResource.get(userId).resetPassword(credential);
@@ -275,5 +280,4 @@ public class AuthService implements IAuthService {
             usersResource.get(userId).roles().realmLevel().add(roleRepresentations);
         }
     }
-
 }

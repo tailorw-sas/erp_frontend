@@ -13,9 +13,9 @@ import java.util.logging.Logger;
 
 @Service
 public class ProducerDeleteFileEventService {
-    private final KafkaTemplate<String, String> producer;
+    private final KafkaTemplate<String, Object> producer;
 
-    public ProducerDeleteFileEventService(KafkaTemplate<String, String> producer) {
+    public ProducerDeleteFileEventService(KafkaTemplate<String, Object> producer) {
         this.producer = producer;
     }
 

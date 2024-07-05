@@ -36,9 +36,6 @@ public class ManageCreditCardType implements Serializable {
     @ManyToMany(mappedBy = "creditCardTypes", fetch = FetchType.EAGER)
     private Set<ManageMerchantBankAccount> merchantBankAccounts = new HashSet<>();
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -48,9 +45,6 @@ public class ManageCreditCardType implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
 
     public ManageCreditCardType(ManageCreditCardTypeDto dto) {
         this.id = dto.getId();

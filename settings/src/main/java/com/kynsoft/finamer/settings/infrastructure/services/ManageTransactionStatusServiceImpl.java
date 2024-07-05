@@ -51,14 +51,11 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
 
     @Override
     public void delete(ManageTransactionStatusDto dto) {
-        ManageTransactionStatus delete = new ManageTransactionStatus(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeleteAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -68,6 +65,11 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
             return userSystem.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_BANK_NOT_FOUND, new ErrorField("id", "Manager Bank not found.")));
+    }
+
+    @Override
+    public List<ManageTransactionStatusDto> findByIds(List<UUID> ids) {
+        return this.repositoryQuery.findAllById(ids).stream().map(ManageTransactionStatus::toAggregate).toList();
     }
 
     @Override

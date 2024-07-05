@@ -28,7 +28,7 @@ public class ConsumerTriggerPasswordResetEventService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer_otp", groupId = "otp")
+    @KafkaListener(topics = "finamer-otp", groupId = "otp")
     public void listen(String event) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();

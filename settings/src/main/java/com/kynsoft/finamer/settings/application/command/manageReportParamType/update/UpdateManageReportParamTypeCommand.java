@@ -20,6 +20,7 @@ public class UpdateManageReportParamTypeCommand implements ICommand {
     private String label;
     private Boolean hotel;
     private String source;
+    private String description;
 
     public static UpdateManageReportParamTypeCommand fromRequest(UpdateManageReportParamTypeRequest request, UUID id){
         return new UpdateManageReportParamTypeCommand(
@@ -28,7 +29,8 @@ public class UpdateManageReportParamTypeCommand implements ICommand {
                 request.getName(),
                 request.getLabel(),
                 request.getHotel(),
-                request.getSource()
+                request.getSource(),
+                request.getDescription()
         );
     }
 

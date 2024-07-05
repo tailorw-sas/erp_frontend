@@ -18,7 +18,7 @@ import org.hibernate.annotations.CreationTimestamp;
 @Getter
 @Setter
 @Entity
-@Table(name = "manage_payment_transaction_type")
+@Table(name = "manage_department_group")
 public class ManageDepartmentGroup implements Serializable {
 
     @Id
@@ -31,11 +31,6 @@ public class ManageDepartmentGroup implements Serializable {
 
     private String description;
 
-    private Boolean isActive;
-
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -46,20 +41,16 @@ public class ManageDepartmentGroup implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
-
     public ManageDepartmentGroup(ManageDepartmentGroupDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
-        this.isActive = dto.getIsActive();
     }
 
     public ManageDepartmentGroupDto toAggregate(){
-        return new ManageDepartmentGroupDto(id,code, description, status, name, isActive);
+        return new ManageDepartmentGroupDto(id,code, description, status, name);
     }
 
 }

@@ -3,34 +3,68 @@ package com.kynsoft.report.applications.command.jasperReportTemplate.update;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
-import com.kynsoft.report.domain.services.IAmazonClient;
+import com.kynsoft.report.domain.dto.JasperReportTemplateType;
+import com.kynsoft.report.domain.dto.status.Status;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
+import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler<UpdateJasperReportTemplateCommand> {
 
     private final IJasperReportTemplateService service;
-    private final IAmazonClient amazonClient;
 
-    public UpdateJasperReportTemplateCommandHandler(IJasperReportTemplateService service, IAmazonClient amazonClient) {
+    public UpdateJasperReportTemplateCommandHandler(IJasperReportTemplateService service) {
         this.service = service;
-        this.amazonClient = amazonClient;
     }
 
     @Override
     public void handle(UpdateJasperReportTemplateCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "JasperReportTemplate ID cannot be null."));
-        JasperReportTemplateDto update = this.service.findById(command.getId());
-        update.setTemplateContentUrl(command.getFile());
-        UpdateIfNotNull.updateIfNotNull(update::setTemplateCode, command.getCode());
-        UpdateIfNotNull.updateIfNotNull(update::setTemplateDescription, command.getDescription());
-        UpdateIfNotNull.updateIfNotNull(update::setTemplateName, command.getName());
-        UpdateIfNotNull.updateIfNotNull(update::setParameters, command.getParameters());
-        update.setType(command.getType());
+        JasperReportTemplateDto updateDto = this.service.findById(command.getId());
 
-        this.service.update(update);
+        ConsumerUpdate update = new ConsumerUpdate();
+        updateStatus(updateDto::setStatus, command.getStatus(), updateDto.getStatus(), update::setUpdate);
+        updateType(updateDto::setType, command.getType(), updateDto.getType(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setDescription, command.getDescription(), updateDto.getDescription(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setFile, command.getFile(), updateDto.getFile(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setName, command.getName(), updateDto.getName(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setParameters, command.getParameters(), updateDto.getParameters(), update::setUpdate);
+
+        UpdateIfNotNull.updateDouble(updateDto::setParentIndex, command.getParentIndex(), updateDto.getParentIndex(), update::setUpdate);
+        UpdateIfNotNull.updateDouble(updateDto::setMenuPosition, command.getMenuPosition(), updateDto.getMenuPosition(), update::setUpdate);
+
+        UpdateIfNotNull.updateBoolean(updateDto::setWeb, command.getWeb(), updateDto.getWeb(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(updateDto::setSubMenu, command.getSubMenu(), updateDto.getSubMenu(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(updateDto::setSendEmail, command.getSendEmail(), updateDto.getSendEmail(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(updateDto::setInternal, command.getInternal(), updateDto.getInternal(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(updateDto::setHighRisk, command.getHighRisk(), updateDto.getHighRisk(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(updateDto::setVisible, command.getVisible(), updateDto.getVisible(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(updateDto::setCancel, command.getCancel(), updateDto.getCancel(), update::setUpdate);
+
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setRootIndex, command.getRootIndex(), updateDto.getRootIndex(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setLanguage, command.getLanguage(), updateDto.getLanguage(), update::setUpdate);
+
+        if (update.getUpdate() > 0) {
+            this.service.update(updateDto);
+        }
     }
+
+    private void updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
+        }
+    }
+
+    private void updateType(Consumer<JasperReportTemplateType> setter, JasperReportTemplateType newValue, JasperReportTemplateType oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
+        }
+    }
+
 }

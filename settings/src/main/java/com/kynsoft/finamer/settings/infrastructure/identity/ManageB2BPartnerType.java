@@ -33,18 +33,12 @@ public class ManageB2BPartnerType implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
 
     public ManageB2BPartnerType(ManageB2BPartnerTypeDto dto) {
         this.id = dto.getId();

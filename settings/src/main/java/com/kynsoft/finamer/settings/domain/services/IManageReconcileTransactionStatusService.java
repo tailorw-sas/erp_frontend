@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.settings.domain.dto.ManageReconcileTransactionStatusDto;
 
 import org.springframework.data.domain.Pageable;
@@ -21,4 +22,6 @@ public interface IManageReconcileTransactionStatusService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);
+
+    List<ManageReconcileTransactionStatusDto> findByIds(List<UUID> ids);
 }

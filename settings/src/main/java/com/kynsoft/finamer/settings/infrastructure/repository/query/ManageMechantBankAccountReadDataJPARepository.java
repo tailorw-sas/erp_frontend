@@ -16,7 +16,7 @@ public interface ManageMechantBankAccountReadDataJPARepository extends JpaReposi
 
     Page<ManageMerchantBankAccount> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManageMerchantBankAccount b WHERE b.managerMerchant.id = :managerMerchant AND b.manageBank.id = :manageBank AND b.deleted = false AND b.accountNumber = :accountNumber AND b.id <> :id")
-    Long countByManagerMerchantANDManagerCurrencyIdNotId(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("manageBank") UUID manageBank, @Param("accountNumber") String accountNumber);
+    @Query("SELECT COUNT(b) FROM ManageMerchantBankAccount b WHERE b.managerMerchant.id = :managerMerchant AND b.manageBank.id = :manageBank AND b.accountNumber = :accountNumber AND b.id <> :id")
+    Long countByManagerMerchantANDManagerBankIdNotId(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("manageBank") UUID manageBank, @Param("accountNumber") String accountNumber);
 
 }

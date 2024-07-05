@@ -24,13 +24,11 @@ public class ManageReportParamType {
     @Column(name = "id")
     private UUID id;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
     private String name;
+    private String description;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -38,9 +36,6 @@ public class ManageReportParamType {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
 
     private String label;
 
@@ -55,11 +50,12 @@ public class ManageReportParamType {
         this.label = dto.getLabel();
         this.hotel = dto.getHotel();
         this.source = dto.getSource();
+        this.description = dto.getDescription();
     }
 
     public ManageReportParamTypeDto toAggregate(){
         return new ManageReportParamTypeDto(
-                id, status, name,label,hotel,source
+                id, status, name,label,hotel,source, description
         );
     }
 }

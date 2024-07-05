@@ -22,4 +22,8 @@ public interface IManageEmployeeService {
     Long countByLoginNameAndNotId(String loginName, UUID id);
 
     Long countByEmailAndNotId(String email, UUID id);
+
+    List<ManageEmployeeDto> finAllByIds(List<UUID> ids);
+
+    void saveAll(List<ManageEmployeeDto> dtos);
 }

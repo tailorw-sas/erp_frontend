@@ -28,7 +28,8 @@ public class CreateManageAgencyTypeCommandHandler implements ICommandHandler<Cre
                 command.getId(),
                 command.getCode(),
                 command.getStatus(),
-                command.getName()
+                command.getName(),
+                command.getDescription()
         ));
     }
 }

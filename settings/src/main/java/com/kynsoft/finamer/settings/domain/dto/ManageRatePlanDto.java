@@ -17,7 +17,7 @@ public class ManageRatePlanDto {
     private UUID id;
     private String code;
     private String name;
-    private String hotel;
+    private ManageHotelDto hotel;
     private String description;
     private Status status;
 

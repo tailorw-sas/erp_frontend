@@ -16,10 +16,10 @@ public interface ManageCreditCardTypeReadDataJPARepository extends JpaRepository
 
     Page<ManageCreditCardType> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManageCreditCardType b WHERE b.code = :code AND b.id <> :id AND b.deleted = false")
+    @Query("SELECT COUNT(b) FROM ManageCreditCardType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
-    @Query("SELECT COUNT(b) FROM ManageCreditCardType b WHERE b.firstDigit = :firstDigit AND b.id <> :id AND b.deleted = false")
+    @Query("SELECT COUNT(b) FROM ManageCreditCardType b WHERE b.firstDigit = :firstDigit AND b.id <> :id")
     Long countByFirstDigitAndNotId(@Param("firstDigit") Integer firstDigit, @Param("id") UUID id);
 
 }

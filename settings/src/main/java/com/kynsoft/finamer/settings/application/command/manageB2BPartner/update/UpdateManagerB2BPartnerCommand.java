@@ -21,7 +21,7 @@ public class UpdateManagerB2BPartnerCommand implements ICommand {
     private final String userName;
     private final String password;
     private final String token;
-    private final UUID ManageB2BPartnerType;
+    private final UUID b2BPartnerType;
 
     public UpdateManagerB2BPartnerCommand(UUID id, String description, String name, Status status, String url, String ip,
                                           String userName, String password, String token, UUID manageB2BPartnerType) {
@@ -34,7 +34,7 @@ public class UpdateManagerB2BPartnerCommand implements ICommand {
         this.userName = userName;
         this.password = password;
         this.token = token;
-        ManageB2BPartnerType = manageB2BPartnerType;
+        b2BPartnerType = manageB2BPartnerType;
     }
 
     public static UpdateManagerB2BPartnerCommand fromRequest(UpdateManagerB2BPartnerRequest request, UUID id) {

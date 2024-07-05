@@ -23,7 +23,6 @@ public class ManageDepartmentGroupResponse  implements IResponse {
     private String description;
 
     private String name;
-    private Boolean isActive;
 
 
     public ManageDepartmentGroupResponse(ManageDepartmentGroupDto dto) {
@@ -32,7 +31,6 @@ public class ManageDepartmentGroupResponse  implements IResponse {
         this.status = dto.getStatus();
         this.name = dto.getName();
         this.description = dto.getDescription();
-        this.isActive = dto.getIsActive();
     }
 
 }

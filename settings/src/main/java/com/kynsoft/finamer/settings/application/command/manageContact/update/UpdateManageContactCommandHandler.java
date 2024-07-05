@@ -8,6 +8,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageContactDto;
 import com.kynsoft.finamer.settings.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.rules.manageContact.ManageContactEmailMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageContactService;
 import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import org.springframework.stereotype.Component;
@@ -30,12 +31,16 @@ public class UpdateManageContactCommandHandler implements ICommandHandler<Update
     @Override
     public void handle(UpdateManageContactCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Contact ID cannot be null."));
+        RulesChecker.checkRule(new ManageContactEmailMustBeUniqueRule(this.service, command.getEmail(), command.getManageHotel(), command.getId()));
 
         ManageContactDto dto = service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setEmail, command.getEmail(), dto.getEmail(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setPhone, command.getPhone(), dto.getPhone(), update::setUpdate);
+        UpdateIfNotNull.updateInteger(dto::setPosition, command.getPosition(), dto.getPosition(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         updateHotel(dto::setManageHotel, command.getManageHotel(), dto.getManageHotel().getId(), update::setUpdate);

@@ -28,7 +28,7 @@ public class ConsumerSaveFileEventService {
     private IAFileService fileService;
 
     // Ejemplo de un método listener
-    @KafkaListener(topics = "finamer_file", groupId = "file")
+    @KafkaListener(topics = "finamer-file", groupId = "file")
     public void listen(String event) {
         try {
 

@@ -96,7 +96,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGER_LANGUAGE_NAME_CANNOT_BE_EMPTY(690, Series.DOMAIN_ERROR, "The name of the language cannot be empty."),
     MANAGER_LANGUAGE_NOT_FOUND(691, Series.DOMAIN_ERROR, "Manager language not found."),
     MANAGER_MERCHANT_CURRENCY_NOT_FOUND(687, Series.DOMAIN_ERROR, "Manager Merchant Currency not found."),
-    MANAGER_MERCHANT_CURRENCY_MUST_BY_UNIQUE(688, Series.DOMAIN_ERROR, "Item already exists."),
+    MANAGER_MERCHANT_CURRENCY_MUST_BY_UNIQUE(688, Series.DOMAIN_ERROR, "Data entered overlaps with others, please check."),
     ALERT_CODE_CANNOT_BE_EMPTY(690, Series.DOMAIN_ERROR, "Alert code cannot be empty"),
     ALERT_NAME_CANNOT_BE_EMPTY(691, Series.DOMAIN_ERROR, "Alert name cannot be empty"),
     ALERT_NOT_FOUND(692, Series.DOMAIN_ERROR, "Alert code not found"),
@@ -210,7 +210,6 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_REGION_NAME_CANNOT_BE_EMPTY(800, Series.DOMAIN_ERROR, "The name cannot be empty."),
     MANAGE_REGION_CODE_SIZE(801, Series.DOMAIN_ERROR, "The code is not accepted."),
     MANAGE_REGION_CODE_MUST_BY_UNIQUE(802, Series.DOMAIN_ERROR, "The code must be unique."),
-
     MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND(802, Series.DOMAIN_ERROR, "The payment transaction type is not found."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CODE_MUST_BY_UNIQUE(803, Series.DOMAIN_ERROR, "The code must be unique."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CODE_SIZE(804, Series.DOMAIN_ERROR, "The code is not accepted."),
@@ -218,10 +217,25 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     NAME_CANNOT_BE_EMPTY(1000, Series.DOMAIN_ERROR, "The name cannot be empty."),
     ITEM_ALREADY_EXITS(1001, Series.DOMAIN_ERROR, "Item already exists."),
     NOT_FOUND(1002, Series.DOMAIN_ERROR, "Not found."),
-    CODE_SIZE(1003, Series.DOMAIN_ERROR, "The code is not accepted.");
-
-
-  
+    FIELD_IS_REQUIRED(1003, Series.DOMAIN_ERROR, "The field is required."),
+    CODE_SIZE(1003, Series.DOMAIN_ERROR, "The code is not accepted."),
+    ACCOUNT_NUMBER(1004, Series.DOMAIN_ERROR, "The account number is not accepted."),
+    MANAGE_AGENCY_NOT_FOUND(1005, Series.DOMAIN_ERROR, "The agency is not found."),
+    MANAGE_AGENCY_CODE_MUST_BY_UNIQUE(1006, Series.DOMAIN_ERROR, "The code must be unique."),
+    MANAGE_AGENCY_CODE_SIZE(1007, Series.DOMAIN_ERROR, "The code is not accepted."),
+    MANAGE_AGENCY_NAME_CANNOT_BE_EMPTY(1008, Series.DOMAIN_ERROR, "The name of the agency cannot be empty."),
+    MANAGE_AGENCY_CIF_CANNOT_BE_EMPTY(1009, Series.DOMAIN_ERROR, "The name of the agency cannot be empty."),
+    NOT_DELETE(1010, Series.DOMAIN_ERROR, "Element cannot be deleted has a related element."),
+    EMAIL_ALREADY_EXISTS(1011, Series.DOMAIN_ERROR, "Email already exists."),
+    PHONE_EXTENSION(1012, Series.DOMAIN_ERROR, "Phone extension is not accepted."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_DEFAULT(1013, Series.DOMAIN_ERROR, "Another item already exists with default."),
+    CHECK_AMOUNT_GREATER_THAN_ZERO_STRICTLY(1014, Series.DOMAIN_ERROR, "The amount must be greater than zero and less or equal than Payment Balance."),
+    CHECK_MINIMUM_CHARACTER_REQUIREMENT(1015, Series.DOMAIN_ERROR, "The comment does not meet the minimum character requirement."),
+    CHECK_DATE_IS_BEFORE_CURRENT_DATE(1016, Series.DOMAIN_ERROR, "The provided date must be before the current date."),
+    CHECK_PAYMENT_AMOUNT_GREATER_THAN_ZERO(1017, Series.DOMAIN_ERROR, "The entered payment amount is invalid. Please enter an amount strictly greater than zero."),
+    CHECK_AMOUNT_IF_DEPOSIT_BALANCE_GREATER_THAN_ZERO(1018, Series.DOMAIN_ERROR, "Cannot create Apply Deposit payment details because the Deposit check transaction has insufficient balance."),
+    AMOUNT_GREATER_THAN_ZERO(1019, Series.DOMAIN_ERROR, "The amount must be greater than 0."),
+    RESERVATION_NUMBER(1020, Series.DOMAIN_ERROR, "The reservation number is not accepted.");
 
     private static final DomainErrorMessage[] VALUES;
 
@@ -275,7 +289,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
      * @param statusCode the numeric value of the enum to be returned
      * @return the enum constant with the specified numeric value
      * @throws IllegalArgumentException if this enum has no constant for the
-     *                                  specified numeric value
+     * specified numeric value
      */
     public static DomainErrorMessage valueOf(int statusCode) {
         DomainErrorMessage status = resolve(statusCode);

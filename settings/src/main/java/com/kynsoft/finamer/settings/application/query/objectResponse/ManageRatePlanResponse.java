@@ -19,7 +19,7 @@ public class ManageRatePlanResponse implements IResponse {
     private UUID id;
     private String code;
     private String name;
-    private String hotel;
+    private ManageHotelResponse hotel;
     private String description;
     private Status status;
 
@@ -27,7 +27,7 @@ public class ManageRatePlanResponse implements IResponse {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
-        this.hotel = dto.getHotel();
+        this.hotel = new ManageHotelResponse(dto.getHotel());
         this.description = dto.getDescription();
         this.status = dto.getStatus();
     }

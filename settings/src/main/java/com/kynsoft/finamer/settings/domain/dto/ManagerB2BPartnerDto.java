@@ -24,7 +24,6 @@ public class ManagerB2BPartnerDto {
     private String userName;
     private String password;
     private String token;
-    private UUID ManageB2BPartnerType;
     private ManageB2BPartnerTypeDto b2BPartnerTypeDto;
 
 }

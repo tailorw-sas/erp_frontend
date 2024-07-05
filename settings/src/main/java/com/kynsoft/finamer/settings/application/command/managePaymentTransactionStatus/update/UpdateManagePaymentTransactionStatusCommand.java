@@ -6,6 +6,7 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -16,12 +17,16 @@ public class UpdateManagePaymentTransactionStatusCommand implements ICommand {
     private Status status;
     private String name;
     private String description;
+    private Boolean requireValidation;
+    private List<UUID> navigate;
 
-    public UpdateManagePaymentTransactionStatusCommand(UUID id,  Status status, String name, String description) {
+    public UpdateManagePaymentTransactionStatusCommand(UUID id,  Status status, String name, String description, Boolean requireValidation,List<UUID> navigate) {
         this.id = id;
         this.status = status;
         this.name = name;
         this.description = description;
+        this.requireValidation = requireValidation;
+        this.navigate = navigate;
     }
 
     public static UpdateManagePaymentTransactionStatusCommand fromRequest(UpdateManagePaymentTransactionStatusRequest request, UUID id){
@@ -29,7 +34,9 @@ public class UpdateManagePaymentTransactionStatusCommand implements ICommand {
                 id,
                 request.getStatus(),
                 request.getName(),
-                request.getDescription()
+                request.getDescription(),
+                request.getRequireValidation(),
+                request.getNavigate()
         );
     }
 

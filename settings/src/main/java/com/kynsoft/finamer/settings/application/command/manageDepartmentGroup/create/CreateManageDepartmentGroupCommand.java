@@ -17,15 +17,13 @@ public class CreateManageDepartmentGroupCommand implements ICommand {
     private Status status;
     private String name;
     private String description;
-    private Boolean isActive;
 
-    public CreateManageDepartmentGroupCommand(String code, Status status, String name, String description, Boolean isActive) {
+    public CreateManageDepartmentGroupCommand(String code, Status status, String name, String description) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.status = status;
         this.name = name;
         this.description = description;
-        this.isActive = isActive;
     }
 
     public static CreateManageDepartmentGroupCommand fromRequest(
@@ -35,8 +33,7 @@ public class CreateManageDepartmentGroupCommand implements ICommand {
 
                 request.getStatus(),
                 request.getName(),
-                request.getDescription(),
-                request.getIsActive()
+                request.getDescription()
 
         );
     }

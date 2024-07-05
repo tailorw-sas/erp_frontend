@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.settings.domain.dto;
 
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,5 +19,6 @@ public class ManagerMerchantCurrencyDto {
     private ManagerCurrencyDto managerCurrency;
     private Double value;
     private String description;
+    private Status status;
 
 }

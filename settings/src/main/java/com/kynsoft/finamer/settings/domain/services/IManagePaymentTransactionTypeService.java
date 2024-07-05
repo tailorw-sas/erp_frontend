@@ -20,5 +20,9 @@ public interface IManagePaymentTransactionTypeService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    PaginatedResponse findWithApplyDepositAndDepositFalse(Boolean applyDeposit, Boolean deposit, Boolean defaults, Pageable pageable);
+
     Long countByCodeAndNotId(String code, UUID id);
+
+    Long countByDefaultAndNotId(UUID id);
 }

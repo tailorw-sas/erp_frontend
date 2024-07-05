@@ -15,9 +15,9 @@ import java.util.logging.Logger;
 @Service
 public class ProducerDeleteUserBusinessRelationEventService {
 
-    private final KafkaTemplate<String, String> producer;
+    private final KafkaTemplate<String, Object> producer;
 
-    public ProducerDeleteUserBusinessRelationEventService(KafkaTemplate<String, String> producer) {
+    public ProducerDeleteUserBusinessRelationEventService(KafkaTemplate<String, Object> producer) {
         this.producer = producer;
     }
 
@@ -31,7 +31,7 @@ public class ProducerDeleteUserBusinessRelationEventService {
 
             ObjectMapper objectMapper = new ObjectMapper();
             String json = objectMapper.writeValueAsString(new CreateEvent<>(event, EventType.DELETED));
-            this.producer.send("finamer_user-business-delete", json);
+            this.producer.send("finamer-user-business-delete", json);
 
         } catch (JsonProcessingException ex) {
             Logger.getLogger(ProducerDeleteUserBusinessRelationEventService.class.getName()).log(Level.SEVERE, null, ex);

@@ -4,14 +4,14 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.settings.application.command.managerMerchantCurrency.create.CreateManagerMerchantCurrencyCommand;
-import com.kynsoft.finamer.settings.application.command.managerMerchantCurrency.create.CreateManagerMerchantCurrencyMessage;
-import com.kynsoft.finamer.settings.application.command.managerMerchantCurrency.create.CreateManagerMerchantCurrencyRequest;
-import com.kynsoft.finamer.settings.application.command.managerMerchantCurrency.delete.DeleteManagerMerchantCurrencyCommand;
-import com.kynsoft.finamer.settings.application.command.managerMerchantCurrency.delete.DeleteManagerMerchantCurrencyMessage;
-import com.kynsoft.finamer.settings.application.command.managerMerchantCurrency.update.UpdateManagerMerchantCurrencyCommand;
-import com.kynsoft.finamer.settings.application.command.managerMerchantCurrency.update.UpdateManagerMerchantCurrencyMessage;
-import com.kynsoft.finamer.settings.application.command.managerMerchantCurrency.update.UpdateManagerMerchantCurrencyRequest;
+import com.kynsoft.finamer.settings.application.command.manageMerchantCurrency.create.CreateManageMerchantCurrencyCommand;
+import com.kynsoft.finamer.settings.application.command.manageMerchantCurrency.create.CreateManageMerchantCurrencyMessage;
+import com.kynsoft.finamer.settings.application.command.manageMerchantCurrency.create.CreateManageMerchantCurrencyRequest;
+import com.kynsoft.finamer.settings.application.command.manageMerchantCurrency.delete.DeleteManagerMerchantCurrencyCommand;
+import com.kynsoft.finamer.settings.application.command.manageMerchantCurrency.delete.DeleteManagerMerchantCurrencyMessage;
+import com.kynsoft.finamer.settings.application.command.manageMerchantCurrency.update.UpdateManagerMerchantCurrencyCommand;
+import com.kynsoft.finamer.settings.application.command.manageMerchantCurrency.update.UpdateManagerMerchantCurrencyMessage;
+import com.kynsoft.finamer.settings.application.command.manageMerchantCurrency.update.UpdateManagerMerchantCurrencyRequest;
 import com.kynsoft.finamer.settings.application.query.managerMerchantCurrency.getById.FindManagerMerchantCurrencyByIdQuery;
 import com.kynsoft.finamer.settings.application.query.managerMerchantCurrency.search.GetSearchManagerMerchantCurrencyQuery;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerMerchantCurrencyResponse;
@@ -32,9 +32,9 @@ public class ManagerMerchantCurrencyController {
     }
 
     @PostMapping()
-    public ResponseEntity<CreateManagerMerchantCurrencyMessage> create(@RequestBody CreateManagerMerchantCurrencyRequest request) {
-        CreateManagerMerchantCurrencyCommand createCommand = CreateManagerMerchantCurrencyCommand.fromRequest(request);
-        CreateManagerMerchantCurrencyMessage response = mediator.send(createCommand);
+    public ResponseEntity<CreateManageMerchantCurrencyMessage> create(@RequestBody CreateManageMerchantCurrencyRequest request) {
+        CreateManageMerchantCurrencyCommand createCommand = CreateManageMerchantCurrencyCommand.fromRequest(request);
+        CreateManageMerchantCurrencyMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);
     }

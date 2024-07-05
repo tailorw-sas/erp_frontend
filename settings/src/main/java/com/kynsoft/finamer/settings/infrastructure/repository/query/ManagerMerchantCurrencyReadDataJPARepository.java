@@ -16,10 +16,10 @@ public interface ManagerMerchantCurrencyReadDataJPARepository extends JpaReposit
 
     Page<ManagerMerchantCurrency> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManagerMerchantCurrency b WHERE b.managerMerchant.id = :managerMerchant AND b.managerCurrency.id = :managerCurrency AND b.deleted = false")
-    Long countByCodeAndNotId(@Param("managerMerchant") UUID managerMerchant, @Param("managerCurrency") UUID managerCurrency);
+    @Query("SELECT COUNT(b) FROM ManagerMerchantCurrency b WHERE b.managerMerchant.id = :managerMerchant AND b.managerCurrency.id = :managerCurrency")
+    Long countByManagerMerchantAndManagerCurrency(@Param("managerMerchant") UUID managerMerchant, @Param("managerCurrency") UUID managerCurrency);
 
-    @Query("SELECT COUNT(b) FROM ManagerMerchantCurrency b WHERE b.managerMerchant.id = :managerMerchant AND b.managerCurrency.id = :managerCurrency AND b.deleted = false AND b.id <> :id")
-    Long countByManagerMerchantANDManagerCurrencyIdNotId(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("managerCurrency") UUID managerCurrency);
+    @Query("SELECT COUNT(b) FROM ManagerMerchantCurrency b WHERE b.managerMerchant.id = :managerMerchant AND b.managerCurrency.id = :managerCurrency AND b.id <> :id")
+    Long countByManagerMerchantAndManagerCurrencyNotId(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("managerCurrency") UUID managerCurrency);
 
 }

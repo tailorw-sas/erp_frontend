@@ -18,5 +18,7 @@ public interface IModuleService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
     Long countByNameAndNotId(String name, UUID id);
 
+    Long countByCodeAndNotId(String code, UUID id);
+
     List<ModuleNodeDto> buildStructure();
 }

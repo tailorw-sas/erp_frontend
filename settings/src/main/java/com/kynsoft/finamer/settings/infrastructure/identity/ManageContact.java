@@ -25,11 +25,8 @@ public class ManageContact implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true)
+//    @Column(unique = true)
     private String code;
-
-    @Column(nullable = true)
-    private Boolean deleted = false;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -44,9 +41,6 @@ public class ManageContact implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "hotel_id")
@@ -72,7 +66,9 @@ public class ManageContact implements Serializable {
 
     public ManageContactDto toAggregate(){
         return new ManageContactDto(
-                id, code, description, status, name, manageHotel.toAggregate(), email, phone, position
+                id, code, description, status, name,
+                manageHotel != null ? manageHotel.toAggregate() : null,
+                email, phone, position
         );
     }
 }

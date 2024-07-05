@@ -21,4 +21,8 @@ public interface IManageTradingCompaniesService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);
+
+    List<ManageTradingCompaniesDto> findByIds(List<UUID> ids);
+
+    List<ManageTradingCompaniesDto> findAll();
 }

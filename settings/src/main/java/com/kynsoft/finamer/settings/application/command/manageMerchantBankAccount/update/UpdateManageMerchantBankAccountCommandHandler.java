@@ -43,7 +43,7 @@ public class UpdateManageMerchantBankAccountCommandHandler implements ICommandHa
     public void handle(UpdateManageMerchantBankAccountCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Merchant Bank Account ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerBank(), "manageBank", "Manage Bank ID cannot be null."));
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerMerchant(), "managerMerchant", "Manager Merchant ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerMerchant(), "manageMerchant", "Manager Merchant ID cannot be null."));
 
         RulesChecker.checkRule(new ManagerMerchantBankAccountMustBeUniqueByIdRule(this.serviceMerchantBankAccountService, command.getManagerMerchant(), command.getManagerBank(), command.getId(), command.getAccountNumber()));
 

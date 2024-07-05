@@ -14,11 +14,11 @@ public class UpdateManageRatePlanCommand implements ICommand {
 
     private UUID id;
     private String name;
-    private String hotel;
+    private UUID hotel;
     private String description;
     private Status status;
 
-    public UpdateManageRatePlanCommand(UUID id, String description, String name, String hotel, Status status) {
+    public UpdateManageRatePlanCommand(UUID id, String description, String name, UUID hotel, Status status) {
         this.id = id;
         this.description = description;
         this.name = name;

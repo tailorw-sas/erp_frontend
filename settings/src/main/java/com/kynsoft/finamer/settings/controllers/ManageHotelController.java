@@ -12,9 +12,13 @@ import com.kynsoft.finamer.settings.application.command.manageHotel.delete.Delet
 import com.kynsoft.finamer.settings.application.command.manageHotel.update.UpdateManageHotelCommand;
 import com.kynsoft.finamer.settings.application.command.manageHotel.update.UpdateManageHotelMessage;
 import com.kynsoft.finamer.settings.application.command.manageHotel.update.UpdateManageHotelRequest;
+import com.kynsoft.finamer.settings.application.query.manageAgency.findAllGrouped.FindAllManageAgencyGroupedQuery;
+import com.kynsoft.finamer.settings.application.query.manageHotel.findAllGrouped.FindAllHotelsGroupedQuery;
 import com.kynsoft.finamer.settings.application.query.manageHotel.getById.FindManageHotelByIdQuery;
 import com.kynsoft.finamer.settings.application.query.manageHotel.search.GetSearchManageHotelQuery;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageHotelResponse;
+import com.kynsoft.finamer.settings.application.query.objectResponse.manageAgencyGroup.ManageAgencyGroupedResponse;
+import com.kynsoft.finamer.settings.application.query.objectResponse.manageHotelGroup.ManageHotelGroupedResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -69,6 +73,14 @@ public class ManageHotelController {
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateManageHotelRequest request){
         UpdateManageHotelCommand command = UpdateManageHotelCommand.fromRequest(request, id);
         UpdateManageHotelMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/all-grouped")
+    public ResponseEntity<?> getAll() {
+        FindAllHotelsGroupedQuery query = new FindAllHotelsGroupedQuery();
+        ManageHotelGroupedResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }

@@ -12,9 +12,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,9 +30,6 @@ public class ManageInvoiceStatus implements Serializable {
     @Column(unique = true)
     private String code;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -48,18 +44,19 @@ public class ManageInvoiceStatus implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
-
     private Boolean enabledToPrint;
     private Boolean enabledToPropagate;
     private Boolean enabledToApply;
     private Boolean enabledToPolicy;
     private Boolean processStatus;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "navigate_entity", joinColumns = @JoinColumn(name = "entity_id"))
-    private Set<Navigate> navigate;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "manage_invoice_status_relations",
+            joinColumns = @JoinColumn(name = "parent_id"),
+            inverseJoinColumns = @JoinColumn(name = "child_id")
+    )
+    private List<ManageInvoiceStatus> navigate = new ArrayList<>();
 
     public ManageInvoiceStatus(ManageInvoiceStatusDto dto){
         this.id = dto.getId();
@@ -72,13 +69,26 @@ public class ManageInvoiceStatus implements Serializable {
         this.enabledToApply= dto.getEnabledToApply();
         this.enabledToPolicy = dto.getEnabledToPolicy();
         this.processStatus = dto.getProcessStatus();
-        this.navigate = dto.getNavigate();
+        if (dto.getNavigate() != null) {
+            this.navigate = dto.getNavigate().stream()
+                    .map(ManageInvoiceStatus::new)
+                    .collect(Collectors.toList());
+        }
+    }
+
+    public ManageInvoiceStatusDto toAggregateSimple(){
+        return new ManageInvoiceStatusDto(
+                id, code, description, status, name, enabledToPrint, enabledToPropagate,
+                enabledToApply, enabledToPolicy, processStatus,
+                 null
+        );
     }
 
     public ManageInvoiceStatusDto toAggregate(){
         return new ManageInvoiceStatusDto(
                 id, code, description, status, name, enabledToPrint, enabledToPropagate,
-                enabledToApply, enabledToPolicy, processStatus, new HashSet<>(navigate)
+                enabledToApply, enabledToPolicy, processStatus,
+                navigate != null ? navigate.stream().map(ManageInvoiceStatus::toAggregateSimple).toList() : null
         );
     }
 }

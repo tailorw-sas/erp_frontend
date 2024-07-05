@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -28,7 +29,7 @@ public class ManageInvoiceStatusResponse implements IResponse {
     private Boolean enabledToApply;
     private Boolean enabledToPolicy;
     private Boolean processStatus;
-    private HashSet<Navigate> navigate;
+    private List<ManageInvoiceStatusResponse> navigate;
 
     public ManageInvoiceStatusResponse(ManageInvoiceStatusDto dto){
         this.id = dto.getId();
@@ -41,6 +42,6 @@ public class ManageInvoiceStatusResponse implements IResponse {
         this.enabledToApply = dto.getEnabledToApply();
         this.enabledToPolicy = dto.getEnabledToPolicy();
         this.processStatus = dto.getProcessStatus();
-        this.navigate = dto.getNavigate();
+        this.navigate = dto.getNavigate() != null ? dto.getNavigate().stream().map(ManageInvoiceStatusResponse::new).toList() : null;
     }
 }

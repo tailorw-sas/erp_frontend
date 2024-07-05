@@ -25,26 +25,26 @@ public class UpdateManageActionLogCommandHandler implements ICommandHandler<Upda
     public void handle(UpdateManageActionLogCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Action Log ID cannot be null."));
 
-        ManageActionLogDto dto = service.findById(command.getId());
-
+        ManageActionLogDto actionLogDto = service.findById(command.getId());
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
-        updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
+        updateFields(actionLogDto, command, update);
 
         if (update.getUpdate() > 0) {
-            this.service.update(dto);
+            service.update(actionLogDto);
         }
     }
 
-    private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
+    private void updateFields(ManageActionLogDto actionLogDto, UpdateManageActionLogCommand command, ConsumerUpdate update) {
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(actionLogDto::setDescription, command.getDescription(), actionLogDto.getDescription(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(actionLogDto::setName, command.getName(), actionLogDto.getName(), update::setUpdate);
+        updateStatus(actionLogDto::setStatus, command.getStatus(), actionLogDto.getStatus(), update::setUpdate);
+    }
+
+    private void updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             setter.accept(newValue);
             update.accept(1);
-
-            return true;
         }
-        return false;
     }
 }

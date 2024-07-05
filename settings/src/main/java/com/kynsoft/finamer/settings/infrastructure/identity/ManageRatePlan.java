@@ -28,11 +28,12 @@ public class ManageRatePlan implements Serializable {
     private String code;
 
     private String name;
-    private String hotel;
-    private String description;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hotel_id")
+    private ManageHotel hotel;
+
+    private String description;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -44,20 +45,18 @@ public class ManageRatePlan implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
-
     public ManageRatePlan(ManageRatePlanDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
-        this.hotel = dto.getHotel();
+        this.hotel = new ManageHotel(dto.getHotel());
         this.description = dto.getDescription();
         this.status = dto.getStatus();
     }
 
     public ManageRatePlanDto toAggregate() {
-        return new ManageRatePlanDto(id, code, name, hotel, description, status);
+        return new ManageRatePlanDto(id, code, name,
+                hotel != null ? hotel.toAggregate() : null, description, status);
     }
 
 }

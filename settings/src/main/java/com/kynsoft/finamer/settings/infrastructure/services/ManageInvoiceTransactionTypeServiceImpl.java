@@ -57,14 +57,11 @@ public class ManageInvoiceTransactionTypeServiceImpl implements IManageInvoiceTr
 
     @Override
     public void delete(ManageInvoiceTransactionTypeDto dto) {
-        ManageInvoiceTransactionType delete = new ManageInvoiceTransactionType(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeletedAt(LocalDateTime.now());
-
-        repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

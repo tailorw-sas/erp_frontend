@@ -78,8 +78,8 @@ public class EmailServiceMailjet implements IEmailService {
 //    }
 
     @Override
-    public boolean sendEmailMailjet(EmailRequest emailRequest, String mailjetApiKey,String mailjetApiSecret,
-                                    String fromEmail, String fromName) {
+    public void sendEmailMailjet(EmailRequest emailRequest, String mailjetApiKey, String mailjetApiSecret,
+                                 String fromEmail, String fromName) {
        try {
            MailjetClient client;
            MailjetRequest request;
@@ -97,10 +97,9 @@ public class EmailServiceMailjet implements IEmailService {
                   .property(Email.VARS, MailJetVar.createVarsJsonObject(emailRequest.getMailJetVars()))
                    .property(Email.MJEVENTPAYLOAD, "Eticket,1234,row,15,seat,B");
            response = client.post(request);
-           return response.getStatus() == 200;
+           response.getStatus();
        }catch (Exception ex){
            String e= ex.getMessage();
-           return false;
        }
     }
 

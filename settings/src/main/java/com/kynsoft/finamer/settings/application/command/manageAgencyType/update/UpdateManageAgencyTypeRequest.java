@@ -10,4 +10,5 @@ public class UpdateManageAgencyTypeRequest {
 
     private Status status;
     private String name;
+    private String description;
 }

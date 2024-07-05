@@ -36,7 +36,7 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
 //        parameters.put("lugar", "HOSPITAL MILITAR");
 //        parameters.put("fecha_registro", "2024-04-23 10:40");
 //        parameters.put("URL_QR", "http://d3ksvzqyx4up5m.cloudfront.net/Ttt_2024-03-14_19-03-33.png");
-        byte [] response = reportService.generatePdfReport(command.getParameters(),reportTemplateDto.getTemplateContentUrl(), new JREmptyDataSource());
+        byte [] response = reportService.generatePdfReport(command.getParameters(),reportTemplateDto.getFile(), new JREmptyDataSource());
         command.setResult(response);
     }
 }

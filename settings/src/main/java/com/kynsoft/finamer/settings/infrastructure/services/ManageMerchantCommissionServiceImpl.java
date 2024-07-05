@@ -14,17 +14,18 @@ import com.kynsoft.finamer.settings.domain.services.IManageMerchantCommissionSer
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageMerchantCommission;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageMerchantCommissionWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageMerchantCommissionReadDataJPARepository;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommissionService {
@@ -52,19 +53,18 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
 
     @Override
     public void delete(ManageMerchantCommissionDto dto) {
-        ManageMerchantCommission delete = new ManageMerchantCommission(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setDeleteAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
     public ManageMerchantCommissionDto findById(UUID id) {
-        Optional<ManageMerchantCommission> userSystem = this.repositoryQuery.findById(id);
-        if (userSystem.isPresent()) {
-            return userSystem.get().toAggregate();
+        Optional<ManageMerchantCommission> commission = this.repositoryQuery.findById(id);
+        if (commission.isPresent()) {
+            return commission.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_COMMISSION_NOT_FOUND, new ErrorField("id", "Manage Merchant Commission not found.")));
     }
@@ -81,40 +81,81 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
-
             if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
                 try {
                     Status enumValue = Status.valueOf((String) filter.getValue());
                     filter.setValue(enumValue);
                 } catch (IllegalArgumentException e) {
-                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
+                    System.err.println("Invalid value for enum type Status: " + filter.getValue());
                 }
             }
         }
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageMerchantCommission> data) {
-        List<ManageMerchantCommissionResponse> userSystemsResponses = new ArrayList<>();
+        List<ManageMerchantCommissionResponse> responses = new ArrayList<>();
         for (ManageMerchantCommission p : data.getContent()) {
-            userSystemsResponses.add(new ManageMerchantCommissionResponse(p.toAggregate()));
+            responses.add(new ManageMerchantCommissionResponse(p.toAggregate()));
         }
-        return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),
+        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
+//    @Override
+//    public Long countByManagerMerchantANDManagerCreditCartType(UUID managerMerchant, UUID manageCreditCartType) {
+//        return this.repositoryQuery.countByManagerMerchantANDManagerCreditCartType(managerMerchant, manageCreditCartType);
+//    }
+//
+//    @Override
+//    public Long countByManagerMerchantANDManagerCreditCartTypeIdNotId(UUID id, UUID managerMerchant, UUID manageCreditCartType) {
+//        return this.repositoryQuery.countByManagerMerchantANDManagerCreditCartTypeNotId(id, managerMerchant, manageCreditCartType);
+//    }
+
+
     @Override
-    public Long countByManagerMerchantANDManagerCreditCartType(UUID managerMerchant, UUID manageCreditCartType) {
-        return this.repositoryQuery.countByManagerMerchantANDManagerCreditCartType(managerMerchant, manageCreditCartType);
+    public List<ManageMerchantCommissionDto> findAllByMerchantAndCreditCardType(UUID managerMerchant, UUID manageCreditCartType) {
+        return this.repositoryQuery.findAllByManagerMerchantAndManageCreditCartType(managerMerchant, manageCreditCartType)
+                .stream()
+                .map(ManageMerchantCommission::toAggregate)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Long countByManagerMerchantANDManagerCreditCartTypeIdNotId(UUID id, UUID managerMerchant, UUID manageCreditCartType) {
-        return this.repositoryQuery.countByManagerMerchantANDManagerCurrencyIdNotId(id, managerMerchant, manageCreditCartType);
+    public boolean checkDateOverlapForSameCombination(UUID managerMerchant, UUID manageCreditCartType, Double commission, String calculationType, LocalDate fromDate, LocalDate toDate) {
+        List<ManageMerchantCommissionDto> existingCommissions = findAllByMerchantAndCreditCardType(managerMerchant, manageCreditCartType);
+        for (ManageMerchantCommissionDto existing : existingCommissions) {
+            if (existing.getCommission().equals(commission) && existing.getCalculationType().equals(calculationType)) {
+                if (isOverlapping(existing.getFromDate(), existing.getToDate(), fromDate, toDate)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
-    public Long countByManagerMerchantANDManagerCreditCartTypeANDDateRange(UUID id, UUID managerMerchant, UUID manageCreditCartType, LocalDate fromCheckDate, LocalDate toCheckDate) {
-        return this.repositoryQuery.countByManagerMerchantANDManagerCreditCartTypeANDDateRange(id, managerMerchant, manageCreditCartType, fromCheckDate, toCheckDate);
+    public boolean checkDateOverlapForDifferentCombination(UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate) {
+        List<ManageMerchantCommissionDto> existingCommissions = findAllByMerchantAndCreditCardType(managerMerchant, manageCreditCartType);
+        for (ManageMerchantCommissionDto existing : existingCommissions) {
+            if (isOverlapping(existing.getFromDate(), existing.getToDate(), fromDate, toDate)) {
+                return true;
+            }
+        }
+        return false;
     }
 
+//    @Override
+//    public int countOverlappingRecords(UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate) {
+//        return 0;
+//    }
+
+    private boolean isOverlapping(LocalDate existingFromDate, LocalDate existingToDate, LocalDate newFromDate, LocalDate newToDate) {
+        return !newFromDate.isAfter(existingToDate) && !newToDate.isBefore(existingFromDate);
+    }
+
+
+    public boolean hasOverlappingRecords(UUID id, UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate) {
+        Long count = repositoryQuery.countOverlappingRecords(id, managerMerchant, manageCreditCartType, fromDate, toDate);
+        return count > 0;
+    }
 }

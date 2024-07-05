@@ -20,4 +20,5 @@ public class ManageReportParamTypeDto {
     private String label;
     private Boolean hotel;
     private String source;
+    private String description;
 }

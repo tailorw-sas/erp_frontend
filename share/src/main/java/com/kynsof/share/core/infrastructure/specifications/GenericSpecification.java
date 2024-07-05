@@ -4,6 +4,7 @@ import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -37,56 +38,80 @@ public class GenericSpecification<T> implements Specification<T> {
             value = UUID.fromString((String) value);
         }
 
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE; // Define el formato esperado
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
+        // Intentar convertir el valor a LocalDate o LocalDateTime si es necesario.
         try {
-            value = LocalDate.parse(value.toString(), formatter);
+            value = LocalDate.parse(value.toString(), dateFormatter);
         } catch (DateTimeParseException ignored) {
-
+            try {
+                value = LocalDateTime.parse(value.toString(), dateTimeFormatter);
+            } catch (DateTimeParseException ignored2) {
+            }
         }
 
         return switch (criteria.getOperation()) {
             case LIKE -> builder.like(builder.lower(path.as(String.class)), "%" + value.toString().toLowerCase() + "%");
-            case EQUALS -> builder.equal(path, value);
-            case GREATER_THAN -> builder.greaterThan(path.as(String.class), value.toString());
-            case LESS_THAN -> builder.lessThan(path.as(String.class), value.toString());
-            case GREATER_THAN_OR_EQUAL_TO -> builder.greaterThanOrEqualTo(path.as(String.class), value.toString());
-            case LESS_THAN_OR_EQUAL_TO -> builder.lessThanOrEqualTo(path.as(String.class), value.toString());
+            case EQUALS -> {
+                if (value instanceof LocalDate) {
+                    yield builder.equal(path.as(LocalDate.class), (LocalDate) value);
+                } else if (value instanceof LocalDateTime) {
+                    yield builder.equal(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else {
+                    yield builder.equal(path, value);
+                }
+            }
+            case GREATER_THAN -> {
+                if (value instanceof LocalDate) {
+                    yield builder.greaterThan(path.as(LocalDate.class), (LocalDate) value);
+                } else if (value instanceof LocalDateTime) {
+                    yield builder.greaterThan(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else {
+                    yield builder.greaterThan(path.as(String.class), value.toString());
+                }
+            }
+            case LESS_THAN -> {
+                if (value instanceof LocalDate) {
+                    yield builder.lessThan(path.as(LocalDate.class), (LocalDate) value);
+                } else if (value instanceof LocalDateTime) {
+                    yield builder.lessThan(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else {
+                    yield builder.lessThan(path.as(String.class), value.toString());
+                }
+            }
+            case GREATER_THAN_OR_EQUAL_TO -> {
+                if (value instanceof LocalDate) {
+                    yield builder.greaterThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
+                } else if (value instanceof LocalDateTime) {
+                    yield builder.greaterThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else {
+                    yield builder.greaterThanOrEqualTo(path.as(String.class), value.toString());
+                }
+            }
+            case LESS_THAN_OR_EQUAL_TO -> {
+                if (value instanceof LocalDate) {
+                    yield builder.lessThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
+                } else if (value instanceof LocalDateTime) {
+                    yield builder.lessThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else {
+                    yield builder.lessThanOrEqualTo(path.as(String.class), value.toString());
+                }
+            }
             case NOT_EQUALS -> builder.notEqual(path, value);
-//            case IN -> {
-//                CriteriaBuilder.In<Object> inClause = builder.in(path);
-//                if (value instanceof List) {
-//                    ((List<?>) value).forEach(item -> {
-//                        UUID uuid = convertToUUID(item.toString());
-//                        if (uuid != null) {
-//                            inClause.value(uuid);
-//                        }
-//                    });
-//                } else {
-//                    UUID uuid = convertToUUID(value.toString());
-//                    if (uuid != null) {
-//                        inClause.value(uuid);
-//                    }
-//                }
-//                yield inClause;
-//            }
             case IN -> {
                 CriteriaBuilder.In<Object> inClause = builder.in(path);
                 if (value instanceof List) {
                     for (Object item : (List<?>) value) {
-                        // Intenta convertir cada elemento a UUID, si es posible. Si no, usa el valor tal cual.
                         Object finalValue = convertToUUID(item.toString());
                         if (finalValue == null) {
-                            // Si el valor no es un UUID válido, lo usamos como String.
                             finalValue = item.toString();
                         }
                         inClause.value(finalValue);
                     }
                 } else {
-                    // Trata de convertir el valor individual a UUID, si es posible.
                     Object finalValue = convertToUUID(value.toString());
                     if (finalValue == null) {
-                        // Si el valor no es un UUID válido, lo usamos como String.
                         finalValue = value.toString();
                     }
                     inClause.value(finalValue);
@@ -110,7 +135,6 @@ public class GenericSpecification<T> implements Specification<T> {
                 }
                 yield builder.not(inClause);
             }
-
             case IS_NULL -> builder.isNull(path);
             case IS_NOT_NULL -> builder.isNotNull(path);
             case IS_TRUE -> builder.isTrue(path.as(Boolean.class));
@@ -119,20 +143,22 @@ public class GenericSpecification<T> implements Specification<T> {
         };
     }
 
+    // Método auxiliar para verificar si un String es un UUID válido
+    private boolean isValidUUID(String str) {
+        try {
+            UUID.fromString(str);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // Método auxiliar para convertir un String a UUID
     private UUID convertToUUID(String str) {
         try {
             return UUID.fromString(str);
         } catch (IllegalArgumentException e) {
             return null;
-        }
-    }
-
-    private boolean isValidUUID(String str) {
-        try {
-            UUID uuid = UUID.fromString(str);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
         }
     }
 }

@@ -30,10 +30,20 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
 
         ConsumerUpdate update = new ConsumerUpdate();
 
+
     
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
+        UpdateIfNotNull.updateInteger(dto::setMinNumberOfCharacter, command.getMinNumberOfCharacter(), dto.getMinNumberOfCharacter(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsActive, command.getIsActive(), dto.getIsActive(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setNegative, command.getNegative(), dto.getNegative(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setIsDefault, command.getIsDefault(), dto.getIsDefault(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setPolicyCredit, command.getPolicyCredit(), dto.getPolicyCredit(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setRemarkRequired, command.getRemarkRequired(), dto.getRemarkRequired(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setSubcategory, command.getSubcategory(), dto.getSubcategory(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setOnlyApplyNet, command.getOnlyApplyNet(), dto.getOnlyApplyNet(), update::setUpdate);
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 

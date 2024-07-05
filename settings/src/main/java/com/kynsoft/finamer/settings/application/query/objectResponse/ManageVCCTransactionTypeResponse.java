@@ -24,6 +24,14 @@ public class ManageVCCTransactionTypeResponse  implements IResponse {
 
     private String name;
     private Boolean isActive;
+    private Boolean negative;
+    private Boolean isDefault;
+    private Boolean subcategory;
+    private Boolean onlyApplyNet;
+    private Boolean policyCredit;
+    private Boolean remarkRequired;
+    private Integer minNumberOfCharacter;
+    private String defaultRemark;
 
 
     public ManageVCCTransactionTypeResponse(ManageVCCTransactionTypeDto dto) {
@@ -33,6 +41,14 @@ public class ManageVCCTransactionTypeResponse  implements IResponse {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.isActive = dto.getIsActive();
+        this.negative = dto.getNegative();
+        this.isDefault = dto.getIsDefault();
+        this.onlyApplyNet = dto.getOnlyApplyNet();
+        this.policyCredit = dto.getPolicyCredit();
+        this.remarkRequired = dto.getRemarkRequired();
+        this.subcategory = dto.getSubcategory();
+        this.minNumberOfCharacter = dto.getMinNumberOfCharacter();
+        this.defaultRemark = dto.getDefaultRemark();
     }
 
 }

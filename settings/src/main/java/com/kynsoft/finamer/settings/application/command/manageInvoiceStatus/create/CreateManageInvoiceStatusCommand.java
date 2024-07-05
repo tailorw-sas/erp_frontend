@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -24,9 +25,13 @@ public class CreateManageInvoiceStatusCommand implements ICommand {
     private Boolean enabledToApply;
     private Boolean enabledToPolicy;
     private Boolean processStatus;
-    private HashSet<Navigate> navigate;
+    private List<UUID> navigate;
 
-    public CreateManageInvoiceStatusCommand(String code, String description, Status status, String name, Boolean enabledToPrint, Boolean enabledToPropagate, Boolean enabledToApply, Boolean enabledToPolicy, Boolean processStatus, HashSet<Navigate> navigate) {
+    public CreateManageInvoiceStatusCommand(String code, String description, Status status,
+                                            String name, Boolean enabledToPrint,
+                                            Boolean enabledToPropagate, Boolean enabledToApply,
+                                            Boolean enabledToPolicy, Boolean processStatus,
+                                            List<UUID> navigate) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;

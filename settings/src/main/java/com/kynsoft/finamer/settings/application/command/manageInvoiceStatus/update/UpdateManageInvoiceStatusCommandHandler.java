@@ -12,6 +12,8 @@ import com.kynsoft.finamer.settings.domain.services.IManageInvoiceStatusService;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Component
@@ -39,7 +41,8 @@ public class UpdateManageInvoiceStatusCommandHandler implements ICommandHandler<
         UpdateIfNotNull.updateBoolean(dto::setEnabledToApply, command.getEnabledToApply(), dto.getEnabledToApply(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setEnabledToPolicy, command.getEnabledToPolicy(), dto.getEnabledToPolicy(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setProcessStatus, command.getProcessStatus(), dto.getProcessStatus(), update::setUpdate);
-        updateNavigate(dto::setNavigate, command.getNavigate(), dto.getNavigate(), update::setUpdate);
+
+        updateNavigates(dto::setNavigate, command.getNavigate(), dto.getNavigate().stream().map(ManageInvoiceStatusDto::getId).toList(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
@@ -56,9 +59,10 @@ public class UpdateManageInvoiceStatusCommandHandler implements ICommandHandler<
         return false;
     }
 
-    private boolean updateNavigate(Consumer<HashSet<Navigate>> setter, HashSet<Navigate>  newNavigate, HashSet<Navigate> oldNavigate, Consumer<Integer> update) {
-        if(newNavigate != null && !newNavigate.equals(oldNavigate)){
-            setter.accept(newNavigate);
+    private boolean updateNavigates(Consumer<List<ManageInvoiceStatusDto>> setter, List<UUID> newValue, List<UUID> oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            List<ManageInvoiceStatusDto> manageInvoiceStatusDtoList = service.findByIds(newValue);
+            setter.accept(manageInvoiceStatusDtoList);
             update.accept(1);
 
             return true;

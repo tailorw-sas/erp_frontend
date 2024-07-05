@@ -20,5 +20,7 @@ public interface IManageContactService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-    Long countByCodeAndNotId(String code, UUID id);
+    Long countByCodeAndManageHotelIdAndNotId(String code, UUID manageHotelId, UUID id);
+
+    Long countByEmailAndManageHotelIdAndNotId(String email, UUID manageHotelId, UUID id);
 }

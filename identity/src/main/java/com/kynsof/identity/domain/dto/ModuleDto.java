@@ -1,5 +1,6 @@
 package com.kynsof.identity.domain.dto;
 
+import com.kynsof.identity.domain.dto.enumType.ModuleStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,8 @@ public class ModuleDto {
     private String description;
     private List<PermissionDto> permissions = new ArrayList<>();
     private LocalDateTime createdAt;
+    private ModuleStatus status;
+    private String code;
 
     public ModuleDto(UUID id, String name, String image, String description, LocalDateTime createdAt) {
         this.id = id;
@@ -37,11 +40,13 @@ public class ModuleDto {
         this.permissions = permissions;
     }
 
-    public ModuleDto(UUID id, String name, String image, String description) {
+    public ModuleDto(UUID id, String name, String image, String description, ModuleStatus status, String code) {
         this.id = id;
         this.name = name;
         this.image = image;
         this.description = description;
+        this.status = status;
+        this.code = code;
     }
 
 }

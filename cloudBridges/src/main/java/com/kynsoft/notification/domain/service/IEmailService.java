@@ -8,7 +8,7 @@ public interface IEmailService {
 //    public boolean sendMailHtml(String toEmail, String subject, String message);
 //    public boolean sendMessageWithAttachment(String toEmail, String subject, String text, MultipartFile file);
 //    public boolean sendMessageWithAttachmentArray(String toEmail, String subject, String text, MultipartFile [] file);
-    boolean sendEmailMailjet(EmailRequest emailRequest, String mailjetApiKey,String mailjetApiSecret,
-                             String fromEmail, String fromName) throws  MailjetException;
+    void sendEmailMailjet(EmailRequest emailRequest, String mailjetApiKey, String mailjetApiSecret,
+                          String fromEmail, String fromName) throws  MailjetException;
 }
 

@@ -51,14 +51,11 @@ public class ManageMerchantBankAccountServiceImpl implements IManageMerchantBank
 
     @Override
     public void delete(ManageMerchantBankAccountDto dto) {
-        ManageMerchantBankAccount delete = new ManageMerchantBankAccount(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setDeleteAt(LocalDateTime.now());
-        delete.setStatus(Status.INACTIVE);
-        delete.setAccountNumber(delete.getAccountNumber() + " + " + UUID.randomUUID());
-
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -105,7 +102,7 @@ public class ManageMerchantBankAccountServiceImpl implements IManageMerchantBank
 
     @Override
     public Long countByManagerMerchantANDManagerCurrencyIdNotId(UUID id, UUID managerMerchant, UUID manageBank, String accountNumber) {
-        return this.repositoryQuery.countByManagerMerchantANDManagerCurrencyIdNotId(id, managerMerchant, manageBank, accountNumber);
+        return this.repositoryQuery.countByManagerMerchantANDManagerBankIdNotId(id, managerMerchant, manageBank, accountNumber);
     }
 
 }

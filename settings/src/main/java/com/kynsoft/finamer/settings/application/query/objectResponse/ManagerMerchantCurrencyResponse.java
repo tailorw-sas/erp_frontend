@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantCurrencyDto;
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,7 @@ public class ManagerMerchantCurrencyResponse implements IResponse {
     private ManagerCurrencyResponse managerCurrency;
     private Double value;
     private String description;
+    private Status status;
 
     public ManagerMerchantCurrencyResponse(ManagerMerchantCurrencyDto dto) {
         this.id = dto.getId();
@@ -27,6 +29,7 @@ public class ManagerMerchantCurrencyResponse implements IResponse {
         this.managerCurrency = new ManagerCurrencyResponse(dto.getManagerCurrency());
         this.value = dto.getValue();
         this.description = dto.getDescription();
+        this.status = dto.getStatus();
     }
 
 }

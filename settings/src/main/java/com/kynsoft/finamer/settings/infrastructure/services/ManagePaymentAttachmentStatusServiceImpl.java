@@ -27,12 +27,15 @@ import java.util.UUID;
 @Service
 public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentAttachmentStatusService {
     
-    @Autowired
-    private ManagePaymentAttachmentStatusWriteDataJpaRepository repositoryCommand;
+    private final ManagePaymentAttachmentStatusWriteDataJpaRepository repositoryCommand;
     
-    @Autowired
-    private ManagePaymentAttachmentStatusReadDataJpaRepository repositoryQuery;
-    
+    private final ManagePaymentAttachmentStatusReadDataJpaRepository repositoryQuery;
+
+    public ManagePaymentAttachmentStatusServiceImpl(ManagePaymentAttachmentStatusWriteDataJpaRepository repositoryCommand, ManagePaymentAttachmentStatusReadDataJpaRepository repositoryQuery) {
+        this.repositoryCommand = repositoryCommand;
+        this.repositoryQuery = repositoryQuery;
+    }
+
     @Override
     public UUID create(ManagePaymentAttachmentStatusDto dto) {
         final ManagePaymentAttachmentStatus entity = new ManagePaymentAttachmentStatus(dto);
@@ -48,14 +51,11 @@ public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentA
 
     @Override
     public void delete(ManagePaymentAttachmentStatusDto dto) {
-        ManagePaymentAttachmentStatus entity = new ManagePaymentAttachmentStatus(dto);
-        
-        entity.setDeleted(true);
-        entity.setCode(entity.getCode() + "-" + UUID.randomUUID());
-        entity.setName(entity.getCode() + "-" + UUID.randomUUID());
-        entity.setDeletedAt(LocalDateTime.now());
-        
-        repositoryCommand.save(entity);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -80,6 +80,11 @@ public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentA
         return repositoryQuery.countByCode(code, id);
     }
 
+    @Override
+    public List<ManagePaymentAttachmentStatusDto> findByIds(List<UUID> ids) {
+        return repositoryQuery.findAllById(ids).stream().map(ManagePaymentAttachmentStatus::toAggregate).toList();
+    }
+
     private PaginatedResponse getPaginatedResponse(Page<ManagePaymentAttachmentStatus> data) {
         List<ManagePaymentAttachmentStatusResponse> userSystemsResponses = new ArrayList<>();
         for (ManagePaymentAttachmentStatus p : data.getContent()) {
@@ -87,5 +92,10 @@ public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentA
         }
         return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public Long countByNameAndNotId(String name, UUID id) {
+        return this.repositoryQuery.countByNameAndNotId(name, id);
     }
 }

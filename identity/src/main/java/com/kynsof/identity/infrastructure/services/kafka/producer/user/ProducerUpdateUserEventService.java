@@ -15,9 +15,9 @@ import java.util.logging.Logger;
 
 @Service
 public class ProducerUpdateUserEventService {
-    private final KafkaTemplate<String, String> producer;
+    private final KafkaTemplate<String, Object> producer;
 
-    public ProducerUpdateUserEventService(KafkaTemplate<String, String> producer) {
+    public ProducerUpdateUserEventService(KafkaTemplate<String, Object> producer) {
         this.producer = producer;
     }
 
@@ -30,7 +30,7 @@ public class ProducerUpdateUserEventService {
             ObjectMapper objectMapper = new ObjectMapper();
             String json = objectMapper.writeValueAsString(new CreateEvent<>(event, EventType.UPDATED));
 
-            this.producer.send("finamer_user", json);
+            this.producer.send("finamer-user", json);
         } catch (JsonProcessingException ex) {
             Logger.getLogger(ProducerUpdateUserEventService.class.getName()).log(Level.SEVERE, null, ex);
         }

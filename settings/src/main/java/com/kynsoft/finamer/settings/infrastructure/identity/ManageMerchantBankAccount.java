@@ -50,18 +50,12 @@ public class ManageMerchantBankAccount implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
 
     public ManageMerchantBankAccount(ManageMerchantBankAccountDto dto) {
         this.id = dto.getId();
@@ -80,7 +74,11 @@ public class ManageMerchantBankAccount implements Serializable {
         for (ManageCreditCardType creditCardType : this.creditCardTypes) {
             ccardTypes.add(creditCardType.toAggregate());
         }
-        return new ManageMerchantBankAccountDto(id, managerMerchant.toAggregate(), manageBank.toAggregate(), accountNumber, description, status, ccardTypes);
+        return new ManageMerchantBankAccountDto(
+                id,
+                managerMerchant != null ? managerMerchant.toAggregate() : null,
+                manageBank != null ? manageBank.toAggregate() : null,
+                accountNumber, description, status, ccardTypes);
     }
 
 }

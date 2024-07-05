@@ -17,8 +17,8 @@ public class ManageReportParamTypeNameMustBeUniqueRule extends BusinessRule {
 
     public ManageReportParamTypeNameMustBeUniqueRule(IManageReportParamTypeService service, String name, UUID id) {
         super(
-                DomainErrorMessage.MANAGE_REPORT_PARAM_TYPE_NAME_MUST_BY_UNIQUE,
-                new ErrorField("name", "The name must be unique.")
+                DomainErrorMessage.ITEM_ALREADY_EXITS,
+                new ErrorField("name", DomainErrorMessage.ITEM_ALREADY_EXITS.toString())
         );
         this.service = service;
         this.name = name;

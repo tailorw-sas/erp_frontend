@@ -12,9 +12,11 @@ import com.kynsoft.finamer.settings.application.command.manageTradingCompanies.d
 import com.kynsoft.finamer.settings.application.command.manageTradingCompanies.update.UpdateManageTradingCompaniesCommand;
 import com.kynsoft.finamer.settings.application.command.manageTradingCompanies.update.UpdateManageTradingCompaniesMessage;
 import com.kynsoft.finamer.settings.application.command.manageTradingCompanies.update.UpdateManageTradingCompaniesRequest;
+import com.kynsoft.finamer.settings.application.query.manageTradingCompanies.findAllGrouped.FindAllManageTradingCompaniesGroupedQuery;
 import com.kynsoft.finamer.settings.application.query.manageTradingCompanies.getById.FindManageTradingCompaniesByIdQuery;
 import com.kynsoft.finamer.settings.application.query.manageTradingCompanies.search.GetSearchManageTradingCompaniesQuery;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageTradingCompaniesResponse;
+import com.kynsoft.finamer.settings.application.query.objectResponse.manageTradingCompanies.ManageTradingCompaniesGroupedResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -69,6 +71,14 @@ public class ManageTradingCompaniesController {
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateManageTradingCompaniesRequest request){
         UpdateManageTradingCompaniesCommand command = UpdateManageTradingCompaniesCommand.fromRequest(request, id);
         UpdateManageTradingCompaniesMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/all-grouped")
+    public ResponseEntity<?> getAll() {
+        FindAllManageTradingCompaniesGroupedQuery query = new FindAllManageTradingCompaniesGroupedQuery();
+        ManageTradingCompaniesGroupedResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }

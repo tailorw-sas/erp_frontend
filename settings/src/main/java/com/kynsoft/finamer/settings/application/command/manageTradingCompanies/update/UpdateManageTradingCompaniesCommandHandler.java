@@ -43,7 +43,7 @@ public class UpdateManageTradingCompaniesCommandHandler implements ICommandHandl
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCompany, command.getCompany(), dto.getCompany(), update::setUpdate);
-        updateLong(dto::setCif, command.getCif(), dto.getCif(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCif, command.getCif(), dto.getCif(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setAddress, command.getAddress(), dto.getAddress(), update::setUpdate);
         updateCountry(dto::setCountry, command.getCountry(), dto.getCountry().getId(), update::setUpdate);
         updateCityState(dto::setCityState, command.getCityState(), dto.getCityState().getId(), update::setUpdate);

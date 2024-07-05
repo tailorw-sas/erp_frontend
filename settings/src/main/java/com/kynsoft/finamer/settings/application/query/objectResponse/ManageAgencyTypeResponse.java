@@ -20,11 +20,13 @@ public class ManageAgencyTypeResponse implements IResponse {
     private String code;
     private Status status;
     private String name;
+    private String description;
 
     public ManageAgencyTypeResponse(ManageAgencyTypeDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
         this.status = dto.getStatus();
         this.name = dto.getName();
+        this.description = dto.getDescription();
     }
 }

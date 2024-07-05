@@ -2,11 +2,13 @@ package com.kynsoft.finamer.settings.application.command.manageInvoiceTransactio
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTransactionTypeKafka;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceTransactionType.ManageInvoiceTransactionTypeCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceTransactionType.ManageInvoiceTransactionTypeCodeSizeRule;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceTransactionType.ManageInvoiceTransactionTypeNameMustBeNullRule;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTransactionTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceTransactionType.ProducerReplicateManageInvoiceTransactionTypeService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,8 +16,11 @@ public class CreateManageInvoiceTransactionTypeCommandHandler implements IComman
 
     private final IManageInvoiceTransactionTypeService service;
 
-    public CreateManageInvoiceTransactionTypeCommandHandler(IManageInvoiceTransactionTypeService service) {
+    private final ProducerReplicateManageInvoiceTransactionTypeService producerReplicateManageInvoiceTransactionTypeService;
+
+    public CreateManageInvoiceTransactionTypeCommandHandler(IManageInvoiceTransactionTypeService service, ProducerReplicateManageInvoiceTransactionTypeService producerReplicateManageInvoiceTransactionTypeService) {
         this.service = service;
+        this.producerReplicateManageInvoiceTransactionTypeService = producerReplicateManageInvoiceTransactionTypeService;
     }
 
     @Override
@@ -37,5 +42,7 @@ public class CreateManageInvoiceTransactionTypeCommandHandler implements IComman
                 command.getMinNumberOfCharacters(),
                 command.getDefaultRemark()
         ));
+
+        this.producerReplicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(command.getId(), command.getCode(), command.getName()));
     }
 }

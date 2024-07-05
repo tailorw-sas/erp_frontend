@@ -33,9 +33,6 @@ public class ManagePermissionModule implements Serializable {
 
     private Boolean isActive;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -45,9 +42,6 @@ public class ManagePermissionModule implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
 
     public ManagePermissionModule(ManagePermissionModuleDto dto) {
         this.id = dto.getId();

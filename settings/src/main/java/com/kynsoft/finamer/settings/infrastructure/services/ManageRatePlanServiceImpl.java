@@ -11,7 +11,6 @@ import com.kynsoft.finamer.settings.application.query.objectResponse.ManageRateP
 import com.kynsoft.finamer.settings.domain.dto.ManageRatePlanDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageRatePlanService;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManageClient;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageRatePlan;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageRatePlanWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageRatePlanReadDataJPARepository;
@@ -52,14 +51,11 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
 
     @Override
     public void delete(ManageRatePlanDto dto) {
-        ManageRatePlan delete = new ManageRatePlan(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeleteAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

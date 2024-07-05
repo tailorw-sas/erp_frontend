@@ -14,4 +14,7 @@ public interface ManageAlertReadDataJPARepository extends JpaRepository<ManageAl
     Page<ManageAlerts> findAll(Specification specification, Pageable pageable);
     @Query("SELECT COUNT(b) FROM ManageAlerts b WHERE b.code = :code")
     Long countByCode(@Param("code") String code);
+
+    @Query("SELECT COUNT(b) FROM ManageAlerts b WHERE b.name = :name")
+    Long countByName(@Param("name") String name);
 }

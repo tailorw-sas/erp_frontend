@@ -22,6 +22,7 @@ public class ManageReportParamTypeResponse implements IResponse {
     private String label;
     private Boolean hotel;
     private String source;
+    private String description;
 
     public ManageReportParamTypeResponse(ManageReportParamTypeDto dto){
         this.id = dto.getId();
@@ -30,5 +31,6 @@ public class ManageReportParamTypeResponse implements IResponse {
         this.label = dto.getLabel();
         this.hotel = dto.getHotel();
         this.source = dto.getSource();
+        this.description = dto.getDescription();
     }
 }

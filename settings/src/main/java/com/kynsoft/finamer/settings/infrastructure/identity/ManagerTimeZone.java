@@ -31,9 +31,6 @@ public class ManagerTimeZone implements Serializable {
     private String description;
     private Double elapse;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -43,9 +40,6 @@ public class ManagerTimeZone implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
 
     public ManagerTimeZone(ManagerTimeZoneDto dto) {
         this.id = dto.getId();

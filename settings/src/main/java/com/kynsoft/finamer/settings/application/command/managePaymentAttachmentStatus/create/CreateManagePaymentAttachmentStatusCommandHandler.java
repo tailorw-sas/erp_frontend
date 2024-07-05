@@ -2,20 +2,33 @@ package com.kynsoft.finamer.settings.application.command.managePaymentAttachment
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentAttachmentStatusKafka;
+import com.kynsoft.finamer.settings.domain.dto.ManageModuleDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeCantBeNullRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeSizeRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNameMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.services.IManageModuleService;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentAttachmentStatusService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentAttachmentStatus.ProducerReplicateManagePaymentAttachmentStatusService;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class CreateManagePaymentAttachmentStatusCommandHandler implements ICommandHandler<CreateManagePaymentAttachmentStatusCommand> {
 
     private final IManagePaymentAttachmentStatusService service;
+    private final ProducerReplicateManagePaymentAttachmentStatusService paymentAttachmentStatusService;
 
-    public CreateManagePaymentAttachmentStatusCommandHandler(final IManagePaymentAttachmentStatusService service) {
+    private final IManageModuleService moduleService;
+
+    public CreateManagePaymentAttachmentStatusCommandHandler(final IManagePaymentAttachmentStatusService service,
+                                                             ProducerReplicateManagePaymentAttachmentStatusService paymentAttachmentStatusService, IManageModuleService moduleService) {
         this.service = service;
+        this.paymentAttachmentStatusService = paymentAttachmentStatusService;
+        this.moduleService = moduleService;
     }
 
     @Override
@@ -23,7 +36,16 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
         RulesChecker.checkRule(new ManagePaymentAttachmentStatusCodeCantBeNullRule(command.getCode()));
         RulesChecker.checkRule(new ManagePaymentAttachmentStatusCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManagePaymentAttachmentStatusCodeMustBeUniqueRule(service, command.getCode(), command.getId()));
+        RulesChecker.checkRule(new ManagePaymentAttachmentStatusNameMustBeUniqueRule(service, command.getName(), command.getId()));
+        List<ManagePaymentAttachmentStatusDto> managePaymentAttachmentStatusDtoList = service.findByIds(command.getNavigate());
 
-        service.create(new ManagePaymentAttachmentStatusDto(command.getId(), command.getCode(), command.getName(), command.getStatus(), command.getNavigate(), command.getModule(), command.getShow(), command.getPermissionCode(), command.getDescription()));
+        ManageModuleDto moduleDto = moduleService.findById(command.getModule());
+
+        service.create(
+                new ManagePaymentAttachmentStatusDto(command.getId(), command.getCode(), command.getName(),
+                        command.getStatus(),  moduleDto, command.getShow(), command.getDefaults(), command.getPermissionCode(),
+                        command.getDescription(), managePaymentAttachmentStatusDtoList));
+
+        this.paymentAttachmentStatusService.create(new ReplicateManagePaymentAttachmentStatusKafka(command.getId(), command.getCode(), command.getName()));
     }
 }

@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
 import com.kynsoft.finamer.settings.domain.dto.ManageMerchantCommissionDto;
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,9 +42,6 @@ public class ManageMerchantCommission implements Serializable {
     @Column(nullable = true)
     private LocalDate toDate;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,8 +49,8 @@ public class ManageMerchantCommission implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     public ManageMerchantCommission(ManageMerchantCommissionDto dto) {
         this.id = dto.getId();
@@ -63,10 +61,15 @@ public class ManageMerchantCommission implements Serializable {
         this.description = dto.getDescription();
         this.fromDate = dto.getFromDate();
         this.toDate = dto.getToDate();
+        this.status = dto.getStatus();
     }
 
     public ManageMerchantCommissionDto toAggregate() {
-        return new ManageMerchantCommissionDto(id, managerMerchant.toAggregate(), manageCreditCartType.toAggregate(), commission, calculationType, description, fromDate, toDate);
+        return new ManageMerchantCommissionDto(
+                id,
+                managerMerchant != null ? managerMerchant.toAggregate() : null,
+                manageCreditCartType != null ? manageCreditCartType.toAggregate() : null,
+                commission, calculationType, description, fromDate, toDate,status);
     }
 
 }

@@ -9,9 +9,14 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface JasperReportTemplateReadDataJPARepository extends JpaRepository<JasperReportTemplate, UUID>, JpaSpecificationExecutor<JasperReportTemplate> {
     Page<JasperReportTemplate> findAll(Specification specification, Pageable pageable);
 
-    Optional<JasperReportTemplate> findByTemplateCode(String templateCode);
+    Optional<JasperReportTemplate> findByCode(String code);
+
+    @Query("SELECT COUNT(b) FROM JasperReportTemplate b WHERE b.code = :code AND b.id <> :id")
+    Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 }

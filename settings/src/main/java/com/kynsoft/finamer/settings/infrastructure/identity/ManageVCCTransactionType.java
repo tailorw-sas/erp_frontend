@@ -7,11 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import org.hibernate.annotations.CreationTimestamp;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,8 +33,14 @@ public class ManageVCCTransactionType implements Serializable {
 
     private Boolean isActive;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
+    private Boolean negative;
+    private Boolean isDefault;
+    private Boolean subcategory;
+    private Boolean onlyApplyNet;
+    private Boolean policyCredit;
+    private Boolean remarkRequired;
+    private Integer minNumberOfCharacter;
+    private String defaultRemark;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -46,9 +52,6 @@ public class ManageVCCTransactionType implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
-
     public ManageVCCTransactionType(ManageVCCTransactionTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -56,10 +59,25 @@ public class ManageVCCTransactionType implements Serializable {
         this.description = dto.getDescription();
         this.status = dto.getStatus();
         this.isActive = dto.getIsActive();
+        this.negative = dto.getNegative();
+        this.isDefault = dto.getIsDefault();
+        this.onlyApplyNet = dto.getOnlyApplyNet();
+        this.policyCredit = dto.getPolicyCredit();
+        this.remarkRequired = dto.getRemarkRequired();
+        this.subcategory = dto.getSubcategory();
+        this.minNumberOfCharacter = dto.getMinNumberOfCharacter();
+        this.defaultRemark = dto.getDefaultRemark();
     }
 
     public ManageVCCTransactionTypeDto toAggregate(){
-        return new ManageVCCTransactionTypeDto(id,code, description, status, name, isActive);
+        return new ManageVCCTransactionTypeDto(id,code, description, status, name, isActive, negative,
+                isDefault,
+                subcategory,
+                onlyApplyNet,
+                policyCredit,
+                remarkRequired,
+                minNumberOfCharacter,
+                defaultRemark);
     }
 
 }

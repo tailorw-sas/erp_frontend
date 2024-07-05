@@ -15,4 +15,6 @@ public interface IJasperReportTemplateService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
     JasperReportTemplateDto findById(UUID id);
     JasperReportTemplateDto findByTemplateCode(String templateCode);
+
+    Long countByCodeAndNotId(String templateCode, UUID id);
 }

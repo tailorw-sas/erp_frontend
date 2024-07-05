@@ -1,8 +1,8 @@
 package com.kynsoft.finamer.settings.application.command.managerTransactionStatus.update;
 
-import com.kynsoft.finamer.settings.domain.dtoEnum.NavigateTransactionStatus;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import java.util.Set;
+import java.util.List;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +12,7 @@ public class UpdateManageTransactionStatusRequest {
 
     private String name;
     private String description;
-    private Set<NavigateTransactionStatus> navigate;
+    private List<UUID> navigate;
     private Boolean enablePayment;
     private Boolean visible;
     private Status status;

@@ -20,7 +20,7 @@ public class ConsumerGenerateReportEventService {
     private IEmailService service;
 
     // Ejemplo de un método listener
-    @KafkaListener(topics = "finamer_generate-report", groupId = "generate-report")
+    @KafkaListener(topics = "finamer-generate-report", groupId = "generate-report")
     public void listen(String event) {
         try {
             System.err.println("#######################################################");

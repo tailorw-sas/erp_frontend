@@ -18,14 +18,16 @@ public class CreateManageReportParamTypeCommand implements ICommand {
     private String label;
     private Boolean hotel;
     private String source;
+    private String description;
 
-    public CreateManageReportParamTypeCommand(Status status, String name, String label, Boolean hotel, String source) {
+    public CreateManageReportParamTypeCommand(Status status, String name, String label, Boolean hotel, String source, String description) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.name = name;
         this.label = label;
         this.hotel = hotel;
         this.source = source;
+        this.description = description;
     }
 
     public static CreateManageReportParamTypeCommand fromRequest(CreateManageReportParamTypeRequest request){
@@ -34,7 +36,8 @@ public class CreateManageReportParamTypeCommand implements ICommand {
                 request.getName(),
                 request.getLabel(),
                 request.getHotel(),
-                request.getSource()
+                request.getSource(),
+                request.getDescription()
         );
     }
 

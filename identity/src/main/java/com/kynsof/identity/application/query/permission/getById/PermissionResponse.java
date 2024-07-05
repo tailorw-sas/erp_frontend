@@ -25,16 +25,23 @@ public class PermissionResponse implements IResponse {
     private PermissionStatusEnm status;
     private String action;
     private LocalDateTime createdAt;
+    private Boolean isHighRisk;
+    private Boolean isIT;
+    private String name;
 
     public PermissionResponse(PermissionDto response) {
         this.id = response.getId();
         this.code = response.getCode();
         this.description = response.getDescription();
         this.module = new ModuleResponse(response.getModule().getId(),
-                response.getModule().getName());
+                response.getModule().getName(), response.getModule().getCode(),
+                response.getModule().getStatus());
         this.status = response.getStatus();
         this.action = response.getAction();
         this.createdAt = response.getCreatedAt();
+        this.isHighRisk = response.getIsHighRisk();
+        this.isIT = response.getIsIT();
+        this.name = response.getName();
     }
 
 }

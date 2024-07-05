@@ -25,9 +25,10 @@ public class CreateManageContactCommandHandler implements ICommandHandler<Create
     public void handle(CreateManageContactCommand command) {
         RulesChecker.checkRule(new ManageContactCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManageContactNameMustBeNullRule(command.getName()));
-        RulesChecker.checkRule(new ManageContactCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
+        RulesChecker.checkRule(new ManageContactCodeMustBeUniqueRule(this.service, command.getCode(), command.getManageHotel(), command.getId()));
         RulesChecker.checkRule(new ManageContactEmailRule(command.getEmail()));
-        RulesChecker.checkRule(new ManageContactPhoneRule(command.getPhone()));
+        //RulesChecker.checkRule(new ManageContactPhoneRule(command.getPhone()));
+        RulesChecker.checkRule(new ManageContactEmailMustBeUniqueRule(this.service, command.getEmail(), command.getManageHotel(), command.getId()));
 
         ManageHotelDto hotelDto = hotelService.findById(command.getManageHotel());
 

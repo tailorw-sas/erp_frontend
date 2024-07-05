@@ -12,5 +12,4 @@ public class CreateManageDepartmentGroupRequest {
     private String description;
     private Status status;
     private String name;
-    private Boolean isActive;
 }

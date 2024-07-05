@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionStatusDto;
 
+import com.kynsoft.finamer.settings.domain.dto.ManageReconcileTransactionStatusDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -21,4 +22,6 @@ public interface IManagePaymentTransactionStatusService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);
+
+    List<ManagePaymentTransactionStatusDto> findByIds(List<UUID> ids);
 }

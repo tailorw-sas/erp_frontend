@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -25,7 +26,7 @@ public class UpdateManageInvoiceStatusCommand implements ICommand {
     private Boolean enabledToApply;
     private Boolean enabledToPolicy;
     private Boolean processStatus;
-    private HashSet<Navigate> navigate;
+    private List<UUID> navigate;
 
     public static UpdateManageInvoiceStatusCommand fromRequest(UpdateManageInvoiceStatusRequest request, UUID id){
         return new UpdateManageInvoiceStatusCommand(

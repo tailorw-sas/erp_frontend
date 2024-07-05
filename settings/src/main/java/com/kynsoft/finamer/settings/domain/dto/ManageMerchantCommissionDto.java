@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.settings.domain.dto;
 
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,5 +23,6 @@ public class ManageMerchantCommissionDto {
     private String description;
     private LocalDate fromDate;
     private LocalDate toDate;
+    private Status status;
 
 }

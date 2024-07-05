@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,18 +24,15 @@ public class KafkaProducerConfig {
 
     @Bean
     @Profile("dev")
-    public ProducerFactory<String, String> devProducerFactory() {
+    public ProducerFactory<String, Object> devProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
-        configProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-        configProps.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-        configProps.put(SaslConfigs.SASL_JAAS_CONFIG,
-                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"user1\" password=\"AkC7B1ooWO\";");
+        addSaslConfig(configProps, "user1", "AkC7B1ooWO");
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
     @Profile("!dev")
-    public ProducerFactory<String, String> defaultProducerFactory() {
+    public ProducerFactory<String, Object> defaultProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -43,12 +41,19 @@ public class KafkaProducerConfig {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return configProps;
     }
 
+    private void addSaslConfig(Map<String, Object> props, String username, String password) {
+        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
+        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+        props.put(SaslConfigs.SASL_JAAS_CONFIG,
+                String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
+    }
+
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
+    public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 }

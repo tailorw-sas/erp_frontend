@@ -51,14 +51,11 @@ public class ManageB2BPartnerTypeServiceImpl implements IManageB2BPartnerTypeSer
 
     @Override
     public void delete(ManageB2BPartnerTypeDto dto) {
-        ManageB2BPartnerType delete = new ManageB2BPartnerType(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeleteAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

@@ -2,9 +2,9 @@ package com.kynsoft.finamer.settings.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageTransactionStatusDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.NavigateTransactionStatus;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +22,7 @@ public class ManageTransactionStatusResponse implements IResponse {
     private String code;
     private String name;
     private String description;
-    private Set<NavigateTransactionStatus> navigate;
+    private List<ManageTransactionStatusNavegateResponse> navigate = new ArrayList<>();
     private Boolean enablePayment;
     private Boolean visible;
     private Status status;
@@ -32,10 +32,14 @@ public class ManageTransactionStatusResponse implements IResponse {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.description = dto.getDescription();
-        this.navigate = dto.getNavigate();
         this.enablePayment = dto.getEnablePayment();
         this.visible = dto.getVisible();
         this.status = dto.getStatus();
+        if (dto.getNavigate() != null) {
+            for (ManageTransactionStatusDto manageTransactionStatusDto : dto.getNavigate()) {
+                this.navigate.add(new ManageTransactionStatusNavegateResponse(manageTransactionStatusDto));
+            }
+        }
     }
 
 }

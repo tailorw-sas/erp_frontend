@@ -6,6 +6,7 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -16,13 +17,16 @@ public class CreateManagePaymentAttachmentStatusCommand implements ICommand {
     private String code;
     private String name;
     private Status status;
-    private String navigate;
-    private String module;
+    private List<UUID> navigate;
+    private UUID module;
     private Boolean show;
+    private Boolean defaults;
     private String permissionCode;
     private String description;
     
-    public CreateManagePaymentAttachmentStatusCommand(final String code, final String name, final Status status, final String navigate, final String module, final Boolean show, final String permissionCode, final String description) {
+    public CreateManagePaymentAttachmentStatusCommand(final String code, final String name, final Status status,
+                                                      final List<UUID> navigate, final UUID module, final Boolean show, Boolean defaults,
+                                                      final String permissionCode, final String description) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -30,12 +34,13 @@ public class CreateManagePaymentAttachmentStatusCommand implements ICommand {
         this.navigate = navigate;
         this.module = module;
         this.show = show;
+        this.defaults = defaults;
         this.permissionCode = permissionCode;
         this.description = description;
     }
     
     public static CreateManagePaymentAttachmentStatusCommand fromRequest(CreateManagePaymentAttachmentStatusRequest request){
-        return new CreateManagePaymentAttachmentStatusCommand(request.getCode(), request.getName(), request.getStatus(), request.getNavigate(), request.getModule(), request.getShow(), request.getPermissionCode(), request.getDescription());
+        return new CreateManagePaymentAttachmentStatusCommand(request.getCode(), request.getName(), request.getStatus(), request.getNavigate(), request.getModule(), request.getShow(), request.getDefaults(), request.getPermissionCode(), request.getDescription());
     }
     @Override
     public ICommandMessage getMessage() {

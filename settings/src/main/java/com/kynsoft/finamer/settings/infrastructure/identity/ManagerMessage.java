@@ -28,9 +28,6 @@ public class ManagerMessage implements Serializable {
     @Column(unique = true)
     private String code;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -51,9 +48,6 @@ public class ManagerMessage implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
-
     public ManagerMessage(ManagerMessageDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -66,7 +60,8 @@ public class ManagerMessage implements Serializable {
 
     public ManagerMessageDto toAggregate(){
         return new ManagerMessageDto(
-                id, code, description, status, name, type, language.toAggregate()
+                id, code, description, status, name, type,
+                language != null ? language.toAggregate() : null
         );
     }
 }

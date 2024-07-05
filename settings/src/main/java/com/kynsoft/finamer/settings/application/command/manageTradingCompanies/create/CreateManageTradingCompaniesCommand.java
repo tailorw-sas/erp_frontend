@@ -17,7 +17,7 @@ public class CreateManageTradingCompaniesCommand implements ICommand {
     private String description;
     private Status status;
     private String company;
-    private Long cif;
+    private String cif;
     private String address;
     private UUID country;
     private UUID cityState;
@@ -26,7 +26,7 @@ public class CreateManageTradingCompaniesCommand implements ICommand {
     private String innsistCode;
     private Boolean isApplyInvoice;
 
-    public CreateManageTradingCompaniesCommand(String code, String description, Status status, String company, Long cif, String address, UUID country, UUID cityState, String city, Long zipCode, String innsistCode, Boolean isApplyInvoice) {
+    public CreateManageTradingCompaniesCommand(String code, String description, Status status, String company, String cif, String address, UUID country, UUID cityState, String city, Long zipCode, String innsistCode, Boolean isApplyInvoice) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;

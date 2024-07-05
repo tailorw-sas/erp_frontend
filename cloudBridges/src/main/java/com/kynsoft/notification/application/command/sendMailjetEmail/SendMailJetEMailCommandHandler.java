@@ -32,7 +32,7 @@ public class SendMailJetEMailCommandHandler implements ICommandHandler<SendMailJ
         try {
             this.service.sendEmailMailjet(emailRequest, templateDto.getMailjetConfigurationDto().getMailjetApiKey(),
                     templateDto.getMailjetConfigurationDto().getMailjetApiSecret(), templateDto.getMailjetConfigurationDto().getFromEmail(),
-                    templateDto.getMailjetConfigurationDto().getFromName());
+                  "not-replay");
 
         } catch (Exception ignored) {
 

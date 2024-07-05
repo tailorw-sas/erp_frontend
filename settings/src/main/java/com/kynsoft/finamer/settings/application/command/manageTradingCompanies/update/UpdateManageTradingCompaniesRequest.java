@@ -12,7 +12,7 @@ public class UpdateManageTradingCompaniesRequest {
     private String description;
     private Status status;
     private String company;
-    private Long cif;
+    private String cif;
     private String address;
     private UUID country;
     private UUID cityState;

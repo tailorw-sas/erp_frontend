@@ -15,11 +15,11 @@ import java.util.logging.Logger;
 
 @Service
 public class ProducerCreateUserBusinessRelationEventService {
-    private final KafkaTemplate<String, String> producer;
+    private final KafkaTemplate<String, Object> producer;
 
     private final IUserPermissionBusinessService userPermissionBusinessService;
 
-    public ProducerCreateUserBusinessRelationEventService(KafkaTemplate<String, String> producer,
+    public ProducerCreateUserBusinessRelationEventService(KafkaTemplate<String, Object> producer,
                                                   IUserPermissionBusinessService userPermissionBusinessService) {
         this.producer = producer;
         this.userPermissionBusinessService = userPermissionBusinessService;
@@ -36,7 +36,7 @@ public class ProducerCreateUserBusinessRelationEventService {
             if (cant == 1) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 String json = objectMapper.writeValueAsString(new CreateEvent<>(event, EventType.CREATED));
-                this.producer.send("finamer_user-business", json);
+                this.producer.send("finamer-user-business", json);
             }
         } catch (JsonProcessingException ex) {
             Logger.getLogger(ProducerCreateUserBusinessRelationEventService.class.getName()).log(Level.SEVERE, null, ex);

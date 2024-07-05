@@ -46,6 +46,10 @@ public class Permission {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    private Boolean isHighRisk;
+    private Boolean isIT;
+    private String name;
+
     public Permission(PermissionDto permissionDto) {
         this.id = permissionDto.getId();
         this.code = permissionDto.getCode();
@@ -54,9 +58,12 @@ public class Permission {
         this.module = new ModuleSystem(permissionDto.getModule());
         this.status = permissionDto.getStatus();
         this.deleted = permissionDto.isDeleted();
+        this.isHighRisk = permissionDto.getIsHighRisk();
+        this.isIT = permissionDto.getIsIT();
+        this.name = permissionDto.getName();
     }
 
     public PermissionDto toAggregate() {
-        return new PermissionDto(this.id, this.code, this.description, this.module.toAggregate(), this.status, this.action, createdAt);
+        return new PermissionDto(this.id, this.code, this.description, this.module.toAggregate(), this.status, this.action, createdAt, isHighRisk, isIT, name);
     }
 }

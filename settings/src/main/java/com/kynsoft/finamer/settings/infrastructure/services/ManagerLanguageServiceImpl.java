@@ -9,7 +9,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerLanguageResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagerLanguageDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerLanguageService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagerLanguage;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagerLanguageWriteDataJPARepository;
@@ -57,22 +56,18 @@ public class ManagerLanguageServiceImpl implements IManagerLanguageService {
 
     @Override
     public void delete(ManagerLanguageDto dto) {
-        ManagerLanguage entity = new ManagerLanguage(dto);
-
-        entity.setDeleted(Boolean.TRUE);
-        entity.setDeletedAt(LocalDateTime.now());
-        entity.setIsEnabled(Boolean.FALSE);
-        entity.setCode(entity.getCode()+ "-" + UUID.randomUUID());
-        entity.setStatus(Status.INACTIVE);
-
-        repositoryCommand.save(entity);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
     public ManagerLanguageDto findById(UUID id) {
         Optional<ManagerLanguage> optional = repositoryQuery.findById(id);
 
-        if(optional.isPresent()){
+        if (optional.isPresent()) {
             return optional.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_LANGUAGE_NOT_FOUND, new ErrorField("id", "Manager language not found.")));

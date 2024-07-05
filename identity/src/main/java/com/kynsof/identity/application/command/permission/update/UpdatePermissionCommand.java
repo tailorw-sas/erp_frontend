@@ -18,20 +18,27 @@ public class UpdatePermissionCommand implements ICommand {
     private UUID idModule;
     private PermissionStatusEnm status;
     private String action;
+    private Boolean isHighRisk;
+    private Boolean isIT;
+    private String name;
 
     public UpdatePermissionCommand(UUID id, String code, String description, UUID idModule, PermissionStatusEnm status,
-                                   String action) {
+                                   String action, Boolean isHighRisk, Boolean isIT, String name) {
         this.id = id;
         this.code = code;
         this.description = description;
         this.idModule = idModule;
         this.status = status;
         this.action = action;
+        this.isHighRisk = isHighRisk;
+        this.isIT = isIT;
+        this.name = name;
     }
 
     public static UpdatePermissionCommand fromRequest(UpdatePermissionRequest request, UUID id) {
         return new UpdatePermissionCommand(id, request.getCode(), request.getDescription(),
-                request.getModule(), request.getStatus(), request.getAction());
+                request.getModule(), request.getStatus(), request.getAction(), request.getIsHighRisk(),
+                request.getIsIT(), request.getName());
     }
 
     @Override

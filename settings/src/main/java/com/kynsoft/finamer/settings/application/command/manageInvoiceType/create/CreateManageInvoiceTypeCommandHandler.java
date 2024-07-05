@@ -2,11 +2,13 @@ package com.kynsoft.finamer.settings.application.command.manageInvoiceType.creat
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTypeKafka;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.ManageInvoiceTypeCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.ManageInvoiceTypeCodeSizeRule;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.ManageInvoiceTypeNameMustBeNullRule;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceType.ProducerReplicateManageInvoiceTypeService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,8 +16,12 @@ public class CreateManageInvoiceTypeCommandHandler implements ICommandHandler<Cr
 
     private final IManageInvoiceTypeService service;
 
-    public CreateManageInvoiceTypeCommandHandler(IManageInvoiceTypeService service) {
+    private final ProducerReplicateManageInvoiceTypeService producerReplicateManageInvoiceTypeService;
+
+    public CreateManageInvoiceTypeCommandHandler(IManageInvoiceTypeService service, ProducerReplicateManageInvoiceTypeService producerReplicateManageInvoiceTypeService) {
+
         this.service = service;
+        this.producerReplicateManageInvoiceTypeService = producerReplicateManageInvoiceTypeService;
     }
 
     @Override
@@ -32,5 +38,7 @@ public class CreateManageInvoiceTypeCommandHandler implements ICommandHandler<Cr
                 command.getName(),
                 command.getEnabledToPolicy()
         ));
+
+        this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(command.getId(), command.getCode(), command.getName()));
     }
 }

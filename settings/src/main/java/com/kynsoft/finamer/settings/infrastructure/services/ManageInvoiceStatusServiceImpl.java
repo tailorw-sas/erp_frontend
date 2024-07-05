@@ -56,14 +56,11 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
 
     @Override
     public void delete(ManageInvoiceStatusDto dto) {
-        ManageInvoiceStatus delete = new ManageInvoiceStatus(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeletedAt(LocalDateTime.now());
-
-        repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -90,6 +87,11 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code,id);
+    }
+
+    @Override
+    public List<ManageInvoiceStatusDto> findByIds(List<UUID> ids) {
+        return repositoryQuery.findAllById(ids).stream().map(ManageInvoiceStatus::toAggregate).toList();
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

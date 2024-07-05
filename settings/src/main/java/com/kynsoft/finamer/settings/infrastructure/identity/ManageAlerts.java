@@ -26,7 +26,7 @@ public class ManageAlerts implements Serializable {
     private UUID id;
     @Column(unique = true)
     private String code;
-    @Column(unique = true)
+
     private String name;
     @Column(name = "popup")
     private Boolean popup;
@@ -36,9 +36,6 @@ public class ManageAlerts implements Serializable {
     @Column(name = "description")
     private String description;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-    
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -46,10 +43,7 @@ public class ManageAlerts implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
-
-    public ManageAlerts(ManageAlertsDto dto){
+    public ManageAlerts(ManageAlertsDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
@@ -57,8 +51,8 @@ public class ManageAlerts implements Serializable {
         this.status = dto.getStatus();
         this.description = dto.getDescription();
     }
-    
-    public ManageAlertsDto toAggregate(){
+
+    public ManageAlertsDto toAggregate() {
         return new ManageAlertsDto(this.id, this.code, this.name, this.popup, this.status, this.description);
     }
 }

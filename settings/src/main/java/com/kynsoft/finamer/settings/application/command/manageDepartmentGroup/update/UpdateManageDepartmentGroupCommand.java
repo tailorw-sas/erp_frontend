@@ -16,14 +16,12 @@ public class UpdateManageDepartmentGroupCommand implements ICommand {
     private Status status;
     private String name;
     private String description;
-    private Boolean isActive;
 
-    public UpdateManageDepartmentGroupCommand(UUID id,  Status status, String name, String description, Boolean isActive) {
+    public UpdateManageDepartmentGroupCommand(UUID id,  Status status, String name, String description) {
         this.id = id;
         this.status = status;
         this.name = name;
         this.description = description;
-        this.isActive = isActive;
     }
 
     public static UpdateManageDepartmentGroupCommand fromRequest(UpdateManageDepartmentGroupRequest request, UUID id){
@@ -31,8 +29,7 @@ public class UpdateManageDepartmentGroupCommand implements ICommand {
                 id,
                 request.getStatus(),
                 request.getName(),
-                request.getDescription(),
-                request.getIsActive()
+                request.getDescription()
         );
     }
 

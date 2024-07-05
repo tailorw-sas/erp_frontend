@@ -30,6 +30,9 @@ public class ManagePaymentTransactionTypeResponse  implements IResponse {
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
     private String defaultRemark;
+    private Boolean deposit;
+    private Boolean applyDeposit;
+    private Boolean defaults;
 
     public ManagePaymentTransactionTypeResponse(ManagePaymentTransactionTypeDto dto) {
         this.id = dto.getId();
@@ -44,6 +47,9 @@ public class ManagePaymentTransactionTypeResponse  implements IResponse {
         this.remarkRequired =  dto.getRemarkRequired();
         this.minNumberOfCharacter =  dto.getMinNumberOfCharacter();
         this.defaultRemark =  dto.getDefaultRemark();
+        this.applyDeposit = dto.getApplyDeposit();
+        this.deposit = dto.getDeposit();
+        this.defaults = dto.getDefaults();
     }
 
 }

@@ -9,10 +9,18 @@ import io.micrometer.common.lang.NonNull;
 
 public interface IAuthService {
     TokenResponse authenticate(LoginRequest loginDTO);
+
     TokenResponse refreshToken(String refreshToken);
+
     String registerUser(@NonNull UserRequest userRequest, boolean isSystemUser);
+
     String registerUserSystem(@NonNull UserSystemKycloackRequest userRequest, boolean isSystemUser);
+
     Boolean forwardPassword(PasswordChangeRequest changeRequest);
+
     Boolean sendPasswordRecoveryOtp(String email);
+
     Boolean changePassword(String userId, String newPassword);
+
+    Boolean firstChangePassword(String userId, String email, String newPassword, String oldPassword);
 }

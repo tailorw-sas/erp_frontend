@@ -1,8 +1,7 @@
 package com.kynsoft.finamer.settings.domain.dto;
 
-import com.kynsoft.finamer.settings.domain.dtoEnum.NavigateTransactionStatus;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import java.util.Set;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +19,7 @@ public class ManageTransactionStatusDto {
     private String code;
     private String name;
     private String description;
-    private Set<NavigateTransactionStatus> navigate;
+    private List<ManageTransactionStatusDto> navigate;
     private Boolean enablePayment;
     private Boolean visible;
     private Status status;

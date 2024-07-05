@@ -2,7 +2,6 @@ package com.kynsoft.finamer.settings.application.command.managerTransactionStatu
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.settings.domain.dtoEnum.NavigateTransactionStatus;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import java.util.Set;
 import lombok.Getter;
@@ -18,12 +17,12 @@ public class CreateManageTransactionStatusCommand implements ICommand {
     private String code;
     private String name;
     private String description;
-    private Set<NavigateTransactionStatus> navigate;
+    private Set<UUID> navigate;
     private Boolean enablePayment;
     private Boolean visible;
     private Status status;
 
-    public CreateManageTransactionStatusCommand(String code, String description, String name, Set<NavigateTransactionStatus> navigate, Boolean enablePayment, Boolean visible, Status status) {
+    public CreateManageTransactionStatusCommand(String code, String description, String name, Set<UUID> navigate, Boolean enablePayment, Boolean visible, Status status) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;

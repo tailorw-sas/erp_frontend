@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -20,9 +21,10 @@ public class ManagePaymentAttachmentStatusResponse implements IResponse {
     private String code;
     private String name;
     private Status status;
-    private String navigate;
-    private String module;
+    private List<ManagePaymentAttachmentStatusResponse> navigate;
+    private ManageModuleResponse module;
     private Boolean show;
+    private Boolean defaults;
     private String permissionCode;
     private String description;
     
@@ -31,9 +33,10 @@ public class ManagePaymentAttachmentStatusResponse implements IResponse {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.status = dto.getStatus();
-        this.navigate = dto.getNavigate();
-        this.module = dto.getModule();
+        this.navigate = dto.getRelatedStatuses() != null ? dto.getRelatedStatuses().stream().map(ManagePaymentAttachmentStatusResponse::new).toList() : null;
+        this.module = dto.getModule() != null ? new ManageModuleResponse(dto.getModule()) : null;
         this.show = dto.getShow();
+        this.defaults = dto.getDefaults();
         this.permissionCode = dto.getPermissionCode();
         this.description = dto.getDescription();
     }

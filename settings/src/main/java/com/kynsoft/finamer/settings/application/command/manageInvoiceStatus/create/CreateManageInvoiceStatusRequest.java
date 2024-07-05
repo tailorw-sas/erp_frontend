@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -20,5 +22,5 @@ public class CreateManageInvoiceStatusRequest {
     private Boolean enabledToApply;
     private Boolean enabledToPolicy;
     private Boolean processStatus;
-    private HashSet<Navigate> navigate;
+    private List<UUID> navigate;
 }

@@ -1,31 +1,27 @@
 package com.kynsoft.finamer.settings.infrastructure.repository.query;
 
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageMerchantCommission;
-import java.time.LocalDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-
-import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 
 public interface ManageMerchantCommissionReadDataJPARepository extends JpaRepository<ManageMerchantCommission, UUID>,
         JpaSpecificationExecutor<ManageMerchantCommission> {
 
-    Page<ManageMerchantCommission> findAll(Specification specification, Pageable pageable);
+    Page<ManageMerchantCommission> findAll(Specification<ManageMerchantCommission> specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManageMerchantCommission b WHERE b.managerMerchant.id = :managerMerchant AND b.manageCreditCartType.id = :manageCreditCartType AND b.deleted = false")
-    Long countByManagerMerchantANDManagerCreditCartType(@Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType);
+    @Query("SELECT m FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType")
+    List<ManageMerchantCommission> findAllByManagerMerchantAndManageCreditCartType(@Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType);
 
-    @Query("SELECT COUNT(b) FROM ManageMerchantCommission b WHERE b.managerMerchant.id = :managerMerchant AND b.manageCreditCartType.id = :manageCreditCartType AND b.deleted = false AND b.id <> :id")
-    Long countByManagerMerchantANDManagerCurrencyIdNotId(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType);
 
-    @Query("SELECT COUNT(b) FROM ManageMerchantCommission b WHERE b.managerMerchant.id = :managerMerchant AND b.manageCreditCartType.id = :manageCreditCartType AND b.fromDate <= :toCheckDate AND b.toDate >= :fromCheckDate AND b.deleted = false AND b.id <> :id")
-    Long countByManagerMerchantANDManagerCreditCartTypeANDDateRange(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant,
-            @Param("manageCreditCartType") UUID manageCreditCartType,
-            @Param("fromCheckDate") LocalDate fromCheckDate,
-            @Param("toCheckDate") LocalDate toCheckDate);
+    @Query("SELECT COUNT(m) FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType AND m.fromDate <= :toDate AND m.toDate >= :fromDate AND m.id <> :id")
+    Long countOverlappingRecords(@Param("id")UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType, @Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 }

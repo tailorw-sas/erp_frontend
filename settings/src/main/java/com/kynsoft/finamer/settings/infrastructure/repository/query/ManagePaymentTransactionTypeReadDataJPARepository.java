@@ -16,7 +16,13 @@ public interface ManagePaymentTransactionTypeReadDataJPARepository extends JpaRe
 
     Page<ManagePaymentTransactionType> findAll(Specification specification, Pageable pageable);
 
+    @Query("SELECT t FROM ManagePaymentTransactionType t WHERE t.applyDeposit = :applyDeposit AND t.deposit = :deposit ORDER BY CASE WHEN t.defaults = :defaults THEN 0 ELSE 1 END, t.id ASC")
+    Page<ManagePaymentTransactionType> findWithApplyDepositAndDepositFalse(@Param("applyDeposit") Boolean applyDeposit, @Param("deposit") Boolean deposit, @Param("defaults") Boolean defaults, Pageable pageable);
+
     @Query("SELECT COUNT(b) FROM ManagePaymentTransactionType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManagePaymentTransactionType b WHERE b.defaults = true AND b.id <> :id")
+    Long countByDefaultAndNotId(@Param("id") UUID id);
 
 }

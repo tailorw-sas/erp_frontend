@@ -9,7 +9,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageReconcileTransactionStatusResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageReconcileTransactionStatusDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageReconcileTransactionStatusService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageReconcileTransactionStatus;
 
@@ -50,12 +49,11 @@ public class ManageReconcileTransactionStatusServiceImpl implements IManageRecon
 
     @Override
     public void delete(ManageReconcileTransactionStatusDto dto) {
-        ManageReconcileTransactionStatus delete = new ManageReconcileTransactionStatus(dto);
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-
-        this.repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -83,6 +81,11 @@ public class ManageReconcileTransactionStatusServiceImpl implements IManageRecon
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public List<ManageReconcileTransactionStatusDto> findByIds(List<UUID> ids) {
+        return repositoryQuery.findAllById(ids).stream().map(ManageReconcileTransactionStatus::toAggregate).toList();
     }
 
     @Override

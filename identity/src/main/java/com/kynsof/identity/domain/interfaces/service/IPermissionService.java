@@ -23,4 +23,6 @@ public interface IPermissionService {
     Long countByCodeAndNotId(String name, UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    List<PermissionDto> findAll();
 }

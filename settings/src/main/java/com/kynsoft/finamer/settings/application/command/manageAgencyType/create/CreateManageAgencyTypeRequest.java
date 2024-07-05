@@ -11,4 +11,5 @@ public class CreateManageAgencyTypeRequest {
     private String code;
     private Status status;
     private String name;
+    private String description;
 }

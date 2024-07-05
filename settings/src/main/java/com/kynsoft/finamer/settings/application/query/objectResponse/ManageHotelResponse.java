@@ -34,6 +34,7 @@ public class ManageHotelResponse implements IResponse {
     private Boolean isVirtual;
     private Boolean requiresFlatRate;
     private Boolean isApplyByVCC;
+    private Boolean isNightType;
 
     public ManageHotelResponse(ManageHotelDto dto) {
         this.id = dto.getId();
@@ -54,5 +55,6 @@ public class ManageHotelResponse implements IResponse {
         this.isVirtual = dto.getIsVirtual();
         this.requiresFlatRate = dto.getRequiresFlatRate();
         this.isApplyByVCC = dto.getIsApplyByVCC();
+        this.isNightType = dto.getIsNightType();
     }
 }

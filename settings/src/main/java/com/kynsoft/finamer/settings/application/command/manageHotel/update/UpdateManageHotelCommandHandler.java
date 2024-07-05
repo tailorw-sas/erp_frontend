@@ -41,6 +41,10 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
     @Override
     public void handle(UpdateManageHotelCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Hotel ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageCountry(), "manageCountry", "Manage Country cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageCityState(), "manageCityState", "Manage City State cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageCurrency(), "manageCurrency", "Manage Currency State cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageRegion(), "manageRegion", "Manage Region cannot be null."));
 
         ManageHotelDto dto = service.findById(command.getId());
 
@@ -56,12 +60,21 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setAddress, command.getAddress(), dto.getAddress(), update::setUpdate);
         updateCurrency(dto::setManageCurrency, command.getManageCurrency(), dto.getManageCurrency().getId(), update::setUpdate);
         updateRegion(dto::setManageRegion, command.getManageRegion(), dto.getManageRegion().getId(), update::setUpdate);
-        updateTradingCompanies(dto::setManageTradingCompanies, command.getManageTradingCompanies(), dto.getManageTradingCompanies().getId(), update::setUpdate);
+
+        if(dto.getManageTradingCompanies() != null) {
+            updateTradingCompanies(dto::setManageTradingCompanies, command.getManageTradingCompanies(), dto.getManageTradingCompanies().getId(), update::setUpdate);
+        } else if(command.getManageTradingCompanies() != null){
+            dto.setManageTradingCompanies(tradingCompaniesService.findById(command.getManageTradingCompanies()));
+            update.setUpdate(1);
+        }
+
+
         UpdateIfNotNull.updateBoolean(dto::setApplyByTradingCompany, command.getApplyByTradingCompany(), dto.getApplyByTradingCompany(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setPrefixToInvoice, command.getPrefixToInvoice(), dto.getPrefixToInvoice(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsVirtual, command.getIsVirtual(), dto.getIsVirtual(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setRequiresFlatRate, command.getRequiresFlatRate(), dto.getRequiresFlatRate(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsApplyByVCC, command.getIsApplyByVCC(), dto.getIsApplyByVCC(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setIsNightType, command.getIsNightType(), dto.getIsNightType(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
@@ -123,11 +136,17 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
     }
 
     private boolean updateTradingCompanies(Consumer<ManageTradingCompaniesDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
-        if (newValue != null && !newValue.equals(oldValue)) {
-            ManageTradingCompaniesDto tradingCompaniesDto = tradingCompaniesService.findById(newValue);
-            setter.accept(tradingCompaniesDto);
-            update.accept(1);
+        if (newValue != null) {
+            if(!newValue.equals(oldValue)) {
+                ManageTradingCompaniesDto tradingCompaniesDto = tradingCompaniesService.findById(newValue);
+                setter.accept(tradingCompaniesDto);
+                update.accept(1);
 
+                return true;
+            }
+        } else {
+            setter.accept(null);
+            update.accept(1);
             return true;
         }
         return false;

@@ -1,6 +1,6 @@
 {
-  "realm": "kynsoft",
-  "auth-server-url": "https://auth.chevere.ddns.net/",
+  "realm": "TailorwRealm",
+  "auth-server-url": "https://authqa.tailorw.net/",
   "ssl-required": "external",
   "resource": "medinec",
   "verify-token-audience": true,

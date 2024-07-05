@@ -12,7 +12,7 @@ on:
     paths:
       - .github/workflows/ci-insis.yml
       - 'insis/**'
-      - 'share/**'
+#      - 'share/**'
 jobs:
   build-push:
     runs-on: ubuntu-latest

@@ -17,8 +17,8 @@ public class PermissionCodeMustBeUniqueRule extends BusinessRule {
 
     public PermissionCodeMustBeUniqueRule(IPermissionService service, String code, UUID id) {
         super(
-                DomainErrorMessage.PERMISSION_CODE_MUST_BY_UNIQUE, 
-                new ErrorField("code", "The permission code must be unique.")
+                DomainErrorMessage.ITEM_ALREADY_EXITS,
+                new ErrorField("code",  DomainErrorMessage.ITEM_ALREADY_EXITS.toString())
         );
         this.service = service;
         this.code = code;

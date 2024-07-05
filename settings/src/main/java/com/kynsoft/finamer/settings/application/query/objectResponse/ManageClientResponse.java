@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -21,6 +23,7 @@ public class ManageClientResponse implements IResponse {
     private String name;
     private String description;
     private Status status;
+    private List<ManageAgencyResponse> agencies;
 
     public ManageClientResponse(ManageClientDto dto) {
         this.id = dto.getId();
@@ -28,6 +31,7 @@ public class ManageClientResponse implements IResponse {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
+        this.agencies = dto.getAgencies() != null ? dto.getAgencies().stream().map(ManageAgencyResponse::new).toList() : null;
     }
 
 }

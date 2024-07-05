@@ -1,5 +1,6 @@
 package com.kynsof.identity.application.command.permission.create;
 
+import com.kynsof.identity.domain.dto.enumType.PermissionStatusEnm;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,4 +18,7 @@ public class CreatePermissionRequest {
     private String description;
     private UUID moduleId;
     private String action;
+    private Boolean isHighRisk;
+    private Boolean isIT;
+    private String name;
 }

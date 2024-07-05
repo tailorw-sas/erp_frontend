@@ -17,6 +17,8 @@ public interface IManageTransactionStatusService {
 
     ManageTransactionStatusDto findById(UUID id);
 
+    List<ManageTransactionStatusDto> findByIds(List<UUID> ids);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);

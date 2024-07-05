@@ -8,8 +8,9 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagerAccountTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerAccountTypeService;
-import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Consumer;
 
 @Component
 public class UpdateManagerAccountTypeCommandHandler implements ICommandHandler<UpdateManagerAccountTypeCommand> {
@@ -22,31 +23,28 @@ public class UpdateManagerAccountTypeCommandHandler implements ICommandHandler<U
 
     @Override
     public void handle(UpdateManagerAccountTypeCommand command) {
-
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manager Account Type ID cannot be null."));
 
-        ManagerAccountTypeDto test = this.service.findById(command.getId());
-
+        ManagerAccountTypeDto accountTypeDto = this.service.findById(command.getId());
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
-        this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
+        updateFields(accountTypeDto, command, update);
 
         if (update.getUpdate() > 0) {
-            this.service.update(test);
+            this.service.update(accountTypeDto);
         }
-
     }
 
-    private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
+    private void updateFields(ManagerAccountTypeDto accountTypeDto, UpdateManagerAccountTypeCommand command, ConsumerUpdate update) {
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(accountTypeDto::setDescription, command.getDescription(), accountTypeDto.getDescription(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(accountTypeDto::setName, command.getName(), accountTypeDto.getName(), update::setUpdate);
+        updateStatus(accountTypeDto::setStatus, command.getStatus(), accountTypeDto.getStatus(), update::setUpdate);
+    }
+
+    private void updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             setter.accept(newValue);
             update.accept(1);
-
-            return true;
         }
-        return false;
     }
-
 }

@@ -11,6 +11,5 @@ public class UpdateManageDepartmentGroupRequest {
     private Status status;
     private String name;
     private String description;
-    private Boolean isActive;
 
 }

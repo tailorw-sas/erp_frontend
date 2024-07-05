@@ -34,9 +34,6 @@ public class ManagerMerchant implements Serializable {
     private ManageB2BPartner b2bPartner;
 
     @Column(nullable = true)
-    private Boolean deleted = false;
-
-    @Column(nullable = true)
     private Boolean defaultm;
 
     @Enumerated(EnumType.STRING)
@@ -49,9 +46,6 @@ public class ManagerMerchant implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
-
     public ManagerMerchant(ManagerMerchantDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -62,7 +56,8 @@ public class ManagerMerchant implements Serializable {
     }
 
     public ManagerMerchantDto toAggregate() {
-        return new ManagerMerchantDto(id, code, description, b2bPartner.toAggregate(), defaultm, status);
+        return new ManagerMerchantDto(id, code, description,
+                b2bPartner != null ? b2bPartner.toAggregate() : null, defaultm, status);
     }
 
 }

@@ -13,9 +13,9 @@ import java.util.logging.Logger;
 
 @Service
 public class ProducerEmailEventService {
-    private final KafkaTemplate<String, String> producer;
+    private final KafkaTemplate<String, Object> producer;
 
-    public ProducerEmailEventService(KafkaTemplate<String, String> producer) {
+    public ProducerEmailEventService(KafkaTemplate<String, Object> producer) {
         this.producer = producer;
     }
 

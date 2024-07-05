@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.settings.application.command.manageMerchantCommission.update;
 
-import com.kynsoft.finamer.settings.application.command.managerMerchantCurrency.update.*;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import lombok.Getter;
 

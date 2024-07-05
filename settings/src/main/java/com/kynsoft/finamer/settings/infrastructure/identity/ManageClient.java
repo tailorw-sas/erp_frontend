@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsoft.finamer.settings.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.settings.domain.dto.ManageClientDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -10,7 +11,9 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.hibernate.annotations.CreationTimestamp;
 
 @NoArgsConstructor
@@ -30,11 +33,11 @@ public class ManageClient implements Serializable {
     private String name;
     private String description;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER)
+    private List<ManageAgency> agencies;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -43,19 +46,18 @@ public class ManageClient implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
-
     public ManageClient(ManageClientDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
+        this.agencies = dto.getAgencies() != null ? dto.getAgencies().stream().map(ManageAgency::new).toList() : null;
     }
 
     public ManageClientDto toAggregate() {
-        return new ManageClientDto(id, code, name, description, status);
+        List<ManageAgencyDto> agencies = this.agencies != null ? this.agencies.stream().map(ManageAgency::toAggregateSample).toList() : null;
+        return new ManageClientDto(id, code, name, description, status,agencies);
     }
 
 }

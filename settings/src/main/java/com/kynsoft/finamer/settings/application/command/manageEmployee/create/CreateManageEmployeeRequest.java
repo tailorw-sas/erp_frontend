@@ -1,27 +1,29 @@
 package com.kynsoft.finamer.settings.application.command.manageEmployee.create;
 
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import java.util.UUID;
+import com.kynsoft.finamer.settings.domain.dtoEnum.UserType;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 public class CreateManageEmployeeRequest {
+    private UUID id;
     private String firstName;
     private String lastName;
     private String loginName;
     private String email;
     private String innsistCode;
-    private String hash;
-    private String salt;
-    private Integer parallelism;
-    private Integer iterations;
-    private Integer memorySize;
-    private Boolean isLock;
-    private Integer phoneExtension;
-    private String middleName;
+    private String phoneExtension;
     private UUID departmentGroup;
-    private UUID employeeGroup;
     private Status status;
+    private List<UUID> managePermissionList;
+    private List<UUID> manageAgencyList;
+    private List<UUID> manageHotelList;
+    private List<UUID> manageTradingCompaniesList;
+    private UserType userType;
+    private List<UUID> manageReportList;
 }

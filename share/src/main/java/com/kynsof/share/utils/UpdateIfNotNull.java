@@ -1,6 +1,9 @@
 package com.kynsof.share.utils;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class UpdateIfNotNull {
 
@@ -95,6 +98,16 @@ public class UpdateIfNotNull {
         return false;
     }
 
+    public static boolean updateDouble(Consumer<Double> setter, Double newValue, Consumer<Integer> update) {
+        if (newValue != null) {
+            setter.accept(newValue);
+            update.accept(1);
+
+            return true;
+        }
+        return false;
+    }
+
     public static boolean updateInteger(Consumer<Integer> setter, Integer newValue, Integer oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             setter.accept(newValue);
@@ -124,6 +137,21 @@ public class UpdateIfNotNull {
             return true;
         }
         return false;
+    }
+
+    public static void updateLocalDateTime(Consumer<LocalDateTime> setter, LocalDateTime newValue, LocalDateTime oldValue, Consumer<Integer> update){
+        if(newValue != null && !newValue.equals(oldValue)){
+            setter.accept(newValue);
+            update.accept(1);
+        }
+    }
+
+    public static <T> void updateEntity(Consumer<T> setter, UUID newValue, UUID oldValue, Consumer<Integer> update, Function<UUID, T> findByIdFunction) {
+        if (newValue!= null &&!newValue.equals(oldValue)) {
+            T entity = findByIdFunction.apply(newValue);
+            setter.accept(entity);
+            update.accept(1);
+        }
     }
 
 }

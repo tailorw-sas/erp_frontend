@@ -1,8 +1,6 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
 import com.kynsoft.finamer.settings.domain.dto.ManageTransactionStatusDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Navigate;
-import com.kynsoft.finamer.settings.domain.dtoEnum.NavigateTransactionStatus;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,8 +10,10 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.hibernate.annotations.CreationTimestamp;
 
 @NoArgsConstructor
@@ -33,13 +33,14 @@ public class ManageTransactionStatus implements Serializable {
     private String name;
     private String description;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "navigate_transaction_status", joinColumns = @JoinColumn(name = "navigation_id"))
-    @Column(name = "navigate_transaction_status")
-    private Set<NavigateTransactionStatus> navigate;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "manage_transaction_status_relations",
+            joinColumns = @JoinColumn(name = "parent_id"),
+            inverseJoinColumns = @JoinColumn(name = "child_id")
+    )
+    private List<ManageTransactionStatus> navigate = new ArrayList<>();
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
     private Boolean enablePayment;
     private Boolean visible;
 
@@ -53,22 +54,27 @@ public class ManageTransactionStatus implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
-
     public ManageTransactionStatus(ManageTransactionStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.description = dto.getDescription();
-        this.navigate = dto.getNavigate();
         this.status = dto.getStatus();
         this.enablePayment = dto.getEnablePayment();
         this.visible = dto.getVisible();
+        this.navigate = dto.getNavigate() != null ? dto.getNavigate().stream()
+                    .map(ManageTransactionStatus::new)
+                    .collect(Collectors.toList()) : null;
     }
 
     public ManageTransactionStatusDto toAggregate() {
-        return new ManageTransactionStatusDto(id, code, name, description, navigate, enablePayment, visible, status);
+
+        return new ManageTransactionStatusDto(id, code, name, description, navigate != null ?
+                navigate.stream().map(ManageTransactionStatus::toAggregateSample).toList() : null, enablePayment, visible, status);
+    }
+
+    public ManageTransactionStatusDto toAggregateSample() {
+        return new ManageTransactionStatusDto(id, code, name, description, null, enablePayment, visible, status);
     }
 
 }

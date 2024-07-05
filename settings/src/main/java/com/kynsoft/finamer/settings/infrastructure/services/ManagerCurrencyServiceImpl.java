@@ -51,14 +51,11 @@ public class ManagerCurrencyServiceImpl implements IManagerCurrencyService {
 
     @Override
     public void delete(ManagerCurrencyDto dto) {
-        ManagerCurrency delete = new ManagerCurrency(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeleteAt(LocalDateTime.now());
-
-        this.repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -67,7 +64,7 @@ public class ManagerCurrencyServiceImpl implements IManagerCurrencyService {
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_CURRENCY_NOT_FOUND, new ErrorField("id", "Manager Currency not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_CURRENCY_NOT_FOUND, new ErrorField("id", "Element cannot be deleted has a related element.")));
     }
 
     @Override

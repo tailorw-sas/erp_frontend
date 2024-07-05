@@ -30,9 +30,6 @@ public class ManagerChargeType implements Serializable {
     private String name;
     private String description;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -42,9 +39,6 @@ public class ManagerChargeType implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
 
     public ManagerChargeType(ManagerChargeTypeDto dto) {
         this.id = dto.getId();

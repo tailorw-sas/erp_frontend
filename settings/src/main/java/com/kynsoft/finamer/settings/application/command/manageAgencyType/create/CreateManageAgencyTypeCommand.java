@@ -16,8 +16,10 @@ public class CreateManageAgencyTypeCommand implements ICommand {
     private String code;
     private Status status;
     private String name;
+    private final String description;
 
-    public CreateManageAgencyTypeCommand(String code, Status status, String name) {
+    public CreateManageAgencyTypeCommand(String code, Status status, String name, String description) {
+        this.description = description;
         this.id = UUID.randomUUID();
         this.code = code;
         this.status = status;
@@ -26,7 +28,8 @@ public class CreateManageAgencyTypeCommand implements ICommand {
 
     public static CreateManageAgencyTypeCommand fromRequest(CreateManageAgencyTypeRequest request){
         return new CreateManageAgencyTypeCommand(
-                request.getCode(), request.getStatus(), request.getName()
+                request.getCode(), request.getStatus(), request.getName(),
+                request.getDescription()
         );
     }
 

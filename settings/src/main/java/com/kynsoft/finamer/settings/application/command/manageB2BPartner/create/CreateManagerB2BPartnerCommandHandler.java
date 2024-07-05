@@ -39,7 +39,6 @@ public class CreateManagerB2BPartnerCommandHandler implements ICommandHandler<Cr
                 command.getUserName(),
                 command.getPassword(),
                 command.getToken(),
-                command.getManageB2BPartnerType(),
                 b2BPartnerTypeDto
         ));
     }

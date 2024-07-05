@@ -4,6 +4,7 @@ import com.kynsof.share.core.application.FileRequest;
 import com.kynsof.share.core.domain.response.ApiResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.util.CustomMultipartFile;
+import com.kynsoft.notification.application.SaveFileS3Response;
 import com.kynsoft.notification.application.command.saveFileS3.SaveFileS3RequestCommand;
 import com.kynsoft.notification.application.command.saveFileS3.SaveFileS3RequestMessage;
 import com.kynsoft.notification.domain.dto.AFileDto;
@@ -43,9 +44,10 @@ public class FileController {
     public ResponseEntity<?> uploadFile(@RequestBody FileRequest request) {
         try {
             MultipartFile file = new CustomMultipartFile(request.getFile(), request.getFileName());
-            String fileUrl = amazonClient.save(file, request.getFileName());
-            this.fileService.create(new AFileDto(UUID.randomUUID(), request.getFileName(), "", fileUrl));
-            return ResponseEntity.ok("OK");
+            String fileUrl = amazonClient.save(file, "finamer");
+            UUID id = UUID.randomUUID();
+            this.fileService.create(new AFileDto(id, request.getFileName(), "", fileUrl));
+            return ResponseEntity.ok(new SaveFileS3Response(id, fileUrl));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to upload file: " + e.getMessage());
         }

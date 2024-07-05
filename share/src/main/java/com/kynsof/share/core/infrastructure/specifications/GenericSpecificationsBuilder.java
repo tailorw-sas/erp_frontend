@@ -31,9 +31,9 @@ public class GenericSpecificationsBuilder<T> implements Specification<T> {
         List<Predicate> orPredicates = new ArrayList<>();
 
         // Verifica si el campo 'deleted' existe en la entidad
-        if (doesClassContainField(root.getJavaType(), "deleted")) {
-            andPredicates.add(cb.isFalse(root.get("deleted")));
-        }
+//        if (doesClassContainField(root.getJavaType(), "deleted")) {
+//            andPredicates.add(cb.isFalse(root.get("deleted")));
+//        }
 
         for (SearchCriteria criteria : params) {
             Predicate predicate = new GenericSpecification<T>(criteria).toPredicate(root, query, cb);

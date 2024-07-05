@@ -20,13 +20,11 @@ public interface IManageMerchantCommissionService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-    Long countByManagerMerchantANDManagerCreditCartType(UUID managerMerchant, UUID manageCreditCartType);
+    List<ManageMerchantCommissionDto> findAllByMerchantAndCreditCardType(UUID managerMerchant, UUID manageCreditCartType);
 
-    Long countByManagerMerchantANDManagerCreditCartTypeIdNotId(UUID id, UUID managerMerchant, UUID manageCreditCartType);
+    boolean checkDateOverlapForSameCombination(UUID managerMerchant, UUID manageCreditCartType, Double commission, String calculationType, LocalDate fromDate, LocalDate toDate);
 
-    Long countByManagerMerchantANDManagerCreditCartTypeANDDateRange(UUID id, UUID managerMerchant,
-            UUID manageCreditCartType,
-            LocalDate fromCheckDate,
-            LocalDate toCheckDate);
+    boolean checkDateOverlapForDifferentCombination(UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate);
 
+    boolean hasOverlappingRecords(UUID id, UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate);
 }

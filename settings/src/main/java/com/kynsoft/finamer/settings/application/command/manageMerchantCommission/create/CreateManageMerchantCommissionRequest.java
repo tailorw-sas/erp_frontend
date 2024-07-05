@@ -2,6 +2,8 @@ package com.kynsoft.finamer.settings.application.command.manageMerchantCommissio
 
 import java.time.LocalDate;
 import java.util.UUID;
+
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,4 +17,5 @@ public class CreateManageMerchantCommissionRequest {
     private String description;
     private LocalDate fromDate;
     private LocalDate toDate;
+    private Status status;
 }

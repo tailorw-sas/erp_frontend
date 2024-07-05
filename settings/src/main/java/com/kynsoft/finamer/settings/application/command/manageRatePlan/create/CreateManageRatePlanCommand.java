@@ -15,11 +15,12 @@ public class CreateManageRatePlanCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
-    private String hotel;
+    private UUID hotel;
     private String description;
     private Status status;
 
-    public CreateManageRatePlanCommand(String code, String description, String name, String hotel, Status status) {
+    public CreateManageRatePlanCommand(String code, String description, String name,
+                                       UUID hotel, Status status) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;

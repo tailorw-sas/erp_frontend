@@ -15,4 +15,5 @@ public interface IAlertsService {
     ManageAlertsDto findById(UUID id);
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
     Long countByCode(String code);
+    Long countByName(String code);
 }

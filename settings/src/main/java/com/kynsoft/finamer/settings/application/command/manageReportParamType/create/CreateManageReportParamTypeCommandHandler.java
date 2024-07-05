@@ -28,7 +28,8 @@ public class CreateManageReportParamTypeCommandHandler implements ICommandHandle
                 command.getName(),
                 command.getLabel(),
                 command.getHotel(),
-                command.getSource()
+                command.getSource(),
+                command.getDescription()
         ));
     }
 }

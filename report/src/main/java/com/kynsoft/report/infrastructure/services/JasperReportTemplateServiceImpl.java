@@ -13,6 +13,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,17 +40,18 @@ public class JasperReportTemplateServiceImpl implements IJasperReportTemplateSer
 
     @Override
     public void update(JasperReportTemplateDto object) {
-        this.commandRepository.save(new JasperReportTemplate(object));
+        JasperReportTemplate update = new JasperReportTemplate(object);
+        update.setUpdateAt(LocalDateTime.now());
+        this.commandRepository.save(update);
     }
 
     @Override
     public void delete(JasperReportTemplateDto object) {
-        JasperReportTemplate delete = new JasperReportTemplate(object);
-        delete.setDeleted(Boolean.TRUE);
-        delete.setTemplateCode(delete.getTemplateCode() + " + " + UUID.randomUUID());
-        delete.setTemplateName(delete.getTemplateName()+ " + " + UUID.randomUUID());
-
-        this.commandRepository.save(delete);
+        try {
+            this.commandRepository.deleteById(object.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", "Element cannot be deleted has a related element.")));
+        }
     }
 
     @Override
@@ -64,7 +66,7 @@ public class JasperReportTemplateServiceImpl implements IJasperReportTemplateSer
 
     @Override
     public JasperReportTemplateDto findByTemplateCode(String templateCode) {
-        Optional<JasperReportTemplate> object = this.queryRepository.findByTemplateCode(templateCode);
+        Optional<JasperReportTemplate> object = this.queryRepository.findByCode(templateCode);
         if (object.isPresent()) {
             return object.get().toAggregate();
         }
@@ -86,6 +88,11 @@ public class JasperReportTemplateServiceImpl implements IJasperReportTemplateSer
         }
         return new PaginatedResponse(patients, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public Long countByCodeAndNotId(String templateCode, UUID id) {
+        return this.queryRepository.countByCodeAndNotId(templateCode, id);
     }
 
 }

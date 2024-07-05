@@ -18,7 +18,7 @@ public class ManageEmproyeeLoginNameMustBeUniqueRule extends BusinessRule {
     public ManageEmproyeeLoginNameMustBeUniqueRule(IManageEmployeeService service, String loginName, UUID id) {
         super(
                 DomainErrorMessage.ITEM_ALREADY_EXITS,
-                new ErrorField("code", DomainErrorMessage.ITEM_ALREADY_EXITS.toString())
+                new ErrorField("loginName", DomainErrorMessage.ITEM_ALREADY_EXITS.getReasonPhrase())
         );
         this.service = service;
         this.loginName = loginName;

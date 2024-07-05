@@ -37,7 +37,7 @@ public class ManageMerchantCommissionMustBeUniqueRule extends BusinessRule {
 
     @Override
     public boolean isBroken() {
-        return this.service.countByManagerMerchantANDManagerCreditCartTypeANDDateRange(id, managerMerchant, manageCreditCartType, fromCheckDate, toCheckDate) > 0;
+        return true; //this.service.countByManagerMerchantANDManagerCreditCartTypeANDDateRange(id, managerMerchant, manageCreditCartType, fromCheckDate, toCheckDate) > 0;
     }
 
 }

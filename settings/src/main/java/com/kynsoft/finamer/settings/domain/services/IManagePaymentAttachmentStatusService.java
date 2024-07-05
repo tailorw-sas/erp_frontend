@@ -15,5 +15,6 @@ public interface IManagePaymentAttachmentStatusService {
     ManagePaymentAttachmentStatusDto findById(UUID id);
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
     Long countByCode(String code, UUID id);
-    
+    List<ManagePaymentAttachmentStatusDto> findByIds(List<UUID> ids);
+    Long countByNameAndNotId(String name, UUID id);
 }

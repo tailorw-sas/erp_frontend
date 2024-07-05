@@ -11,6 +11,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -28,9 +30,6 @@ public class ManagerLanguage implements Serializable {
     @Column(unique = true)
     private String code;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -46,9 +45,6 @@ public class ManagerLanguage implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
 
     public ManagerLanguage(ManagerLanguageDto dto){
         this.id = dto.getId();

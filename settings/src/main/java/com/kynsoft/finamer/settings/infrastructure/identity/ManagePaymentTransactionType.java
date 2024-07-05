@@ -36,12 +36,15 @@ public class ManagePaymentTransactionType implements Serializable {
     private Boolean negative;
     private Boolean policyCredit;
     private Boolean remarkRequired;
+    @Column(nullable = true)
+    private Boolean deposit;
+    @Column(nullable = true)
+    private Boolean applyDeposit;
+    private Boolean defaults;
+
     private Integer minNumberOfCharacter;
     private String defaultRemark;
 
-
-    @Column(nullable = true)
-    private Boolean deleted = false;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -52,9 +55,6 @@ public class ManagePaymentTransactionType implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deleteAt;
 
     public ManagePaymentTransactionType(ManagePaymentTransactionTypeDto dto) {
         this.id = dto.getId();
@@ -69,6 +69,9 @@ public class ManagePaymentTransactionType implements Serializable {
         this.remarkRequired = dto.getRemarkRequired();
         this.minNumberOfCharacter = dto.getMinNumberOfCharacter();
         this.defaultRemark = dto.getDefaultRemark();
+        this.deposit = dto.getDeposit();
+        this.applyDeposit = dto.getApplyDeposit();
+        this.defaults = dto.getDefaults();
     }
 
     public ManagePaymentTransactionTypeDto toAggregate(){
@@ -78,7 +81,11 @@ public class ManagePaymentTransactionType implements Serializable {
                 policyCredit,
                 remarkRequired,
                 minNumberOfCharacter,
-                defaultRemark);
+                defaultRemark,
+                deposit,
+                applyDeposit,
+                defaults
+        );
     }
 
 }

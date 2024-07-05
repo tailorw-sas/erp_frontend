@@ -21,4 +21,8 @@ public interface IManageHotelService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);
+
+    List<ManageHotelDto> findByIds(List<UUID> ids);
+
+    List<ManageHotelDto> findAll();
 }

@@ -18,6 +18,7 @@ public interface IUserSystemService {
     void deleteAll(List<UUID> users);
 
     UserSystemDto findById(UUID id);
+    UserSystemDto findByEmail(String email);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 

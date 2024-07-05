@@ -9,7 +9,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagePaymentTransactionType;
@@ -51,12 +50,11 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
 
     @Override
     public void delete(ManagePaymentTransactionTypeDto dto) {
-        ManagePaymentTransactionType delete = new ManagePaymentTransactionType(dto);
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -89,5 +87,17 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
+    }
+
+    @Override
+    public Long countByDefaultAndNotId(UUID id) {
+        return this.repositoryQuery.countByDefaultAndNotId(id);
+    }
+
+    @Override
+    public PaginatedResponse findWithApplyDepositAndDepositFalse(Boolean applyDeposit, Boolean deposit, Boolean defaults, Pageable pageable) {
+        Page<ManagePaymentTransactionType> data = this.repositoryQuery.findWithApplyDepositAndDepositFalse(applyDeposit, deposit, defaults, pageable);
+
+        return getPaginatedResponse(data);
     }
 }

@@ -18,6 +18,9 @@ public interface ManageContactReadDataJPARepository extends JpaRepository<Manage
 
     Page<ManageContact> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManageContact b WHERE b.code = :code AND b.id <> :id")
-    Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+    @Query("SELECT COUNT(r) FROM ManageContact r WHERE r.code = :code AND r.manageHotel.id = :manageHotelId AND r.id <> :id")
+    Long countByCodeAndManageHotelIdAndNotId(@Param("code") String code, @Param("manageHotelId") UUID manageHotelId, @Param("id") UUID id);
+
+    @Query("SELECT COUNT(r) FROM ManageContact r WHERE r.email = :email AND r.manageHotel.id = :manageHotelId AND r.id <> :id")
+    Long countByEmailAndManageHotelIdAndNotId(@Param("email") String email, @Param("manageHotelId") UUID manageHotelId, @Param("id") UUID id);
 }

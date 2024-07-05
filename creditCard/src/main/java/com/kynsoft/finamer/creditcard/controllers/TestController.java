@@ -7,9 +7,9 @@ import com.kynsoft.finamer.creditcard.application.command.test.create.CreateTest
 import com.kynsoft.finamer.creditcard.application.command.test.create.CreateTestRequest;
 import com.kynsoft.finamer.creditcard.application.command.test.update.UpdateTestCommand;
 import com.kynsoft.finamer.creditcard.application.command.test.update.UpdateTestMessage;
-import com.kynsoft.finamer.creditcard.application.query.getById.FindTestByIdQuery;
+import com.kynsoft.finamer.creditcard.application.query.test.getById.FindTestByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TestResponse;
-import com.kynsoft.finamer.creditcard.application.query.search.GetSearchTestQuery;
+import com.kynsoft.finamer.creditcard.application.query.test.search.GetSearchTestQuery;
 import com.kynsoft.finamer.creditcard.application.command.test.create.CreateTestMessage;
 import com.kynsoft.finamer.creditcard.application.command.test.delete.DeleteTestCommand;
 import com.kynsoft.finamer.creditcard.application.command.test.delete.DeleteTestMessage;

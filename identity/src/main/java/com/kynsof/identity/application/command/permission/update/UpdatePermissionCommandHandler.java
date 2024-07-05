@@ -38,8 +38,14 @@ public class UpdatePermissionCommandHandler implements ICommandHandler<UpdatePer
             update.setModule(this.serviceModule.findById(command.getIdModule()));
         }
 
-        update.setStatus(command.getStatus());
+        if(command.getStatus() != null){
+            update.setStatus(command.getStatus());
+        }
+
         UpdateIfNotNull.updateIfNotNull(update::setAction, command.getAction());
+        UpdateIfNotNull.updateIfNotNull(update::setIsHighRisk, command.getIsHighRisk());
+        UpdateIfNotNull.updateIfNotNull(update::setIsIT, command.getIsIT());
+        UpdateIfNotNull.updateIfNotNull(update::setName, command.getName());
 
         service.update(update);
     }

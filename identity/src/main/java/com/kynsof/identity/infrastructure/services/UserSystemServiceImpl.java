@@ -28,11 +28,14 @@ import java.util.UUID;
 @Service
 public class UserSystemServiceImpl implements IUserSystemService {
 
-    @Autowired
-    private UserSystemsWriteDataJPARepository repositoryCommand;
+    private final UserSystemsWriteDataJPARepository repositoryCommand;
 
-    @Autowired
-    private UserSystemReadDataJPARepository repositoryQuery;
+    private final UserSystemReadDataJPARepository repositoryQuery;
+
+    public UserSystemServiceImpl(UserSystemReadDataJPARepository repositoryQuery, UserSystemsWriteDataJPARepository repositoryCommand) {
+        this.repositoryQuery = repositoryQuery;
+        this.repositoryCommand = repositoryCommand;
+    }
 
     @Override
     public UUID create(UserSystemDto userSystemDto) {
@@ -84,6 +87,12 @@ public class UserSystemServiceImpl implements IUserSystemService {
             return userSystem.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.USER_NOT_FOUND, new ErrorField("id", "User not found.")));
+    }
+
+    @Override
+    public UserSystemDto findByEmail(String email) {
+        Optional<UserSystem> userSystem = this.repositoryQuery.findByEmail(email);
+        return userSystem.map(UserSystem::toAggregate).orElse(null);
     }
 
     @Override

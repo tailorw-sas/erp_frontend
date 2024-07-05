@@ -31,11 +31,8 @@ public class UpdateManageAgencyTypeCommandHandler implements ICommandHandler<Upd
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
-
-        if (update.getUpdate() > 0) {
-            this.service.update(dto);
-        }
-
+        dto.setDescription(command.getDescription());
+        this.service.update(dto);
     }
 
     private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {

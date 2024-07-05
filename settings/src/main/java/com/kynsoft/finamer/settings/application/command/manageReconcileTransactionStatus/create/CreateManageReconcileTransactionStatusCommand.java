@@ -2,10 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageReconcileTransact
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsoft.finamer.settings.domain.dtoEnum.NavigatePaymentTransactionStatus;
+import com.kynsoft.finamer.settings.domain.dtoEnum.NavigateReconcileTransactionStatus;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -17,13 +21,17 @@ public class CreateManageReconcileTransactionStatusCommand implements ICommand {
     private Status status;
     private String name;
     private String description;
+    private Boolean requireValidation;
+    private List<UUID> navigate;
 
-    public CreateManageReconcileTransactionStatusCommand(String code, Status status, String name, String description) {
+    public CreateManageReconcileTransactionStatusCommand(String code, Status status, String name, String description, Boolean requireValidation,List<UUID> navigate) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.status = status;
         this.name = name;
         this.description = description;
+        this.navigate = navigate;
+        this.requireValidation = requireValidation;
     }
 
     public static CreateManageReconcileTransactionStatusCommand fromRequest(
@@ -33,7 +41,9 @@ public class CreateManageReconcileTransactionStatusCommand implements ICommand {
 
                 request.getStatus(),
                 request.getName(),
-                request.getDescription()
+                request.getDescription(),
+                request.getRequireValidation(),
+                request.getNavigate()
 
         );
     }

@@ -17,8 +17,8 @@ public class ManagerMerchantCurrencyMustBeUniqueRule extends BusinessRule {
 
     public ManagerMerchantCurrencyMustBeUniqueRule(IManagerMerchantCurrencyService service, UUID managerMerchant, UUID managerCurrency) {
         super(
-                DomainErrorMessage.MANAGER_MERCHANT_CURRENCY_MUST_BY_UNIQUE, 
-                new ErrorField("id", "Item already exists.")
+                DomainErrorMessage.ITEM_ALREADY_EXITS,
+                new ErrorField("id", DomainErrorMessage.ITEM_ALREADY_EXITS.toString())
         );
         this.service = service;
         this.managerMerchant = managerMerchant;

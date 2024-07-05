@@ -28,9 +28,6 @@ public class ManageHotel implements Serializable {
     @Column(unique = true)
     private String code;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -45,15 +42,11 @@ public class ManageHotel implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
-
     private String babelCode;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id")
-    private ManagerCountry manageCountry;
-
+    private ManageCountry manageCountry;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "city_state_id")
     private ManageCityState manageCityState;
@@ -84,6 +77,8 @@ public class ManageHotel implements Serializable {
 
     private Boolean isApplyByVCC;
 
+    private Boolean isNightType;
+
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -91,26 +86,37 @@ public class ManageHotel implements Serializable {
         this.description = dto.getDescription();
         this.name = dto.getName();
         this.babelCode = dto.getBabelCode();
-        this.manageCountry = new ManagerCountry(dto.getManageCountry());
+        this.manageCountry = new ManageCountry(dto.getManageCountry());
         this.manageCityState = new ManageCityState(dto.getManageCityState());
         this.city = dto.getCity();
         this.address = dto.getAddress();
         this.manageCurrency = new ManagerCurrency(dto.getManageCurrency());
         this.manageRegion = new ManageRegion(dto.getManageRegion());
-        this.manageTradingCompanies = new ManageTradingCompanies(dto.getManageTradingCompanies());
+        this.manageTradingCompanies = dto.getManageTradingCompanies() != null ? new ManageTradingCompanies(dto.getManageTradingCompanies()) : null;
         this.applyByTradingCompany = dto.getApplyByTradingCompany();
         this.prefixToInvoice = dto.getPrefixToInvoice();
         this.isVirtual = dto.getIsVirtual();
         this.requiresFlatRate = dto.getRequiresFlatRate();
         this.isApplyByVCC = dto.getIsApplyByVCC();
+        this.isNightType = dto.getIsNightType();
     }
 
     public ManageHotelDto toAggregate(){
         return new ManageHotelDto(
-                id, code,description, status, name, babelCode, manageCountry.toAggregate(),
-                manageCityState.toAggregate(), city, address, manageCurrency.toAggregate(),
-                manageRegion.toAggregate(), manageTradingCompanies.toAggregate(),
-                applyByTradingCompany, prefixToInvoice, isVirtual, requiresFlatRate, isApplyByVCC
+                id,
+                code,
+                description,
+                status,
+                name,
+                babelCode,
+                manageCountry != null ? manageCountry.toAggregate() : null,
+                manageCityState != null ? manageCityState.toAggregate() : null,
+                city,
+                address,
+                manageCurrency != null ? manageCurrency.toAggregate() : null,
+                manageRegion != null ? manageRegion.toAggregate() : null,
+                manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null,
+                applyByTradingCompany, prefixToInvoice, isVirtual, requiresFlatRate, isApplyByVCC, isNightType
         );
     }
 }

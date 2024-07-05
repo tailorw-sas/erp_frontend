@@ -14,9 +14,9 @@ import java.util.logging.Logger;
 
 @Service
 public class ProducerTriggerPasswordResetEventService {
-    private final KafkaTemplate<String, String> producer;
+    private final KafkaTemplate<String, Object> producer;
 
-    public ProducerTriggerPasswordResetEventService(KafkaTemplate<String, String> producer) {
+    public ProducerTriggerPasswordResetEventService(KafkaTemplate<String, Object> producer) {
         this.producer = producer;
     }
 
@@ -26,7 +26,7 @@ public class ProducerTriggerPasswordResetEventService {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             String json = objectMapper.writeValueAsString(new CreateEvent<>(entity, EventType.CREATED));
-            this.producer.send("finamer_otp", json);
+            this.producer.send("finamer-otp", json);
         } catch (JsonProcessingException ex) {
             Logger.getLogger(ProducerTriggerPasswordResetEventService.class.getName()).log(Level.SEVERE, null, ex);
         }

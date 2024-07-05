@@ -9,12 +9,8 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageDepartmentGroupResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageDepartmentGroupDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-
 import com.kynsoft.finamer.settings.domain.services.IManageDepartmentGroupService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageDepartmentGroup;
-
-
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageDepartmentGroupWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageDepartmentGroupReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,12 +47,11 @@ public class ManageDepartmentGroupServiceImpl implements IManageDepartmentGroupS
 
     @Override
     public void delete(ManageDepartmentGroupDto dto) {
-        ManageDepartmentGroup delete = new ManageDepartmentGroup(dto);
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -66,7 +61,7 @@ public class ManageDepartmentGroupServiceImpl implements IManageDepartmentGroupS
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_DEPARTMENT_GROUP_NOT_FOUND, new ErrorField("id", "The manager payment source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_DEPARTMENT_GROUP_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_DEPARTMENT_GROUP_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.kynsof.identity.infrastructure.services;
 import com.kynsof.identity.application.query.module.getbyid.ModuleResponse;
 import com.kynsof.identity.application.query.module.search.ModuleListResponse;
 import com.kynsof.identity.domain.dto.ModuleDto;
+import com.kynsof.identity.domain.dto.enumType.ModuleStatus;
 import com.kynsof.identity.domain.dto.moduleDto.ModuleDataDto;
 import com.kynsof.identity.domain.dto.moduleDto.ModuleNodeDto;
 import com.kynsof.identity.domain.interfaces.service.IModuleService;
@@ -48,12 +49,11 @@ public class ModuleServiceImpl implements IModuleService {
 
     @Override
     public void delete(ModuleDto delete) {
-        ModuleSystem moduleSystem = new ModuleSystem(delete);
-
-        moduleSystem.setDeleted(true);
-        moduleSystem.setName(delete.getName() + "-" + UUID.randomUUID());
-
-        this.commandRepository.save(moduleSystem);
+        try{
+            commandRepository.deleteById(delete.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -61,14 +61,9 @@ public class ModuleServiceImpl implements IModuleService {
         List<ModuleSystem> delete = new ArrayList<>();
         for (UUID id : modules) {
             try {
-                ModuleDto user = this.findById(id);
-                ModuleSystem d = new ModuleSystem(user);
-                d.setDeleted(Boolean.TRUE);
-                d.setName(d.getName() + "-" + UUID.randomUUID());
-
-                delete.add(d);
+                commandRepository.deleteById(id);
             } catch (Exception e) {
-                System.err.println("Module not found!!!");
+                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
             }
         }
         this.commandRepository.saveAll(delete);
@@ -85,6 +80,7 @@ public class ModuleServiceImpl implements IModuleService {
 
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<ModuleResponse> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ModuleSystem> data = this.queryRepository.findAll(specifications, pageable);
         return getPaginatedResponse(data);
@@ -129,13 +125,32 @@ public class ModuleServiceImpl implements IModuleService {
         return this.queryRepository.countByNameAndNotId(name, id);
     }
 
-    public void updateDelete() {
-        List<ModuleSystem> modules = this.queryRepository.findAll();
-        for (ModuleSystem module : modules) {
-            if (module.getDeleted() == null || !module.getDeleted().equals(Boolean.TRUE)) {
-                module.setDeleted(Boolean.FALSE);
+    @Override
+    public Long countByCodeAndNotId(String code, UUID id) {
+        return queryRepository.countByCodeAndNotId(code, id);
+    }
+
+//    public void updateDelete() {
+//        List<ModuleSystem> modules = this.queryRepository.findAll();
+//        for (ModuleSystem module : modules) {
+//            if (module.getDeleted() == null || !module.getDeleted().equals(Boolean.TRUE)) {
+//                module.setDeleted(Boolean.FALSE);
+//            }
+//            this.commandRepository.save(module);
+//        }
+//    }
+
+    private void filterCriteria(List<FilterCriteria> filterCriteria) {
+        for (FilterCriteria filter : filterCriteria) {
+
+            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
+                try {
+                    ModuleStatus enumValue = ModuleStatus.valueOf((String) filter.getValue());
+                    filter.setValue(enumValue);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
+                }
             }
-            this.commandRepository.save(module);
         }
     }
 }

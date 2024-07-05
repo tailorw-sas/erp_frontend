@@ -17,8 +17,8 @@ public class ModuleNameMustBeUniqueRule extends BusinessRule {
 
     public ModuleNameMustBeUniqueRule(IModuleService service, String name, UUID id) {
         super(
-                DomainErrorMessage.MODULE_NAME_MUST_BY_UNIQUE, 
-                new ErrorField("name", "The module name must be unique.")
+                DomainErrorMessage.ITEM_ALREADY_EXITS,
+                new ErrorField("name", DomainErrorMessage.ITEM_ALREADY_EXITS.getReasonPhrase())
         );
         this.service = service;
         this.name = name;

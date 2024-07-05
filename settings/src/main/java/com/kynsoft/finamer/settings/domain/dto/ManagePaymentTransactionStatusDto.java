@@ -1,10 +1,17 @@
 package com.kynsoft.finamer.settings.domain.dto;
 
+import com.kynsoft.finamer.settings.domain.dtoEnum.NavigatePaymentTransactionStatus;
+import com.kynsoft.finamer.settings.domain.dtoEnum.NavigateTransactionStatus;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.infrastructure.identity.ManagePaymentTransactionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -17,4 +24,6 @@ public class ManagePaymentTransactionStatusDto {
     private String description;
     private Status status;
     private String name;
+    private Boolean requireValidation;
+    private List<ManagePaymentTransactionStatusDto> relatedStatuses = new ArrayList<>();
 }

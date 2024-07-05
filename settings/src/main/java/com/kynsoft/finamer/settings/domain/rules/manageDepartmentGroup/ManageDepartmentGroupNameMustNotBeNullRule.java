@@ -11,7 +11,7 @@ public class ManageDepartmentGroupNameMustNotBeNullRule extends BusinessRule {
     public ManageDepartmentGroupNameMustNotBeNullRule(String name) {
         super(
                 DomainErrorMessage.MANAGE_DEPARTMENT_GROUP_NAME_CANNOT_BE_EMPTY,
-                new ErrorField("name", "The name be empty.")
+                new ErrorField("name", "The name cannot be empty.")
         );
         this.name = name;
     }

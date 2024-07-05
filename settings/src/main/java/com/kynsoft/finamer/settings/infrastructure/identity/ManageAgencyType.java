@@ -27,13 +27,13 @@ public class ManageAgencyType {
     @Column(unique = true)
     private String code;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
     private String name;
+
+    @Column(name = "description", nullable = true)
+    private String description;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -42,19 +42,17 @@ public class ManageAgencyType {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
-
     public ManageAgencyType(ManageAgencyTypeDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
         this.status = dto.getStatus();
         this.name = dto.getName();
+        this.description = dto.getDescription();
     }
 
     public ManageAgencyTypeDto toAggregate(){
         return new ManageAgencyTypeDto(
-                id, code, status, name
+                id, code, status, name, description
         );
     }
 }

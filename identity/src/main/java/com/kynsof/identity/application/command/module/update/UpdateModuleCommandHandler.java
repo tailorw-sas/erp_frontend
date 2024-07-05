@@ -1,6 +1,7 @@
 package com.kynsof.identity.application.command.module.update;
 
 import com.kynsof.identity.domain.dto.ModuleDto;
+import com.kynsof.identity.domain.dto.enumType.ModuleStatus;
 import com.kynsof.identity.domain.interfaces.service.IModuleService;
 import com.kynsof.identity.domain.rules.module.ModuleNameMustBeUniqueRule;
 import com.kynsof.share.core.domain.RulesChecker;
@@ -9,6 +10,8 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Consumer;
 
 @Component
 public class UpdateModuleCommandHandler implements ICommandHandler<UpdateModuleCommand> {
@@ -32,11 +35,22 @@ public class UpdateModuleCommandHandler implements ICommandHandler<UpdateModuleC
         if (UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(module::setName, command.getName(), module.getName(), update::setUpdate)) {
             RulesChecker.checkRule(new ModuleNameMustBeUniqueRule(this.service, command.getName(), command.getId()));
         }
+
+        this.updateStatus(module::setStatus, command.getStatus(), module.getStatus(), update::setUpdate);
        // UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(module::setImage, command.getImage(), module.getImage(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(module);
         }
 
+    }
+    private boolean updateStatus(Consumer<ModuleStatus> setter, ModuleStatus newValue, ModuleStatus oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
+
+            return true;
+        }
+        return false;
     }
 }

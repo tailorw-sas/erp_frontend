@@ -20,4 +20,7 @@ public class CreateManagePaymentTransactionTypeRequest {
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
     private String defaultRemark;
+    private Boolean deposit;
+    private Boolean applyDeposit;
+    private Boolean defaults;
 }

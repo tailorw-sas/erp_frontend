@@ -9,7 +9,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageVCCTransactionTypeResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageVCCTransactionTypeDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 
 import com.kynsoft.finamer.settings.domain.services.IManageVCCTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageVCCTransactionType;
@@ -51,12 +50,11 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
 
     @Override
     public void delete(ManageVCCTransactionTypeDto dto) {
-        ManageVCCTransactionType delete = new ManageVCCTransactionType(dto);
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-
-        this.repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

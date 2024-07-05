@@ -57,14 +57,11 @@ public class ManageContactServiceImpl implements IManageContactService {
 
     @Override
     public void delete(ManageContactDto dto) {
-        ManageContact delete = new ManageContact(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeletedAt(LocalDateTime.now());
-
-        repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -89,8 +86,13 @@ public class ManageContactServiceImpl implements IManageContactService {
     }
 
     @Override
-    public Long countByCodeAndNotId(String code, UUID id) {
-        return repositoryQuery.countByCodeAndNotId(code, id);
+    public Long countByCodeAndManageHotelIdAndNotId(String code, UUID manageHotelId, UUID id) {
+        return repositoryQuery.countByCodeAndManageHotelIdAndNotId(code, manageHotelId, id);
+    }
+
+    @Override
+    public Long countByEmailAndManageHotelIdAndNotId(String email, UUID manageHotelId, UUID id) {
+        return repositoryQuery.countByEmailAndManageHotelIdAndNotId(email, manageHotelId, id);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

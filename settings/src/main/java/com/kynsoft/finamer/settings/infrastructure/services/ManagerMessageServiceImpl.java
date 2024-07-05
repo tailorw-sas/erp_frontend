@@ -9,7 +9,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerMessageResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMessageDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerMessageService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagerMessage;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagerMessageWriteDataJPARepository;
@@ -58,14 +57,11 @@ public class ManagerMessageServiceImpl implements IManagerMessageService {
 
     @Override
     public void delete(ManagerMessageDto dto) {
-        ManagerMessage delete = new ManagerMessage(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeletedAt(LocalDateTime.now());
-
-        repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

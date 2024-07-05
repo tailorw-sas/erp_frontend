@@ -5,9 +5,13 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.finamer.settings.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.settings.domain.dto.ManageRatePlanDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import com.kynsoft.finamer.settings.domain.services.IManageRatePlanService;
+
+import java.util.UUID;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +20,11 @@ public class UpdateManageRatePlanCommandHandler implements ICommandHandler<Updat
 
     private final IManageRatePlanService service;
 
-    public UpdateManageRatePlanCommandHandler(IManageRatePlanService service) {
+    private final IManageHotelService hotelService;
+
+    public UpdateManageRatePlanCommandHandler(IManageRatePlanService service, IManageHotelService hotelService) {
         this.service = service;
+        this.hotelService = hotelService;
     }
 
     @Override
@@ -31,8 +38,8 @@ public class UpdateManageRatePlanCommandHandler implements ICommandHandler<Updat
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setHotel, command.getHotel(), test.getHotel(), update::setUpdate);
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
+        updateHotel(test::setHotel, command.getHotel(), test.getHotel().getId(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
@@ -50,4 +57,14 @@ public class UpdateManageRatePlanCommandHandler implements ICommandHandler<Updat
         return false;
     }
 
+    private boolean updateHotel(Consumer<ManageHotelDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            ManageHotelDto hotelDto = hotelService.findById(newValue);
+            setter.accept(hotelDto);
+            update.accept(1);
+
+            return true;
+        }
+        return false;
+    }
 }

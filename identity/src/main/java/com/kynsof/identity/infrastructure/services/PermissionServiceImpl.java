@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PermissionServiceImpl implements IPermissionService {
@@ -83,6 +84,11 @@ public class PermissionServiceImpl implements IPermissionService {
         GenericSpecificationsBuilder<Permission> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<Permission> data = this.queryRepository.findAll(specifications, pageable);
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public List<PermissionDto> findAll() {
+        return queryRepository.findAll().stream().map(Permission::toAggregate).collect(Collectors.toList());
     }
 
     private void filterCreteria(List<FilterCriteria> filterCriteria) {

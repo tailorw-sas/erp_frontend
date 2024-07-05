@@ -18,4 +18,7 @@ public class UpdatePermissionRequest {
     private UUID module;
     private PermissionStatusEnm status;
     private String action;
+    private Boolean isHighRisk;
+    private Boolean isIT;
+    private String name;
 }

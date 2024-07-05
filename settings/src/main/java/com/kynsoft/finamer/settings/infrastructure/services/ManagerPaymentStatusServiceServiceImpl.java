@@ -48,13 +48,11 @@ public class ManagerPaymentStatusServiceServiceImpl implements IManagerPaymentSt
 
     @Override
     public void delete(ManagerPaymentStatusDto dto) {
-        ManagerPaymentStatus entity = new ManagerPaymentStatus(dto);
-        entity.setDeleted(true);
-        entity.setCode(entity.getCode() + "-" + UUID.randomUUID());
-        entity.setName(entity.getCode() + "-" + UUID.randomUUID());
-        entity.setDeletedAt(LocalDateTime.now());
-
-        repositoryCommand.save(entity);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

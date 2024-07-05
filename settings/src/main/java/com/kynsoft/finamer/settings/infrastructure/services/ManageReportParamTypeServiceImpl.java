@@ -9,7 +9,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageReportParamTypeResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageReportParamTypeDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageReportParamTypeService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageReportParamType;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageReportParamTypeWriteDataJPARepository;
@@ -56,14 +55,11 @@ public class ManageReportParamTypeServiceImpl implements IManageReportParamTypeS
 
     @Override
     public void delete(ManageReportParamTypeDto dto) {
-        ManageReportParamType delete = new ManageReportParamType(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setName(delete.getName()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeletedAt(LocalDateTime.now());
-
-        repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override

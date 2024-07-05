@@ -34,18 +34,12 @@ public class ManagerPaymentStatus {
     @Column(name = "description")
     private String description;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
 
     public ManagerPaymentStatus(ManagerPaymentStatusDto dto){
         this.id = dto.getId();

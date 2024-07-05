@@ -11,7 +11,6 @@ import com.kynsoft.finamer.settings.application.query.objectResponse.ManageTradi
 import com.kynsoft.finamer.settings.domain.dto.ManageTradingCompaniesDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageTradingCompaniesService;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManageAttachmentType;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageTradingCompanies;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageTradingCompaniesWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageTradingCompaniesReadDataJPARepository;
@@ -25,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageTradingCompaniesServiceImpl implements IManageTradingCompaniesService {
@@ -58,14 +58,11 @@ public class ManageTradingCompaniesServiceImpl implements IManageTradingCompanie
 
     @Override
     public void delete(ManageTradingCompaniesDto dto) {
-        ManageTradingCompanies delete = new ManageTradingCompanies(dto);
-
-        delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        delete.setStatus(Status.INACTIVE);
-        delete.setDeletedAt(LocalDateTime.now());
-
-        repositoryCommand.save(delete);
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -92,6 +89,16 @@ public class ManageTradingCompaniesServiceImpl implements IManageTradingCompanie
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
+    }
+
+    @Override
+    public List<ManageTradingCompaniesDto> findByIds(List<UUID> ids) {
+        return repositoryQuery.findAllById(ids).stream().map(ManageTradingCompanies::toAggregate).toList();
+    }
+
+    @Override
+    public List<ManageTradingCompaniesDto> findAll() {
+        return repositoryQuery.findAll().stream().map(ManageTradingCompanies::toAggregate).collect(Collectors.toList());
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

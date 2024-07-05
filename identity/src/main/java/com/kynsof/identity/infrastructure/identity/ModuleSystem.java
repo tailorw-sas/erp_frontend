@@ -2,6 +2,7 @@ package com.kynsof.identity.infrastructure.identity;
 
 import com.kynsof.identity.domain.dto.ModuleDto;
 import com.kynsof.identity.domain.dto.PermissionDto;
+import com.kynsof.identity.domain.dto.enumType.ModuleStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,8 +26,11 @@ public class ModuleSystem {
     private String image;
     private String description;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
+    @Enumerated(EnumType.STRING)
+    private ModuleStatus status;
+
+    @Column(unique = true)
+    private String code;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -40,6 +44,8 @@ public class ModuleSystem {
         this.name = module.getName();
         this.image = module.getImage();
         this.description = module.getDescription();
+        this.status = module.getStatus();
+        this.code = module.getCode();
     }
 
     public ModuleDto toAggregate () {
@@ -48,6 +54,6 @@ public class ModuleSystem {
             p.add(new PermissionDto(permission.getId(), permission.getCode(), permission.getDescription()));
         }
         
-        return new ModuleDto(id, name, image, description, p, createdAt);
+        return new ModuleDto(id, name, image, description, p, createdAt, status, code);
     }
 }

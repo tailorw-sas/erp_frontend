@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -26,5 +27,5 @@ public class ManageInvoiceStatusDto {
     private Boolean enabledToApply;
     private Boolean enabledToPolicy;
     private Boolean processStatus;
-    private HashSet<Navigate> navigate;
+    private List<ManageInvoiceStatusDto> navigate;
 }

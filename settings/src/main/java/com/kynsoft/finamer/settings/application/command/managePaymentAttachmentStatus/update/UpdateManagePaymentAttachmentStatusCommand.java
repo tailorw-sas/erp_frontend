@@ -6,6 +6,7 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -16,13 +17,15 @@ public class UpdateManagePaymentAttachmentStatusCommand implements ICommand {
     private String code;
     private String name;
     private Status status;
-    private String navigate;
-    private String module;
+    private List<UUID> navigate;
+    private UUID module;
     private Boolean show;
+    private Boolean defaults;
     private String permissionCode;
     private String description;
 
-    public UpdateManagePaymentAttachmentStatusCommand(UUID id, String code, String name, Status status, String navigate, String module, Boolean show, String permissionCode, String description) {
+    public UpdateManagePaymentAttachmentStatusCommand(UUID id, String code, String name, Status status, List<UUID> navigate,
+                                                      UUID module, Boolean show, Boolean defaults, String permissionCode, String description) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -30,12 +33,16 @@ public class UpdateManagePaymentAttachmentStatusCommand implements ICommand {
         this.navigate = navigate;
         this.module = module;
         this.show = show;
+        this.defaults = defaults;
         this.permissionCode = permissionCode;
         this.description = description;
     }
     
-    public static UpdateManagePaymentAttachmentStatusCommand fromRequest(UpdateManagePaymentAttachmentStatusRequest request, UUID id){
-        return new UpdateManagePaymentAttachmentStatusCommand(id, request.getCode(), request.getName(), request.getStatus(), request.getNavigate(), request.getModule(), request.getShow(), request.getPermissionCode(), request.getDescription());
+    public static UpdateManagePaymentAttachmentStatusCommand fromRequest(UpdateManagePaymentAttachmentStatusRequest request,
+                                                                         UUID id){
+        return new UpdateManagePaymentAttachmentStatusCommand(id, request.getCode(), request.getName(),
+                request.getStatus(), request.getNavigate(), request.getModule(), request.getShow(), request.getDefaults(),
+                request.getPermissionCode(), request.getDescription());
     }
 
     @Override

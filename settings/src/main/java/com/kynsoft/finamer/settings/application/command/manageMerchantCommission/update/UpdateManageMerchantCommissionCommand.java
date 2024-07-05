@@ -3,6 +3,8 @@ package com.kynsoft.finamer.settings.application.command.manageMerchantCommissio
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import java.time.LocalDate;
+
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,16 +14,17 @@ import java.util.UUID;
 @Setter
 public class UpdateManageMerchantCommissionCommand implements ICommand {
 
-    private UUID id;
-    private UUID managerMerchant;
-    private UUID manageCreditCartType;
-    private Double commission;
-    private String calculationType;
-    private String description;
-    private LocalDate fromDate;
-    private LocalDate toDate;
+    private final UUID id;
+    private final UUID managerMerchant;
+    private final UUID manageCreditCartType;
+    private final Double commission;
+    private final String calculationType;
+    private final String description;
+    private final LocalDate fromDate;
+    private final LocalDate toDate;
+    private final Status status;
 
-    public UpdateManageMerchantCommissionCommand(UUID id, UUID managerMerchant, UUID manageCreditCartType, Double commission, String calculationType, String description, LocalDate fromDate, LocalDate toDate) {
+    public UpdateManageMerchantCommissionCommand(UUID id, UUID managerMerchant, UUID manageCreditCartType, Double commission, String calculationType, String description, LocalDate fromDate, LocalDate toDate, Status status) {
         this.id = id;
         this.managerMerchant = managerMerchant;
         this.manageCreditCartType = manageCreditCartType;
@@ -30,6 +33,7 @@ public class UpdateManageMerchantCommissionCommand implements ICommand {
         this.description = description;
         this.fromDate = fromDate;
         this.toDate = toDate;
+        this.status = status;
     }
 
     public static UpdateManageMerchantCommissionCommand fromRequest(UpdateManageMerchantCommissionRequest request, UUID id) {
@@ -41,7 +45,8 @@ public class UpdateManageMerchantCommissionCommand implements ICommand {
                 request.getCalculationType(),
                 request.getDescription(),
                 request.getFromDate(),
-                request.getToDate()
+                request.getToDate(),
+                request.getStatus()
         );
     }
 

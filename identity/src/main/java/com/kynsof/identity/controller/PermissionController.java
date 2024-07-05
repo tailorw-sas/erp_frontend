@@ -11,6 +11,8 @@ import com.kynsof.identity.application.command.permission.deleteAll.DeleteAllPer
 import com.kynsof.identity.application.command.permission.update.UpdatePermissionCommand;
 import com.kynsof.identity.application.command.permission.update.UpdatePermissionMessage;
 import com.kynsof.identity.application.command.permission.update.UpdatePermissionRequest;
+import com.kynsof.identity.application.query.permission.findAllGrouped.FindAllPermissionGroupedQuery;
+import com.kynsof.identity.application.query.permission.findAllGrouped.PermissionGroupedResponse;
 import com.kynsof.identity.application.query.permission.getById.FindPermissionByIdQuery;
 import com.kynsof.identity.application.query.permission.getById.PermissionResponse;
 import com.kynsof.identity.application.query.permission.search.GetSearchPermissionQuery;
@@ -18,9 +20,7 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -88,4 +88,11 @@ public class PermissionController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/all-grouped")
+    public ResponseEntity<?> getAll() {
+        FindAllPermissionGroupedQuery query = new FindAllPermissionGroupedQuery();
+        PermissionGroupedResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
 }
