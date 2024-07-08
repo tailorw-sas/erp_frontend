@@ -35,9 +35,9 @@ public class PaymentServiceImpl implements IPaymentService {
     private PaymentReadDataJPARepository repositoryQuery;
 
     @Override
-    public UUID create(PaymentDto dto) {
+    public PaymentDto create(PaymentDto dto) {
         Payment data = new Payment(dto);
-        return this.repositoryCommand.save(data).getId();
+        return this.repositoryCommand.save(data).toAggregate();
     }
 
     @Override

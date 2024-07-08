@@ -3,7 +3,6 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,7 +29,7 @@ public class PaymentDetailResponse implements IResponse {
         this.status = dto.getStatus();
         this.paymentId = dto.getPayment().getId();
         this.transactionType = dto.getTransactionType() != null ? new ManagePaymentTransactionTypeResponse(dto.getTransactionType()) : null;
-        this.amount = Objects.equals(dto.getTransactionType().getDeposit(), Boolean.TRUE) ? (dto.getAmount()*-1) : (dto.getAmount()*1);
+        this.amount = dto.getAmount();
         this.remark = dto.getRemark();
         this.parent = dto.getParent() != null ? new PaymentDetailResponse(dto.getParent()) : null;
     }

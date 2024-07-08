@@ -13,5 +13,6 @@ public interface IAFileService {
     void update(AFileDto object);
     void delete(AFileDto object);
     AFileDto findById(UUID id);
+    List<AFileDto> findByIds(List<UUID> ids);
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

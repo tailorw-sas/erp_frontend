@@ -60,7 +60,7 @@ public class AuthService implements IAuthService {
     public TokenResponse authenticate(LoginRequest loginDTO) {
         MultiValueMap<String, String> map = createAuthRequestMap(loginDTO.getUsername(), loginDTO.getPassword());
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, createHeaders());
-
+        System.out.println(keycloakProvider.getTokenUri());
         try {
             ResponseEntity<TokenResponse> response = restTemplate.exchange(
                     keycloakProvider.getTokenUri(),

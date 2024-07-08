@@ -22,11 +22,14 @@ import java.util.UUID;
 @Service
 public class AFileServiceImpl implements IAFileService {
 
-    @Autowired
-    private FileWriteDataJPARepository commandRepository;
+    private final FileWriteDataJPARepository commandRepository;
 
-    @Autowired
-    private FileReadDataJPARepository queryRepository;
+    private final FileReadDataJPARepository queryRepository;
+
+    public AFileServiceImpl(FileWriteDataJPARepository commandRepository, FileReadDataJPARepository queryRepository) {
+        this.commandRepository = commandRepository;
+        this.queryRepository = queryRepository;
+    }
 
     @Override
     public UUID create(AFileDto object) {
@@ -51,6 +54,12 @@ public class AFileServiceImpl implements IAFileService {
     public AFileDto findById(UUID id) {
         Optional<AFile> file = this.queryRepository.findById(id);
         return file.map(AFile::toAggregate).orElse(null);
+    }
+
+    @Override
+    public List<AFileDto> findByIds(List<UUID> ids) {
+        List<AFile> files = this.queryRepository.findAllById(ids);
+        return files.stream().map(AFile::toAggregate).toList();
     }
 
     @Override

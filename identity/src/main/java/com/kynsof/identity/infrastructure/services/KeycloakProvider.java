@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component;
 @Getter
 public class KeycloakProvider {
 
-    @Value("${keycloak.provider.server-url:https://auth.chevere.ddns.net/}")
+    @Value("${keycloak.provider.server-url:https://authdev.tailorw.net/}")
     private String server_url;
 
-    @Value("${keycloak.provider.realm-name:kynsoft}")
+    @Value("${keycloak.provider.realm-name:TailorwRealm}")
     private String realm_name;
 
     @Value("${keycloak.provider.realm-master:master}")
@@ -28,15 +28,15 @@ public class KeycloakProvider {
     @Value("${keycloak.provider.user-console:admin}")
     private String user_console;
 
-    @Value("${keycloak.provider.password-console:ZWJjMTViM2U4YjQ0MTQwZTI5ZjI1YWFk}")
+    @Value("${keycloak.provider.password-console:b65d2efd242f458794b84826d183c293}")
     private String password_console;
 
-    @Value("${keycloak.provider.client-secret:7i6w6w9yRbv2VOi0ksbLfdd1TnW5TTlb}")
+    @Value("${keycloak.provider.client-secret:c2IcfkbsS4q2K3iFRp1YELUBrabpDzGz}")
     private String client_secret;
-    @Value("${spring.security.oauth2.client.provider.keycloak.token-uri:https://auth.chevere.ddns.net/realms/kynsoft/protocol/openid-connect/token}")
+    @Value("${spring.security.oauth2.client.provider.keycloak.token-uri:https://authdev.tailorw.net/realms/TailorwRealm/protocol/openid-connect/token}")
     private String tokenUri;
 
-    @Value("${keycloak.provider.client-id:medinec}")
+    @Value("${keycloak.provider.client-id:login-app}")
     private String client_id;
 
     @Value("${keycloak.provider.grant-type:password}")

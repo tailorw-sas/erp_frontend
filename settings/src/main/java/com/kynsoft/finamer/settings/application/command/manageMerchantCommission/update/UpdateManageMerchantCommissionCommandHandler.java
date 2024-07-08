@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageMerchantCommissio
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageMerchantCommissionKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -18,6 +19,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantCommission.ProducerUpdateManageMerchantCommissionService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,12 +29,15 @@ public class UpdateManageMerchantCommissionCommandHandler implements ICommandHan
     private final IManageCreditCardTypeService serviceCurrencyService;
     private final IManageMerchantCommissionService service;
 
+    private final ProducerUpdateManageMerchantCommissionService producerService;
+
     public UpdateManageMerchantCommissionCommandHandler(IManagerMerchantService serviceMerchantService,
                                                         IManageCreditCardTypeService serviceCurrencyService,
-                                                        IManageMerchantCommissionService service) {
+                                                        IManageMerchantCommissionService service, ProducerUpdateManageMerchantCommissionService producerService) {
         this.serviceMerchantService = serviceMerchantService;
         this.serviceCurrencyService = serviceCurrencyService;
         this.service = service;
+        this.producerService = producerService;
     }
 
     @Override
@@ -53,6 +58,7 @@ public class UpdateManageMerchantCommissionCommandHandler implements ICommandHan
 
         if (update.getUpdate() > 0) {
             this.service.update(existingCommission);
+            this.producerService.update(new UpdateManageMerchantCommissionKafka(command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getCommission(), command.getCalculationType()));
         }
     }
 

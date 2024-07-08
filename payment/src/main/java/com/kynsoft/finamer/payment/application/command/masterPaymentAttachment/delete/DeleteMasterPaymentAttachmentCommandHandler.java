@@ -22,8 +22,8 @@ public class DeleteMasterPaymentAttachmentCommandHandler implements ICommandHand
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     public DeleteMasterPaymentAttachmentCommandHandler(IMasterPaymentAttachmentService masterPaymentAttachmentService,
-                                                       IManageEmployeeService manageEmployeeService,
-                                                       IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+            IManageEmployeeService manageEmployeeService,
+            IAttachmentStatusHistoryService attachmentStatusHistoryService) {
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
         this.manageEmployeeService = manageEmployeeService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
@@ -34,12 +34,17 @@ public class DeleteMasterPaymentAttachmentCommandHandler implements ICommandHand
         MasterPaymentAttachmentDto delete = this.masterPaymentAttachmentService.findById(command.getId());
 
         masterPaymentAttachmentService.delete(delete);
-        this.deleteAttachmentStatusHistory(null, delete.getResource(), delete.getFileName());
+        this.deleteAttachmentStatusHistory(command.getEmployee(), delete.getResource(), delete.getFileName());
     }
 
     private void deleteAttachmentStatusHistory(UUID employee, PaymentDto payment, String fileName) {
-        ManageEmployeeDto employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
+        //ManageEmployeeDto employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
+        ManageEmployeeDto employeeDto = null;
+        try {
+            employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
+        } catch (Exception e) {
+        }
         attachmentStatusHistoryDto.setId(UUID.randomUUID());
         attachmentStatusHistoryDto.setDescription("An attachment to the payment was deleted. The file name: " + fileName);
         attachmentStatusHistoryDto.setEmployee(employeeDto);

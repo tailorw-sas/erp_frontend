@@ -24,7 +24,8 @@ public class CreateRoomRateCommandHandler implements ICommandHandler<CreateRoomR
 
         roomRateService.create(new ManageRoomRateDto(
                 command.getId(),
-                null,
+                bookingDto.getRoomRates() != null ? bookingDto.getRoomRates().size() + 1L
+                        : 1L,
                 command.getCheckIn(),
                 command.getCheckOut(),
                 command.getInvoiceAmount(),

@@ -34,25 +34,17 @@ public class UserPermissionBusiness {
     @JoinColumn(name = "business_id")
     private Business business;
 
-    private boolean deleted;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public UserPermissionBusiness(UUID id, UserSystemDto user, PermissionDto permissionDto, BusinessDto business) {
-        this.id = id;
-        this.user = new UserSystem(user);
-        this.permission = new Permission(permissionDto);
-        this.business = new Business(business);
-    }
 
     public UserPermissionBusiness(UserPermissionBusinessDto userRoleBusinessDto) {
         this.id = userRoleBusinessDto.getId();
         this.user = new UserSystem(userRoleBusinessDto.getUser());
         this.permission = new Permission(userRoleBusinessDto.getPermission());
         this.business = new Business(userRoleBusinessDto.getBusiness());
-        this.deleted = userRoleBusinessDto.isDeleted();
     }
 
     public UserPermissionBusinessDto toAggregate () {

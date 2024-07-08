@@ -36,9 +36,10 @@ public class AFile extends BaseEntity {
         this.name = file.getName();
         this.microServiceName = file.getMicroServiceName();
         this.url = file.getUrl();
+        this.isConfirm = file.isConfirm();
     }
 
     public AFileDto toAggregate () {
-        return new AFileDto(id, name, microServiceName, url);
+        return new AFileDto(id, name, microServiceName, url, isConfirm);
     }
 }

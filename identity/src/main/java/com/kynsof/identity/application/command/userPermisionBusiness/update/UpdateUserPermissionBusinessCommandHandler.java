@@ -11,8 +11,8 @@ import com.kynsof.identity.domain.interfaces.service.IUserSystemService;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.UUID;
 
 @Component
 public class UpdateUserPermissionBusinessCommandHandler implements ICommandHandler<UpdateUserPermissionBusinessCommand> {
@@ -38,31 +38,11 @@ public class UpdateUserPermissionBusinessCommandHandler implements ICommandHandl
     @Override
     public void handle(UpdateUserPermissionBusinessCommand command) {
         UserRoleBusinessUpdateRequest updateRequest = command.getPayload();
-        // Validar y recuperar las entidades involucradas
+
         UserSystemDto userSystemDto = userSystemService.findById(updateRequest.getUserId());
         BusinessDto businessDto = businessService.findById(updateRequest.getBusinessId());
-
-        // Recuperar el estado actual
-        List<UserPermissionBusinessDto> currentPermissions = service.findByUserAndBusiness(userSystemDto.getId(),
-                        businessDto.getId())
-                .stream()
-                .toList();
-
-        Set<UUID> newPermissionIds = new HashSet<>(updateRequest.getPermissionIds());
-        Set<UUID> currentPermissionIds = currentPermissions.stream()
-                .map(permission -> permission.getPermission().getId())
-                .collect(Collectors.toSet());
-
-        // Determinar cambios necesarios
-        Set<UUID> permissionsToAdd = new HashSet<>(newPermissionIds);
-        permissionsToAdd.removeAll(currentPermissionIds);
-
-        Set<UUID> permissionsToRemove = new HashSet<>(currentPermissionIds);
-        permissionsToRemove.removeAll(newPermissionIds);
-        List<UserPermissionBusinessDto> addPermissionUserBusinessList = new ArrayList<>();
-        List<UserPermissionBusinessDto> deletePermissionUserBusinessList = new ArrayList<>();
-        // Ejecutar cambios
-        for (UUID permissionIdToAdd : permissionsToAdd) {
+        List<UserPermissionBusinessDto> addPermissionUserBusinessList = new java.util.ArrayList<>(List.of());
+        for (UUID permissionIdToAdd : command.getPayload().getPermissionIds()) {
             PermissionDto permissionDto = permissionService.findById(permissionIdToAdd);
             UserPermissionBusinessDto newUserPermissionBusiness = new UserPermissionBusinessDto();
             newUserPermissionBusiness.setId(UUID.randomUUID());
@@ -72,21 +52,9 @@ public class UpdateUserPermissionBusinessCommandHandler implements ICommandHandl
             addPermissionUserBusinessList.add(newUserPermissionBusiness);
         }
 
-        for (UUID permissionIdToRemove : permissionsToRemove) {
-            currentPermissions.stream()
-                    .filter(p -> p.getPermission().getId().equals(permissionIdToRemove))
-                    .findFirst().ifPresent(deletePermissionUserBusinessList::add);
-        }
+        service.delete(updateRequest.getBusinessId(), updateRequest.getUserId());
 
         service.create(addPermissionUserBusinessList);
-        service.delete(deletePermissionUserBusinessList);
 
-    }
-
-
-    private boolean validate(UserPermissionBusinessDto payloadUpdate, UserPermissionBusinessDto toUpdate) {
-        return !(payloadUpdate.getBusiness().getId().equals(toUpdate.getBusiness().getId()) &&
-                payloadUpdate.getPermission().getId().equals(toUpdate.getPermission().getId()) &&
-                payloadUpdate.getUser().getId().equals(toUpdate.getUser().getId()));
     }
 }

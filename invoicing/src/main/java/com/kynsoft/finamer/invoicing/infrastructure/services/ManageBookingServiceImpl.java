@@ -34,7 +34,8 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     @Autowired
     private final ManageBookingReadDataJPARepository repositoryQuery;
 
-    public ManageBookingServiceImpl(ManageBookingWriteDataJpaRepository repositoryCommand, ManageBookingReadDataJPARepository repositoryQuery) {
+    public ManageBookingServiceImpl(ManageBookingWriteDataJpaRepository repositoryCommand,
+            ManageBookingReadDataJPARepository repositoryQuery) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
     }
@@ -52,6 +53,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
         repositoryCommand.save(entity);
     }
+
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
@@ -60,6 +62,13 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         Page<ManageBooking> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public boolean existsByExactLastTwoChars(String lastTwoChars, UUID hotelId) {
+        boolean exists = this.repositoryQuery.existsByExactLastTwoChars(lastTwoChars, hotelId);
+
+        return exists;
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageBooking> data) {
@@ -73,10 +82,11 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
     @Override
     public void delete(ManageBookingDto dto) {
-        try{
+        try {
             this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE,
+                    new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
 
@@ -84,17 +94,14 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     public ManageBookingDto findById(UUID id) {
         Optional<ManageBooking> optionalEntity = repositoryQuery.findById(id);
 
-        if(optionalEntity.isPresent()){
+        if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
+                new ErrorField("id", "The source not found.")));
 
     }
-
-
-
-
 
     @Override
     public List<ManageBookingDto> findByIds(List<UUID> ids) {

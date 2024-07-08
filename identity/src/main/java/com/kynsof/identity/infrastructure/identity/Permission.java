@@ -39,7 +39,7 @@ public class Permission {
     @JoinColumn(name = "module_id")
     private ModuleSystem module;
 
-    @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "permission")
     private Set<UserPermissionBusiness> userPermissionBusinesses = new HashSet<>();
 
     @CreationTimestamp
