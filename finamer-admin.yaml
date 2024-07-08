@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finamer-admin
+  namespace: finamer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finamer-admin
+  template:
+    metadata:
+      labels:
+        app: finamer-admin
+    spec:
+      containers:
+      - name: finamer-admin
+        image: tailorw/fin-admin:dev
+        env:
+        - name: NUXT_PUBLIC_RECAPTCHA_SITE_KEY
+          value: 6LfifQAqAAAAAAOHfDjN6BIYoVTXbu_vVtBJr2lY
+        - name: NUXT_RECAPTCHA_SECRET_KEY
+          value: 6LfifQAqAAAAAFDBc1ZyeTY2cdfYC8V3qdGPR1j-
+        - name: AUTH_ORIGIN
+          value: https://erpdev.tailorw.net/
+        - name: AUTH_SECRET
+          value: 5299f11c-95d4-47f9-a970-bd74aabd91f3
+        - name: VITE_APP_CLIENT_ID
+          value: 91be4d3d-dd35-45f1-a7fa-85aaf43e743d
+        - name: VITE_APP_CLIENT_SECRET
+          value: 2042012a-884b-4ce0-b68d-2efe4ad14378
+        - name: VITE_APP_BASE_URL
+          value: http://gateway-service:8080
+        - name: NUXT_PUBLIC_LOAD_TABLE_DATA
+          value: 'true'
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: finamer-admin
+  labels:
+    app: finamer-admin
+  namespace: finamer
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: finamer-admin
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: finamer-admin-ingress
+  namespace: finamer
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: finamer-admin
+      port:
+        number: 3000
+  ingressClassName: nginx
+  rules:
+  - host: "erpdev.tailorw.net"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/auth/login"
+        backend:
+          service:
+            name: finamer-admin
+            port:
+              number: 3000

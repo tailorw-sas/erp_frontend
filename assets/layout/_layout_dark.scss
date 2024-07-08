@@ -1,0 +1,12 @@
+$breakpoint: 992px !default;
+$scale: 14px !default;
+
+.layout-dark {
+    --sidebar-shadow: none;
+    --sidebar-border: 1px solid var(--surface-border);
+    --card-shadow: none;
+    --body-bg: linear-gradient(180deg, #2e323f 0%, #0a061a 100%);
+    --body-image: url('/demo/images/pages/effect-ondark.png');
+    --root-menu-item-hover-bg: rgba(255, 255, 255, 0.05);
+    --exception-pages-image: url('/demo/images/pages/exception-ondark.png');
+}
