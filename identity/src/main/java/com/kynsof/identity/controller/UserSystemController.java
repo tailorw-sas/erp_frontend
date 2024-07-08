@@ -111,7 +111,6 @@ public class UserSystemController {
 
     @GetMapping(path = "/me")
     public ResponseEntity<?> me(@AuthenticationPrincipal Jwt jwt) {
-        System.out.println(jwt.getClaim("sub"));
 		try {
             String userId = jwt.getClaim("sub");
             UserMeQuery query = new UserMeQuery(UUID.fromString(userId));
