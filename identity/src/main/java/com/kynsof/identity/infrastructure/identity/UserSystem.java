@@ -46,8 +46,8 @@ public class UserSystem implements Serializable {
     @Column(nullable = true)
     private UUID selectedBusiness;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<UserPermissionBusiness> userRolesClinics = new HashSet<>();
+    @OneToMany(mappedBy = "user")
+    private Set<UserPermissionBusiness> userPermissionBusinesses = new HashSet<>();
 
 
     @CreationTimestamp

@@ -33,8 +33,8 @@ public class Business {
     private EBusinessStatus status;
     private boolean deleted;
 
-    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<UserPermissionBusiness> userRoleBusinesses = new HashSet<>();
+    @OneToMany(mappedBy = "business")
+    private Set<UserPermissionBusiness> userPermissionBusinesses = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "geographicLocation_id")

@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface UserPermissionBusinessWriteDataJPARepository extends JpaRepository<UserPermissionBusiness, UUID> {
+    void deleteAllByUserIdAndBusinessId(UUID userId, UUID businessId);
 }

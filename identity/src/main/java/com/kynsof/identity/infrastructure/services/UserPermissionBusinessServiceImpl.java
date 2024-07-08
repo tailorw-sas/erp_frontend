@@ -126,4 +126,9 @@ public class UserPermissionBusinessServiceImpl implements IUserPermissionBusines
         return this.queryRepository.countByUserAndBusinessAndNotDeleted(userId, businessId);
     }
 
+    @Override
+    public void delete(UUID businessId, UUID userId) {
+        commandRepository.deleteAllByUserIdAndBusinessId(userId, businessId);
+    }
+
 }

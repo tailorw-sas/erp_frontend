@@ -25,4 +25,6 @@ public interface IUserPermissionBusinessService {
     Long countByUserAndBusiness(UUID userId, UUID businessId);
 
     Long countByUserAndBusinessNotDeleted(UUID userId, UUID businessId);
+
+    void delete(UUID businessId, UUID userId);
 }
