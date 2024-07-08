@@ -1,0 +1,55 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "NODE_ENV=production node .output/server/index.mjs",
+    "typecheck": "nuxt typecheck",
+    "lint:fix": "eslint . --fix",
+    "lint": "oxlint --deny-warnings -D correctness -D suspicious -D perf && eslint --max-warnings 0 .",
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@fullcalendar/core": "^6.1.13",
+    "@fullcalendar/daygrid": "^6.1.13",
+    "@fullcalendar/interaction": "^6.1.13",
+    "@fullcalendar/timegrid": "^6.1.13",
+    "@fullcalendar/vue3": "^6.1.13",
+    "@nuxt/image": "^1.7.0",
+    "@pinia/nuxt": "^0.5.1",
+    "dayjs": "^1.11.11",
+    "fullcalendar": "^6.1.13",
+    "jwt-decode": "^4.0.0",
+    "lodash": "^4.17.21",
+    "nuxt": "^3.11.2",
+    "pinia": "^2.1.7",
+    "primeflex": "^3.3.1",
+    "primeicons": "^7.0.0",
+    "primevue": "^3.52.0",
+    "vue": "^3.4.27",
+    "vue-recaptcha-v3": "^2.0.1",
+    "vue-router": "^4.3.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^2.11.5",
+    "@nuxtjs/tailwindcss": "^6.12.0",
+    "@sidebase/nuxt-auth": "^0.7.0",
+    "@types/lodash": "^4.17.4",
+    "@types/node": "^20.11.30",
+    "@vueuse/nuxt": "^10.10.0",
+    "eslint": "^8.57.0",
+    "nuxt-primevue": "^3.0.0",
+    "oxlint": "^0.2.15",
+    "sass": "^1.77.2",
+    "typescript": "^5.4.3",
+    "vue-tsc": "^2.0.7"
+  },
+  "peerDependencies": {
+    "next-auth": "4.21.1"
+  }
+}
