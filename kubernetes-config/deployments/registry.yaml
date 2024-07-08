@@ -7,6 +7,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: registry
       workload.user.cattle.io/workloadselector: apps.deployment-finamer-registry
   strategy:
     rollingUpdate:
@@ -15,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        app: finamer-registry
+        app: registry
         workload.user.cattle.io/workloadselector: apps.deployment-finamer-registry
     spec:
       containers:
