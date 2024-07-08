@@ -11,6 +11,7 @@ import java.util.UUID;
 public class UpdateMasterPaymentAttachmentRequest {
 
     private Status status;
+    private UUID employee;
     private UUID resourceType;
     private UUID attachmentType;
     private String fileName;

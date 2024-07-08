@@ -17,7 +17,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     @Override
     public void handle(UpdateManageAgencyCommand command) {
         ManageAgencyDto dto = service.findById(command.getId());
-
+        dto.setName(command.getName());
         service.update(dto);
     }
 }

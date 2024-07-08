@@ -36,10 +36,10 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     public UpdateMasterPaymentAttachmentCommandHandler(IMasterPaymentAttachmentService masterPaymentAttachmentService,
-                                                       IManageAttachmentTypeService manageAttachmentTypeService,
-                                                       IManageResourceTypeService manageResourceTypeService,
-                                                       IManageEmployeeService manageEmployeeService,
-                                                       IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+            IManageAttachmentTypeService manageAttachmentTypeService,
+            IManageResourceTypeService manageResourceTypeService,
+            IManageEmployeeService manageEmployeeService,
+            IAttachmentStatusHistoryService attachmentStatusHistoryService) {
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
         this.manageAttachmentTypeService = manageAttachmentTypeService;
         this.manageResourceTypeService = manageResourceTypeService;
@@ -66,7 +66,7 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
 
         if (update.getUpdate() > 0) {
             this.masterPaymentAttachmentService.update(masterPaymentAttachmentDto);
-            this.deleteAttachmentStatusHistory(null, masterPaymentAttachmentDto.getResource(), masterPaymentAttachmentDto.getFileName());
+            this.deleteAttachmentStatusHistory(command.getEmployee(), masterPaymentAttachmentDto.getResource(), masterPaymentAttachmentDto.getFileName());
         }
 
     }
@@ -86,7 +86,7 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
         if (newValue != null && !newValue.equals(oldValue)) {
             AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(newValue);
             if (manageAttachmentTypeDto.getDefaults()) {
-                RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService,  payment));
+                RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, payment));
             }
             setter.accept(manageAttachmentTypeDto);
             update.accept(1);
@@ -105,8 +105,13 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
     }
 
     private void deleteAttachmentStatusHistory(UUID employee, PaymentDto payment, String fileName) {
-        ManageEmployeeDto employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
+        //ManageEmployeeDto employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;//Revisar aqui para si el employee no existe ponerle null tambien.
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
+        ManageEmployeeDto employeeDto = null;
+        try {
+            employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
+        } catch (Exception e) {
+        }
         attachmentStatusHistoryDto.setId(UUID.randomUUID());
         attachmentStatusHistoryDto.setDescription("An attachment to the payment was update. The file name: " + fileName);
         attachmentStatusHistoryDto.setEmployee(employeeDto);

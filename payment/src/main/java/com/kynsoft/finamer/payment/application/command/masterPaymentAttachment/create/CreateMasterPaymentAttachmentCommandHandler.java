@@ -65,12 +65,16 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
                 command.getPath(),
                 command.getRemark()
         ));
-        this.createAttachmentStatusHistory(null, resource, command.getFileName());
+        this.updateAttachmentStatusHistory(command.getEmployee(), resource, command.getFileName());
     }
 
-    private void createAttachmentStatusHistory(UUID employee, PaymentDto payment, String fileName) {
-        ManageEmployeeDto employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
+    private void updateAttachmentStatusHistory(UUID employee, PaymentDto payment, String fileName) {
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
+        ManageEmployeeDto employeeDto = null;
+        try {
+            employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
+        } catch (Exception e) {
+        }
         attachmentStatusHistoryDto.setId(UUID.randomUUID());
         attachmentStatusHistoryDto.setDescription("An attachment to the payment was inserted. The file name: " + fileName);
         attachmentStatusHistoryDto.setEmployee(employeeDto);

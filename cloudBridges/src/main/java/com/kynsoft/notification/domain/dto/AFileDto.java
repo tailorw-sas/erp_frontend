@@ -16,6 +16,7 @@ public class AFileDto {
     private String name;
     private String microServiceName;
     private String url;
+    private boolean isConfirm;
 
     public AFileDto(String name, String url) {
         this.name = name;

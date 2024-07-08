@@ -18,6 +18,8 @@ public interface IManageBookingService {
 
     ManageBookingDto findById(UUID id);
 
+    boolean existsByExactLastTwoChars(String lastTwoChars, UUID hotelId);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<ManageBookingDto> findByIds(List<UUID> ids);

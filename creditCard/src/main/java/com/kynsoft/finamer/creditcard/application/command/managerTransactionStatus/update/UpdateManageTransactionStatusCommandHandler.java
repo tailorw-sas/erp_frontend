@@ -17,7 +17,7 @@ public class UpdateManageTransactionStatusCommandHandler implements ICommandHand
     @Override
     public void handle(UpdateManageTransactionStatusCommand command) {
         ManageTransactionStatusDto dto = this.service.findById(command.getId());
-
+        dto.setName(command.getName());
         this.service.update(dto);
     }
 

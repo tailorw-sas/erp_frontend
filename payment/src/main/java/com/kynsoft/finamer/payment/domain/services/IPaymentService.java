@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IPaymentService {
-    UUID create(PaymentDto dto);
+    PaymentDto create(PaymentDto dto);
 
     void update(PaymentDto dto);
 

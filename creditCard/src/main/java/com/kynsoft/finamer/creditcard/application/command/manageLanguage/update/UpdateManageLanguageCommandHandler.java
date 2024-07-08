@@ -17,7 +17,7 @@ public class UpdateManageLanguageCommandHandler implements ICommandHandler<Updat
     @Override
     public void handle(UpdateManageLanguageCommand command) {
         ManageLanguageDto dto = service.findById(command.getId());
-
+        dto.setName(command.getName());
         this.service.update(dto);
     }
 }

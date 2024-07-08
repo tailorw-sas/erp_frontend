@@ -36,19 +36,25 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         PaymentDto paymentDto = this.paymentService.findById(command.getPayment());
 
         ConsumerUpdate updatePayment = new ConsumerUpdate();
+
+        //identified and notIdentified
         if (paymentTransactionTypeDto.getCash()) {
             RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyRule(command.getAmount(), paymentDto.getPaymentBalance()));
             UpdateIfNotNull.updateDouble(paymentDto::setIdentified, paymentDto.getIdentified() + command.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(paymentDto::setNotIdentified, paymentDto.getNotIdentified() - command.getAmount(), updatePayment::setUpdate);
         }
 
+        //Other Deductions
         if (!paymentTransactionTypeDto.getCash() && !paymentTransactionTypeDto.getDeposit()) {
             UpdateIfNotNull.updateDouble(paymentDto::setOtherDeductions, paymentDto.getOtherDeductions() + command.getAmount(), updatePayment::setUpdate);
         }
 
+        //Deposit Amount and Deposit Balance
         if (paymentTransactionTypeDto.getDeposit()) {
+            // Crear regla que valide que el Amount ingresado no debe de ser mayor que el valor del Payment Balance y mayor que cero.
             UpdateIfNotNull.updateDouble(paymentDto::setDepositAmount, paymentDto.getDepositAmount() + command.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(paymentDto::setDepositBalance, paymentDto.getDepositBalance() + command.getAmount(), updatePayment::setUpdate);
+            command.setAmount(command.getAmount() * -1);
         }
 
         if (paymentTransactionTypeDto.getRemarkRequired()) {

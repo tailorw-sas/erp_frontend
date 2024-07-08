@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
+
 import org.hibernate.generator.EventType;
 
 import java.time.LocalDateTime;
@@ -27,8 +27,6 @@ public class ManageRoomRate {
     @Column(name = "id")
     private UUID id;
 
-    @Column(columnDefinition = "serial", name = "room_rate_gen_id")
-    @Generated(event = EventType.INSERT)
     private Long room_rate_id;
 
     private LocalDateTime checkIn;
@@ -66,7 +64,7 @@ public class ManageRoomRate {
 
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
-
+        this.room_rate_id = dto.getRoom_rate_id();
         this.invoiceAmount = dto.getInvoiceAmount();
         this.roomNumber = dto.getRoomNumber();
 

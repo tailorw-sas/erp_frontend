@@ -17,7 +17,7 @@ public class UpdateManageCreditCardTypeCommandHandler implements ICommandHandler
     @Override
     public void handle(UpdateManageCreditCardTypeCommand command) {
         ManageCreditCardTypeDto test = this.service.findById(command.getId());
-
+        test.setName(command.getName());
         this.service.update(test);
 
     }

@@ -14,6 +14,7 @@ public class CreateMasterPaymentAttachmentCommand implements ICommand {
 
     private UUID id;
     private Status status;
+    private UUID employee;
     private UUID resource;
     private UUID resourceType;
     private UUID attachmentType;
@@ -21,11 +22,12 @@ public class CreateMasterPaymentAttachmentCommand implements ICommand {
     private String path;
     private String remark;
 
-    public CreateMasterPaymentAttachmentCommand(Status status, UUID resource, UUID resourceType, 
+    public CreateMasterPaymentAttachmentCommand(Status status, UUID employee, UUID resource, UUID resourceType, 
                                                 UUID attachmentType, String fileNames, String paths, 
                                                 String remark) {
         this.id = UUID.randomUUID();
         this.status = status;
+        this.employee = employee;
         this.resource = resource;
         this.resourceType = resourceType;
         this.attachmentType = attachmentType;
@@ -37,6 +39,7 @@ public class CreateMasterPaymentAttachmentCommand implements ICommand {
     public static CreateMasterPaymentAttachmentCommand fromRequest(CreateMasterPaymentAttachmentRequest request) {
         return new CreateMasterPaymentAttachmentCommand(
                 request.getStatus(),
+                request.getEmployee(),
                 request.getResource(),
                 request.getResourceType(),
                 request.getAttachmentType(),

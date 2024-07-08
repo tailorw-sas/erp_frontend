@@ -20,6 +20,7 @@ public class ManageBookingDto {
     private UUID id;
 
     private Long booking_id;
+    private Long reservationNumber;
 
     private LocalDateTime hotelCreationDate;
     private LocalDateTime bookingDate;

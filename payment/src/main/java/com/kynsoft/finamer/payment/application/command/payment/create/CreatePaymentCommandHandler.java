@@ -35,13 +35,13 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     private final IPaymentService paymentService;
 
     public CreatePaymentCommandHandler(IManagePaymentSourceService sourceService,
-                                       IManagePaymentStatusService statusService,
-                                       IManageClientService clientService,
-                                       IManageAgencyService agencyService,
-                                       IManageBankAccountService bankAccountService,
-                                       IManagePaymentAttachmentStatusService attachmentStatusService,
-                                       IPaymentService paymentService,
-                                       IManageHotelService hotelService) {
+            IManagePaymentStatusService statusService,
+            IManageClientService clientService,
+            IManageAgencyService agencyService,
+            IManageBankAccountService bankAccountService,
+            IManagePaymentAttachmentStatusService attachmentStatusService,
+            IPaymentService paymentService,
+            IManageHotelService hotelService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -66,30 +66,27 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         ManageBankAccountDto bankAccountDto = this.bankAccountService.findById(command.getBankAccount());
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findById(command.getAttachmentStatus());
 
-        PaymentDto payment = new PaymentDto(
-                command.getId(), 
+        command.setPayment(this.paymentService.create(new PaymentDto(
+                command.getId(),
                 Long.MIN_VALUE,
-                command.getStatus(), 
-                paymentSourceDto, 
-                command.getReference(), 
-                command.getTransactionDate(), 
-                paymentStatusDto, 
-                clientDto, 
-                agencyDto, 
-                hotelDto, 
-                bankAccountDto, 
-                attachmentStatusDto, 
-                command.getPaymentAmount(), 
-                command.getPaymentAmount(), 
-                0.0, 
-                0.0, 
-                0.0, 
-                0.0, 
-                command.getPaymentAmount(), 
+                command.getStatus(),
+                paymentSourceDto,
+                command.getReference(),
+                command.getTransactionDate(),
+                paymentStatusDto,
+                clientDto,
+                agencyDto,
+                hotelDto,
+                bankAccountDto,
+                attachmentStatusDto,
+                command.getPaymentAmount(),
+                command.getPaymentAmount(),
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                command.getPaymentAmount(),
                 command.getRemark()
-        );
-
-        this.paymentService.create(payment);
-        command.setPayment(payment);
+        )));
     }
 }

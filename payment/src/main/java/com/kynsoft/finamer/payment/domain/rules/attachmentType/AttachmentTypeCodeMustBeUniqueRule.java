@@ -18,7 +18,7 @@ public class AttachmentTypeCodeMustBeUniqueRule extends BusinessRule {
     public AttachmentTypeCodeMustBeUniqueRule(IManageAttachmentTypeService service, String code, UUID id) {
         super(
                 DomainErrorMessage.ITEM_ALREADY_EXITS,
-                new ErrorField("code", DomainErrorMessage.ITEM_ALREADY_EXITS.getReasonPhrase())
+                new ErrorField("defaults", DomainErrorMessage.ITEM_ALREADY_EXITS.getReasonPhrase())
         );
         this.service = service;
         this.code = code;

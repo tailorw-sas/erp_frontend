@@ -10,6 +10,7 @@ import lombok.Setter;
 public class CreateMasterPaymentAttachmentRequest {
 
     private Status status;
+    private UUID employee;
     private UUID resource;
     private UUID resourceType;
     private UUID attachmentType;

@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageMerchant.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageMerchantKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -12,6 +13,8 @@ import com.kynsoft.finamer.settings.domain.services.IManagerB2BPartnerService;
 import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
 import java.util.UUID;
 import java.util.function.Consumer;
+
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchant.ProducerUpdateManageMerchantService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,10 +23,13 @@ public class UpdateManagerMerchantCommandHandler implements ICommandHandler<Upda
     private final IManagerMerchantService service;
     private final IManagerB2BPartnerService serviceB2BPartner;
 
+    private final ProducerUpdateManageMerchantService producerService;
+
     public UpdateManagerMerchantCommandHandler(IManagerMerchantService service,
-                                               IManagerB2BPartnerService serviceB2BPartner) {
+                                               IManagerB2BPartnerService serviceB2BPartner, ProducerUpdateManageMerchantService producerService) {
         this.service = service;
         this.serviceB2BPartner = serviceB2BPartner;
+        this.producerService = producerService;
     }
 
     @Override
@@ -43,6 +49,7 @@ public class UpdateManagerMerchantCommandHandler implements ICommandHandler<Upda
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
+            this.producerService.update(new UpdateManageMerchantKafka(test.getId(), test.getCode()));
         }
 
     }
