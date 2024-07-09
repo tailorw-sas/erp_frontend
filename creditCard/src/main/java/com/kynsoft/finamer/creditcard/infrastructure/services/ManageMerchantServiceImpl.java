@@ -11,7 +11,6 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMer
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageMerchant;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageMerchant;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageMerchantWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageMerchantReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +61,7 @@ public class ManageMerchantServiceImpl implements IManageMerchantService {
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_NOT_FOUND, new ErrorField("id", "Manager Merchant not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_MERCHANT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_MERCHANT_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override

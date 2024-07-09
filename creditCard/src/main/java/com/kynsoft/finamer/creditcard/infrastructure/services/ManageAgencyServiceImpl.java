@@ -73,7 +73,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
         if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "Manage Agency not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_NOT_FOUND, new ErrorField("id", "Manage Agency not found.")));
     }
 
     @Override

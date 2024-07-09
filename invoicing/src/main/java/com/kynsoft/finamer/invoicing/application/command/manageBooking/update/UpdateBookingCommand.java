@@ -19,8 +19,7 @@ public class UpdateBookingCommand implements ICommand {
     private LocalDateTime checkOut;
 
     private String hotelBookingNumber;
-    private String firstName;
-    private String lastName;
+    private String fullName;
     private Double invoiceAmount;
     private String roomNumber;
     private String couponNumber;
@@ -40,8 +39,8 @@ public class UpdateBookingCommand implements ICommand {
     private UUID roomCategory;
 
     public UpdateBookingCommand(UUID id, LocalDateTime hotelCreationDate, LocalDateTime bookingDate,
-            LocalDateTime checkIn, LocalDateTime checkOut, String hotelBookingNumber, String firstName,
-            String lastName, Double invoiceAmount, String roomNumber, String couponNumber, Integer adults,
+            LocalDateTime checkIn, LocalDateTime checkOut, String hotelBookingNumber, String fullName,
+            Double invoiceAmount, String roomNumber, String couponNumber, Integer adults,
             Integer children, Double rateAdult, Double rateChild, String hotelInvoiceNumber, String folioNumber,
             Double hotelAmount, String description, UUID invoice, UUID ratePlan, UUID nightType, UUID roomType,
             UUID roomCategory) {
@@ -51,8 +50,7 @@ public class UpdateBookingCommand implements ICommand {
         this.checkIn = checkIn;
         this.checkOut = checkOut;
         this.hotelBookingNumber = hotelBookingNumber;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.fullName = fullName;
         this.invoiceAmount = invoiceAmount;
         this.roomNumber = roomNumber;
         this.couponNumber = couponNumber;
@@ -79,8 +77,7 @@ public class UpdateBookingCommand implements ICommand {
                 request.getCheckIn(),
                 request.getCheckOut(),
                 request.getHotelBookingNumber(),
-                request.getFirstName(),
-                request.getLastName(),
+                request.getFullName(),
                 request.getInvoiceAmount(),
                 request.getRoomNumber(),
                 request.getCouponNumber(),

@@ -108,10 +108,10 @@ public class UserSystemController {
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
-    //Insercion de comentarios para validar Git
+
     @GetMapping(path = "/me")
     public ResponseEntity<?> me(@AuthenticationPrincipal Jwt jwt) {
-		try {
+        try {
             String userId = jwt.getClaim("sub");
             UserMeQuery query = new UserMeQuery(UUID.fromString(userId));
             UserMeResponse response = mediator.send(query);

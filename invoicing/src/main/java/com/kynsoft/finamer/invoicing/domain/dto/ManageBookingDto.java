@@ -28,8 +28,8 @@ public class ManageBookingDto {
     private LocalDateTime checkOut;
 
     private String hotelBookingNumber;
-    private String firstName;
-    private String lastName;
+    private String fullName;
+
     private Double invoiceAmount;
     private String roomNumber;
     private String couponNumber;

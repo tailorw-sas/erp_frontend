@@ -11,7 +11,6 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageLan
 import com.kynsoft.finamer.creditcard.domain.dto.ManageLanguageDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageLanguageService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageLanguage;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageLanguage;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageLanguageWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageLanguageReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +70,7 @@ public class ManageLanguageServiceImpl implements IManageLanguageService {
         if (optional.isPresent()) {
             return optional.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_LANGUAGE_NOT_FOUND, new ErrorField("id", "Manager language not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_LANGUAGE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_LANGUAGE_NOT_FOUND.getReasonPhrase())));
     }
 
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {

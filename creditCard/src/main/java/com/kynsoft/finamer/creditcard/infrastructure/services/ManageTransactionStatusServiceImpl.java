@@ -11,7 +11,6 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageTra
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageTransactionStatus;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageTransactionStatus;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageTransactionStatusWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageTransactionStatusReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +63,7 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "Manage Transaction Status not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_TRANSACTION_STATUS_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_TRANSACTION_STATUS_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override

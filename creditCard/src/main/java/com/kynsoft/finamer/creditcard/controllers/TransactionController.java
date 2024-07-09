@@ -4,6 +4,9 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionCommand;
+import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionMessage;
+import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionRequest;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionRequest;
@@ -25,9 +28,17 @@ public class TransactionController {
     }
 
     @PostMapping("/manual")
-    public ResponseEntity<?> create(@RequestBody CreateManualTransactionRequest request){
+    public ResponseEntity<?> createManual(@RequestBody CreateManualTransactionRequest request){
         CreateManualTransactionCommand command = CreateManualTransactionCommand.fromRequest(request);
         CreateManualTransactionMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/adjustment")
+    public ResponseEntity<?> createAdjustment(@RequestBody CreateAdjustmentTransactionRequest request){
+        CreateAdjustmentTransactionCommand command = CreateAdjustmentTransactionCommand.fromRequest(request);
+        CreateAdjustmentTransactionMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);
     }

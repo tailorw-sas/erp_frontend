@@ -8,7 +8,9 @@ import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfGreaterThanPaymentBalanceRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckMinNumberOfCharacterInRemarkRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
@@ -37,6 +39,8 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
 
         ConsumerUpdate updatePayment = new ConsumerUpdate();
 
+        RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(command.getAmount()));
+
         //identified and notIdentified
         if (paymentTransactionTypeDto.getCash()) {
             RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyRule(command.getAmount(), paymentDto.getPaymentBalance()));
@@ -52,6 +56,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         //Deposit Amount and Deposit Balance
         if (paymentTransactionTypeDto.getDeposit()) {
             // Crear regla que valide que el Amount ingresado no debe de ser mayor que el valor del Payment Balance y mayor que cero.
+            RulesChecker.checkRule(new CheckAmountIfGreaterThanPaymentBalanceRule(command.getAmount(), paymentDto.getPaymentBalance(), paymentDto.getDepositAmount()));
             UpdateIfNotNull.updateDouble(paymentDto::setDepositAmount, paymentDto.getDepositAmount() + command.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(paymentDto::setDepositBalance, paymentDto.getDepositBalance() + command.getAmount(), updatePayment::setUpdate);
             command.setAmount(command.getAmount() * -1);

@@ -87,7 +87,7 @@ public class ManageInvoice {
 
     public ManageInvoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
-
+        this.invoiceNumber = dto.getInvoiceNumber();
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
         this.invoiceAmount = dto.getInvoiceAmount();

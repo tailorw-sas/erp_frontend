@@ -17,11 +17,11 @@ import java.time.LocalDate;
 public class TransactionResponse implements IResponse {
 
     private Long id;
-    private ManageMerchantDto merchant;
+    private ManageMerchantResponse merchant;
     private MethodType methodType;
-    private ManageHotelDto hotel;
-    private ManageAgencyDto agency;
-    private ManageLanguageDto language;
+    private ManageHotelResponse hotel;
+    private ManageAgencyResponse agency;
+    private ManageLanguageResponse language;
     private Double amount;
     private LocalDate checkIn;
     private String reservationNumber;
@@ -32,19 +32,21 @@ public class TransactionResponse implements IResponse {
 
     private String enrolleCode;
     private String cardNumber;
-    private ManageCreditCardTypeDto creditCardType;
+    private ManageCreditCardTypeResponse creditCardType;
     private Double commission;
-    private ManageTransactionStatusDto status;
+    private ManageTransactionStatusResponse status;
     private TransactionBasicResponse parent;
     private LocalDate transactionDate;
+    private ManageVCCTransactionTypeResponse transactionCategory;
+    private ManageVCCTransactionTypeResponse transactionSubCategory;
 
     public TransactionResponse(TransactionDto dto){
         this.id = dto.getId();
-        this.merchant = dto.getMerchant() != null ? dto.getMerchant() : null;
+        this.merchant = dto.getMerchant() != null ? new ManageMerchantResponse(dto.getMerchant()) : null;
         this.methodType = dto.getMethodType();
-        this.hotel = dto.getHotel() != null ? dto.getHotel() : null;
-        this.agency = dto.getAgency() != null ? dto.getAgency() : null;
-        this.language = dto.getLanguage() != null ? dto.getLanguage() : null;
+        this.hotel = dto.getHotel() != null ? new ManageHotelResponse(dto.getHotel()) : null;
+        this.agency = dto.getAgency() != null ? new ManageAgencyResponse(dto.getAgency()) : null;
+        this.language = dto.getLanguage() != null ? new ManageLanguageResponse(dto.getLanguage()) : null;
         this.amount = dto.getAmount();
         this.checkIn = dto.getCheckIn();
         this.reservationNumber = dto.getReservationNumber();
@@ -55,13 +57,15 @@ public class TransactionResponse implements IResponse {
 
         this.enrolleCode = dto.getEnrolleCode();
         this.cardNumber = dto.getCardNumber();
-        this.creditCardType = dto.getCreditCardType();
+        this.creditCardType = dto.getCreditCardType() != null ? new ManageCreditCardTypeResponse(dto.getCreditCardType()) : null;
         this.commission = dto.getCommission();
-        this.status = dto.getStatus();
+        this.status = dto.getStatus() != null ? new ManageTransactionStatusResponse(dto.getStatus()) :  null;
         this.parent = dto.getParent() != null ? new TransactionBasicResponse(
                 dto.getParent().getId(), dto.getParent().getTransactionDate(),
                 dto.getParent().getCheckIn()
         ) : null;
         this.transactionDate = dto.getTransactionDate();
+        this.transactionCategory = dto.getTransactionCategory() != null ? new ManageVCCTransactionTypeResponse(dto.getTransactionCategory()) : null;
+        this.transactionSubCategory = dto.getTransactionSubCategory() != null ? new ManageVCCTransactionTypeResponse(dto.getTransactionSubCategory()) : null;
     }
 }

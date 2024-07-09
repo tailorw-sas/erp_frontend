@@ -11,7 +11,6 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageCre
 import com.kynsoft.finamer.creditcard.domain.dto.ManageCreditCardTypeDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageCreditCardTypeService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageCreditCardType;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageCreditCardType;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageCreditCardTypeWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageCreditCardTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +63,7 @@ public class ManageCreditCardTypeServiceImpl implements IManageCreditCardTypeSer
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_BANK_NOT_FOUND, new ErrorField("id", "Manager Bank not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_CREDIT_CARD_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_CREDIT_CARD_TYPE_NOT_FOUND.getReasonPhrase())));
     }
 
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {

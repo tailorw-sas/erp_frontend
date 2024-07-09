@@ -23,4 +23,6 @@ public interface IManageVCCTransactionTypeService {
     List<ManageVCCTransactionTypeDto> findAll();
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    ManageVCCTransactionTypeDto findByCode(String code);
 }

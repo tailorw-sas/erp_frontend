@@ -69,7 +69,7 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
         if (commission.isPresent()) {
             return commission.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_COMMISSION_NOT_FOUND, new ErrorField("id", "Manage Merchant Commission not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override

@@ -8,6 +8,8 @@ import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfDepositBalanceGreaterThanZeroRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckApplyDepositRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDepositToApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
@@ -35,6 +37,8 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
         PaymentDto paymentUpdate = paymentDetailDto.getPayment();
 
+        RulesChecker.checkRule(new CheckApplyDepositRule(paymentTransactionTypeDto.getApplyDeposit()));
+        RulesChecker.checkRule(new CheckDepositToApplyDepositRule(paymentDetailDto.getTransactionType().getDeposit()));
         RulesChecker.checkRule(new CheckAmountIfDepositBalanceGreaterThanZeroRule(command.getAmount(), paymentUpdate.getDepositBalance()));
 
         ConsumerUpdate updatePayment = new ConsumerUpdate();

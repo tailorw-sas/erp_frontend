@@ -59,6 +59,6 @@ public class ParameterizationServiceImpl implements IParameterizationService {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", DomainErrorMessage.NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_PARAMETERIZATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_PARAMETERIZATION_NOT_FOUND.getReasonPhrase())));
     }
 }

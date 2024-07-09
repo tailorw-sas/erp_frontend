@@ -37,7 +37,9 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
     private final IParameterizationService parameterizationService;
 
-    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService) {
+    private final IManageVCCTransactionTypeService transactionTypeService;
+
+    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService) {
         this.service = service;
         this.merchantService = merchantService;
         this.hotelService = hotelService;
@@ -47,6 +49,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         this.transactionStatusService = transactionStatusService;
         this.merchantHotelEnrolleService = merchantHotelEnrolleService;
         this.parameterizationService = parameterizationService;
+        this.transactionTypeService = transactionTypeService;
     }
 
     @Override
@@ -69,6 +72,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         }
 
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByCode(parameterizationDto.getTransactionStatusCode());
+        ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionCategory());
+        ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionSubCategory());
 
         if(command.getMethodType().name().equals("LINK")){
             RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getGuestName(), "gestName", "Guest name cannot be null."));
@@ -99,7 +104,9 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 creditCardTypeDto,
                 commission,
                 transactionStatusDto,
-                null
+                null,
+                transactionCategory,
+                transactionSubCategory
         ));
         command.setId(id);
     }
