@@ -17,7 +17,8 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
 
     private final IManageRoomRateService roomRateService;
 
-    public CreateAdjustmentCommandHandler(IManageAdjustmentService adjustmentService, IManageInvoiceTransactionTypeService transactionTypeService, IManageRoomRateService roomRateService) {
+    public CreateAdjustmentCommandHandler(IManageAdjustmentService adjustmentService,
+            IManageInvoiceTransactionTypeService transactionTypeService, IManageRoomRateService roomRateService) {
         this.adjustmentService = adjustmentService;
         this.transactionTypeService = transactionTypeService;
         this.roomRateService = roomRateService;
@@ -25,7 +26,10 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
 
     @Override
     public void handle(CreateAdjustmentCommand command) {
-        ManageInvoiceTransactionTypeDto transactionTypeDto = command.getTransactionType() != null && !command.getTransactionType().equals("") ? transactionTypeService.findById(command.getTransactionType()): null;
+        ManageInvoiceTransactionTypeDto transactionTypeDto = command.getTransactionType() != null
+                && !command.getTransactionType().equals("")
+                        ? transactionTypeService.findById(command.getTransactionType())
+                        : null;
         ManageRoomRateDto roomRateDto = roomRateService.findById(command.getRoomRate());
 
         adjustmentService.create(new ManageAdjustmentDto(
@@ -35,7 +39,7 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
                 command.getDate(),
                 command.getDescription(),
                 transactionTypeDto,
-                roomRateDto
-        ));
+                roomRateDto,
+                command.getEmployee()));
     }
 }

@@ -11,7 +11,7 @@ public class CheckAmountIfGreaterThanPaymentBalanceRule extends BusinessRule {
     private final Double depositAmount;
 
     public CheckAmountIfGreaterThanPaymentBalanceRule(Double amount, Double paymentBalance, Double depositAmount) {
-        super(DomainErrorMessage.CHECK_PAYMENT_AMOUNT_AND_PAYMENT_BALANCE, new ErrorField("amount", DomainErrorMessage.CHECK_PAYMENT_AMOUNT_AND_PAYMENT_BALANCE.getReasonPhrase()));
+        super(DomainErrorMessage.CHECK_PAYMENT_DETAILS_AMOUNT_GREATER_THAN_ZERO, new ErrorField("amount", DomainErrorMessage.CHECK_PAYMENT_DETAILS_AMOUNT_GREATER_THAN_ZERO.getReasonPhrase()));
         this.amount = amount;
         this.paymentBalance = paymentBalance;
         this.depositAmount = depositAmount;

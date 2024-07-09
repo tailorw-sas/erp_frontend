@@ -136,6 +136,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                         command.getBookingCommands().get(i).getCheckOut(),
                                         command.getBookingCommands().get(i).getHotelBookingNumber(),
                                         command.getBookingCommands().get(i).getFullName(),
+                                        command.getBookingCommands().get(i).getFirstName(),
+                                        command.getBookingCommands().get(i).getLastName(),
                                         command.getBookingCommands().get(i).getInvoiceAmount(),
                                         command.getBookingCommands().get(i).getRoomNumber(),
                                         command.getBookingCommands().get(i).getCouponNumber(),
@@ -213,7 +215,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                         command.getAdjustmentCommands().get(i).getDate(),
                                         command.getAdjustmentCommands().get(i).getDescription(),
                                         transactionTypeDto,
-                                        null);
+                                        null, command.getAdjustmentCommands().get(i).getEmployee());
 
                         if (command.getAdjustmentCommands().get(i).getRoomRate() != null) {
                                 for (ManageRoomRateDto rateDto : roomRates) {

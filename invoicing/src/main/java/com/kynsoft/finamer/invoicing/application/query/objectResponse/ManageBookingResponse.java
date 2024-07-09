@@ -25,6 +25,8 @@ public class ManageBookingResponse implements IResponse {
     private LocalDateTime checkOut;
     private String hotelBookingNumber;
     private String fullName;
+    private String firstName;
+    private String lastName;
     private Double invoiceAmount;
     private String roomNumber;
     private String couponNumber;
@@ -51,6 +53,8 @@ public class ManageBookingResponse implements IResponse {
         this.checkOut = dto.getCheckOut();
         this.hotelBookingNumber = dto.getHotelBookingNumber();
         this.fullName = dto.getFullName();
+        this.lastName = dto.getLastName();
+        this.firstName = dto.getFirstName();
         this.invoiceAmount = dto.getInvoiceAmount();
         this.roomNumber = dto.getRoomNumber();
         this.couponNumber = dto.getCouponNumber();

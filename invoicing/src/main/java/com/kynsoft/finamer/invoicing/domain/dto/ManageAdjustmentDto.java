@@ -21,4 +21,5 @@ public class ManageAdjustmentDto {
     private String description;
     private ManageInvoiceTransactionTypeDto transaction;
     private ManageRoomRateDto roomRate;
+    private String employee;
 }

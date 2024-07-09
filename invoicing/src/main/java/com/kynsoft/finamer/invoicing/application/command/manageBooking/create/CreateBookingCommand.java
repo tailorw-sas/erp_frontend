@@ -20,6 +20,8 @@ public class CreateBookingCommand implements ICommand {
 
         private String hotelBookingNumber;
         private String fullName;
+        private String firstName;
+        private String lastName;
         private Double invoiceAmount;
         private String roomNumber;
         private String couponNumber;
@@ -40,6 +42,9 @@ public class CreateBookingCommand implements ICommand {
 
         public CreateBookingCommand(UUID id, LocalDateTime hotelCreationDate, LocalDateTime bookingDate,
                         LocalDateTime checkIn, LocalDateTime checkOut, String hotelBookingNumber, String fullName,
+
+                        String firstName,
+                        String lastName,
                         Double invoiceAmount, String roomNumber, String couponNumber, Integer adults, Integer children,
                         Double rateAdult, Double rateChild, String hotelInvoiceNumber, String folioNumber,
                         Double hotelAmount,
@@ -67,6 +72,8 @@ public class CreateBookingCommand implements ICommand {
                 this.ratePlan = ratePlan;
                 this.nightType = nightType;
                 this.roomType = roomType;
+                this.firstName = firstName;
+                this.lastName = lastName;
                 this.roomCategory = roomCategory;
 
         }
@@ -80,6 +87,8 @@ public class CreateBookingCommand implements ICommand {
                                 request.getCheckOut(),
                                 request.getHotelBookingNumber(),
                                 request.getFullName(),
+                                request.getFirstName(),
+                                request.getLastName(),
                                 request.getInvoiceAmount(),
                                 request.getRoomNumber(),
                                 request.getCouponNumber(),

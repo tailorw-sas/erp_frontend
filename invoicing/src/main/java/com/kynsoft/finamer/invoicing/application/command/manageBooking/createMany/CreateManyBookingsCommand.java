@@ -21,7 +21,8 @@ public class CreateManyBookingsCommand implements ICommand {
         return new CreateManyBookingsCommand(request.getBookings().stream()
                 .map(e -> new CreateBookingCommand(e.getId() != null ? e.getId() : UUID.randomUUID(),
                         e.getHotelCreationDate(), e.getBookingDate(), e.getCheckIn(), e.getCheckOut(),
-                        e.getHotelBookingNumber(), e.getFullName(), e.getInvoiceAmount(), e.getRoomNumber(),
+                        e.getHotelBookingNumber(), e.getFullName(), e.getFirstName(), e.getLastName(),
+                        e.getInvoiceAmount(), e.getRoomNumber(),
                         e.getCouponNumber(), e.getAdults(), e.getChildren(), e.getRateAdult(), e.getRateChild(),
                         e.getHotelInvoiceNumber(), e.getFolioNumber(), e.getHotelAmount(), e.getDescription(),
                         e.getInvoice() != null && !e.getInvoice().isEmpty() ? UUID.fromString(e.getInvoice()) : null,

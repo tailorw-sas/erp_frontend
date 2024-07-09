@@ -29,6 +29,8 @@ public class ManageBookingDto {
 
     private String hotelBookingNumber;
     private String fullName;
+    private String firstName;
+    private String lastName;
 
     private Double invoiceAmount;
     private String roomNumber;

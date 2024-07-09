@@ -20,6 +20,8 @@ public class UpdateBookingCommand implements ICommand {
 
     private String hotelBookingNumber;
     private String fullName;
+    private String firstName;
+    private String lastName;
     private Double invoiceAmount;
     private String roomNumber;
     private String couponNumber;
@@ -40,6 +42,9 @@ public class UpdateBookingCommand implements ICommand {
 
     public UpdateBookingCommand(UUID id, LocalDateTime hotelCreationDate, LocalDateTime bookingDate,
             LocalDateTime checkIn, LocalDateTime checkOut, String hotelBookingNumber, String fullName,
+
+            String firstName,
+            String lastName,
             Double invoiceAmount, String roomNumber, String couponNumber, Integer adults,
             Integer children, Double rateAdult, Double rateChild, String hotelInvoiceNumber, String folioNumber,
             Double hotelAmount, String description, UUID invoice, UUID ratePlan, UUID nightType, UUID roomType,
@@ -49,6 +54,8 @@ public class UpdateBookingCommand implements ICommand {
         this.bookingDate = bookingDate;
         this.checkIn = checkIn;
         this.checkOut = checkOut;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.hotelBookingNumber = hotelBookingNumber;
         this.fullName = fullName;
         this.invoiceAmount = invoiceAmount;
@@ -78,6 +85,8 @@ public class UpdateBookingCommand implements ICommand {
                 request.getCheckOut(),
                 request.getHotelBookingNumber(),
                 request.getFullName(),
+                request.getFirstName(),
+                request.getLastName(),
                 request.getInvoiceAmount(),
                 request.getRoomNumber(),
                 request.getCouponNumber(),

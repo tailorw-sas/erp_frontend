@@ -83,7 +83,8 @@ public class TransactionDto {
     public TransactionDto(
             ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
-            String reservationNumber, String referenceNumber, ManageTransactionStatusDto status){
+            String reservationNumber, String referenceNumber, ManageTransactionStatusDto status,
+            Double commission, LocalDate checkIn){
         this.agency = agency;
         this.transactionCategory = transactionCategory;
         this.transactionSubCategory = transactionSubCategory;
@@ -91,5 +92,7 @@ public class TransactionDto {
         this.reservationNumber = reservationNumber;
         this.referenceNumber = referenceNumber;
         this.status = status;
+        this.commission = commission;
+        this.checkIn = checkIn;
     }
 }

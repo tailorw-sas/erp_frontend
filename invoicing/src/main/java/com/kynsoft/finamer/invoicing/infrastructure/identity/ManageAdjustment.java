@@ -33,6 +33,7 @@ public class ManageAdjustment {
     private Double amount;
     private LocalDateTime date;
     private String description;
+    private String employee;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_transaction_type", nullable = true)
@@ -60,6 +61,7 @@ public class ManageAdjustment {
         this.amount = dto.getAmount();
         this.date = dto.getDate();
         this.description = dto.getDescription();
+        this.employee = dto.getEmployee();
         this.transaction = dto.getTransaction() != null ? new ManageInvoiceTransactionType(dto.getTransaction()) : null;
         this.roomRate = dto.getRoomRate() != null ? new ManageRoomRate(dto.getRoomRate()) : null;
     }
@@ -67,12 +69,12 @@ public class ManageAdjustment {
     public ManageAdjustmentDto toAggregate() {
         return new ManageAdjustmentDto(id, adjustment_id, amount, date, description,
                 transaction != null ? transaction.toAggregate() : null,
-                roomRate != null ? roomRate.toAggregate() : null);
+                roomRate != null ? roomRate.toAggregate() : null, employee);
     }
 
     public ManageAdjustmentDto toAggregateSample() {
         return new ManageAdjustmentDto(id, adjustment_id, amount, date, description,
                 transaction != null ? transaction.toAggregate() : null,
-                null);
+                null, employee);
     }
 }
