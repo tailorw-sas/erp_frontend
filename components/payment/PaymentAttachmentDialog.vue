@@ -144,6 +144,68 @@ const Fields: Array<Container> = [
 
 ]
 
+const fieldsV2: Array<FieldDefinitionType> = [
+  {
+    field: 'invoice.invoice_id',
+    header: 'Resource',
+    dataType: 'number',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
+    field: 'invoice.invoiceType',
+    header: 'Resource Type',
+    dataType: 'number',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+
+  {
+    field: 'type',
+    header: 'Attachment Type',
+    dataType: 'select',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    validation: z.object({
+      id: z.string(),
+      name: z.string(),
+
+    }).nullable()
+      .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
+      .refine((value: any) => value.status !== 'ACTIVE', {
+        message: `This Attachment Type is not active`
+      })
+
+  },
+  {
+    field: 'filename',
+    header: 'Filename',
+    dataType: 'text',
+    class: 'field col-12 required',
+    headerClass: 'mb-1',
+
+  },
+  {
+    field: 'file',
+    header: 'Path',
+    dataType: 'fileupload',
+    class: 'field col-12 required',
+    headerClass: 'mb-1',
+
+  },
+  {
+    field: 'remark',
+    header: 'Remark',
+    dataType: 'textarea',
+    class: 'field col-12',
+    headerClass: 'mb-1',
+
+  },
+
+]
+
 const Columns: IColumn[] = [
   { field: 'attachment_id', header: 'Id', type: 'text', width: '200px' },
   { field: 'type', header: 'Type', type: 'select', width: '200px' },
@@ -156,7 +218,7 @@ const dialogVisible = ref(props.openDialog)
 const options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
-  uriApi: 'manage-attachment',
+  uriApi: 'manage-invoice',
   loading: false,
   showDelete: false,
   showFilters: false,
@@ -180,6 +242,10 @@ const Payload = ref<IQueryRequest>({
   page: 0,
   sortBy: 'code',
   sortType: 'ASC'
+})
+
+const formTitle = computed(() => {
+  return idItem.value ? 'Edit' : 'Create'
 })
 
 const ListItems = ref<any[]>([])
@@ -267,12 +333,6 @@ async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-
-    const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
-
-    payload.invoice = props.selectedInvoice
-
-    payload.file = file
 
     payload.type = item.type?.id
     await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
@@ -407,53 +467,38 @@ function requireConfirmationToSave(item: any) {
     }
   })
 }
-
-onMounted(() => {
-  if (props.selectedInvoice) {
-    Payload.value.filter = [{
-      key: 'invoice.id',
-      operator: 'EQUALS',
-      value: props.selectedInvoice,
-      logicalOperation: 'AND'
-    }]
-  }
-  if (!props.isCreationDialog) {
-    getList()
-  }
-})
 </script>
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class="p-4 h-screen w-fit"
+    v-model:visible="dialogVisible" modal :header="header" class="h-screen w-fit"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
     style="width: 800px;" @hide="closeDialog"
   >
-    <div class=" h-full overflow-hidden p-2">
-      <div class="flex flex-row align-items-center">
-        <div class="flex flex-column">
-          <div class="card p-0">
-            <Accordion :active-index="0" class="mb-2">
-              <AccordionTab header="Filters">
-                <div class="flex gap-4 flex-column lg:flex-row">
-                  <div class="flex align-items-center gap-2">
-                    <label for="email">Invoice:</label>
-                    <div class="w-full lg:w-auto">
-                      <IconField icon-position="left" class="w-full">
-                        <InputText type="text" placeholder="Search" class="w-full" />
-                        <InputIcon class="pi pi-search" />
-                      </IconField>
-                    </div>
-                  </div>
-                  <div class="flex align-items-center">
-                    <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch" @click="searchAndFilter" />
-                    <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :loading="loadingSearch" @click="clearFilterToSearch" />
+    <template #default>
+      <div class="grid p-fluid formgrid">
+        <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
+          <Accordion :active-index="0" class="mb-2 card p-0">
+            <AccordionTab header="Filters">
+              <div class="flex gap-4 flex-column lg:flex-row">
+                <div class="flex align-items-center gap-2">
+                  <label for="email">Invoice:</label>
+                  <div class="w-full lg:w-auto">
+                    <IconField icon-position="left" class="w-full">
+                      <InputText type="text" placeholder="Search" class="w-full" />
+                      <InputIcon class="pi pi-search" />
+                    </IconField>
                   </div>
                 </div>
-              </AccordionTab>
-            </Accordion>
-          </div>
+                <div class="flex align-items-center">
+                  <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch" @click="searchAndFilter" />
+                  <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :loading="loadingSearch" @click="clearFilterToSearch" />
+                </div>
+              </div>
+            </AccordionTab>
+          </Accordion>
           <DynamicTable
+            class="card p-0"
             :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns"
             :options="options" :pagination="Pagination"
             @update:clicked-item="getItemById($event)"
@@ -461,33 +506,79 @@ onMounted(() => {
             @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
           />
         </div>
+        <div class="col-12 order-2 md:order-0 md:col-3 pt-5">
+          <div>
+            <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+              {{ formTitle }}
+            </div>
+            <div class="card">
+              <EditFormV2
+                :key="formReload"
+                :fields="fieldsV2"
+                :item="item"
+                :show-actions="true"
+                :loading-save="loadingSaveAll"
+                @submit-form="requireConfirmationToSave"
+                @on-confirm-create="clearForm"
+                @cancel="clearForm"
+                @delete="requireConfirmationToDelete($event)"
+                @submit="requireConfirmationToSave($event)"
+              >
+                <template #field-type="{ item: data, onUpdate }">
+                  <DebouncedAutoCompleteComponent
+                    v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+                    :model="data.type" :suggestions="attachmentTypeList" @change="($event) => {
+                      onUpdate('type', $event)
+                    }" @load="($event) => getAttachmentTypeList($event)"
+                  >
+                    <template #option="props">
+                      <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                    </template>
+                  </DebouncedAutoCompleteComponent>
+                </template>
+                <template #form-footer="props">
+                  <Button
+                    v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+                    @click="props.item.submitForm($event)"
+                  />
+                </template>
+              </EditFormV2>
+            </div>
+          </div>
 
-        <EditFormV2WithContainer
-          :key="formReload" :fields-with-containers="Fields" :item="item" :show-actions="true"
-          :loading-save="loadingSaveAll" class="w-fit h-fit m-4"
-          @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
-        >
-          <template #field-type="{ item: data, onUpdate }">
-            <DebouncedAutoCompleteComponent
-              v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-              :model="data.type" :suggestions="attachmentTypeList" @change="($event) => {
-                onUpdate('type', $event)
-              }" @load="($event) => getAttachmentTypeList($event)"
-            >
-              <template #option="props">
-                <span>{{ props.item.code }} - {{ props.item.name }}</span>
-              </template>
-            </DebouncedAutoCompleteComponent>
-          </template>
-          <template #form-footer="props">
-            <Button
-              v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-              @click="props.item.submitForm($event)"
-            />
-            <Button v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
-          </template>
-        </EditFormV2WithContainer>
+          <EditFormV2WithContainer
+            v-if="false"
+            :key="formReload"
+            :fields-with-containers="Fields"
+            :item="item"
+            :show-actions="true"
+            :loading-save="loadingSaveAll"
+            class="w-fit h-fit m-4 card p-0"
+            @cancel="clearForm"
+            @delete="requireConfirmationToDelete($event)"
+            @submit="requireConfirmationToSave($event)"
+          >
+            <template #field-type="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+                :model="data.type" :suggestions="attachmentTypeList" @change="($event) => {
+                  onUpdate('type', $event)
+                }" @load="($event) => getAttachmentTypeList($event)"
+              >
+                <template #option="props">
+                  <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                </template>
+              </DebouncedAutoCompleteComponent>
+            </template>
+            <template #form-footer="props">
+              <Button
+                v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+                @click="props.item.submitForm($event)"
+              />
+            </template>
+          </EditFormV2WithContainer>
+        </div>
       </div>
-    </div>
+    </template>
   </Dialog>
 </template>

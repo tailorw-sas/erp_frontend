@@ -721,7 +721,9 @@ onMounted(async () => {
     <div class="card">
       <div class="flex justify-content-end">
         <!--        <Button v-tooltip.top="'Cancel'" class="w-3rem" severity="secondary" icon="pi pi-arrow-left" @click="goToList" /> -->
-        <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" :disabled="errorInfForm()" @click="saveSubmit($event)" />
+        <IfCan :perms="['EMPLOYEE:CREATE']">
+          <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" :disabled="errorInfForm()" @click="saveSubmit($event)" />
+        </IfCan>
       </div>
     </div>
   </div>

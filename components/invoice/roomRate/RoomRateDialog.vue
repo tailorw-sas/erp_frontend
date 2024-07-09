@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { FieldDefinitionType, Container } from '~/components/form/EditFormV2WithContainer'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+
 const props = defineProps({
   fields: {
     type: Array<Container>,
@@ -59,28 +60,32 @@ const dialogVisible = ref(props.openDialog)
 const formFields = ref<FieldDefinitionType[]>([])
 
 onMounted(() => {
-  props?.fields.forEach(container => {
+  props?.fields.forEach((container) => {
     formFields.value.push(...container.childs)
   })
 })
 </script>
+
 <template>
-
-  <Dialog v-model:visible="dialogVisible" modal :header="header" :class="props.class || 'p-4 h-fit'"
-    :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" @hide="closeDialog"
-    :block-scroll="true">
+  <Dialog
+    v-model:visible="dialogVisible" modal :header="header" :class="props.class || 'p-4 h-fit'"
+    :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
+    @hide="closeDialog"
+  >
     <div class="w-full h-full overflow-hidden p-2">
-      <EditFormV2WithContainer :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
-        :loading-save="loadingSaveAll" @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
-        @submit="requireConfirmationToSave($event)" :container-class="containerClass" class="w-full h-fit m-4">
-        
-
+      <EditFormV2WithContainer
+        :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
+        :loading-save="loadingSaveAll" :container-class="containerClass" class="w-full h-fit m-4"
+        @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
+      >
         <template #form-footer="props">
-          <Button v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-            @click="props.item.submitForm($event)" />
+          <Button
+            v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+            @click="props.item.submitForm($event)"
+          />
+          <Button v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
         </template>
       </EditFormV2WithContainer>
     </div>
-
   </Dialog>
 </template>

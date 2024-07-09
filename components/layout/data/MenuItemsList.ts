@@ -77,7 +77,7 @@ export const model = ref([
     ]
   },
   {
-    label: 'Nomenclators',
+    label: 'Settings',
     icon: 'pi pi-home',
     items: [
 
@@ -646,7 +646,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
   },
   // Nomenclators
   {
-    label: 'Nomenclators',
+    label: 'Settings',
     icon: 'pi pi-folder',
     items: [
       [

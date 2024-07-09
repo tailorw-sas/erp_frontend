@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
+import dayjs from 'dayjs'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
@@ -16,29 +17,39 @@ const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
 const contextMenuTransaction = ref()
+const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
-  merchant: '',
-  ccType: '',
-  hotel: '',
-  status: '',
+  merchant: [allDefaultItem],
+  ccType: [allDefaultItem],
+  hotel: [allDefaultItem],
+  status: [allDefaultItem],
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
 const contextMenu = ref()
-const menuItems2 = ref([
+
+const allMenuListItems = [
   {
     label: 'Refund',
     icon: 'pi pi-dollar',
     command: () => openNewRefundDialog()
   },
-])
+]
 
+const menuListItems = ref<any[]>([])
+
+const collectionStatusList = ref<any[]>([])
 const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
 const merchantList = ref<any[]>([])
 const ccTypeList = ref<any[]>([])
+
+const confCollectionStatusListApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-collection-status',
+})
 
 const confStatusListApi = reactive({
   moduleApi: 'settings',
@@ -172,10 +183,10 @@ const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'ASC'
+  sortType: 'DES'
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -188,7 +199,7 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
-async function getList(query?: IQueryRequest) {
+async function getList() {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -199,7 +210,7 @@ async function getList(query?: IQueryRequest) {
     listItems.value = []
     const newListItems = []
 
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, (query) || payload.value)
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -260,29 +271,116 @@ function searchAndFilter() {
     page: 0,
     sortBy: 'createdAt',
     sortType: 'DES'
-  };
-
+  }
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
     newPayload.filter = [{
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-      operator: 'LIKE',
+      operator: 'EQUALS',
       value: filterToSearch.value.search,
       logicalOperation: 'AND'
     }]
   }
   else {
     newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-    if (filterToSearch.value.criterial && filterToSearch.value.search) {
+    // Date
+    if (filterToSearch.value.from) {
       newPayload.filter = [...newPayload.filter, {
-        key: filterToSearch.value.criterial ? filterToSearch.value.criterial.id : '',
-        operator: 'LIKE',
-        value: filterToSearch.value.search,
-        logicalOperation: 'AND',
-        type: 'filterSearch',
+        key: 'checkIn',
+        operator: 'GREATER_THAN_OR_EQUAL_TO',
+        value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
+        logicalOperation: 'AND'
       }]
     }
+    if (filterToSearch.value.to) {
+      newPayload.filter = [...newPayload.filter, {
+        key: 'checkIn',
+        operator: 'LESS_THAN_OR_EQUAL_TO',
+        value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
+        logicalOperation: 'AND'
+      }]
+    }
+    if (filterToSearch.value.merchant?.length > 0) {
+      const filteredItems = filterToSearch.value.merchant.filter((item: any) => item?.id !== 'All')
+      if (filteredItems.length > 0) {
+        const itemIds = filteredItems?.map((item: any) => item?.id)
+        newPayload.filter = [...newPayload.filter, {
+          key: 'merchant.id',
+          operator: 'IN',
+          value: itemIds,
+          logicalOperation: 'AND'
+        }]
+      }
+    }
+    if (filterToSearch.value.hotel?.length > 0) {
+      const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
+      if (filteredItems.length > 0) {
+        const itemIds = filteredItems?.map((item: any) => item?.id)
+        newPayload.filter = [...newPayload.filter, {
+          key: 'hotel.id',
+          operator: 'IN',
+          value: itemIds,
+          logicalOperation: 'AND'
+        }]
+      }
+    }
+    if (filterToSearch.value.ccType?.length > 0) {
+      const filteredItems = filterToSearch.value.ccType.filter((item: any) => item?.id !== 'All')
+      if (filteredItems.length > 0) {
+        const itemIds = filteredItems?.map((item: any) => item?.id)
+        newPayload.filter = [...newPayload.filter, {
+          key: 'creditCardType.id',
+          operator: 'IN',
+          value: itemIds,
+          logicalOperation: 'AND'
+        }]
+      }
+    }
+    if (filterToSearch.value.status?.length > 0) {
+      const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
+      if (filteredItems.length > 0) {
+        const itemIds = filteredItems?.map((item: any) => item?.id)
+        newPayload.filter = [...newPayload.filter, {
+          key: 'status.id',
+          operator: 'IN',
+          value: itemIds,
+          logicalOperation: 'AND'
+        }]
+      }
+    }
   }
-  getList(newPayload)
+  payload.value = newPayload
+  getList()
+}
+
+async function getCollectionStatusList() {
+  if (collectionStatusList.value.length > 0) {
+    return collectionStatusList.value
+  }
+  try {
+    const payload = {
+      filter: [
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 50,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: 'DES'
+    }
+
+    const response = await GenericService.search(confCollectionStatusListApi.moduleApi, confCollectionStatusListApi.uriApi, payload)
+    const { data: dataList } = response
+    collectionStatusList.value = dataList
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+  return collectionStatusList.value
 }
 
 async function getHotelList(query: string = '') {
@@ -317,7 +415,7 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confHotelListApi.moduleApi, confHotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = []
+    hotelList.value = [allDefaultItem]
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -359,7 +457,7 @@ async function getMerchantList(query: string = '') {
 
     const response = await GenericService.search(confMerchantListApi.moduleApi, confMerchantListApi.uriApi, payload)
     const { data: dataList } = response
-    merchantList.value = []
+    merchantList.value = [allDefaultItem]
     for (const iterator of dataList) {
       merchantList.value = [...merchantList.value, { id: iterator.id, name: iterator.description, code: iterator.code }]
     }
@@ -401,7 +499,7 @@ async function getStatusList(query: string = '') {
 
     const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
     const { data: dataList } = response
-    statusList.value = []
+    statusList.value = [allDefaultItem]
     for (const iterator of dataList) {
       statusList.value = [...statusList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -443,7 +541,7 @@ async function getCCTypeList(query: string = '') {
 
     const response = await GenericService.search(confCCTypeListApi.moduleApi, confCCTypeListApi.uriApi, payload)
     const { data: dataList } = response
-    ccTypeList.value = []
+    ccTypeList.value = [allDefaultItem]
     for (const iterator of dataList) {
       ccTypeList.value = [...ccTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -487,8 +585,11 @@ async function onCloseNewManualTransactionDialog(isCancel: boolean) {
   }
 }
 
-async function onCloseNewAdjustmentTransactionDialog() {
+async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
   newAdjustmentTransactionDialogVisible.value = false
+  if (!isCancel) {
+    getList()
+  }
 }
 
 async function onCloseNewRefundDialog() {
@@ -496,12 +597,25 @@ async function onCloseNewRefundDialog() {
 }
 
 const disabledSearch = computed(() => {
-  // return !(filterToSearch.value.criterial && filterToSearch.value.search)
+  // return !(filterToSearch.value.criteria && filterToSearch.value.search)
   return false
 })
 
+async function findMenuItems(status: string) {
+  const collection: any = collectionStatusList.value.find(item => item?.name === status)
+  menuListItems.value = []
+  if (collection) {
+    const navigateOptions = collection.navigate.map((n: any) => n.name.toLowerCase())
+    menuListItems.value = allMenuListItems.filter((element: any) => navigateOptions.includes(element.label.toLowerCase()))
+  }
+}
+
 async function onRowRightClick(event: any) {
-  contextMenu.value.show(event)
+  // await nextTick()
+  await findMenuItems(contextMenuTransaction.value.status)
+  if (menuListItems.value.length > 0) {
+    contextMenu.value.show(event)
+  }
 }
 // -------------------------------------------------------------------------------------------------------
 
@@ -509,7 +623,6 @@ async function onRowRightClick(event: any) {
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
-
   getList()
 })
 
@@ -517,9 +630,10 @@ watch(payloadOnChangePage, (newValue) => {
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(() => {
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-
-  getList()
+  filterToSearch.value.criteria = ENUM_FILTER[0]
+  // getList()
+  searchAndFilter()
+  getCollectionStatusList()
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -543,7 +657,7 @@ onMounted(() => {
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
-                  Filters
+                  Search Fields
                 </div>
                 <div>
                   <PaymentLegend :legend="legend" />
@@ -551,20 +665,23 @@ onMounted(() => {
               </div>
             </template>
             <div class="grid">
-              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
-                <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label class="filter-label" for="">Merchant:</label>
-                  <label class="filter-label" for="">Hotel:</label>
-                </div>
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                    <label class="filter-label" for="">Merchant:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll"
-                        id="autocomplete" class="w-full" field="name"
+                        v-if="!loadingSaveAll" id="autocomplete"
+                        :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.merchant" :suggestions="merchantList"
                         @load="($event) => getMerchantList($event)" @change="($event) => {
-                          filterToSearch.merchant = $event
+                          console.log(filterToSearch)
+                          if (!filterToSearch.merchant.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.merchant = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.merchant = $event.filter((element: any) => element?.id !== 'All')
+                          }
                         }"
                       >
                         <template #option="props">
@@ -574,13 +691,19 @@ onMounted(() => {
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
+                    <label class="filter-label" for="">Hotel:</label>
                     <div class="w-full">
                       <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll"
-                        id="autocomplete" class="w-full" field="name"
+                        v-if="!loadingSaveAll" id="autocomplete"
+                        :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
                         @load="($event) => getHotelList($event)" @change="($event) => {
-                          filterToSearch.hotel = $event
+                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                          }
                         }"
                       >
                         <template #option="props">
@@ -591,20 +714,21 @@ onMounted(() => {
                   </div>
                 </div>
               </div>
-              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
-                <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label class="filter-label" for="">CC Type:</label>
-                  <label class="filter-label" for="">Status:</label>
-                </div>
-
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                    <label class="filter-label" for="">CC Type:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll"
-                        id="autocomplete" class="w-full" field="name"
+                        v-if="!loadingSaveAll" id="autocomplete"
+                        :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.ccType" :suggestions="ccTypeList" @change="($event) => {
-                          filterToSearch.ccType = $event
+                          if (!filterToSearch.ccType.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.ccType = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.ccType = $event.filter((element: any) => element?.id !== 'All')
+                          }
                         }" @load="($event) => getCCTypeList($event)"
                       >
                         <template #option="props">
@@ -614,13 +738,19 @@ onMounted(() => {
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
+                    <label class="filter-label" for="">Status:</label>
                     <div class="w-full">
                       <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll"
-                        id="autocomplete" class="w-full" field="name"
+                        v-if="!loadingSaveAll" id="autocomplete"
+                        :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.status" :suggestions="statusList"
                         @load="($event) => getStatusList($event)" @change="($event) => {
-                          filterToSearch.status = $event
+                          if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
+                          }
                         }"
                       >
                         <template #option="props">
@@ -632,13 +762,9 @@ onMounted(() => {
                 </div>
               </div>
               <div class="col-12 md:col-6 lg:col-2 flex pb-0">
-                <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label class="filter-label" for="">From:</label>
-                  <label class="filter-label" for="">To:</label>
-                </div>
-
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                    <label class="filter-label" for="">From:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <Calendar
                         v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
@@ -647,6 +773,7 @@ onMounted(() => {
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
+                    <label class="filter-label" for="">To:</label>
                     <div class="w-full">
                       <Calendar
                         v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
@@ -658,21 +785,19 @@ onMounted(() => {
               </div>
               <div class="col-12 md:col-6 lg:col-2 flex pb-0">
                 <div class="flex w-full">
-                  <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                    <label class="filter-label" for="">Criteria:</label>
-                    <label class="filter-label" for="">Search:</label>
-                  </div>
                   <div class="flex flex-row w-full">
                     <div class="flex flex-column gap-2 w-full">
-                      <div class="flex align-items-center" style=" z-index:5 ">
+                      <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                        <label class="filter-label" for="">Criteria:</label>
                         <div class="w-full">
                           <Dropdown
-                            v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
+                            v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
                             placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
                           />
                         </div>
                       </div>
-                      <div class="flex align-items-center">
+                      <div class="flex align-items-center gap-2">
+                        <label class="filter-label" for="">Search:</label>
                         <div class="w-full">
                           <IconField icon-position="left">
                             <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
@@ -710,14 +835,13 @@ onMounted(() => {
         @on-sort-field="onSortField"
         @on-row-right-click="onRowRightClick"
         @update:right-clicked-item="(event) => {
-          console.log(event)
           contextMenuTransaction = event
         }"
       />
     </div>
-    <ContextMenu ref="contextMenu" :model="menuItems2" />
+    <ContextMenu ref="contextMenu" :model="menuListItems" />
     <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />
-    <VCCNewAdjustmentTransaction :open-dialog="newAdjustmentTransactionDialogVisible" @on-close-dialog="onCloseNewAdjustmentTransactionDialog" />
+    <VCCNewAdjustmentTransaction :open-dialog="newAdjustmentTransactionDialogVisible" @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" />
     <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog" />
   </div>
 </template>

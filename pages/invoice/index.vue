@@ -24,11 +24,15 @@ const listItems = ref<any[]>([])
 const formReload = ref(0)
 const invoiceTypeList = ref<any[]>()
 
+const bookingDialogOpen = ref<boolean>(false)
+
 const loadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
 const hotelError = ref(false)
+
+const active = ref(0)
 
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
@@ -59,10 +63,6 @@ const statusList = ref<any[]>([])
 const clientList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 
-const confstatusListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-invoice-status',
-})
 const confclientListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-client',
@@ -387,6 +387,10 @@ function clearFilterToSearch() {
 }
 async function getItemById(id: string) {
   openEditDialog(id)
+}
+
+function handleDialogOpen() {
+  bookingDialogOpen.value = true
 }
 
 async function createItem(item: { [key: string]: any }) {
@@ -1040,7 +1044,10 @@ const legend = ref(
         </template>
 
         <template #expanded-item="props">
-          <InvoiceTabView :selected-invoice="props.itemId" />
+          <InvoiceTabView
+            :selected-invoice="props.itemId" :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
+            :open-dialog="handleDialogOpen" :active="active" :set-active="($event) => { active = $event }"
+          />
         </template>
 
         <template #column-status="props">

@@ -178,8 +178,8 @@ const Fields = ref<Array<Container>>([
       },
 
       {
-        field: 'firstName',
-        header: 'First Name',
+        field: 'fullName',
+        header: 'Full Name',
         dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
@@ -296,15 +296,7 @@ const Fields = ref<Array<Container>>([
         })
 
       },
-      {
-        field: 'lastName',
-        header: 'Last Name',
-        dataType: 'text',
-        class: 'field col-12 md: required',
-        headerClass: 'mb-1',
-        validation: z.string().min(1, 'The Last Name field is required')
 
-      },
       {
         field: 'roomCategory',
         header: 'Room Category',
@@ -353,10 +345,10 @@ const Fields = ref<Array<Container>>([
       {
         field: 'hotelAmount',
         header: 'Hotel Amount',
-        dataType: 'number',
+        dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.number().nonnegative('The Hotel Amount field must be greater than 0').nullable()
+        validation: z.string().min(1, 'The Hotel Amount field is required').refine(val => +val <= 0, 'The Hotel Amount field must be greater than 0').nullable()
 
       },
 
@@ -411,6 +403,14 @@ const fieldsV2: Array<FieldDefinitionType> = [
       invalid_type_error: 'The Booking Date field is required',
     })
   },
+  {
+    field: 'fullName',
+    header: 'Full Name',
+    dataType: 'text',
+    class: 'field col-12 md:col-6 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The First Name field is required')
+  },
 
   // Hotel Creation Date
   {
@@ -463,24 +463,6 @@ const fieldsV2: Array<FieldDefinitionType> = [
   },
 
   // First Name
-  {
-    field: 'firstName',
-    header: 'First Name',
-    dataType: 'text',
-    class: 'field col-12 md:col-3 required',
-    headerClass: 'mb-1',
-    validation: z.string().min(1, 'The First Name field is required')
-  },
-
-  // Last Name
-  {
-    field: 'lastName',
-    header: 'Last Name',
-    dataType: 'text',
-    class: 'field col-12 md:col-3 required',
-    headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Last Name field is required')
-  },
 
   // Invoice Amount
   {
@@ -623,7 +605,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.number().nonnegative('The Hotel Amount field must be greater than 0').nullable()
+    validation: z.string().min(1, 'The Hotel Amount field is required').refine(val => +val > 0, 'The Hotel Amount field must be greater than 0').nullable()
   },
   // Description
   {
@@ -642,8 +624,8 @@ const item = ref<GenericObject>({
   checkIn: new Date(),
   checkOut: new Date(),
   hotelBookingNumber: '',
-  firstName: '',
-  lastName: '',
+  fullName: '',
+
   invoiceAmount: 0,
   roomNumber: '',
   couponNumber: '',
@@ -670,8 +652,8 @@ const itemTemp = ref<GenericObject>({
   checkIn: new Date(),
   checkOut: new Date(),
   hotelBookingNumber: '',
-  firstName: '',
-  lastName: '',
+  fullName: '',
+
   invoiceAmount: 0,
   roomNumber: '',
   couponNumber: '',
@@ -713,8 +695,7 @@ const confApi = reactive({
 const Columns: IColumn[] = [
   { field: 'booking_id', header: 'Id', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi },
-  { field: 'firstName', header: 'First Name', type: 'text' },
-  { field: 'lastName', header: 'Last Name', type: 'text' },
+  { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'couponNumber', header: 'Coupon Number', type: 'text' },
   { field: 'reservationNumber', header: 'Reservation Number', type: 'text' },
   { field: 'roomType', header: 'Room Type', type: 'select', objApi: confroomTypeApi },
@@ -765,7 +746,7 @@ const Options = ref({
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
   loading: false,
-  showFilters: !props.isTabView,
+  showFilters: false,
   actionsAsMenu: false,
   showAcctions: true,
   showEdit: false,
@@ -1003,8 +984,8 @@ async function GetItemById(id: string) {
       item.value.checkIn = new Date(element.checkIn)
       item.value.checkOut = new Date(element.checkOut)
       item.value.hotelBookingNumber = element.hotelBookingNumber
-      item.value.firstName = element.firstName
-      item.value.lastName = element.lastName
+      item.value.fullName = element.fullName
+
       item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : 0
       item.value.roomNumber = element.roomNumber
       item.value.couponNumber = element.couponNumber
@@ -1014,7 +995,7 @@ async function GetItemById(id: string) {
       item.value.rateChild = element.rateChild
       item.value.hotelInvoiceNumber = element.hotelInvoiceNumber
       item.value.folioNumber = element.folioNumber
-      item.value.hotelAmount = element.hotelAmount ? element?.hotelAmount : 0
+      item.value.hotelAmount = element.hotelAmount ? String(element?.hotelAmount) : '0'
       item.value.description = element.description
       item.value.invoice = element.invoice
       item.value.ratePlan = element.ratePlan
@@ -1036,8 +1017,8 @@ async function GetItemById(id: string) {
         item.value.checkIn = new Date(response.checkIn)
         item.value.checkOut = new Date(response.checkOut)
         item.value.hotelBookingNumber = response.hotelBookingNumber
-        item.value.firstName = response.firstName
-        item.value.lastName = response.lastName
+        item.value.fullName = response.fullName
+
         item.value.invoiceAmount = response.invoiceAmount
         item.value.roomNumber = response.roomNumber
         item.value.couponNumber = response.couponNumber
@@ -1047,7 +1028,7 @@ async function GetItemById(id: string) {
         item.value.rateChild = response.rateChild
         item.value.hotelInvoiceNumber = response.hotelInvoiceNumber
         item.value.folioNumber = response.folioNumber
-        item.value.hotelAmount = response.hotelAmount
+        item.value.hotelAmount = String(response.hotelAmount)
         item.value.description = response.description
         item.value.invoice = response.invoice
         item.value.ratePlan = response.ratePlan
@@ -1238,7 +1219,7 @@ onMounted(() => {
   }
 })
 
-console.log('TAB COUPON VALIDATION', couponNumberValidation)
+// console.log('TAB COUPON VALIDATION', couponNumberValidation)
 </script>
 
 <template>

@@ -719,7 +719,7 @@ onMounted(async () => {
                 v-if="!loadingSaveAll"
                 v-model="data.fromDate"
                 date-format="yy-mm-dd"
-                :min-date="new Date()"
+                :min-date="new Date('2020-01-01')"
                 :max-date="data.toDate ? new Date(data.toDate) : undefined"
                 @update:model-value="($event) => {
                   onUpdate('fromDate', $event)
@@ -733,7 +733,7 @@ onMounted(async () => {
                 v-if="!loadingSaveAll"
                 v-model="data.toDate"
                 date-format="yy-mm-dd"
-                :min-date="data.fromDate ? new Date(data.fromDate) : new Date()"
+                :min-date="data.fromDate ? new Date(data.fromDate) : new Date('2020-01-01')"
                 @update:model-value="($event) => {
                   onUpdate('toDate', $event)
                 }"

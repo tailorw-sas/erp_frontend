@@ -39,6 +39,19 @@
     border-bottom-color: white !important;
   }
 }
+  #tabView .p-tabview-nav-container{
+    padding-left: 5px;
+    border-top-left-radius: 5px !important;
+    border-top-right-radius: 5px !important;
+  
+    .p-tabview-nav-link{
+      color: var(--primary-color-text) !important;
+    }
+    .p-tabview-nav-link:hover{
+      border-bottom-color: white !important;
+    }
+  }
+
 
 .layout-sidebar .layout-menu {
   margin: 0 !important;

@@ -9,6 +9,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import DialogPaymentDetailForm from '~/components/payment/DialogPaymentDetailForm.vue'
+import PaymentAttachmentDialog from '~/components/payment/PaymentAttachmentDialog.vue'
 
 const route = useRoute()
 const toast = useToast()
@@ -31,6 +32,9 @@ const bankAccountList = ref<any[]>([])
 const paymentStatusList = ref<any[]>([])
 const attachmentStatusList = ref<any[]>([])
 const onOffDialogPaymentDetail = ref(false)
+
+const attachmentDialogOpen = ref<boolean>(false)
+const attachmentList = ref<any[]>([])
 
 const paymentDetailsList = ref<any[]>([])
 
@@ -109,21 +113,21 @@ const fields: Array<FieldDefinitionType> = [
     field: 'depositAmount',
     header: 'Deposit Amount',
     dataType: 'text',
-    disabled: false,
+    disabled: true,
     class: 'field col-12 md:col-1',
   },
   {
     field: 'identified',
     header: 'Identified',
     dataType: 'text',
-    disabled: false,
+    disabled: true,
     class: 'field col-12 md:col-1',
   },
   {
     field: 'otherDeductions',
     header: 'Other Deductions',
     dataType: 'text',
-    disabled: false,
+    disabled: true,
     class: 'field col-12 md:col-3',
   },
   {
@@ -164,21 +168,21 @@ const fields: Array<FieldDefinitionType> = [
     field: 'paymentBalance',
     header: 'Payment Balance',
     dataType: 'text',
-    disabled: false,
+    disabled: true,
     class: 'field col-12 md:col-1',
   },
   {
     field: 'depositBalance',
     header: 'Deposit Balance',
     dataType: 'text',
-    disabled: false,
+    disabled: true,
     class: 'field col-12 md:col-1',
   },
   {
     field: 'notIdentified',
     header: 'Not Identified',
     dataType: 'text',
-    disabled: false,
+    disabled: true,
     class: 'field col-12 md:col-1',
   },
   {
@@ -729,6 +733,21 @@ async function getAttachmentStatusList(moduleApi: string, uriApi: string, queryO
   attachmentStatusList.value = await getDataList<DataListItemForAttachmentStatus, ListItemForAttachmentStatus>(moduleApi, uriApi, [], queryObj, mapFunctionForAttachmentStatusList)
 }
 
+// Attachments
+function handleAttachmentDialogOpen() {
+  console.log('Si entra aca')
+
+  attachmentDialogOpen.value = true
+}
+function addAttachment(attachment: any) {
+  attachmentList.value = [...attachmentList.value, attachment]
+}
+
+function updateAttachment(attachment: any) {
+  const index = attachmentList.value.findIndex(item => item.id === attachment.id)
+  attachmentList.value[index] = attachment
+}
+
 watch(() => item.value, async (newValue) => {
   if (newValue) {
     requireConfirmationToSave(newValue)
@@ -932,11 +951,11 @@ onMounted(async () => {
 
   <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
     <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="saveSubmit($event)" />
-    <Button v-tooltip.top="'New Detail'" class="w-3rem mx-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="secondary" @click="openDialogPaymentDetails" />
+    <Button v-tooltip.top="'New Detail'" class="w-3rem mx-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="secondary" @click="openDialogPaymentDetails($event)" />
     <Button v-tooltip.top="'Delete'" class="w-3rem" severity="secondary" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" />
     <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
-    <Button v-tooltip.top="'Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip" severity="secondary" @click="goToList" />
-    <Button v-tooltip.top="'Go Back'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="goToList" />
+    <Button v-tooltip.top="'Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip" severity="secondary" @click="handleAttachmentDialogOpen" />
+    <!-- <Button v-tooltip.top="'Go Back'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="goToList" /> -->
   </div>
   <DialogPaymentDetailForm
     :key="dialogPaymentDetailFormReload"
@@ -946,4 +965,16 @@ onMounted(async () => {
     @update:visible="onOffDialogPaymentDetail = $event"
     @save="saveAndReload($event)"
   />
+  <div v-if="attachmentDialogOpen">
+    <PaymentAttachmentDialog
+      :add-item="addAttachment"
+      :close-dialog="() => { attachmentDialogOpen = false }"
+      :is-creation-dialog="true"
+      header="Manager Payment Attachment"
+      :list-items="attachmentList"
+      :open-dialog="attachmentDialogOpen"
+      :update-item="updateAttachment"
+      selected-invoice=""
+    />
+  </div>
 </template>

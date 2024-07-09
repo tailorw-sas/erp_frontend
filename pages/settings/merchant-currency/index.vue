@@ -57,10 +57,10 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'value',
     header: 'Value',
-    dataType: 'number',
+    dataType: 'text',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: z.number()
+    validation: z.string()
       .min(1, 'The value field is required'),
   },
   {

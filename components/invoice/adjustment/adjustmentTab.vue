@@ -229,7 +229,7 @@ const Options = ref({
   showDelete: true,
   showAcctions: true,
   showEdit: false,
-  showFilters: !props.isTabView,
+  showFilters: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
   showContextMenu: true,
