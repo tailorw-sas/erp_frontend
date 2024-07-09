@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
+import dayjs from 'dayjs'
 import getUrlByImage from '~/composables/files'
 import { ModulesService } from '~/services/modules-services'
 import { GenericService } from '~/services/generic-services'
@@ -72,7 +73,13 @@ const props = defineProps({
   isTabView: {
     type: Boolean,
     default: false
-  }
+  },
+
+  isDetailView: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 
 })
 
@@ -166,7 +173,7 @@ const Fields: Array<Container> = [
         validation: z.date({
           required_error: 'The Check Out field is required',
           invalid_type_error: 'The Check Out field is required',
-        }).min(new Date(), 'The Check Out field cannot be greater than current date')
+        })
 
       },
 
@@ -316,7 +323,7 @@ const confratePlanApi = reactive({
 
 const Columns: IColumn[] = [
   { field: 'room_rate_id', header: 'Id', type: 'text' },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: confroomTypeApi },
+
   { field: 'fullName', header: 'Full Name', type: 'text' },
 
   { field: 'checkIn', header: 'Check In', type: 'date' },
@@ -324,12 +331,14 @@ const Columns: IColumn[] = [
   { field: 'adults', header: 'Adults', type: 'text' },
   { field: 'children', header: 'Children', type: 'text' },
   { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi },
-  { field: 'nightType', header: 'Night Type', type: 'select', objApi: confnightTypeApi },
+  { field: 'nights', header: 'Nights', type: 'text' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi },
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'select' },
-  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
 
 ]
+
+const finalColumns = ref<IColumn[]>(Columns)
 
 const ENUM_FILTER = [
   { id: 'code', name: 'Code' },
@@ -342,13 +351,13 @@ const Options = ref({
   moduleApi: 'invoicing',
   uriApi: 'manage-room-rate',
   loading: false,
-  showDelete: true,
-  showAcctions: true,
+  showDelete: !props.isDetailView,
+  showAcctions: !props.isDetailView,
   showEdit: false,
   showFilters: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
-  showContextMenu: true,
+  showContextMenu: !props.isDetailView,
   menuModel
 })
 
@@ -410,10 +419,12 @@ async function getRoomRateList() {
         ...iterator,
         checkIn: new Date(iterator?.checkIn),
         checkOut: new Date(iterator?.checkOut),
+        nights: dayjs(iterator?.checkOut).diff(dayjs(iterator?.checkIn), 'day', false),
         room_rate_id: iterator?.room_rate_id ? +iterator?.room_rate_id + +iterator?.booking?.booking_id : countRR + +iterator?.booking?.booking_id,
         loadingEdit: false,
         loadingDelete: false,
-        fullName: iterator.booking.fullName,
+        fullName: `${iterator.booking.fistName ?? ''} ${iterator.booking.lastName ?? ''}`,
+        booking_id: iterator.booking.booking_id,
         roomType: iterator.booking.roomType,
         nightType: iterator.booking.nightType,
         ratePlan: iterator.booking.ratePlan,
@@ -684,6 +695,24 @@ onMounted(() => {
     }]
   }
 
+  if (props.isDetailView) {
+    finalColumns.value = [
+      { field: 'room_rate_id', header: 'Id', type: 'text' },
+      { field: 'booking_id', header: 'Booking id', type: 'text' },
+      { field: 'fullName', header: 'Full Name', type: 'text' },
+      { field: 'checkIn', header: 'Check In', type: 'date' },
+      { field: 'checkOut', header: 'Check Out', type: 'date' },
+      { field: 'nights', header: 'Nights', type: 'date' },
+      { field: 'adults', header: 'Adult', type: 'text' },
+      { field: 'children', header: 'Children', type: 'text' },
+      { field: 'roomType', header: 'Room Type', type: 'select' },
+      { field: 'ratePlan', header: 'Rate Plan', type: 'select' },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
+      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+
+    ]
+  }
+
   if (!props.isCreationDialog) {
     getRoomRateList()
   }
@@ -693,7 +722,7 @@ onMounted(() => {
 <template>
   <div>
     <DynamicTableWithContextMenu
-      :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns"
+      :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns"
       :options="Options" :pagination="Pagination" @on-confirm-create="ClearForm"
       @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
@@ -703,7 +732,7 @@ onMounted(() => {
 
       }"
     >
-      <template #row-selector-body="itemProps">
+      <template v-if="!isDetailView" #row-selector-body="itemProps">
         <span class="pi pi-pen-to-square" @click="openEditDialog(itemProps.item)" />
       </template>
 

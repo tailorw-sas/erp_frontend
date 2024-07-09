@@ -155,10 +155,6 @@ const itemTemp = ref<GenericObject>({
   status: true
 })
 
-const formTitle = computed(() => {
-  return idItem.value ? 'Edit' : 'Create'
-})
-
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
@@ -222,8 +218,6 @@ function clearForm() {
   formReload.value++
 }
 
-async function buildFilters() {}
-
 async function getList() {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -263,8 +257,6 @@ async function getList() {
     options.value.loading = false
   }
 }
-
-const openCreateDialog = async () => await navigateTo({ path: 'invoice/create' })
 
 const openEditDialog = async (item: any) => await navigateTo({ path: `invoice/edit/${item}` })
 
@@ -326,7 +318,9 @@ function searchAndFilter() {
     }
   }
   else {
-    return hotelError.value = true
+    if (filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[0]?.id && filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[1]?.id) {
+      return hotelError.value = true
+    }
   }
   if (filterToSearch.value.status?.length > 0) {
     const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
@@ -681,6 +675,11 @@ watch(disableClient, () => {
     filterToSearch.value.agency = []
   }
 })
+watch(filterToSearch, () => {
+  if (filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[0]?.id || filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[1]?.id) {
+    hotelError.value = false
+  }
+}, { deep: true })
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -1046,7 +1045,7 @@ const legend = ref(
         <template #expanded-item="props">
           <InvoiceTabView
             :selected-invoice="props.itemId" :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
-            :open-dialog="handleDialogOpen" :active="active" :set-active="($event) => { active = $event }"
+            :open-dialog="handleDialogOpen" :active="active" :set-active="($event) => { active = $event }" :is-detail-view="true"
           />
         </template>
 

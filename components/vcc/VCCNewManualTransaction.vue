@@ -397,7 +397,7 @@ function handleMethodTypeChange(value: any) {
 }
 
 watch(() => item.value, async (newValue) => {
-  if (newValue && dialogVisible.value) {
+  if (newValue && newValue.merchant && dialogVisible.value) {
     requireConfirmationToSave(newValue)
   }
 })
@@ -405,14 +405,11 @@ watch(() => item.value, async (newValue) => {
 watch(() => props.openDialog, async (newValue) => {
   dialogVisible.value = newValue
   if (newValue) {
+    clearForm()
     handleMethodTypeChange('')
     await getMerchantList('', true)
     getHotelList(item.value.merchant)
   }
-})
-
-onMounted(() => {
-  clearForm()
 })
 </script>
 
@@ -439,7 +436,7 @@ onMounted(() => {
       >
         <template #field-merchant="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingDefaultMerchant"
+            v-if="!loadingDefaultMerchant && !loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -455,6 +452,7 @@ onMounted(() => {
         </template>
         <template #field-methodType="{ item: data, onUpdate }">
           <Dropdown
+            v-if="!loadingSaveAll"
             v-model="data.methodType"
             :options="[...ENUM_METHOD_TYPE]"
             option-label="name"
@@ -466,9 +464,11 @@ onMounted(() => {
               handleMethodTypeChange($event.id)
             }"
           />
+          <Skeleton v-else height="2rem" class="" />
         </template>
         <template #field-hotel="{ item: data, onUpdate }">
           <Dropdown
+            v-if="!loadingSaveAll"
             v-model="data.hotel"
             :options="HotelList"
             option-label="name"
@@ -480,9 +480,11 @@ onMounted(() => {
               onUpdate('hotel', $event)
             }"
           />
+          <Skeleton v-else height="2rem" class="" />
         </template>
         <template #field-agency="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -493,9 +495,11 @@ onMounted(() => {
             }"
             @load="($event) => getAgencyList($event)"
           />
+          <Skeleton v-else height="2rem" class="" />
         </template>
         <template #field-language="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -506,9 +510,11 @@ onMounted(() => {
             }"
             @load="($event) => getLanguageList($event)"
           />
+          <Skeleton v-else height="2rem" class="" />
         </template>
         <template #field-checkIn="{ item: data, onUpdate }">
           <Calendar
+            v-if="!loadingSaveAll"
             v-model="data.checkIn"
             date-format="yy-mm-dd"
             :max-date="new Date()"
@@ -517,6 +523,7 @@ onMounted(() => {
               onUpdate('checkIn', $event)
             }"
           />
+          <Skeleton v-else height="2rem" class="" />
         </template>
       </EditFormV2>
     </div>
