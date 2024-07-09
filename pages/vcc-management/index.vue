@@ -288,7 +288,8 @@ function searchAndFilter() {
         key: 'checkIn',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
     if (filterToSearch.value.to) {
@@ -296,7 +297,8 @@ function searchAndFilter() {
         key: 'checkIn',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
     if (filterToSearch.value.merchant?.length > 0) {
@@ -307,7 +309,8 @@ function searchAndFilter() {
           key: 'merchant.id',
           operator: 'IN',
           value: itemIds,
-          logicalOperation: 'AND'
+          logicalOperation: 'AND',
+          type: 'filterSearch'
         }]
       }
     }
@@ -319,7 +322,8 @@ function searchAndFilter() {
           key: 'hotel.id',
           operator: 'IN',
           value: itemIds,
-          logicalOperation: 'AND'
+          logicalOperation: 'AND',
+          type: 'filterSearch'
         }]
       }
     }
@@ -331,7 +335,8 @@ function searchAndFilter() {
           key: 'creditCardType.id',
           operator: 'IN',
           value: itemIds,
-          logicalOperation: 'AND'
+          logicalOperation: 'AND',
+          type: 'filterSearch'
         }]
       }
     }
@@ -343,7 +348,8 @@ function searchAndFilter() {
           key: 'status.id',
           operator: 'IN',
           value: itemIds,
-          logicalOperation: 'AND'
+          logicalOperation: 'AND',
+          type: 'filterSearch'
         }]
       }
     }

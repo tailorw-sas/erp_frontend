@@ -331,7 +331,7 @@ function saveSubmit(event: Event) {
 }
 
 watch(() => item.value, async (newValue) => {
-  if (newValue && dialogVisible.value) {
+  if (newValue && newValue.agency && dialogVisible.value) {
     requireConfirmationToSave(newValue)
   }
 })
@@ -339,13 +339,10 @@ watch(() => item.value, async (newValue) => {
 watch(() => props.openDialog, (newValue) => {
   dialogVisible.value = newValue
   if (newValue) {
+    clearForm()
     getCategoryList('', true)
     getSubCategoryList('', true)
   }
-})
-
-onMounted(() => {
-  clearForm()
 })
 </script>
 
@@ -356,7 +353,7 @@ onMounted(() => {
     header="New Adjustment Transaction"
     class="w-8 md:w-6 lg:w-4 card p-0"
     content-class="border-round-bottom border-top-1 surface-border pb-0"
-    @hide="onClose(false)"
+    @hide="onClose(true)"
   >
     <div class="mt-4 p-4">
       <EditFormV2
@@ -372,7 +369,7 @@ onMounted(() => {
       >
         <template #field-transactionCategory="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingDefaultCategory"
+            v-if="!loadingDefaultCategory && !loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -387,7 +384,7 @@ onMounted(() => {
         </template>
         <template #field-transactionSubCategory="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingDefaultSubCategory"
+            v-if="!loadingDefaultSubCategory && !loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -402,6 +399,7 @@ onMounted(() => {
         </template>
         <template #field-agency="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -412,6 +410,7 @@ onMounted(() => {
             }"
             @load="($event) => getAgencyList($event)"
           />
+          <Skeleton v-else height="2rem" class="" />
         </template>
       </EditFormV2>
     </div>

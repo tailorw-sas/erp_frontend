@@ -67,20 +67,23 @@ const props = defineProps({
   isTabView: {
     type: Boolean,
     default: false
-  }
+  },
+  isDetailView: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 })
+
+const { data } = useAuth()
 
 const toast = useToast()
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 const ListItems = ref<any[]>([])
 const formReload = ref(0)
-const active = ref(0)
-const forceSave = ref(false)
-const LoadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
-const loadingSearch = ref(false)
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
@@ -144,7 +147,7 @@ const Fields: Array<Container> = [
       },
       {
         field: 'description',
-        header: 'Description',
+        header: 'Remark',
         dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
@@ -189,8 +192,9 @@ const Columns: IColumn[] = [
   { field: 'adjustment_id', header: 'Id', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'room_rate_id', header: 'Rate', type: 'text' },
-  { field: 'transactionType', header: 'Category', type: 'select', objApi: transactionTypeApi },
+  { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi },
   { field: 'date', header: 'Transaction Date', type: 'date' },
+  { field: 'employee', header: 'Employee', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
 
 ]
@@ -226,13 +230,13 @@ const Options = ref({
   moduleApi: 'invoicing',
   uriApi: 'manage-adjustment',
   loading: false,
-  showDelete: true,
-  showAcctions: true,
+  showDelete: !props.isDetailView,
+  showAcctions: !props.isDetailView,
   showEdit: false,
   showFilters: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
-  showContextMenu: true,
+  showContextMenu: !props.isDetailView,
   menuModel
 })
 
@@ -290,7 +294,7 @@ async function getAdjustmentList() {
       if (iterator.hasOwnProperty('status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, room_rate_id: iterator?.roomRate?.room_rate_id }]
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, room_rate_id: iterator?.roomRate?.room_rate_id, date: new Date(iterator?.date) }]
 
       if (typeof +iterator?.amount === 'number') {
         totalAmount.value += +iterator?.amount
@@ -357,7 +361,7 @@ async function GetItemById(id: string) {
       const element: any = props.listItems.find((item: any) => item.id === id)
       item.value.id = element.id
       item.value.amount = element.amount
-      item.value.date = element.date
+      item.value.date = new Date(element.date)
       item.value.transactionType = element.transactionType
       item.value.roomRate = element.roomRate
       item.value.description = element.description
@@ -370,8 +374,8 @@ async function GetItemById(id: string) {
       if (response) {
         item.value.id = response.id
         item.value.amount = response.amount
-        item.value.date = response.date
-        item.value.transactionType = response.transactionType
+        item.value.date = new Date(response.date)
+        item.value.transactionType = response.transaction
         item.value.roomRate = response.roomRate
         item.value.description = response.description
       }
@@ -447,6 +451,7 @@ async function saveAdjustment(item: { [key: string]: any }) {
     idItem.value = ''
   }
   else {
+    item.employee = data?.value?.user?.name
     try {
       if (props?.isCreationDialog) {
         item.id = v4()
@@ -587,7 +592,7 @@ onMounted(() => {
 
       }"
     >
-      <template #row-selector-body="itemProps">
+      <template v-if="!isDetailView" #row-selector-body="itemProps">
         <span class="pi pi-pen-to-square" @click="openEditDialog(itemProps.item)" />
       </template>
 

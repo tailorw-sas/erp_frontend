@@ -403,9 +403,9 @@ getOptionsList()
         v-model:contextMenuSelection="selectedItem"
         v-model:filters="filters1" v-model:selection="clickedItem"
         :context-menu="options?.showContextMenu" :meta-key-selection="metaKey" selection-mode="single"
-        filter-display="row" sort-mode="single" :value="data" @row-dblclick="onDoubleClickItem" data-key="id"
-        show-gridlines striped-rows removable-sort lazy scrollable scroll-height="60vh" :filters="filters1"
-        row-group-mode="subheader" @row-contextmenu="onRowContextMenu" @sort="onSortField" @update:selection="onSelectItem"
+        filter-display="row" sort-mode="single" :value="data" data-key="id" show-gridlines
+        striped-rows removable-sort lazy scrollable scroll-height="60vh" :filters="filters1" row-group-mode="subheader"
+        @row-dblclick="onDoubleClickItem" @row-contextmenu="onRowContextMenu" @sort="onSortField" @update:selection="onSelectItem"
         @update:filters="onChangeFilters"
       >
         <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
@@ -457,7 +457,7 @@ getOptionsList()
             </span>
           </div>
         </template>
-        <Column selection-mode="single" header-style="width: 3rem">
+        <Column v-if="options?.showAcctions" selection-mode="single" header-style="width: 3rem">
           <template #body="templateProps">
             <slot name="row-selector-body" :item="templateProps.data" />
           </template>
@@ -465,7 +465,7 @@ getOptionsList()
         <!-- :show-filter-match-modes="column.type !== 'bool' " -->
         <Column
           v-for="(column, index) in columns" :key="column.field" :field="column.field" :header="column.header"
-          :show-filter-match-modes="false" sortable :filter-field="column.field" class="custom-table-head"
+          :show-filter-match-modes="false" :sortable="options?.showAcctions" :filter-field="column.field" class="custom-table-head"
           :style="{ width: column.type === 'image' ? '80px' : 'auto' }"
         >
           <template #body="{ data }">

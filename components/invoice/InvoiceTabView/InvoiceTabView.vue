@@ -78,16 +78,24 @@ const props = defineProps({
   },
   invoiceObj: {
     type: Object as any,
-    required: false
+    required: false,
+    default: () => {},
   },
 
   invoiceAgency: {
     type: Object,
-    required: false
+    required: false,
+    default: () => {},
   },
   invoiceHotel: {
     type: Object,
-    required: false
+    required: false,
+    default: () => {},
+  },
+  isDetailView: {
+    type: Boolean,
+    required: false,
+    default: false,
   },
   setActive: { type: Function, required: true },
   active: { type: Number, required: true },
@@ -298,7 +306,7 @@ onMounted(async () => {
             :open-dialog="openDialog" :open-room-rate-dialog="openRoomRateDialog" :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate" :selected-invoice="selectedInvoice as any"
             :add-item="addBooking" :update-item="updateBooking" :list-items="bookingList"
-            :is-creation-dialog="isCreationDialog" :invoice-obj="item" :invoice-agency="{}" :invoice-hotel="{}"
+            :is-creation-dialog="isCreationDialog" :invoice-obj="item" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-detail-view="isDetailView"
           />
         </TabPanel>
         <TabPanel>
@@ -319,7 +327,7 @@ onMounted(async () => {
             :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
             :open-adjustment-dialog="openAdjustmentDialog" :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate" :list-items="roomRateList" :add-item="addRoomRate"
-            :update-item="updateRoomRate" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any"
+            :update-item="updateRoomRate" :is-creation-dialog="isCreationDialog" :is-detail-view="isDetailView" :selected-invoice="selectedInvoice as any"
           />
         </TabPanel>
         <TabPanel>
@@ -340,13 +348,11 @@ onMounted(async () => {
             :close-dialog="() => { adjustmentDialogOpen = false }" :open-dialog="handleDialogOpen"
             :selected-room-rate="selectedRoomRate" :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate" :list-items="adjustmentList" :add-item="addAdjustment"
-            :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any"
+            :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any" :is-detail-view="isDetailView"
           />
         </TabPanel>
       </TabView>
     </div>
-
-    <Toast position="top-center" :base-z-index="5" />
   </div>
 </template>
 

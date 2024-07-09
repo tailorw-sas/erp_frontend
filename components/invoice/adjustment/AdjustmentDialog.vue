@@ -102,7 +102,13 @@ onMounted(() => {
             v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
             @click="props.item.submitForm($event)"
           />
-          <Button v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
+          <Button
+            v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
+
+              clearForm()
+              closeDialog()
+            }"
+          />
         </template>
       </EditFormV2WithContainer>
     </div>
