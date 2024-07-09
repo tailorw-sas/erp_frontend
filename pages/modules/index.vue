@@ -135,7 +135,7 @@ const pagination = ref<IPagination>({
 function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
-  fields[0].disabled = false
+  updateFieldProperty(fields, 'code', 'disabled', false)
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
 }
@@ -207,7 +207,7 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
       }
-      fields[0].disabled = true
+      updateFieldProperty(fields, 'code', 'disabled', true)
       updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
     }

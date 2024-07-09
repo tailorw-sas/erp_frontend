@@ -1,11 +1,16 @@
 export const ENUM_PERMISSIONS = [
-  { id: 'all', name: 'TODOS' },
-  { id: 'show', name: 'MOSTRAR' },
-  { id: 'list', name: 'LISTAR' },
-  { id: 'create', name: 'CREAR' },
-  { id: 'edit', name: 'EDITAR' },
-  { id: 'delete', name: 'ELIMINAR' },
-  { id: 'details', name: 'DETALLES' },
+  // { id: 'ALL', name: 'TODOS' },
+  // { id: 'SHOW', name: 'MOSTRAR' },
+  { id: 'LIST', name: 'LIST' },
+  { id: 'CREATE', name: 'CREATE' },
+  { id: 'EDIT', name: 'EDIT' },
+  { id: 'DELETE', name: 'DELETE' },
+  { id: 'DETAIL', name: 'DETAIL' },
+  { id: 'CLONE', name: 'CLONE' },
+  { id: 'ASSIGN', name: 'ASSIGN' },
+  { id: 'PRINT', name: 'PRINT' },
+  { id: 'IMPORT', name: 'IMPORT' },
+  { id: 'EXPORT', name: 'EXPORT' },
 ]
 
 export const ENUM_INVOICE_TYPE = [
@@ -16,18 +21,11 @@ export const ENUM_INVOICE_TYPE = [
 ]
 
 export const ENUM_INVOICE_CRITERIA = [
-  { id: 'payment.id', name: 'Payment Id' },
-  { id: 'transferNo', name: 'Transf. No' },
-  { id: 'transferAmount', name: 'T. Amount' },
-  { id: 'description', name: 'Remark' },
-  { id: 'detailId', name: 'Detail Id' },
-  { id: 'detailAmount', name: 'Detail Amount' },
-  { id: 'detailRemark', name: 'Detail Remark' },
+  { id: 'invoice_id', name: 'Invoice Id' },
   { id: 'invoiceNumber', name: 'Invoice No' },
   { id: 'bookings.booking_id', name: 'Booking Id' },
-  { id: 'bookings.firstName', name: 'Guest First Name' },
-  { id: 'bookings.lastName', name: 'Guest Last Name' },
-  { id: 'bookings.reservationNumber', name: 'Reservation' },
+  { id: 'bookings.fullName', name: 'Full Name' },
+  { id: 'bookings.reservationNumber', name: 'Reservation No' },
   { id: 'bookings.couponNumber', name: 'Coupon No' },
 ]
 

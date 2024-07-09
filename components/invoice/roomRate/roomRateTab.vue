@@ -127,7 +127,7 @@ async function deleteRoomRateOption(item: any) {
 }
 
 const menuModel = ref([
-  { label: 'Add Adjustment', icon: 'pi pi-plus', command: props.openAdjustmentDialog },
+  { label: 'Add Adjustment', command: props.openAdjustmentDialog },
   { label: 'Edit Room Rate', command: openEditDialog },
 
 ])
@@ -317,8 +317,8 @@ const confratePlanApi = reactive({
 const Columns: IColumn[] = [
   { field: 'room_rate_id', header: 'Id', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confroomTypeApi },
-  { field: 'firstName', header: 'First Name', type: 'text' },
-  { field: 'lastName', header: 'Last Name', type: 'text' },
+  { field: 'fullName', header: 'Full Name', type: 'text' },
+
   { field: 'checkIn', header: 'Check In', type: 'date' },
   { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'adults', header: 'Adults', type: 'text' },
@@ -345,7 +345,7 @@ const Options = ref({
   showDelete: true,
   showAcctions: true,
   showEdit: false,
-  showFilters: !props.isTabView,
+  showFilters: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
   showContextMenu: true,
@@ -406,7 +406,19 @@ async function getRoomRateList() {
     for (const iterator of dataList) {
       countRR++
 
-      ListItems.value = [...ListItems.value, { ...iterator, room_rate_id: iterator?.room_rate_id ? +iterator?.room_rate_id + +iterator?.booking?.booking_id : countRR + +iterator?.booking?.booking_id, loadingEdit: false, loadingDelete: false, firstName: iterator.booking.firstName, lastName: iterator.booking.lastName, roomType: iterator.booking.roomType, nightType: iterator.booking.nightType, ratePlan: iterator.booking.ratePlan, agency: iterator?.booking?.invoice?.agency }]
+      ListItems.value = [...ListItems.value, {
+        ...iterator,
+        checkIn: new Date(iterator?.checkIn),
+        checkOut: new Date(iterator?.checkOut),
+        room_rate_id: iterator?.room_rate_id ? +iterator?.room_rate_id + +iterator?.booking?.booking_id : countRR + +iterator?.booking?.booking_id,
+        loadingEdit: false,
+        loadingDelete: false,
+        fullName: iterator.booking.fullName,
+        roomType: iterator.booking.roomType,
+        nightType: iterator.booking.nightType,
+        ratePlan: iterator.booking.ratePlan,
+        agency: iterator?.booking?.invoice?.agency
+      }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += +iterator.invoiceAmount

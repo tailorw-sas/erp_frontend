@@ -96,4 +96,7 @@ const debouncedComplete = useDebounceFn((event: any) => {
   border: transparent !important;
   padding-right: 4px !important;
 }
+.p-autocomplete-multiple-container {
+  width: 100%;
+}
 </style>

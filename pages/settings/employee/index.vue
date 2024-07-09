@@ -231,13 +231,23 @@ const disabledClearSearch = computed(() => {
       Manage Employee
     </h3>
     <div class="my-2 flex justify-content-end px-0">
-      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true">
-        <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="setOperation(E_OPERATION.CREATE)" />
-      </div>
-      <Button v-tooltip.left="'Clone Employee'" label="Clone" icon="pi pi-users" severity="primary" class="ml-2 mr-2"
-              :disabled="!idItemToLoadFirstTime || options.loading" @click="setOperation(E_OPERATION.CLONE)"/>
-      <Button v-tooltip.left="'Clone Permissions'" label="Clone Permissions" icon="pi pi-clone" severity="primary"
-              :disabled="!userToClone || options.loading" @click="openClonePermissionsDialog"/>
+      <IfCan :perms="['EMPLOYEE:CREATE']">
+        <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true">
+          <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="setOperation(E_OPERATION.CREATE)" />
+        </div>
+      </IfCan>
+      <IfCan :perms="['EMPLOYEE:CLONE']">
+        <Button
+          v-tooltip.left="'Clone Employee'" label="Clone" icon="pi pi-users" severity="primary" class="ml-2 mr-2"
+          :disabled="!idItemToLoadFirstTime || options.loading" @click="setOperation(E_OPERATION.CLONE)"
+        />
+      </IfCan>
+      <IfCan :perms="['EMPLOYEE:ASSIGN']">
+        <Button
+          v-tooltip.left="'Clone Permissions'" label="Clone Permissions" icon="pi pi-clone" severity="primary"
+          :disabled="!userToClone || options.loading" @click="openClonePermissionsDialog"
+        />
+      </IfCan>
     </div>
   </div>
   <div class="grid">

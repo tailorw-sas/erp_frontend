@@ -47,18 +47,18 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('agency'),
   },
   {
-    field: 'category',
-    header: 'Category',
+    field: 'transactionCategory',
+    header: 'Transaction Category',
     dataType: 'select',
     class: 'field col-12 required',
-    validation: validateEntityStatus('category'),
+    validation: validateEntityStatus('transaction category'),
   },
   {
-    field: 'subcategory',
-    header: 'Subcategory',
+    field: 'transactionSubCategory',
+    header: 'Transaction Subcategory',
     dataType: 'select',
     class: 'field col-12 required',
-    validation: validateEntityStatus('subcategory'),
+    validation: validateEntityStatus('transaction subcategory'),
   },
   {
     field: 'amount',
@@ -76,7 +76,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The reservation number field is required').regex(/^([IG]) \d{1,8} \d{1,8}$/i, 'Invalid reservation number format')
+    validation: z.string().trim().min(1, 'The reservation number field is required').regex(/^([IG]) \d{3} \d{2}$/i, 'Invalid reservation number format')
   },
   {
     field: 'referenceNumber',
@@ -89,7 +89,7 @@ const fields: Array<FieldDefinitionType> = [
 
 const item = ref<GenericObject>({
   agency: null,
-  category: null,
+  transactionCategory: null,
   subCategory: null,
   amount: '0',
   reservationNumber: '',
@@ -98,7 +98,7 @@ const item = ref<GenericObject>({
 
 const itemTemp = ref<GenericObject>({
   agency: null,
-  category: null,
+  transactionCategory: null,
   subCategory: null,
   amount: '0',
   reservationNumber: '',
@@ -143,12 +143,12 @@ async function save(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   try {
-    payload.category = typeof payload.category === 'object' ? payload.category.id : payload.category
-    payload.subCategory = typeof payload.subCategory === 'object' ? payload.subCategory.id : payload.subCategory
+    payload.transactionCategory = typeof payload.transactionCategory === 'object' ? payload.transactionCategory.id : payload.transactionCategory
+    payload.transactionSubCategory = typeof payload.transactionSubCategory === 'object' ? payload.transactionSubCategory.id : payload.transactionSubCategory
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-    // TODO: El mensaje debe ser 'The transaction details id {id} was created'
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
+    onClose(false)
   }
   catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
@@ -211,7 +211,7 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
       CategoryList.value = [...CategoryList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
     }
     if (isDefault && CategoryList.value.length > 0) {
-      item.value.category = CategoryList.value[0]
+      item.value.transactionCategory = CategoryList.value[0]
       formReload.value += 1
     }
   }
@@ -278,7 +278,7 @@ async function getSubCategoryList(query: string, isDefault: boolean = false) {
       SubCategoryList.value = [...SubCategoryList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
     }
     if (isDefault && SubCategoryList.value.length > 0) {
-      item.value.subcategory = SubCategoryList.value[0]
+      item.value.transactionSubCategory = SubCategoryList.value[0]
       formReload.value += 1
     }
   }
@@ -370,31 +370,31 @@ onMounted(() => {
         @force-save="forceSave = $event"
         @submit="getObjectValues($event)"
       >
-        <template #field-category="{ item: data, onUpdate }">
+        <template #field-transactionCategory="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingDefaultCategory"
             id="autocomplete"
             field="name"
             item-value="id"
-            :model="data.category"
+            :model="data.transactionCategory"
             :suggestions="CategoryList"
             @change="($event) => {
-              onUpdate('category', $event)
+              onUpdate('transactionCategory', $event)
             }"
             @load="($event) => getCategoryList($event)"
           />
           <Skeleton v-else height="2rem" class="" />
         </template>
-        <template #field-subcategory="{ item: data, onUpdate }">
+        <template #field-transactionSubCategory="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingDefaultSubCategory"
             id="autocomplete"
             field="name"
             item-value="id"
-            :model="data.subcategory"
+            :model="data.transactionSubCategory"
             :suggestions="SubCategoryList"
             @change="($event) => {
-              onUpdate('subcategory', $event)
+              onUpdate('transactionSubCategory', $event)
             }"
             @load="($event) => getSubCategoryList($event)"
           />

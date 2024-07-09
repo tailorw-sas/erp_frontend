@@ -108,7 +108,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12 md:col-6 required',
-    validation: z.string().trim().min(1, 'The reservation number field is required').regex(/^([IG]) \d{1,8} \d{1,8}$/i, 'Invalid reservation number format')
+    validation: z.string().trim().min(1, 'The reservation number field is required').regex(/^([IG]) \d{3} \d{2}$/i, 'Invalid reservation number format')
   },
   {
     field: 'referenceNumber',
@@ -222,8 +222,7 @@ async function save(item: { [key: string]: any }) {
     payload.methodType = typeof payload.methodType === 'object' ? payload.methodType.id : payload.methodType
     delete payload.event
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-    // TODO: El mensaje debe ser 'The transaction details id {id} was created'
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
     onClose(false)
   }
   catch (error: any) {

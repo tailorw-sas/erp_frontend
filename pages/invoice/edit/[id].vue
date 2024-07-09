@@ -12,6 +12,7 @@ import type { FieldDefinitionType, Container } from '~/components/form/EditFormV
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import dayjs from 'dayjs'
+import { fields } from '~/components/invoice/form/invoice.fields'
 
 const toast = useToast()
 
@@ -46,98 +47,9 @@ const errorInTab = ref({
 const invoiceAgency = ref<any>(null)
 const invoiceHotel = ref<any>(null)
 
+const attachmentDialogOpen = ref<boolean>(false)
 
 
-const fields: Array<Container> = [
-  {
-    childs: [
-      {
-        field: 'invoice_id',
-        header: 'Id',
-        dataType: 'text',
-        class: 'w-full',
-        disabled: true,
-        containerFieldClass: 'ml-10'
-
-      },
-      {
-        field: 'invoiceNumber',
-        header: 'Invoice Number',
-        dataType: 'text',
-        class: 'w-full',
-        disabled: true,
-      },
-
-    ],
-    containerClass: 'flex flex-column justify-content-evenly w-full'
-  },
-
-  {
-    childs: [
-
-      {
-        field: 'hotel',
-        header: 'Hotel',
-        dataType: 'select',
-        class: 'w-full px-4 required',
-        
-
-      },
-      {
-        field: 'agency',
-        header: 'Agency',
-        dataType: 'select',
-        class: 'w-full px-4 required',
-        
-      },
-
-    ],
-
-    containerClass: 'flex flex-column justify-content-evenly w-full '
-  },
-  {
-    childs: [
-      {
-        field: 'invoiceDate',
-        header: 'Invoice Date',
-        dataType: 'date',
-        class: 'w-full required',
-        validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
-      },
-      {
-        field: 'isManual',
-        header: 'Manual',
-        dataType: 'check',
-        class: 'w-full ',
-        disabled: true
-      },
-
-    ],
-    containerClass: 'flex flex-column justify-content-evenly w-full'
-  },
-  {
-    childs: [
-      {
-        field: 'invoiceAmount',
-        header: 'Invoice Amount',
-        dataType: 'text',
-        class: 'w-full px-4 required',
-        disabled: true
-      },
-      {
-        field: 'invoiceType',
-        header: 'Type',
-        dataType: 'select',
-        class: 'w-full px-4 ',
-        containerFieldClass: '',
-        validation: validateEntityStatus('Invoice Type')
-      },
-
-    ],
-    containerClass: 'flex flex-column justify-content-evenly w-full'
-  },
-
-]
 
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
@@ -515,20 +427,6 @@ function update() {
 
 }
 
-function openRoomRateDialog(booking?: any) {
-  active.value = 1
-
-  if (booking?.id) {
-
-    selectedBooking.value = booking?.id
-  }
-
-
-
-  roomRateDialogOpen.value = true
-
-
-}
 
 function openAdjustmentDialog(roomRate?: any) {
   active.value = 2
@@ -564,6 +462,11 @@ async function getInvoiceAgency(id) {
   catch (err) {
 
   }
+
+}
+
+function handleAttachmentDialogOpen() {
+  attachmentDialogOpen.value = true
 }
 
 
@@ -658,84 +561,57 @@ onMounted(async () => {
 
       <template #form-footer="props">
         <div class="px-4" style="width: 100%; height: 100%;">
-          <div class="flex justify-content-end mb-3">
-              
-              <Button v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-fit mx-1" icon="pi pi-plus"
-                :loading="loadingSaveAll" @click="handleDialogOpen()" label="New" />
-              <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll"
-                @click="update" />
-             
+          
 
-            </div>
-          <TabView v-model:activeIndex="active" class="tabview-custom">
-            <TabPanel  >
-              <template #header >
-                <div class="flex align-items-center gap-2 p-2 " :style="`${active === 0 && 'background-color: white; color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`"  >
-                  <i class="pi pi-calendar" style="font-size: 1.5rem" />
-                  <span class="font-bold white-space-nowrap" >
-                    Bookings
-                    <i v-if="errorInTab.tabGeneralData" class="pi p-error pi-question-circle"
-                      style="font-size: 1.2rem" />
-                  </span>
-                </div>
-              </template>
-              <BookingTab :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
-                :open-dialog="handleDialogOpen" :open-room-rate-dialog="openRoomRateDialog" :force-update="forceUpdate"
-                :toggle-force-update="() => { }" :selected-invoice="selectedInvoice" :is-creation-dialog="false" :show-totals="true" :invoice-obj="item" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel"></BookingTab>
-              
-            </TabPanel>
-            <TabPanel>
-              <template #header>
-                <div class="flex align-items-center gap-2 p-2" :style="`${active === 1 && 'background-color: white; color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
-                  <i class="pi pi-receipt" style="font-size: 1.5rem" />
-                  <span class="font-bold white-space-nowrap">
-                    Room Rates
-                    <i v-if="errorInTab.tabGeneralData" class="pi p-error pi-question-circle"
-                      style="font-size: 1.2rem" />
-                  </span>
-                </div>
-              </template>
-              <RoomRateTab :is-dialog-open="roomRateDialogOpen" :close-dialog="() => { roomRateDialogOpen = false }"
-                :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
-                :open-adjustment-dialog="openAdjustmentDialog" :selected-invoice="selectedInvoice"
-                :force-update="forceUpdate" :is-creation-dialog="false" :toggle-force-update="() => { }" :show-totals="true">
-              </RoomRateTab>
-            </TabPanel>
-            <TabPanel>
-              <template #header>
-                <div class="flex align-items-center gap-2 p-2" :style="`${active === 2 && 'background-color: white; color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
-                  <i class="pi pi-sliders-v"  style="font-size: 1.5rem" />
-                  <span class="font-bold white-space-nowrap">
-                    Adjustments
-                    <i v-if="errorInTab.tabGeneralData" class="pi p-error pi-question-circle"
-                      style="font-size: 1.2rem" />
-                  </span>
-                </div>
-              </template>
-              <AdjustmentTab :is-dialog-open="adjustmentDialogOpen"
-                :close-dialog="() => { adjustmentDialogOpen = false }" :open-dialog="handleDialogOpen"
-                :selected-room-rate="selectedRoomRate" :is-creation-dialog="false" :selected-invoice="selectedInvoice"
-                :force-update="forceUpdate" :toggle-force-update="() => { }" :show-totals="true">
-              </AdjustmentTab>
-            </TabPanel>
-
-          </TabView>
+            <InvoiceTabView
+            :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
+            :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
+             :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate"
+            :is-creation-dialog="false" :selected-invoice="selectedInvoice as any"  :active="active" :set-active="($event) => { active = $event }"
+            
+          />
+         
 
           <div >
             <div class="flex justify-content-end">
-              
-              
-              <Button severity="danger" v-tooltip.top="'Cancel'" class="w-fit mx-1" icon="pi pi-times" @click="goToList" label="Cancel" />
-              <Button v-tooltip.top="'Save'" class="w-fit mx-1" icon="pi pi-save" :loading="loadingSaveAll" @click="() => {
-      saveItem(props.item.fieldValues)
-    }" label="Save"/>
+              <Button
+                v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"  @click="() => {
+                  saveItem(props.item.fieldValues)
+                }"
+              />
+              <Button
+                v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-print"
+                :loading="loadingSaveAll" disabled
+              />
+
+              <Button
+                v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
+                :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
+              />
+              <Button
+                v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-file"
+                :loading="loadingSaveAll" disabled
+              />
+              <Button
+                v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
+                :loading="loadingSaveAll" @click="handleDialogOpen()"
+              />
+              <Button
+                v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-dollar"
+                :loading="loadingSaveAll" disabled
+              />
+              <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
+              <Button v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="goToList" />
             </div>
           </div>
         </div>
       </template>
     </EditFormV2WithContainer>
 
-
+ <div v-if="attachmentDialogOpen">
+          <AttachmentDialog  :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Master Invoice Attachment"  :open-dialog="attachmentDialogOpen" :selected-invoice="selectedInvoice" />
+        </div>
 
     
   </div>
