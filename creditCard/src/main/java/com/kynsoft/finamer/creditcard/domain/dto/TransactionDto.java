@@ -35,6 +35,8 @@ public class TransactionDto {
     private ManageTransactionStatusDto status;
     private TransactionDto parent;
     private LocalDate transactionDate;
+    private ManageVCCTransactionTypeDto transactionCategory;
+    private ManageVCCTransactionTypeDto transactionSubCategory;
 
     public TransactionDto(
             Long id, LocalDate checkIn, String reservationNumber,
@@ -47,7 +49,15 @@ public class TransactionDto {
         this.transactionDate = transactionDate;
     }
 
-    public TransactionDto(ManageMerchantDto merchant, MethodType methodType, ManageHotelDto hotel, ManageAgencyDto agency, ManageLanguageDto language, Double amount, LocalDate checkIn, String reservationNumber, String referenceNumber, String hotelContactEmail, String guestName, String email, String enrolleCode, String cardNumber, ManageCreditCardTypeDto creditCardType, Double commission, ManageTransactionStatusDto status, TransactionDto parent) {
+    public TransactionDto(
+            ManageMerchantDto merchant, MethodType methodType, ManageHotelDto hotel,
+            ManageAgencyDto agency, ManageLanguageDto language, Double amount,
+            LocalDate checkIn, String reservationNumber, String referenceNumber,
+            String hotelContactEmail, String guestName, String email, String enrolleCode,
+            String cardNumber, ManageCreditCardTypeDto creditCardType, Double commission,
+            ManageTransactionStatusDto status, TransactionDto parent,
+            ManageVCCTransactionTypeDto transactionCategory,
+            ManageVCCTransactionTypeDto transactionSubCategory) {
         this.merchant = merchant;
         this.methodType = methodType;
         this.hotel = hotel;
@@ -66,5 +76,20 @@ public class TransactionDto {
         this.commission = commission;
         this.status = status;
         this.parent = parent;
+        this.transactionCategory = transactionCategory;
+        this.transactionSubCategory = transactionSubCategory;
+    }
+
+    public TransactionDto(
+            ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
+            ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
+            String reservationNumber, String referenceNumber, ManageTransactionStatusDto status){
+        this.agency = agency;
+        this.transactionCategory = transactionCategory;
+        this.transactionSubCategory = transactionSubCategory;
+        this.amount = amount;
+        this.reservationNumber = reservationNumber;
+        this.referenceNumber = referenceNumber;
+        this.status = status;
     }
 }

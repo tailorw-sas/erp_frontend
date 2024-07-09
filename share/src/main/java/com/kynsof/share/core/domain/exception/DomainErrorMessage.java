@@ -259,7 +259,20 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     ATTACHMENT_TYPE_CHECK_DEFAULT(1028, Series.DOMAIN_ERROR, "Another item already exists with default."),
     PAYMENT_CLOSE_OPERATION_NOT_FOUND(1029, Series.DOMAIN_ERROR, "Payment Close Operation not found."),
     BOOKING_HOTEL_NUMBER_INVALID(1029, Series.DOMAIN_ERROR, "Booking's hotel booking number is repeated"),
-    RESERVATION_NUMBER_MUST_BE_UNIQUE(1030, Series.DOMAIN_ERROR, "There is already a transaction with that reservation number in this hotel.");
+    RESERVATION_NUMBER_MUST_BE_UNIQUE(1030, Series.DOMAIN_ERROR, "There is already a transaction with that reservation number in this hotel."),
+    CHECK_DEPOSIT_TO_APPLY(1031, Series.DOMAIN_ERROR, "Only deposits can be applied to transactions of type Check Deposit."),
+    CHECK_APPLY_DEPOSIT(1032, Series.DOMAIN_ERROR, "Please make sure that the 'Apply Deposit' option is selected for the type of transaction chosen."),
+    CHECK_PAYMENT_DETAILS_AMOUNT_GREATER_THAN_ZERO(1033, Series.DOMAIN_ERROR, "The entered payment detail amount is invalid. Please enter an amount strictly greater than zero."),
+    CHECK_PAYMENT_AMOUNT_AND_PAYMENT_BALANCE(1034, Series.DOMAIN_ERROR, "Transaction failed due to exceeding the payment balance limit."),
+    MANAGE_CREDIT_CARD_TYPE_NOT_FOUND(1035, Series.DOMAIN_ERROR, "Credit Card Type not found."),
+    VCC_MANAGE_HOTEL_NOT_FOUND(1036, Series.DOMAIN_ERROR, "Hotel not found."),
+    VCC_MANAGE_LANGUAGE_NOT_FOUND(1037, Series.DOMAIN_ERROR, "Language not found."),
+    VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND(1038, Series.DOMAIN_ERROR, "Merchant Commission not found."),
+    VCC_MANAGE_MERCHANT_NOT_FOUND(1039, Series.DOMAIN_ERROR, "Merchant not found."),
+    VCC_MANAGE_TRANSACTION_STATUS_NOT_FOUND(1040, Series.DOMAIN_ERROR, "Transaction Status not found"),
+    VCC_MANAGE_TRANSACTION_TYPE_NOT_FOUND(1041, Series.DOMAIN_ERROR, "VCC Transaction Type not found"),
+    VCC_PARAMETERIZATION_NOT_FOUND(1042, Series.DOMAIN_ERROR, "Parameterization not found"),
+    VCC_TRANSACTION_NOT_FOUND(1043, Series.DOMAIN_ERROR, "Transaction not found");
 
     private static final DomainErrorMessage[] VALUES;
 

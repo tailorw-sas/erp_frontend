@@ -17,13 +17,22 @@ public class CreateManyBookingsCommand implements ICommand {
 
     private List<CreateBookingCommand> bookings;
 
-
     public static CreateManyBookingsCommand fromRequest(CreateManyBookingRequest request) {
-        return new CreateManyBookingsCommand(request.getBookings().stream().map(e -> new CreateBookingCommand(e.getId() != null ? e.getId() : UUID.randomUUID(), e.getHotelCreationDate(), e.getBookingDate(), e.getCheckIn(), e.getCheckOut(), e.getHotelBookingNumber(), e.getFirstName(), e.getLastName(), e.getInvoiceAmount(), e.getRoomNumber(), e.getCouponNumber(), e.getAdults(), e.getChildren(), e.getRateAdult(), e.getRateChild(), e.getHotelInvoiceNumber(), e.getFolioNumber(), e.getHotelAmount(), e.getDescription(), e.getInvoice() != null && !e.getInvoice().isEmpty() ? UUID.fromString(e.getInvoice()): null,
-                e.getRatePlan() != null && !e.getRatePlan().isEmpty() ? UUID.fromString(e.getRatePlan()): null,
-                e.getNightType() != null && !e.getNightType().isEmpty() ? UUID.fromString(e.getNightType()): null,
-                e.getRoomType() != null && !e.getRoomType().isEmpty() ? UUID.fromString(e.getRoomType()): null,
-                e.getRoomCategory() != null && !e.getRoomCategory().isEmpty() ? UUID.fromString(e.getRoomCategory()): null)).collect(Collectors.toList()));
+        return new CreateManyBookingsCommand(request.getBookings().stream()
+                .map(e -> new CreateBookingCommand(e.getId() != null ? e.getId() : UUID.randomUUID(),
+                        e.getHotelCreationDate(), e.getBookingDate(), e.getCheckIn(), e.getCheckOut(),
+                        e.getHotelBookingNumber(), e.getFullName(), e.getInvoiceAmount(), e.getRoomNumber(),
+                        e.getCouponNumber(), e.getAdults(), e.getChildren(), e.getRateAdult(), e.getRateChild(),
+                        e.getHotelInvoiceNumber(), e.getFolioNumber(), e.getHotelAmount(), e.getDescription(),
+                        e.getInvoice() != null && !e.getInvoice().isEmpty() ? UUID.fromString(e.getInvoice()) : null,
+                        e.getRatePlan() != null && !e.getRatePlan().isEmpty() ? UUID.fromString(e.getRatePlan()) : null,
+                        e.getNightType() != null && !e.getNightType().isEmpty() ? UUID.fromString(e.getNightType())
+                                : null,
+                        e.getRoomType() != null && !e.getRoomType().isEmpty() ? UUID.fromString(e.getRoomType()) : null,
+                        e.getRoomCategory() != null && !e.getRoomCategory().isEmpty()
+                                ? UUID.fromString(e.getRoomCategory())
+                                : null))
+                .collect(Collectors.toList()));
     }
 
     @Override

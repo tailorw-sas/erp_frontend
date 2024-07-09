@@ -2,7 +2,6 @@ package com.kynsoft.finamer.creditcard.application.command.parameterization.crea
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.creditcard.application.command.parameterization.delete.DeleteParameterizationMessage;
 import lombok.Getter;
 
 import java.util.UUID;
@@ -12,15 +11,21 @@ public class CreateParameterizationCommand implements ICommand {
 
     private UUID id;
     private String transactionStatusCode;
+    private String transactionCategory;
+    private String transactionSubCategory;
 
-    public CreateParameterizationCommand(String transactionStatusCode){
+    public CreateParameterizationCommand(String transactionStatusCode, String transactionCategory, String transactionSubCategory){
         this.id = UUID.randomUUID();
         this.transactionStatusCode = transactionStatusCode;
+        this.transactionCategory = transactionCategory;
+        this.transactionSubCategory = transactionSubCategory;
     }
 
     public static CreateParameterizationCommand fromRequest(CreateParameterizationRequest request){
         return new CreateParameterizationCommand(
-                request.getTransactionStatusCode()
+                request.getTransactionStatusCode(),
+                request.getTransactionCategory(),
+                request.getTransactionSubCategory()
         );
     }
 

@@ -27,26 +27,28 @@ import java.util.stream.Collectors;
 @Service
 public class UserPermissionBusinessServiceImpl implements IUserPermissionBusinessService {
 
-    @Autowired
-    private UserPermissionBusinessWriteDataJPARepository commandRepository;
+    private final UserPermissionBusinessWriteDataJPARepository commandRepository;
 
-    @Autowired
-    private UserPermissionBusinessReadDataJPARepository queryRepository;
+    private final UserPermissionBusinessReadDataJPARepository queryRepository;
+
+    public UserPermissionBusinessServiceImpl(UserPermissionBusinessWriteDataJPARepository commandRepository, UserPermissionBusinessReadDataJPARepository queryRepository) {
+        this.commandRepository = commandRepository;
+        this.queryRepository = queryRepository;
+    }
 
     @Override
     @Transactional
     public void create(List<UserPermissionBusinessDto> userRoleBusiness) {
         List<UserPermissionBusiness> saveUserRoleBusinesses = new ArrayList<>();
-        for (UserPermissionBusinessDto userRoleBusines : userRoleBusiness) {
-            //  RulesChecker.checkRule(new UserRoleBusinessMustBeUniqueRule(this, userRoleBusines));
-
-            saveUserRoleBusinesses.add(new UserPermissionBusiness(userRoleBusines));
+        for (UserPermissionBusinessDto userPermissionBusinessDto : userRoleBusiness) {
+            saveUserRoleBusinesses.add(new UserPermissionBusiness(userPermissionBusinessDto));
         }
 
         this.commandRepository.saveAll(saveUserRoleBusinesses);
     }
 
     @Override
+    @Transactional
     public void update(List<UserPermissionBusinessDto> userRoleBusiness) {
         List<UserPermissionBusiness> userRoleBusinesses = userRoleBusiness.stream()
                 .map(UserPermissionBusiness::new)
@@ -127,6 +129,7 @@ public class UserPermissionBusinessServiceImpl implements IUserPermissionBusines
     }
 
     @Override
+    @Transactional
     public void delete(UUID businessId, UUID userId) {
         commandRepository.deleteAllByUserIdAndBusinessId(userId, businessId);
     }

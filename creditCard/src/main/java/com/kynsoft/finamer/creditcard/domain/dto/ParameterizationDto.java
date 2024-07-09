@@ -16,5 +16,7 @@ public class ParameterizationDto {
     private UUID id;
     private Boolean isActive;
     private String transactionStatusCode;
+    private String transactionCategory;
+    private String transactionSubCategory;
 
 }

@@ -41,8 +41,7 @@ public class ManageBooking {
     private LocalDateTime checkOut;
 
     private String hotelBookingNumber;
-    private String firstName;
-    private String lastName;
+    private String fullName;
     private Double invoiceAmount;
     private String roomNumber;
     private String couponNumber;
@@ -98,8 +97,7 @@ public class ManageBooking {
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
         this.hotelBookingNumber = dto.getHotelBookingNumber();
-        this.firstName = dto.getFirstName();
-        this.lastName = dto.getLastName();
+        this.fullName = dto.getFullName();
         this.invoiceAmount = dto.getInvoiceAmount();
         this.roomNumber = dto.getRoomNumber();
         this.couponNumber = dto.getCouponNumber();
@@ -127,7 +125,7 @@ public class ManageBooking {
     public ManageBookingDto toAggregate() {
         return new ManageBookingDto(id, booking_id, reservationNumber, hotelCreationDate, bookingDate, checkIn,
                 checkOut,
-                hotelBookingNumber, firstName, lastName, invoiceAmount, roomNumber, couponNumber, adults, children,
+                hotelBookingNumber, fullName, invoiceAmount, roomNumber, couponNumber, adults, children,
                 rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
                 invoice != null ? invoice.toAggregate() : null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
@@ -140,7 +138,7 @@ public class ManageBooking {
     public ManageBookingDto toAggregateSample() {
         return new ManageBookingDto(id, booking_id, reservationNumber, hotelCreationDate, bookingDate, checkIn,
                 checkOut,
-                hotelBookingNumber, firstName, lastName, invoiceAmount, roomNumber, couponNumber, adults, children,
+                hotelBookingNumber, fullName, invoiceAmount, roomNumber, couponNumber, adults, children,
                 rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
                 null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,

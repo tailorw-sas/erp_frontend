@@ -11,11 +11,9 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageHot
 import com.kynsoft.finamer.creditcard.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageHotelService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageHotel;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageHotel;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageHotelWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageHotelReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -71,12 +69,10 @@ public class ManageHotelServiceImpl implements IManageHotelService {
         Optional<ManageHotel> optionalEntity = repositoryQuery.findById(id);
 
         if(optionalEntity.isPresent()){
-            if(optionalEntity.get().getIsApplyByVcc()){
-                return optionalEntity.get().toAggregate();
-            }
+            return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND, new ErrorField("id", "Manage Hotel not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_HOTEL_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_HOTEL_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override

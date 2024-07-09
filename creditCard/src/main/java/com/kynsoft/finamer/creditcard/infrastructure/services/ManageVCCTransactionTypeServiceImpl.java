@@ -11,7 +11,6 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageVCC
 import com.kynsoft.finamer.creditcard.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageVCCTransactionTypeService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageVCCTransactionType;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageVCCTransactionType;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageVCCTransactionTypeWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageVCCTransactionTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +62,7 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_SOURCE_NOT_FOUND, new ErrorField("id", "The manager payment source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override
@@ -82,6 +81,15 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
         Page<ManageVCCTransactionType> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public ManageVCCTransactionTypeDto findByCode(String code) {
+        Optional<ManageVCCTransactionType> userSystem = this.repositoryQuery.findByCode(code);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Transaction Type not found.")));
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageVCCTransactionType> data) {

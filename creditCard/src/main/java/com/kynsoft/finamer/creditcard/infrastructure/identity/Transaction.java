@@ -82,6 +82,14 @@ public class Transaction implements Serializable {
 
     private LocalDateTime updateAt;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_transaction_category_id")
+    private ManageVCCTransactionType transactionCategory;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_transaction_sub_category_id")
+    private ManageVCCTransactionType transactionSubCategory;
+
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
         this.merchant = dto.getMerchant() != null ? new ManageMerchant(dto.getMerchant()) : null;
@@ -102,6 +110,8 @@ public class Transaction implements Serializable {
         this.commission = dto.getCommission();
         this.status = dto.getStatus() != null ? new ManageTransactionStatus(dto.getStatus()) : null;
         this.parent = dto.getParent() != null ? new Transaction(dto.getParent()) : null;
+        this.transactionCategory = dto.getTransactionCategory() != null ? new ManageVCCTransactionType(dto.getTransactionCategory()) : null;
+        this.transactionSubCategory = dto.getTransactionSubCategory() != null ? new ManageVCCTransactionType(dto.getTransactionSubCategory()) : null;
     }
 
     private TransactionDto toAggregateParent() {
@@ -113,7 +123,8 @@ public class Transaction implements Serializable {
     public TransactionDto toAggregate(){
         return new TransactionDto(
                 id,
-                merchant.toAggregate(), methodType,
+                merchant != null ? merchant.toAggregate() : null,
+                methodType,
                 hotel != null ? hotel.toAggregate() : null,
                 agency != null ? agency.toAggregate() : null,
                 language != null ? language.toAggregate() : null,
@@ -124,7 +135,9 @@ public class Transaction implements Serializable {
                 commission,
                 status != null ? status.toAggregate() : null,
                 parent != null ? parent.toAggregateParent() : null,
-                createdAt.toLocalDate()
+                createdAt.toLocalDate(),
+                transactionCategory != null ? transactionCategory.toAggregate() : null,
+                transactionSubCategory != null ? transactionSubCategory.toAggregate() : null
         );
     }
 }
