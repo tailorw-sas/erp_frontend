@@ -18,5 +18,6 @@ public class CreateAdjustmentRequest {
     private LocalDateTime date;
     private String description;
     private UUID transactionType;
-   private UUID roomRate;
+    private UUID roomRate;
+    private String employee;
 }

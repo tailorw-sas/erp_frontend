@@ -14,7 +14,7 @@ public class CheckPaymentDetailAmountGreaterThanZeroRule extends BusinessRule {
     }
 
     /**
-     * Payment Detail Amount: Debe ser mayor estricto que 0 y es el monto del Pago
+     * Payment Detail Amount: Debe ser mayor estricto que 0.
      * @return true or false
      */
     @Override

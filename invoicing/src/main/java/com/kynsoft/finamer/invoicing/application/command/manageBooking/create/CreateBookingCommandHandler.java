@@ -79,6 +79,8 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                                 command.getCheckOut(),
                                 command.getHotelBookingNumber(),
                                 command.getFullName(),
+                                command.getFirstName(),
+                                command.getLastName(),
                                 command.getInvoiceAmount(),
                                 command.getRoomNumber(),
                                 command.getCouponNumber(),

@@ -12,6 +12,7 @@ import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.Adjustm
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Component
@@ -51,6 +52,9 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
         ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionCategory());
         ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionSubCategory());
 
+        double commission = 0;
+        LocalDate checkIn = LocalDate.now();
+
         Long id = this.service.create(new TransactionDto(
                 agencyDto,
                 transactionCategory,
@@ -58,7 +62,9 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 command.getAmount(),
                 command.getReservationNumber(),
                 command.getReferenceNumber(),
-                transactionStatusDto
+                transactionStatusDto,
+                commission,
+                checkIn
         ));
         command.setId(id);
     }

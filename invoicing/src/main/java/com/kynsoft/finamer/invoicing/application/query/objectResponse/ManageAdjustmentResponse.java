@@ -25,6 +25,7 @@ public class ManageAdjustmentResponse implements IResponse {
     private String description;
     private ManageInvoiceTransactionTypeDto transaction;
     private ManageRoomRateDto roomRate;
+    private String employee;
 
     public ManageAdjustmentResponse(ManageAdjustmentDto dto) {
         this.id = dto.getId();
@@ -34,5 +35,6 @@ public class ManageAdjustmentResponse implements IResponse {
         this.transaction = dto.getTransaction();
         this.roomRate = dto.getRoomRate();
         this.adjustment_id = dto.getAdjustment_id();
+        this.employee = dto.getEmployee();
     }
 }

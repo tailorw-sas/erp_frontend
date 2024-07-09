@@ -61,6 +61,7 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
                                         element.getCheckOut(),
                                         element.getHotelBookingNumber(),
                                         element.getFullName(),
+                                        element.getFirstName(), element.getLastName(),
                                         element.getInvoiceAmount(),
                                         element.getRoomNumber(),
                                         element.getCouponNumber(),

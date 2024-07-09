@@ -64,7 +64,7 @@ public class PaymentDetail implements Serializable {
 
         PaymentDetailDto parentDto = null;
         if (this.parent != null) {
-            parentDto = new PaymentDetailDto(id, status, payment.toAggregate(), transactionType.toAggregate(), amount, remark, null);
+            parentDto = parent.toAggregate();
         }
 
         return new PaymentDetailDto(

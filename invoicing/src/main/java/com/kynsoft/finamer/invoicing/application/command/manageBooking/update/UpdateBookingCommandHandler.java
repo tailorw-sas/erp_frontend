@@ -50,6 +50,11 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
                                 command.getHotelBookingNumber(), dto.getHotelBookingNumber(), update::setUpdate);
                 UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setFullName, command.getFullName(),
                                 dto.getFullName(), update::setUpdate);
+                UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setFirstName, command.getFirstName(),
+                                dto.getFirstName(), update::setUpdate);
+                UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setLastName,
+                                command.getLastName(),
+                                dto.getLastName(), update::setUpdate);
 
                 UpdateIfNotNull.updateDouble(dto::setInvoiceAmount, command.getInvoiceAmount(), dto.getInvoiceAmount(),
                                 update::setUpdate);

@@ -22,6 +22,8 @@ public class UpdateBookingRequest {
 
     private String hotelBookingNumber;
     private String fullName;
+    private String firstName;
+    private String lastName;
     private Double invoiceAmount;
     private String roomNumber;
     private String couponNumber;

@@ -18,14 +18,17 @@ public class CreateAdjustmentCommand implements ICommand {
     private String description;
     private UUID transactionType;
     private UUID roomRate;
+    private String employee;
 
-    public CreateAdjustmentCommand(Double amount, LocalDateTime date, String description, UUID transactionType, UUID roomRate) {
+    public CreateAdjustmentCommand(Double amount, LocalDateTime date, String description, UUID transactionType,
+            UUID roomRate, String employee) {
         this.id = UUID.randomUUID();
         this.amount = amount;
         this.date = date;
         this.description = description;
         this.transactionType = transactionType;
         this.roomRate = roomRate;
+        this.employee = employee;
     }
 
     public static CreateAdjustmentCommand fromRequest(CreateAdjustmentRequest request) {
@@ -34,8 +37,8 @@ public class CreateAdjustmentCommand implements ICommand {
                 request.getDate(),
                 request.getDescription(),
                 request.getTransactionType(),
-                request.getRoomRate()
-        );
+                request.getRoomRate(),
+                request.getEmployee());
     }
 
     @Override
