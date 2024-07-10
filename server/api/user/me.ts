@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     'Authorization': `Bearer ${token?.access_token}`,
   }
 
-  const result = await $fetch(`http://10.42.2.96:9909/api/users/me`, {
+  const result = await $fetch(`${process.env.VITE_APP_BASE_URL}/identity/api/users/me`, {
     headers: defaultHeaders
   })
 
