@@ -112,7 +112,7 @@ export default NuxtAuthHandler({
 
           const { access_token, expires_in, refresh_token, refresh_expires_in } = userResponse
           const authorization = `Bearer ${access_token}`
-          const userMeResponse: any = await $fetch(`http://10.42.2.96:9909/identity/api/users/me`, {
+          const userMeResponse: any = await $fetch(`http://10.42.2.96:9909/api/users/me`, {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': authorization
