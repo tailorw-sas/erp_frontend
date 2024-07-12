@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: invoicing
-          image: kmontes2020/fin-invoicing:v1
+          image: tailorw/fin-invoicing:dev
           imagePullPolicy: Always
           ports:
             - containerPort: 9905
