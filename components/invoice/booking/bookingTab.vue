@@ -96,6 +96,8 @@ const confirm = useConfirm()
 const ListItems = ref<any[]>([])
 const formReload = ref(0)
 
+const route = useRoute()
+
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 
@@ -208,7 +210,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'select',
         class: 'field col-12 ',
         headerClass: 'mb-1',
-        validation: validateEntityStatusForNotRequiredField('Room Type')
 
       },
       {
@@ -259,7 +260,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'select',
         class: 'field col-12 ',
         headerClass: 'mb-1',
-        validation: validateEntityStatusForNotRequiredField('Rate Plan')
 
       },
 
@@ -308,7 +308,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'select',
         class: 'field col-12',
         headerClass: 'mb-1',
-        validation: validateEntityStatusForNotRequiredField('Room Category')
 
       },
       {
@@ -463,7 +462,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must be greater than 0' })
+    ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType === ENUM_INVOICE_TYPE[3]?.id || props.invoiceObj?.invoiceType === ENUM_INVOICE_TYPE[2]?.id ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must be greater than 0' }) })
   },
 
   // Room Number
@@ -502,7 +501,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-    validation: validateEntityStatusForNotRequiredField('Room Category')
+
   },
 
   // Folio Number
@@ -576,7 +575,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-    validation: validateEntityStatusForNotRequiredField('Room Type')
+
   },
 
   // Rate Plan
@@ -586,7 +585,6 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-    validation: validateEntityStatusForNotRequiredField('Rate Plan')
 
   },
 
@@ -597,7 +595,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Hotel Amount field is required').refine(val => +val > 0, 'The Hotel Amount field must be greater than 0').nullable()
+    validation: z.string().refine(val => +val > 0, 'The Hotel Amount field must be greater than 0').nullable()
   },
   // Description
   {
@@ -689,9 +687,10 @@ const confApi = reactive({
 
 const Columns: IColumn[] = [
   { field: 'booking_id', header: 'Id', type: 'text' },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi },
 
   { field: 'fullName', header: 'Full Name', type: 'text' },
-  { field: 'reservationNumber', header: 'Reservation Number', type: 'text' },
+  { field: 'hotelBookingNumber', header: 'Reservation Number', type: 'text' },
   { field: 'couponNumber', header: 'Coupon Number', type: 'text' },
   { field: 'roomType', header: 'Room Type', type: 'select', objApi: confroomTypeApi },
   { field: 'checkIn', header: 'Check In', type: 'date' },
@@ -750,7 +749,7 @@ const Options = ref({
   messageToDelete: 'Do you want to save the change?',
   showContextMenu: !props.isDetailView,
   menuModel,
-  showDelete: !props.isDetailView,
+  showDelete: false,
   isTabView: props.isTabView
 })
 
@@ -1257,6 +1256,8 @@ onMounted(() => {
       @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
       @on-list-item="ResetListItems" @on-sort-field="OnSortField" @update:double-clicked="($event) => {
 
+        if (route.query.type === ENUM_INVOICE_TYPE[3]?.id && isCreationDialog){ return }
+
         openEditBooking({ id: $event })
 
       }"
@@ -1271,12 +1272,13 @@ onMounted(() => {
         >
           <Badge class="px-2 mr-7 flex align-items-center text-xs text-white" severity="contrast">
             <span class="font-bold">
-              Total invoice amount: ${{ totalInvoiceAmount }}
+              Total hotel amount: ${{ totalHotelAmount }}
             </span>
           </Badge>
           <Badge class="px-2 ml-1 mr-6  flex align-items-center text-xs text-white" severity="contrast">
             <span class="font-bold">
-              Total hotel amount: ${{ totalHotelAmount }}
+
+              Total invoice amount: ${{ totalInvoiceAmount }}
             </span>
           </Badge>
         </div>
@@ -1284,14 +1286,14 @@ onMounted(() => {
     </DynamicTableWithContextMenu>
   </div>
 
-  <div v-if="isDialogOpen">
+  <div v-if="isDialogOpen" style="h-fit">
     <BookingDialog
       :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
       :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
       :require-confirmation-to-save="requireConfirmationToSaveBooking"
       :require-confirmation-to-delete="requireConfirmationToDeleteBooking" :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'"
       :close-dialog="closeDialog" container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full"
-      class="h-full p-2 overflow-y-hidden" content-class="w-full" :night-type-list="nightTypeList"
+      class="h-fit p-2 overflow-y-hidden" content-class="w-full" :night-type-list="nightTypeList"
       :rate-plan-list="ratePlanList" :room-category-list="roomCategoryList" :room-type-list="roomTypeList" :get-night-type-list="getNightTypeList" :get-room-category-list="getRoomCategoryList" :get-room-type-list="getRoomTypeList" :getrate-plan-list="getratePlanList"
       :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-night-type-required="nightTypeRequired" :coupon-number-validation="couponNumberValidation"
     />

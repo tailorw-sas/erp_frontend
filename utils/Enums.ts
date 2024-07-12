@@ -20,6 +20,13 @@ export const ENUM_INVOICE_TYPE = [
   { id: 'OLD_CREDIT', name: 'Old Credit', code: 'OLD' }
 ]
 
+export const OBJ_ENUM_INVOICE = {
+  INVOICE: 'Invoice',
+  INCOME: 'Income',
+  CREDIT: 'Credit',
+  OLD_CREDIT: 'Old Credit',
+}
+
 export const ENUM_INVOICE_CRITERIA = [
   { id: 'invoice_id', name: 'Invoice Id' },
   { id: 'invoiceNumber', name: 'Invoice No' },
@@ -30,7 +37,7 @@ export const ENUM_INVOICE_CRITERIA = [
 ]
 
 export const ENUM_INVOICE_STATUS = [
-  { id: 'PROCECSED', name: 'Procesed' },
+  { id: 'PROCECSED', name: 'Processed' },
   { id: 'RECONCILED', name: 'Reconciled' },
   { id: 'SENT', name: 'Sent' },
   { id: 'CANCELED', name: 'Canceled' },
@@ -40,7 +47,7 @@ export const ENUM_INVOICE_STATUS = [
 export const OBJ_INVOICE_TITLE: any = {
   INVOICE: 'New Invoice',
   INCOME: 'Income',
-  CREDIT: 'Credit',
+  CREDIT: 'New Credit to Invoice ',
   OLD_CREDIT: 'Old Credit'
 }
 

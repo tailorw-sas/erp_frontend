@@ -6,6 +6,7 @@ const props = defineProps({
   item: { type: Object, required: true },
   fields: { type: Array<FieldDefinitionType>, required: true },
   loadingSaveAll: { type: Boolean, default: false },
+  selectedPayment: { type: Object, required: true },
 })
 const emit = defineEmits(['update:visible', 'save'])
 const confirm = useConfirm()
@@ -128,10 +129,14 @@ watch(() => props.item, async (newValue) => {
     }"
   >
     <template #header>
-      <div class="flex justify-content-between align-items-center w-full">
+      <div class="flex justify-content-between align-items-center justify-content-between w-full">
         <h5 class="m-0 py-2">
           Payment Details
         </h5>
+        <div>
+          <strong class="mx-2">Payment:</strong>
+          <span>{{ props.selectedPayment.paymentId }}</span>
+        </div>
       </div>
     </template>
 
@@ -174,7 +179,8 @@ watch(() => props.item, async (newValue) => {
 
     <template #footer>
       <Button v-tooltip.top="'Save'" class="w-3rem p-button" icon="pi pi-save" @click="saveSubmit($event)" />
-      <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" />
+      <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" />
+      <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
     </template>
   </Dialog>
 </template>

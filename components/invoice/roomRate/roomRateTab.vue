@@ -351,7 +351,7 @@ const Options = ref({
   moduleApi: 'invoicing',
   uriApi: 'manage-room-rate',
   loading: false,
-  showDelete: !props.isDetailView,
+  showDelete: false,
   showAcctions: !props.isDetailView,
   showEdit: false,
   showFilters: false,
@@ -740,12 +740,13 @@ onMounted(() => {
         <div class="flex align-items-center  justify-content-end pr-4 rounded-full" style="height: 10px;">
           <Badge class="px-2 mr-8 flex align-items-center text-xs text-white" severity="contrast">
             <span class="font-bold">
-              Total invoice amount: ${{ totalInvoiceAmount }}
+
+              Total hotel amount: ${{ totalHotelAmount }}
             </span>
           </Badge>
           <Badge class="px-2 mx-8  flex align-items-center text-xs text-white" severity="contrast">
             <span class="font-bold">
-              Total hotel amount: ${{ totalHotelAmount }}
+              Total invoice amount: ${{ totalInvoiceAmount }}
             </span>
           </Badge>
         </div>
@@ -758,9 +759,9 @@ onMounted(() => {
       :fields="Fields" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
       :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
       :require-confirmation-to-save="requireConfirmationToSaveRoomRate"
-      :require-confirmation-to-delete="requireConfirmationToDeleteRoomRate" :header="isCreationDialog || !idItem ? 'New Room Rate' : 'Edit Room Rate'"
+      :require-confirmation-to-delete="requireConfirmationToDeleteRoomRate" :header="isCreationDialog || !idItem ? 'New Room Rate' : 'Update Room Rate'"
       :close-dialog="closeDialog" container-class="flex flex-row justify-content-between mx-4 my-2 w-full"
-      class="h-full p-2 overflow-y-hidden" content-class="w-full h-full" :booking-list="bookingList"
+      class="h-fit p-2 overflow-y-hidden" content-class="w-full h-full" :booking-list="bookingList"
     />
   </div>
 </template>

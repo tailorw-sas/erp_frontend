@@ -36,7 +36,7 @@ const dialogVisible = ref(props.openDialog)
 const loadingSaveAll = ref(false)
 const confApi = reactive({
   moduleApi: 'creditcard',
-  uriApi: 'transactions/manual',
+  uriApi: 'transactions/refund',
 })
 const toast = useToast()
 
@@ -75,11 +75,6 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     disabled: true,
     class: 'field col-12 md:col-4',
-    validation: z.string().trim().min(1, 'The commission field is required')
-      .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-      .refine(val => Number.parseFloat(val) > 0, {
-        message: 'The amount must be greater than zero',
-      })
   },
   {
     field: 'netAmount',
@@ -166,7 +161,12 @@ function clearForm() {
   item.value.reference = props.parentTransaction.referenceNumber
   item.value.grossAmount = String(props.parentTransaction.amount)
   item.value.transactionCommission = String(props.parentTransaction.commission)
-  item.value.netAmount = String(props.parentTransaction.totalAmount)
+  item.value.netAmount = String(props.parentTransaction.netAmount)
+  item.value.selectedAmount = {
+    type: '',
+    total: '',
+    partial: '',
+  }
   formReload.value++
 }
 
@@ -187,27 +187,21 @@ function requireConfirmationToSave(item: any) {
 
 async function save(item: { [key: string]: any }) {
   loadingSaveAll.value = true
-  const payload: { [key: string]: any } = { ...item }
-  console.log(payload)
-  /* try {
-    payload.merchant = typeof payload.merchant === 'object' ? payload.merchant.id : payload.merchant
-    payload.amount = Number(payload.amount)
-    payload.checkIn = payload.checkIn ? dayjs(payload.checkIn).format('YYYY-MM-DD') : ''
-    payload.hotel = typeof payload.hotel === 'object' ? payload.hotel.id : payload.hotel
-    payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
-    payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
-    payload.methodType = typeof payload.methodType === 'object' ? payload.methodType.id : payload.methodType
-    delete payload.event
+  const payload: { [key: string]: any } = {}
+  try {
+    payload.parentId = item.transactionId
+    payload.hasCommission = item.refundCommission
+    payload.amount = item.selectedAmount.type === 'TOTAL' ? item.selectedAmount.total : item.selectedAmount.partial
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-    // TODO: El mensaje debe ser 'The transaction details id {id} was created'
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
+    onClose(false)
   }
   catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
   finally {
     loadingSaveAll.value = false
-  } */
+  }
 }
 
 function saveSubmit(event: Event) {
@@ -220,7 +214,7 @@ function handleRefundTypeChange(value: any) {
     item.value.selectedAmount.total = props.parentTransaction.amount
   }
   else {
-    item.value.selectedAmount.total = props.parentTransaction.totalAmount
+    item.value.selectedAmount.total = props.parentTransaction.netAmount
   }
   if (!item.value.selectedAmount.type) {
     item.value.selectedAmount.type = 'TOTAL'
@@ -228,13 +222,14 @@ function handleRefundTypeChange(value: any) {
 }
 
 watch(() => item.value, async (newValue) => {
-  if (newValue && dialogVisible.value) {
+  if (newValue && newValue.refundType && dialogVisible.value) {
     requireConfirmationToSave(newValue)
   }
 })
 
 watch(() => props.openDialog, (newValue) => {
   dialogVisible.value = newValue
+  console.log('dialogVisible', newValue)
   if (newValue) {
     clearForm()
   }
@@ -248,7 +243,7 @@ watch(() => props.openDialog, (newValue) => {
     header="Refund Transaction Details"
     class="w-10 lg:w-6 card p-0"
     content-class="border-round-bottom border-top-1 surface-border pb-0"
-    @hide="onClose(false)"
+    @hide="onClose(true)"
   >
     <div class="mt-4 p-4">
       <EditFormV2

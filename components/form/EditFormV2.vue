@@ -272,6 +272,40 @@ watch(() => props.forceSave, () => {
               <Skeleton v-else height="7rem" />
             </span>
 
+            <span v-else-if="field.dataType === 'fileupload'">
+              <FileUpload
+                v-if="!loadingSave" :max-file-size="1000000" :multiple="false" auto custom-upload
+                @uploader="customBase64Uploader($event, fieldValues, field.field)"
+              >
+                <template #header="{ chooseCallback }">
+                  <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
+                    <div class="flex gap-2">
+                      <Button id="btn-choose" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
+                      <Button icon="pi pi-times" class="ml-2" severity="danger" :disabled="!objFile" text @click="clearFile(fieldValues, field.field)" />
+                    </div>
+                  </div>
+                </template>
+                <template #content="{ files }">
+                  <ul v-if="files[0] || fieldValues[field.field]" class="list-none p-0 m-0">
+                    <li class="p-3 surface-border flex align-items-start sm:align-items-center">
+
+                      <div class="flex flex-column">
+                        <span class="text-900 font-semibold text-xl mb-2">{{ fieldValues[field.field].name }}</span>
+                        <span class="text-900 font-medium">
+                          <Badge severity="warning">
+                            {{ formatSize(fieldValues[field.field].size) }}
+                          </Badge>
+                        </span>
+                      </div>
+                    </li>
+                  </ul>
+                </template>
+              </FileUpload>
+
+              <Skeleton v-else height="7rem" />
+
+            </span>
+
             <span v-else-if="field.dataType === 'check'">
               <Checkbox
                 v-model="fieldValues[field.field]"

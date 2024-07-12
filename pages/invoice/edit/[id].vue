@@ -501,49 +501,19 @@ onMounted(async () => {
       :loading-save="loadingSaveAll" :loading-delete="loadingDelete" @cancel="clearForm"
       @delete="requireConfirmationToDelete($event)" container-class="flex flex-row justify-content-evenly card w-full">
 
-      <template #field-hotel="{ item: data, onUpdate }">
-        <DebouncedAutoCompleteComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="data.hotel"
-                :suggestions="hotelList"
-                @change="($event) => {
-                  onUpdate('hotel', $event)
-                }"
-                @load="($event) => getHotelList($event)"
-                >
-                <template #option="props">
-      
-                  <span>{{ props.item.code }} - {{ props.item.name }}</span>
-      
-      
-                </template>
-              </DebouncedAutoCompleteComponent>
-      </template>
-      <template #field-agency="{ item: data, onUpdate }">
-        <DebouncedAutoCompleteComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="data.agency"
-                :suggestions="agencyList"
-                @change="($event) => {
-                  onUpdate('agency', $event)
-                }"
-                @load="($event) => getAgencyList($event)"
-                >
-                <template #option="props">
-      
-                  <span>{{ props.item.code }} - {{ props.item.name }}</span>
-      
-      
-                </template>
-              </DebouncedAutoCompleteComponent>
-      </template>
-     <template #field-invoiceType="{ item: data, onUpdate }">
+       <template #field-invoiceDate="{ item: data, onUpdate }">
+        <Calendar
+          v-if="!loadingSaveAll"
+          v-model="data.invoiceDate"
+          date-format="yy-mm-dd"
+          :max-date="new Date()"
+          @update:model-value="($event) => {
+            onUpdate('invoiceDate', $event)
+          }"
+        />
+</template>
+
+      <template #field-invoiceType="{ item: data, onUpdate }">
         <Dropdown
           v-if="!loadingSaveAll"
           v-model="data.invoiceType"
@@ -555,8 +525,49 @@ onMounted(async () => {
           @update:model-value="($event) => {
             onUpdate('invoiceType', $event)
           }"
-        />
+        >
+          <template #option="props">
+            {{ props.option?.code }}-{{ props.option?.name }}
+          </template>
+          <template #value="props">
+            {{ props.value?.code }}-{{ props.value?.name }}
+          </template>
+        </Dropdown>
         <Skeleton v-else height="2rem" class="mb-2" />
+      </template>
+      <template #field-hotel="{ item: data, onUpdate }">
+        <DebouncedAutoCompleteComponent
+          v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+          :model="data.hotel" :suggestions="hotelList" @change="($event) => {
+            onUpdate('hotel', $event)
+          }" @load="($event) => getHotelList($event)"
+        >
+          <template #option="props">
+            <span>{{ props.item.code }} - {{ props.item.name }}</span>
+          </template>
+          <template #chip="{ value }">
+            <div>
+              {{ value?.code }}-{{ value?.name }}
+            </div>
+          </template>
+        </DebouncedAutoCompleteComponent>
+      </template>
+      <template #field-agency="{ item: data, onUpdate }">
+        <DebouncedAutoCompleteComponent
+          v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+          :model="data.agency" :suggestions="agencyList"  @change="($event) => {
+            onUpdate('agency', $event)
+          }" @load="($event) => getAgencyList($event)"
+        >
+          <template #option="props">
+            <span>{{ props.item.code }} - {{ props.item.name }}</span>
+          </template>
+          <template #chip="{ value }">
+            <div>
+              {{ value?.code }}-{{ value?.name }}
+            </div>
+          </template>
+        </DebouncedAutoCompleteComponent>
       </template>
 
       <template #form-footer="props">
@@ -568,7 +579,7 @@ onMounted(async () => {
             :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
              :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate"
-            :is-creation-dialog="false" :selected-invoice="selectedInvoice as any"  :active="active" :set-active="($event) => { active = $event }"
+            :is-creation-dialog="false" :selected-invoice="selectedInvoice as any"  :active="active" :set-active="($event) => { active = $event }" :showTotals="true"
             
           />
          
@@ -610,7 +621,7 @@ onMounted(async () => {
     </EditFormV2WithContainer>
 
  <div v-if="attachmentDialogOpen">
-          <AttachmentDialog  :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Master Invoice Attachment"  :open-dialog="attachmentDialogOpen" :selected-invoice="selectedInvoice" />
+          <AttachmentDialog  :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Master Invoice Attachment"  :open-dialog="attachmentDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
         </div>
 
     

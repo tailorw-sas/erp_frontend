@@ -5,12 +5,9 @@ import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import dayjs from 'dayjs'
-import getUrlByImage from '~/composables/files'
-import { ModulesService } from '~/services/modules-services'
+
 import { GenericService } from '~/services/generic-services'
-import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoiceTabView from '~/components/invoice/InvoiceTabView/InvoiceTabView.vue'
@@ -70,6 +67,8 @@ const confinvoiceTypeListtApi = reactive({
 //
 const confirm = useConfirm()
 const formReload = ref(0)
+
+const invoiceAmount = ref(0)
 
 const idItem = ref('')
 const filterToSearch = ref<IData>({
@@ -208,7 +207,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.invoiceAmount = 0.00
     payload.hotel = item.hotel?.id
     payload.agency = item.agency?.id
-    payload.invoiceType = item.invoiceType?.id
+    payload.invoiceType = route.query.type
     payload.id = v4()
 
     for (let i = 0; i < bookingList?.value?.length; i++) {
@@ -265,28 +264,17 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
-  if (idItem.value) {
-    try {
-      await updateItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The invoice was updated created successfully', life: 10000 })
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-    idItem.value = ''
+
+  try {
+    await createItem(item)
+    navigateTo('/invoice')
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The invoice was created successfully', life: 10000 })
   }
-  else {
-    try {
-      await createItem(item)
-      navigateTo('/invoice')
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The invoice was created successfully', life: 10000 })
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
+  catch (error: any) {
+    successOperation = false
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
+
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
@@ -355,7 +343,7 @@ function openAdjustmentDialog(roomRate?: any) {
 }
 
 function addBooking(booking: any) {
-  bookingList.value = [...bookingList.value, booking]
+  bookingList.value = [...bookingList.value, { ...booking, nights: dayjs(booking?.checkOut).diff(dayjs(booking?.checkIn), 'day', false) }]
   roomRateList.value = [...roomRateList.value, {
     checkIn: new Date(booking?.checkIn),
     checkOut: new Date(booking?.checkOut),
@@ -367,14 +355,58 @@ function addBooking(booking: any) {
     rateChild: booking?.rateChild,
     hotelAmount: booking?.hotelAmount,
     remark: booking?.description,
-    booking: booking?.id
+    booking: booking?.id,
+    nights: dayjs(booking?.checkOut).diff(dayjs(booking?.checkIn), 'day', false)
   }]
+
+  calcInvoiceAmount()
+}
+
+async function getItemById(id: any) {
+  if (id) {
+    idItem.value = id
+    loadingSaveAll.value = true
+    try {
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+
+      if (response) {
+        item.value.id = response.id
+        item.value.invoice_id = response.invoice_id
+        item.value.invoiceNumber = response.invoiceNumber
+        item.value.invoiceDate = new Date(response.invoiceDate)
+        item.value.isManual = response.isManual
+        item.value.invoiceAmount = response.invoiceAmount
+        item.value.hotel = response.hotel
+        item.value.agency = response.agency
+        item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
+      }
+
+      formReload.value += 1
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+      }
+    }
+    finally {
+      loadingSaveAll.value = false
+    }
+  }
+}
+
+function calcInvoiceAmount() {
+  invoiceAmount.value = 0
+
+  bookingList.value.forEach((b) => {
+    invoiceAmount.value += +b?.invoiceAmount
+  })
 }
 
 function updateBooking(booking: any) {
   const index = bookingList.value.findIndex(item => item.id === booking.id)
 
   bookingList.value[index] = booking
+  calcInvoiceAmount()
 }
 
 function addRoomRate(booking: any) {
@@ -408,12 +440,16 @@ onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
   item.value.invoiceType = ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
+
+  if (route.query.type === ENUM_INVOICE_TYPE[2]?.id && route.query.selected) {
+    await getItemById(route.query.selected)
+  }
 })
 </script>
 
 <template>
   <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-    {{ OBJ_INVOICE_TITLE[String(route.query.type)] }}
+    {{ OBJ_INVOICE_TITLE[String(route.query.type)] }} {{ route.query.type === ENUM_INVOICE_TYPE[2]?.id ? item?.invoice_id : "" }}
   </div>
   <div cactiveTab>
     <EditFormV2WithContainer
@@ -421,6 +457,24 @@ onMounted(async () => {
       :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="flex flex-row justify-content-evenly card w-full"
       @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
     >
+      <template #field-invoiceDate="{ item: data, onUpdate }">
+        <Calendar
+          v-if="!loadingSaveAll"
+          v-model="data.invoiceDate"
+          date-format="yy-mm-dd"
+          :max-date="new Date()"
+          @update:model-value="($event) => {
+            onUpdate('invoiceDate', $event)
+          }"
+        />
+      </template>
+      <template #field-invoiceAmount="{ onUpdate, item: data }">
+        <InputText
+          v-model="invoiceAmount"
+          show-clear :disabled="true"
+          @update:model-value="onUpdate('invoiceAmount', $event)"
+        />
+      </template>
       <template #field-invoiceType="{ item: data, onUpdate }">
         <Dropdown
           v-if="!loadingSaveAll"
@@ -433,7 +487,14 @@ onMounted(async () => {
           @update:model-value="($event) => {
             onUpdate('invoiceType', $event)
           }"
-        />
+        >
+          <template #option="props">
+            {{ props.option?.code }}-{{ props.option?.name }}
+          </template>
+          <template #value="props">
+            {{ props.value?.code }}-{{ props.value?.name }}
+          </template>
+        </Dropdown>
         <Skeleton v-else height="2rem" class="mb-2" />
       </template>
       <template #field-hotel="{ item: data, onUpdate }">
@@ -446,6 +507,11 @@ onMounted(async () => {
           <template #option="props">
             <span>{{ props.item.code }} - {{ props.item.name }}</span>
           </template>
+          <template #chip="{ value }">
+            <div>
+              {{ value?.code }}-{{ value?.name }}
+            </div>
+          </template>
         </DebouncedAutoCompleteComponent>
       </template>
       <template #field-agency="{ item: data, onUpdate }">
@@ -457,6 +523,11 @@ onMounted(async () => {
         >
           <template #option="props">
             <span>{{ props.item.code }} - {{ props.item.name }}</span>
+          </template>
+          <template #chip="{ value }">
+            <div>
+              {{ value?.code }}-{{ value?.name }}
+            </div>
           </template>
         </DebouncedAutoCompleteComponent>
       </template>
@@ -477,7 +548,19 @@ onMounted(async () => {
           />
 
           <div>
-            <div class="flex justify-content-end">
+            <div v-if="route.query.type === ENUM_INVOICE_TYPE[2]?.id" class="flex justify-content-end">
+              <Button
+                v-tooltip.top="'Apply'" class="w-3rem mx-1" icon="pi pi-check" :loading="loadingSaveAll" :disabled="bookingList.length === 0" @click="() => {
+                  saveItem(props.item.fieldValues)
+                }"
+              />
+              <Button
+                v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
+                :loading="loadingSaveAll" @click="handleDialogOpen()"
+              />
+              <Button v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="goToList" />
+            </div>
+            <div v-else class="flex justify-content-end">
               <Button
                 v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll" :disabled="bookingList.length === 0" @click="() => {
                   saveItem(props.item.fieldValues)
@@ -490,7 +573,7 @@ onMounted(async () => {
 
               <Button
                 v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
+                :loading="loadingSaveAll" disabled @click="handleAttachmentDialogOpen()"
               />
               <Button
                 v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-file"
@@ -510,7 +593,7 @@ onMounted(async () => {
           </div>
         </div>
         <div v-if="attachmentDialogOpen">
-          <AttachmentDialog :add-item="addAttachment" :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="true" header="Master Invoice Attachment" :list-items="attachmentList" :open-dialog="attachmentDialogOpen" :update-item="updateAttachment" selected-invoice="" />
+          <AttachmentDialog :add-item="addAttachment" :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="true" header="Master Invoice Attachment" :list-items="attachmentList" :open-dialog="attachmentDialogOpen" :update-item="updateAttachment" selected-invoice="" :selected-invoice-obj="{}" />
         </div>
       </template>
     </EditFormV2WithContainer>

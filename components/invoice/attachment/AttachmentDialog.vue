@@ -41,8 +41,14 @@ const props = defineProps({
   selectedInvoice: {
     type: String,
     required: true
+  },
+  selectedInvoiceObj: {
+    type: Object,
+    required: true
   }
 })
+
+const invoice = ref(props.selectedInvoiceObj)
 
 const attachmentTypeList = ref<any[]>([])
 const confattachmentTypeListApi = reactive({
@@ -54,6 +60,8 @@ const formReload = ref(0)
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 
+console.log(invoice.value)
+
 const loadingDelete = ref(false)
 
 const idItem = ref('')
@@ -63,7 +71,10 @@ const item = ref<GenericObject>({
   file: '',
   remark: '',
   invoice: props.selectedInvoice,
-  attachment_id: ''
+  attachment_id: '',
+  resource: invoice.value.invoice_id,
+  // @ts-expect-error
+  resourceType: `${invoice.value.invoiceType?.name || OBJ_ENUM_INVOICE[invoice.value.invoiceType]}`
 })
 
 const itemTemp = ref<GenericObject>({
@@ -72,7 +83,9 @@ const itemTemp = ref<GenericObject>({
   file: '',
   remark: '',
   invoice: props.selectedInvoice,
-  attachment_id: ''
+  attachment_id: '',
+  resource: '',
+  resourceType: '',
 })
 const toast = useToast()
 
@@ -80,7 +93,7 @@ const Fields: Array<Container> = [
   {
     childs: [
       {
-        field: 'invoice.invoice_id',
+        field: 'resource',
         header: 'Resource',
         dataType: 'number',
         class: 'field col-12 md: required',
@@ -88,9 +101,9 @@ const Fields: Array<Container> = [
         disabled: true
       },
       {
-        field: 'invoice.invoiceType',
+        field: 'resourceType',
         header: 'Resource Type',
-        dataType: 'number',
+        dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
         disabled: true
@@ -148,7 +161,7 @@ const Columns: IColumn[] = [
   { field: 'attachment_id', header: 'Id', type: 'text', width: '200px' },
   { field: 'type', header: 'Type', type: 'select', width: '200px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '200px' },
-  { field: 'remark', header: 'Remark', width: '200px' },
+  { field: 'remark', header: 'Remark', type: 'text', width: '200px' },
 
 ]
 
@@ -220,10 +233,7 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, room_rate_id: iterator?.roomRate?.room_rate_id }]
-    }
-    if (ListItems.value.length > 0) {
-      idItemToLoadFirstTime.value = ListItems.value[0].id
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false }]
     }
   }
   catch (error) {
@@ -305,8 +315,6 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
 
-  console.log(idItem)
-
   if (idItem.value) {
     try {
       if (props.isCreationDialog) {
@@ -339,6 +347,7 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
+    getList()
   }
 }
 
@@ -408,6 +417,10 @@ function requireConfirmationToSave(item: any) {
   })
 }
 
+watch(() => props.selectedInvoiceObj, () => {
+  invoice.value = props.selectedInvoiceObj
+})
+
 onMounted(() => {
   if (props.selectedInvoice) {
     Payload.value.filter = [{
@@ -439,15 +452,11 @@ onMounted(() => {
                   <div class="flex align-items-center gap-2">
                     <label for="email">Invoice:</label>
                     <div class="w-full lg:w-auto">
-                      <IconField icon-position="left" class="w-full">
-                        <InputText type="text" placeholder="Search" class="w-full" />
+                      <IconField v-model="invoice.invoice_id" icon-position="left" class="w-full">
+                        <InputText v-model="invoice.invoice_id" type="text" placeholder="Search" disabled class="w-full" />
                         <InputIcon class="pi pi-search" />
                       </IconField>
                     </div>
-                  </div>
-                  <div class="flex align-items-center">
-                    <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch" @click="searchAndFilter" />
-                    <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :loading="loadingSearch" @click="clearFilterToSearch" />
                   </div>
                 </div>
               </AccordionTab>
@@ -457,6 +466,7 @@ onMounted(() => {
             :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns"
             :options="options" :pagination="Pagination"
             @update:clicked-item="getItemById($event)"
+            @open-edit-dialog="getItemById($event)"
             @on-confirm-create="clearForm"
             @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
           />

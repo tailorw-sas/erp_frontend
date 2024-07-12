@@ -1,14 +1,15 @@
-import type { IFilter, IStandardObject } from '~/components/fields/interfaces/IFieldInterfaces'
-
 export interface IColumn {
   field: string
   header: string
-  type?: 'text' | 'obj' | 'bool' | 'select' | 'local-select' | 'date' | 'image' | 'icon'
+  type?: 'text' | 'obj' | 'bool' | 'select' | 'local-select' | 'date' | 'image' | 'icon' | 'custom-badge'
   tooltip?: string
   widthTruncate?: string
   sortable?: boolean
   width?: string
   icon?: string
+  badge?: {
+    color: string
+  }
   objApi?: {
     moduleApi: string
     uriApi: string
@@ -21,6 +22,7 @@ export interface IColumn {
     id: string
     name: string
   }[]
+  statusClassMap?: IStatusClass[]
 }
 
 export interface IPagination {
@@ -68,4 +70,9 @@ export interface IOperator {
 export interface IOperatorBool {
   IS_TRUE: string
   IS_FALSE: string
+}
+
+export interface IStatusClass {
+  status: string
+  class: string
 }

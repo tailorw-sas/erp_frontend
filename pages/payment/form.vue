@@ -66,7 +66,7 @@ const columns: IColumn[] = [
 ]
 
 const formTitle = computed(() => {
-  return idItem.value ? 'Payment Edit' : 'Payment Create'
+  return idItem.value ? 'Payment Edit' : 'New Payment'
 })
 
 const decimalRegex = /^-?\d+(\.\d+)?$/
@@ -458,6 +458,7 @@ async function getItemById(id: string) {
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
       if (response) {
+        item.value.id = id
         item.value.paymentId = response.paymentId
         item.value.reference = response.reference
         item.value.transactionDate = response.transactionDate
@@ -951,17 +952,18 @@ onMounted(async () => {
 
   <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
     <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="saveSubmit($event)" />
-    <Button v-tooltip.top="'New Detail'" class="w-3rem mx-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="secondary" @click="openDialogPaymentDetails($event)" />
-    <Button v-tooltip.top="'Delete'" class="w-3rem" severity="secondary" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" />
+    <Button v-tooltip.top="'New Detail'" class="w-3rem mx-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
+    <Button v-tooltip.top="'Delete'" class="w-3rem" outlined severity="danger" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" />
     <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
-    <Button v-tooltip.top="'Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip" severity="secondary" @click="handleAttachmentDialogOpen" />
-    <!-- <Button v-tooltip.top="'Go Back'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="goToList" /> -->
+    <Button v-tooltip.top="'Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
+    <Button v-tooltip.top="'Go Back'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="goToList" />
   </div>
   <DialogPaymentDetailForm
     :key="dialogPaymentDetailFormReload"
     :visible="onOffDialogPaymentDetail"
     :fields="fieldPaymentDetails"
     :item="itemDetails"
+    :selected-payment="item"
     @update:visible="onOffDialogPaymentDetail = $event"
     @save="saveAndReload($event)"
   />
@@ -974,7 +976,7 @@ onMounted(async () => {
       :list-items="attachmentList"
       :open-dialog="attachmentDialogOpen"
       :update-item="updateAttachment"
-      selected-invoice=""
+      :selected-payment="item"
     />
   </div>
 </template>
