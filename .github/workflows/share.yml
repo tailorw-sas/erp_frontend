@@ -32,4 +32,4 @@ jobs:
       - name: Publish package
         run: cd share && mvn --batch-mode deploy
         env:
-          GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
