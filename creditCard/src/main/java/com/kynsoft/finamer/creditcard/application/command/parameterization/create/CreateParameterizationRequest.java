@@ -8,4 +8,5 @@ public class CreateParameterizationRequest {
     private String transactionStatusCode;
     private String transactionCategory;
     private String transactionSubCategory;
+    private String refundTransactionStatusCode;
 }

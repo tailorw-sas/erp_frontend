@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageEmployee.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateEmployeePermissionKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageEmployeeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
@@ -14,17 +15,19 @@ import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmployeePh
 import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmproyeeEmailMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmproyeeLoginNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.*;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.employeePermission.ProducerUpdateEmployeePermissionService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageEmployee.ProducerUpdateManageEmployeeService;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateManageEmployeeCommandHandler implements ICommandHandler<UpdateManageEmployeeCommand> {
-    
+
     private final IManageEmployeeService service;
 
     private final IManageDepartmentGroupService serviceDepartment;
@@ -41,14 +44,17 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
 
     private final ProducerUpdateManageEmployeeService producerUpdateManageEmployeeService;
 
+    private final ProducerUpdateEmployeePermissionService producerUpdateEmployeePermissionService;
+
     public UpdateManageEmployeeCommandHandler(IManageEmployeeService service,
-                                              IManageDepartmentGroupService serviceDepartment,
-                                              IManagePermissionService permissionService,
-                                              IManageAgencyService agencyService,
-                                              IManageHotelService hotelService,
-                                              IManageTradingCompaniesService tradingCompaniesService, 
-                                              IManageReportService reportService,
-                                              ProducerUpdateManageEmployeeService producerUpdateManageEmployeeService) {
+            IManageDepartmentGroupService serviceDepartment,
+            IManagePermissionService permissionService,
+            IManageAgencyService agencyService,
+            IManageHotelService hotelService,
+            IManageTradingCompaniesService tradingCompaniesService,
+            IManageReportService reportService,
+            ProducerUpdateManageEmployeeService producerUpdateManageEmployeeService,
+            ProducerUpdateEmployeePermissionService producerUpdateEmployeePermissionService) {
         this.service = service;
         this.serviceDepartment = serviceDepartment;
         this.permissionService = permissionService;
@@ -57,6 +63,7 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
         this.tradingCompaniesService = tradingCompaniesService;
         this.reportService = reportService;
         this.producerUpdateManageEmployeeService = producerUpdateManageEmployeeService;
+        this.producerUpdateEmployeePermissionService = producerUpdateEmployeePermissionService;
     }
 
     @Override
@@ -96,6 +103,11 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
         if (update.getUpdate() > 0) {
             this.service.update(test);
             this.producerUpdateManageEmployeeService.update(new UpdateManageEmployeeKafka(test.getId(), test.getFirstName(), test.getLastName(), test.getEmail()));
+
+            List<UUID> permissions = test.getManagePermissionList().stream()
+                    .map(ManagePermissionDto::getId)
+                    .collect(Collectors.toList());
+            this.producerUpdateEmployeePermissionService.update(new UpdateEmployeePermissionKafka(test.getId(), permissions));
         }
 
     }
@@ -142,6 +154,7 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
         }
         return false;
     }
+
     private boolean updateHotel(Consumer<List<ManageHotelDto>> setter, List<UUID> newValue, List<UUID> oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             List<ManageHotelDto> dtoList = hotelService.findByIds(newValue);

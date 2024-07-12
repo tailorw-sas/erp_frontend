@@ -47,6 +47,7 @@ public class ManageAgencyResponse implements IResponse {
     private ManagerB2BPartnerResponse sentB2BPartner;
     private ManagerCountryResponse country;
     private ManageCityStateResponse cityState;
+    private Boolean isDefault;
 
     public ManageAgencyResponse(ManageAgencyDto dto){
         this.id = dto.getId();
@@ -78,5 +79,6 @@ public class ManageAgencyResponse implements IResponse {
         this.sentB2BPartner = dto.getSentB2BPartner() != null ? new ManagerB2BPartnerResponse(dto.getSentB2BPartner()) : null;
         this.country = dto.getCountry() != null ? new ManagerCountryResponse(dto.getCountry()) : null;
         this.cityState = dto.getCityState() != null ? new ManageCityStateResponse(dto.getCityState()) : null;
+        this.isDefault = dto.getIsDefault();
     }
 }

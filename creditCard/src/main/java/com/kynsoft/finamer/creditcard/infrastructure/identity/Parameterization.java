@@ -38,6 +38,9 @@ public class Parameterization implements Serializable {
     @Column(name = "transaction_sub_category")
     private String transactionSubCategory;
 
+    @Column(name = "refund_transaction_status_code")
+    private String refundTransactionStatusCode;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -48,11 +51,14 @@ public class Parameterization implements Serializable {
         this.transactionStatusCode = dto.getTransactionStatusCode();
         this.transactionCategory = dto.getTransactionCategory();
         this.transactionSubCategory = dto.getTransactionSubCategory();
+        this.refundTransactionStatusCode = dto.getRefundTransactionStatusCode();
     }
 
     public ParameterizationDto toAggregate(){
         return new ParameterizationDto(
-                id, isActive, transactionStatusCode, transactionCategory, transactionSubCategory
+                id, isActive, transactionStatusCode,
+                transactionCategory, transactionSubCategory,
+                refundTransactionStatusCode
         );
     }
 

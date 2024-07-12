@@ -25,4 +25,6 @@ public interface IPermissionService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<PermissionDto> findAll();
+
+    List<PermissionDto> findByIds(List<UUID> ids);
 }

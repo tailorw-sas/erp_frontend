@@ -74,6 +74,11 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
+    public boolean existByCode(String code) {
+        return repositoryQuery.existsManageHotelByCode(code);
+    }
+
+    @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }

@@ -45,4 +45,5 @@ public class ManageAgencyDto {
     private ManagerB2BPartnerDto sentB2BPartner;
     private ManagerCountryDto country;
     private ManageCityStateDto cityState;
+    private Boolean isDefault;
 }

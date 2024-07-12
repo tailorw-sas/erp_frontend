@@ -21,6 +21,7 @@ import java.util.UUID;
 public class ManageInvoiceDto {
     private UUID id;
     private Long invoice_id;
+    private Long invoiceNo;
     private String invoiceNumber;
     private LocalDateTime invoiceDate;
     private LocalDateTime dueDate;

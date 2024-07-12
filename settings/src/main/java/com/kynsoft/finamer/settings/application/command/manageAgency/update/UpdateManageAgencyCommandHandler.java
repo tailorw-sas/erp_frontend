@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.*;
+import com.kynsoft.finamer.settings.domain.rules.manageAgency.ManageAgencyDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.*;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerUpdateManageAgencyService;
 import org.springframework.stereotype.Component;
@@ -44,7 +45,9 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     @Override
     public void handle(UpdateManageAgencyCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Agency Type ID cannot be null."));
-
+        if(command.getIsDefault()) {
+            RulesChecker.checkRule(new ManageAgencyDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
         ManageAgencyDto dto = service.findById(command.getId());
         ConsumerUpdate update = new ConsumerUpdate();
 
@@ -77,6 +80,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setBookingCouponFormat, command.getBookingCouponFormat(), dto.getBookingCouponFormat(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCity, command.getCity(), dto.getCity(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setIsDefault, command.getIsDefault(), dto.getIsDefault(), update::setUpdate);
     }
 
     private void updateRelationships(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {

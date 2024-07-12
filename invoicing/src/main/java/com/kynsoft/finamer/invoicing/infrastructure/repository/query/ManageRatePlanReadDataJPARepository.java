@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ManageRatePlanReadDataJPARepository extends JpaRepository<ManageRatePlan, UUID>,
@@ -16,7 +17,11 @@ public interface ManageRatePlanReadDataJPARepository extends JpaRepository<Manag
 
     Page<ManageRatePlan> findAll(Specification specification, Pageable pageable);
 
+    Optional<ManageRatePlan> findManageRatePlanByCode(String code);
+
     @Query("SELECT COUNT(b) FROM ManageRatePlan b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    boolean existsManageRatePlanByCode(String code);
 
 }

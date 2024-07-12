@@ -20,4 +20,6 @@ public interface IManageAgencyService {
     Long countByCodeAndNotId(String code, UUID id);
 
     List<ManageAgencyDto> findByIds(List<UUID> ids);
+
+    boolean existByCode(String manageHotelCode);
 }

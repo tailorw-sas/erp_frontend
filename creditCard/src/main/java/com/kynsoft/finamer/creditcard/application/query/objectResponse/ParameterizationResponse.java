@@ -20,6 +20,7 @@ public class ParameterizationResponse implements IResponse {
     private String transactionStatusCode;
     private String transactionCategory;
     private String transactionSubCategory;
+    private String refundTransactionStatusCode;
 
     public ParameterizationResponse(ParameterizationDto dto){
         this.id = dto.getId();
@@ -27,5 +28,6 @@ public class ParameterizationResponse implements IResponse {
         this.transactionStatusCode = dto.getTransactionStatusCode();
         this.transactionCategory = dto.getTransactionCategory();
         this.transactionSubCategory = dto.getTransactionSubCategory();
+        this.refundTransactionStatusCode = dto.getRefundTransactionStatusCode();
     }
 }

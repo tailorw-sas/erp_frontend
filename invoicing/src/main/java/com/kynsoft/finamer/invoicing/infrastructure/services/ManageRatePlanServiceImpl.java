@@ -64,6 +64,19 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_RATE_PLAN_NOT_FOUND, new ErrorField("id", "Manage Rate Plan not found.")));
     }
 
+    @Override
+    public ManageRatePlanDto findByCode(String code) {
+        Optional<ManageRatePlan> userSystem = this.repositoryQuery.findManageRatePlanByCode(code);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_RATE_PLAN_NOT_FOUND, new ErrorField("code", "Manage Rate Plan not found.")));
+    }
+
+    @Override
+    public boolean existByCode(String code) {
+        return repositoryQuery.existsManageRatePlanByCode(code);
+    }
 
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

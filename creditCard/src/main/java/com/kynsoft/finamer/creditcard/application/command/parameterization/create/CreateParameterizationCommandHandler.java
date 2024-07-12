@@ -23,13 +23,15 @@ public class CreateParameterizationCommandHandler implements ICommandHandler<Cre
         if(Objects.isNull(actual)){
             this.service.create(new ParameterizationDto(
                     command.getId(), true, command.getTransactionStatusCode(),
-                    command.getTransactionCategory(), command.getTransactionSubCategory()
+                    command.getTransactionCategory(), command.getTransactionSubCategory(),
+                    command.getRefundTransactionStatusCode()
             ));
         } else {
             this.service.delete(actual);
             this.service.create(new ParameterizationDto(
                     command.getId(), true, command.getTransactionStatusCode(),
-                    command.getTransactionCategory(), command.getTransactionSubCategory()
+                    command.getTransactionCategory(), command.getTransactionSubCategory(),
+                    command.getRefundTransactionStatusCode()
             ));
         }
     }

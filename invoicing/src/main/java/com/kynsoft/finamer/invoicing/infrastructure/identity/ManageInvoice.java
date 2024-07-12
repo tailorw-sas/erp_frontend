@@ -38,6 +38,10 @@ public class ManageInvoice {
     @Generated(event = EventType.INSERT)
     private Long invoice_id;
 
+    @Column(columnDefinition = "serial", name = "inovice_no")
+    @Generated(event = EventType.INSERT)
+    private Long invoiceNo;
+
     private String invoiceNumber;
 
     private LocalDateTime invoiceDate;
@@ -112,14 +116,16 @@ public class ManageInvoice {
 
     public ManageInvoiceDto toAggregateSample() {
 
-        return new ManageInvoiceDto(id, invoice_id, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount,
+        return new ManageInvoiceDto(id, invoice_id, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+                invoiceAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, null, null);
 
     }
 
     public ManageInvoiceDto toAggregate() {
-        return new ManageInvoiceDto(id, invoice_id, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount,
+        return new ManageInvoiceDto(id, invoice_id,
+                invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, bookings != null ? bookings.stream().map(b -> {
                     return b.toAggregateSample();

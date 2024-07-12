@@ -85,6 +85,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         );
 
         double commission = 0;
+        double netAmount = command.getAmount() - commission;
 
         Long id = this.service.create(new TransactionDto(
                 merchantDto,
@@ -106,7 +107,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 transactionStatusDto,
                 null,
                 transactionCategory,
-                transactionSubCategory
+                transactionSubCategory,
+                netAmount
         ));
         command.setId(id);
     }

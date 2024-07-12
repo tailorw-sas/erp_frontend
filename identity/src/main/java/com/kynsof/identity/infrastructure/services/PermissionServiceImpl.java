@@ -118,4 +118,8 @@ public class PermissionServiceImpl implements IPermissionService {
         return this.queryRepository.countByCodeAndNotId(name, id);
     }
 
+    @Override
+    public List<PermissionDto> findByIds(List<UUID> ids) {
+        return this.queryRepository.findAllById(ids).stream().map(Permission::toAggregate).toList();
+    }
 }

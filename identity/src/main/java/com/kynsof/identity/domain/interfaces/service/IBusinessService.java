@@ -29,4 +29,6 @@ public interface IBusinessService {
     Long countByRucAndNotId(String ruc, UUID id);
 
     Long countByNameAndNotId(String name, UUID id);
+
+    List<BusinessDto> findAllBusiness();
 }

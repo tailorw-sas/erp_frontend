@@ -20,4 +20,6 @@ public interface ManageAgencyReadDataJPARepository extends JpaRepository<ManageA
 
     @Query("SELECT COUNT(b) FROM ManageAgency b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    boolean existsManageAgenciesByCode(String code);
 }

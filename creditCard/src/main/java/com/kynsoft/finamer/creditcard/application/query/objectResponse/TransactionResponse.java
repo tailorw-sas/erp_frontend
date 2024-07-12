@@ -39,6 +39,7 @@ public class TransactionResponse implements IResponse {
     private LocalDate transactionDate;
     private ManageVCCTransactionTypeResponse transactionCategory;
     private ManageVCCTransactionTypeResponse transactionSubCategory;
+    private Double netAmount;
 
     public TransactionResponse(TransactionDto dto){
         this.id = dto.getId();
@@ -67,5 +68,6 @@ public class TransactionResponse implements IResponse {
         this.transactionDate = dto.getTransactionDate();
         this.transactionCategory = dto.getTransactionCategory() != null ? new ManageVCCTransactionTypeResponse(dto.getTransactionCategory()) : null;
         this.transactionSubCategory = dto.getTransactionSubCategory() != null ? new ManageVCCTransactionTypeResponse(dto.getTransactionSubCategory()) : null;
+        this.netAmount = dto.getNetAmount();
     }
 }

@@ -152,4 +152,15 @@ public class BusinessServiceImpl implements IBusinessService {
         return repositoryQuery.countByNameAndNotId(name, id);
     }
 
+    @Override
+    public List<BusinessDto> findAllBusiness() {
+        List<Business> businessList = this.repositoryQuery.findAll();
+        List<BusinessDto> businessListDto = new ArrayList<>();
+        for (Business business : businessList) {
+            businessListDto.add(business.toAggregate());
+        }
+
+        return businessListDto;
+    }
+
 }

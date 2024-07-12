@@ -40,4 +40,5 @@ public class CreateManageAgencyRequest {
     private UUID sentB2BPartner;
     private UUID country;
     private UUID cityState;
+    private Boolean isDefault;
 }

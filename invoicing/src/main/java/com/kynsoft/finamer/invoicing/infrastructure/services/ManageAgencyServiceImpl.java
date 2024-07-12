@@ -82,6 +82,11 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
         return repositoryQuery.findAllById(ids).stream().map(ManageAgency::toAggregate).toList();
     }
 
+    @Override
+    public boolean existByCode(String manageHotelCode) {
+        return repositoryQuery.existsManageAgenciesByCode(manageHotelCode);
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

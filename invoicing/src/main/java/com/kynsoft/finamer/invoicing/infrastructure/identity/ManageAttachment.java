@@ -68,6 +68,7 @@ public class ManageAttachment {
 
         this.id = dto.getId();
         this.attachment_id = dto.getAttachment_id();
+        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
         this.filename = dto.getFilename();
         this.file = dto.getFile();
         this.remark = dto.getRemark();

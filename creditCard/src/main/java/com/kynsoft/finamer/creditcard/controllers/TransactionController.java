@@ -10,6 +10,9 @@ import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionRequest;
+import com.kynsoft.finamer.creditcard.application.command.refundTransaction.create.CreateRefundTransactionCommand;
+import com.kynsoft.finamer.creditcard.application.command.refundTransaction.create.CreateRefundTransactionMessage;
+import com.kynsoft.finamer.creditcard.application.command.refundTransaction.create.CreateRefundTransactionRequest;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.getById.FindTransactionByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.GetSearchTransactionQuery;
@@ -39,6 +42,14 @@ public class TransactionController {
     public ResponseEntity<?> createAdjustment(@RequestBody CreateAdjustmentTransactionRequest request){
         CreateAdjustmentTransactionCommand command = CreateAdjustmentTransactionCommand.fromRequest(request);
         CreateAdjustmentTransactionMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refund")
+    public ResponseEntity<?> createRefund(@RequestBody CreateRefundTransactionRequest request){
+        CreateRefundTransactionCommand command = CreateRefundTransactionCommand.fromRequest(request);
+        CreateRefundTransactionMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);
     }
