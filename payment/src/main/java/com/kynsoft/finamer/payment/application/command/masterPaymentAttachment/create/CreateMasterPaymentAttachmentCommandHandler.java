@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.masterPaymentAttachment.
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
@@ -55,6 +56,7 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
             RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, resource.getId()));
         }
 
+        this.updateAttachmentStatusHistory(command.getEmployee(), resource, command.getFileName());
         this.masterPaymentAttachmentService.create(new MasterPaymentAttachmentDto(
                 command.getId(),
                 command.getStatus(),
@@ -65,16 +67,15 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
                 command.getPath(),
                 command.getRemark()
         ));
-        this.updateAttachmentStatusHistory(command.getEmployee(), resource, command.getFileName());
+//        this.updateAttachmentStatusHistory(command.getEmployee(), resource, command.getFileName());
     }
 
     private void updateAttachmentStatusHistory(UUID employee, PaymentDto payment, String fileName) {
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(employee, "id", "Employee ID cannot be null."));
+
+        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(employee);
+
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
-        ManageEmployeeDto employeeDto = null;
-        try {
-            employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
-        } catch (Exception e) {
-        }
         attachmentStatusHistoryDto.setId(UUID.randomUUID());
         attachmentStatusHistoryDto.setDescription("An attachment to the payment was inserted. The file name: " + fileName);
         attachmentStatusHistoryDto.setEmployee(employeeDto);

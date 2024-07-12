@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -20,4 +21,7 @@ public interface TransactionReadDataJPARepository extends JpaRepository<Transact
 
     @Query("SELECT COUNT(r) FROM Transaction r WHERE r.reservationNumber = :reservationNumber AND r.hotel.id = :hotel")
     Long countByReservationNumberAndManageHotelIdAndNotId(@Param("reservationNumber") String reservationNumber, @Param("hotel") UUID hotel);
+
+    @Query("SELECT SUM(t.amount) FROM Transaction t WHERE t.parent.id = :parentId")
+    Optional<Double> findSumOfAmountByParentId(@Param("parentId") Long parentId);
 }

@@ -15,7 +15,6 @@ import com.kynsoft.finamer.settings.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageAgencyWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageAgencyReadDataJPARepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -99,6 +98,11 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     @Override
     public List<ManageAgencyDto> findAll() {
         return repositoryQuery.findAll().stream().map(ManageAgency::toAggregate).collect(Collectors.toList());
+    }
+
+    @Override
+    public Long countByDefaultAndNotId(UUID id) {
+        return this.repositoryQuery.countByDefaultAndNotId(id);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

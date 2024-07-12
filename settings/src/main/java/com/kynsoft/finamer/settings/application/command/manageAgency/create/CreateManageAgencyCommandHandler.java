@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicateManageAgencyKafka;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.rules.manageAgency.ManageAgencyCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageAgency.ManageAgencyCodeSizeRule;
+import com.kynsoft.finamer.settings.domain.rules.manageAgency.ManageAgencyDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageAgency.ManageAgencyNameMustBeNull;
 import com.kynsoft.finamer.settings.domain.services.*;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerReplicateManageAgencyService;
@@ -45,7 +46,9 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
         RulesChecker.checkRule(new ManageAgencyCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManageAgencyNameMustBeNull(command.getName()));
         RulesChecker.checkRule(new ManageAgencyCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
-
+        if(command.getIsDefault()) {
+            RulesChecker.checkRule(new ManageAgencyDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
         ManageAgencyTypeDto agencyTypeDto = this.agencyTypeService.findById(command.getAgencyType());
         ManagerCountryDto countryDto = this.countryService.findById(command.getCountry());
         ManageCityStateDto cityStateDto = this.cityStateService.findById(command.getCityState());
@@ -67,7 +70,8 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
                 clientDto,
                 b2BPartnerDto,
                 countryDto,
-                cityStateDto));
+                cityStateDto,
+                command.getIsDefault()));
 
         this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(command.getId(),
                 command.getCode(), command.getName(), command.getClient()));

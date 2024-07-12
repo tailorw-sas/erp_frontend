@@ -72,6 +72,21 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "Room type not found.")));
     }
 
+    @Override
+    public ManageRoomTypeDto findByCode(String code) {
+        Optional<ManageRoomType> optionalEntity = repositoryQuery.findManageRoomTypeByCode(code);
+
+        if(optionalEntity.isPresent()){
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Room type not found.")));
+    }
+
+    @Override
+    public boolean existByCode(String code) {
+        return repositoryQuery.existsManageRoomTypeByCode(code);
+    }
 
 
     @Override

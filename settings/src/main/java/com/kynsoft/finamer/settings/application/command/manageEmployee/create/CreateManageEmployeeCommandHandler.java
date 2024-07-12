@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageEmployee.create;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateEmployeePermissionKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageEmployeeKafka;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmployeeEmailSizeRule;
@@ -9,10 +10,13 @@ import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmployeePh
 import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmproyeeEmailMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageEmployee.ManageEmproyeeLoginNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.*;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.employeePermission.ProducerReplicateEmployeePermissionService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageEmployee.ProducerReplicateManageEmployeeService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class CreateManageEmployeeCommandHandler implements ICommandHandler<CreateManageEmployeeCommand> {
@@ -32,14 +36,17 @@ public class CreateManageEmployeeCommandHandler implements ICommandHandler<Creat
 
     private final ProducerReplicateManageEmployeeService producerReplicateManageEmployeeService;
 
+    private final ProducerReplicateEmployeePermissionService producerReplicateEmployeePermissionService;
+
     public CreateManageEmployeeCommandHandler(IManageEmployeeService service,
-                                              IManageDepartmentGroupService serviceDepartment, 
-                                              IManagePermissionService permissionService, 
-                                              IManageAgencyService agencyService, 
-                                              IManageHotelService hotelService, 
-                                              IManageTradingCompaniesService tradingCompaniesService, 
-                                              IManageReportService reportService,
-                                              ProducerReplicateManageEmployeeService producerReplicateManageEmployeeService) {
+            IManageDepartmentGroupService serviceDepartment,
+            IManagePermissionService permissionService,
+            IManageAgencyService agencyService,
+            IManageHotelService hotelService,
+            IManageTradingCompaniesService tradingCompaniesService,
+            IManageReportService reportService,
+            ProducerReplicateManageEmployeeService producerReplicateManageEmployeeService,
+            ProducerReplicateEmployeePermissionService producerReplicateEmployeePermissionService) {
         this.service = service;
         this.serviceDepartment = serviceDepartment;
         this.permissionService = permissionService;
@@ -48,6 +55,7 @@ public class CreateManageEmployeeCommandHandler implements ICommandHandler<Creat
         this.tradingCompaniesService = tradingCompaniesService;
         this.reportService = reportService;
         this.producerReplicateManageEmployeeService = producerReplicateManageEmployeeService;
+        this.producerReplicateEmployeePermissionService = producerReplicateEmployeePermissionService;
     }
 
     @Override
@@ -83,5 +91,10 @@ public class CreateManageEmployeeCommandHandler implements ICommandHandler<Creat
                 reportList
         ));
         this.producerReplicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(command.getId(), command.getFirstName(), command.getLastName(), command.getEmail()));
+
+        List<UUID> permissions = permissionList.stream()
+                                                        .map(ManagePermissionDto::getId)
+                                                        .collect(Collectors.toList());
+        this.producerReplicateEmployeePermissionService.create(new ReplicateEmployeePermissionKafka(command.getId(), permissions));
     }
 }

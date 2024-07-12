@@ -15,7 +15,7 @@ public interface IManageHotelService {
 
     ManageHotelDto findById(UUID id);
 
-
+    boolean existByCode(String code);
 
     Long countByCodeAndNotId(String code, UUID id);
 

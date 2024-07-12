@@ -14,7 +14,9 @@ public interface IManageRoomTypeService {
 
     ManageRoomTypeDto findById(UUID id);
 
+    ManageRoomTypeDto findByCode(String code);
 
+    boolean existByCode(String code);
 
     Long countByCodeAndNotId(String code, UUID id);
 

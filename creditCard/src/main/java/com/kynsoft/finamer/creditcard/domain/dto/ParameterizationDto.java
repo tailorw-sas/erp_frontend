@@ -18,5 +18,6 @@ public class ParameterizationDto {
     private String transactionStatusCode;
     private String transactionCategory;
     private String transactionSubCategory;
+    private String refundTransactionStatusCode;
 
 }

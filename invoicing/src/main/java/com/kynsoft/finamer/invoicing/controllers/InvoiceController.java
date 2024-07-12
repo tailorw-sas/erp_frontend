@@ -7,6 +7,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create
 import com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create.CreateAdjustmentMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.calculateInvoiceAmount.CalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceRequest;
@@ -59,6 +60,14 @@ public class InvoiceController {
         CreateBulkInvoiceCommand command = CreateBulkInvoiceCommand.fromRequest(request);
 
         CreateBulkInvoiceMessage message = this.mediator.send(command);
+
+        mediator
+                .send(new CalculateInvoiceAmountCommand(message.getId()));
+
+        CalculateInvoiceAmountCommand calculateInvoiceAmountCommand = new CalculateInvoiceAmountCommand(
+                message.getId());
+
+        mediator.send(calculateInvoiceAmountCommand);
         return ResponseEntity.ok(message);
 
     }

@@ -20,4 +20,6 @@ public interface ManageHotelReadDataJPARepository extends JpaRepository<ManageHo
 
     @Query("SELECT COUNT(b) FROM ManageHotel b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    boolean existsManageHotelByCode(String code);
 }

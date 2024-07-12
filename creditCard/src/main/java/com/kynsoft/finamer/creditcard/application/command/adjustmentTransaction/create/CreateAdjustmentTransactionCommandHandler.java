@@ -54,6 +54,7 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
 
         double commission = 0;
         LocalDate checkIn = LocalDate.now();
+        double netAmount = command.getAmount() - commission;
 
         Long id = this.service.create(new TransactionDto(
                 agencyDto,
@@ -64,7 +65,9 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 command.getReferenceNumber(),
                 transactionStatusDto,
                 commission,
-                checkIn
+                checkIn,
+                true,
+                netAmount
         ));
         command.setId(id);
     }

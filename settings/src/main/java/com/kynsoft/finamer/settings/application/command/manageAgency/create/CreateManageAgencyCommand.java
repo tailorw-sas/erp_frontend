@@ -43,9 +43,10 @@ public class CreateManageAgencyCommand implements ICommand {
     private UUID sentB2BPartner;
     private UUID country;
     private UUID cityState;
+    private Boolean isDefault;
 
 
-    public CreateManageAgencyCommand(String code, Status status, String name, String cif, String agencyAlias, Boolean audit, String zipCode, String address, String mailingAddress, String phone, String alternativePhone, String email, String alternativeEmail, String contactName, Boolean autoReconcile, Integer creditDay, String rfc, Boolean validateCheckout, String bookingCouponFormat, String description, String city, EGenerationType generationType, ESentFileFormat sentFileFormat, UUID agencyType, UUID client, UUID sentB2BPartner, UUID country, UUID cityState) {
+    public CreateManageAgencyCommand(String code, Status status, String name, String cif, String agencyAlias, Boolean audit, String zipCode, String address, String mailingAddress, String phone, String alternativePhone, String email, String alternativeEmail, String contactName, Boolean autoReconcile, Integer creditDay, String rfc, Boolean validateCheckout, String bookingCouponFormat, String description, String city, EGenerationType generationType, ESentFileFormat sentFileFormat, UUID agencyType, UUID client, UUID sentB2BPartner, UUID country, UUID cityState, Boolean isDefault) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.status = status;
@@ -75,11 +76,12 @@ public class CreateManageAgencyCommand implements ICommand {
         this.sentB2BPartner = sentB2BPartner;
         this.country = country;
         this.cityState = cityState;
+        this.isDefault = isDefault;
     }
 
     public static CreateManageAgencyCommand fromRequest(CreateManageAgencyRequest request) {
         return new CreateManageAgencyCommand(
-                request.getCode(), request.getStatus(), request.getName(), request.getCif(), request.getAgencyAlias(), request.getAudit(), request.getZipCode(), request.getAddress(), request.getMailingAddress(), request.getPhone(), request.getAlternativePhone(), request.getEmail(), request.getAlternativeEmail(), request.getContactName(), request.getAutoReconcile(), request.getCreditDay(), request.getRfc(), request.getValidateCheckout(), request.getBookingCouponFormat(), request.getDescription(), request.getCity(), request.getGenerationType(), request.getSentFileFormat(), request.getAgencyType(), request.getClient(), request.getSentB2BPartner(), request.getCountry(), request.getCityState()
+                request.getCode(), request.getStatus(), request.getName(), request.getCif(), request.getAgencyAlias(), request.getAudit(), request.getZipCode(), request.getAddress(), request.getMailingAddress(), request.getPhone(), request.getAlternativePhone(), request.getEmail(), request.getAlternativeEmail(), request.getContactName(), request.getAutoReconcile(), request.getCreditDay(), request.getRfc(), request.getValidateCheckout(), request.getBookingCouponFormat(), request.getDescription(), request.getCity(), request.getGenerationType(), request.getSentFileFormat(), request.getAgencyType(), request.getClient(), request.getSentB2BPartner(), request.getCountry(), request.getCityState(), request.getIsDefault()
         );
     }
 

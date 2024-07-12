@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class ManageInvoiceResponse implements IResponse {
     private UUID id;
     private Long invoice_id;
+    private Long invoiceNo;
     private String invoiceNumber;
     private LocalDateTime invoiceDate;
     private Boolean isManual;
@@ -33,11 +35,12 @@ public class ManageInvoiceResponse implements IResponse {
     private EInvoiceType invoiceType;;
     private EInvoiceStatus status;
     private boolean autoRec;
+    private boolean hasAttachments;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoice_id = dto.getInvoice_id();
-        this.invoiceNumber = dto.getInvoiceNumber();
+        this.invoiceNumber = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getInvoiceNo().toString();
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
         this.invoiceAmount = dto.getInvoiceAmount();
@@ -46,5 +49,6 @@ public class ManageInvoiceResponse implements IResponse {
         this.invoiceType = dto.getInvoiceType();
         this.status = dto.getStatus();
         this.autoRec = dto.getAutoRec();
+        this.hasAttachments = dto.getAttachments() != null && dto.getAttachments().size() > 0;
     }
 }

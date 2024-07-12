@@ -14,7 +14,9 @@ public interface IManageRatePlanService {
 
     ManageRatePlanDto findById(UUID id);
 
+    ManageRatePlanDto findByCode(String code);
 
+    boolean existByCode(String code);
 
     Long countByCodeAndNotId(String code, UUID id);
 }

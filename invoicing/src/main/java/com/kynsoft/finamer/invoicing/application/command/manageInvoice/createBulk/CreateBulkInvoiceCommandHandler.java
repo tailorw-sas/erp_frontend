@@ -22,6 +22,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomCategoryDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
@@ -254,17 +255,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 ManageAgencyDto agencyDto = this.agencyService.findById(command.getInvoiceCommand().getAgency());
                 ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
 
-                String invoiceNumber = "";
+                String invoiceNumber = InvoiceType.getInvoiceTypeCode(command.getInvoiceCommand().getInvoiceType());
 
-                if (hotelDto.getManageTradingCompanies() != null
-                                && hotelDto.getManageTradingCompanies().getIsApplyInvoice()) {
-                        invoiceNumber += hotelDto.getManageTradingCompanies().getCode()
-                                        + hotelDto.getManageTradingCompanies().getAutogen_code();
-                } else {
-                        invoiceNumber += hotelDto.getCode() + hotelDto.getAutogen_code();
-                }
-
-                ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L,
+                ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
                                 invoiceNumber,
                                 command.getInvoiceCommand().getInvoiceDate(), command.getInvoiceCommand().getDueDate(),
                                 command.getInvoiceCommand().getIsManual(),

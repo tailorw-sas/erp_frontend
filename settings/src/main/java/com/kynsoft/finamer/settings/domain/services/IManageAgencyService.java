@@ -26,4 +26,6 @@ public interface IManageAgencyService {
     List<ManageAgencyDto> findByIds(List<UUID> ids);
 
     List<ManageAgencyDto> findAll();
+
+    Long countByDefaultAndNotId(UUID id);
 }

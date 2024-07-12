@@ -270,10 +270,13 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     VCC_MANAGE_LANGUAGE_NOT_FOUND(1038, Series.DOMAIN_ERROR, "Language not found."),
     VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND(1039, Series.DOMAIN_ERROR, "Merchant Commission not found."),
     VCC_MANAGE_MERCHANT_NOT_FOUND(1040, Series.DOMAIN_ERROR, "Merchant not found."),
-    VCC_MANAGE_TRANSACTION_STATUS_NOT_FOUND(1041, Series.DOMAIN_ERROR, "Transaction Status not found"),
-    VCC_MANAGE_TRANSACTION_TYPE_NOT_FOUND(1042, Series.DOMAIN_ERROR, "VCC Transaction Type not found"),
-    VCC_PARAMETERIZATION_NOT_FOUND(1043, Series.DOMAIN_ERROR, "Parameterization not found"),
-    VCC_TRANSACTION_NOT_FOUND(1044, Series.DOMAIN_ERROR, "Transaction not found");
+    VCC_MANAGE_TRANSACTION_STATUS_NOT_FOUND(1041, Series.DOMAIN_ERROR, "Transaction Status not found."),
+    VCC_MANAGE_TRANSACTION_TYPE_NOT_FOUND(1042, Series.DOMAIN_ERROR, "VCC Transaction Type not found."),
+    VCC_PARAMETERIZATION_NOT_FOUND(1043, Series.DOMAIN_ERROR, "Parameterization not found."),
+    VCC_TRANSACTION_NOT_FOUND(1044, Series.DOMAIN_ERROR, "Transaction not found."),
+    VCC_REFUND_NOT_ACCEPTED(1045, Series.DOMAIN_ERROR, "Refunds cannot exceed the original amount."),
+    VCC_REFUND_CANNOT_BE_ADJUSTMENT(1046, Series.DOMAIN_ERROR, "Refund cannot be made to an adjustment transaction."),
+    MANAGE_AGENCY_CHECK_DEFAULT(1047, Series.DOMAIN_ERROR, "Another item already exists with default.");
 
     private static final DomainErrorMessage[] VALUES;
 

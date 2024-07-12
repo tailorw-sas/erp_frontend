@@ -37,6 +37,8 @@ public class TransactionDto {
     private LocalDate transactionDate;
     private ManageVCCTransactionTypeDto transactionCategory;
     private ManageVCCTransactionTypeDto transactionSubCategory;
+    private Boolean isAdjustment;
+    private Double netAmount;
 
     public TransactionDto(
             Long id, LocalDate checkIn, String reservationNumber,
@@ -57,7 +59,7 @@ public class TransactionDto {
             String cardNumber, ManageCreditCardTypeDto creditCardType, Double commission,
             ManageTransactionStatusDto status, TransactionDto parent,
             ManageVCCTransactionTypeDto transactionCategory,
-            ManageVCCTransactionTypeDto transactionSubCategory) {
+            ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount) {
         this.merchant = merchant;
         this.methodType = methodType;
         this.hotel = hotel;
@@ -78,13 +80,14 @@ public class TransactionDto {
         this.parent = parent;
         this.transactionCategory = transactionCategory;
         this.transactionSubCategory = transactionSubCategory;
+        this.netAmount = netAmount;
     }
 
     public TransactionDto(
             ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
             String reservationNumber, String referenceNumber, ManageTransactionStatusDto status,
-            Double commission, LocalDate checkIn){
+            Double commission, LocalDate checkIn, Boolean isAdjustment, Double netAmount){
         this.agency = agency;
         this.transactionCategory = transactionCategory;
         this.transactionSubCategory = transactionSubCategory;
@@ -94,5 +97,7 @@ public class TransactionDto {
         this.status = status;
         this.commission = commission;
         this.checkIn = checkIn;
+        this.isAdjustment = isAdjustment;
+        this.netAmount = netAmount;
     }
 }

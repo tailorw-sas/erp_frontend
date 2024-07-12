@@ -3,7 +3,6 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.create;
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 

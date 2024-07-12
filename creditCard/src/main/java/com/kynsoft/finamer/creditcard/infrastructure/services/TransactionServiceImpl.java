@@ -86,6 +86,18 @@ public class TransactionServiceImpl implements ITransactionService {
         return this.repositoryQuery.countByReservationNumberAndManageHotelIdAndNotId(reservationNumber, hotel);
     }
 
+    @Override
+    public boolean compareParentTransactionAmount(Long parentId, Double amount) {
+        Optional<Transaction> parentTransaction = repositoryQuery.findById(parentId);
+        if (parentTransaction.isPresent()) {
+            double parentAmount = parentTransaction.get().getAmount();
+            Optional<Double> sumOfChildrenAmount = repositoryQuery.findSumOfAmountByParentId(parentId);
+            return (sumOfChildrenAmount.orElse(0.0) + amount) > parentAmount;
+        } else {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
+        }
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

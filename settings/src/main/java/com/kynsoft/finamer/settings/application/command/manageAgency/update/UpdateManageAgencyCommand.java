@@ -44,10 +44,11 @@ public class UpdateManageAgencyCommand implements ICommand {
     private UUID sentB2BPartner;
     private UUID country;
     private UUID cityState;
+    private Boolean isDefault;
 
     public static UpdateManageAgencyCommand fromRequest(UpdateManageAgencyRequest request, UUID id){
         return new UpdateManageAgencyCommand(
-                id, request.getStatus(), request.getName(), request.getCif(), request.getAgencyAlias(), request.getAudit(), request.getZipCode(), request.getAddress(), request.getMailingAddress(), request.getPhone(), request.getAlternativePhone(), request.getEmail(), request.getAlternativeEmail(), request.getContactName(), request.getAutoReconcile(), request.getCreditDay(), request.getRfc(), request.getValidateCheckout(), request.getBookingCouponFormat(), request.getDescription(), request.getCity(), request.getGenerationType(), request.getSentFileFormat(), request.getAgencyType(), request.getClient(), request.getSentB2BPartner(), request.getCountry(), request.getCityState()
+                id, request.getStatus(), request.getName(), request.getCif(), request.getAgencyAlias(), request.getAudit(), request.getZipCode(), request.getAddress(), request.getMailingAddress(), request.getPhone(), request.getAlternativePhone(), request.getEmail(), request.getAlternativeEmail(), request.getContactName(), request.getAutoReconcile(), request.getCreditDay(), request.getRfc(), request.getValidateCheckout(), request.getBookingCouponFormat(), request.getDescription(), request.getCity(), request.getGenerationType(), request.getSentFileFormat(), request.getAgencyType(), request.getClient(), request.getSentB2BPartner(), request.getCountry(), request.getCityState(), request.getIsDefault()
         );
     }
 

@@ -47,6 +47,7 @@ public class ManageAgency {
     private String bookingCouponFormat;
     private String description;
     private String city;
+    private Boolean isDefault;
 
     @Enumerated(EnumType.STRING)
     private EGenerationType generationType;
@@ -118,11 +119,12 @@ public class ManageAgency {
         this.sentB2BPartner = dto.getSentB2BPartner() != null ? new ManageB2BPartner(dto.getSentB2BPartner()) : null;
         this.country = dto.getCountry() != null ? new ManageCountry(dto.getCountry()) : null;
         this.cityState = dto.getCityState() != null ? new ManageCityState(dto.getCityState()) : null;
+        this.isDefault = dto.getIsDefault();
     }
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, status, name, cif, agencyAlias, audit, zipCode, address, mailingAddress, phone, alternativePhone, email, alternativeEmail, contactName, autoReconcile, creditDay, rfc, validateCheckout, bookingCouponFormat, description, city, generationType, sentFileFormat, agencyType.toAggregate(), client.toAggregate(), sentB2BPartner.toAggregate(), country.toAggregate(), cityState.toAggregate()
+                id, code, status, name, cif, agencyAlias, audit, zipCode, address, mailingAddress, phone, alternativePhone, email, alternativeEmail, contactName, autoReconcile, creditDay, rfc, validateCheckout, bookingCouponFormat, description, city, generationType, sentFileFormat, agencyType.toAggregate(), client.toAggregate(), sentB2BPartner.toAggregate(), country.toAggregate(), cityState.toAggregate(), isDefault
         );
     }
 
@@ -132,7 +134,8 @@ public class ManageAgency {
                 address, mailingAddress, phone, alternativePhone, email, alternativeEmail,
                 contactName, autoReconcile, creditDay, rfc, validateCheckout, bookingCouponFormat,
                 description, city, generationType, sentFileFormat, agencyType.toAggregate(),
-                null, sentB2BPartner.toAggregate(), country.toAggregate(), cityState.toAggregate()
+                null, sentB2BPartner.toAggregate(), country.toAggregate(), cityState.toAggregate(),
+                isDefault
         );
     }
 }
