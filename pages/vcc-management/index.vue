@@ -4,7 +4,7 @@ import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import type { MenuItem } from '~/components/menu/MenuItems'
@@ -115,28 +115,16 @@ const legend = ref(
   ]
 )
 
-function getStatusClass(status: string) {
-  switch (status) {
-    case 'Sent':
-      return 'text-sent'
-    case 'Created':
-      return 'text-created'
-    case 'Received':
-      return 'text-received'
-    case 'Declined':
-      return 'text-declined'
-    case 'Paid':
-      return 'text-paid'
-    case 'Canceled':
-      return 'text-canceled'
-    case 'Reconciled':
-      return 'text-reconciled'
-    case 'Refund':
-      return 'text-refund'
-    default:
-      return ''
-  }
-}
+const sClassMap: IStatusClass[] = [
+  { status: 'Sent', class: 'text-sent' },
+  { status: 'Created', class: 'text-created' },
+  { status: 'Received', class: 'text-received' },
+  { status: 'Declined', class: 'text-declined' },
+  { status: 'Paid', class: 'text-paid' },
+  { status: 'Canceled', class: 'text-canceled' },
+  { status: 'Reconciled', class: 'text-reconciled' },
+  { status: 'Refund', class: 'text-refund' },
+]
 ////
 
 const createItems: Array<MenuItem> = ref([{
@@ -156,16 +144,18 @@ const columns: IColumn[] = [
   { field: 'id', header: 'Id', type: 'text' },
   { field: 'parent', header: 'Parent Id', type: 'text' },
   { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'text' },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
   { field: 'creditCardType', header: 'CC Type', type: 'text', },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'commission', header: 'Commission', type: 'text' },
-  { field: 'totalAmount', header: 'T.Amount', type: 'text' },
+  { field: 'netAmount', header: 'T.Amount', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'status', header: 'Status', type: 'text' },
+  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap },
 ]
+
+const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
   { id: 'id', name: 'Id' },
@@ -200,6 +190,8 @@ const pagination = ref<IPagination>({
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
+  const count = { amount: 0, commission: 0, net: 0 }
+  subTotals.value = { ...count }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -222,24 +214,26 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'amount') && Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
-        iterator.totalAmount = iterator.amount - iterator.commission
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = iterator.status.name
-        iterator.rowClass = getStatusClass(iterator.status)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
+        iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        count.amount += iterator.amount
         iterator.amount = String(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
+        count.commission += iterator.commission
         iterator.commission = String(iterator.commission)
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'totalAmount')) {
-        iterator.totalAmount = String(iterator.totalAmount)
+      if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
+        count.net += iterator.netAmount
+        iterator.netAmount = iterator.netAmount ? String(iterator.netAmount) : '0'
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
@@ -255,6 +249,7 @@ async function getList() {
   }
   finally {
     options.value.loading = false
+    subTotals.value = { ...count }
   }
 }
 
@@ -277,7 +272,8 @@ function searchAndFilter() {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'EQUALS',
       value: filterToSearch.value.search,
-      logicalOperation: 'AND'
+      logicalOperation: 'AND',
+      type: 'filterSearch'
     }]
   }
   else {
@@ -598,8 +594,12 @@ async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
   }
 }
 
-async function onCloseNewRefundDialog() {
+async function onCloseNewRefundDialog(isCancel: boolean = true) {
   newRefundDialogVisible.value = false
+  console.log(isCancel)
+  if (!isCancel) {
+    getList()
+  }
 }
 
 const disabledSearch = computed(() => {
@@ -843,12 +843,24 @@ onMounted(() => {
         @update:right-clicked-item="(event) => {
           contextMenuTransaction = event
         }"
-      />
+      >
+        <template #datatable-footer>
+          <ColumnGroup type="footer">
+            <Row>
+              <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
+              <Column :footer="Math.round((subTotals.amount + Number.EPSILON) * 100) / 100" />
+              <Column :footer="Math.round((subTotals.commission + Number.EPSILON) * 100) / 100" />
+              <Column :footer="Math.round((subTotals.net + Number.EPSILON) * 100) / 100" />
+              <Column :colspan="2" />
+            </Row>
+          </ColumnGroup>
+        </template>
+      </DynamicTable>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
     <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />
     <VCCNewAdjustmentTransaction :open-dialog="newAdjustmentTransactionDialogVisible" @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" />
-    <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog" />
+    <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog($event)" />
   </div>
 </template>
 
@@ -870,27 +882,42 @@ onMounted(() => {
 }
 
 .text-sent {
-  color: #006400;
+  background-color: #006400;
+  color: #fff;
 }
 .text-created {
-  color: #FF8D00;
+  background-color: #FF8D00;
+  color: #fff;
 }
 .text-received {
-  color: #3403F9;
+  background-color: #3403F9;
+  color: #fff;
 }
 .text-declined {
-  color: #661E22;
+  background-color: #661E22;
+  color: #fff;
 }
 .text-paid {
-  color: #2E892E;
+  background-color: #2E892E;
+  color: #fff;
 }
 .text-canceled {
-  color: #FF1405;
+  background-color: #FF1405;
+  color: #fff;
 }
 .text-reconciled {
-  color: #05D2FF;
+  background-color: #05D2FF;
+  color: #fff;
 }
 .text-refund {
-  color: #666666;
+  background-color: #666666;
+  color: #fff;
+}
+
+.p-datatable-tfoot {
+  background-color: #42A5F5;
+  tr td {
+    color: #fff;
+  }
 }
 </style>

@@ -78,6 +78,20 @@ onMounted(() => {
         :loading-save="loadingSaveAll" :container-class="containerClass" class="w-full h-fit m-4"
         @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
       >
+        <template #field-invoiceAmount="{ onUpdate, item: data }">
+          <InputText
+            v-model="data.invoiceAmount"
+            show-clear :disabled="!!item?.id"
+            @update:model-value="onUpdate('invoiceAmount', $event)"
+          />
+        </template>
+        <template #field-hotelAmount="{ onUpdate, item: data }">
+          <InputText
+            v-model="data.hotelAmount"
+            show-clear :disabled="!!item?.id"
+            @update:model-value="onUpdate('hotelAmount', $event)"
+          />
+        </template>
         <template #form-footer="props">
           <Button
             v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"

@@ -68,6 +68,8 @@ const emits = defineEmits<{
   (e: 'update:doubleClicked', value: any): void
   (e: 'onSortField', value: any): void
   (e: 'onExpandField', value: any): void
+  (e: 'onSelectField', value: any): void
+
 }>()
 
 const expandedRows = ref<any>({})
@@ -357,6 +359,7 @@ async function onRowExpand({ data }: any) {
   }
 
   emits('onExpandField', data?.id)
+  emits('onSelectField', data)
 
   const { $api } = useNuxtApp()
   const serverUrl = useRequestURL()
@@ -368,6 +371,7 @@ async function onRowExpand({ data }: any) {
 function onRowCollapse(event: { data: { name: any } }) {
   // toast.add({ severity: 'success', summary: 'Product Collapsed', detail: event.data.name, life: 3000 })
   emits('onExpandField', '')
+  emits('onSelectField', null)
 }
 
 onMounted(() => {
@@ -691,6 +695,8 @@ getOptionsList()
           </span>
         </Badge>
       </div>
+
+      <slot name="pagination-right" />
     </div>
   </BlockUI>
 

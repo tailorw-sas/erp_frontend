@@ -66,10 +66,10 @@ const items = ref([
 ])
 
 const itemFilter = ref<GenericObject>({
-  client: null,
-  agency: null,
+  client: [],
+  agency: [],
   allClientAndAgency: false,
-  hotel: '',
+  hotel: [],
   status: [],
   from: '',
   to: '',
@@ -94,15 +94,26 @@ const ENUM_FILTER_STATUS = [
 ]
 
 const filterToSearch = ref<IData>({
-  criterial: null,
-  search: '',
+  client: [],
+  agency: [],
+  allClientAndAgency: false,
+  hotel: [],
+  status: [],
+  from: '',
+  to: '',
+  allFromAndTo: false,
+  criteria: null,
+  value: '',
+  type: '',
+  payApplied: false,
+  detail: false,
 })
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 
 const columns: IColumn[] = [
   { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-paperclip', sortable: false },
-  { field: 'paymentId', header: 'ID', tooltip: 'Payment ID', width: '60px', type: 'text' },
+  { field: 'paymentId', header: 'ID', tooltip: 'Payment ID', width: '40px', type: 'text' },
   { field: 'paymentSource', header: 'P.Source', tooltip: 'Payment Source', width: '60px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-source' } },
   { field: 'transactionDate', header: 'Trans. Date', tooltip: 'Transaction Date', width: '60px', type: 'date' },
   { field: 'paymentStatus', header: 'Status', width: '50px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' } },
@@ -115,7 +126,7 @@ const columns: IColumn[] = [
   { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'text' },
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'text' },
   { field: 'noApplied', header: 'Not Applied', tooltip: 'Not Applied', width: '60px', type: 'text' },
-  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
   // { field: 'attachmentStatus', header: 'Attachment Status', width: '100px', type: 'select' },
   // { field: 'paymentAmount', header: 'Payment Amount', tooltip: 'Payment Amount', width: '200px', type: 'text' },
   // { field: 'paymentBalance', header: 'Payment Balance', width: '200px', type: 'text' },
@@ -124,6 +135,7 @@ const columns: IColumn[] = [
   // { field: 'identified', header: 'Identified', width: '200px', type: 'text' },
   // { field: 'notIdentified', header: 'Not Identified', width: '200px', type: 'text' },
 ]
+
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -220,9 +232,9 @@ function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
-      key: filterToSearch.value.criterial ? filterToSearch.value.criterial.id : '',
+      key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'LIKE',
-      value: filterToSearch.value.search,
+      value: filterToSearch.value.value,
       logicalOperation: 'AND',
       type: 'filterSearch',
     }]
@@ -256,14 +268,35 @@ function toggle(event) {
   menu.value.toggle(event)
 }
 
+interface DataListItem {
+  id: string
+  name: string
+  code: string
+  status: string
+}
+
+interface ListItem {
+  id: string
+  name: string
+  status: boolean | string
+}
+
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.name}`,
+    status: data.status
+  }
+}
+
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  clientItemsList.value = await getDataList(moduleApi, uriApi, [], queryObj)
+  clientItemsList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  agencyItemsList.value = await getDataList(moduleApi, uriApi, [], queryObj)
+  agencyItemsList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
 }
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  hotelItemsList.value = await getDataList(moduleApi, uriApi, [], queryObj)
+  hotelItemsList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
 }
 
 // -------------------------------------------------------------------------------------------------------
@@ -293,257 +326,295 @@ onMounted(async () => {
       Payment Management
     </h3>
     <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
-      <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" aria-haspopup="true" aria-controls="overlay_menu" @click="toggle" />
+      <Button v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true" aria-controls="overlay_menu" @click="toggle" />
       <Menu id="overlay_menu" ref="menu" :model="items" :popup="true" />
     </div>
   </div>
-  <div class="grid">
-    <div class="col-12 order-0">
-      <div class="card p-0 m-0">
-        <Accordion :active-index="0">
-          <AccordionTab>
-            <template #header>
-              <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
-                <div>
-                  Filters
-                </div>
-                <div>
-                  <PaymentLegend :legend="legend" />
-                </div>
+  <div>
+    <div class="card p-0 m-0">
+      <Accordion id="accordion" :active-index="0">
+        <AccordionTab>
+          <template #header>
+            <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
+              <div>
+                Search Fields
               </div>
-            </template>
-            <div class="grid pt-4 pb-0">
-              <!-- first filter -->
-              <div class="col-12 md:col-2 align-items-center py-0 mr-2">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12 md:col-10">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> Client</label>
-                      <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          id="autocomplete"
-                          field="name"
-                          item-value="id"
-                          class="w-full"
-                          :model="itemFilter.client"
-                          :suggestions="[...clientItemsList]"
-                          @load="async($event) => {
-                            const objQueryToSearch = {
-                              query: $event,
-                              keys: ['name', 'code'],
-                            }
-                            await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch)
-                          }"
-                        />
-                      </div>
-                    </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="mr-2 font-bold"> Agency</label>
-                      <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          id="autocomplete"
-                          field="name"
-                          item-value="id"
-                          class="w-full"
-                          :model="itemFilter.agency"
-                          :suggestions="[...agencyItemsList]"
-                          @load="async($event) => {
-                            const objQueryToSearch = {
-                              query: $event,
-                              keys: ['name', 'code'],
-                            }
-                            await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, objQueryToSearch)
-                          }"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-12 md:col-2 align-items-center">
-                    <div class="flex align-items-center">
-                      <Checkbox
-                        id="allClientAndAgency"
-                        v-model="itemFilter.allClientAndAgency"
-                        :binary="true"
-                      />
-                      <label for="allClientAndAgency" class="ml-2"> All</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- second filter -->
-              <div class="col-12 md:col-2 align-items-center py-0 mr-2">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> Hotels</label>
-                      <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          id="autocomplete"
-                          class="w-full"
-                          field="name"
-                          item-value="id"
-                          :model="itemFilter.hotel"
-                          :suggestions="[...hotelItemsList]"
-                          @load="async($event) => {
-                            const objQueryToSearch = {
-                              query: $event,
-                              keys: ['name', 'code'],
-                            }
-                            await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch)
-                          }"
-                        />
-                      </div>
-                    </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="mr-2 font-bold"> Status</label>
-                      <div class="w-full">
-                        <MultiSelect
-                          v-model="itemFilter.status"
-                          :options="[...ENUM_FILTER_STATUS]"
-                          option-label="name"
-                          placeholder="Status"
-                          display="chip"
-                          return-object="false"
-                          class="align-items-center w-full"
-                          show-clear
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- third filter -->
-              <div class="col-12 md:col-2 align-items-center py-0 mr-2">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12 md:col-10">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> From</label>
-                      <div class="w-full">
-                        <Calendar id="from" v-model="itemFilter.from" class="w-full" date-format="dd/mm/yy" />
-                      </div>
-                    </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="mr-2 font-bold" style="padding-right: 17px;"> To</label>
-                      <div class="w-full">
-                        <Calendar id="from" v-model="itemFilter.to" class="w-full" date-format="dd/mm/yy" />
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12 md:col-2 align-items-center">
-                    <div class="flex align-items-center">
-                      <Checkbox
-                        id="allFromAndTo"
-                        v-model="itemFilter.allFromAndTo"
-                        :binary="true"
-                      />
-                      <label for="allClientAndAgency" class="ml-2"> All</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- fourth filter -->
-              <div class="col-12 md:col-2 align-items-center py-0">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> Criteria</label>
-                      <div class="w-full">
-                        <Dropdown
-                          v-model="itemFilter.criteria"
-                          :options="[...ENUM_FILTER]"
-                          option-label="name"
-                          placeholder="Criteria"
-                          return-object="false"
-                          class="align-items-center w-full"
-                          show-clear
-                        />
-                      </div>
-                    </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="mr-2 font-bold">Search</label>
-                      <InputText v-model="itemFilter.value" type="text" placeholder="" class="w-full" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- fifth filter -->
-              <div class="col-12 md:col-2 align-items-center py-0">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> Type</label>
-                      <div class="w-full">
-                        <Dropdown
-                          v-model="itemFilter.type"
-                          :options="[...ENUM_FILTER]"
-                          option-label="name"
-                          placeholder="Type"
-                          return-object="false"
-                          class="align-items-center w-full"
-                          show-clear
-                        />
-                      </div>
-                    </div>
-                    <div class="flex align-items-center justify-content-between pl-6">
-                      <div class="flex align-items-center">
-                        <label for="payApplied" class="mr-2 font-bold"> Pay Applied</label>
-                        <Checkbox
-                          id="payApplied"
-                          v-model="itemFilter.payApplied"
-                          :binary="true"
-                        />
-                      </div>
-
-                      <div class="flex align-items-center ml-2">
-                        <label for="detail" class="mr-2 font-bold"> Details</label>
-                        <Checkbox
-                          id="detail"
-                          v-model="itemFilter.detail"
-                          :binary="true"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Button filter -->
-              <div class="col-12 md:col-1 flex align-items-center justify-content-center">
-                <Button
-                  label="Filter"
-                  class="p-button-lg"
-                  icon="pi pi-filter"
-                  @click="searchAndFilter"
-                />
+              <div>
+                <PaymentLegend :legend="legend" />
               </div>
             </div>
-          </AccordionTab>
-        </Accordion>
-      </div>
-      <div v-if="false" class="card py-2 my-2 flex justify-content-between flex-column md:flex-row" style="border: 0.5px solid #e6e6e6;">
-        <div class="text-xl font-bold flex align-items-center text-primary">
-          Payment
-        </div>
-      </div>
-      <DynamicTable
+          </template>
+          <div class="grid p-0" style="margin: 0 auto;">
+            <!-- first filter -->
+            <div class="col-12 md:col-2 align-items-center my-0 py-0 mr-2">
+              <div class="grid align-items-center justify-content-center">
+                <div class="col-12 md:col-10">
+                  <div class="flex align-items-center mb-2">
+                    <label for="" class="mr-2 font-bold"> Client</label>
+                    <div class="w-full">
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        class="w-full"
+                        :multiple="true"
+                        :model="itemFilter.client"
+                        :suggestions="[...clientItemsList]"
+                        @change="($event) => {
+                          if (!itemFilter.client.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            itemFilter.client = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            itemFilter.client = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }"
+                        @load="async($event) => {
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch)
+                        }"
+                      />
+                    </div>
+                  </div>
+                  <div class="flex align-items-center">
+                    <label for="" class="mr-2 font-bold"> Agency</label>
+                    <div class="w-full">
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        class="w-full"
+                        :multiple="true"
+                        :model="itemFilter.agency"
+                        :suggestions="[...agencyItemsList]"
+                        @change="($event) => {
+                          if (!itemFilter.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            itemFilter.agency = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            itemFilter.agency = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }"
+                        @load="async($event) => {
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, objQueryToSearch)
+                        }"
+                      />
+                    </div>
+                  </div>
+                </div>
 
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="goToCreateForm"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-        @open-edit-dialog="goToForm($event)"
-        @on-row-double-click="goToForm($event)"
-      />
+                <div class="col-12 md:col-2 align-items-center">
+                  <div class="flex align-items-center">
+                    <Checkbox
+                      id="allClientAndAgency"
+                      v-model="itemFilter.allClientAndAgency"
+                      :binary="true"
+                    />
+                    <label for="allClientAndAgency" class="ml-2"> All</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- second filter -->
+            <div class="col-12 md:col-2 align-items-center my-0 py-0 mr-2">
+              <div class="grid align-items-center justify-content-center">
+                <div class="col-12">
+                  <div class="flex align-items-center mb-2">
+                    <label for="" class="mr-2 font-bold"> Hotels</label>
+                    <div class="w-full">
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        class="w-full"
+                        field="name"
+                        item-value="id"
+                        :multiple="true"
+                        :model="itemFilter.hotel"
+                        :suggestions="[...hotelItemsList]"
+                        @change="($event) => {
+                          if (!itemFilter.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            itemFilter.hotel = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            itemFilter.hotel = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }"
+                        @load="async($event) => {
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch)
+                        }"
+                      />
+                    </div>
+                  </div>
+                  <div class="flex align-items-center">
+                    <label for="" class="mr-2 font-bold"> Status</label>
+                    <div class="w-full">
+                      <MultiSelect
+                        v-model="itemFilter.status"
+                        :options="[...ENUM_FILTER_STATUS]"
+                        option-label="name"
+                        placeholder="Status"
+                        display="chip"
+                        return-object="false"
+                        class="align-items-center w-full"
+                        show-clear
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- third filter -->
+            <div class="col-12 md:col-2 align-items-center my-0 py-0 mr-2">
+              <div class="grid align-items-center justify-content-center">
+                <div class="col-12 md:col-10">
+                  <div class="flex align-items-center mb-2">
+                    <label for="" class="mr-2 font-bold"> From</label>
+                    <div class="w-full">
+                      <Calendar
+                        id="from"
+                        v-model="itemFilter.from"
+                        :min-date="new Date('2000-01-01')"
+                        :max-date="itemFilter.to ? itemFilter.to : null"
+                        class="w-full"
+                        date-format="dd/mm/yy"
+                      />
+                    </div>
+                  </div>
+                  <div class="flex align-items-center">
+                    <label for="" class="mr-2 font-bold" style="padding-right: 17px;"> To</label>
+                    <div class="w-full">
+                      <Calendar
+                        id="to"
+                        v-model="itemFilter.to"
+                        class="w-full"
+                        :min-date="itemFilter.from ? itemFilter.from : new Date('2000-01-01')"
+                        date-format="dd/mm/yy"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 md:col-2 align-items-center">
+                  <div class="flex align-items-center">
+                    <Checkbox
+                      id="allFromAndTo"
+                      v-model="itemFilter.allFromAndTo"
+                      :binary="true"
+                    />
+                    <label for="allClientAndAgency" class="ml-2"> All</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- fourth filter -->
+            <div class="col-12 md:col-2 align-items-center my-0 py-0">
+              <div class="grid align-items-center justify-content-center">
+                <div class="col-12">
+                  <div class="flex align-items-center mb-2">
+                    <label for="" class="mr-2 font-bold"> Criteria</label>
+                    <div class="w-full">
+                      <Dropdown
+                        v-model="itemFilter.criteria"
+                        :options="[...ENUM_FILTER]"
+                        option-label="name"
+                        placeholder="Criteria"
+                        return-object="false"
+                        class="align-items-center w-full"
+                        show-clear
+                      />
+                    </div>
+                  </div>
+                  <div class="flex align-items-center">
+                    <label for="" class="mr-2 font-bold">Value</label>
+                    <InputText v-model="itemFilter.value" type="text" placeholder="" class="w-full" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- fifth filter -->
+            <div class="col-12 md:col-2 align-items-center my-0 py-0">
+              <div class="grid align-items-center justify-content-center">
+                <div class="col-12">
+                  <div class="flex align-items-center mb-2">
+                    <label for="" class="mr-2 font-bold"> Type</label>
+                    <div class="w-full">
+                      <Dropdown
+                        v-model="itemFilter.type"
+                        :options="[...ENUM_FILTER]"
+                        option-label="name"
+                        placeholder="Type"
+                        return-object="false"
+                        class="align-items-center w-full"
+                        show-clear
+                      />
+                    </div>
+                  </div>
+                  <div class="flex align-items-center justify-content-between pl-6">
+                    <div class="flex align-items-center">
+                      <label for="payApplied" class="mr-2 font-bold"> Pay Applied</label>
+                      <Checkbox
+                        id="payApplied"
+                        v-model="itemFilter.payApplied"
+                        :binary="true"
+                      />
+                    </div>
+
+                    <div class="flex align-items-center ml-2">
+                      <label for="detail" class="mr-2 font-bold"> Details</label>
+                      <Checkbox
+                        id="detail"
+                        v-model="itemFilter.detail"
+                        :binary="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Button filter -->
+            <div class="col-12 md:col-1 flex align-items-center my-0 py-0 justify-content-center">
+              <Button
+                label=""
+                class="p-button-lg w-3rem h-3rem"
+                icon="pi pi-search"
+                @click="searchAndFilter"
+              />
+            </div>
+          </div>
+        </AccordionTab>
+      </Accordion>
     </div>
+    <div v-if="false" class="card py-2 my-2 flex justify-content-between flex-column md:flex-row" style="border: 0.5px solid #e6e6e6;">
+      <div class="text-xl font-bold flex align-items-center text-primary">
+        Payment
+      </div>
+    </div>
+    <DynamicTable
+
+      :data="listItems"
+      :columns="columns"
+      :options="options"
+      :pagination="pagination"
+      @on-confirm-create="goToCreateForm"
+      @on-change-pagination="payloadOnChangePage = $event"
+      @on-change-filter="parseDataTableFilter"
+      @on-list-item="resetListItems"
+      @on-sort-field="onSortField"
+      @open-edit-dialog="goToForm($event)"
+      @on-row-double-click="goToForm($event)"
+    />
   </div>
 </template>

@@ -597,10 +597,10 @@ onMounted(() => {
       </template>
 
       <template v-if="showTotals" #pagination-left="">
-        <div class="flex pl-3 ml-8 align-items-center " style="height: 10px; width: 20%;">
-          <Badge class="px-2 ml-8 flex align-items-center text-xs text-white" severity="contrast">
+        <div class="flex pl-1 ml-8 align-items-center " style="height: 10px; width: 20%;">
+          <Badge class="px-2 ml-1 flex align-items-center text-xs text-white" severity="contrast">
             <span class="font-bold">
-              Total ${{ totalAmount }}
+              Total amount:${{ totalAmount }}
             </span>
           </Badge>
         </div>
@@ -615,7 +615,7 @@ onMounted(() => {
       :require-confirmation-to-save="requireConfirmationToSaveAdjustment"
       :require-confirmation-to-delete="requireConfirmationToDeleteAdjustment" :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'"
       :close-dialog="closeDialog" container-class="flex flex-row justify-content-between mx-4 my-2 w-full"
-      class="h-full p-2 overflow-y-hidden" content-class="w-full h-fit" :transaction-type-list="transactionTypeList" :get-transaction-type-list="getTransactionTypeList"
+      class="h-fit p-2 overflow-y-hidden" content-class="w-full h-fit" :transaction-type-list="transactionTypeList" :get-transaction-type-list="getTransactionTypeList"
     />
   </div>
 </template>

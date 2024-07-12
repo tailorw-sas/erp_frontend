@@ -596,59 +596,6 @@ getOptionsList()
             </div>
           </template>
         </Column>
-        <Column
-          v-if="options?.hasOwnProperty('showAcctions') ? options?.showAcctions : false" field="action" header=""
-          style="width: 90px; text-align: center;"
-        >
-          <template #body="{ data, index }">
-            <span v-if="options?.actionsAsMenu ? options?.actionsAsMenu : false">
-              <Button
-                type="button" icon="pi pi-ellipsis-v" severity="secondary" text aria-haspopup="true"
-                aria-controls="overlay_menu" @click="toggleMenu($event, index, data)"
-              />
-              <!-- <Menu v-if="true" ref="menu" id="overlay_menu" :model="menuItems" :popup="true" /> -->
-
-              <Menu id="overlay_menu" ref="menu" :model="menuItems" :popup="true" class="w-full md:w-9rem">
-                <template #item="{ item, props }">
-                  <a
-                    v-ripple class="flex align-items-center" v-bind="props.action"
-                    @click="handleAction(item.action, data)"
-                  >
-                    <span :class="item.icon" />
-                    <span class="ml-2">{{ item.label }}</span>
-                  </a>
-                </template>
-              </Menu>
-
-            </span>
-            <span v-else>
-              <Button
-                v-if="options?.hasOwnProperty('showAttend') ? options?.showAttend : false" type="button"
-                icon="pi pi-file-check" severity="primary" class="mx-1" text aria-haspopup="true"
-                aria-controls="overlay_menu" :loading="data.loadingEdit" @click="onAttend(data)"
-              />
-              <Button
-                v-if="options?.hasOwnProperty('showEdit') ? options?.showEdit : true" v-tooltip.left="'Editar'"
-                type="button" icon="pi pi-pencil" severity="primary" class="mx-1" text aria-haspopup="true"
-                aria-controls="overlay_menu" :loading="data.loadingEdit" @click="onEdit(data)"
-              />
-              <Button
-                v-if="options?.hasOwnProperty('showDelete') ? options?.showDelete : true"
-                v-tooltip.left="'Eliminar'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
-                aria-haspopup="true" aria-controls="overlay_menu" :loading="data.loadingDelete"
-                @click="showConfirmDelete(data)"
-              />
-
-              <!-- Local -->
-              <Button
-                v-if="options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false"
-                v-tooltip.left="'Eliminar'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
-                aria-haspopup="true" aria-controls="overlay_menu" :loading="data.loadingDelete"
-                @click="showConfirmDelete(data)"
-              />
-            </span>
-          </template>
-        </Column>
       </DataTable>
     </div>
 

@@ -24,6 +24,8 @@ const listItems = ref<any[]>([])
 const formReload = ref(0)
 const invoiceTypeList = ref<any[]>()
 
+const totalInvoiceAmount = ref(0)
+
 const bookingDialogOpen = ref<boolean>(false)
 
 const loadingSaveAll = ref(false)
@@ -31,6 +33,9 @@ const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
 const hotelError = ref(false)
+
+const attachmentDialogOpen = ref<boolean>(false)
+const attachmentInvoice = ref(null)
 
 const active = ref(0)
 
@@ -93,12 +98,8 @@ const createItems = ref([{
   command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[0].id}`),
 
 }, {
-  label: 'Income',
-  command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[1].id}`)
-
-}, {
   label: 'Credit',
-  command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[2].id}`),
+  command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[2].id}&selected=${expandedInvoice.value}`),
   disabled: computedexpandedInvoice
 
 }, {
@@ -229,6 +230,8 @@ async function getList() {
     listItems.value = []
     const newListItems = []
 
+    totalInvoiceAmount.value = 0
+
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -246,6 +249,8 @@ async function getList() {
         newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
+
+      totalInvoiceAmount.value += iterator.invoiceAmount
     }
 
     listItems.value = [...listItems.value, ...newListItems]
@@ -334,8 +339,8 @@ function searchAndFilter() {
       }]
     }
   }
-  if (filterToSearch.value.type?.length > 0) {
-    const filteredItems = filterToSearch.value.type.filter((item: any) => item?.id !== 'All')
+  if (filterToSearch.value.invoiceType?.length > 0) {
+    const filteredItems = filterToSearch.value.invoiceType.filter((item: any) => item?.id !== 'All')
     if (filteredItems.length > 0) {
       const itemIds = filteredItems?.map((item: any) => item?.id)
       payload.value.filter = [...payload.value.filter, {
@@ -627,7 +632,7 @@ function getStatusBadgeBackgroundColor(code: string) {
 
 function getStatusName(code: string) {
   switch (code) {
-    case 'PROCECSED': return 'Procesed'
+    case 'PROCECSED': return 'Processed'
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
@@ -742,12 +747,19 @@ const legend = ref(
         </PopupNavigationMenu>
 
         <Button class="ml-2" icon="pi pi-download" label="Import" />
-        <Button class="ml-2" icon="pi pi-file-plus" label="Process" />
         <Button class="ml-2" icon="pi pi-copy" label="Rec Inv" />
         <Button class="ml-2" icon="pi pi-envelope" label="Send" />
+        <Button
+          class="ml-2" icon="pi pi-paperclip" :disabled="!attachmentInvoice" label="Document" @click="() => {
+            attachmentDialogOpen = true
+          }"
+        />
+
+        <Button class="ml-2" icon="pi pi-file-plus" label="Process" />
         <Button class="ml-2" icon="pi pi-cog" label="Adjustment" disabled />
         <Button class="ml-2" icon="pi pi-print" label="Print" disabled />
         <Button class="ml-2" icon="pi pi-upload" label="Export" disabled />
+        <Button class="ml-2" icon="pi pi-times" label="Exit" @click="() => { navigateTo('/') }" />
       </div>
     </div>
   </div>
@@ -797,6 +809,11 @@ const legend = ref(
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
+                        <template #chip="{ value }">
+                          <div>
+                            {{ value?.code }}
+                          </div>
+                        </template>
                       </DebouncedAutoCompleteComponent>
                     </div>
                   </div>
@@ -821,6 +838,11 @@ const legend = ref(
                       >
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                        <template #chip="{ value }">
+                          <div>
+                            {{ value?.code }}-{{ value?.name }}
+                          </div>
                         </template>
                       </DebouncedAutoCompleteComponent>
                     </div>
@@ -861,6 +883,11 @@ const legend = ref(
                         >
                           <template #option="props">
                             <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                          </template>
+                          <template #chip="{ value }">
+                            <div>
+                              {{ value?.code }}-{{ value?.name }}
+                            </div>
                           </template>
                         </DebouncedAutoCompleteComponent>
                         <div v-if="hotelError" class="flex align-items-center text-sm">
@@ -982,7 +1009,7 @@ const legend = ref(
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2 w-full">
-                    <Checkbox id="all-check-2" v-model="filterToSearch.includeInvoicePaid" disabled :binary="true" />
+                    <Checkbox id="all-check-2" v-model="filterToSearch.includeInvoicePaid" :binary="true" />
                     <label for="all-check-2">Include Invoice Paid</label>
                   </div>
                   <div class="flex align-items-center gap-2" />
@@ -1007,39 +1034,19 @@ const legend = ref(
         @on-confirm-create="clearForm" @open-edit-dialog="openEditDialog($event)"
         @on-change-pagination="payloadOnChangePage = $event" @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems" @on-sort-field="onSortField" @update:double-clicked="getItemById" @on-expand-field="($event) => { expandedInvoice = $event }"
-      >
-        <!-- <template #topbar-end>
-          <div class="flex flex-row gap-4 align-items-center" style="font-weight: 600;">
-            <span>
-              Legend:
-            </span>
-            <div class="flex align-items-center gap-2">
-              <span style="background-color: #FF8D00; width: 20px; height: 20px; border-radius: 6px;" />
 
-              <span>Processed</span>
-            </div>
-            <div class="flex align-items-center gap-2">
-              <span value="Canceled" style="background-color:#686868; width: 20px; height: 20px; border-radius: 6px;" />
-              <span>Canceled</span>
-            </div>
-            <div class="flex align-items-center gap-2">
-              <span value="Waiting" style="background-color: #F90303; width: 20px; height: 20px; border-radius: 6px;" />
-              <span>Waiting</span>
-            </div>
-            <div class="flex align-items-center gap-2">
-              <span
-                value="Reconciled" style="background-color: #005FB7; width: 20px; height: 20px; border-radius: 6px;"
-              />
-              <span>Reconciled</span>
-            </div>
-            <div class="flex align-items-center gap-2">
-              <span value="Sent" style="background-color: #006400; width: 20px; height: 20px; border-radius: 6px;" />
-              <span>Sent</span>
-            </div>
-          </div>
-        </template> -->
-        <template #row-selector-body="">
-          <span class="pi pi-paperclip" />
+        @on-select-field="($event) => { attachmentInvoice = $event }"
+      >
+        <template #row-selector-body="props">
+          <button
+            :disabled="!props.item?.hasAttachments"
+            class="pi pi-paperclip" style="background-color: white; border: 0; padding: 5px; border-radius: 100%;"
+            @click="() => {
+              attachmentInvoice = props.item
+              attachmentDialogOpen = true
+
+            }"
+          />
         </template>
 
         <template #expanded-item="props">
@@ -1052,7 +1059,25 @@ const legend = ref(
         <template #column-status="props">
           <Badge :value="getStatusName(props.item)" :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item)}`" />
         </template>
+
+        <template #pagination-right>
+          <div style="margin-right: -20%; margin-left: 220px; display: flex;">
+            <Badge class="flex align-items-center text-xs text-white" severity="contrast">
+              <span class="font-bold">
+                Total amount: ${{ totalInvoiceAmount }}
+              </span>
+            </Badge>
+            <Badge class="flex align-items-center text-xs text-white ml-8 -mr-8" severity="contrast">
+              <span class="font-bold">
+                Total due amount: ${{ totalInvoiceAmount }}
+              </span>
+            </Badge>
+          </div>
+        </template>
       </ExpandableTable>
     </div>
+  </div>
+  <div v-if="attachmentDialogOpen">
+    <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Master Invoice Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" />
   </div>
 </template>

@@ -583,12 +583,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/payment'),
               items: []
             },
-            // {
-            //   label: 'Payment Method',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/payment-method'),
-            //   items: []
-            // },
+            {
+              label: 'Payment Close Operation',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/close-operation/payment'),
+              items: []
+            },
             // {
             //   label: 'Payment Status',
             //   icon: 'pi pi-fw pi-file',
@@ -626,6 +626,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/invoice'),
               items: []
             },
+            {
+              label: 'Invoice Close Operation',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/close-operation/invoice'),
+              items: []
+            },
           ]
         }
       ],
@@ -637,6 +643,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'VCC Management',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/vcc-management'),
+              items: []
+            },
+            {
+              label: 'VCC Close Operation',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/close-operation/vcc'),
               items: []
             },
           ]
@@ -802,6 +814,19 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/settings/payment-source'),
               items: []
             },
+            // Ocultar ambos en produccion
+            {
+              label: 'Payment Reource Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/payment/resource-type'),
+              items: []
+            },
+            {
+              label: 'Payment Attachment Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/payment/attachment-type'),
+              items: []
+            },
             // {
             //   label: 'Payment Transaction Status',
             //   icon: 'pi pi-fw pi-file',
@@ -886,12 +911,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/settings/reconcile-transaction-status'),
               items: []
             },
-            {
-              label: 'Transaction Status',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/transaction-status'),
-              items: []
-            }
+            // {
+            //   label: 'Transaction Status',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/settings/transaction-status'),
+            //   items: []
+            // }
           ]
         }
 

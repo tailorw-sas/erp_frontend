@@ -78,13 +78,15 @@ const debouncedComplete = useDebounceFn((event: any) => {
       <slot name="option" :item="props.option" />
     </template>
     <template #chip="props">
-      <div
-        :style="{
-          color: (Object.prototype.hasOwnProperty.call(props.value, 'status') && props.value.status === 'INACTIVE') ? 'red' : '',
-        }"
-      >
-        {{ props.value[field] }}
-      </div>
+      <slot name="chip" :value="props.value">
+        <div
+          :style="{
+            color: (Object.prototype.hasOwnProperty.call(props.value, 'status') && props.value.status === 'INACTIVE') ? 'red' : '',
+          }"
+        >
+          {{ props.value[field] }}
+        </div>
+      </slot>
     </template>
   </AutoComplete>
 </template>

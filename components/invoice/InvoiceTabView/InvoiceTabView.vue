@@ -306,7 +306,7 @@ onMounted(async () => {
             :open-dialog="openDialog" :open-room-rate-dialog="openRoomRateDialog" :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate" :selected-invoice="selectedInvoice as any"
             :add-item="addBooking" :update-item="updateBooking" :list-items="bookingList"
-            :is-creation-dialog="isCreationDialog" :invoice-obj="item" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-detail-view="isDetailView"
+            :is-creation-dialog="isCreationDialog" :invoice-obj="item" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-detail-view="isDetailView" :show-totals="showTotals"
           />
         </TabPanel>
         <TabPanel>
@@ -327,7 +327,7 @@ onMounted(async () => {
             :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
             :open-adjustment-dialog="openAdjustmentDialog" :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate" :list-items="roomRateList" :add-item="addRoomRate"
-            :update-item="updateRoomRate" :is-creation-dialog="isCreationDialog" :is-detail-view="isDetailView" :selected-invoice="selectedInvoice as any"
+            :update-item="updateRoomRate" :is-creation-dialog="isCreationDialog" :is-detail-view="isDetailView" :selected-invoice="selectedInvoice as any" :show-totals="showTotals"
           />
         </TabPanel>
         <TabPanel>
@@ -348,7 +348,7 @@ onMounted(async () => {
             :close-dialog="() => { adjustmentDialogOpen = false }" :open-dialog="handleDialogOpen"
             :selected-room-rate="selectedRoomRate" :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate" :list-items="adjustmentList" :add-item="addAdjustment"
-            :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any" :is-detail-view="isDetailView"
+            :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any" :is-detail-view="isDetailView" :show-totals="showTotals"
           />
         </TabPanel>
       </TabView>

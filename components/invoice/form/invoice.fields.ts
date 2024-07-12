@@ -11,7 +11,7 @@ export const fields: Array<Container> = [
         field: 'invoice_id',
         header: 'Id',
         dataType: 'text',
-        class: `w-full ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3] ? 'required' : ''}`,
+        class: `w-full px-4  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3]?.id ? 'required' : ''}`,
         disabled: true,
         containerFieldClass: 'ml-10'
 
@@ -20,7 +20,7 @@ export const fields: Array<Container> = [
         field: 'invoiceNumber',
         header: 'Invoice Number',
         dataType: 'text',
-        class: 'w-full',
+        class: 'w-full px-4 ',
         disabled: true,
 
       },
@@ -57,15 +57,16 @@ export const fields: Array<Container> = [
         field: 'invoiceDate',
         header: 'Invoice Date',
         dataType: 'date',
-        class: 'w-full required',
+        class: 'w-full px-4  required',
         validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
       },
       {
-        field: 'isManual',
-        header: 'Manual',
-        dataType: 'check',
-        class: `w-full ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3] ? 'required' : ''}`,
-        disabled: true
+        field: 'invoiceAmount',
+        header: 'Invoice Amount',
+        dataType: 'text',
+        class: 'w-full px-4  required',
+        disabled: true,
+        ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
       },
 
     ],
@@ -73,19 +74,20 @@ export const fields: Array<Container> = [
   },
   {
     childs: [
-      {
-        field: 'invoiceAmount',
-        header: 'Invoice Amount',
-        dataType: 'text',
-        class: 'w-full px-4 required',
-        disabled: true
-      },
+
       {
         field: 'invoiceType',
         header: 'Type',
         dataType: 'select',
-        class: 'w-full px-4 ',
+        class: 'w-full px-4 mb-5',
         containerFieldClass: '',
+        disabled: true
+      },
+      {
+        field: 'isManual',
+        header: 'Manual',
+        dataType: 'check',
+        class: `w-full px-4  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3] ? 'required' : ''}`,
         disabled: true
       },
 

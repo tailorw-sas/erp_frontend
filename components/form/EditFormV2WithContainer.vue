@@ -296,8 +296,8 @@ watch(() => props.forceSave, () => {
                       <li class="p-3 surface-border flex align-items-start sm:align-items-center">
 
                         <div class="flex flex-column">
-                          <span class="text-900 font-semibold text-xl mb-2">{{ fieldValues[field.field].name }}</span>
-                          <span class="text-900 font-medium">
+                          <span class="text-900 font-semibold text-xl mb-2">{{ fieldValues[field.field].name || fieldValues[field.field].split("/")[fieldValues[field.field].split("/")?.length - 1] }}</span>
+                          <span v-if="fieldValues[field.field].size" class="text-900 font-medium">
                             <Badge severity="warning">
                               {{ formatSize(fieldValues[field.field].size) }}
                             </Badge>

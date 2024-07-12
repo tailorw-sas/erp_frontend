@@ -308,6 +308,9 @@ async function getOptionsList() {
         case 'bool':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.EQUALS }
           break
+        case 'custom-badge':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
         default:
           break
       }
@@ -398,7 +401,9 @@ function haveFilterApplay(filtersValue: any, column: any) {
   if (column.type === 'text') {
     result = filtersValue[column.field].value
   }
-
+  if (column.type === 'custom-badge') {
+    result = filtersValue[column.field].value
+  }
   return result
 }
 
@@ -545,12 +550,23 @@ getOptionsList()
             <span v-else-if="column.type === 'bool'">
               <Badge v-tooltip.top="data[column.field] ? 'Active' : 'Inactive'" :value="data[column.field].toString().charAt(0).toUpperCase() + data[column.field].toString().slice(1)" :severity="data[column.field] ? 'success' : 'danger'" class="success" />
             </span>
+            <span v-else-if="column.type === 'custom-badge'">
+              <Badge
+                v-tooltip.top="data[column.field]" :value="data[column.field].toString()"
+                :class="column.statusClassMap?.find(e => e.status === data[column.field])?.class"
+              />
+            </span>
             <span v-else>
               <span v-if="column.type === 'local-select'" v-tooltip.top="data[column.field].name" class="truncate">
                 {{ (column.hasOwnProperty('localItems') && column.localItems) ? getNameById(data[column.field], column.localItems) : '' }}
               </span>
               <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field]" class="truncate">
-                {{ data[column.field] }}
+                <span v-if="column.badge && data[column.field]">
+                  <Badge v-tooltip.top="data[column.field]" :value="data[column.field] ? 'True' : 'False'" :severity="data[column.field] ? 'success' : 'danger'" class="}" />
+                </span>
+                <span v-else>
+                  {{ data[column.field] }}
+                </span>
               </span>
             </span>
           </template>
@@ -730,6 +746,7 @@ getOptionsList()
             </span>
           </template>
         </Column>
+        <slot name="datatable-footer"/>
       </DataTable>
     </div>
 
