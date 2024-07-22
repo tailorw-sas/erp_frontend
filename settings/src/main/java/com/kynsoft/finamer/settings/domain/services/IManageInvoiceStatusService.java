@@ -22,4 +22,6 @@ public interface IManageInvoiceStatusService {
     Long countByCodeAndNotId(String code, UUID id);
 
     List<ManageInvoiceStatusDto> findByIds(List<UUID> ids);
+
+    List<ManageInvoiceStatusDto> findAllToReplicate();
 }

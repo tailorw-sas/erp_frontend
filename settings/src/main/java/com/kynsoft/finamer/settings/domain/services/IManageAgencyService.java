@@ -28,4 +28,6 @@ public interface IManageAgencyService {
     List<ManageAgencyDto> findAll();
 
     Long countByDefaultAndNotId(UUID id);
+
+    List<ManageAgencyDto> findAllToReplicate();
 }

@@ -6,5 +6,7 @@ public enum CustomCellType {
     DATE,
     DATETIME,
     NUMERIC,
-    FORMULA
+    FORMULA,
+    RICHFIELD,
+    DATAFORMAT
 }

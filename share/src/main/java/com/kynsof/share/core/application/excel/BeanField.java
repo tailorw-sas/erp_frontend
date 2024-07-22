@@ -26,6 +26,17 @@ public class BeanField {
 
     }
 
+    public Object getFieldValue(Object instance){
+        String getterName = "get" + Character.toUpperCase(this.field.getName().charAt(0)) + this.field.getName().substring(1);
+        try {
+            Method getterMethod = this.field.getDeclaringClass().getMethod(getterName);
+            return getterMethod.invoke(instance);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
     public Class<?> getFieldType(){
        return field.getType();
     }

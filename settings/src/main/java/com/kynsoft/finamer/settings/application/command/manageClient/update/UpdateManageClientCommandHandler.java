@@ -40,7 +40,7 @@ public class UpdateManageClientCommandHandler implements ICommandHandler<UpdateM
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerUpdateManageClientService.update(new UpdateManageClientKafka(test.getId(), test.getName()));
+            this.producerUpdateManageClientService.update(new UpdateManageClientKafka(test.getId(), test.getName(), command.getStatus().name()));
         }
 
     }

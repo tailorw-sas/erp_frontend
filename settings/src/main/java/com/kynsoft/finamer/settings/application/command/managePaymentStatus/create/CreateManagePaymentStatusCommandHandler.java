@@ -29,6 +29,6 @@ public class CreateManagePaymentStatusCommandHandler implements ICommandHandler<
         RulesChecker.checkRule(new ManagePaymentStatusNameCantBeNullRule(command.getName()));
 
         service.create(new ManagerPaymentStatusDto(command.getId(), command.getCode(), command.getName(), command.getStatus(), command.getCollected(), command.getDescription()));
-        this.producerReplicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(command.getId(), command.getCode(), command.getName()));
+        this.producerReplicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name()));
     }
 }

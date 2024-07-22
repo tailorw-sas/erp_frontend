@@ -17,5 +17,7 @@ public class ReplicateManagePaymentAttachmentStatusKafka implements Serializable
     private String code;
     @JsonProperty("name")
     private String name;
+    @JsonProperty("status")
+    private String status;
 
 }

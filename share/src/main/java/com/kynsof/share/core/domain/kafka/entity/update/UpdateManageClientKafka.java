@@ -16,4 +16,5 @@ public class UpdateManageClientKafka  implements Serializable {
 
     private UUID id;
     private String name;
+    private String status;
 }

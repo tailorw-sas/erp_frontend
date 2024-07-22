@@ -105,4 +105,16 @@ public class ManagerClientServiceImpl implements IManagerClientService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManageClientDto> findAllToReplicate() {
+        List<ManageClient> objects = this.repositoryQuery.findAll();
+        List<ManageClientDto> objectDtos = new ArrayList<>();
+
+        for (ManageClient object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

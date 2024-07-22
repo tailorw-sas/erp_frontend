@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageCollectionStatus.
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageCollectionStatusKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -9,6 +10,7 @@ import com.kynsoft.finamer.settings.domain.dto.ManageCollectionStatusDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.manageCollectionStatus.ManageCollectionStatusNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageCollectionStatusService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCollectionStatus.ProducerUpdateManageCollectionStatusService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,8 +22,11 @@ public class UpdateManageCollectionStatusCommandHandler implements ICommandHandl
 
     private final IManageCollectionStatusService service;
 
-    public UpdateManageCollectionStatusCommandHandler(IManageCollectionStatusService service) {
+    private final ProducerUpdateManageCollectionStatusService producerService;
+
+    public UpdateManageCollectionStatusCommandHandler(IManageCollectionStatusService service, ProducerUpdateManageCollectionStatusService producerService) {
         this.service = service;
+        this.producerService = producerService;
     }
 
     @Override
@@ -43,6 +48,7 @@ public class UpdateManageCollectionStatusCommandHandler implements ICommandHandl
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerService.update(new UpdateManageCollectionStatusKafka(dto.getId(), dto.getName()));
         }
     }
 

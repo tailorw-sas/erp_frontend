@@ -17,4 +17,5 @@ public interface IManagePaymentAttachmentStatusService {
     Long countByCode(String code, UUID id);
     List<ManagePaymentAttachmentStatusDto> findByIds(List<UUID> ids);
     Long countByNameAndNotId(String name, UUID id);
+    List<ManagePaymentAttachmentStatusDto> findAllToReplicate();
 }

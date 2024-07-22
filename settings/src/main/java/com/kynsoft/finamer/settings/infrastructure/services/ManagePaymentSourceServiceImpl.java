@@ -9,12 +9,10 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagePaymentSourceResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentSourceDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentSourceService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagePaymentSource;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagePaymentSourceWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManagePaymentSourceReadDataJPARepository;
-import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -90,4 +88,17 @@ public class ManagePaymentSourceServiceImpl implements IManagePaymentSourceServi
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
+
+    @Override
+    public List<ManagePaymentSourceDto> findAllToReplicate() {
+        List<ManagePaymentSource> objects = this.repositoryQuery.findAll();
+        List<ManagePaymentSourceDto> objectDtos = new ArrayList<>();
+
+        for (ManagePaymentSource object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

@@ -87,7 +87,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageHotelService.update(new UpdateManageHotelKafka(dto.getId(), dto.getName(), dto.getIsApplyByVCC(), dto.getManageTradingCompanies().getId()));
+            this.producerUpdateManageHotelService.update(new UpdateManageHotelKafka(dto.getId(), dto.getName(), dto.getIsApplyByVCC(), dto.getManageTradingCompanies().getId(), command.getStatus().name()));
         }
     }
 

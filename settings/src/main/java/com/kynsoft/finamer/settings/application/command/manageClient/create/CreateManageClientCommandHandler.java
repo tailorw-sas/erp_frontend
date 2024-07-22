@@ -36,6 +36,6 @@ public class CreateManageClientCommandHandler implements ICommandHandler<CreateM
                 command.getDescription(),
                 command.getStatus()
         ));
-        this.producerReplicateManageClientService.create(new ReplicateManageClientKafka(command.getId(), command.getCode(), command.getName()));
+        this.producerReplicateManageClientService.create(new ReplicateManageClientKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name()));
     }
 }

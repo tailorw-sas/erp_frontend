@@ -111,4 +111,17 @@ public class ManageBankAccountServiceImpl implements IManageBankAccountService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManageBankAccountDto> findAllToReplicate() {
+        List<ManageBankAccount> objects = this.repositoryQuery.findAll();
+        List<ManageBankAccountDto> objectDtos = new ArrayList<>();
+
+        for (ManageBankAccount object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

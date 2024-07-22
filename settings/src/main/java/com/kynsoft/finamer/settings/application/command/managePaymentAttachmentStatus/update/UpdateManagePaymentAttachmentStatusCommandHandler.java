@@ -54,7 +54,7 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         this.updateModule(dto::setModule, command.getModule(), dto.getModule().getId(), update::setUpdate);
 
         this.service.update(dto);
-        this.producerUpdateManagePaymentAttachmentStatusService.update(new UpdateManagePaymentAttachmentStatusKafka(dto.getId(), dto.getName()));
+        this.producerUpdateManagePaymentAttachmentStatusService.update(new UpdateManagePaymentAttachmentStatusKafka(dto.getId(), dto.getName(), command.getStatus().name()));
 //        if (update.getUpdate() > 0) {
 //        }
     }

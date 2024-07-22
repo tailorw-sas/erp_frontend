@@ -15,4 +15,5 @@ public interface IManagerPaymentStatusService {
     ManagerPaymentStatusDto findById(UUID uuid);
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
     Long countByCode(String code, UUID id);
+    List<ManagerPaymentStatusDto> findAllToReplicate();
 }

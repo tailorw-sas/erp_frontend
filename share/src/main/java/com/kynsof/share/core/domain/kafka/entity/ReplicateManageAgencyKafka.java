@@ -22,4 +22,11 @@ public class ReplicateManageAgencyKafka implements Serializable {
     private String name;
     @JsonProperty("client")
     private UUID client;
+    @JsonProperty("bookingCouponFormat")
+    private String bookingCouponFormat;
+    @JsonProperty("status")
+    private String status;
+
+    @JsonProperty("generationType")
+    private String generationType;
 }

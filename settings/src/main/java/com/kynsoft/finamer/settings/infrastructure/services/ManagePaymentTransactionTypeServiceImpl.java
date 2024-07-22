@@ -13,7 +13,6 @@ import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagePaymentTransactionType;
 
-
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagePaymentTransactionTypeWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManagePaymentTransactionTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,4 +99,17 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
 
         return getPaginatedResponse(data);
     }
+
+    @Override
+    public List<ManagePaymentTransactionTypeDto> findAllToReplicate() {
+        List<ManagePaymentTransactionType> objects = this.repositoryQuery.findAll();
+        List<ManagePaymentTransactionTypeDto> objectDtos = new ArrayList<>();
+
+        for (ManagePaymentTransactionType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

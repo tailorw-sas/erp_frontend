@@ -58,6 +58,8 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.equal(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.equal(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else if (value instanceof String) {
+                    yield builder.equal(builder.lower(path.as(String.class)), value.toString().toLowerCase());
                 } else {
                     yield builder.equal(path, value);
                 }

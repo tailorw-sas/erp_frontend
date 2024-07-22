@@ -20,4 +20,6 @@ public interface IManagerClientService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);
+
+    List<ManageClientDto> findAllToReplicate();
 }

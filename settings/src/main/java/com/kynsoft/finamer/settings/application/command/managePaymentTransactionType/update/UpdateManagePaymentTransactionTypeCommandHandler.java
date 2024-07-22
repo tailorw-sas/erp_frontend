@@ -9,6 +9,9 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransactionTypeDefaultMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransantionTypeValidateApplyDepositRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransantionTypeValidateCashRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransantionTypeValidateDepositRule;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerUpdateManagePaymentTransactionTypeService;
 import org.springframework.stereotype.Component;
@@ -30,6 +33,9 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
     @Override
     public void handle(UpdateManagePaymentTransactionTypeCommand command) {
 
+        RulesChecker.checkRule(new ManagePaymentTransantionTypeValidateCashRule(command.getCash(), command.getDeposit(), command.getApplyDeposit()));
+        RulesChecker.checkRule(new ManagePaymentTransantionTypeValidateDepositRule(command.getCash(), command.getDeposit(), command.getApplyDeposit()));
+        RulesChecker.checkRule(new ManagePaymentTransantionTypeValidateApplyDepositRule(command.getCash(), command.getDeposit(), command.getApplyDeposit()));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Module ID cannot be null."));
 
         ManagePaymentTransactionTypeDto dto = this.service.findById(command.getId());
@@ -47,9 +53,10 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
         UpdateIfNotNull.updateBoolean(dto::setRemarkRequired, command.getRemarkRequired(), dto.getRemarkRequired(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDeposit, command.getDeposit(), dto.getDeposit(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setApplyDeposit, command.getApplyDeposit(), dto.getApplyDeposit(), update::setUpdate);
-        if (UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate)) {
-            RulesChecker.checkRule(new ManagePaymentTransactionTypeDefaultMustBeUniqueRule(service, command.getId()));
-        }
+        UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
+//        if (UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate)) {
+//            RulesChecker.checkRule(new ManagePaymentTransactionTypeDefaultMustBeUniqueRule(service, command.getId()));
+//        }
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 
@@ -63,7 +70,8 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
                     dto.getApplyDeposit(), 
                     dto.getCash(), 
                     dto.getRemarkRequired(), 
-                    dto.getMinNumberOfCharacter()
+                    dto.getMinNumberOfCharacter(),
+                    command.getDefaultRemark()
             ));
         }
     }
