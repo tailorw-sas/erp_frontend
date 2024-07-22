@@ -21,4 +21,6 @@ public interface IManageBankAccountService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByAccountNumberAndNotId(String accountNumber, UUID id);
+
+    List<ManageBankAccountDto> findAllToReplicate();
 }

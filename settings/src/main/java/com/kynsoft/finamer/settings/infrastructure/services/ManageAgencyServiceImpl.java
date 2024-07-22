@@ -125,4 +125,18 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(), data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    
+    @Override
+    public List<ManageAgencyDto> findAllToReplicate() {
+        List<ManageAgency> objects = this.repositoryQuery.findAll();
+        List<ManageAgencyDto> objectDtos = new ArrayList<>();
+
+        for (ManageAgency object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

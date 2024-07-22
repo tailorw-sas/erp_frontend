@@ -123,4 +123,17 @@ public class ManageHotelServiceImpl implements IManageHotelService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManageHotelDto> findAllToReplicate() {
+        List<ManageHotel> objects = this.repositoryQuery.findAll();
+        List<ManageHotelDto> objectDtos = new ArrayList<>();
+
+        for (ManageHotel object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

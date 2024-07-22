@@ -14,7 +14,6 @@ import com.kynsoft.finamer.settings.infrastructure.identity.ManagePaymentAttachm
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagePaymentAttachmentStatusWriteDataJpaRepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManagePaymentAttachmentStatusReadDataJpaRepository;
 import java.time.LocalDateTime;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -98,4 +97,17 @@ public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentA
     public Long countByNameAndNotId(String name, UUID id) {
         return this.repositoryQuery.countByNameAndNotId(name, id);
     }
+
+    @Override
+    public List<ManagePaymentAttachmentStatusDto> findAllToReplicate() {
+        List<ManagePaymentAttachmentStatus> objects = this.repositoryQuery.findAll();
+        List<ManagePaymentAttachmentStatusDto> objectDtos = new ArrayList<>();
+
+        for (ManagePaymentAttachmentStatus object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

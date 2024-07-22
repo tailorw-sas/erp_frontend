@@ -1,6 +1,5 @@
 package com.kynsof.share.core.domain.kafka.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,4 +17,6 @@ public class ReplicateManageClientKafka  implements Serializable {
     private UUID id;
     private String code;
     private String name;
+    private String status;
+
 }

@@ -13,4 +13,5 @@ public class ReaderConfiguration {
     private boolean ignoreHeaders;
 
     private String sheetNameToRead;
+
 }

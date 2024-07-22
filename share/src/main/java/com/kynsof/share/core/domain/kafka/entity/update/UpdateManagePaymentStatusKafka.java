@@ -17,5 +17,6 @@ public class UpdateManagePaymentStatusKafka implements Serializable {
     private UUID id;
     @JsonProperty("name")
     private String name;
-
+    @JsonProperty("status")
+    private String status;
 }

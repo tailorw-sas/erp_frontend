@@ -26,4 +26,6 @@ public interface IManageEmployeeService {
     List<ManageEmployeeDto> finAllByIds(List<UUID> ids);
 
     void saveAll(List<ManageEmployeeDto> dtos);
+
+    List<ManageEmployeeDto> findAllToReplicate();
 }

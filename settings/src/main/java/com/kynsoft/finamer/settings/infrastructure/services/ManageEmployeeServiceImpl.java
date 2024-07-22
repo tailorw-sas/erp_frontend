@@ -121,4 +121,16 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         repositoryCommand.saveAll(dtos.stream().map(ManageEmployee::new).collect(Collectors.toList()));
     }
 
+    @Override
+    public List<ManageEmployeeDto> findAllToReplicate() {
+        List<ManageEmployee> objects = this.repositoryQuery.findAll();
+        List<ManageEmployeeDto> objectDtos = new ArrayList<>();
+
+        for (ManageEmployee object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

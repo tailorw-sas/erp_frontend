@@ -112,4 +112,17 @@ public class ManageInvoiceTransactionTypeServiceImpl implements IManageInvoiceTr
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManageInvoiceTransactionTypeDto> findAllToReplicate() {
+        List<ManageInvoiceTransactionType> objects = this.repositoryQuery.findAll();
+        List<ManageInvoiceTransactionTypeDto> objectDtos = new ArrayList<>();
+
+        for (ManageInvoiceTransactionType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

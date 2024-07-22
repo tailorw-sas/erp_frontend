@@ -116,4 +116,16 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManageInvoiceStatusDto> findAllToReplicate() {
+        List<ManageInvoiceStatus> objects = this.repositoryQuery.findAll();
+        List<ManageInvoiceStatusDto> objectDtos = new ArrayList<>();
+
+        for (ManageInvoiceStatus object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
 }

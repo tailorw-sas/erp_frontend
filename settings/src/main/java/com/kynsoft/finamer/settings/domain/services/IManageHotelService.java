@@ -25,4 +25,6 @@ public interface IManageHotelService {
     List<ManageHotelDto> findByIds(List<UUID> ids);
 
     List<ManageHotelDto> findAll();
+
+    List<ManageHotelDto> findAllToReplicate();
 }

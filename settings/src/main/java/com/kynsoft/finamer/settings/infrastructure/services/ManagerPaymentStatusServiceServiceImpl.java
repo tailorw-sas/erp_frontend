@@ -85,4 +85,17 @@ public class ManagerPaymentStatusServiceServiceImpl implements IManagerPaymentSt
         return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManagerPaymentStatusDto> findAllToReplicate() {
+        List<ManagerPaymentStatus> objects = this.repositoryQuery.findAll();
+        List<ManagerPaymentStatusDto> objectDtos = new ArrayList<>();
+
+        for (ManagerPaymentStatus object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

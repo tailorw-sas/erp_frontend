@@ -40,7 +40,7 @@ public class UpdatePaymentStatusCommandHandler implements ICommandHandler<Update
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManagePaymentStatusService.update(new UpdateManagePaymentStatusKafka(dto.getId(), dto.getName()));
+            this.producerUpdateManagePaymentStatusService.update(new UpdateManagePaymentStatusKafka(dto.getId(), dto.getName(), command.getStatus().name()));
         }
     }
 

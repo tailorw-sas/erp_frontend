@@ -15,5 +15,7 @@ public class ReplicateManageBankAccountKafka implements Serializable {
     private UUID id;
     @JsonProperty("accountNumber")
     private String accountNumber;
+    @JsonProperty("status")
+    private String status;
 
 }

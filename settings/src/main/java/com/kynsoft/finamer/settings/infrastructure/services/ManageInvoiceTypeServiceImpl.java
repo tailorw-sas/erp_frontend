@@ -112,4 +112,16 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManageInvoiceTypeDto> findAllToReplicate() {
+        List<ManageInvoiceType> objects = this.repositoryQuery.findAll();
+        List<ManageInvoiceTypeDto> objectDtos = new ArrayList<>();
+
+        for (ManageInvoiceType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
 }
