@@ -16,9 +16,9 @@ pipeline {
 	stage ('Create docker image'){
 		steps {
 			dir('invoicing'){
-				sh 'docker build -t tailorw/fin-invoicing:v1 .'
+				sh 'docker build -t tailorw/fin-invoicing:dev .'
 				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
-                			sh 'docker push tailorw/fin-invoicing:v1'
+                			sh 'docker push tailorw/fin-invoicing:dev'
                 		}
 			}
 		}
