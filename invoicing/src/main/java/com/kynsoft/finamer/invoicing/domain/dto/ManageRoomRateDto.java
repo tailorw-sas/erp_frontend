@@ -15,7 +15,7 @@ import java.util.UUID;
 @Setter
 public class ManageRoomRateDto {
     private UUID id;
-    private Long room_rate_id;
+    private Long roomRateId;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
     private Double invoiceAmount;
@@ -28,5 +28,7 @@ public class ManageRoomRateDto {
     private String remark;
     private ManageBookingDto booking;
     private List<ManageAdjustmentDto> adjustments;
+    private Long nights;
+
 
 }

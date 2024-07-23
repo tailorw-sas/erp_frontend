@@ -1,9 +1,9 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
+import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.manageBooking.importbooking.ImportBookingFromFileCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingRequest;
@@ -12,25 +12,22 @@ import com.kynsoft.finamer.invoicing.application.command.manageBooking.createMan
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.createMany.CreateManyBookingsCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.delete.DeleteBookingCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.delete.DeleteBookingMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.importbooking.ImportBookingFromFileCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.update.UpdateBookingCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.update.UpdateBookingMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.update.UpdateBookingRequest;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.calculateInvoiceAmount.CalculateInvoiceAmountCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.calculateInvoiceAmount.CalculateInvoiceAmountMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateMessage;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.getById.FindBookingByIdQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingErrorRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingFromFileErrorQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.search.GetSearchBookingQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBookingResponse;
-import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingErrorRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
-import com.kynsoft.finamer.invoicing.domain.excel.validators.ImportBookingProcessStatusRequest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,11 +53,6 @@ public class BookingController {
                 request.getChildren(), request.getRateAdult(), request.getRateChild(), request.getHotelAmount(),
                 request.getDescription(), response.getId(), UUID.randomUUID());
         CreateRoomRateMessage roomRateMessage = mediator.send(createRoomRateCommand);
-
-        CalculateInvoiceAmountCommand calculateInvoiceAmountCommand = new CalculateInvoiceAmountCommand(
-                createCommand.getInvoice());
-
-        mediator.send(calculateInvoiceAmountCommand);
 
         return ResponseEntity.ok(response);
     }
@@ -103,8 +95,7 @@ public class BookingController {
 
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getPageSize())
-                .withSort(Sort.by("createdAt").ascending());
+        Pageable pageable = PageableUtil.createPageable(request);
 
         GetSearchBookingQuery query = new GetSearchBookingQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
@@ -116,24 +107,24 @@ public class BookingController {
 
         UpdateBookingCommand command = UpdateBookingCommand.fromRequest(request, id);
         UpdateBookingMessage response = mediator.send(command);
+
         return ResponseEntity.ok(response);
     }
+
     @PostMapping(path = "/import")
     public ResponseEntity<?> importBooking(@RequestBody ImportBookingRequest request) {
         ImportBookingFromFileCommand importBookingFromFileCommand = new ImportBookingFromFileCommand(request);
         return ResponseEntity.ok(mediator.send(importBookingFromFileCommand));
     }
 
-    @GetMapping(path = "/import/error/{importProcessId}")
-    public ResponseEntity<?> getImportBookingError(@PathVariable("importProcessId") String importProcessId,
-                                                   @RequestParam("pageSize") int pageSize,
-                                                   @RequestParam("pageNumber") int pageNumber
-                                                   ) {
-        ImportBookingErrorRequest request = new ImportBookingErrorRequest(importProcessId, PageRequest.of(pageNumber,pageSize));
+    @PostMapping(path = "/import-search")
+    public ResponseEntity<?> getImportBookingError(@RequestBody SearchRequest searchRequest) {
+        ImportBookingErrorRequest request = new ImportBookingErrorRequest(searchRequest.getQuery(), PageRequest.of(searchRequest.getPage(), searchRequest.getPageSize()));
         ImportBookingFromFileErrorQuery importBookingFromFileErrorQuery = new ImportBookingFromFileErrorQuery(request);
         return ResponseEntity.ok(mediator.send(importBookingFromFileErrorQuery));
     }
-    @GetMapping(path = "/import/status/{importProcessId}")
+
+    @GetMapping(path = "/import-status/{importProcessId}")
     public ResponseEntity<?> getImportBookingProcessStatus(@PathVariable("importProcessId") String importProcessId) {
         ImportBookingProcessStatusRequest request = new ImportBookingProcessStatusRequest(importProcessId);
         ImportBookingProcessStatusQuery importBookingProcessStatusQuery = new ImportBookingProcessStatusQuery(request);

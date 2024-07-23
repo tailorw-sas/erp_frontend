@@ -3,13 +3,8 @@ package com.kynsoft.finamer.invoicing.domain.excel.bean;
 import com.kynsof.share.core.application.excel.CustomCellType;
 import com.kynsof.share.core.application.excel.annotation.Cell;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import lombok.Data;
-
-import java.text.SimpleDateFormat;
-import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Data
 public class BookingRow {
@@ -17,7 +12,7 @@ public class BookingRow {
 
     @Cell(position = -1)
     private int rowNumber;
-    @Cell(position = 0)
+    @Cell(position = 0,cellType = CustomCellType.DATAFORMAT)
     private String transactionDate;
     @Cell(position = 1)
     private String manageHotelCode;
@@ -27,9 +22,9 @@ public class BookingRow {
     private String firstName;
     @Cell(position = 4)
     private String lastName;
-    @Cell(position = 5)
+    @Cell(position = 5,cellType = CustomCellType.DATAFORMAT)
     private String checkIn;
-    @Cell(position = 6)
+    @Cell(position = 6,cellType = CustomCellType.DATAFORMAT)
     private String checkOut;
     @Cell(position = 7,cellType = CustomCellType.NUMERIC)
     private double nights;
@@ -41,13 +36,13 @@ public class BookingRow {
     private double invoiceAmount;
     @Cell(position = 11)
     private String coupon;
-    @Cell(position = 12)
+    @Cell(position = 12,cellType = CustomCellType.DATAFORMAT)
     private String hotelBookingNumber;
     @Cell(position = 13)
     private String roomType;
     @Cell(position = 14)
     private String ratePlan;
-    @Cell(position = 15)
+    @Cell(position = 15,cellType = CustomCellType.DATAFORMAT)
     private String hotelInvoiceNumber;
     @Cell(position = 16)
     private String remarks;
@@ -57,30 +52,29 @@ public class BookingRow {
     private double roomNumber;
     @Cell(position = 19,cellType = CustomCellType.NUMERIC)
     private double hotelInvoiceAmount;
-    @Cell(position = 20)
+    @Cell(position = 20,cellType = CustomCellType.DATAFORMAT)
     private String bookingDate;
     @Cell(position =21)
     private String hotelType;
 
-    public ManageBookingDto toAgregate() {
+    public ManageBookingDto toAggregate() {
         ManageBookingDto manageBookingDto = new ManageBookingDto();
         manageBookingDto.setAdults((int) this.adults);
         manageBookingDto.setChildren((int) this.children);
-        LocalDate checkInDate= LocalDate.parse(this.checkIn,DateTimeFormatter.ofPattern("yyyyMMdd"));
-        LocalDate checkOutDate=LocalDate.parse(this.checkOut,DateTimeFormatter.ofPattern("yyyyMMdd"));
-        manageBookingDto.setCheckIn(checkInDate.atTime(0,0));
-        manageBookingDto.setCheckOut(checkOutDate.atTime(0,0));
+        manageBookingDto.setCheckIn(DateUtil.parseDateToDateTime(this.checkIn));
+        manageBookingDto.setCheckOut(DateUtil.parseDateToDateTime(this.checkOut));
         manageBookingDto.setCouponNumber(this.coupon);
         manageBookingDto.setHotelAmount(this.hotelInvoiceAmount);
         manageBookingDto.setFirstName(this.firstName);
         manageBookingDto.setLastName(this.lastName);
+        manageBookingDto.setFullName(this.firstName+" "+this.lastName);
         manageBookingDto.setHotelBookingNumber(this.hotelBookingNumber);
         manageBookingDto.setHotelInvoiceNumber(this.hotelInvoiceNumber);
         manageBookingDto.setDescription(this.remarks);
         manageBookingDto.setRoomNumber(String.valueOf(this.roomNumber));
+        manageBookingDto.setInvoiceAmount(this.invoiceAmount);
         // manageBookingDto.setAmountPax();
-        LocalDate bookingDate=LocalDate.parse(this.bookingDate,DateTimeFormatter.ofPattern("yyyyMMdd"));
-        manageBookingDto.setBookingDate(bookingDate.atTime(0,0));
+        manageBookingDto.setBookingDate(DateUtil.parseDateToDateTime(this.bookingDate));
         return manageBookingDto;
     }
 

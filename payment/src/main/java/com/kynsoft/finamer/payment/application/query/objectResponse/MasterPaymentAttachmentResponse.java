@@ -22,6 +22,7 @@ public class MasterPaymentAttachmentResponse implements IResponse {
     private ResourceTypeResponse resourceType;
     private AttachmentTypeResponse attachmentType;
     private String fileName;
+    private String fileWeight;
     private String path;
     private String remark;
 
@@ -34,6 +35,7 @@ public class MasterPaymentAttachmentResponse implements IResponse {
         this.fileName = dto.getFileName();
         this.path = dto.getPath();
         this.remark = dto.getRemark();
+        this.fileWeight = dto.getFileWeight() != null ? dto.getFileWeight() : null;
     }
 
 }

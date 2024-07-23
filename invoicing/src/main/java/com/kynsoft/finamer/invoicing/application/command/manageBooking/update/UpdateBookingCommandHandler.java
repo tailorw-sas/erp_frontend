@@ -36,6 +36,8 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
         public void handle(UpdateBookingCommand command) {
                 ManageBookingDto dto = this.bookingService.findById(command.getId());
 
+
+                command.setInvoice(dto.getInvoice().getId());
                 ConsumerUpdate update = new ConsumerUpdate();
 
                 UpdateIfNotNull.updateLocalDateTime(dto::setHotelCreationDate, command.getHotelCreationDate(),

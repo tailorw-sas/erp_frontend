@@ -17,11 +17,12 @@ public class UpdateMasterPaymentAttachmentCommand implements ICommand {
     private UUID resourceType;
     private UUID attachmentType;
     private String fileName;
+    private String fileWeight;
     private String path;
     private String remark;
 
     public UpdateMasterPaymentAttachmentCommand(UUID id, Status status, UUID employee, UUID resourceType, UUID attachmentType, 
-                                                String fileName, String path, String remark) {
+                                                String fileName, String path, String remark, String fileWeight) {
         this.id = id;
         this.status = status;
         this.employee = employee;
@@ -30,6 +31,7 @@ public class UpdateMasterPaymentAttachmentCommand implements ICommand {
         this.fileName = fileName;
         this.path = path;
         this.remark = remark;
+        this.fileWeight = fileWeight;
     }
 
     public static UpdateMasterPaymentAttachmentCommand fromRequest(UpdateMasterPaymentAttachmentRequest request, UUID id) {
@@ -41,7 +43,8 @@ public class UpdateMasterPaymentAttachmentCommand implements ICommand {
                 request.getAttachmentType(),
                 request.getFileName(),
                 request.getPath(),
-                request.getRemark()
+                request.getRemark(),
+                request.getFileWeight()
         );
     }
 

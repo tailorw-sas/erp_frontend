@@ -5,6 +5,8 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.creditcard.domain.dto.CreditCardCloseOperationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageHotelDto;
+import com.kynsoft.finamer.creditcard.domain.rules.closeOperation.CheckBeginDateAndEndDateRule;
+import com.kynsoft.finamer.creditcard.domain.rules.closeOperation.CloseOperationHotelMustBeUniqueRule;
 import com.kynsoft.finamer.creditcard.domain.services.ICreditCardCloseOperationService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageHotelService;
 import org.springframework.stereotype.Component;
@@ -24,6 +26,9 @@ public class CreateCreditCardCloseOperationCommandHandler implements ICommandHan
     public void handle(CreateCreditCardCloseOperationCommand command) {
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getHotel(), "id", "Manage Hotel ID cannot be null."));
+        RulesChecker.checkRule(new CheckBeginDateAndEndDateRule(command.getBeginDate(), command.getEndDate()));
+        RulesChecker.checkRule(new CloseOperationHotelMustBeUniqueRule(closeOperationService, command.getHotel()));
+
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
         this.closeOperationService.create(new CreditCardCloseOperationDto(

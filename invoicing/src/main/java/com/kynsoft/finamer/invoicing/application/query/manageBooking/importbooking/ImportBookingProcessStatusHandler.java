@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
-import com.kynsoft.finamer.invoicing.domain.excel.validators.ImportBookingProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.domain.services.ImportBookingService;
 import org.springframework.stereotype.Component;
 

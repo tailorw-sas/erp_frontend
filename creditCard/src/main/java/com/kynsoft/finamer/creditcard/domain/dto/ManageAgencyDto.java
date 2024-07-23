@@ -16,4 +16,5 @@ public class ManageAgencyDto {
     private UUID id;
     private String code;
     private String name;
+    private String bookingCouponFormat;
 }

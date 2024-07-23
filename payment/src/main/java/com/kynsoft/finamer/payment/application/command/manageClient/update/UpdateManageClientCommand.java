@@ -13,10 +13,12 @@ public class UpdateManageClientCommand implements ICommand {
 
     private UUID id;
     private String name;
+    private String status;
 
-    public UpdateManageClientCommand(UUID id, String name) {
+    public UpdateManageClientCommand(UUID id, String name, String status) {
         this.id = id;
         this.name = name;
+        this.status = status;
     }
 
     @Override

@@ -23,4 +23,6 @@ public interface ITransactionService {
     Long countByReservationNumberAndManageHotelIdAndNotId(String reservationNumber, UUID hotel);
 
     boolean compareParentTransactionAmount(Long parentId, Double amount);
+
+    Double findSumOfAmountByParentId(Long parentId);
 }

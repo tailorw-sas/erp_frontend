@@ -18,12 +18,13 @@ public class ManageMerchantHotelEnrolleResponse implements IResponse {
     private UUID id;
     private ManageMerchantResponse managerMerchant;
     private ManageHotelResponse managerHotel;
-
     private String enrolle;
+
     public ManageMerchantHotelEnrolleResponse(ManageMerchantHotelEnrolleDto dto) {
         this.id = dto.getId();
         this.managerMerchant = dto.getManageMerchant() != null ? new ManageMerchantResponse(dto.getManageMerchant()) : null;
         this.managerHotel = dto.getManageHotel() != null ? new ManageHotelResponse(dto.getManageHotel()) : null;
+        this.enrolle = dto.getEnrolle();
     }
 
 }

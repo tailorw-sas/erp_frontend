@@ -25,12 +25,15 @@ public class ManageBankAccount implements Serializable {
     @Column(unique = true)
     private String accountNumber;
 
+    private String status;
+
     public ManageBankAccount(ManageBankAccountDto dto) {
         this.id = dto.getId();
         this.accountNumber = dto.getAccountNumber();
+        this.status = dto.getStatus();
     }
 
     public ManageBankAccountDto toAggregate(){
-        return new ManageBankAccountDto(id, accountNumber);
+        return new ManageBankAccountDto(id, accountNumber, status);
     }
 }

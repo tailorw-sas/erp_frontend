@@ -17,4 +17,5 @@ public class ManageHotelDto {
     private String code;
     private String name;
     private Boolean isApplyByVCC;
+    private String status;
 }

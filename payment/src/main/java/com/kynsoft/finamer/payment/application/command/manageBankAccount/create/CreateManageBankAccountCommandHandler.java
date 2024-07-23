@@ -17,7 +17,7 @@ public class CreateManageBankAccountCommandHandler implements ICommandHandler<Cr
     @Override
     public void handle(CreateManageBankAccountCommand command) {
 
-        service.create(new ManageBankAccountDto(command.getId(), command.getAccountNumber()));
+        service.create(new ManageBankAccountDto(command.getId(), command.getAccountNumber(), command.getStatus()));
 
     }
 }

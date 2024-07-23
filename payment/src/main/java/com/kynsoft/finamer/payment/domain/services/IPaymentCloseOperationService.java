@@ -13,11 +13,17 @@ public interface IPaymentCloseOperationService {
 
     void update(PaymentCloseOperationDto dto);
 
+    void updateAll(List<PaymentCloseOperationDto> dtos);
+
     void delete(PaymentCloseOperationDto dto);
+
+    List<PaymentCloseOperationDto> findByHotelIds(List<UUID> hotelIds);
 
     PaymentCloseOperationDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long findByHotelId(UUID hotelId);
+
+    PaymentCloseOperationDto findByHotelIds(UUID hotel);
 }

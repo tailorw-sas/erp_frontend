@@ -1,9 +1,12 @@
 package com.kynsoft.finamer.creditcard.application.command.manageMerchantCommission.update;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageCreditCardTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
 import com.kynsoft.finamer.creditcard.domain.services.IManageCreditCardTypeService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantCommissionService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
@@ -32,7 +35,19 @@ public class UpdateManageMerchantCommissionCommandHandler implements ICommandHan
         existingCommission.setManagerMerchant(manageMerchantDto);
         existingCommission.setManageCreditCartType(creditCardTypeDto);
         existingCommission.setCommission(command.getCommission());
-        existingCommission.setCalculationType(command.getCalculationType());
+        existingCommission.setFromDate(command.getFromDate());
+        existingCommission.setToDate(command.getToDate());
+        if(command.getToDate() != null) {
+            existingCommission.setStatus(command.getStatus());
+        }
+        CalculationType calculationType;
+        try{
+            calculationType = CalculationType.valueOf(command.getCalculationType());
+        } catch (Exception e){
+            throw new BusinessException(DomainErrorMessage.VCC_WRONG_CALCULATION_TYPE, DomainErrorMessage.VCC_WRONG_CALCULATION_TYPE.name());
+        }
+
+        existingCommission.setCalculationType(calculationType);
         this.service.update(existingCommission);
     }
 }

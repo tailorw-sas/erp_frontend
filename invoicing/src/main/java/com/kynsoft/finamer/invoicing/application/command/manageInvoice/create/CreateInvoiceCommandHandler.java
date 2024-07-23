@@ -4,18 +4,9 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
-import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceStatusService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTypeService;
-
-import java.util.UUID;
-
+import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -45,10 +36,11 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
 
         String invoiceNumber = InvoiceType.getInvoiceTypeCode(command.getInvoiceType());
 
-        service.create(new ManageInvoiceDto(command.getId(), 0L, 0L,
+        ManageInvoiceDto invoiceDto = service.create(new ManageInvoiceDto(command.getId(), 0L, 0L,
                 invoiceNumber, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),
                 command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCECSED,
                 false,
-                null, null));
+                null, null, null, null, null, null));
+        command.setInvoiceId(invoiceDto.getInvoiceId());
     }
 }

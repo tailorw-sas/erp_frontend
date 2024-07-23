@@ -21,7 +21,15 @@ public class ConsumerReplicateManageMerchantCommissionService {
     @KafkaListener(topics = "finamer-replicate-manage-merchant-commission", groupId = "vcc-entity-replica")
     public void listen(ReplicateManageMerchantCommissionKafka entity) {
         try {
-            CreateManageMerchantCommissionCommand command = new CreateManageMerchantCommissionCommand(entity.getId(), entity.getManagerMerchant(), entity.getManageCreditCartType(), entity.getCommission(), entity.getCalculationType());
+            CreateManageMerchantCommissionCommand command = new CreateManageMerchantCommissionCommand(
+                    entity.getId(),
+                    entity.getManagerMerchant(),
+                    entity.getManageCreditCartType(),
+                    entity.getCommission(),
+                    entity.getCalculationType(),
+                    entity.getFromDate(),
+                    entity.getToDate(),
+                    entity.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageMerchantCommissionService.class.getName()).log(Level.SEVERE, null, ex);

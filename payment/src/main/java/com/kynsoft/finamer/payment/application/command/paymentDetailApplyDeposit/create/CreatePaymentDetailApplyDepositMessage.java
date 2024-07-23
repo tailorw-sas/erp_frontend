@@ -1,19 +1,16 @@
 package com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import lombok.Getter;
-
-import java.util.UUID;
 
 @Getter
 public class CreatePaymentDetailApplyDepositMessage implements ICommandMessage {
 
-    private final UUID id;
+    private final PaymentDto payment;
 
-    private final String command = "CREATE_PAYMENT_DETAIL";
-
-    public CreatePaymentDetailApplyDepositMessage(UUID id) {
-        this.id = id;
+    public CreatePaymentDetailApplyDepositMessage(PaymentDto payment) {
+        this.payment = payment;
     }
 
 }

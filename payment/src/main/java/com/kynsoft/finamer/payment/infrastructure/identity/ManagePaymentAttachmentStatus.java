@@ -25,14 +25,16 @@ public class ManagePaymentAttachmentStatus {
 
     @Column(unique = true)
     private String name;
+    private String status;
 
     public ManagePaymentAttachmentStatus(ManagePaymentAttachmentStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.status = dto.getStatus();
     }
 
     public ManagePaymentAttachmentStatusDto toAggregate() {
-        return new ManagePaymentAttachmentStatusDto(id, code, name);
+        return new ManagePaymentAttachmentStatusDto(id, code, name, status);
     }
 }

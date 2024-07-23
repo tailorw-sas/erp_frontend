@@ -20,7 +20,8 @@ public class CreateManagePaymentSourceCommandHandler implements ICommandHandler<
         service.create( new ManagePaymentSourceDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
+                command.getName(),
+                command.getStatus()
         ));
     }
 }

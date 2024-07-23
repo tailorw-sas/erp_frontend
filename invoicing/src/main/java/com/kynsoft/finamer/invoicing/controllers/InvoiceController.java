@@ -1,12 +1,9 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
+import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create.CreateAdjustmentCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create.CreateAdjustmentMessage;
-import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.calculateInvoiceAmount.CalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceMessage;
@@ -19,21 +16,18 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.delete.De
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceRequest;
-import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateMessage;
+import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.ExportInvoiceQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.GetSearchInvoiceQuery;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ExportInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/manage-invoice")
@@ -51,6 +45,10 @@ public class InvoiceController {
         CreateInvoiceCommand createCommand = CreateInvoiceCommand.fromRequest(request);
         CreateInvoiceMessage response = mediator.send(createCommand);
 
+        FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
+        ManageInvoiceResponse resp = mediator.send(query);
+
+        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null, null, null,null));
         return ResponseEntity.ok(response);
     }
 
@@ -61,13 +59,15 @@ public class InvoiceController {
 
         CreateBulkInvoiceMessage message = this.mediator.send(command);
 
-        mediator
-                .send(new CalculateInvoiceAmountCommand(message.getId()));
+        this.mediator.send(
+                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
+                    return b.getId();
+                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
+                    return rr.getId();
+                }).collect(Collectors.toList())));
 
-        CalculateInvoiceAmountCommand calculateInvoiceAmountCommand = new CalculateInvoiceAmountCommand(
-                message.getId());
+        this.mediator.send(new UpdateInvoiceCommand(message.getId(), null, null, null, null, null, null,null));
 
-        mediator.send(calculateInvoiceAmountCommand);
         return ResponseEntity.ok(message);
 
     }
@@ -92,12 +92,27 @@ public class InvoiceController {
 
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getPageSize())
-                .withSort(Sort.by("createdAt").ascending());
+        Pageable pageable = PageableUtil.createPageable(request);
 
         GetSearchInvoiceQuery query = new GetSearchInvoiceQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/export")
+    public ResponseEntity<?> export(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        ExportInvoiceQuery query = new ExportInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        ExportInvoiceResponse data = mediator.send(query);
+
+        final byte[] bytes = data.getStream().toByteArray();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice.xlsx");
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+        return ResponseEntity.ok().headers(headers).body(bytes);
     }
 
     @PatchMapping(path = "/{id}")

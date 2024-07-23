@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -36,6 +39,8 @@ public class PaymentResponse implements IResponse {
     private Double identified;
     private Double notIdentified;
     private String remark;
+    private Boolean hasAttachment;
+    private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
 
     public PaymentResponse(PaymentDto dto) {
         this.id = dto.getId();
@@ -57,6 +62,12 @@ public class PaymentResponse implements IResponse {
         this.identified = dto.getIdentified();
         this.notIdentified = dto.getNotIdentified();
         this.remark = dto.getRemark();
+        if (dto.getAttachments() != null) {
+            for (MasterPaymentAttachmentDto attachment : dto.getAttachments()) {
+                attachments.add(new MasterPaymentAttachmentResponse(attachment));
+            }
+        }
+        this.hasAttachment = !this.attachments.isEmpty();
     }
 
 }

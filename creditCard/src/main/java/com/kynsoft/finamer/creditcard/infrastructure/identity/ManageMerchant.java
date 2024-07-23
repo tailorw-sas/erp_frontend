@@ -26,7 +26,7 @@ public class ManageMerchant implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
-    @Column(unique = true)
+
     private String code;
 
     @CreationTimestamp

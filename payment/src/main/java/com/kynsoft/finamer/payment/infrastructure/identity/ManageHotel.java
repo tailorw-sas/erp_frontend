@@ -34,6 +34,7 @@ public class ManageHotel implements Serializable {
     private Boolean deleted = false;
 
     private String name;
+    private String status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -49,11 +50,12 @@ public class ManageHotel implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.status = dto.getStatus();
     }
 
     public ManageHotelDto toAggregate() {
         return new ManageHotelDto(
-                id, code, name
+                id, code, name, status
         );
     }
 }

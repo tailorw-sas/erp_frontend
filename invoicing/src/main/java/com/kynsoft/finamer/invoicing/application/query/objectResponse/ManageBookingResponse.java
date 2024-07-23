@@ -17,7 +17,7 @@ import java.util.UUID;
 @Setter
 public class ManageBookingResponse implements IResponse {
     private UUID id;
-    private Long booking_id;
+    private Long bookingId;
     private Long reservationNumber;
     private LocalDateTime hotelCreationDate;
     private LocalDateTime bookingDate;
@@ -43,10 +43,11 @@ public class ManageBookingResponse implements IResponse {
     private ManageNightTypeDto nightType;
     private ManageRoomTypeDto roomType;
     private ManageRoomCategoryDto roomCategory;
+    private Long nights;
 
     public ManageBookingResponse(ManageBookingDto dto) {
         this.id = dto.getId();
-        this.booking_id = dto.getBooking_id();
+        this.bookingId = dto.getBookingId();
         this.hotelCreationDate = dto.getHotelCreationDate();
         this.bookingDate = dto.getBookingDate();
         this.checkIn = dto.getCheckIn();
@@ -72,5 +73,6 @@ public class ManageBookingResponse implements IResponse {
         this.roomType = dto.getRoomType();
         this.roomCategory = dto.getRoomCategory();
         this.reservationNumber = dto.getReservationNumber();
+        this.nights = dto.getNights();
     }
 }

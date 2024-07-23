@@ -59,6 +59,7 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(masterPaymentAttachmentDto::setRemark, command.getRemark(), masterPaymentAttachmentDto.getRemark(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(masterPaymentAttachmentDto::setPath, command.getPath(), masterPaymentAttachmentDto.getPath(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(masterPaymentAttachmentDto::setFileName, command.getFileName(), masterPaymentAttachmentDto.getFileName(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(masterPaymentAttachmentDto::setFileWeight, command.getFileWeight(), masterPaymentAttachmentDto.getFileWeight(), update::setUpdate);
 
         this.updateStatus(masterPaymentAttachmentDto::setStatus, command.getStatus(), masterPaymentAttachmentDto.getStatus(), update::setUpdate);
         this.updateResourceType(masterPaymentAttachmentDto::setResourceType, command.getResourceType(), masterPaymentAttachmentDto.getResourceType().getId(), update::setUpdate);
@@ -86,7 +87,7 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
         if (newValue != null && !newValue.equals(oldValue)) {
             AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(newValue);
             if (manageAttachmentTypeDto.getDefaults()) {
-                RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, payment));
+                RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, payment, ""));
             }
             setter.accept(manageAttachmentTypeDto);
             update.accept(1);

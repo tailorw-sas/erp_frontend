@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.query.manageAgency.search.GetSearchManageAgencyQuery;
+import com.kynsoft.finamer.creditcard.application.query.manageCollectionStatus.search.GetSearchManageCollectionStatusQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageCreditCardType.search.GetSearchManageCreditCardTypeQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageHotel.search.GetSearchManageHotelQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageLanguage.search.GetSearchManageLanguageQuery;
@@ -116,6 +117,16 @@ public class NomenclatorsController {
         Pageable pageable = PageableUtil.createPageable(request);
 
         GetManageVCCTransactionTypeQuery query = new GetManageVCCTransactionTypeQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/collectionstatus")
+    public ResponseEntity<?> collectionstatus(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchManageCollectionStatusQuery query = new GetSearchManageCollectionStatusQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);

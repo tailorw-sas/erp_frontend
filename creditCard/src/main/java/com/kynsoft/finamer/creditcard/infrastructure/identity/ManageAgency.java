@@ -27,10 +27,12 @@ public class ManageAgency implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true)
     private String code;
 
     private String name;
+
+    @Column(name = "booking_coupon_format")
+    private String bookingCouponFormat;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -42,11 +44,13 @@ public class ManageAgency implements Serializable {
     public ManageAgency(ManageAgencyDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
-        this.name = dto.getName();}
+        this.name = dto.getName();
+        this.bookingCouponFormat = dto.getBookingCouponFormat();
+    }
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, name
+                id, code, name, bookingCouponFormat
         );
     }
 }

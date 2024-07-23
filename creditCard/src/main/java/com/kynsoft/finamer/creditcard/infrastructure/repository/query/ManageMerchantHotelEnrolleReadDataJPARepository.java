@@ -20,8 +20,9 @@ public interface ManageMerchantHotelEnrolleReadDataJPARepository extends JpaRepo
 
     Page<ManageMerchantHotelEnrolle> findAll(Specification specification, Pageable pageable);
 
-    Optional<ManageMerchantHotelEnrolle> findByManageMerchantAndManageHotel(ManageMerchant managerMerchant, ManageHotel managerHotel);
+    @Query("SELECT e FROM ManageMerchantHotelEnrolle e WHERE e.manageMerchant = :manageMerchant AND e.manageHotel = :manageHotel AND e.deleted = false")
+    Optional<ManageMerchantHotelEnrolle> findByManageMerchantAndManageHotel(@Param("manageMerchant") ManageMerchant managerMerchant, @Param("manageHotel") ManageHotel managerHotel);
 
-    @Query("SELECT e.manageHotel FROM ManageMerchantHotelEnrolle e WHERE e.manageMerchant = :manageMerchant AND e.manageHotel.isApplyByVcc = true")
+    @Query("SELECT e.manageHotel FROM ManageMerchantHotelEnrolle e WHERE e.manageMerchant = :manageMerchant AND e.manageHotel.isApplyByVcc = true AND e.deleted = false")
     List<ManageHotel> findHotelsByManageMerchant(@Param("manageMerchant") ManageMerchant manageMerchant);
 }

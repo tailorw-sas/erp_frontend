@@ -31,6 +31,7 @@ public class CreateBulkInvoiceCommand implements ICommand {
         private List<CreateRoomRateCommand> roomRateCommands;
         private List<CreateAdjustmentCommand> adjustmentCommands;
         private List<CreateAttachmentCommand> attachmentCommands;
+        private Long invoiceId;
 
         public CreateBulkInvoiceCommand(CreateInvoiceCommand invoiceCommand, List<CreateBookingCommand> bookingCommands,
                         List<CreateRoomRateCommand> roomRateCommands,
@@ -75,6 +76,7 @@ public class CreateBulkInvoiceCommand implements ICommand {
                                 roomRateCommands.stream().map(e -> new CreateRoomRateMessage(e.getId()))
                                                 .collect(Collectors.toList()),
                                 adjustmentCommands.stream().map(e -> new CreateAdjustmentMessage(e.getId()))
-                                                .collect(Collectors.toList()));
+                                                .collect(Collectors.toList()),
+                                invoiceId);
         }
 }

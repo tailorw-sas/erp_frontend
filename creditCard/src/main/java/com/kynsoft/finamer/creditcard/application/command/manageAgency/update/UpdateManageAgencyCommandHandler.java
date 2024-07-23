@@ -18,6 +18,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     public void handle(UpdateManageAgencyCommand command) {
         ManageAgencyDto dto = service.findById(command.getId());
         dto.setName(command.getName());
+        dto.setBookingCouponFormat(command.getBookingCouponFormat());
         service.update(dto);
     }
 }

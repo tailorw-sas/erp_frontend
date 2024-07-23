@@ -8,14 +8,16 @@ import com.kynsof.identity.infrastructure.identity.Business;
 import com.kynsof.identity.infrastructure.identity.UserSystem;
 import com.kynsof.identity.infrastructure.repository.command.BusinessWriteDataJPARepository;
 import com.kynsof.identity.infrastructure.repository.command.UserSystemsWriteDataJPARepository;
-import com.kynsof.identity.infrastructure.repository.query.BusinessReadDataJPARepository;
-import com.kynsof.identity.infrastructure.repository.query.UserSystemReadDataJPARepository;
+import com.kynsof.identity.infrastructure.repository.query.*;
 import com.kynsof.share.core.domain.EUserType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
 import java.util.UUID;
 
 @Component
@@ -25,13 +27,21 @@ public class DataSeeder implements ApplicationRunner {
     private final UserSystemsWriteDataJPARepository writeRepository;
     private final BusinessReadDataJPARepository businessReadDataJPARepository;
     private final BusinessWriteDataJPARepository businessWriteDataJPARepository;
+    private final ModuleReadDataJPARepository moduleQuery;
+    private final PermissionReadDataJPARepository permissionReadDataJPARepository;
+    private final BusinessModuleReadDataJPARepository businessModuleReadDataJPARepository;
+    private final DataSource dataSource;
 
     @Autowired
-    public DataSeeder(UserSystemReadDataJPARepository readRepository, UserSystemsWriteDataJPARepository writeRepository, BusinessReadDataJPARepository businessReadDataJPARepository, BusinessWriteDataJPARepository businessWriteDataJPARepository) {
+    public DataSeeder(UserSystemReadDataJPARepository readRepository, UserSystemsWriteDataJPARepository writeRepository, BusinessReadDataJPARepository businessReadDataJPARepository, BusinessWriteDataJPARepository businessWriteDataJPARepository, ModuleReadDataJPARepository moduleQuery, PermissionReadDataJPARepository permissionReadDataJPARepository, BusinessModuleReadDataJPARepository businessModuleReadDataJPARepository, DataSource dataSource) {
         this.readRepository = readRepository;
         this.writeRepository = writeRepository;
         this.businessReadDataJPARepository = businessReadDataJPARepository;
         this.businessWriteDataJPARepository = businessWriteDataJPARepository;
+        this.moduleQuery = moduleQuery;
+        this.permissionReadDataJPARepository = permissionReadDataJPARepository;
+        this.businessModuleReadDataJPARepository = businessModuleReadDataJPARepository;
+        this.dataSource = dataSource;
     }
 
     @Override
@@ -72,6 +82,16 @@ public class DataSeeder implements ApplicationRunner {
             );
             businessWriteDataJPARepository.save(new Business(create));
 
+
+            if (moduleQuery.count() == 0) {
+                ScriptUtils.executeSqlScript(dataSource.getConnection(), new ClassPathResource("module_system.sql"));
+            }
+            if (permissionReadDataJPARepository.count() == 0) {
+                ScriptUtils.executeSqlScript(dataSource.getConnection(), new ClassPathResource("permission.sql"));
+            }
+            if (businessModuleReadDataJPARepository.count() == 0) {
+                ScriptUtils.executeSqlScript(dataSource.getConnection(), new ClassPathResource("business_module.sql"));
+            }
             System.out.println("Seeder: Usuario creado con éxito.");
         } else {
             System.out.println("Seeder: El usuario con ID " + userId + " ya existe.");

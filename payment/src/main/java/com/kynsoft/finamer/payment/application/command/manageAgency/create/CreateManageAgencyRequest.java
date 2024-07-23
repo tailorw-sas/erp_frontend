@@ -12,4 +12,5 @@ public class CreateManageAgencyRequest {
     private String code;
     private String name;
     private UUID id;
+    private String status;
 }

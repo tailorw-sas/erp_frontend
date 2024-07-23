@@ -7,12 +7,15 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTypeService;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -43,10 +46,13 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         UpdateIfNotNull.updateBoolean(dto::setIsManual, command.getIsManual(), dto.getIsManual(), update::setUpdate);
         UpdateIfNotNull.updateDouble(dto::setInvoiceAmount, command.getInvoiceAmount(), dto.getInvoiceAmount(),
                 update::setUpdate);
-        this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(),
+        this.updateDate(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(),
                 update::setUpdate);
         this.updateAgency(dto::setAgency, command.getAgency(), dto.getAgency().getId(), update::setUpdate);
         this.updateHotel(dto::setHotel, command.getHotel(), dto.getHotel().getId(), update::setUpdate);
+
+        dto.setInvoiceNumber(InvoiceType.getInvoiceTypeCode(dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE) + "-" + dto.getInvoiceNo().toString());
+        update.setUpdate(1);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
@@ -66,6 +72,14 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         if (newValue != null && !newValue.equals(oldValue)) {
             ManageAgencyDto agencyDto = this.agencyService.findById(newValue);
             setter.accept(agencyDto);
+            update.accept(1);
+
+        }
+    }
+
+     private void updateDate(Consumer<LocalDate> setter, LocalDate newValue, LocalDate oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            setter.accept(newValue);
             update.accept(1);
 
         }

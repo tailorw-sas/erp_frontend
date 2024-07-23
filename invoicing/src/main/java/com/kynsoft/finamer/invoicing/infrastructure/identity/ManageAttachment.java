@@ -1,25 +1,17 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
-
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,6 +30,9 @@ public class ManageAttachment {
     private Long attachment_id;
 
     private String filename;
+
+    private String employee;
+    private UUID employeeId;
 
     private String file;
 
@@ -73,17 +68,19 @@ public class ManageAttachment {
         this.file = dto.getFile();
         this.remark = dto.getRemark();
         this.type = dto.getType() != null ? new ManageAttachmentType(dto.getType()) : null;
+        this.employee = dto.getEmployee();
+        this.employeeId = dto.getEmployeeId();
     }
 
     public ManageAttachmentDto toAggregate() {
         return new ManageAttachmentDto(id, attachment_id, filename, file, remark,
                 type != null ? type.toAggregate() : null,
-                invoice != null ? invoice.toAggregateSample() : null);
+                invoice != null ? invoice.toAggregateSample() : null, employee, employeeId, createdAt);
     }
 
     public ManageAttachmentDto toAggregateSample() {
         return new ManageAttachmentDto(id, attachment_id, filename, file, remark,
                 type != null ? type.toAggregate() : null,
-                null);
+                null, employee, employeeId,createdAt);
     }
 }

@@ -27,14 +27,17 @@ public class ManageClient implements Serializable {
 
     private String name;
 
+    private String status;
+
     public ManageClient(ManageClientDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.status = dto.getStatus();
     }
 
     public ManageClientDto toAggregate() {
-        return new ManageClientDto(id, code, name);
+        return new ManageClientDto(id, code, name, status);
     }
 
 }

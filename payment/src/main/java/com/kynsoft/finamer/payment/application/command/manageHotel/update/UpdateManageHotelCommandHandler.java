@@ -20,6 +20,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
 
         ManageHotelDto dto = this.service.findById(command.getId());
         dto.setName(command.getName());
+        dto.setStatus(command.getStatus());
         service.update(dto);
     }
 }

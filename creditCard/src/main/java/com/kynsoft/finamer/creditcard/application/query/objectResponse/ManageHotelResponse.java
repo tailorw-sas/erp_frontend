@@ -19,11 +19,13 @@ public class ManageHotelResponse implements IResponse {
     private String code;
     private String name;
     private Boolean isApplyByVCC;
+    private String status;
 
     public ManageHotelResponse(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.isApplyByVCC = dto.getIsApplyByVCC();
+        this.status = dto.getStatus();
     }
 }

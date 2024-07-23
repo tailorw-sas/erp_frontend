@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -36,4 +37,6 @@ public class PaymentDto {
     private Double identified;
     private Double notIdentified;
     private String remark;
+
+    private List<MasterPaymentAttachmentDto> attachments;
 }

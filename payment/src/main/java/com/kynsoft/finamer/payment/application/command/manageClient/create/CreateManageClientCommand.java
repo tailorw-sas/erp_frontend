@@ -14,11 +14,13 @@ public class CreateManageClientCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
+    private String status;
 
-    public CreateManageClientCommand(UUID id, String code, String name) {
+    public CreateManageClientCommand(UUID id, String code, String name, String status) {
         this.id = id;
         this.code = code;
         this.name = name;
+        this.status = status;
     }
 
     @Override

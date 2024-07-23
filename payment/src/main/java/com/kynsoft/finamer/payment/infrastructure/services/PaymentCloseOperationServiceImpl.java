@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationService {
@@ -47,6 +48,19 @@ public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationS
         update.setUpdatedAt(LocalDateTime.now());
 
         this.repositoryCommand.save(update);
+    }
+
+    @Override
+    public void updateAll(List<PaymentCloseOperationDto> dtos) {
+        List<PaymentCloseOperation> updates = new ArrayList<>();
+
+        for (PaymentCloseOperationDto dto : dtos) {
+            PaymentCloseOperation up = new PaymentCloseOperation(dto);
+            up.setUpdatedAt(LocalDateTime.now());
+            updates.add(up);
+        }
+
+        this.repositoryCommand.saveAll(updates);
     }
 
     @Override
@@ -103,6 +117,23 @@ public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationS
     @Override
     public Long findByHotelId(UUID hotelId) {
         return this.repositoryQuery.findByHotelId(hotelId);
+    }
+
+    @Override
+    public List<PaymentCloseOperationDto> findByHotelIds(List<UUID> hotelIds) {
+        return this.repositoryQuery.findByHotelIds(hotelIds)
+                .stream()
+                .map(PaymentCloseOperation::toAggregate)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public PaymentCloseOperationDto findByHotelIds(UUID hotel) {
+        Optional<PaymentCloseOperation> object = this.repositoryQuery.findByHotelIds(hotel);
+        if (object.isPresent()) {
+            return object.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
     }
 
 }

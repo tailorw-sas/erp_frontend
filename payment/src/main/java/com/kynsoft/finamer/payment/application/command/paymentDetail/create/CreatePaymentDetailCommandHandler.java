@@ -7,13 +7,16 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfGreaterThanPaymentBalanceRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfNewPaymentDetailIsApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckMinNumberOfCharacterInRemarkRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import java.time.LocalDate;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -40,6 +43,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         ConsumerUpdate updatePayment = new ConsumerUpdate();
 
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(command.getAmount()));
+        RulesChecker.checkRule(new CheckIfNewPaymentDetailIsApplyDepositRule(paymentTransactionTypeDto.getApplyDeposit()));
 
         //identified and notIdentified
         if (paymentTransactionTypeDto.getCash()) {
@@ -54,25 +58,39 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         }
 
         //Deposit Amount and Deposit Balance
+        LocalDate transactionDate = null;
         if (paymentTransactionTypeDto.getDeposit()) {
             // Crear regla que valide que el Amount ingresado no debe de ser mayor que el valor del Payment Balance y mayor que cero.
             RulesChecker.checkRule(new CheckAmountIfGreaterThanPaymentBalanceRule(command.getAmount(), paymentDto.getPaymentBalance(), paymentDto.getDepositAmount()));
             UpdateIfNotNull.updateDouble(paymentDto::setDepositAmount, paymentDto.getDepositAmount() + command.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(paymentDto::setDepositBalance, paymentDto.getDepositBalance() + command.getAmount(), updatePayment::setUpdate);
             command.setAmount(command.getAmount() * -1);
+            //Validar el Close Operation
+            transactionDate = LocalDate.now();
         }
 
         if (paymentTransactionTypeDto.getRemarkRequired()) {
             RulesChecker.checkRule(new CheckMinNumberOfCharacterInRemarkRule(paymentTransactionTypeDto.getMinNumberOfCharacter(), command.getRemark()));
+        } else {
+            command.setRemark(paymentTransactionTypeDto.getDefaultRemark());
         }
 
         this.paymentDetailService.create(new PaymentDetailDto(
                 command.getId(),
-                command.getStatus(),
+                command.getStatus() != null ? command.getStatus() : Status.ACTIVE,
                 paymentDto,
                 paymentTransactionTypeDto,
                 command.getAmount(),
                 command.getRemark(),
+                null,
+                null,
+                null,
+                transactionDate,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null
         ));
 

@@ -15,6 +15,9 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.update.Upda
 import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositRequest;
+import com.kynsoft.finamer.payment.application.command.paymentDetailSplitDeposit.create.CreatePaymentDetailSplitDepositCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetailSplitDeposit.create.CreatePaymentDetailSplitDepositMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetailSplitDeposit.create.CreatePaymentDetailSplitDepositRequest;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentDetailResponse;
 import com.kynsoft.finamer.payment.application.query.paymentDetail.getById.FindPaymentDetailByIdQuery;
 import com.kynsoft.finamer.payment.application.query.paymentDetail.search.GetSearchPaymentDetailQuery;
@@ -44,9 +47,17 @@ public class PaymentDetailController {
     }
 
     @PostMapping("/apply-deposit")
-    public ResponseEntity<CreatePaymentDetailApplyDepositMessage> create(@RequestBody CreatePaymentDetailApplyDepositRequest request) {
+    public ResponseEntity<CreatePaymentDetailApplyDepositMessage> createApplyDeposit(@RequestBody CreatePaymentDetailApplyDepositRequest request) {
         CreatePaymentDetailApplyDepositCommand createCommand = CreatePaymentDetailApplyDepositCommand.fromRequest(request);
         CreatePaymentDetailApplyDepositMessage response = mediator.send(createCommand);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/split")
+    public ResponseEntity<CreatePaymentDetailSplitDepositMessage> createSplit(@RequestBody CreatePaymentDetailSplitDepositRequest request) {
+        CreatePaymentDetailSplitDepositCommand createCommand = CreatePaymentDetailSplitDepositCommand.fromRequest(request);
+        CreatePaymentDetailSplitDepositMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);
     }

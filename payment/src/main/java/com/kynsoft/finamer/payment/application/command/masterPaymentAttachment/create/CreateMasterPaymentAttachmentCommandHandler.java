@@ -53,10 +53,9 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
         ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(command.getResourceType());
 
         if(manageAttachmentTypeDto.getDefaults()) {
-            RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, resource.getId()));
+            RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, resource.getId(), command.getFileName()));
         }
 
-        this.updateAttachmentStatusHistory(command.getEmployee(), resource, command.getFileName());
         this.masterPaymentAttachmentService.create(new MasterPaymentAttachmentDto(
                 command.getId(),
                 command.getStatus(),
@@ -64,10 +63,11 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
                 manageResourceTypeDto,
                 manageAttachmentTypeDto,
                 command.getFileName(),
+                command.getFileWeight(),
                 command.getPath(),
                 command.getRemark()
         ));
-//        this.updateAttachmentStatusHistory(command.getEmployee(), resource, command.getFileName());
+        this.updateAttachmentStatusHistory(command.getEmployee(), resource, command.getFileName());
     }
 
     private void updateAttachmentStatusHistory(UUID employee, PaymentDto payment, String fileName) {

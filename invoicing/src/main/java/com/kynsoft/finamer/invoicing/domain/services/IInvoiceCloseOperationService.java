@@ -13,6 +13,8 @@ public interface IInvoiceCloseOperationService {
 
     void update(InvoiceCloseOperationDto dto);
 
+    void updateAll(List<InvoiceCloseOperationDto> dtos);
+
     void delete(InvoiceCloseOperationDto dto);
 
     InvoiceCloseOperationDto findById(UUID id);
@@ -20,4 +22,8 @@ public interface IInvoiceCloseOperationService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long findByHotelId(UUID hotelId);
+
+    List<InvoiceCloseOperationDto> findByHotelIds(List<UUID> hotelIds);
+
+    InvoiceCloseOperationDto findActiveByHotelId(UUID hotelId);
 }

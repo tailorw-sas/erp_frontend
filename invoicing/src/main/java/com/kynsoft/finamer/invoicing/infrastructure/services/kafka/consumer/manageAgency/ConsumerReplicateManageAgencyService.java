@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageAgencyKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageAgency.create.CreateManageAgencyCommand;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class ConsumerReplicateManageAgencyService {
 //
 //            ReplicateManageAgencyKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageAgencyKafka.class);
             CreateManageAgencyCommand command = new CreateManageAgencyCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName(), objKafka.getClient());
+                    objKafka.getName(), objKafka.getClient(), EGenerationType.valueOf(objKafka.getGenerationType()));
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageAgencyService.class.getName()).log(Level.SEVERE, null, ex);

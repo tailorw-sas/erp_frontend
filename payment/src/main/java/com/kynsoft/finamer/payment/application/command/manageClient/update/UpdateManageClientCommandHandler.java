@@ -19,6 +19,7 @@ public class UpdateManageClientCommandHandler implements ICommandHandler<UpdateM
 
         ManageClientDto dto = this.service.findById(command.getId());
         dto.setName(command.getName());
+        dto.setStatus(command.getStatus());
         service.update(dto);
     }
 }

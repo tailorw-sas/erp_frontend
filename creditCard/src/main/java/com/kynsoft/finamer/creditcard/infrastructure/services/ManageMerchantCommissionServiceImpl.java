@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,11 +57,10 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
 
     @Override
     public void delete(ManageMerchantCommissionDto dto) {
-        try{
-            this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
-        }
+        ManageMerchantCommission delete = new ManageMerchantCommission(dto);
+        delete.setDeleted(true);
+        delete.setDeletedAt(LocalDateTime.now());
+        this.repositoryCommand.save(delete);
     }
 
     @Override
@@ -95,5 +95,16 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
                 .stream()
                 .map(ManageMerchantCommission::toAggregate)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public ManageMerchantCommissionDto findByManagerMerchantAndManageCreditCartTypeAndDateWithinRangeOrNoEndDate(UUID managerMerchant, UUID manageCreditCartType, LocalDate date) {
+        Optional<ManageMerchantCommission> commission = this.repositoryQuery.findByManagerMerchantAndManageCreditCartTypeAndDateWithinRangeOrNoEndDate(
+                managerMerchant, manageCreditCartType, date
+        );
+        if (commission.isPresent()) {
+            return commission.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND.getReasonPhrase())));
     }
 }

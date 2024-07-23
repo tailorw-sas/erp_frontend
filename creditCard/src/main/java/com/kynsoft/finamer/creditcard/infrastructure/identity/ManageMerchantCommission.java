@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -33,7 +35,13 @@ public class ManageMerchantCommission implements Serializable {
     private ManageCreditCardType manageCreditCartType;
 
     private Double commission;
-    private String calculationType;
+
+    @Enumerated(EnumType.STRING)
+    private CalculationType calculationType;
+
+    private LocalDate fromDate;
+    private LocalDate toDate;
+    private String status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -42,12 +50,18 @@ public class ManageMerchantCommission implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
+    private Boolean deleted = false;
+    private LocalDateTime deletedAt;
+
     public ManageMerchantCommission(ManageMerchantCommissionDto dto) {
         this.id = dto.getId();
         this.managerMerchant = new ManageMerchant(dto.getManagerMerchant());
         this.manageCreditCartType = new ManageCreditCardType(dto.getManageCreditCartType());
         this.commission = dto.getCommission();
         this.calculationType = dto.getCalculationType();
+        this.fromDate = dto.getFromDate();
+        this.toDate = dto.getToDate();
+        this.status = dto.getStatus();
     }
 
     public ManageMerchantCommissionDto toAggregate() {
@@ -55,7 +69,7 @@ public class ManageMerchantCommission implements Serializable {
                 id,
                 managerMerchant != null ? managerMerchant.toAggregate() : null,
                 manageCreditCartType != null ? manageCreditCartType.toAggregate() : null,
-                commission, calculationType);
+                commission, calculationType, fromDate, toDate, status);
     }
 
 }

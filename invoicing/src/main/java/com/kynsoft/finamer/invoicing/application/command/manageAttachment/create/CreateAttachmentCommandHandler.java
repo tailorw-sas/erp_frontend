@@ -39,6 +39,6 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                 command.getFile(),
                 command.getRemark(),
                 attachmentType,
-                invoiceDto));
+                invoiceDto, command.getEmployee(), command.getEmployeeId(), null));
     }
 }

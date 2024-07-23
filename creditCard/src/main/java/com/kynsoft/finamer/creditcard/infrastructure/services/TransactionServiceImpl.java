@@ -88,14 +88,19 @@ public class TransactionServiceImpl implements ITransactionService {
 
     @Override
     public boolean compareParentTransactionAmount(Long parentId, Double amount) {
-        Optional<Transaction> parentTransaction = repositoryQuery.findById(parentId);
+        Optional<Transaction> parentTransaction = this.repositoryQuery.findById(parentId);
         if (parentTransaction.isPresent()) {
             double parentAmount = parentTransaction.get().getAmount();
-            Optional<Double> sumOfChildrenAmount = repositoryQuery.findSumOfAmountByParentId(parentId);
+            Optional<Double> sumOfChildrenAmount = this.repositoryQuery.findSumOfAmountByParentId(parentId);
             return (sumOfChildrenAmount.orElse(0.0) + amount) > parentAmount;
         } else {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
         }
+    }
+
+    @Override
+    public Double findSumOfAmountByParentId(Long parentId) {
+        return this.repositoryQuery.findSumOfAmountByParentId(parentId).orElse(0.0);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

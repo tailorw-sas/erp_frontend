@@ -72,7 +72,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<Payment> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        GenericSpecificationsBuilder<PaymentDetail> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<PaymentDetail> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);

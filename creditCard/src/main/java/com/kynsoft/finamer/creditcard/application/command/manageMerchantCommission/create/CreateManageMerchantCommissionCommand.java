@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Getter
@@ -18,6 +19,9 @@ public class CreateManageMerchantCommissionCommand implements ICommand {
     private final UUID manageCreditCartType;
     private final Double commission;
     private final String calculationType;
+    private LocalDate fromDate;
+    private LocalDate toDate;
+    private String status;
 
     @Override
     public ICommandMessage getMessage() {

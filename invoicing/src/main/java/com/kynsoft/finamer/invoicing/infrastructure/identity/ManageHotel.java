@@ -59,6 +59,10 @@ public class ManageHotel implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
+    private Boolean isVirtual;
+
+    private String status;
+
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -67,11 +71,13 @@ public class ManageHotel implements Serializable {
         this.manageTradingCompanies = dto.getManageTradingCompanies() != null
                 ? new ManageTradingCompanies(dto.getManageTradingCompanies())
                 : null;
-
+        this.isVirtual=dto.isVirtual();
+        this.status = dto.getStatus();
     }
 
     public ManageHotelDto toAggregate() {
         return new ManageHotelDto(
-                id, code, name, manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null, null);
+                id, code, name, manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null, null,
+                isVirtual != null ? isVirtual : false, status);
     }
 }

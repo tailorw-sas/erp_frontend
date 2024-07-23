@@ -41,6 +41,7 @@ public class MasterPaymentAttachment implements Serializable {
     private AttachmentType attachmentType;
 
     private String fileName;
+    private String fileWeight;
     private String path;
     private String remark;
 
@@ -57,6 +58,7 @@ public class MasterPaymentAttachment implements Serializable {
         this.resourceType = dto.getResourceType() != null ? new ResourceType(dto.getResourceType()) : null;
         this.attachmentType = dto.getAttachmentType() != null ? new AttachmentType(dto.getAttachmentType()) : null;
         this.fileName = dto.getFileName();
+        this.fileWeight = dto.getFileWeight();
         this.path = dto.getPath();
         this.status = dto.getStatus();
         this.remark = dto.getRemark();
@@ -70,6 +72,21 @@ public class MasterPaymentAttachment implements Serializable {
                 resourceType.toAggregate(), 
                 attachmentType.toAggregate(), 
                 fileName, 
+                fileWeight != null ? fileWeight : null,
+                path, 
+                remark
+        );
+    }
+
+    public MasterPaymentAttachmentDto toAggregateSimple() {
+        return new MasterPaymentAttachmentDto(
+                id, 
+                status, 
+                null, 
+                resourceType.toAggregate(), 
+                attachmentType.toAggregate(), 
+                fileName, 
+                fileWeight != null ? fileWeight : null,
                 path, 
                 remark
         );

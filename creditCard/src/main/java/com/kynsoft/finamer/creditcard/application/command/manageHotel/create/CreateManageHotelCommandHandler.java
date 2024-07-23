@@ -17,7 +17,7 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
     @Override
     public void handle(CreateManageHotelCommand command) {
         service.create(new ManageHotelDto(
-                command.getId(), command.getCode(), command.getName(), command.getIsApplyByVCC()
+                command.getId(), command.getCode(), command.getName(), command.getIsApplyByVCC(), command.getStatus()
         ));
     }
 }

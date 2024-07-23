@@ -8,9 +8,8 @@ import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
-import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.ManualTransactionAmountRule;
-import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.ManualTransactionReservationNumberRule;
-import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.ManualTransactionReservationNumberUniqueRule;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
+import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.*;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +38,9 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
     private final IManageVCCTransactionTypeService transactionTypeService;
 
-    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService) {
+    private final ICreditCardCloseOperationService closeOperationService;
+
+    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService) {
         this.service = service;
         this.merchantService = merchantService;
         this.hotelService = hotelService;
@@ -50,37 +51,43 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         this.merchantHotelEnrolleService = merchantHotelEnrolleService;
         this.parameterizationService = parameterizationService;
         this.transactionTypeService = transactionTypeService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     public void handle(CreateManualTransactionCommand command) {
         RulesChecker.checkRule(new ManualTransactionAmountRule(command.getAmount()));
-        RulesChecker.checkRule(new ManualTransactionReservationNumberRule(command.getReservationNumber()));
+        RulesChecker.checkRule(new ManualTransactionCheckInBeforeRule(command.getCheckIn()));
+        RulesChecker.checkRule(new ManualTransactionCheckInCloseOperationRule(this.closeOperationService, command.getCheckIn(), command.getHotel()));
 
-        ManageMerchantDto merchantDto = merchantService.findById(command.getMerchant());
-        ManageHotelDto hotelDto = hotelService.findById(command.getHotel());
+        ManageMerchantDto merchantDto = this.merchantService.findById(command.getMerchant());
+        ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
-        RulesChecker.checkRule(new ManualTransactionReservationNumberUniqueRule(service, command.getReservationNumber(), command.getHotel()));
+        RulesChecker.checkRule(new ManualTransactionReservationNumberUniqueRule(this.service, command.getReservationNumber(), command.getHotel()));
 
-        ManageAgencyDto agencyDto = agencyService.findById(command.getAgency());
-        ManageLanguageDto languageDto = languageService.findById(command.getLanguage());
+        ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
+        ManageLanguageDto languageDto = this.languageService.findById(command.getLanguage());
+
+        RulesChecker.checkRule(new ManualTransactionAgencyBookingFormatRule(agencyDto.getBookingCouponFormat()));
+        RulesChecker.checkRule(new ManualTransactionReservationNumberRule(command.getReservationNumber(), agencyDto.getBookingCouponFormat()));
+
         ManageCreditCardTypeDto creditCardTypeDto = null;
 
-        ParameterizationDto parameterizationDto = parameterizationService.findActiveParameterization();
+        ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
         if(Objects.isNull(parameterizationDto)){
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "No active parameterization")));
         }
 
-        ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByCode(parameterizationDto.getTransactionStatusCode());
+        ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByCode(parameterizationDto.getTransactionStatusCode());
         ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionCategory());
         ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionSubCategory());
 
-        if(command.getMethodType().name().equals("LINK")){
+        if(command.getMethodType().compareTo(MethodType.LINK) == 0){
             RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getGuestName(), "gestName", "Guest name cannot be null."));
             RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmail(), "email", "Email cannot be null."));
         }
 
-        ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto = merchantHotelEnrolleService.findByManageMerchantAndManageHotel(
+        ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto = this.merchantHotelEnrolleService.findByManageMerchantAndManageHotel(
                 merchantDto, hotelDto
         );
 
@@ -108,7 +115,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 null,
                 transactionCategory,
                 transactionSubCategory,
-                netAmount
+                netAmount,
+                true
         ));
         command.setId(id);
     }

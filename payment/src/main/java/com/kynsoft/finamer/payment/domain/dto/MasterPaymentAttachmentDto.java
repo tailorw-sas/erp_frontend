@@ -20,6 +20,7 @@ public class MasterPaymentAttachmentDto {
     private ResourceTypeDto resourceType;
     private AttachmentTypeDto attachmentType;
     private String fileName;
+    private String fileWeight;
     private String path;
     private String remark;
 }

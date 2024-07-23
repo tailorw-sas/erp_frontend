@@ -13,6 +13,8 @@ public interface ICreditCardCloseOperationService {
 
     void update(CreditCardCloseOperationDto dto);
 
+    void updateAll(List<CreditCardCloseOperationDto> dtos);
+
     void delete(CreditCardCloseOperationDto dto);
 
     CreditCardCloseOperationDto findById(UUID id);
@@ -20,4 +22,8 @@ public interface ICreditCardCloseOperationService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long findByHotelId(UUID hotelId);
+
+    List<CreditCardCloseOperationDto> findByHotelIds(List<UUID> hotelIds);
+
+    CreditCardCloseOperationDto findActiveByHotelId(UUID hotelId);
 }

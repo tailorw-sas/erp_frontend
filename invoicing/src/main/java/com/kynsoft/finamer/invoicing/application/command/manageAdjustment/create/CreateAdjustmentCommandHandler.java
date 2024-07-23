@@ -5,6 +5,8 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAdjustmentService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTransactionTypeService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
 import org.springframework.stereotype.Component;
@@ -16,13 +18,22 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
     private final IManageInvoiceTransactionTypeService transactionTypeService;
 
     private final IManageRoomRateService roomRateService;
+    private final IManageBookingService bookingService;
+    private final IManageInvoiceService invoiceService;
+
+ 
 
     public CreateAdjustmentCommandHandler(IManageAdjustmentService adjustmentService,
-            IManageInvoiceTransactionTypeService transactionTypeService, IManageRoomRateService roomRateService) {
+            IManageInvoiceTransactionTypeService transactionTypeService, IManageRoomRateService roomRateService,
+            IManageBookingService bookingService, IManageInvoiceService invoiceService) {
         this.adjustmentService = adjustmentService;
         this.transactionTypeService = transactionTypeService;
         this.roomRateService = roomRateService;
+        this.bookingService = bookingService;
+        this.invoiceService = invoiceService;
     }
+
+
 
     @Override
     public void handle(CreateAdjustmentCommand command) {
@@ -41,5 +52,9 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
                 transactionTypeDto,
                 roomRateDto,
                 command.getEmployee()));
+
+                roomRateService.calculateInvoiceAmount(this.roomRateService.findById(roomRateDto.getId()));
+                bookingService.calculateInvoiceAmount(this.bookingService.findById(roomRateDto.getBooking().getId()));
+                invoiceService.calculateInvoiceAmount(this.invoiceService.findById(roomRateDto.getBooking().getInvoice().getId()));
     }
 }

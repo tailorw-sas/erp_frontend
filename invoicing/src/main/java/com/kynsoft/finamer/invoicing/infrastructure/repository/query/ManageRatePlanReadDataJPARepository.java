@@ -22,6 +22,6 @@ public interface ManageRatePlanReadDataJPARepository extends JpaRepository<Manag
     @Query("SELECT COUNT(b) FROM ManageRatePlan b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
-    boolean existsManageRatePlanByCode(String code);
+    boolean existsByCode(String code);
 
 }

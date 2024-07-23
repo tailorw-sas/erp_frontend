@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
+import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAgencyBookingFormatRule;
 import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAmountRule;
 import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionReservationNumberRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
@@ -28,20 +29,25 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
 
     private final IManageTransactionStatusService transactionStatusService;
 
-    public CreateAdjustmentTransactionCommandHandler(ITransactionService service, IManageAgencyService agencyService, IManageVCCTransactionTypeService transactionTypeService, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService) {
+    private final ICreditCardCloseOperationService closeOperationService;
+
+    public CreateAdjustmentTransactionCommandHandler(ITransactionService service, IManageAgencyService agencyService, IManageVCCTransactionTypeService transactionTypeService, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService, ICreditCardCloseOperationService closeOperationService) {
         this.service = service;
         this.agencyService = agencyService;
         this.transactionTypeService = transactionTypeService;
         this.parameterizationService = parameterizationService;
         this.transactionStatusService = transactionStatusService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     public void handle(CreateAdjustmentTransactionCommand command) {
         RulesChecker.checkRule(new AdjustmentTransactionAmountRule(command.getAmount()));
-        RulesChecker.checkRule(new AdjustmentTransactionReservationNumberRule(command.getReservationNumber()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
+
+        RulesChecker.checkRule(new AdjustmentTransactionAgencyBookingFormatRule(agencyDto.getBookingCouponFormat()));
+        RulesChecker.checkRule(new AdjustmentTransactionReservationNumberRule(command.getReservationNumber(), agencyDto.getBookingCouponFormat()));
 
         ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
         if(Objects.isNull(parameterizationDto)){
@@ -53,7 +59,7 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
         ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionSubCategory());
 
         double commission = 0;
-        LocalDate checkIn = LocalDate.now();
+        LocalDate transactionDate = command.getTransactionDate();
         double netAmount = command.getAmount() - commission;
 
         Long id = this.service.create(new TransactionDto(
@@ -65,9 +71,10 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 command.getReferenceNumber(),
                 transactionStatusDto,
                 commission,
-                checkIn,
-                true,
-                netAmount
+                transactionDate,
+                netAmount,
+                transactionDate,
+                false
         ));
         command.setId(id);
     }

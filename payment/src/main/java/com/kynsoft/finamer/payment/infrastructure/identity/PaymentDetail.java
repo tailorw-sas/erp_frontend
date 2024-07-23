@@ -9,8 +9,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.hibernate.annotations.CreationTimestamp;
 
 @NoArgsConstructor
@@ -39,9 +43,18 @@ public class PaymentDetail implements Serializable {
     private Double amount;
     private String remark;
 
-    @ManyToOne(optional = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "fk_pk_payment_detail", nullable = true)
-    private PaymentDetail parent;
+    private Double bookingId;
+    private String invoiceId;
+    private LocalDate transactionDate;
+    private String firstName;
+    private String lastName;
+    private String reservation;
+    private String couponNo;
+    private Integer adults;
+    private Integer childrens;
+
+    @OneToMany(fetch = FetchType.EAGER)
+    private List<PaymentDetail> children = new ArrayList<>();
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -57,24 +70,65 @@ public class PaymentDetail implements Serializable {
         this.amount = dto.getAmount();
         this.remark = dto.getRemark();
         this.status = dto.getStatus();
-        this.parent = dto.getParent() != null ? new PaymentDetail(dto.getParent()) : null;
+        if (dto.getChildren() != null) {
+            this.children = dto.getChildren().stream()
+                    .map(PaymentDetail::new)
+                    .collect(Collectors.toList());
+        }
+        this.bookingId = dto.getBookingId() != null ? dto.getBookingId() : null;
+        this.invoiceId = dto.getInvoiceId() != null ? dto.getInvoiceId() : null;
+        this.transactionDate = dto.getTransactionDate() != null ? dto.getTransactionDate() : null;
+        this.firstName = dto.getFirstName() != null ? dto.getFirstName() : null;
+        this.lastName = dto.getLastName() != null ? dto.getLastName() : null;
+        this.reservation = dto.getReservation() != null ? dto.getReservation() : null;
+        this.couponNo = dto.getCouponNo() != null ? dto.getCouponNo() : null;
+        this.adults = dto.getAdults() != null ? dto.getAdults() : null;
+        this.childrens = dto.getChildrens() != null ? dto.getChildrens() : null;
     }
 
     public PaymentDetailDto toAggregate() {
 
-        PaymentDetailDto parentDto = null;
-        if (this.parent != null) {
-            parentDto = parent.toAggregate();
-        }
+        return new PaymentDetailDto(
+                id,
+                status,
+                payment.toAggregate(),
+                transactionType.toAggregate(),
+                amount,
+                remark,
+                children != null ? children.stream().map(PaymentDetail::toAggregateSimple).toList() : null,
+                bookingId,
+                invoiceId,
+                transactionDate,
+                firstName,
+                lastName,
+                reservation,
+                couponNo,
+                adults,
+                childrens,
+                createdAt
+        );
+    }
+
+    public PaymentDetailDto toAggregateSimple() {
 
         return new PaymentDetailDto(
-                id, 
-                status, 
-                payment.toAggregate(), 
-                transactionType.toAggregate(), 
-                amount, 
+                id,
+                status,
+                payment.toAggregate(),
+                transactionType.toAggregate(),
+                amount,
                 remark,
-                parentDto
+                null,
+                bookingId != null ? bookingId : null,
+                invoiceId != null ? invoiceId : null,
+                transactionDate != null ? transactionDate : null,
+                firstName != null ? firstName : null,
+                lastName != null ? lastName : null,
+                reservation != null ? reservation : null,
+                couponNo != null ? couponNo : null,
+                adults != null ? adults : null,
+                childrens != null ? childrens : null,
+                createdAt
         );
     }
 }

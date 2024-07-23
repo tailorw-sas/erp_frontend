@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -22,4 +23,6 @@ public interface ManageAgencyReadDataJPARepository extends JpaRepository<ManageA
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
     boolean existsManageAgenciesByCode(String code);
+
+    Optional<ManageAgency> findManageAgenciesByCode(String code);
 }

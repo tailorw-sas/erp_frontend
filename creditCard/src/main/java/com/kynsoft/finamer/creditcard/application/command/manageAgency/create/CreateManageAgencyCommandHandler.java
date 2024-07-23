@@ -20,7 +20,8 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
         service.create(new ManageAgencyDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
+                command.getName(),
+                command.getBookingCouponFormat()
         ));
     }
 }

@@ -12,6 +12,9 @@ import com.kynsoft.finamer.creditcard.application.command.creditCardCloseOperati
 import com.kynsoft.finamer.creditcard.application.command.creditCardCloseOperation.update.UpdateCreditCardCloseOperationCommand;
 import com.kynsoft.finamer.creditcard.application.command.creditCardCloseOperation.update.UpdateCreditCardCloseOperationMessage;
 import com.kynsoft.finamer.creditcard.application.command.creditCardCloseOperation.update.UpdateCreditCardCloseOperationRequest;
+import com.kynsoft.finamer.creditcard.application.command.creditCardCloseOperation.updateAll.UpdateAllCreditCardCloseOperationCommand;
+import com.kynsoft.finamer.creditcard.application.command.creditCardCloseOperation.updateAll.UpdateAllCreditCardCloseOperationMessage;
+import com.kynsoft.finamer.creditcard.application.command.creditCardCloseOperation.updateAll.UpdateAllCreditCardCloseOperationRequest;
 import com.kynsoft.finamer.creditcard.application.query.creditCardCloseOperation.getById.FindCreditCardCloseOperationByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.creditCardCloseOperation.search.GetSearchCreditCardCloseOperationQuery;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CreditCardCloseOperationResponse;
@@ -46,6 +49,14 @@ public class CreditCardCloseOperationController {
         DeleteCreditCardCloseOperationCommand command = new DeleteCreditCardCloseOperationCommand(id);
         DeleteCreditCardCloseOperationMessage response = mediator.send(command);
 
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping(path = "/all")
+    public ResponseEntity<?> update(@RequestBody UpdateAllCreditCardCloseOperationRequest request) {
+
+        UpdateAllCreditCardCloseOperationCommand command = UpdateAllCreditCardCloseOperationCommand.fromRequest(request);
+        UpdateAllCreditCardCloseOperationMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
     }
 
