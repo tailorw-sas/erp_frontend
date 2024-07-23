@@ -22,4 +22,5 @@ public class ManagePaymentTransactionTypeDto {
     private Boolean applyDeposit;
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
+    private String defaultRemark;
 }

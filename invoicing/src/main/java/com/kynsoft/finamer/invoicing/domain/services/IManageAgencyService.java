@@ -16,6 +16,7 @@ public interface IManageAgencyService {
 
     ManageAgencyDto findById(UUID id);
 
+    ManageAgencyDto findByCode(String code);
 
     Long countByCodeAndNotId(String code, UUID id);
 

@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
-import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -12,14 +11,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.generator.EventType;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -36,7 +33,7 @@ public class ManageInvoice {
 
     @Column(columnDefinition = "serial", name = "invoice_gen_id")
     @Generated(event = EventType.INSERT)
-    private Long invoice_id;
+    private Long invoiceId;
 
     @Column(columnDefinition = "serial", name = "inovice_no")
     @Generated(event = EventType.INSERT)
@@ -44,12 +41,23 @@ public class ManageInvoice {
 
     private String invoiceNumber;
 
-    private LocalDateTime invoiceDate;
+    private LocalDate invoiceDate;
 
-    private LocalDateTime dueDate;
+    private LocalDate dueDate;
 
     private Boolean isManual;
     private Boolean autoRec;
+
+    private Boolean reSend;
+    private LocalDate reSendDate;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "invoice_type_id")
+    private ManageInvoiceType manageInvoiceType;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "invoice_status_id")
+    private ManageInvoiceStatus manageInvoiceStatus;
 
     private Double invoiceAmount;
 
@@ -111,27 +119,39 @@ public class ManageInvoice {
             attachment.setInvoice(this);
             return attachment;
         }).collect(Collectors.toList()) : null;
+        this.reSend = dto.getReSend();
+        this.reSendDate = dto.getReSendDate();
+        this.manageInvoiceType = dto.getManageInvoiceType() != null ? new ManageInvoiceType(dto.getManageInvoiceType()) : null;
+        this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null ? new ManageInvoiceStatus(dto.getManageInvoiceStatus()) : null;
 
     }
 
     public ManageInvoiceDto toAggregateSample() {
 
-        return new ManageInvoiceDto(id, invoice_id, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+        return new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
                 invoiceAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
-                autoRec, null, null);
+                autoRec, null, null, reSend, reSendDate, 
+                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null, 
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null
+        );
 
     }
 
     public ManageInvoiceDto toAggregate() {
-        return new ManageInvoiceDto(id, invoice_id,
+        return new ManageInvoiceDto(id, invoiceId,
                 invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, bookings != null ? bookings.stream().map(b -> {
                     return b.toAggregateSample();
                 }).collect(Collectors.toList()) : null, attachments != null ? attachments.stream().map(b -> {
                     return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null);
+                }).collect(Collectors.toList()) : null,
+                reSend,
+                reSendDate,
+                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null, 
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null
+        );
     }
 
 }

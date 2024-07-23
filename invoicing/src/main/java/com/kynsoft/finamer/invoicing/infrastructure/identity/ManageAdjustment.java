@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.generator.EventType;
 
 import java.time.LocalDateTime;
@@ -28,7 +27,7 @@ public class ManageAdjustment {
 
     @Column(columnDefinition = "serial", name = "adjustment_gen_id")
     @Generated(event = EventType.INSERT)
-    private Long adjustment_id;
+    private Long adjustmentId;
 
     private Double amount;
     private LocalDateTime date;
@@ -67,13 +66,13 @@ public class ManageAdjustment {
     }
 
     public ManageAdjustmentDto toAggregate() {
-        return new ManageAdjustmentDto(id, adjustment_id, amount, date, description,
+        return new ManageAdjustmentDto(id, adjustmentId, amount, date, description,
                 transaction != null ? transaction.toAggregate() : null,
                 roomRate != null ? roomRate.toAggregate() : null, employee);
     }
 
     public ManageAdjustmentDto toAggregateSample() {
-        return new ManageAdjustmentDto(id, adjustment_id, amount, date, description,
+        return new ManageAdjustmentDto(id, adjustmentId, amount, date, description,
                 transaction != null ? transaction.toAggregate() : null,
                 null, employee);
     }

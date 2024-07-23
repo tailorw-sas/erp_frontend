@@ -15,10 +15,13 @@ public class UpdateManageHotelCommand implements ICommand {
     private UUID id;
     private String name;
     private UUID tradingCompany;
+    private String status;
 
-    public UpdateManageHotelCommand(UUID id, String name, UUID tradingCompany) {
+    public UpdateManageHotelCommand(UUID id, String name, UUID tradingCompany, String status) {
         this.id = id;
         this.name = name;
+        this.tradingCompany = tradingCompany;
+        this.status = status;
     }
 
     @Override

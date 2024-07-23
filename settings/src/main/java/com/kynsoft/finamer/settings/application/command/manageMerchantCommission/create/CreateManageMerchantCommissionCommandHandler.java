@@ -61,6 +61,6 @@ public class CreateManageMerchantCommissionCommandHandler implements ICommandHan
 
         // Save new commission
         service.create(commissionDto);
-        this.producerService.create(new ReplicateManageMerchantCommissionKafka(command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getCommission(), command.getCalculationType()));
+        this.producerService.create(new ReplicateManageMerchantCommissionKafka(command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getCommission(), command.getCalculationType(), command.getFromDate(), toDate, command.getStatus().name()));
     }
 }

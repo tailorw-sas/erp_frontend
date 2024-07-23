@@ -12,6 +12,9 @@ import com.kynsoft.finamer.invoicing.application.command.invoicecloseoperation.d
 import com.kynsoft.finamer.invoicing.application.command.invoicecloseoperation.update.UpdateInvoiceCloseOperationCommand;
 import com.kynsoft.finamer.invoicing.application.command.invoicecloseoperation.update.UpdateInvoiceCloseOperationMessage;
 import com.kynsoft.finamer.invoicing.application.command.invoicecloseoperation.update.UpdateInvoiceCloseOperationRequest;
+import com.kynsoft.finamer.invoicing.application.command.invoicecloseoperation.updateAll.UpdateAllInvoiceCloseOperationCommand;
+import com.kynsoft.finamer.invoicing.application.command.invoicecloseoperation.updateAll.UpdateAllInvoiceCloseOperationMessage;
+import com.kynsoft.finamer.invoicing.application.command.invoicecloseoperation.updateAll.UpdateAllInvoiceCloseOperationRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoicecloseoperation.getById.FindInvoiceCloseOperationByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.invoicecloseoperation.search.GetSearchInvoiceCloseOperationQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.InvoiceCloseOperationResponse;
@@ -54,6 +57,14 @@ public class InvoiceCloseOperationController {
 
         UpdateInvoiceCloseOperationCommand command = UpdateInvoiceCloseOperationCommand.fromRequest(request, id);
         UpdateInvoiceCloseOperationMessage response = mediator.send(command);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/all")
+    public ResponseEntity<?> update(@RequestBody UpdateAllInvoiceCloseOperationRequest request) {
+
+        UpdateAllInvoiceCloseOperationCommand command = UpdateAllInvoiceCloseOperationCommand.fromRequest(request);
+        UpdateAllInvoiceCloseOperationMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
     }
 

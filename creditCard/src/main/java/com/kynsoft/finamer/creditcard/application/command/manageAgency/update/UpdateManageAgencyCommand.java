@@ -15,6 +15,7 @@ public class UpdateManageAgencyCommand implements ICommand {
 
     private UUID id;
     private String name;
+    private String bookingCouponFormat;
 
     @Override
     public ICommandMessage getMessage() {

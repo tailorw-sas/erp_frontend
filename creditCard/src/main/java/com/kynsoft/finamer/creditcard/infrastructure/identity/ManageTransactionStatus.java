@@ -27,7 +27,6 @@ public class ManageTransactionStatus implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true)
     private String code;
 
     private String name;

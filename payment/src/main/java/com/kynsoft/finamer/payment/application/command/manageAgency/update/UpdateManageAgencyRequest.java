@@ -9,8 +9,8 @@ import java.util.UUID;
 @Setter
 public class UpdateManageAgencyRequest {
 
-
     private UUID id;
     private String name;
-
+    private String status;
+    private UUID agencyType;
 }

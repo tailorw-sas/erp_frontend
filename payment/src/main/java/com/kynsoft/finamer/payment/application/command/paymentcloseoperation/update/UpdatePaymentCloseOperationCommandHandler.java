@@ -7,6 +7,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.rules.closeOperation.CheckBeginDateAndEndDateRule;
 import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
 import java.time.LocalDate;
@@ -32,6 +33,7 @@ public class UpdatePaymentCloseOperationCommandHandler implements ICommandHandle
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Payment Close Operation ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getHotel(), "id", "Manage Hotel ID cannot be null."));
+        RulesChecker.checkRule(new CheckBeginDateAndEndDateRule(command.getBeginDate(), command.getEndDate()));
 
         PaymentCloseOperationDto closeOperationDto = this.closeOperationService.findById(command.getId());
 

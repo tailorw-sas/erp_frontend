@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.payment.create;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,4 +25,5 @@ public class CreatePaymentRequest {
     private Double paymentAmount;
     private String remark;
     private Status status;
+    private List<CreateAttachmentRequest> attachments;
 }

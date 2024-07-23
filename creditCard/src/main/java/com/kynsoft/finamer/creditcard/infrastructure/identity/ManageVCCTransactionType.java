@@ -24,7 +24,6 @@ public class ManageVCCTransactionType implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true)
     private String code;
 
     private String name;

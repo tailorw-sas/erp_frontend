@@ -1,8 +1,11 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -51,21 +54,25 @@ public class ManageAgency {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
+    @Enumerated(EnumType.STRING)
+    private EGenerationType generationType;
+
     public ManageAgency(ManageAgencyDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.client = dto.getClient() != null ? new ManageClient(dto.getClient()) : null;
+        this.generationType=dto.getGenerationType();
 
     }
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, name, client != null ? client.toAggregate() : null);
+                id, code, name, client != null ? client.toAggregate() : null,generationType);
     }
 
     public ManageAgencyDto toAggregateSample() {
         return new ManageAgencyDto(
-                id, code, name, client != null ? client.toAggregate() : null);
+                id, code, name, client != null ? client.toAggregate() : null,generationType);
     }
 }

@@ -147,7 +147,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 agencyDto.getClient().getId(), 
                                 agencyDto.getBookingCouponFormat(), 
                                 agencyDto.getStatus().name(), 
-                                agencyDto.getGenerationType().name()
+                                agencyDto.getGenerationType().name(),
+                                agencyDto.getAgencyType().getId()
                         ));
                     }
                 }

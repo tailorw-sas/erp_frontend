@@ -78,7 +78,7 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
                                         nightTypeDto,
                                         roomTypeDto,
                                         roomCategoryDto,
-                                        null));
+                                        null, null));
 
                 }
 

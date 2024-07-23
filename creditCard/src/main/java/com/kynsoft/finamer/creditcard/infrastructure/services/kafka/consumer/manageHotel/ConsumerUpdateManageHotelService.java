@@ -21,7 +21,7 @@ public class ConsumerUpdateManageHotelService {
     @KafkaListener(topics = "finamer-update-manage-hotel", groupId = "vcc-entity-replica")
     public void listen(UpdateManageHotelKafka objKafka) {
         try {
-            UpdateManageHotelCommand command = new UpdateManageHotelCommand(objKafka.getId(), objKafka.getName(), objKafka.getIsApplyByVCC());
+            UpdateManageHotelCommand command = new UpdateManageHotelCommand(objKafka.getId(), objKafka.getName(), objKafka.getIsApplyByVCC(), objKafka.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageHotelService.class.getName()).log(Level.SEVERE, null, ex);

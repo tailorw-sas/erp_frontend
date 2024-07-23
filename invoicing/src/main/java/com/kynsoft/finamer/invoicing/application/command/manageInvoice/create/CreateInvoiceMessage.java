@@ -9,11 +9,13 @@ import java.util.UUID;
 public class CreateInvoiceMessage implements ICommandMessage {
 
     private final UUID id;
+    private final Long invoiceId;
 
     private final String command = "CREATE_INVOICE";
 
-    public CreateInvoiceMessage(UUID id) {
+    public CreateInvoiceMessage(UUID id, Long invoiceId) {
         this.id = id;
+        this.invoiceId = invoiceId;
     }
 
 }

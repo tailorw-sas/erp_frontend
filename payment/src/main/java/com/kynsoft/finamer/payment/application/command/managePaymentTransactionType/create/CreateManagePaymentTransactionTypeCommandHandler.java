@@ -25,7 +25,8 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
                 command.getDeposit(),
                 command.getApplyDeposit(),
                 command.getRemarkRequired(),
-                command.getMinNumberOfCharacter()
+                command.getMinNumberOfCharacter(),
+                command.getDefaultRemark()
         ));
     }
 }

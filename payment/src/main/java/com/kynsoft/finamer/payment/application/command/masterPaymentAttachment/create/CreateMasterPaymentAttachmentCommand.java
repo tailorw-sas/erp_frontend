@@ -19,12 +19,13 @@ public class CreateMasterPaymentAttachmentCommand implements ICommand {
     private UUID resourceType;
     private UUID attachmentType;
     private String fileName;
+    private String fileWeight;
     private String path;
     private String remark;
 
     public CreateMasterPaymentAttachmentCommand(Status status, UUID employee, UUID resource, UUID resourceType, 
                                                 UUID attachmentType, String fileNames, String paths, 
-                                                String remark) {
+                                                String remark, String fileWeight) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.employee = employee;
@@ -34,6 +35,7 @@ public class CreateMasterPaymentAttachmentCommand implements ICommand {
         this.fileName = fileNames;
         this.path = paths;
         this.remark = remark;
+        this.fileWeight = fileWeight;
     }
 
     public static CreateMasterPaymentAttachmentCommand fromRequest(CreateMasterPaymentAttachmentRequest request) {
@@ -45,7 +47,8 @@ public class CreateMasterPaymentAttachmentCommand implements ICommand {
                 request.getAttachmentType(),
                 request.getFileName(),
                 request.getPath(),
-                request.getRemark()
+                request.getRemark(),
+                request.getFileWeight()
         );
     }
 

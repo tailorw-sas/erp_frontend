@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -14,14 +15,14 @@ import java.util.UUID;
 public class UpdateInvoiceCommand implements ICommand {
 
     private UUID id;
-    private LocalDateTime invoiceDate;
+    private LocalDate invoiceDate;
     private Boolean isManual;
     private Double invoiceAmount;
     private UUID hotel;
     private UUID agency;
     private UUID invoiceType;
 
-    public UpdateInvoiceCommand(UUID id,  LocalDateTime invoiceDate, Boolean isManual, Double invoiceAmount, UUID hotel, UUID agency, UUID invoiceType, Status status) {
+    public UpdateInvoiceCommand(UUID id,  LocalDate invoiceDate, Boolean isManual, Double invoiceAmount, UUID hotel, UUID agency, UUID invoiceType, Status status) {
         this.id = id;
         this.invoiceDate = invoiceDate;
         this.isManual = isManual;

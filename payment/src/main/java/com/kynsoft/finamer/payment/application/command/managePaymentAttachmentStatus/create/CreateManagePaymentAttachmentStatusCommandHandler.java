@@ -19,7 +19,8 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
         service.create(new ManagePaymentAttachmentStatusDto(
                 command.getId(), 
                 command.getCode(), 
-                command.getName()
+                command.getName(),
+                command.getStatus()
         ));
     }
 }

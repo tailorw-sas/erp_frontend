@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.domain.dto;
 
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,5 +18,6 @@ public class ManageAgencyDto {
     private String code;
     private String name;
     private ManageClientDto client;
+    private EGenerationType generationType;
 
 }

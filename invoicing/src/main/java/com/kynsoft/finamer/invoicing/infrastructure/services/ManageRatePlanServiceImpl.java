@@ -75,7 +75,7 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
 
     @Override
     public boolean existByCode(String code) {
-        return repositoryQuery.existsManageRatePlanByCode(code);
+        return repositoryQuery.existsByCode(code);
     }
 
 

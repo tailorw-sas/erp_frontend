@@ -58,7 +58,7 @@ public class UpdateManageMerchantCommissionCommandHandler implements ICommandHan
 
         if (update.getUpdate() > 0) {
             this.service.update(existingCommission);
-            this.producerService.update(new UpdateManageMerchantCommissionKafka(command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getCommission(), command.getCalculationType()));
+            this.producerService.update(new UpdateManageMerchantCommissionKafka(existingCommission.getId(), existingCommission.getManagerMerchant().getId(), existingCommission.getManageCreditCartType().getId(), existingCommission.getCommission(), existingCommission.getCalculationType(), existingCommission.getFromDate(), existingCommission.getToDate(), existingCommission.getStatus().name()));
         }
     }
 

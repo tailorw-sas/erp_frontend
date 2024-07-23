@@ -15,6 +15,7 @@ public class UpdateMasterPaymentAttachmentRequest {
     private UUID resourceType;
     private UUID attachmentType;
     private String fileName;
+    private String fileWeight;
     private String path;
     private String remark;
 }

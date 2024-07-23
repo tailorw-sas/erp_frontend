@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
+import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
@@ -14,9 +15,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageAdjustment.update
 import com.kynsoft.finamer.invoicing.application.query.manageAdjustment.getById.FindAdjustmentByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageAdjustment.search.GetSearchAdjustmentQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageAdjustmentResponse;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +36,8 @@ public class AdjustmentController {
     public ResponseEntity<CreateAdjustmentMessage> create(@RequestBody CreateAdjustmentRequest request) {
         CreateAdjustmentCommand createCommand = CreateAdjustmentCommand.fromRequest(request);
         CreateAdjustmentMessage response = mediator.send(createCommand);
+
+       
 
         return ResponseEntity.ok(response);
     }
@@ -62,8 +63,7 @@ public class AdjustmentController {
 
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getPageSize())
-                .withSort(Sort.by("createdAt").ascending());
+        Pageable pageable = PageableUtil.createPageable(request);
 
         GetSearchAdjustmentQuery query = new GetSearchAdjustmentQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
@@ -75,6 +75,9 @@ public class AdjustmentController {
 
         UpdateAdjustmentCommand command = UpdateAdjustmentCommand.fromRequest(request, id);
         UpdateAdjustmentMessage response = mediator.send(command);
+
+       
+
         return ResponseEntity.ok(response);
     }
 }

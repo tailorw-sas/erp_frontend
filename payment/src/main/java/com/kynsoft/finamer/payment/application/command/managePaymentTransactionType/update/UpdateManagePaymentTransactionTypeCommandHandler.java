@@ -24,6 +24,7 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
         dto.setRemarkRequired(command.getRemarkRequired());
         dto.setName(command.getName());
         dto.setStatus(command.getStatus());
+        dto.setDefaultRemark(command.getDefaultRemark());
         service.update(dto);
     }
 }

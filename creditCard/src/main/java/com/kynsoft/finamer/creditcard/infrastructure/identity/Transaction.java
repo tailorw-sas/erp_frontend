@@ -90,10 +90,10 @@ public class Transaction implements Serializable {
     @JoinColumn(name = "manage_transaction_sub_category_id")
     private ManageVCCTransactionType transactionSubCategory;
 
-    @Column(name = "is_adjustment")
-    private Boolean isAdjustment = false;
-
     private Double netAmount;
+
+    @Column(name = "permit_refund")
+    private Boolean permitRefund = true;
 
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
@@ -117,10 +117,10 @@ public class Transaction implements Serializable {
         this.parent = dto.getParent() != null ? new Transaction(dto.getParent()) : null;
         this.transactionCategory = dto.getTransactionCategory() != null ? new ManageVCCTransactionType(dto.getTransactionCategory()) : null;
         this.transactionSubCategory = dto.getTransactionSubCategory() != null ? new ManageVCCTransactionType(dto.getTransactionSubCategory()) : null;
-        if(dto.getIsAdjustment() != null){
-            this.isAdjustment = dto.getIsAdjustment();
-        }
         this.netAmount = dto.getNetAmount();
+        if(dto.getPermitRefund() != null){
+            this.permitRefund = dto.getPermitRefund();
+        }
     }
 
     private TransactionDto toAggregateParent() {
@@ -147,8 +147,7 @@ public class Transaction implements Serializable {
                 createdAt.toLocalDate(),
                 transactionCategory != null ? transactionCategory.toAggregate() : null,
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
-                isAdjustment,
-                netAmount
+                netAmount, permitRefund
         );
     }
 }

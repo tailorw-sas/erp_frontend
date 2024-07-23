@@ -26,14 +26,16 @@ public class ManagePaymentSource implements Serializable {
     private String code;
 
     private String name;
+    private String status;
 
     public ManagePaymentSource(ManagePaymentSourceDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.status = dto.getStatus();
     }
 
     public ManagePaymentSourceDto toAggregate(){
-        return new ManagePaymentSourceDto(id, code, name);
+        return new ManagePaymentSourceDto(id, code, name, status);
     }
 }

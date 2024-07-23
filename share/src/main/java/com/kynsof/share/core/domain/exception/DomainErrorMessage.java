@@ -243,7 +243,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_BANK_ACCOUNT_NOT_FOUND(1025, Series.DOMAIN_ERROR, "Manage Bank Account not found."),
     ATTACHMENT_TYPE_NOT_FOUND(1026, Series.DOMAIN_ERROR, "Attachment Type not found."),
     ATTACHMENT_STATUS_HISTORY_NOT_FOUND(1027, Series.DOMAIN_ERROR, "Attachment Status History not found."),
-    ATTACHMENT_TYPE_CHECK_DEFAULT(1028, Series.DOMAIN_ERROR, "Another item already exists with default."),
+    ATTACHMENT_TYPE_CHECK_DEFAULT(1028, Series.DOMAIN_ERROR, "Only a payment support by payment is allowed."),
     PAYMENT_CLOSE_OPERATION_NOT_FOUND(1029, Series.DOMAIN_ERROR, "Payment Close Operation not found."),
     BOOKING_HOTEL_NUMBER_INVALID(1029, Series.DOMAIN_ERROR, "The field Hotel Booking No. is repeated"),
     RESERVATION_NUMBER_MUST_BE_UNIQUE(1030, Series.DOMAIN_ERROR, "There is already a transaction with that reservation number in this hotel."),
@@ -287,7 +287,9 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     CHECK_PAYMENT_CREATEAT_VALIDATE_HOUR_FOR_DELETE(1066, Series.DOMAIN_ERROR, "The Payment Detail cannot be deleted because 24 hours have already passed since its creation."),
     INVOICE_CLOSE_OPERATION_NOT_FOUND(1067, Series.DOMAIN_ERROR, "Close Operation not found."),
     INVOICE_CLOSE_OPERATION_OUT_OF_RANGE(1068, Series.DOMAIN_ERROR, "Invoice date out of schedule range"),
-    CHECK_INVOICE_OF_TYPE_INCOME(1069, Series.DOMAIN_ERROR, "Invoice of type income. It is not possible to create a new booking.");
+    CHECK_INVOICE_OF_TYPE_INCOME(1069, Series.DOMAIN_ERROR, "Invoice of type income. It is not possible to create a new booking."),
+    VCC_WRONG_CALCULATION_TYPE(1070, Series.DOMAIN_ERROR, "The calculation type is wrong."),
+    VCC_TRANSACTION_CANNOT_BE_REFUNDED(1071, Series.DOMAIN_ERROR, "This transaction cannot be refunded.");
 
     private static final DomainErrorMessage[] VALUES;
 

@@ -19,7 +19,7 @@ public class AttachmentStatusHistoryResponse implements IResponse {
 
     private UUID id;
     private Status status;
-    private UUID payment;
+    private PaymentHistoryResponse payment;
     private ManageEmployeeResponse employee;
     private String description;
     private LocalDateTime createdAt;
@@ -28,7 +28,7 @@ public class AttachmentStatusHistoryResponse implements IResponse {
     public AttachmentStatusHistoryResponse(AttachmentStatusHistoryDto dto) {
         this.id = dto.getId();
         this.status = dto.getStatus();
-        this.payment = dto.getPayment().getId();
+        this.payment = dto.getPayment() != null ? new PaymentHistoryResponse(dto.getPayment()) : null;
         this.employee = dto.getEmployee() != null ? new ManageEmployeeResponse(dto.getEmployee()) : null;
         this.description = dto.getDescription();
         this.createdAt = dto.getCreatedAt();

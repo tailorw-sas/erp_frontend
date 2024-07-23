@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Setter
@@ -18,4 +19,7 @@ public class ReplicateManageMerchantCommissionKafka {
     private UUID manageCreditCartType;
     private Double commission;
     private String calculationType;
+    private LocalDate fromDate;
+    private LocalDate toDate;
+    private String status;
 }

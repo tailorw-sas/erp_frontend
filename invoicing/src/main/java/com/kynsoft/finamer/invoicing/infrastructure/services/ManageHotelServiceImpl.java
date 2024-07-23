@@ -74,6 +74,13 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
+    public ManageHotelDto findByCode(String code) {
+        return repositoryQuery.findManageHotelByCode(code).map(ManageHotel::toAggregate)
+                .orElseThrow( ()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND,
+                new ErrorField("code", "Manage Hotel not found."))));
+    }
+
+    @Override
     public boolean existByCode(String code) {
         return repositoryQuery.existsManageHotelByCode(code);
     }

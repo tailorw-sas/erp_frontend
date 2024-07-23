@@ -56,7 +56,8 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 
         if (update.getUpdate() > 0) {
             service.update(dto);
-            producerUpdateManageAgencyService.update(new UpdateManageAgencyKafka(dto.getId(), dto.getName(), dto.getClient().getId(), dto.getBookingCouponFormat(), command.getStatus().name()));
+            producerUpdateManageAgencyService.update(new UpdateManageAgencyKafka(dto.getId(), dto.getName(), dto.getClient().getId(), 
+                    dto.getBookingCouponFormat(), command.getStatus().name(), dto.getAgencyType().getId()));
         }
     }
 

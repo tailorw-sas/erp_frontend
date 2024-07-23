@@ -16,6 +16,7 @@ public class UpdateManageHotelCommand implements ICommand {
     private UUID id;
     private String name;
     private Boolean isApplyByVCC;
+    private String status;
 
     @Override
     public ICommandMessage getMessage() {

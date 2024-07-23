@@ -39,6 +39,26 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
     }
+    @Override
+    public void calculateInvoiceAmount(ManageBookingDto dto){
+        Double InvoiceAmount = 0.00;
+
+
+        
+
+        if (dto.getRoomRates() != null) {
+
+            for (int i = 0; i < dto.getRoomRates().size(); i++) {
+
+                InvoiceAmount += dto.getRoomRates().get(i).getInvoiceAmount();
+
+            }
+
+            dto.setInvoiceAmount(InvoiceAmount);
+
+            this.update(dto);
+        }
+    }
 
     @Override
     public UUID create(ManageBookingDto dto) {
@@ -89,6 +109,12 @@ public class ManageBookingServiceImpl implements IManageBookingService {
                     new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
+
+    @Override
+    public boolean existByBookingHotelNumber(String bookingHotelNumber) {
+        return repositoryQuery.existsByHotelBookingNumber(bookingHotelNumber);
+    }
+
 
     @Override
     public ManageBookingDto findById(UUID id) {

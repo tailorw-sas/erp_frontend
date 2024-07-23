@@ -15,11 +15,13 @@ import java.util.UUID;
 public class ManageAdjustmentDto {
     private UUID id;
 
-    private Long adjustment_id;
+    private Long adjustmentId;
     private Double amount;
     private LocalDateTime date;
     private String description;
     private ManageInvoiceTransactionTypeDto transaction;
     private ManageRoomRateDto roomRate;
     private String employee;
+
+
 }

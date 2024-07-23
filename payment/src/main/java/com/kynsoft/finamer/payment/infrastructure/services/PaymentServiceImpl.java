@@ -79,7 +79,6 @@ public class PaymentServiceImpl implements IPaymentService {
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
-
             if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
                 try {
                     Status enumValue = Status.valueOf((String) filter.getValue());

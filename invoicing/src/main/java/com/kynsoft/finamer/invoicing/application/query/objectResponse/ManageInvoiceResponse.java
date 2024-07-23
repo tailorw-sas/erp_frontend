@@ -4,18 +4,14 @@ import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -24,31 +20,39 @@ import java.util.UUID;
 @Setter
 public class ManageInvoiceResponse implements IResponse {
     private UUID id;
-    private Long invoice_id;
+    private Long invoiceId;
     private Long invoiceNo;
     private String invoiceNumber;
-    private LocalDateTime invoiceDate;
+    private LocalDate invoiceDate;
     private Boolean isManual;
     private Double invoiceAmount;
     private ManageHotelDto hotel;
     private ManageAgencyDto agency;
-    private EInvoiceType invoiceType;;
+    private EInvoiceType invoiceType;
     private EInvoiceStatus status;
     private boolean autoRec;
     private boolean hasAttachments;
+    private Boolean reSend;
+    private LocalDate reSendDate;
+    private ManageInvoiceTypeResponse manageInvoiceType;
+    private ManageInvoiceStatusResponse manageInvoiceStatus;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
-        this.invoice_id = dto.getInvoice_id();
-        this.invoiceNumber = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getInvoiceNo().toString();
+        this.invoiceId = dto.getInvoiceId();
+        this.invoiceNumber = dto.getInvoiceNumber();
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
         this.invoiceAmount = dto.getInvoiceAmount();
         this.hotel = dto.getHotel();
         this.agency = dto.getAgency();
-        this.invoiceType = dto.getInvoiceType();
-        this.status = dto.getStatus();
-        this.autoRec = dto.getAutoRec();
+        this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
+        this.status = dto.getStatus() != null ? dto.getStatus() : EInvoiceStatus.PROCECSED;
+        this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : false;
         this.hasAttachments = dto.getAttachments() != null && dto.getAttachments().size() > 0;
+        this.reSend = dto.getReSend();
+        this.reSendDate = dto.getReSendDate();
+        this.manageInvoiceType = dto.getManageInvoiceType() != null ? new ManageInvoiceTypeResponse(dto.getManageInvoiceType()) : null;
+        this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null ? new ManageInvoiceStatusResponse(dto.getManageInvoiceStatus()) : null;
     }
 }

@@ -40,6 +40,28 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     }
 
     @Override
+     public void calculateInvoiceAmount(ManageRoomRateDto dto){
+        Double InvoiceAmount = dto.getInvoiceAmount() != null ? dto.getInvoiceAmount() : 0;
+
+
+        
+
+        if (dto.getAdjustments() != null) {
+
+            for (int i = 0; i < dto.getAdjustments().size(); i++) {
+
+                InvoiceAmount += dto.getAdjustments().get(i).getAmount();
+
+            }
+
+            dto.setInvoiceAmount(InvoiceAmount);
+
+            this.update(dto);
+        }
+    }
+
+
+    @Override
     public UUID create(ManageRoomRateDto dto) {
         ManageRoomRate entity = new ManageRoomRate(dto);
         return repositoryCommand.saveAndFlush(entity).getId();

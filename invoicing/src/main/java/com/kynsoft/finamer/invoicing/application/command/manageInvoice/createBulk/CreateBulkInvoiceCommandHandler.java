@@ -2,47 +2,17 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBu
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create.CreateAdjustmentCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateCommand;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTransactionTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageNightTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRatePlanDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomCategoryDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
-import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceStatusService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTransactionTypeService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTypeService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRoomCategoryService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
+import com.kynsoft.finamer.invoicing.domain.services.*;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
-
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Transactional
@@ -61,16 +31,19 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         private final IManageInvoiceStatusService manageInvoiceStatusService;
         private final IManageAttachmentTypeService attachmentTypeService;
         private final IManageBookingService bookingService;
+        private final IManageRoomRateService rateService;
+
+        private final IInvoiceCloseOperationService closeOperationService;
 
         public CreateBulkInvoiceCommandHandler(IManageRatePlanService ratePlanService,
-                        IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
-                        IManageRoomCategoryService roomCategoryService,
-                        IManageInvoiceTransactionTypeService transactionTypeService,
-                        IManageInvoiceService service, IManageAgencyService agencyService,
-                        IManageHotelService hotelService,
-                        IManageInvoiceTypeService iManageInvoiceTypeService,
-                        IManageInvoiceStatusService manageInvoiceStatusService,
-                        IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService) {
+                                               IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
+                                               IManageRoomCategoryService roomCategoryService,
+                                               IManageInvoiceTransactionTypeService transactionTypeService,
+                                               IManageInvoiceService service, IManageAgencyService agencyService,
+                                               IManageHotelService hotelService,
+                                               IManageInvoiceTypeService iManageInvoiceTypeService,
+                                               IManageInvoiceStatusService manageInvoiceStatusService,
+                                               IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IManageRoomRateService rateService, IInvoiceCloseOperationService closeOperationService) {
 
                 this.ratePlanService = ratePlanService;
                 this.nightTypeService = nightTypeService;
@@ -84,11 +57,19 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 this.manageInvoiceStatusService = manageInvoiceStatusService;
                 this.attachmentTypeService = attachmentTypeService;
                 this.bookingService = bookingService;
+                this.rateService = rateService;
+            this.closeOperationService = closeOperationService;
         }
 
         @Override
         @Transactional
         public void handle(CreateBulkInvoiceCommand command) {
+                ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
+                RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+                        this.closeOperationService,
+                        command.getInvoiceCommand().getInvoiceDate(),
+                        hotelDto.getId()
+                ));
 
                 List<ManageAdjustmentDto> adjustments = new LinkedList<>();
                 List<ManageBookingDto> bookings = new LinkedList<>();
@@ -154,7 +135,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                         ratePlanDto,
                                         nightTypeDto,
                                         roomTypeDto,
-                                        roomCategoryDto, new LinkedList<>()));
+                                        roomCategoryDto, new LinkedList<>(), null));
 
                 }
 
@@ -173,7 +154,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                         command.getRoomRateCommands().get(i).getHotelAmount(),
                                         command.getRoomRateCommands().get(i).getRemark(),
                                         null,
-                                        new LinkedList<>());
+                                        new LinkedList<>(), null);
 
                         if (command.getRoomRateCommands().get(i).getBooking() != null) {
                                 for (ManageBookingDto bookingDto : bookings) {
@@ -181,7 +162,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                                         .equals(command.getRoomRateCommands().get(i).getBooking())) {
 
                                                 List<ManageRoomRateDto> rates = bookingDto.getRoomRates();
-                                                roomRateDto.setRoom_rate_id(rates != null ? rates.size() + 1L : 1L);
+                                                roomRateDto.setRoomRateId(rates != null ? rates.size() + 1L : 1L);
                                                 if (rates != null) {
                                                         rates.add(roomRateDto);
                                                 } else {
@@ -247,13 +228,13 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                         command.getAttachmentCommands().get(i).getFile(),
                                         command.getAttachmentCommands().get(i).getRemark(),
                                         attachmentType,
-                                        null);
+                                        null, command.getAttachmentCommands().get(i).getEmployee(),command.getAttachmentCommands().get(i).getEmployeeId(), null);
 
                         attachmentDtos.add(attachmentDto);
                 }
 
                 ManageAgencyDto agencyDto = this.agencyService.findById(command.getInvoiceCommand().getAgency());
-                ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
+
 
                 String invoiceNumber = InvoiceType.getInvoiceTypeCode(command.getInvoiceCommand().getInvoiceType());
 
@@ -263,9 +244,17 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                 command.getInvoiceCommand().getIsManual(),
                                 command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
                                 command.getInvoiceCommand().getInvoiceType(), EInvoiceStatus.PROCECSED,
-                                false, bookings, attachmentDtos);
+                                false, bookings, attachmentDtos, null, null, null, null);
 
-                service.create(invoiceDto);
+                ManageInvoiceDto created = service.create(invoiceDto);
+
+
+               
+
+
+                command.setInvoiceId(created.getInvoiceId());
+
+
 
         }
 }

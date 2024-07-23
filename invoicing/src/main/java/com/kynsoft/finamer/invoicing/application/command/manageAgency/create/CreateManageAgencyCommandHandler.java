@@ -23,14 +23,18 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
     @Override
     public void handle(CreateManageAgencyCommand command) {
 
-        ManageClientDto clientDto = command.getClient() != null
-                ? this.managerClientService.findById(command.getClient())
-                : null;
+        ManageClientDto clientDto = null;
+        try {
+            clientDto = command.getClient() != null ? this.managerClientService.findById(command.getClient()) : null;
+        } catch (Exception e) {
+        }
 
         service.create(new ManageAgencyDto(
                 command.getId(),
                 command.getCode(),
                 command.getName(),
-                clientDto));
+                clientDto,
+                command.getGenerationType()
+                ));
     }
 }

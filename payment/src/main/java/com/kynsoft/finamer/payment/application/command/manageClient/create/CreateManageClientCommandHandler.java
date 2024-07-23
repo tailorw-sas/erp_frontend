@@ -19,7 +19,8 @@ public class CreateManageClientCommandHandler implements ICommandHandler<CreateM
         service.create(new ManageClientDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
+                command.getName(),
+                command.getStatus()
         ));
     }
 }

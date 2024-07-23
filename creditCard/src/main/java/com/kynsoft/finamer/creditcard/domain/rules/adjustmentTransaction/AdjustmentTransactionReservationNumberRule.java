@@ -11,23 +11,41 @@ public class AdjustmentTransactionReservationNumberRule extends BusinessRule {
 
     private final String reservationNumber;
 
-    public AdjustmentTransactionReservationNumberRule(String reservationNumber) {
+    private final String bookingCouponFormat;
+
+    public AdjustmentTransactionReservationNumberRule(String reservationNumber, String bookingCouponFormat) {
         super(
                 DomainErrorMessage.RESERVATION_NUMBER,
                 new ErrorField("reservationNumber", DomainErrorMessage.RESERVATION_NUMBER.getReasonPhrase())
         );
         this.reservationNumber = reservationNumber;
+        this.bookingCouponFormat = bookingCouponFormat;
     }
 
     @Override
     public boolean isBroken() {
-        return !validateCode(reservationNumber);
+        return !validateCode(reservationNumber, bookingCouponFormat);
     }
 
-    private boolean validateCode(String reservationNumber) {
-        Pattern pattern = Pattern.compile("^(I|G)\\s\\d{3}\\s\\d{2}$");
-        Matcher matcher = pattern.matcher(reservationNumber);
+    private boolean validateCode(String reservationNumber, String bookingCouponFormat) {
+        // Primera parte: Verificar que empiece con "I" o "G" seguido de un espacio
+        String firstPart = reservationNumber.substring(0, 2);
+        Pattern pattern = Pattern.compile("^([IG])\\s$");
+        Matcher matcher = pattern.matcher(firstPart);
 
-        return matcher.matches();
+        if (!matcher.matches()) {
+            return false;
+        }
+
+        // Si bookingCouponFormat es vacío o null permitir cualquier formato de números
+        if(bookingCouponFormat == null || bookingCouponFormat.isEmpty()){
+            return true;
+        }
+
+        // Segunda parte: Validar el número según la expresión regular proporcionada
+        String numberPart = reservationNumber.substring(2); // Ignora el primer caracter y el espacio
+        Pattern numberPattern = Pattern.compile(bookingCouponFormat);
+        Matcher numberMatcher = numberPattern.matcher(numberPart);
+        return numberMatcher.matches();
     }
 }

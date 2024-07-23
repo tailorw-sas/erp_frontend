@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.generator.EventType;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,7 +29,7 @@ public class ManageBooking {
 
     @Column(columnDefinition = "serial", name = "booking_gen_id")
     @Generated(event = EventType.INSERT)
-    private Long booking_id;
+    private Long bookingId;
 
     @Column(columnDefinition = "serial", name = "reservation_number")
     @Generated(event = EventType.INSERT)
@@ -48,6 +48,7 @@ public class ManageBooking {
     private String roomNumber;
     private String couponNumber;
     private Integer adults;
+    private Long nights;
     private Integer children;
     private Double rateAdult;
     private Double rateChild;
@@ -120,14 +121,16 @@ public class ManageBooking {
         this.roomCategory = dto.getRoomCategory() != null ? new ManageRoomCategory(dto.getRoomCategory()) : null;
         this.roomRates = dto.getRoomRates() != null ? dto.getRoomRates().stream().map(r -> {
             ManageRoomRate roomRate = new ManageRoomRate(r);
-            roomRate.setRoom_rate_id(this.roomRates != null ? this.roomRates.size() + 1L : 1L);
+            roomRate.setRoomRateId(this.roomRates != null ? this.roomRates.size() + 1L : 1L);
             roomRate.setBooking(this);
             return roomRate;
         }).collect(Collectors.toList()) : null;
+
+        this.nights = dto.getCheckIn() != null && dto.getCheckOut() !=null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
     }
 
     public ManageBookingDto toAggregate() {
-        return new ManageBookingDto(id, booking_id, reservationNumber, hotelCreationDate, bookingDate, checkIn,
+        return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
                 checkOut,
                 hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, roomNumber, couponNumber, adults,
                 children,
@@ -137,11 +140,11 @@ public class ManageBooking {
                 roomCategory != null ? roomCategory.toAggregate() : null,
                 roomRates != null ? roomRates.stream().map(b -> {
                     return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null);
+                }).collect(Collectors.toList()) : null, nights);
     }
 
     public ManageBookingDto toAggregateSample() {
-        return new ManageBookingDto(id, booking_id, reservationNumber, hotelCreationDate, bookingDate, checkIn,
+        return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
                 checkOut,
                 hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, roomNumber, couponNumber, adults,
                 children,
@@ -151,6 +154,6 @@ public class ManageBooking {
                 roomCategory != null ? roomCategory.toAggregate() : null,
                 roomRates != null ? roomRates.stream().map(b -> {
                     return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null);
+                }).collect(Collectors.toList()) : null, nights);
     }
 }

@@ -41,6 +41,9 @@ public class ManageMerchantHotelEnrolle implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
+    private Boolean deleted = false;
+    private LocalDateTime deletedAt;
+
     public ManageMerchantHotelEnrolle(ManageMerchantHotelEnrolleDto dto) {
         this.id = dto.getId();
         this.manageMerchant = new ManageMerchant(dto.getManageMerchant());

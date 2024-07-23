@@ -19,7 +19,7 @@ import java.util.UUID;
 public class ManageAdjustmentResponse implements IResponse {
     private UUID id;
     private Double amount;
-    private Long adjustment_id;
+    private Long adjustmentId;
 
     private LocalDateTime date;
     private String description;
@@ -34,7 +34,7 @@ public class ManageAdjustmentResponse implements IResponse {
         this.description = dto.getDescription();
         this.transaction = dto.getTransaction();
         this.roomRate = dto.getRoomRate();
-        this.adjustment_id = dto.getAdjustment_id();
+        this.adjustmentId = dto.getAdjustmentId();
         this.employee = dto.getEmployee();
     }
 }

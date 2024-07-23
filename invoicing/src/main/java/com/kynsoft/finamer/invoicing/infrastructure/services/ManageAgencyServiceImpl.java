@@ -70,6 +70,11 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     }
 
+    @Override
+    public ManageAgencyDto findByCode(String code) {
+        return repositoryQuery.findManageAgenciesByCode(code).map(ManageAgency::toAggregate)
+                .orElseThrow(()->  new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("code", "The source not found."))));
+    }
 
 
     @Override

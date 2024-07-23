@@ -1,9 +1,12 @@
 package com.kynsoft.finamer.creditcard.application.command.manageMerchantCommission.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageCreditCardTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
 import com.kynsoft.finamer.creditcard.domain.services.IManageCreditCardTypeService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantCommissionService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
@@ -30,12 +33,22 @@ public class CreateManageMerchantCommissionCommandHandler implements ICommandHan
         ManageCreditCardTypeDto manageCreditCardTypeDto = this.serviceCreditCardType.findById(command.getManageCreditCartType());
         ManageMerchantDto manageMerchantDto = this.serviceMerchantService.findById(command.getManagerMerchant());
 
+        CalculationType calculationType;
+        try{
+            calculationType = CalculationType.valueOf(command.getCalculationType());
+        } catch (Exception e){
+            throw new BusinessException(DomainErrorMessage.VCC_WRONG_CALCULATION_TYPE, DomainErrorMessage.VCC_WRONG_CALCULATION_TYPE.name());
+        }
+
         ManageMerchantCommissionDto commissionDto = new ManageMerchantCommissionDto(
                 command.getId(),
                 manageMerchantDto,
                 manageCreditCardTypeDto,
                 command.getCommission(),
-                command.getCalculationType()
+                calculationType,
+                command.getFromDate(),
+                command.getToDate(),
+                command.getStatus()
         );
 
         // Save new commission

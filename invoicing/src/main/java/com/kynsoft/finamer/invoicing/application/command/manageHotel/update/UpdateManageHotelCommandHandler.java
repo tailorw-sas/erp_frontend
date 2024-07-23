@@ -4,10 +4,14 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageTradingCompaniesDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageTradingCompaniesService;
 
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+import java.util.function.Consumer;
 
 @Component
 public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateManageHotelCommand> {
@@ -33,7 +37,34 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(),
                 update::setUpdate);
 
-        UpdateIfNotNull.updateEntity(dto::setManageTradingCompanies, command.getTradingCompany(),
-                dto.getManageTradingCompanies().getId(), update::setUpdate, tradingCompaniesService::findById);
+        if(dto.getManageTradingCompanies() != null) {
+            updateTradingCompanies(dto::setManageTradingCompanies, command.getTradingCompany(), dto.getManageTradingCompanies().getId(), update::setUpdate);
+        } else if(command.getTradingCompany() != null){
+            dto.setManageTradingCompanies(tradingCompaniesService.findById(command.getTradingCompany()));
+            update.setUpdate(1);
+        }
+
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
+
+        if (update.getUpdate() > 0) {
+            this.service.update(dto);
+        }
+    }
+
+    private boolean updateTradingCompanies(Consumer<ManageTradingCompaniesDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+        if (newValue != null) {
+            if(!newValue.equals(oldValue)) {
+                ManageTradingCompaniesDto tradingCompaniesDto = tradingCompaniesService.findById(newValue);
+                setter.accept(tradingCompaniesDto);
+                update.accept(1);
+
+                return true;
+            }
+        } else {
+            setter.accept(null);
+            update.accept(1);
+            return true;
+        }
+        return false;
     }
 }

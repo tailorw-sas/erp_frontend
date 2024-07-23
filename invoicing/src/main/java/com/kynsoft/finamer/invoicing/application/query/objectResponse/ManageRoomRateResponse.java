@@ -17,7 +17,7 @@ import java.util.UUID;
 @Setter
 public class ManageRoomRateResponse implements IResponse {
     private UUID id;
-    private Long room_rate_id;
+    private Long roomRateId;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
     private Double invoiceAmount;
@@ -29,10 +29,11 @@ public class ManageRoomRateResponse implements IResponse {
     private Double hotelAmount;
     private String remark;
     private ManageBookingDto booking;
+    private Long nights;
 
     public ManageRoomRateResponse(ManageRoomRateDto dto) {
         this.id = dto.getId();
-        this.room_rate_id = dto.getRoom_rate_id();
+        this.roomRateId = dto.getRoomRateId();
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
         this.invoiceAmount = dto.getInvoiceAmount();
@@ -44,5 +45,6 @@ public class ManageRoomRateResponse implements IResponse {
         this.hotelAmount = dto.getHotelAmount();
         this.remark = dto.getRemark();
         this.booking = dto.getBooking();
+        this.nights = dto.getNights();
     }
 }

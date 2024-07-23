@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
+import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
@@ -14,9 +15,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.update.U
 import com.kynsoft.finamer.invoicing.application.query.manageRoomRate.getById.FindRoomRateByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageRoomRate.search.GetSearchRoomRateQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageRoomRateResponse;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +36,8 @@ public class RoomRateController {
     public ResponseEntity<CreateRoomRateMessage> create(@RequestBody CreateRoomRateRequest request) {
         CreateRoomRateCommand createCommand = CreateRoomRateCommand.fromRequest(request);
         CreateRoomRateMessage response = mediator.send(createCommand);
+
+    
 
         return ResponseEntity.ok(response);
     }
@@ -62,8 +63,7 @@ public class RoomRateController {
 
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getPageSize())
-                .withSort(Sort.by("createdAt").ascending());
+        Pageable pageable = PageableUtil.createPageable(request);
 
         GetSearchRoomRateQuery query = new GetSearchRoomRateQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
@@ -75,6 +75,9 @@ public class RoomRateController {
 
         UpdateRoomRateCommand command = UpdateRoomRateCommand.fromRequest(request, id);
         UpdateRoomRateMessage response = mediator.send(command);
+
+      
+        
         return ResponseEntity.ok(response);
     }
 }

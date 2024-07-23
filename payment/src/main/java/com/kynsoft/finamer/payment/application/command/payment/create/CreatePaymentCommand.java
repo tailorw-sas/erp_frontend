@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,10 +31,11 @@ public class CreatePaymentCommand implements ICommand {
     private Status status;
 
     private PaymentDto payment;
+    private List<CreateAttachmentRequest> attachments;
 
     public CreatePaymentCommand(Status status, UUID paymentSource, String reference, LocalDate transactionDate, 
                                 UUID paymentStatus, UUID client, UUID agency, UUID hotel, UUID bankAccount, 
-                                UUID attachmentStatus, Double paymentAmount, String remark) {
+                                UUID attachmentStatus, Double paymentAmount, String remark, List<CreateAttachmentRequest> attachments) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.paymentSource = paymentSource;
@@ -47,6 +49,7 @@ public class CreatePaymentCommand implements ICommand {
         this.attachmentStatus = attachmentStatus;
         this.paymentAmount = paymentAmount;
         this.remark = remark;
+        this.attachments = attachments;
     }
 
     public static CreatePaymentCommand fromRequest(CreatePaymentRequest request) {
@@ -62,7 +65,8 @@ public class CreatePaymentCommand implements ICommand {
                 request.getBankAccount(),
                 request.getAttachmentStatus(),
                 request.getPaymentAmount(),
-                request.getRemark()
+                request.getRemark(),
+                request.getAttachments()
         );
     }
 

@@ -9,8 +9,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -19,7 +17,8 @@ public class ManageBookingDto {
 
     private UUID id;
 
-    private Long booking_id;
+    private Long bookingId;
+
     private Long reservationNumber;
 
     private LocalDateTime hotelCreationDate;
@@ -49,4 +48,5 @@ public class ManageBookingDto {
     private ManageRoomTypeDto roomType;
     private ManageRoomCategoryDto roomCategory;
     private List<ManageRoomRateDto> roomRates;
+    private Long nights;
 }

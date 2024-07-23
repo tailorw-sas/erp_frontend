@@ -23,14 +23,16 @@ public class ManagePaymentStatus {
     private String code;
     @Column(unique = true)
     private String name;
+    private String status;
 
     public ManagePaymentStatus(ManagePaymentStatusDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.status = dto.getStatus();
     }
     
     public ManagePaymentStatusDto toAggregate(){
-        return new ManagePaymentStatusDto(id, code, name);
+        return new ManagePaymentStatusDto(id, code, name, status);
     }
 }

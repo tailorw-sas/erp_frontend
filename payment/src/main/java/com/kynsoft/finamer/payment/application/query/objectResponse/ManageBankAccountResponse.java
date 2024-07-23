@@ -17,10 +17,12 @@ public class ManageBankAccountResponse implements IResponse {
 
     private UUID id;
     private String accountNumber;
+    private String status;
 
     public ManageBankAccountResponse(ManageBankAccountDto dto) {
         this.id = dto.getId();
         this.accountNumber = dto.getAccountNumber();
+        this.status = dto.getStatus();
     }
 
 }

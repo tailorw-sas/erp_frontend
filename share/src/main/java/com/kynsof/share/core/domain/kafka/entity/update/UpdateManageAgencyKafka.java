@@ -24,4 +24,6 @@ public class UpdateManageAgencyKafka implements Serializable {
     private String bookingCouponFormat;
     @JsonProperty("status")
     private String status;
+    @JsonProperty("agencyType")
+    private UUID agencyType;
 }

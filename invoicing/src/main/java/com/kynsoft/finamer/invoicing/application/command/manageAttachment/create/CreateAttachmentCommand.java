@@ -2,13 +2,9 @@ package com.kynsoft.finamer.invoicing.application.command.manageAttachment.creat
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -22,6 +18,8 @@ public class CreateAttachmentCommand implements ICommand {
     private String remark;
     private UUID type;
     private UUID invoice;
+    private String employee;
+    private UUID employeeId;
 
     public CreateAttachmentCommand(
 
@@ -29,7 +27,10 @@ public class CreateAttachmentCommand implements ICommand {
             String file,
             String remark,
             UUID type,
-            UUID invoice) {
+            UUID invoice ,
+         String employee,
+     UUID employeeId
+    ) {
         this.id = UUID.randomUUID();
 
         this.file = file;
@@ -37,11 +38,13 @@ public class CreateAttachmentCommand implements ICommand {
         this.remark = remark;
         this.type = type;
         this.invoice = invoice;
+        this.employee = employee;
+        this.employeeId =employeeId;
     }
 
     public static CreateAttachmentCommand fromRequest(CreateAttachmentRequest request) {
         return new CreateAttachmentCommand(
-                request.getFilename(), request.getFile(), request.getRemark(), request.getType(), request.getInvoice());
+                request.getFilename(), request.getFile(), request.getRemark(), request.getType(), request.getInvoice(), request.getEmployee(), request.getEmployeeId());
     }
 
     @Override

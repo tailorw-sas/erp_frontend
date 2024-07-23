@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.event;
 
-import com.kynsoft.finamer.invoicing.infrastructure.identity.excel.BookingRowError;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportRowErrorRedisRepository;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;

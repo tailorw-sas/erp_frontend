@@ -27,12 +27,13 @@ public class ManageHotel implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true)
     private String code;
 
     private String name;
 
     private Boolean isApplyByVcc;
+
+    private String status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -46,6 +47,7 @@ public class ManageHotel implements Serializable {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.isApplyByVcc = dto.getIsApplyByVCC();
+        this.status = dto.getStatus();
     }
 
     public ManageHotelDto toAggregate(){
@@ -53,7 +55,8 @@ public class ManageHotel implements Serializable {
                 id,
                 code,
                 name,
-                isApplyByVcc
+                isApplyByVcc,
+                status
         );
     }
 }

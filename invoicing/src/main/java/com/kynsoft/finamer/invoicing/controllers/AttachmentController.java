@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
+import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
@@ -14,9 +15,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageAttachment.update
 import com.kynsoft.finamer.invoicing.application.query.manageAttachment.getById.FindAttachmentByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageAttachment.search.GetSearchAttachmentQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageAttachmentResponse;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,8 +60,7 @@ public class AttachmentController {
 
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getPageSize())
-                .withSort(Sort.by("createdAt").ascending());
+        Pageable pageable = PageableUtil.createPageable(request);
 
         GetSearchAttachmentQuery query = new GetSearchAttachmentQuery(pageable, request.getFilter(),
                 request.getQuery());

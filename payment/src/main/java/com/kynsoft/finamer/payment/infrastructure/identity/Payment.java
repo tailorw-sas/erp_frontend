@@ -11,10 +11,12 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
+import org.hibernate.generator.EventType;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,7 +31,7 @@ public class Payment implements Serializable {
     private UUID id;
 
     @Column(columnDefinition="serial", name = "payment_gen_id")
-    @Generated(GenerationTime.INSERT)
+    @Generated(event = EventType.INSERT)
     private Long paymentId;
 
     @Enumerated(EnumType.STRING)
@@ -64,6 +66,9 @@ public class Payment implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "attachment_status_id")
     private ManagePaymentAttachmentStatus attachmentStatus;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "resource")
+    private List<MasterPaymentAttachment> attachments;
 
     private Double paymentAmount;
     private Double paymentBalance;
@@ -101,6 +106,11 @@ public class Payment implements Serializable {
         this.identified = dto.getIdentified();
         this.notIdentified = dto.getNotIdentified();
         this.remark = dto.getRemark();
+        this.attachments = dto.getAttachments() != null ? dto.getAttachments().stream().map(_attachment -> {
+            MasterPaymentAttachment attachment = new MasterPaymentAttachment(_attachment);
+            attachment.setResource(this);
+            return attachment;
+        }).collect(Collectors.toList()) : null;
     }
 
     public PaymentDto toAggregate(){
@@ -124,7 +134,11 @@ public class Payment implements Serializable {
                 otherDeductions, 
                 identified, 
                 notIdentified, 
-                remark
+                remark,
+                attachments != null ? attachments.stream().map(b -> {
+                    return b.toAggregateSimple();
+                }).collect(Collectors.toList()) : null
         );
     }
+
 }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class InvoiceCloseOperationServiceImpl implements IInvoiceCloseOperationService {
@@ -103,6 +104,46 @@ public class InvoiceCloseOperationServiceImpl implements IInvoiceCloseOperationS
     @Override
     public Long findByHotelId(UUID hotelId) {
         return this.repositoryQuery.findByHotelId(hotelId);
+    }
+
+    @Override
+    public List<InvoiceCloseOperationDto> findByHotelIds(List<UUID> hotelIds) {
+        return this.repositoryQuery.findByHotelIds(hotelIds)
+                .stream()
+                .map(InvoiceCloseOperation::toAggregate)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public InvoiceCloseOperationDto findActiveByHotelId(UUID hotelId) {
+        Optional<InvoiceCloseOperation> entity = this.repositoryQuery.findActiveByHotelId(hotelId);
+        if (entity.isPresent()) {
+            return entity.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.INVOICE_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public void updateAll(List<InvoiceCloseOperationDto> dtos) {
+        List<InvoiceCloseOperation> updates = new ArrayList<>();
+
+        for (InvoiceCloseOperationDto dto : dtos) {
+            InvoiceCloseOperation up = new InvoiceCloseOperation(dto);
+            up.setUpdatedAt(LocalDateTime.now());
+            updates.add(up);
+        }
+
+        System.err.println("############################################");
+        System.err.println("############################################");
+        System.err.println("############################################");
+        System.err.println("############################################");
+        System.err.println("############################################");
+        System.err.println("UPDATE: " + updates.size());
+        System.err.println("############################################");
+        System.err.println("############################################");
+        System.err.println("############################################");
+        System.err.println("############################################");
+        this.repositoryCommand.saveAll(updates);
     }
 
 }

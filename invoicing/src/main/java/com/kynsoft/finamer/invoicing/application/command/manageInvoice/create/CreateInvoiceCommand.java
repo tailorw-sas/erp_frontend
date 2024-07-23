@@ -6,7 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Getter
@@ -14,15 +14,16 @@ import java.util.UUID;
 public class CreateInvoiceCommand implements ICommand {
 
     private UUID id;
-    private LocalDateTime invoiceDate;
-    private LocalDateTime dueDate;
+    private LocalDate invoiceDate;
+    private LocalDate dueDate;
     private Boolean isManual;
     private Double invoiceAmount;
     private UUID hotel;
     private UUID agency;
     private EInvoiceType invoiceType;
+    private Long invoiceId;
 
-    public CreateInvoiceCommand(LocalDateTime invoiceDate, LocalDateTime dueDate, Boolean isManual,
+    public CreateInvoiceCommand(LocalDate invoiceDate, LocalDate dueDate, Boolean isManual,
             Double invoiceAmount, UUID hotel,
             UUID agency, EInvoiceType invoiceType, UUID id) {
         this.id = id;
@@ -46,6 +47,6 @@ public class CreateInvoiceCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new CreateInvoiceMessage(id);
+        return new CreateInvoiceMessage(id, invoiceId);
     }
 }

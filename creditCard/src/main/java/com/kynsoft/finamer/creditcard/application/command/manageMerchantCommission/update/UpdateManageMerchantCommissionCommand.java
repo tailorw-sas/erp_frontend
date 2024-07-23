@@ -19,6 +19,9 @@ public class UpdateManageMerchantCommissionCommand implements ICommand {
     private final UUID manageCreditCartType;
     private final Double commission;
     private final String calculationType;
+    private LocalDate fromDate;
+    private LocalDate toDate;
+    private String status;
 
     @Override
     public ICommandMessage getMessage() {

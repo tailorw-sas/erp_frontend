@@ -18,5 +18,6 @@ public class ManageHotelDto {
     private String name;
     private ManageTradingCompaniesDto manageTradingCompanies;
     private Long autogen_code;
-
+    private boolean virtual;
+    private String status;
 }

@@ -23,7 +23,7 @@ public class ConsumerUpdateManageHotelService {
     public void listen(UpdateManageHotelKafka objKafka) {
         try {
             UpdateManageHotelCommand command = new UpdateManageHotelCommand(objKafka.getId(), objKafka.getName(),
-                    objKafka.getManageTradingCompany());
+                    objKafka.getManageTradingCompany(), objKafka.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageHotelService.class.getName()).log(Level.SEVERE, null, ex);

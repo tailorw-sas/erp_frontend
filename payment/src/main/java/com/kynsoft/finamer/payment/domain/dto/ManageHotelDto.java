@@ -16,5 +16,6 @@ public class ManageHotelDto {
     private UUID id;
     private String code;
     private String name;
+    private String status;
 
 }

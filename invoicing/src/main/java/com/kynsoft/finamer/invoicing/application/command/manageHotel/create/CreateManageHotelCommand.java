@@ -15,12 +15,16 @@ public class CreateManageHotelCommand implements ICommand {
     private String code;
     private String name;
     private UUID manageTradingCompany;
+    private boolean isVirtual;
+    private String status;
 
-    public CreateManageHotelCommand(UUID id, String code, String name, UUID manageTradingCompany) {
+    public CreateManageHotelCommand(UUID id, String code, String name, UUID manageTradingCompany,boolean isVirtual, String status) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.manageTradingCompany = manageTradingCompany;
+        this.isVirtual=isVirtual;
+        this.status = status;
     }
 
     @Override

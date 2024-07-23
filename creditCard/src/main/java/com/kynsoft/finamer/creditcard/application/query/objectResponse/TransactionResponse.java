@@ -40,6 +40,7 @@ public class TransactionResponse implements IResponse {
     private ManageVCCTransactionTypeResponse transactionCategory;
     private ManageVCCTransactionTypeResponse transactionSubCategory;
     private Double netAmount;
+    private Boolean permitRefund;
 
     public TransactionResponse(TransactionDto dto){
         this.id = dto.getId();
@@ -69,5 +70,6 @@ public class TransactionResponse implements IResponse {
         this.transactionCategory = dto.getTransactionCategory() != null ? new ManageVCCTransactionTypeResponse(dto.getTransactionCategory()) : null;
         this.transactionSubCategory = dto.getTransactionSubCategory() != null ? new ManageVCCTransactionTypeResponse(dto.getTransactionSubCategory()) : null;
         this.netAmount = dto.getNetAmount();
+        this.permitRefund = dto.getPermitRefund();
     }
 }

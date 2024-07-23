@@ -31,6 +31,7 @@ public class ManagePaymentTransactionType implements Serializable {
     private Boolean applyDeposit;
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
+    private String defaultRemark;
 
     public ManagePaymentTransactionType(ManagePaymentTransactionTypeDto dto) {
         this.id = dto.getId();
@@ -42,10 +43,11 @@ public class ManagePaymentTransactionType implements Serializable {
         this.applyDeposit = dto.getApplyDeposit();
         this.remarkRequired = dto.getRemarkRequired();
         this.minNumberOfCharacter = dto.getMinNumberOfCharacter();
+        this.defaultRemark = dto.getDefaultRemark();
     }
 
     public ManagePaymentTransactionTypeDto toAggregate() {
-        return new ManagePaymentTransactionTypeDto(id, code, name, status, cash, deposit, applyDeposit, remarkRequired, minNumberOfCharacter);
+        return new ManagePaymentTransactionTypeDto(id, code, name, status, cash, deposit, applyDeposit, remarkRequired, minNumberOfCharacter, defaultRemark);
     }
 
 }

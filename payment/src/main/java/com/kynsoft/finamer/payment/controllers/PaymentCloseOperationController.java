@@ -12,6 +12,9 @@ import com.kynsoft.finamer.payment.application.command.paymentcloseoperation.del
 import com.kynsoft.finamer.payment.application.command.paymentcloseoperation.update.UpdatePaymentCloseOperationCommand;
 import com.kynsoft.finamer.payment.application.command.paymentcloseoperation.update.UpdatePaymentCloseOperationMessage;
 import com.kynsoft.finamer.payment.application.command.paymentcloseoperation.update.UpdatePaymentCloseOperationRequest;
+import com.kynsoft.finamer.payment.application.command.paymentcloseoperation.updateAll.UpdateAllPaymentCloseOperationCommand;
+import com.kynsoft.finamer.payment.application.command.paymentcloseoperation.updateAll.UpdateAllPaymentCloseOperationMessage;
+import com.kynsoft.finamer.payment.application.command.paymentcloseoperation.updateAll.UpdateAllPaymentCloseOperationRequest;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentCloseOperationResponse;
 import com.kynsoft.finamer.payment.application.query.paymentcloseoperation.getById.FindPaymentCloseOperationByIdQuery;
 import com.kynsoft.finamer.payment.application.query.paymentcloseoperation.search.GetSearchPaymentCloseOperationQuery;
@@ -54,6 +57,14 @@ public class PaymentCloseOperationController {
 
         UpdatePaymentCloseOperationCommand command = UpdatePaymentCloseOperationCommand.fromRequest(request, id);
         UpdatePaymentCloseOperationMessage response = mediator.send(command);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping(path = "/all")
+    public ResponseEntity<?> update(@RequestBody UpdateAllPaymentCloseOperationRequest request) {
+
+        UpdateAllPaymentCloseOperationCommand command = UpdateAllPaymentCloseOperationCommand.fromRequest(request);
+        UpdateAllPaymentCloseOperationMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
     }
 

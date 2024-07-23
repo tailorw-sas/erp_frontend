@@ -18,4 +18,6 @@ public class CreateAttachmentRequest {
     private String remark;
     private UUID type;
     private UUID invoice;
+    private String employee;
+    private UUID employeeId;
 }

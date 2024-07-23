@@ -29,4 +29,6 @@ public class ReplicateManageAgencyKafka implements Serializable {
 
     @JsonProperty("generationType")
     private String generationType;
+    @JsonProperty("agencyType")
+    private UUID agencyType;
 }

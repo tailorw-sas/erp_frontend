@@ -6,6 +6,7 @@ import com.kynsoft.finamer.payment.application.command.manageHotel.create.Create
 import com.kynsoft.finamer.payment.application.command.paymentcloseoperation.create.CreatePaymentCloseOperationCommand;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -25,15 +26,16 @@ public class ConsumerReplicateManageHotelService {
     @KafkaListener(topics = "finamer-replicate-manage-hotel", groupId = "payment-entity-replica")
     public void listen(ReplicateManageHotelKafka objKafka) {
         try {
-            CreateManageHotelCommand command = new CreateManageHotelCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName());
+            CreateManageHotelCommand command = new CreateManageHotelCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName(), objKafka.getStatus());
             mediator.send(command);
 
             try {
+                YearMonth yearMonthObject = YearMonth.of(LocalDate.now().getYear(), LocalDate.now().getMonth());
                 CreatePaymentCloseOperationCommand commandCloseOperationCommand = new CreatePaymentCloseOperationCommand(
                         Status.ACTIVE, 
                         objKafka.getId(), 
-                        LocalDate.now(), 
-                        LocalDate.now().plusDays(1)
+                        yearMonthObject.atDay(1), 
+                        yearMonthObject.atEndOfMonth()
                 );
                 mediator.send(commandCloseOperationCommand);
             } catch (Exception e) {

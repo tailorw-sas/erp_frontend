@@ -15,6 +15,9 @@ import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetail
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -51,19 +54,37 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
         UpdateIfNotNull.updateDouble(paymentUpdate::setIdentified, paymentUpdate.getIdentified() + command.getAmount(), updatePayment::setUpdate);
         UpdateIfNotNull.updateDouble(paymentUpdate::setNotIdentified, paymentUpdate.getPaymentAmount() - paymentUpdate.getIdentified(), updatePayment::setUpdate);
 
-        this.paymentDetailService.create(new PaymentDetailDto(
+        //TODO: Se debe de validar esta variable para que cumpla con el Close Operation
+        LocalDate transactionDate = LocalDate.now();
+        PaymentDetailDto children = new PaymentDetailDto(
                 command.getId(),
                 command.getStatus(),
                 paymentUpdate,
                 paymentTransactionTypeDto,
                 command.getAmount(),
                 command.getRemark(),
-                paymentDetailDto
-        ));
+                null,
+                null,
+                null,
+                transactionDate,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
 
-        if (updatePayment.getUpdate() > 0) {
-            this.paymentService.update(paymentUpdate);
-        }
+        this.paymentDetailService.create(children);
+
+        List<PaymentDetailDto> updateChildrens = new ArrayList<>();
+        updateChildrens.addAll(paymentDetailDto.getChildren());
+        updateChildrens.add(children);
+        paymentDetailDto.setChildren(updateChildrens);
+        paymentDetailService.update(paymentDetailDto);
+
+        this.paymentService.update(paymentUpdate);
+        command.setPaymentResponse(paymentUpdate);
 
     }
 }

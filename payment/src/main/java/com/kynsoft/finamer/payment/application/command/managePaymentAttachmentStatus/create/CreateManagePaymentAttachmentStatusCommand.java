@@ -14,11 +14,13 @@ public class CreateManagePaymentAttachmentStatusCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
+    private String status;
     
-    public CreateManagePaymentAttachmentStatusCommand(UUID id, final String code, final String name) {
+    public CreateManagePaymentAttachmentStatusCommand(UUID id, final String code, final String name, String status) {
         this.id = id;
         this.code = code;
         this.name = name;
+        this.status = status;
     }
 
     @Override

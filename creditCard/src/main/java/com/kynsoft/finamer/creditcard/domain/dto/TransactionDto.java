@@ -37,8 +37,8 @@ public class TransactionDto {
     private LocalDate transactionDate;
     private ManageVCCTransactionTypeDto transactionCategory;
     private ManageVCCTransactionTypeDto transactionSubCategory;
-    private Boolean isAdjustment;
     private Double netAmount;
+    private Boolean permitRefund;
 
     public TransactionDto(
             Long id, LocalDate checkIn, String reservationNumber,
@@ -59,7 +59,7 @@ public class TransactionDto {
             String cardNumber, ManageCreditCardTypeDto creditCardType, Double commission,
             ManageTransactionStatusDto status, TransactionDto parent,
             ManageVCCTransactionTypeDto transactionCategory,
-            ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount) {
+            ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount, Boolean permitRefund) {
         this.merchant = merchant;
         this.methodType = methodType;
         this.hotel = hotel;
@@ -81,13 +81,15 @@ public class TransactionDto {
         this.transactionCategory = transactionCategory;
         this.transactionSubCategory = transactionSubCategory;
         this.netAmount = netAmount;
+        this.permitRefund = permitRefund;
     }
 
     public TransactionDto(
             ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
             String reservationNumber, String referenceNumber, ManageTransactionStatusDto status,
-            Double commission, LocalDate checkIn, Boolean isAdjustment, Double netAmount){
+            Double commission, LocalDate checkIn, Double netAmount,
+            LocalDate transactionDate, Boolean permitRefund){
         this.agency = agency;
         this.transactionCategory = transactionCategory;
         this.transactionSubCategory = transactionSubCategory;
@@ -97,7 +99,8 @@ public class TransactionDto {
         this.status = status;
         this.commission = commission;
         this.checkIn = checkIn;
-        this.isAdjustment = isAdjustment;
         this.netAmount = netAmount;
+        this.transactionDate = transactionDate;
+        this.permitRefund = permitRefund;
     }
 }

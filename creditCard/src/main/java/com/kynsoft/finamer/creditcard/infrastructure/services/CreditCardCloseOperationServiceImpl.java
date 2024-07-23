@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CreditCardCloseOperationServiceImpl implements ICreditCardCloseOperationService {
@@ -50,6 +51,19 @@ public class CreditCardCloseOperationServiceImpl implements ICreditCardCloseOper
     }
 
     @Override
+    public void updateAll(List<CreditCardCloseOperationDto> dtos) {
+        List<CreditCardCloseOperation> updates = new ArrayList<>();
+
+        for (CreditCardCloseOperationDto dto : dtos) {
+            CreditCardCloseOperation up = new CreditCardCloseOperation(dto);
+            up.setUpdatedAt(LocalDateTime.now());
+            updates.add(up);
+        }
+
+        this.repositoryCommand.saveAll(updates);
+    }
+
+    @Override
     public void delete(CreditCardCloseOperationDto dto) {
         try {
             this.repositoryCommand.deleteById(dto.getId());
@@ -64,7 +78,7 @@ public class CreditCardCloseOperationServiceImpl implements ICreditCardCloseOper
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override
@@ -103,6 +117,23 @@ public class CreditCardCloseOperationServiceImpl implements ICreditCardCloseOper
     @Override
     public Long findByHotelId(UUID hotelId) {
         return this.repositoryQuery.findByHotelId(hotelId);
+    }
+
+    @Override
+    public List<CreditCardCloseOperationDto> findByHotelIds(List<UUID> hotelIds) {
+        return this.repositoryQuery.findByHotelIds(hotelIds)
+                .stream()
+                .map(CreditCardCloseOperation::toAggregate)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public CreditCardCloseOperationDto findActiveByHotelId(UUID hotelId) {
+        Optional<CreditCardCloseOperation> entity = this.repositoryQuery.findActiveByHotelId(hotelId);
+        if (entity.isPresent()) {
+            return entity.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
     }
 
 }
