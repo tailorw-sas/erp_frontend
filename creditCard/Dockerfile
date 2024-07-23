@@ -36,7 +36,7 @@ COPY . /build
 
 # Setup environment vairables for maven resposiory
 ARG PACKAGE_TOKEN
-ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
+ENV PACKAGE_TOKEN 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
 
 # Build
 RUN mvn dependency:go-offline -f pom.xml -s rc-settings.xml
