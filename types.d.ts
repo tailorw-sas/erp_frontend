@@ -35,6 +35,17 @@ export interface Business {
 }
 
 export interface SearchResponse {
+  [x: string]: { data: any, page: any, size: any, totalElements: any, totalPages: any }
+  data: any[]
+  totalPages: number
+  totalElementsPage: number
+  totalElements: number
+  size: number
+  page: number
+}
+
+export interface PaginatedResponse {
+  [x: string]: { data: any, page: any, size: any, totalElements: any, totalPages: any }
   data: any[]
   totalPages: number
   totalElementsPage: number

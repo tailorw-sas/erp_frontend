@@ -162,7 +162,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -282,7 +282,7 @@ async function getHotelList(query: string) {
           pageSize: 20,
           page: 0,
           sortBy: 'name',
-          sortType: 'DES'
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     const response = await GenericService.search('settings', 'manage-hotel', payload)
@@ -371,13 +371,13 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
+      idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
-    idItem.value = ''
   }
   else {
     try {

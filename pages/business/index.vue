@@ -5,6 +5,7 @@ import type { IFilter, IFormField, IQueryRequest } from '~/components/fields/int
 import type { IBusiness, IData } from '~/components/table/interfaces/IModelData'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
+import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const listItems = ref<IBusiness[]>([])
@@ -371,7 +372,7 @@ function clearFilterToSearch() {
     pageSize: 50,
     page: 0,
     sortBy: 'name',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''

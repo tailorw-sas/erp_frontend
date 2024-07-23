@@ -16,14 +16,15 @@ export const cards = ref<Card[]>([
     title: 'Invoice Management',
     icon: icon_1,
     color: '#7CA742',
-    status: '', 
+    status: '',
     url: 'invoice'
   },
   {
     title: 'Payment Management',
     icon: icon_2,
     color: '#0F8BFD',
-    status: ''
+    status: '',
+    url: 'payment'
   },
   {
     title: 'Collection Management',
@@ -35,7 +36,8 @@ export const cards = ref<Card[]>([
     title: 'Virtual Credit Card Management',
     icon: icon_4,
     color: '#970235',
-    status: ''
+    status: '',
+    url: 'vcc-management'
   },
   {
     title: 'Report Management',

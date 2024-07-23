@@ -30,4 +30,8 @@ useHead({
     padding-top: 10px;
     padding-bottom: 10px;
   }
+
+  td.p-frozen-column {
+  background-color: #fff !important;
+}
 </style>

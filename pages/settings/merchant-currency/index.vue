@@ -62,6 +62,7 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
     validation: z.string()
       .min(1, 'The value field is required'),
+    // .min(1, 'The value field is required').regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed'),
   },
   {
     field: 'description',
@@ -133,7 +134,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'id',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -217,7 +218,7 @@ async function getItemById(id: string) {
           status: response.managerMerchant.status
         }
         item.value.id = response.id
-        item.value.value = response.value
+        item.value.value = String(response.value)
         item.value.description = response.description
         MerchantList.value = [objMerchant]
         item.value.managerMerchant = objMerchant
@@ -306,13 +307,13 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
+      idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: 'Item could not be updated', life: 10000 })
     }
-    idItem.value = ''
   }
   else {
     try {

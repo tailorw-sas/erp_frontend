@@ -3,10 +3,13 @@ import type { FieldDefinitionType } from '../form/EditFormV2'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
+  title: { type: String, default: '' },
   item: { type: Object, required: true },
   fields: { type: Array<FieldDefinitionType>, required: true },
   loadingSaveAll: { type: Boolean, default: false },
   selectedPayment: { type: Object, required: true },
+  isSplitAction: { type: Boolean, default: false },
+  action: { type: String, default: 'new-detail' }, // new-detail, deposit-transfer, split-deposit
 })
 const emit = defineEmits(['update:visible', 'save'])
 const confirm = useConfirm()
@@ -49,6 +52,8 @@ function handleSaveForm($event: any) {
     forceSave.value = false
     item.value = $event
   }
+
+  emit('save', item.value)
 }
 
 interface DataListItem {
@@ -56,23 +61,29 @@ interface DataListItem {
   name: string
   code: string
   status: string
+  defaults: boolean
+  cash: boolean
 }
 
 interface ListItem {
   id: string
   name: string
   status: boolean | string
+  default: boolean
+  cash: boolean
 }
 function mapFunction(data: DataListItem): ListItem {
   return {
     id: data.id,
     name: `${data.code} - ${data.name}`,
-    status: data.status
+    status: data.status,
+    default: data.defaults,
+    cash: data.cash
   }
 }
 
-async function getTransactionTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  transactionTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
+async function getTransactionTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  transactionTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
 }
 
 function requireConfirmationToSave(item: any) {
@@ -94,14 +105,14 @@ watch(() => props.visible, (newValue) => {
   onOffDialog.value = newValue
   emit('update:visible', newValue)
 })
-watch(() => item.value, async (newValue) => {
-  if (newValue) {
-    requireConfirmationToSave(newValue)
-  }
-})
+// watch(() => item.value, async (newValue) => {
+//   if (newValue) {
+//     requireConfirmationToSave(newValue)
+//   }
+// })
 watch(() => props.item, async (newValue) => {
   if (newValue) {
-    newValue.transactionType.status = 'ACTIVE'
+    // newValue.transactionType.status = 'ACTIVE'
     item.value = { ...newValue }
   }
 })
@@ -124,14 +135,14 @@ watch(() => props.item, async (newValue) => {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
       mask: {
-        style: 'backdrop-filter: blur(2px)',
+        style: 'backdrop-filter: blur(5px)',
       },
     }"
   >
     <template #header>
       <div class="flex justify-content-between align-items-center justify-content-between w-full">
         <h5 class="m-0 py-2">
-          Payment Details
+          {{ props.title }}
         </h5>
         <div>
           <strong class="mx-2">Payment:</strong>

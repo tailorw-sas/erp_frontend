@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { usePrimeVue } from 'primevue/config'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -30,6 +30,7 @@ let submitEvent = new Event('')
 const confirm = useConfirm()
 const dialogVisible = ref(props.openDialog)
 const loadingSaveAll = ref(false)
+const loadingDefaultAgency = ref(false)
 const loadingDefaultCategory = ref(false)
 const loadingDefaultSubCategory = ref(false)
 const confApi = reactive({
@@ -125,18 +126,23 @@ function clearForm() {
 }
 
 function requireConfirmationToSave(item: any) {
-  confirm.require({
-    target: submitEvent.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: async () => {
-      await save(item)
-    },
-    reject: () => {}
-  })
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    save(item)
+  }
+  else {
+    confirm.require({
+      target: submitEvent.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: async () => {
+        await save(item)
+      },
+      reject: () => {}
+    })
+  }
 }
 
 async function save(item: { [key: string]: any }) {
@@ -292,20 +298,35 @@ async function getSubCategoryList(query: string, isDefault: boolean = false) {
   }
 }
 
-async function getAgencyList(query: string) {
+async function getAgencyList(query: string, isDefault: boolean = false) {
+  if (isDefault) {
+    loadingDefaultAgency.value = true
+  }
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: isDefault
+        ? [{
+            key: 'isDefault',
+            operator: 'EQUALS',
+            value: true,
+            logicalOperation: 'AND'
+          }, {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }]
+        : [{
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'AND'
+          }, {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }],
       query: '',
       sortBy: 'createdAt',
       sortType: 'ASC',
@@ -319,9 +340,18 @@ async function getAgencyList(query: string) {
     for (const iterator of dataList) {
       AgencyList.value = [...AgencyList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
     }
+    if (isDefault && AgencyList.value.length > 0) {
+      item.value.agency = AgencyList.value[0]
+      formReload.value += 1
+    }
   }
   catch (error) {
     console.error('Error loading agency list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultAgency.value = false
+    }
   }
 }
 
@@ -340,6 +370,7 @@ watch(() => props.openDialog, (newValue) => {
   dialogVisible.value = newValue
   if (newValue) {
     clearForm()
+    getAgencyList('', true)
     getCategoryList('', true)
     getSubCategoryList('', true)
   }
@@ -399,7 +430,7 @@ watch(() => props.openDialog, (newValue) => {
         </template>
         <template #field-agency="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
+            v-if="!loadingDefaultAgency && !loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -416,8 +447,8 @@ watch(() => props.openDialog, (newValue) => {
     </div>
     <template #footer>
       <div class="flex justify-content-end mr-4">
-        <Button v-tooltip.top="'Cancel'" label="Cancel" severity="danger" icon="pi pi-times" class="mr-2" @click="onClose(true)" />
-        <Button v-tooltip.top="'Save'" label="Save" icon="pi pi-save" :loading="loadingSaveAll" @click="saveSubmit($event)" />
+        <Button v-tooltip.top="'Save'" label="Save" icon="pi pi-save" :loading="loadingSaveAll" class="mr-2" @click="saveSubmit($event)" />
+        <Button v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" icon="pi pi-times" @click="onClose(true)" />
       </div>
     </template>
   </Dialog>

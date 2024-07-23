@@ -28,6 +28,7 @@ const props = defineProps({
       loading: boolean
       actionsAsMenu: boolean
       showAcctions?: boolean
+      showSort?: boolean
       showCreate?: boolean
       showEdit?: boolean
       showAttend?: boolean
@@ -338,7 +339,7 @@ function onSortField(event: any) {
     const shortAndFilter = {
       filter: event.filters,
       sortField: event.sortField,
-      sortOrder: event.sortOrder === 1 ? 'ASC' : 'DES'
+      sortOrder: event.sortOrder === 1 ? ENUM_SHORT_TYPE.ASC : ENUM_SHORT_TYPE.DESC
     }
     emits('onSortField', { ...shortAndFilter })
   }
@@ -399,6 +400,8 @@ getOptionsList()
           </template>
         </ContextMenu>
       </div>
+      <BlockUI :blocked="options?.loading">
+        <div class="card p-0">
       <DataTable
         v-model:contextMenuSelection="selectedItem"
         v-model:filters="filters1" v-model:selection="clickedItem"
@@ -406,7 +409,7 @@ getOptionsList()
         filter-display="row" sort-mode="single" :value="data" data-key="id" show-gridlines
         striped-rows removable-sort lazy scrollable scroll-height="60vh" :filters="filters1" row-group-mode="subheader"
         @row-dblclick="onDoubleClickItem" @row-contextmenu="onRowContextMenu" @sort="onSortField" @update:selection="onSelectItem"
-        @update:filters="onChangeFilters"
+        @update:filters="onChangeFilters"   edit-mode="cell"
       >
         <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
           <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
@@ -464,10 +467,21 @@ getOptionsList()
         </Column>
         <!-- :show-filter-match-modes="column.type !== 'bool' " -->
         <Column
-          v-for="(column, index) in columns" :key="column.field" :field="column.field" :header="column.header"
-          :show-filter-match-modes="false" :sortable="options?.showAcctions" :filter-field="column.field" class="custom-table-head"
-          :style="{ width: column.type === 'image' ? '80px' : 'auto' }"
-        >
+        v-for="(column, index) in columns" :key="column.field"
+        :field="column.field"
+        :show-filter-match-modes="false"
+        :sortable="column.hasOwnProperty('sortable') ? column.sortable : true"
+        :filter-field="column.field"
+        class="custom-table-head" :class="column.columnClass"
+        :style="{
+          width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
+          minWidth: column?.width ? column?.width : 'auto',
+          // maxWidth: column?.width ? column?.width : 'auto',
+        }"
+      >
+      <template #header>
+        <span v-tooltip="column.tooltip">{{ column.header }}</span>
+      </template>
           <template #body="{ data }">
             <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null">
               <span v-if="column.type === 'select' || column.type === 'local-select'">
@@ -598,6 +612,8 @@ getOptionsList()
         </Column>
       </DataTable>
     </div>
+    </BlockUI>
+    </div>
 
     <div class="flex flex-row justify-content-end  w-full align-items-center mt-3 card p-0">
       <slot name="pagination-left" />
@@ -615,12 +631,15 @@ getOptionsList()
           <div class="flex  w-fit align-items-center mx-3 gap-4 justify-content-between ">
             <slot name="pagination-total-section" :total="props.pagination?.totalElements">
               <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
+                
                 <span>
                   Total:
                 </span>
+                <slot name="pagination-total" :total="props.pagination?.totalElements">
                 <span class="font-bold font">
                   {{ props.pagination?.totalElements }}
                 </span>
+              </slot>
               </Badge>
             </slot>
           </div>

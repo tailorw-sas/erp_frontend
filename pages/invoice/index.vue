@@ -5,19 +5,20 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
-import { filter } from 'lodash'
 import Checkbox from 'primevue/checkbox'
+import ContextMenu from 'primevue/contextmenu'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
-import { statusToBoolean, statusToString } from '~/utils/helpers'
+import { statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import getUrlByImage from '~/composables/files'
-import type { MenuItem } from '~/components/menu/MenuItems'
+
 // VARIABLES -----------------------------------------------------------------------------------------
 const menu = ref()
+const menu_import = ref()
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
@@ -33,32 +34,33 @@ const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
 const hotelError = ref(false)
-
+const attachmentHistoryDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
-const attachmentInvoice = ref(null)
+const attachmentInvoice = <any>ref(null)
 
 const active = ref(0)
 
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
-  criteria: null,
+  criteria: ENUM_INVOICE_CRITERIA[0],
   search: '',
   client: [],
   agency: [],
   hotel: [],
-  status: [{ id: 'PROCECSED', name: 'Procesed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
+  status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
   invoiceType: [{ id: 'All', name: 'All', code: 'All' }],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
 
   includeInvoicePaid: true
 })
+
 const confApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice',
 })
 
-const disableClient = ref<boolean>(true)
+const disableClient = ref<boolean>(false)
 const disableDates = ref<boolean>(true)
 
 const expandedInvoice = ref('')
@@ -88,24 +90,74 @@ const confinvoiceTypeListtApi = reactive({
   uriApi: 'manage-invoice-type',
 })
 
+const invoiceContextMenu = ref()
+const invoiceAllContextMenuItems = ref([
+  {
+    label: 'Change Agency',
+    icon: 'pi pi-pencil',
+    command: () => {},
+    default: false
+  },
+  {
+    label: 'New Credit',
+    icon: 'pi pi-credit-card',
+    command: () => {
+      navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[2].id}&selected=${attachmentInvoice.value.id}`)
+    },
+    default: true,
+  },
+  {
+    label: 'Status History',
+    icon: 'pi pi-history',
+    command: handleAttachmentHistoryDialogOpen,
+    default: true,
+  },
+  {
+    label: 'Document',
+    icon: 'pi pi-paperclip',
+    command: () => {
+      attachmentDialogOpen.value = true
+    },
+    default: true,
+  },
+  {
+    label: 'Print',
+    icon: 'pi pi-print',
+    command: () => {
+      if(attachmentInvoice.value?.hasAttachments){
+      exportAttachments()}
+    },
+    default: true,
+  },
+])
+
+const invoiceContextMenuItems = ref<any[]>([])
+
+const exportDialogOpen = ref(false)
+const exportPdfDialogOpen = ref(false)
+const exportAttachmentsDialogOpen = ref(false)
+const exportBlob = ref<any>(null)
+
 ////
 const computedexpandedInvoice = computed(() => {
   return expandedInvoice.value === ''
 })
 
-const createItems = ref([{
-  label: 'Invoice',
-  command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[0].id}`),
-
-}, {
-  label: 'Credit',
-  command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[2].id}&selected=${expandedInvoice.value}`),
-  disabled: computedexpandedInvoice
-
-}, {
-  label: 'Old Credit',
-  command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[3].id}`)
-}])
+const createItems = ref([
+  {
+    label: 'Invoice',
+    command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[0].id}`, {open: {target: '_blank'}}),
+  },
+  // {
+  //   label: 'Credit',
+  //   command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[2].id}&selected=${expandedInvoice.value}`),
+  //   disabled: computedexpandedInvoice
+  // },
+  {
+    label: 'Old Credit',
+    command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[3].id}`, {open: {target: '_blank'}})
+  },
+])
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -156,22 +208,33 @@ const itemTemp = ref<GenericObject>({
   status: true
 })
 
+// IMPORTS ---------------------------------------------------------------------------------------------
+const itemsMenuImport = [
+  {
+    label: 'Booking From File',
+    command: () => navigateTo('invoice/import', {open: {target: '_blank'}})
+  },
+  {
+    label: 'Booking From File (Virtual Hotels)',
+    command: () => navigateTo('invoice/import-virtual')
+  }
+]
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'invoice_id', header: 'Id', type: 'text' },
+  { field: 'invoiceId', header: 'Id', type: 'text' },
   // { field: 'invoiceType', header: 'Type', type: 'select' },
-  { field: 'hotel', header: 'Hotel', type: 'select' },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
-  { field: 'agency', header: 'Agency', type: 'select' },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
   { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
   { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
   { field: 'isManual', header: 'Manual', type: 'bool' },
   { field: 'invoiceAmount', header: 'Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Due Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Invoice Balance', type: 'text' },
   // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
-  { field: 'status', header: 'Status', type: 'select' },
+  { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
 ]
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
@@ -186,7 +249,7 @@ const options = ref({
   uriApi: 'manage-invoice',
   loading: false,
   showDelete: false,
-  showFilters: false,
+  showFilters: true,
   actionsAsMenu: false,
   showEdit: false,
   showAcctions: false,
@@ -199,8 +262,8 @@ const payload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'code',
-  sortType: 'ASC'
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -218,6 +281,45 @@ function clearForm() {
   fields[0].disabled = false
   formReload.value++
 }
+
+function handleAttachmentHistoryDialogOpen() {
+  attachmentHistoryDialogOpen.value = true
+}
+
+
+async function exportToPdf() {
+  exportPdfDialogOpen.value = true
+}
+
+async function exportAttachments() {
+  exportAttachmentsDialogOpen.value = true
+}
+
+async function exportList(){
+  try {
+  //   const response = await GenericService.export(options.value.moduleApi, options.value.uriApi, payload.value)
+  // exportBlob.value = response
+
+  exportDialogOpen.value = true
+
+
+  
+
+  // const url = window.URL.createObjectURL(response);
+  //       const link = document.createElement('a');
+  //       link.href = url;
+  //       link.setAttribute('download', 'invoice-list.xlsx'); 
+  //       document.body.appendChild(link);
+  //       link.click();
+  //       document.body.removeChild(link);
+  //       window.URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.log(error);
+  }
+  
+}
+
 
 async function getList() {
   if (options.value.loading) {
@@ -263,7 +365,7 @@ async function getList() {
   }
 }
 
-const openEditDialog = async (item: any) => await navigateTo({ path: `invoice/edit/${item}` })
+const openEditDialog = async (item: any) => await navigateTo({ path: `invoice/edit/${item}` }, {open: {target: '_blank'}})
 
 async function resetListItems() {
   payload.value.page = 0
@@ -277,7 +379,7 @@ function searchAndFilter() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
 
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
@@ -355,7 +457,7 @@ function searchAndFilter() {
     payload.value.filter = [...payload.value.filter, {
       key: 'invoiceDate',
       operator: 'GREATER_THAN_OR_EQUAL_TO',
-      value: filterToSearch.value.from,
+      value: dayjs(filterToSearch.value.from).startOf('day').toISOString(),
       logicalOperation: 'AND'
     }]
   }
@@ -363,7 +465,7 @@ function searchAndFilter() {
     payload.value.filter = [...payload.value.filter, {
       key: 'invoiceDate',
       operator: 'LESS_THAN_OR_EQUAL_TO',
-      value: filterToSearch.value.to,
+      value: dayjs(filterToSearch.value.to).endOf('day').toISOString(),
       logicalOperation: 'AND'
     }]
   }
@@ -378,10 +480,21 @@ function clearFilterToSearch() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  filterToSearch.value.search = ''
+  filterToSearch.value = {
+    criteria: ENUM_INVOICE_CRITERIA[0],
+    search: '',
+    client: [],
+    agency: [],
+    hotel: [],
+    status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
+    invoiceType: [{ id: 'All', name: 'All', code: 'All' }],
+    from: dayjs(new Date()).startOf('month').toDate(),
+    to: dayjs(new Date()).endOf('month').toDate(),
+
+    includeInvoicePaid: true
+  }
   getList()
 }
 async function getItemById(id: string) {
@@ -492,7 +605,7 @@ async function getHotelList() {
         pageSize: 200,
         page: 0,
         sortBy: 'createdAt',
-        sortType: 'DES'
+        sortType: ENUM_SHORT_TYPE.DESC
       }
 
     hotelList.value = [{ id: 'All', name: 'All', code: 'All' }]
@@ -523,7 +636,7 @@ async function getClientList() {
         pageSize: 200,
         page: 0,
         sortBy: 'createdAt',
-        sortType: 'DES'
+        sortType: ENUM_SHORT_TYPE.DESC
       }
 
     clientList.value = [{ id: 'All', name: 'All', code: 'All' }]
@@ -572,7 +685,7 @@ async function getAgencyList() {
         pageSize: 200,
         page: 0,
         sortBy: 'createdAt',
-        sortType: 'DES'
+        sortType: ENUM_SHORT_TYPE.DESC
       }
 
     agencyList.value = [{ id: 'All', name: 'All', code: 'All' }]
@@ -603,13 +716,41 @@ async function getAgencyList() {
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
+  console.log(payloadFilter);
+
+  // if(payloadFilter?.agencyCd){
+  //   payloadFilter['agency.code'] = payloadFilter.agencyCd
+  //   delete payloadFilter.agencyCd
+  // }
+
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  
+  if(parseFilter && parseFilter?.length > 0){
+  for (let i = 0; i < parseFilter?.length; i++) {
+    
+    if(parseFilter[i]?.key === 'agencyCd'){
+      parseFilter[i].key = 'agency.code'
+    }
+
+    if(parseFilter[i]?.key === 'status'){
+      parseFilter[i].key = 'invoiceStatus'
+    }
+    
+  }
+}
+
   payload.value.filter = [...parseFilter || []]
   getList()
 }
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'hotel') {
+      event.sortField = 'hotel.name'
+    }
+    if (event.sortField === 'agencyCd') {
+      event.sortField = 'agency.code'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     getList()
@@ -619,7 +760,6 @@ function onSortField(event: any) {
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
     case 'PROCECSED': return '#FF8D00'
-
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
     case 'CANCELED': return '#F90303'
@@ -655,6 +795,21 @@ const disabledClearSearch = computed(() => {
 
 function toggle(event) {
   menu.value.toggle(event)
+}
+
+function toggleImport(event) {
+  menu_import.value.toggle(event)
+}
+
+function setMenuOptions(statusId: string) {
+  invoiceContextMenuItems.value = [...invoiceAllContextMenuItems.value.filter((item: any) => item?.default)]
+}
+
+function onRowRightClick(event: any) {
+  // Mostrar solo si es para estos estados
+  setMenuOptions(event.data.status)
+  attachmentInvoice.value = event.data
+  invoiceContextMenu.value.show(event.originalEvent)
 }
 // -------------------------------------------------------------------------------------------------------
 
@@ -746,20 +901,28 @@ const legend = ref(
           </template>
         </PopupNavigationMenu>
 
-        <Button class="ml-2" icon="pi pi-download" label="Import" />
+        <Button v-tooltip.left="'Import'" class="ml-2" label="import" icon="pi pi-download" severity="primary" aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport" />
+        <Menu id="overlay_menu_import" ref="menu_import" class="ml-2" :model="itemsMenuImport" :popup="true" />
+        <PopupNavigationMenu v-if="false" :items="itemsMenuImport" icon="pi pi-plus" label="Import">
+          <template #item="props">
+            <button style="border: none; width: 100%;">
+              {{ props.props.label }}
+            </button>
+          </template>
+        </PopupNavigationMenu>
+        <!-- <SplitButton class="ml-2" icon="pi pi-download" label="Import" :model="itemsMenuImport" /> -->
         <Button class="ml-2" icon="pi pi-copy" label="Rec Inv" />
         <Button class="ml-2" icon="pi pi-envelope" label="Send" />
-        <Button
+        <!-- <Button
           class="ml-2" icon="pi pi-paperclip" :disabled="!attachmentInvoice" label="Document" @click="() => {
             attachmentDialogOpen = true
           }"
-        />
-
-        <Button class="ml-2" icon="pi pi-file-plus" label="Process" />
-        <Button class="ml-2" icon="pi pi-cog" label="Adjustment" disabled />
-        <Button class="ml-2" icon="pi pi-print" label="Print" disabled />
-        <Button class="ml-2" icon="pi pi-upload" label="Export" disabled />
-        <Button class="ml-2" icon="pi pi-times" label="Exit" @click="() => { navigateTo('/') }" />
+        /> -->
+        <!-- <Button class="ml-2" icon="pi pi-file-plus" label="Process" /> -->
+        <!--  <Button class="ml-2" icon="pi pi-cog" label="Adjustment" disabled /> -->
+        <Button class="ml-2" icon="pi pi-print" label="Print" :disabled="listItems.length === 0" @click="exportToPdf"/>
+        <Button class="ml-2" icon="pi pi-upload" label="Export" :disabled="listItems.length === 0" @click="()=>exportList()" />
+        <!-- <Button class="ml-2" icon="pi pi-times" label="Exit" @click="() => { navigateTo('/') }" /> -->
       </div>
     </div>
   </div>
@@ -850,10 +1013,6 @@ const legend = ref(
                 </div>
               </div>
 
-              <div class="flex align-items-center gap-2 ">
-                <Checkbox id="all-check-1" v-model="disableClient" :binary="true" style="z-index: 999;" />
-                <label for="all-check-1">All</label>
-              </div>
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
                   <label for="">Hotel</label>
@@ -914,6 +1073,7 @@ const legend = ref(
                         <template #option="props">
                           <span>{{ props.item.name }}</span>
                         </template>
+                        
                       </DebouncedAutoCompleteComponent>
                     </div>
                   </div>
@@ -1002,9 +1162,14 @@ const legend = ref(
                           }
                         }"
                       >
-                        <template #option="props">
-                          <span>{{ props.item.name }}</span>
-                        </template>
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                      <template #chip="{ value }">
+                        <div>
+                          {{ value?.code }}-{{ value?.name }}
+                        </div>
+                      </template>
                       </DebouncedAutoCompleteComponent>
                     </div>
                   </div>
@@ -1015,11 +1180,12 @@ const legend = ref(
                   <div class="flex align-items-center gap-2" />
                 </div>
               </div>
-              <div class="flex align-items-center">
+              <div class="flex align-items-center gap-2">
                 <Button
                   v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch"
                   :loading="loadingSearch" @click="searchAndFilter"
                 />
+                <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :loading="loadingSearch" @click="clearFilterToSearch" />
               </div>
               <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
             </div> -->
@@ -1034,12 +1200,14 @@ const legend = ref(
         @on-confirm-create="clearForm" @open-edit-dialog="openEditDialog($event)"
         @on-change-pagination="payloadOnChangePage = $event" @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems" @on-sort-field="onSortField" @update:double-clicked="getItemById" @on-expand-field="($event) => { expandedInvoice = $event }"
-
-        @on-select-field="($event) => { attachmentInvoice = $event }"
+        @on-select-field="($event) => { attachmentInvoice = $event }" @on-row-right-click="onRowRightClick"
       >
+        <template #column-invoiceDate="{ item: data }">
+          {{ dayjs(data).format('DD-MM-YYYY') }}
+        </template>
         <template #row-selector-body="props">
           <button
-            :disabled="!props.item?.hasAttachments"
+            v-if="props.item?.hasAttachments"
             class="pi pi-paperclip" style="background-color: white; border: 0; padding: 5px; border-radius: 100%;"
             @click="() => {
               attachmentInvoice = props.item
@@ -1060,24 +1228,38 @@ const legend = ref(
           <Badge :value="getStatusName(props.item)" :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item)}`" />
         </template>
 
-        <template #pagination-right>
-          <div style="margin-right: -20%; margin-left: 220px; display: flex;">
-            <Badge class="flex align-items-center text-xs text-white" severity="contrast">
-              <span class="font-bold">
-                Total amount: ${{ totalInvoiceAmount }}
-              </span>
-            </Badge>
-            <Badge class="flex align-items-center text-xs text-white ml-8 -mr-8" severity="contrast">
-              <span class="font-bold">
-                Total due amount: ${{ totalInvoiceAmount }}
-              </span>
-            </Badge>
-          </div>
+        <template #datatable-footer>
+          <ColumnGroup type="footer" class="flex align-items-center">
+            <Row>
+              <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
+              <Column :footer="totalInvoiceAmount" />
+              <Column :footer="totalInvoiceAmount" />
+              <Column :colspan="9" />
+              
+              
+            </Row>
+          </ColumnGroup>
         </template>
+
+       
       </ExpandableTable>
     </div>
+    <ContextMenu ref="invoiceContextMenu" :model="invoiceContextMenuItems" />
   </div>
   <div v-if="attachmentDialogOpen">
-    <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Master Invoice Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" />
+    <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" />
+  </div>
+  <div v-if="attachmentHistoryDialogOpen">
+    <AttachmentHistoryDialog  :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History"  :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" :is-creation-dialog="false" />
+  </div>
+
+  <div v-if="exportDialogOpen">
+    <ExportDialog :close-dialog="() => { exportDialogOpen = false }" :open-dialog="exportDialogOpen" :payload="payload" />
+  </div>
+  <div v-if="exportPdfDialogOpen">
+    <ExportToPdfDialog :close-dialog="() => { exportPdfDialogOpen = false }" :open-dialog="exportPdfDialogOpen" :payload="payload" :invoices="listItems" :total-amount="totalInvoiceAmount" :total-due-amount="totalInvoiceAmount" />
+  </div>
+  <div v-if="exportAttachmentsDialogOpen">
+    <ExportAttachmentsDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen" :payload="payload" :invoice="attachmentInvoice"  />
   </div>
 </template>

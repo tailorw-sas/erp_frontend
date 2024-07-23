@@ -4,7 +4,6 @@ import { usePrimeVue } from 'primevue/config'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { z } from 'zod'
-import dayjs from 'dayjs'
 import { GenericService } from '~/services/generic-services'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
@@ -39,6 +38,7 @@ const confApi = reactive({
   uriApi: 'transactions/refund',
 })
 const toast = useToast()
+let partialErrors = ref<string[]>([])
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -93,12 +93,17 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Refund Type',
     dataType: 'select',
     class: 'field col-12 sm:col-6 md:col-3',
+    validation: z.object({
+      id: z.string(),
+      name: z.string(),
+    }).nullable()
+      .refine(value => value && value.id && value.name, { message: `The refund type field is required` })
   },
   {
     field: 'refundCommission',
     header: 'Commission',
     dataType: 'check',
-    class: 'field col-12 sm:col-6 md:col-3 flex align-self-end justify-content-center pb-2 mt-2',
+    class: 'field col-12 sm:col-6 md:col-3 flex align-self-start justify-content-center pb-2 mt-4',
   },
   {
     field: 'selectedAmount',
@@ -107,6 +112,12 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-6',
   }
 ]
+
+const validationPartialAmount = z.string().trim().min(1, 'The partial field is required')
+  .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
+  .refine(val => Number.parseFloat(val) > 0, {
+    message: 'The amount must be greater than zero',
+  })
 
 const item = ref<GenericObject>({
   transactionId: '',
@@ -119,8 +130,8 @@ const item = ref<GenericObject>({
   reservationNumber: '',
   selectedAmount: {
     type: '',
-    total: '',
-    partial: '',
+    total: '0',
+    partial: '0',
   },
 })
 
@@ -135,8 +146,8 @@ const itemTemp = ref<GenericObject>({
   reservationNumber: '',
   selectedAmount: {
     type: '',
-    total: '',
-    partial: '',
+    total: '0',
+    partial: '0',
   },
 })
 
@@ -144,6 +155,20 @@ const ENUM_REFUND_TYPE = [
   { id: 'gross', name: 'Gross Amount' },
   { id: 'net', name: 'Net Amount' },
 ]
+
+function validatePartialField(field: string) {
+  if (item.value.selectedAmount.type === 'PARTIAL') {
+    const result = validationPartialAmount.safeParse(field)
+    if (!result.success) {
+      partialErrors.value = result.error.issues.map(e => e.message)
+      partialErrors.value = [partialErrors.value[0]]
+    }
+    else {
+      partialErrors.value = []
+    }
+  }
+  return partialErrors.value.length === 0
+}
 
 async function getObjectValues($event: any) {
   forceSave.value = false
@@ -164,25 +189,30 @@ function clearForm() {
   item.value.netAmount = String(props.parentTransaction.netAmount)
   item.value.selectedAmount = {
     type: '',
-    total: '',
-    partial: '',
+    total: '0',
+    partial: '0',
   }
   formReload.value++
 }
 
 function requireConfirmationToSave(item: any) {
-  confirm.require({
-    target: submitEvent.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: async () => {
-      await save(item)
-    },
-    reject: () => {}
-  })
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    save(item)
+  }
+  else {
+    confirm.require({
+      target: submitEvent.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: async () => {
+        await save(item)
+      },
+      reject: () => {}
+    })
+  }
 }
 
 async function save(item: { [key: string]: any }) {
@@ -205,8 +235,11 @@ async function save(item: { [key: string]: any }) {
 }
 
 function saveSubmit(event: Event) {
-  forceSave.value = true
-  submitEvent = event
+  const isValidPartial = validatePartialField(item.value.selectedAmount.partial)
+  if (isValidPartial) {
+    forceSave.value = true
+    submitEvent = event
+  }
 }
 
 function handleRefundTypeChange(value: any) {
@@ -229,9 +262,9 @@ watch(() => item.value, async (newValue) => {
 
 watch(() => props.openDialog, (newValue) => {
   dialogVisible.value = newValue
-  console.log('dialogVisible', newValue)
   if (newValue) {
     clearForm()
+    partialErrors.value = []
   }
 })
 </script>
@@ -272,10 +305,10 @@ watch(() => props.openDialog, (newValue) => {
         </template>
         <template #field-selectedAmount="{ item: data, onUpdate }">
           <div class="flex gap-4 mb-1 align-self-end">
-            <div class="flex align-items-end">
+            <div class="flex align-items-start">
               <RadioButton
-                v-model="data.selectedAmount.type" :disabled="!data.refundType"
-                class="mb-1" input-id="total" name="amountType" value="TOTAL" @change="($event) => {
+                v-model="data.selectedAmount.type" :disabled="!data.refundType" style="margin-top: 18px"
+                input-id="total" name="amountType" value="TOTAL" @change="($event) => {
                   data.selectedAmount.type = 'TOTAL'
                 }"
               />
@@ -291,10 +324,10 @@ watch(() => props.openDialog, (newValue) => {
                 />
               </div>
             </div>
-            <div class="flex align-items-end">
+            <div class="flex align-items-start">
               <RadioButton
-                v-model="data.selectedAmount.type" :disabled="!data.refundType"
-                class="mb-1" input-id="partial" name="amountType" value="PARTIAL" @change="($event) => {
+                v-model="data.selectedAmount.type" :disabled="!data.refundType" style="margin-top: 18px"
+                input-id="partial" name="amountType" value="PARTIAL" @change="($event) => {
                   data.selectedAmount.type = 'PARTIAL'
                 }"
               />
@@ -303,10 +336,14 @@ watch(() => props.openDialog, (newValue) => {
                 <InputText
                   v-model="data.selectedAmount.partial"
                   show-clear
-                  :disabled="!data.refundType || data.amountType === 'TOTAL'"
-                  @change="($event) => {
-                  }"
+                  :disabled="!data.refundType || data.selectedAmount.type === 'TOTAL'"
+                  @update:model-value="validatePartialField"
                 />
+                <div v-if="partialErrors.length > 0" class="w-full p-error text-xs">
+                  <div v-for="error in partialErrors" :key="error" class="error-message">
+                    {{ error }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -315,8 +352,8 @@ watch(() => props.openDialog, (newValue) => {
     </div>
     <template #footer>
       <div class="flex justify-content-end mr-4">
-        <Button v-tooltip.top="'Cancel'" label="Cancel" severity="danger" icon="pi pi-times" class="mr-2" @click="onClose(true)" />
-        <Button v-tooltip.top="'Save'" label="Save" icon="pi pi-save" :loading="loadingSaveAll" @click="saveSubmit($event)" />
+        <Button v-tooltip.top="'Save'" label="Save" icon="pi pi-save" :loading="loadingSaveAll" class="mr-2" @click="saveSubmit($event)" />
+        <Button v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" icon="pi pi-times" @click="onClose(true)" />
       </div>
     </template>
   </Dialog>

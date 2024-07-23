@@ -1,5 +1,4 @@
 import { getToken } from '#auth'
-import { useBusinessStore } from '~/stores/businessStore'
 
 export default defineEventHandler(async (event): Promise<any> => {
   const body = await readBody(event)
@@ -7,9 +6,6 @@ export default defineEventHandler(async (event): Promise<any> => {
   const controller = getRouterParam(event, 'controller')
 
   const token = await getToken({ event })
-  const businessStore = useBusinessStore()
-
-  console.log(businessStore.business)
 
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',

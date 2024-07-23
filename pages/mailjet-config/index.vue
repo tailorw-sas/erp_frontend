@@ -9,6 +9,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { GenericService } from '~/services/generic-services'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IData } from '~/components/table/interfaces/IModelData'
+import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -101,6 +102,8 @@ const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
   pageSize: 50,
+  sortBy: 'createdAt',
+  sortType: 'ASC',
   page: 0
 })
 const pagination = ref<IPagination>({
@@ -122,7 +125,7 @@ function searchAndFilter() {
     pageSize: 50,
     page: 0,
     sortBy: 'fromName',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
@@ -142,7 +145,7 @@ function clearFilterToSearch() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''
@@ -180,7 +183,7 @@ async function getList() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
-      
+
     if (listItems.value.length > 0) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
@@ -314,6 +317,15 @@ function requireConfirmationToDelete(event: any) {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns.value)
+  const fromName = parseFilter?.find((item: IFilter) => item?.key === 'name')
+  const fromEmail = parseFilter?.find((item: IFilter) => item?.key === 'email')
+
+  if (fromName) {
+    fromName.key = 'fromName'
+  }
+  if (fromEmail) {
+    fromEmail.key = 'fromEmail'
+  }
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getList()

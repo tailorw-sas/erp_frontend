@@ -34,7 +34,8 @@ const allMenuListItems = [
   {
     label: 'Refund',
     icon: 'pi pi-dollar',
-    command: () => openNewRefundDialog()
+    command: () => openNewRefundDialog(),
+    disabled: false
   },
 ]
 
@@ -45,11 +46,6 @@ const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
 const merchantList = ref<any[]>([])
 const ccTypeList = ref<any[]>([])
-
-const confCollectionStatusListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-collection-status',
-})
 
 const confStatusListApi = reactive({
   moduleApi: 'settings',
@@ -152,7 +148,7 @@ const columns: IColumn[] = [
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'netAmount', header: 'T.Amount', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap },
+  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
@@ -176,7 +172,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -265,7 +261,7 @@ function searchAndFilter() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
     newPayload.filter = [{
@@ -354,6 +350,22 @@ function searchAndFilter() {
   getList()
 }
 
+function clearFilterToSearch() {
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  filterToSearch.value = {
+    criteria: null,
+    search: '',
+    merchant: [allDefaultItem],
+    ccType: [allDefaultItem],
+    hotel: [allDefaultItem],
+    status: [allDefaultItem],
+    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    to: new Date(),
+  }
+  filterToSearch.value.criterial = ENUM_FILTER[0]
+  getList()
+}
+
 async function getCollectionStatusList() {
   if (collectionStatusList.value.length > 0) {
     return collectionStatusList.value
@@ -372,10 +384,10 @@ async function getCollectionStatusList() {
       pageSize: 50,
       page: 0,
       sortBy: 'createdAt',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
-    const response = await GenericService.search(confCollectionStatusListApi.moduleApi, confCollectionStatusListApi.uriApi, payload)
+    const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
     const { data: dataList } = response
     collectionStatusList.value = dataList
   }
@@ -412,7 +424,7 @@ async function getHotelList(query: string = '') {
       pageSize: 20,
       page: 0,
       sortBy: 'createdAt',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search(confHotelListApi.moduleApi, confHotelListApi.uriApi, payload)
@@ -454,7 +466,7 @@ async function getMerchantList(query: string = '') {
       pageSize: 20,
       page: 0,
       sortBy: 'createdAt',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search(confMerchantListApi.moduleApi, confMerchantListApi.uriApi, payload)
@@ -496,7 +508,7 @@ async function getStatusList(query: string = '') {
       pageSize: 20,
       page: 0,
       sortBy: 'createdAt',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
@@ -538,7 +550,7 @@ async function getCCTypeList(query: string = '') {
       pageSize: 20,
       page: 0,
       sortBy: 'createdAt',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search(confCCTypeListApi.moduleApi, confCCTypeListApi.uriApi, payload)
@@ -557,7 +569,47 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
+
+  const statusFilter: any = getStatusFilter(payloadFilter.status)
+  if (statusFilter) {
+    const index = payload.value.filter.findIndex((filter: IFilter) => filter.key === statusFilter.key)
+    if (index !== -1) {
+      payload.value.filter[index] = statusFilter
+    }
+    else {
+      payload.value.filter.push(statusFilter)
+    }
+  }
+
   getList()
+}
+
+function getStatusFilter(element: any) {
+  if (element && Array.isArray(element.constraints) && element.constraints.length > 0) {
+    for (const iterator of element.constraints) {
+      if (iterator.value) {
+        const ketTemp = 'status.name'
+        let operator: string = ''
+        if ('matchMode' in iterator) {
+          if (typeof iterator.matchMode === 'object') {
+            operator = iterator.matchMode.id.toUpperCase()
+          }
+          else {
+            operator = iterator.matchMode.toUpperCase()
+          }
+        }
+        if (Array.isArray(iterator.value) && iterator.value.length > 0) {
+          const objFilter: IFilter = {
+            key: ketTemp,
+            operator,
+            value: iterator.value.length > 0 ? [...iterator.value.map((item: any) => item.name)] : [],
+            logicalOperation: 'AND',
+          }
+          return objFilter
+        }
+      }
+    }
+  }
 }
 
 function onSortField(event: any) {
@@ -596,7 +648,6 @@ async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
 
 async function onCloseNewRefundDialog(isCancel: boolean = true) {
   newRefundDialogVisible.value = false
-  console.log(isCancel)
   if (!isCancel) {
     getList()
   }
@@ -608,7 +659,7 @@ const disabledSearch = computed(() => {
 })
 
 async function findMenuItems(status: string) {
-  const collection: any = collectionStatusList.value.find(item => item?.name === status)
+  const collection: any = collectionStatusList.value.find(item => item?.name.toLowerCase() === status.toLowerCase())
   menuListItems.value = []
   if (collection) {
     const navigateOptions = collection.navigate.map((n: any) => n.name.toLowerCase())
@@ -617,10 +668,19 @@ async function findMenuItems(status: string) {
 }
 
 async function onRowRightClick(event: any) {
-  // await nextTick()
+  contextMenu.value.hide()
+  contextMenuTransaction.value = event.data
   await findMenuItems(contextMenuTransaction.value.status)
   if (menuListItems.value.length > 0) {
-    contextMenu.value.show(event)
+    setRefundAvailable(contextMenuTransaction.value.permitRefund)
+    contextMenu.value.show(event.originalEvent)
+  }
+}
+
+function setRefundAvailable(isAvailable: boolean) {
+  const menuItem = menuListItems.value.find((item: any) => item.label === 'Refund')
+  if (menuItem) {
+    menuItem.disabled = !isAvailable
   }
 }
 // -------------------------------------------------------------------------------------------------------
@@ -681,7 +741,6 @@ onMounted(() => {
                         :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.merchant" :suggestions="merchantList"
                         @load="($event) => getMerchantList($event)" @change="($event) => {
-                          console.log(filterToSearch)
                           if (!filterToSearch.merchant.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.merchant = $event.filter((element: any) => element?.id === 'All')
                           }
@@ -817,6 +876,10 @@ onMounted(() => {
                         v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch"
                         :loading="loadingSearch" @click="searchAndFilter"
                       />
+                      <Button
+                        v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                        :loading="loadingSearch" @click="clearFilterToSearch"
+                      />
                     </div>
                   </div>
                 </div>
@@ -840,12 +903,9 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
         @on-row-right-click="onRowRightClick"
-        @update:right-clicked-item="(event) => {
-          contextMenuTransaction = event
-        }"
       >
         <template #datatable-footer>
-          <ColumnGroup type="footer">
+          <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
               <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
               <Column :footer="Math.round((subTotals.amount + Number.EPSILON) * 100) / 100" />

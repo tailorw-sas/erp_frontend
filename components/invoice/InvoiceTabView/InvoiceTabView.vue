@@ -101,14 +101,16 @@ const props = defineProps({
   active: { type: Number, required: true },
   bookingList: Array<any>,
   roomRateList: Array<any>,
-  adjustmentList: Array<any>
+  adjustmentList: Array<any>,
+    sortRoomRate: Function as any,
+    sortAdjustment: Function as any,
+    sortBooking: Function as any,
 })
 
 const activeTab = ref(props.active)
 
 const toast = useToast()
 
-const forceUpdate = ref(false)
 
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
@@ -139,7 +141,7 @@ const filterToSearch = ref<IData>({
 })
 
 const item = ref<GenericObject>({
-  invoice_id: '',
+  invoiceId: '',
   invoiceNumber: '',
   invoiceDate: new Date(),
   isManual: true,
@@ -150,7 +152,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
-  invoice_id: '',
+  invoiceId: '',
   invoiceNumber: '',
   invoiceDate: new Date(),
   isManual: true,
@@ -219,7 +221,7 @@ async function getItemById(id: string) {
 
       if (response) {
         item.value.id = response.id
-        item.value.invoice_id = response.invoice_id
+        item.value.invoiceId = response.invoiceId
         item.value.invoiceNumber = response.invoiceNumber
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
@@ -242,9 +244,6 @@ async function getItemById(id: string) {
   }
 }
 
-function toggleForceUpdate() {
-  forceUpdate.value = !forceUpdate.value
-}
 
 function openRoomRateDialog(booking?: any) {
   activeTab.value = 1
@@ -304,9 +303,9 @@ onMounted(async () => {
           <BookingTab
             :is-dialog-open="isDialogOpen" :close-dialog="() => closeDialog()"
             :open-dialog="openDialog" :open-room-rate-dialog="openRoomRateDialog" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :selected-invoice="selectedInvoice as any"
+            :toggle-force-update="toggleForceUpdate" :sort-booking="sortBooking" :selected-invoice="selectedInvoice as any"
             :add-item="addBooking" :update-item="updateBooking" :list-items="bookingList"
-            :is-creation-dialog="isCreationDialog" :invoice-obj="item" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-detail-view="isDetailView" :show-totals="showTotals"
+            :is-creation-dialog="isCreationDialog" :invoice-obj="invoiceObj" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-detail-view="isDetailView" :show-totals="showTotals"
           />
         </TabPanel>
         <TabPanel>
@@ -325,8 +324,8 @@ onMounted(async () => {
           <RoomRateTab
             :is-dialog-open="roomRateDialogOpen" :close-dialog="() => { roomRateDialogOpen = false }"
             :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
-            :open-adjustment-dialog="openAdjustmentDialog" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :list-items="roomRateList" :add-item="addRoomRate"
+            :open-adjustment-dialog="openAdjustmentDialog" :sort-room-rate="sortRoomRate" :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate" :list-items="roomRateList" :add-item="addRoomRate" :invoice-obj="invoiceObj"
             :update-item="updateRoomRate" :is-creation-dialog="isCreationDialog" :is-detail-view="isDetailView" :selected-invoice="selectedInvoice as any" :show-totals="showTotals"
           />
         </TabPanel>
@@ -346,7 +345,7 @@ onMounted(async () => {
           <AdjustmentTab
             :is-dialog-open="adjustmentDialogOpen"
             :close-dialog="() => { adjustmentDialogOpen = false }" :open-dialog="handleDialogOpen"
-            :selected-room-rate="selectedRoomRate" :force-update="forceUpdate"
+            :selected-room-rate="selectedRoomRate" :sort-adjustment="sortAdjustment" :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate" :list-items="adjustmentList" :add-item="addAdjustment"
             :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any" :is-detail-view="isDetailView" :show-totals="showTotals"
           />

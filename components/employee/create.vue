@@ -8,6 +8,7 @@ import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import { GenericService } from '~/services/generic-services'
 import { validateEntityStatus } from '~/utils/schemaValidations'
 import { statusToString } from '~/utils/helpers'
+import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const emits = defineEmits<{
   (e: 'onSuccessCreate', value: boolean): void
@@ -341,7 +342,7 @@ async function getDepartmentGroupList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search('settings', 'manage-department-group', payload)

@@ -5,11 +5,12 @@ import BlockUI from 'primevue/blockui'
 import type { DataTableFilterMeta } from 'primevue/datatable'
 import type { PageState } from 'primevue/paginator'
 import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterfaces'
-import type { IData } from './interfaces/IModelData'
+import { getLastDayOfMonth } from '../../utils/helpers'
 import type { IColumn, IObjApi } from './interfaces/ITableInterfaces'
 import DialogDelete from './components/DialogDelete.vue'
 import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
 import { GenericService } from '~/services/generic-services'
+import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const props = defineProps({
   data: {
@@ -37,6 +38,8 @@ const props = defineProps({
       showTitleBar?: boolean
       messageToDelete: string
       search?: boolean
+      selectionMode?: 'single' | 'multiple' | undefined
+      expandableRows?: boolean
     }>
   },
   pagination: {
@@ -68,7 +71,7 @@ const emits = defineEmits<{
   (e: 'onSortField', value: any): void
   (e: 'onRowDoubleClick', value: any): void
   (e: 'onRowRightClick', value: any): void
-  (e: 'update:rightClickedItem', value: any): void
+  (e: 'onCellEditComplete', value: any): void
 }>()
 
 const menu = ref()
@@ -89,7 +92,9 @@ props.columns.forEach((field) => {
 })
 
 const openDialogDelete = ref(false)
-const clickedItem = ref<IData | undefined>({})
+// const clickedItem = ref<IData | undefined>([])
+const clickedItem = ref<any>([])
+const expandedRows = ref({})
 const metaKey = ref(false)
 const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
 
@@ -201,26 +206,37 @@ function onEdit(item: any) {
 }
 
 function onSelectItem(item: any) {
+  // console.log(item, typeof item === 'object', Array.isArray(item))
   if (item) {
-    emits('update:clickedItem', item?.id)
+    if (Array.isArray(item)) {
+      if (item.length > 0) {
+        const ids = item.map((i: any) => i.id)
+        emits('update:clickedItem', ids)
+      }
+    }
+    else {
+      if (typeof item === 'object') {
+        emits('update:clickedItem', item.id)
+      }
+    }
+  }
+  else {
+    emits('update:clickedItem', null)
   }
 }
 
 function onRowDoubleClick(event) {
-  console.log('Doble click', event)
-
   if (event.originalEvent.type === 'dblclick' && event.data) {
     emits('onRowDoubleClick', event.data)
   }
 }
 
-function onRowRightClick(event: Event) {
-  event.preventDefault()
+function onRowRightClick(event: any) {
   emits('onRowRightClick', event)
 }
 
-function onRowContextMenuSelection(event: any) {
-  emits('update:rightClickedItem', event)
+function onCellEditComplete(event: any, data: any) {
+  emits('onCellEditComplete', { newDate: event, data })
 }
 
 function showConfirmDelete(item: any) {
@@ -291,7 +307,9 @@ async function getOptionsList() {
     for (const iterator of props.columns) {
       switch (iterator.type) {
         case 'text':
-
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'slot-text':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'select':
@@ -303,19 +321,23 @@ async function getOptionsList() {
           // filters1.value[iterator.field] = { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }
           break
         case 'date':
+        case 'date-editable':
           filters1.value[iterator.field] = { constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] }
           break
         case 'bool':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.EQUALS }
           break
         case 'custom-badge':
-          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          filters1.value[iterator.field] = { constraints: [{ value: null, matchMode: FilterMatchMode.IN }] }
+          break
+        case 'slot-select':
+          filters1.value[iterator.field] = { constraints: [{ value: null, matchMode: FilterMatchMode.IN }] }
           break
         default:
           break
       }
 
-      if ((iterator.type === 'local-select' || iterator.type === 'select') && (iterator.localItems && iterator.localItems?.length > 0)) {
+      if ((iterator.type === 'local-select' || iterator.type === 'select' || iterator.type === 'custom-badge' || iterator.type === 'slot-select') && (iterator.localItems && iterator.localItems?.length > 0)) {
         objListData[iterator.field] = [...iterator.localItems]
       }
     }
@@ -343,6 +365,7 @@ async function getOptionsListOldVersion() {
           // filters1.value[iterator.field] = { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }
           break
         case 'date':
+        case 'date-editable':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.DATE_IS }
           break
         case 'bool':
@@ -365,7 +388,7 @@ async function getOptionsListOldVersion() {
 async function getDataFromSelectors() {
   try {
     for (const iterator of props.columns) {
-      if (iterator.type === 'select') {
+      if (iterator.type === 'select' || iterator.type === 'custom-badge' || iterator.type === 'slot-select') {
         const response = await getList({ moduleApi: iterator.objApi?.moduleApi || '', uriApi: iterator.objApi?.uriApi || '', keyValue: iterator.objApi?.keyValue }, [], [])
         objListData[iterator.field] = response
       }
@@ -380,7 +403,7 @@ function onSortField(event: any) {
     const shortAndFilter = {
       filter: event.filters,
       sortField: event.sortField,
-      sortOrder: event.sortOrder === 1 ? 'ASC' : 'DES'
+      sortOrder: event.sortOrder === 1 ? ENUM_SHORT_TYPE.ASC : ENUM_SHORT_TYPE.DESC
     }
     emits('onSortField', { ...shortAndFilter })
   }
@@ -392,16 +415,13 @@ function haveFilterApplay(filtersValue: any, column: any) {
   if (column.type === 'bool') {
     result = filtersValue[column.field].value !== null
   }
-  if (column.type === 'select' || column.type === 'local-select') {
+  if (column.type === 'select' || column.type === 'local-select' || column.type === 'custom-badge' || column.type === 'slot-select') {
     result = filtersValue[column.field].constraints[0].value !== null
   }
-  if (column.type === 'date') {
+  if (column.type === 'date' || column.type === 'date-editable') {
     result = filtersValue[column.field].constraints[0].value !== null
   }
-  if (column.type === 'text') {
-    result = filtersValue[column.field].value
-  }
-  if (column.type === 'custom-badge') {
+  if (column.type === 'text' || column.type === 'slot-text') {
     result = filtersValue[column.field].value
   }
   return result
@@ -416,15 +436,27 @@ function rowClass(data: any) {
   return data.rowClass
 }
 
+function formatRangeDate(date: string): string {
+  if (!date) {
+    return 'No date'
+  }
+
+  const parsedDate = dayjs(date).toDate()
+  const startDate = dayjs(date).format('YYYY-MM-DD')
+  const endDate = dayjs(getLastDayOfMonth(parsedDate)).format('YYYY-MM-DD')
+
+  return `${startDate} - ${endDate}`
+}
+
 watch(() => props.data, async (newValue) => {
-  if (newValue.length > 0) {
+  if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
     clickedItem.value = props.data[0]
   }
 })
 
 onMounted(() => {
   getDataFromSelectors()
-  if (props.data.length > 0) {
+  if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
     clickedItem.value = props.data[0]
   }
 })
@@ -452,8 +484,9 @@ getOptionsList()
       <DataTable
         v-model:filters="filters1"
         v-model:selection="clickedItem"
+        v-model:expandedRows="expandedRows"
         :meta-key-selection="metaKey"
-        selection-mode="single"
+        :selection-mode="options?.selectionMode ?? 'single'"
         :filter-display="modeFilterDisplay"
         :row-class="rowClass"
         sort-mode="single"
@@ -466,12 +499,12 @@ getOptionsList()
         scrollable
         scroll-height="60vh"
         :filters="filters1"
+        edit-mode="cell"
         @sort="onSortField"
         @update:selection="onSelectItem"
         @update:filters="onChangeFilters"
         @row-dblclick="onRowDoubleClick"
-        @contextmenu="onRowRightClick"
-        @update:context-menu-selection="onRowContextMenuSelection"
+        @row-contextmenu="onRowRightClick"
       >
         <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
           <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
@@ -512,16 +545,30 @@ getOptionsList()
         </template>
         <!-- :show-filter-match-modes="column.type !== 'bool' " -->
         <Column
-          v-for="(column, index) in columns" :key="column.field"
+          v-if="options?.selectionMode" :selection-mode="options?.selectionMode ?? undefined"
+          header-style="width: 3rem"
+        />
+        <Column v-if="options?.hasOwnProperty('expandableRows') ? options?.expandableRows : false" expander style="width: 2rem">
+          <template #rowtogglericon="{ rowExpanded }">
+            <i :class="rowExpanded ? 'pi pi-minus' : 'pi pi-plus'" style="border: 1px solid #dee2e6; padding: 2px; border-radius: 10%;" />
+          </template>
+        </Column>
+
+        <Column
+          v-for="(column, index) in columns"
+          :key="column.field"
           :field="column.field"
           :show-filter-match-modes="false"
           :sortable="column.hasOwnProperty('sortable') ? column.sortable : true"
           :filter-field="column.field"
-          class="custom-table-head"
+          :frozen="column.frozen"
+          align-frozen="right"
+          class="custom-table-head" :class="column.columnClass"
           :style="{
-            width: column.type === 'image' ? '80px' : 'auto',
+            width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
             minWidth: column?.width ? column?.width : 'auto',
-            maxWidth: column?.width ? column?.width : 'auto',
+            display: column?.hidden ? 'none' : 'table-cell',
+            // maxWidth: column?.width ? column?.width : 'auto',
           }"
         >
           <!--  :style="{ width: column?.width ? column?.width : '100%', maxWidth: column?.width ? column?.width : '100%' }" -->
@@ -529,6 +576,9 @@ getOptionsList()
             <span v-tooltip="column.tooltip">{{ column.header }}</span>
           </template>
           <template #body="{ data }">
+            <slot v-if="column.type === 'slot-text'" :name="`column-${column.field}`" :data="data" :column="column" />
+            <slot v-if="column.type === 'slot-select'" :name="`column-${column.field}`" :data="data" :column="column" />
+            <slot v-if="column.type === 'slot-icon'" :name="`column-${column.field}`" :data="data" :column="column" />
             <span v-if="column.type === 'icon' && column.icon">
               <Button :icon="column.icon" class="p-button-rounded p-button-text w-2rem h-2rem" aria-label="Submit" />
             </span>
@@ -541,6 +591,10 @@ getOptionsList()
             <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
               {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}
             </span>
+            <span v-else-if="column.type === 'date-editable'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate w-full">
+              <span v-if="column.props?.isRange">{{ formatRangeDate(data[column.field]) }}</span>
+              <span v-else>{{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}</span>
+            </span>
             <span v-else-if="column.type === 'image'">
               <NuxtImg v-if="data[column.field]" :src="data[column.field]" alt="Avatar" class="avatar" />
               <div v-else>
@@ -552,7 +606,7 @@ getOptionsList()
             </span>
             <span v-else-if="column.type === 'custom-badge'">
               <Badge
-                v-tooltip.top="data[column.field]" :value="data[column.field].toString()"
+                v-tooltip.top="data[column.field].toString()" :value="data[column.field]"
                 :class="column.statusClassMap?.find(e => e.status === data[column.field])?.class"
               />
             </span>
@@ -570,8 +624,8 @@ getOptionsList()
               </span>
             </span>
           </template>
-          <template v-if="(column.type === 'image' || column.type === 'icon') ? false : options?.hasOwnProperty('showFilters') ? options?.showFilters : true" #filter="{ filterModel, filterCallback }">
-            <div v-if="column.type === 'text'" class="flex flex-column">
+          <template v-if="(column.type === 'image' || column.type === 'icon' || column.showFilter === false) ? false : options?.hasOwnProperty('showFilters') ? options?.showFilters : true" #filter="{ filterModel, filterCallback }">
+            <div v-if="column.type === 'text' || column.type === 'slot-text'" class="flex flex-column">
               <Dropdown
                 v-if="true"
                 v-model="filterModel.matchMode"
@@ -607,7 +661,7 @@ getOptionsList()
               </Menu>
             </div>
 
-            <div v-if="column.type === 'select' || column.type === 'local-select'" class="flex flex-column">
+            <div v-if="column.type === 'select' || column.type === 'local-select' || column.type === 'custom-badge' || column.type === 'slot-select'" class="flex flex-column">
               <Dropdown
                 v-if="true"
                 key="selectMultiple1"
@@ -655,7 +709,7 @@ getOptionsList()
               <label :for="column.field" class="font-bold ml-3"> {{ column.header }} </label>
             </div>
 
-            <div v-if="column.type === 'date'" class="flex flex-column">
+            <div v-if="column.type === 'date' || column.type === 'date-editable'" class="flex flex-column">
               <Dropdown
                 v-if="true"
                 v-model="filterModel.matchMode"
@@ -683,6 +737,14 @@ getOptionsList()
           </template>
           <template #filterclear="{ field }">
             <Button type="button" label="Clear" severity="secondary" @click="clearIndividualFilter(field)" />
+          </template>
+          <template v-if="column.type === 'date-editable'" #editor="{ data, field }">
+            <Calendar
+              v-model="data[field]" :manual-input="false"
+              style="width: 100%" view="month"
+              date-format="yy-mm-dd"
+              @update:model-value="onCellEditComplete($event, data)"
+            />
           </template>
         </Column>
         <Column v-if="options?.hasOwnProperty('showAcctions') ? options?.showAcctions : false" field="action" header="" :style="{ 'width': `${props.actionsWidth}px`, 'text-align': 'center' }">
@@ -746,7 +808,11 @@ getOptionsList()
             </span>
           </template>
         </Column>
-        <slot name="datatable-footer"/>
+        <template #expansion="slotProps">
+          <slot name="expansion" :data="slotProps.data" />
+        </template>
+
+        <slot name="datatable-footer" />
       </DataTable>
     </div>
 
@@ -764,9 +830,11 @@ getOptionsList()
           <span>
             Total:
           </span>
-          <span class="font-bold">
-            {{ props.pagination?.totalElements }}
-          </span>
+          <slot name="pagination-total" :total="props.pagination?.totalElements">
+            <span class="font-bold">
+              {{ props.pagination?.totalElements }}
+            </span>
+          </slot>
         </Badge>
       </div>
     </div>
@@ -801,7 +869,9 @@ getOptionsList()
   background-size: cover; /* Para ajustar el tamaño de la imagen de fondo */
   background-position: center; /* Para centrar la imagen de fondo */
 }
-:deep(.p-column-filter-menu-button) {
-    // display: none !important;
+
+:deep(.p-datatable-row-expansion > td) {
+  padding: 0;
+  background-color: #F5F5F5
 }
 </style>

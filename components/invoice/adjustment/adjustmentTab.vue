@@ -73,6 +73,7 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  sortAdjustment: Function as any
 })
 
 const { data } = useAuth()
@@ -94,6 +95,9 @@ const dialogOpen = ref<boolean>(props.isDialogOpen)
 const totalAmount = ref<number>(0)
 
 const transactionTypeList = ref<any[]>([])
+
+const selectedAdjustment = ref<any>()
+const adjustmentContextMenu = ref()
 
 const transactionTypeApi = reactive({
   moduleApi: 'settings',
@@ -189,13 +193,14 @@ const confApi = reactive({
 })
 
 const Columns: IColumn[] = [
-  { field: 'adjustment_id', header: 'Id', type: 'text' },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'room_rate_id', header: 'Rate', type: 'text' },
-  { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi },
-  { field: 'date', header: 'Transaction Date', type: 'date' },
-  { field: 'employee', header: 'Employee', type: 'text' },
-  { field: 'description', header: 'Description', type: 'text' },
+  { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-pen-to-square', sortable: false },
+  { field: 'adjustmentId', header: 'Id', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'amount', header: 'Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'roomRateId', header: 'Room Rate', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'date', header: 'Transaction Date', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'employee', header: 'Employee', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'description', header: 'Description', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
 
 ]
 
@@ -206,6 +211,7 @@ const ENUM_FILTER = [
 ]
 
 async function openEditDialog(item: any) {
+  console.log(item);
   props.openDialog()
   if (item?.id) {
     idItem.value = item?.id
@@ -221,7 +227,7 @@ async function openEditDialog(item: any) {
 }
 const menuModel = ref([
 
-  { label: 'Edit Adjustment', command: openEditDialog },
+  { label: 'Edit Adjustment', command: ()=> openEditDialog(selectedAdjustment.value) },
 
 ])
 
@@ -229,15 +235,11 @@ const Options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
   uriApi: 'manage-adjustment',
+  messageToDelete: 'Do you want to save the change?',
   loading: false,
-  showDelete: !props.isDetailView,
-  showAcctions: !props.isDetailView,
-  showEdit: false,
   showFilters: false,
   actionsAsMenu: false,
-  messageToDelete: 'Do you want to save the change?',
-  showContextMenu: !props.isDetailView,
-  menuModel
+  
 })
 
 const PayloadOnChangePage = ref<PageState>()
@@ -246,8 +248,8 @@ const Payload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'code',
-  sortType: 'ASC'
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const Pagination = ref<IPagination>({
   page: 0,
@@ -291,13 +293,10 @@ async function getAdjustmentList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      if (iterator.hasOwnProperty('status')) {
-        iterator.status = statusToBoolean(iterator.status)
-      }
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, room_rate_id: iterator?.roomRate?.room_rate_id, date: new Date(iterator?.date) }]
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date }]
 
       if (typeof +iterator?.amount === 'number') {
-        totalAmount.value += +iterator?.amount
+        totalAmount.value += Number(iterator?.amount)
       }
     }
     if (ListItems.value.length > 0) {
@@ -325,7 +324,7 @@ function searchAndFilter() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     Payload.value.filter = [...Payload.value.filter, {
@@ -345,7 +344,7 @@ function clearFilterToSearch() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''
@@ -362,7 +361,7 @@ async function GetItemById(id: string) {
       item.value.id = element.id
       item.value.amount = element.amount
       item.value.date = new Date(element.date)
-      item.value.transactionType = element.transactionType
+      item.value.transactionType = {...element.transactionType, fullName: `${element.transactionType?.code}-${element.transactionType?.name}`}
       item.value.roomRate = element.roomRate
       item.value.description = element.description
       formReload.value += 1
@@ -375,7 +374,7 @@ async function GetItemById(id: string) {
         item.value.id = response.id
         item.value.amount = response.amount
         item.value.date = new Date(response.date)
-        item.value.transactionType = response.transaction
+        item.value.transactionType = {...response.transaction, fullName: `${response.transaction?.code}-${response.transaction?.name}`}
         item.value.roomRate = response.roomRate
         item.value.description = response.description
       }
@@ -428,7 +427,8 @@ async function saveAdjustment(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
   item.roomRate = props?.selectedRoomRate
-  item.transactionType = item.transactionType?.id || null
+  item.employee = data?.value?.user?.name
+  
   if (idItem.value || item?.id) {
     try {
       if (!item?.id) {
@@ -439,30 +439,34 @@ async function saveAdjustment(item: { [key: string]: any }) {
         props.updateItem(item)
       }
       else {
+        item.transactionType = item.transactionType?.id || null
         await updateAdjustment(item)
       }
 
       props.closeDialog()
     }
     catch (error: any) {
+      console.log(error);
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
     idItem.value = ''
   }
   else {
-    item.employee = data?.value?.user?.name
+    
     try {
       if (props?.isCreationDialog) {
         item.id = v4()
         props.addItem(item)
       }
       else {
+        item.transactionType = item.transactionType?.id || null
         await createAdjustment(item)
       }
       props.closeDialog()
     }
     catch (error: any) {
+      console.log(error);
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
@@ -504,19 +508,25 @@ async function getTransactionTypeList() {
         pageSize: 200,
         page: 0,
         sortBy: 'createdAt',
-        sortType: 'DES'
+        sortType: ENUM_SHORT_TYPE.DESC
       }
 
     transactionTypeList.value = []
     const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
     const { data: dataList } = response
     for (const iterator of dataList) {
-      transactionTypeList.value = [...transactionTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      transactionTypeList.value = [...transactionTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, fullName: `${iterator?.code}-${iterator?.name}` }]
     }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
+}
+
+function onRowRightClick(event: any) {
+  
+  selectedAdjustment.value = event.data
+  adjustmentContextMenu.value.show(event.originalEvent)
 }
 
 function requireConfirmationToDeleteAdjustment(event: any) {
@@ -546,9 +556,15 @@ async function ParseDataTableFilter(payloadFilter: any) {
 
 function OnSortField(event: any) {
   if (event) {
+    if(props?.isCreationDialog){
+    return  props.sortAdjustment(event)
+    }
     Payload.value.sortBy = event.sortField
     Payload.value.sortType = event.sortOrder
-    ParseDataTableFilter(event.filter)
+    getAdjustmentList()
+
+    
+
   }
 }
 
@@ -563,6 +579,15 @@ watch(() => props.forceUpdate, () => {
     props.toggleForceUpdate()
   }
 })
+
+watch(() => props.listItems, () => {
+  if (props.isCreationDialog) {
+    totalAmount.value = 0
+    props?.listItems?.forEach((listItem: any) => {
+      totalAmount.value += listItem?.amount ? Number(listItem?.amount) : 0
+    })
+  }
+}, { deep: true })
 
 onMounted(() => {
   if (props.selectedInvoice) {
@@ -581,40 +606,50 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTableWithContextMenu
+    <DynamicTable
       :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns"
       :options="Options" :pagination="Pagination" @on-confirm-create="ClearForm"
       @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-sort-field="OnSortField" @update:double-clicked="($event) => {
+      @on-list-item="ResetListItems" @on-row-right-click="onRowRightClick" @on-sort-field="OnSortField" @on-row-double-click="($event) => {
 
-        openEditDialog({ id: $event })
+        openEditDialog($event)
 
       }"
     >
-      <template v-if="!isDetailView" #row-selector-body="itemProps">
-        <span class="pi pi-pen-to-square" @click="openEditDialog(itemProps.item)" />
+     
+
+      <template v-if="isCreationDialog" #pagination-total="props">
+        <span class="font-bold font">
+          {{ listItems?.length }}
+        </span>
       </template>
 
-      <template v-if="showTotals" #pagination-left="">
-        <div class="flex pl-1 ml-8 align-items-center " style="height: 10px; width: 20%;">
-          <Badge class="px-2 ml-1 flex align-items-center text-xs text-white" severity="contrast">
-            <span class="font-bold">
-              Total amount:${{ totalAmount }}
-            </span>
-          </Badge>
-        </div>
+      <template #datatable-footer>
+        <ColumnGroup type="footer" class="flex align-items-center">
+          <Row>
+            <Column footer="Totals:" :colspan="2" footer-style="text-align:right" />
+            <Column :footer="totalAmount" />
+            
+            
+            <Column :colspan="6" />
+          </Row>
+        </ColumnGroup>
       </template>
-    </DynamicTableWithContextMenu>
+    </DynamicTable>
   </div>
+  <ContextMenu v-if="!isDetailView" ref="adjustmentContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen">
     <AdjustmentDialog
       :fields="Fields" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
       :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
-      :require-confirmation-to-save="requireConfirmationToSaveAdjustment"
+      :require-confirmation-to-save="saveAdjustment"
       :require-confirmation-to-delete="requireConfirmationToDeleteAdjustment" :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'"
-      :close-dialog="closeDialog" container-class="flex flex-row justify-content-between mx-4 my-2 w-full"
+      :close-dialog="() => {
+        ClearForm()
+        closeDialog()
+      }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full"
       class="h-fit p-2 overflow-y-hidden" content-class="w-full h-fit" :transaction-type-list="transactionTypeList" :get-transaction-type-list="getTransactionTypeList"
     />
   </div>

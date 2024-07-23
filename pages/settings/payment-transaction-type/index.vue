@@ -19,6 +19,7 @@ const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const formReload = ref(0)
 
+const watchCatchChange = ref(false)
 const loadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
@@ -215,7 +216,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -389,13 +390,13 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
+      idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     }
     catch (error: any) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
     }
-    idItem.value = ''
   }
   else {
     try {
@@ -490,6 +491,7 @@ const disabledClearSearch = computed(() => {
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
+
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
@@ -594,6 +596,59 @@ onMounted(() => {
             :loading-save="loadingSaveAll" :loading-delete="loadingDelete" update
             @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)" @update:field="switchField"
           >
+            <template #field-cash="{ item: data, onUpdate }">
+              <Checkbox
+                id="cash"
+                v-model="data.cash"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('cash', $event)
+                  if ($event) {
+                    onUpdate('deposit', false)
+                    onUpdate('applyDeposit', false)
+                  }
+                }"
+              />
+              <label for="cash" class="ml-2 font-bold">
+                Cash
+              </label>
+            </template>
+            <template #field-deposit="{ item: data, onUpdate }">
+              <Checkbox
+                id="deposit"
+                v-model="data.deposit"
+                :binary="true"
+                @update:model-value="($event) => {
+                  if (data.cash) {
+                    onUpdate('deposit', false)
+                  }
+                  else {
+                    onUpdate('deposit', $event)
+                  }
+                }"
+              />
+              <label for="cash" class="ml-2 font-bold">
+                Deposit
+              </label>
+            </template>
+            <template #field-applyDeposit="{ item: data, onUpdate }">
+              <Checkbox
+                id="applyDeposit"
+                v-model="data.applyDeposit"
+                :binary="true"
+                @update:model-value="($event) => {
+                  if (data.cash) {
+                    onUpdate('applyDeposit', false)
+                  }
+                  else {
+                    onUpdate('applyDeposit', $event)
+                  }
+                }"
+              />
+              <label for="cash" class="ml-2 font-bold">
+                Apply Deposit
+              </label>
+            </template>
             <template #field-remarkRequired="{ item: data, onUpdate }">
               <Checkbox
                 ref="refRemarkRequired"
@@ -605,7 +660,7 @@ onMounted(() => {
                   onUpdate('minNumberOfCharacter', 0)
                 }"
               />
-              <label for="remarkRequired" class="ml-2">
+              <label for="remarkRequired" class="ml-2 font-bold">
                 Remark Required
                 <span :class="fields.find(field => field.field === 'remarkRequired')?.class.includes('required') ? 'p-error font-semibold' : ''" />
               </label>

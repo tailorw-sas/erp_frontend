@@ -12,7 +12,8 @@ import type { FieldDefinitionType, Container } from '~/components/form/EditFormV
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import dayjs from 'dayjs'
-import { fields } from '~/components/invoice/form/invoice.fields'
+
+
 
 const toast = useToast()
 
@@ -34,6 +35,8 @@ const loadingDelete = ref(false)
 const bookingDialogOpen = ref<boolean>(false)
 const roomRateDialogOpen = ref<boolean>(false)
 const adjustmentDialogOpen = ref<boolean>(false)
+const attachmentHistoryDialogOpen = ref<boolean>(false)
+const exportAttachmentsDialogOpen = ref<boolean>(false)
 
 
 
@@ -73,6 +76,99 @@ const confinvoiceTypeListtApi = reactive({
 })
 
 
+const fields: Array<Container> = [
+  {
+    childs: [
+      {
+        field: 'invoiceId',
+        header: 'Id',
+        dataType: 'text',
+        class: `w-full px-3  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3]?.id ? 'required' : ''}`,
+        disabled: true,
+        containerFieldClass: 'ml-10'
+
+      },
+      {
+        field: 'invoiceNumber',
+        header: 'Invoice Number',
+        dataType: 'text',
+        class: 'w-full px-3 ',
+        disabled: true,
+
+      },
+
+    ],
+    containerClass: 'flex flex-column justify-content-evenly w-full'
+  },
+
+  {
+    childs: [
+
+      {
+        field: 'hotel',
+        header: 'Hotel',
+        dataType: 'select',
+        class: 'w-full px-3 required',
+        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id 
+
+      },
+      {
+        field: 'agency',
+        header: 'Agency',
+        dataType: 'select',
+        class: 'w-full px-3 required',
+        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id 
+      },
+
+    ],
+
+    containerClass: 'flex flex-column justify-content-evenly w-full '
+  },
+  {
+    childs: [
+      {
+        field: 'invoiceDate',
+        header: 'Invoice Date',
+        dataType: 'date',
+        class: 'w-full px-3  required',
+        validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
+      },
+      {
+        field: 'invoiceAmount',
+        header: 'Invoice Amount',
+        dataType: 'text',
+        class: 'w-full px-3  required',
+        disabled: true,
+        ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
+      },
+
+    ],
+    containerClass: 'flex flex-column justify-content-evenly w-full'
+  },
+  {
+    childs: [
+
+      {
+        field: 'invoiceType',
+        header: 'Type',
+        dataType: 'select',
+        class: 'w-full px-3 mb-5',
+        containerFieldClass: '',
+        disabled: true
+      },
+      {
+        field: 'isManual',
+        header: 'Manual',
+        dataType: 'check',
+        class: `w-full px-3  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3] ? 'required' : ''}`,
+        disabled: true
+      },
+
+    ],
+    containerClass: 'flex flex-column justify-content-evenly w-full'
+  },
+
+]
 
 
 // VARIABLES -----------------------------------------------------------------------------------------
@@ -92,7 +188,7 @@ const filterToSearch = ref<IData>({
 
 
 const item = ref<GenericObject>({
-  invoice_id: '',
+  invoiceId: '',
   invoiceNumber: '',
   invoiceDate: new Date(),
   isManual: true,
@@ -103,7 +199,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
-  invoice_id: '',
+  invoiceId: '',
   invoiceNumber: '',
   invoiceDate: new Date(),
   isManual: true,
@@ -178,19 +274,23 @@ async function getHotelList() {
         pageSize: 200,
         page: 0,
         sortBy: 'createdAt',
-        sortType: 'DES'
+        sortType: ENUM_SHORT_TYPE.DESC
       }
 
-    hotelList.value = []
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
+    hotelList.value = []
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
     }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
+}
+
+function handleAttachmentHistoryDialogOpen() {
+  attachmentHistoryDialogOpen.value = true
 }
 
 async function getAgencyList() {
@@ -207,14 +307,14 @@ async function getAgencyList() {
         pageSize: 200,
         page: 0,
         sortBy: 'createdAt',
-        sortType: 'DES'
+        sortType: ENUM_SHORT_TYPE.DESC
       }
 
-    agencyList.value = []
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
+    agencyList.value = []
     for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
     }
   }
   catch (error) {
@@ -231,12 +331,12 @@ async function getInvoiceTypeList() {
         pageSize: 200,
         page: 0,
         sortBy: 'createdAt',
-        sortType: 'DES'
+        sortType: ENUM_SHORT_TYPE.DESC
       }
 
-    invoiceTypeList.value = []
     const response = await GenericService.search(confinvoiceTypeListtApi.moduleApi, confinvoiceTypeListtApi.uriApi, payload)
     const { data: dataList } = response
+    invoiceTypeList.value = []
     for (const iterator of dataList) {
       invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
     }
@@ -264,21 +364,19 @@ async function getItemById(id: string) {
 
       if (response) {
         item.value.id = response.id
-        item.value.invoice_id = response.invoice_id
+        item.value.invoiceId = response.invoiceId
         item.value.invoiceNumber = response.invoiceNumber
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
         item.value.hotel = response.hotel
+        item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
         item.value.agency = response.agency
+        item.value.hasAttachments = response.hasAttachments
+        item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
-
-
-  
-
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
-
       }
 
       formReload.value += 1
@@ -300,7 +398,7 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
 
-    payload.invoice_id = item.invoice_id
+    payload.invoiceId = item.invoiceId
     payload.invoiceNumber = item.invoiceNumber
     payload.invoiceDate = item.invoiceDate
     payload.isManual = item.isManual
@@ -308,7 +406,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.hotel = item.hotel.id
     payload.invoiceType = item?.invoiceType?.id
     payload.agency = item.agency.id
-    
+
     await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
   }
 }
@@ -320,7 +418,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.isManual = item.isManual
   payload.hotel = item.hotel.id
   payload.agency = item.agency.id
-  
+
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
   navigateTo(
     '/invoice'
@@ -486,144 +584,145 @@ onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   //@ts-ignore
   await getItemById(route.params.id.toString())
-  
-  
+
+
 })
 </script>
 
 <template>
   <div class="justify-content-center align-center ">
-     <div class=" flex justify-content-start p-3 mb-4  align-items-center" style="background-color: #0F8BFD; height: 45px; border-radius: 10px;">
-      <span style="font-weight: 700; color: white; font-size: large;">{{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}</span>
+    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+      {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
     </div>
-
-    <EditFormV2WithContainer :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
-      :loading-save="loadingSaveAll" :loading-delete="loadingDelete" @cancel="clearForm"
-      @delete="requireConfirmationToDelete($event)" container-class="flex flex-row justify-content-evenly card w-full">
-
-       <template #field-invoiceDate="{ item: data, onUpdate }">
-        <Calendar
-          v-if="!loadingSaveAll"
-          v-model="data.invoiceDate"
-          date-format="yy-mm-dd"
-          :max-date="new Date()"
-          @update:model-value="($event) => {
+    <div class="p-3 pt-0">
+      <EditFormV2WithContainer :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
+                               :loading-save="loadingSaveAll" :loading-delete="loadingDelete" @cancel="clearForm"
+                               @delete="requireConfirmationToDelete($event)" container-class="flex flex-row justify-content-evenly card w-full mb-2">
+        <template #field-invoiceDate="{ item: data, onUpdate }">
+          <Calendar
+              v-if="!loadingSaveAll"
+              v-model="data.invoiceDate"
+              date-format="yy-mm-dd"
+              :max-date="new Date()"
+              @update:model-value="($event) => {
             onUpdate('invoiceDate', $event)
           }"
-        />
-</template>
+          />
+        </template>
 
-      <template #field-invoiceType="{ item: data, onUpdate }">
-        <Dropdown
-          v-if="!loadingSaveAll"
-          v-model="data.invoiceType"
-          :options="[...ENUM_INVOICE_TYPE]"
-          option-label="name"
-          return-object="false"
-          show-clear
-          disabled
-          @update:model-value="($event) => {
+        <template #field-invoiceType="{ item: data, onUpdate }">
+          <Dropdown
+              v-if="!loadingSaveAll"
+              v-model="data.invoiceType"
+              :options="[...ENUM_INVOICE_TYPE]"
+              option-label="name"
+              return-object="false"
+              show-clear
+              disabled
+              @update:model-value="($event) => {
             onUpdate('invoiceType', $event)
           }"
-        >
-          <template #option="props">
-            {{ props.option?.code }}-{{ props.option?.name }}
-          </template>
-          <template #value="props">
-            {{ props.value?.code }}-{{ props.value?.name }}
-          </template>
-        </Dropdown>
-        <Skeleton v-else height="2rem" class="mb-2" />
-      </template>
-      <template #field-hotel="{ item: data, onUpdate }">
-        <DebouncedAutoCompleteComponent
-          v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-          :model="data.hotel" :suggestions="hotelList" @change="($event) => {
+          >
+            <template #option="props">
+              {{ props.option?.code }}-{{ props.option?.name }}
+            </template>
+            <template #value="props">
+              {{ props.value?.code }}-{{ props.value?.name }}
+            </template>
+          </Dropdown>
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
+        <template #field-hotel="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+              v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
+              :model="data.hotel" :suggestions="hotelList" @change="($event) => {
             onUpdate('hotel', $event)
           }" @load="($event) => getHotelList($event)"
-        >
-          <template #option="props">
-            <span>{{ props.item.code }} - {{ props.item.name }}</span>
-          </template>
-          <template #chip="{ value }">
-            <div>
-              {{ value?.code }}-{{ value?.name }}
-            </div>
-          </template>
-        </DebouncedAutoCompleteComponent>
-      </template>
-      <template #field-agency="{ item: data, onUpdate }">
-        <DebouncedAutoCompleteComponent
-          v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-          :model="data.agency" :suggestions="agencyList"  @change="($event) => {
+          >
+            <template #option="props">
+              <span>{{ props.item.fullName }}</span>
+            </template>
+            <template #chip="{ value }">
+              <div>
+                {{ value?.fullName }}
+              </div>
+            </template>
+          </DebouncedAutoCompleteComponent>
+        </template>
+        <template #field-agency="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+              v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
+              :model="data.agency" :suggestions="agencyList"  @change="($event) => {
             onUpdate('agency', $event)
           }" @load="($event) => getAgencyList($event)"
-        >
-          <template #option="props">
-            <span>{{ props.item.code }} - {{ props.item.name }}</span>
-          </template>
-          <template #chip="{ value }">
-            <div>
-              {{ value?.code }}-{{ value?.name }}
-            </div>
-          </template>
-        </DebouncedAutoCompleteComponent>
-      </template>
+          >
+            <template #option="props">
+              <span>{{ props.item.fullName }}</span>
+            </template>
+            <template #chip="{ value }">
+              <div>
+                {{ value?.fullName }}
+              </div>
+            </template>
+          </DebouncedAutoCompleteComponent>
+        </template>
 
-      <template #form-footer="props">
-        <div class="px-4" style="width: 100%; height: 100%;">
-          
-
+        <template #form-footer="props">
+          <div style="width: 100%; height: 100%;">
             <InvoiceTabView
-            :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
-            :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
-             :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate"
-            :is-creation-dialog="false" :selected-invoice="selectedInvoice as any"  :active="active" :set-active="($event) => { active = $event }" :showTotals="true"
-            
-          />
-         
+                :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
+                :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
+                :force-update="forceUpdate"
+                :toggle-force-update="update"
+                :invoice-obj="item"
+                :is-creation-dialog="false" :selected-invoice="selectedInvoice as any"  :active="active" :set-active="($event) => { active = $event }" :showTotals="true"
 
-          <div >
-            <div class="flex justify-content-end">
-              <Button
-                v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"  @click="() => {
+            />
+            <div >
+              <div class="flex justify-content-end">
+                <Button
+                    v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"  @click="() => {
                   saveItem(props.item.fieldValues)
                 }"
-              />
-              <Button
-                v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-print"
-                :loading="loadingSaveAll" disabled
-              />
+                />
+                <Button
+                    v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-print"
+                    :loading="loadingSaveAll" :disabled="!item.hasAttachments" @click="()=>{
+                      exportAttachmentsDialogOpen = true
+                    }"
+                />
 
-              <Button
-                v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
+                <Button
+                    v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
+                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
+                />
+                 <Button
+                v-tooltip.top="'Show History'" class="w-3rem mx-1" icon="pi pi-history"
+                :loading="loadingSaveAll" @click="handleAttachmentHistoryDialogOpen()"
               />
-              <Button
-                v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-file"
-                :loading="loadingSaveAll" disabled
-              />
-              <Button
-                v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                :loading="loadingSaveAll" @click="handleDialogOpen()"
-              />
-              <Button
-                v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-dollar"
-                :loading="loadingSaveAll" disabled
-              />
-              <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
-              <Button v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="goToList" />
+               
+                <Button
+                    v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
+                    :loading="loadingSaveAll" @click="handleDialogOpen()"
+                />
+               
+                <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" @click="update" />
+                <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="goToList" />
+              </div>
             </div>
           </div>
-        </div>
-      </template>
-    </EditFormV2WithContainer>
+        </template>
+      </EditFormV2WithContainer>
+    </div>
 
- <div v-if="attachmentDialogOpen">
-          <AttachmentDialog  :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Master Invoice Attachment"  :open-dialog="attachmentDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
+     <div v-if="attachmentDialogOpen">
+              <AttachmentDialog  :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Manage Invoice Attachment"  :open-dialog="attachmentDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
+            </div>
+      </div>
+      <div v-if="attachmentHistoryDialogOpen">
+          <AttachmentHistoryDialog  :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History"  :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" :is-creation-dialog="false" />
         </div>
-
-    
-  </div>
+        <div v-if="exportAttachmentsDialogOpen">
+          <ExportAttachmentsDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen"  :invoice="item"  />
+        </div>
 </template>

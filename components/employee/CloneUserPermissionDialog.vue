@@ -4,6 +4,7 @@ import { usePrimeVue } from 'primevue/config'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { GenericService } from '~/services/generic-services'
+import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const props = defineProps({
   openDialog: {
@@ -77,7 +78,7 @@ async function getUserList() {
       pageSize: 20,
       page: 0,
       sortBy: 'createdAt',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
     if (filter.value) {
       payload.filter = [...payload.filter, {

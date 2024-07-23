@@ -11,7 +11,8 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import getUrlByImage from '~/composables/files'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import { updateFieldProperty } from '~/utils/helpers'
+import { statusToBoolean, statusToString, updateFieldProperty } from '~/utils/helpers'
+import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 // VARIABLES -----------------------------------------------------------------------------------------
 
 const toast = useToast()
@@ -33,25 +34,26 @@ const confApi = reactive({
 })
 
 const ENUM_FILTER = [
-  { id: 'code', name: 'Code' },
-  { id: 'name', name: 'Name' },
+  { id: 'templateCode', name: 'Code' },
+  { id: 'templateName', name: 'Name' },
+
 ]
 
 const item = ref<GenericObject>({
-  file: null as File | null,
+  file: '',
   code: '',
   name: '',
   status: true,
-  type: null,
+  type: '',
   description: '',
   parameters: '',
 })
 
 const itemTemp = ref<GenericObject>({
-  file: null as File | null,
+  file: '',
   code: '',
   name: '',
-  type: null,
+  type: '',
   description: '',
   parameters: '',
   status: true,
@@ -114,6 +116,8 @@ const columns = ref<IColumn[]>([
   { field: 'code', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
+  { field: 'type', header: 'Tipo', type: 'local-select', localItems: [...ENUM_REPORT_TYPE] },
+
   { field: 'createdAt', header: 'Created At', type: 'date' },
 ])
 // -------------------------------------------------------------------------------------------------------
@@ -134,7 +138,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -184,6 +188,7 @@ async function getList() {
     idItemToLoadFirstTime.value = ''
     options.value.loading = true
     listItems.value = []
+    const newListItems = []
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
@@ -194,12 +199,22 @@ async function getList() {
     pagination.value.totalElements = totalElements
     pagination.value.totalPages = totalPages
 
+    const existingIds = new Set(listItems.value.map(item => item.id))
+
     for (const iterator of dataList) {
+      iterator.type = ENUM_REPORT_TYPE.find(x => x.id === iterator.type)
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
-      listItems.value = [...listItems.value, { ...iterator, loadingEdit: false, loadingDelete: false }]
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
     }
+    listItems.value = [...listItems.value, ...newListItems]
+
     if (listItems.value.length > 0) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
@@ -251,14 +266,10 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
+    payload.file = typeof payload.file === 'object' ? await getUrlByImage(payload.file) : payload.file
+
     payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
-    if (!payload.file) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'File is required', life: 3000 })
-    }
-    else {
-      payload.file = typeof payload.file === 'object' ? await getUrlByImage(payload.file) : payload.file
-      return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-    }
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -365,6 +376,20 @@ function requireConfirmationToDelete(event: any) {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  const templateCode = parseFilter?.find((item: IFilter) => item?.key === 'code')
+  const templateName = parseFilter?.find((item: IFilter) => item?.key === 'name')
+  const templateDescription = parseFilter?.find((item: IFilter) => item?.key === 'description')
+
+  if (templateCode) {
+    templateCode.key = 'templateCode'
+  }
+  if (templateName) {
+    templateName.key = 'templateName'
+  }
+  if (templateDescription) {
+    templateDescription.key = 'templateDescription'
+  }
+
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getList()
@@ -372,6 +397,25 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
+    switch (event.sortField) {
+      case 'code':
+        event.sortField = 'templateCode'
+        break
+      case 'name':
+        event.sortField = 'templateName'
+        break
+      case 'description':
+        event.sortField = 'templateDescription'
+        break
+      case 'type':
+        if (event.sortOrder === 'ASC') {
+          event.sortOrder = 'ASC'
+        }
+        else {
+          event.sortOrder = ENUM_SHORT_TYPE.DESC
+        }
+        break
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)

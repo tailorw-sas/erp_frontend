@@ -2,8 +2,8 @@ import { GenericService } from '~/services/generic-services'
 
 export interface FilterCriteria {
   key: string
-  operator: 'EQUALS' | 'NOT_EQUALS' | 'GREATER_THAN' | 'LESS_THAN' // Puedes añadir más operadores si es necesario
-  value: string // Puedes cambiar el tipo según sea necesario (por ejemplo, string | number)
+  operator: 'EQUALS' | 'NOT_EQUALS' | 'GREATER_THAN' | 'LESS_THAN' | 'LIKE' | 'IN' | 'NOT_IN' // Puedes añadir más operadores si es necesario
+  value: string | string[] | boolean// Puedes cambiar el tipo según sea necesario (por ejemplo, string | number)
   logicalOperation: 'AND' | 'OR'
 }
 export async function getList(id: string = '', filter: FilterCriteria[] = []) {
