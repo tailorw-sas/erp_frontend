@@ -141,6 +141,10 @@ public class GenericSpecification<T> implements Specification<T> {
             case IS_NOT_NULL -> builder.isNotNull(path);
             case IS_TRUE -> builder.isTrue(path.as(Boolean.class));
             case IS_FALSE -> builder.isFalse(path.as(Boolean.class));
+            case EXISTS -> {
+                Join<T, ?> join = root.join(criteria.getKey(), JoinType.LEFT);
+                yield builder.isNotNull(join.get("id"));
+            }
             default -> throw new IllegalArgumentException("Operación no soportada: " + criteria.getOperation());
         };
     }
