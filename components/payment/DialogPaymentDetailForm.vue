@@ -9,7 +9,6 @@ const props = defineProps({
   loadingSaveAll: { type: Boolean, default: false },
   selectedPayment: { type: Object, required: true },
   isSplitAction: { type: Boolean, default: false },
-  action: { type: String, default: 'new-detail' }, // new-detail, deposit-transfer, split-deposit
 })
 const emit = defineEmits(['update:visible', 'save'])
 const confirm = useConfirm()
@@ -23,8 +22,7 @@ let submitEvent: Event = new Event('')
 const item = ref({ ...props.item })
 
 const objApis = ref({
-  transactionType: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' },
-
+  transactionType: { moduleApi: 'settings', uriApi: 'manage-invoice-transaction-type' },
 })
 function closeDialog() {
   onOffDialog.value = false
@@ -134,9 +132,6 @@ watch(() => props.item, async (newValue) => {
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
-      mask: {
-        style: 'backdrop-filter: blur(5px)',
-      },
     }"
   >
     <template #header>
@@ -144,10 +139,7 @@ watch(() => props.item, async (newValue) => {
         <h5 class="m-0 py-2">
           {{ props.title }}
         </h5>
-        <div>
-          <strong class="mx-2">Payment:</strong>
-          <span>{{ props.selectedPayment.paymentId }}</span>
-        </div>
+
       </div>
     </template>
 
@@ -173,6 +165,8 @@ watch(() => props.item, async (newValue) => {
             :model="data.transactionType"
             :suggestions="[...transactionTypeList]"
             @change="($event) => {
+              console.log('event', $event);
+
               onUpdate('transactionType', $event)
             }"
             @load="async($event) => {
@@ -189,8 +183,8 @@ watch(() => props.item, async (newValue) => {
     </template>
 
     <template #footer>
-      <Button v-tooltip.top="'Save'" class="w-3rem p-button" icon="pi pi-save" @click="saveSubmit($event)" />
-      <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" />
+      <Button v-tooltip.top="'Apply'" class="w-3rem p-button" icon="pi pi-save" @click="saveSubmit($event)" />
+      <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" />
       <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
     </template>
   </Dialog>
