@@ -136,8 +136,8 @@ const payload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
-  sortBy: 'createdAt',
-  sortType: 'DES'
+  sortBy: 'code',
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -234,7 +234,7 @@ async function getForSelectNavigateList(query: string = '') {
       pageSize: 200,
       page: 0,
       sortBy: 'code',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload)
@@ -360,13 +360,13 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
+      idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
-    idItem.value = ''
   }
   else {
     try {

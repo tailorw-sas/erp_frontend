@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { usePrimeVue } from 'primevue/config'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -108,7 +108,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12 md:col-6 required',
-    validation: z.string().trim().min(1, 'The reservation number field is required').regex(/^([IG]) \d{3} \d{2}$/i, 'Invalid reservation number format')
+    validation: z.string().trim().min(1, 'The reservation number field is required')
   },
   {
     field: 'referenceNumber',
@@ -195,18 +195,23 @@ function clearForm() {
 }
 
 function requireConfirmationToSave(item: any) {
-  confirm.require({
-    target: submitEvent.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: async () => {
-      await save(item)
-    },
-    reject: () => {}
-  })
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    save(item)
+  }
+  else {
+    confirm.require({
+      target: submitEvent.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: async () => {
+        await save(item)
+      },
+      reject: () => {}
+    })
+  }
 }
 
 async function save(item: { [key: string]: any }) {
@@ -388,11 +393,16 @@ function handleMethodTypeChange(value: any) {
       .min(1, 'The email field is required').email('Invalid email'))
     updateFieldProperty(fields, 'guestName', 'validation', z.string().trim()
       .min(1, 'The guest name field is required'))
+    // required
+    updateFieldProperty(fields, 'email', 'class', 'field col-12 md:col-6 required')
+    updateFieldProperty(fields, 'guestName', 'class', 'field col-12 md:col-6 required')
   }
   else {
     updateFieldProperty(fields, 'email', 'validation', z.string().trim()
       .email('Invalid email').or(z.string().length(0)))
     updateFieldProperty(fields, 'guestName', 'validation', z.string())
+    updateFieldProperty(fields, 'email', 'class', 'field col-12 md:col-6')
+    updateFieldProperty(fields, 'guestName', 'class', 'field col-12 md:col-6')
   }
 }
 
@@ -529,8 +539,8 @@ watch(() => props.openDialog, async (newValue) => {
     </div>
     <template #footer>
       <div class="flex justify-content-end mr-4">
-        <Button v-tooltip.top="'Cancel'" label="Cancel" severity="danger" icon="pi pi-times" class="mr-2" @click="onClose(true)" />
-        <Button v-tooltip.top="'Save'" label="Save" icon="pi pi-save" :loading="loadingSaveAll" @click="saveSubmit($event)" />
+        <Button v-tooltip.top="'Save'" label="Save" icon="pi pi-save" :loading="loadingSaveAll" class="mr-2" @click="saveSubmit($event)" />
+        <Button v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" icon="pi pi-times" @click="onClose(true)" />
       </div>
     </template>
   </Dialog>

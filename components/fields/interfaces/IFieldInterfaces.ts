@@ -63,7 +63,7 @@ export interface ValidationMethods {
 export interface IFilter {
   key: string
   operator: string
-  value: string | string []
+  value: string | string [] | number | number [] | boolean
   logicalOperation: string
   type?: 'filterSearch' | 'filterTable'
 }

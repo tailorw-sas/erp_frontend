@@ -13,6 +13,11 @@ export const ENUM_PERMISSIONS = [
   { id: 'EXPORT', name: 'EXPORT' },
 ]
 
+export enum ENUM_SHORT_TYPE {
+  DESC = 'DESC',
+  ASC = 'ASC',
+}
+
 export const ENUM_INVOICE_TYPE = [
   { id: 'INVOICE', name: 'Invoice', code: 'INV' },
   { id: 'INCOME', name: 'Income', code: 'INC' },
@@ -26,11 +31,17 @@ export const OBJ_ENUM_INVOICE = {
   CREDIT: 'Credit',
   OLD_CREDIT: 'Old Credit',
 }
+export const OBJ_ENUM_INVOICE_TYPE_CODE = {
+  INVOICE: 'INV',
+  INCOME: 'INC',
+  CREDIT: 'CRD',
+  OLD_CREDIT: 'OLD',
+}
 
 export const ENUM_INVOICE_CRITERIA = [
-  { id: 'invoice_id', name: 'Invoice Id' },
+  { id: 'invoiceId', name: 'Invoice Id' },
   { id: 'invoiceNumber', name: 'Invoice No' },
-  { id: 'bookings.booking_id', name: 'Booking Id' },
+  { id: 'bookings.bookingId', name: 'Booking Id' },
   { id: 'bookings.fullName', name: 'Full Name' },
   { id: 'bookings.reservationNumber', name: 'Reservation No' },
   { id: 'bookings.couponNumber', name: 'Coupon No' },
@@ -269,8 +280,8 @@ export enum E_STATUS {
 export const ENUM_GENERATION_TYPE = [
   { id: 'ByCoupon', name: 'By Coupon' },
   { id: 'ByBooking', name: 'By Booking' },
-  { id: 'ByCheckIn', name: 'By CheckIn' },
-  { id: 'ByCheckInCheckOut', name: 'By Check in-Check out' },
+  // { id: 'ByCheckIn', name: 'By CheckIn' },
+  // { id: 'ByCheckInCheckOut', name: 'By Check in-Check out' },
 ]
 
 export const ENUM_FILE_FORMAT = [

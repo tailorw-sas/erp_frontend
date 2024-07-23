@@ -9,6 +9,7 @@ import { GenericService } from '~/services/generic-services'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
+import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -32,11 +33,18 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const ENUM_FILTER = [
-  { id: 'code', name: 'Code' },
+  { id: 'templateCode', name: 'Code' },
   { id: 'name', name: 'Name' },
 ]
 
 const fields: Array<FieldDefinitionType> = [
+  {
+    field: 'templateCode',
+    header: 'Code',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'This is a required field').max(50, 'Maximum 50 characters')
+  },
   {
     field: 'mailjetConfigId',
     header: 'Mailjet Config',
@@ -47,13 +55,7 @@ const fields: Array<FieldDefinitionType> = [
       name: z.string().min(1, 'This is a required field'),
     }).nullable().refine(value => value && value.id && value.name, { message: 'This is a required field' }),
   },
-  {
-    field: 'templateCode',
-    header: 'Code',
-    dataType: 'text',
-    class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'This is a required field').max(50, 'Maximum 50 characters')
-  },
+
   {
     field: 'name',
     header: 'Name',
@@ -128,7 +130,7 @@ function searchAndFilter() {
     pageSize: 50,
     page: 0,
     sortBy: 'name',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
@@ -148,7 +150,7 @@ function clearFilterToSearch() {
     pageSize: 50,
     page: 0,
     sortBy: 'name',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''

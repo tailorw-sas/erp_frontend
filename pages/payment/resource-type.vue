@@ -114,7 +114,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,

@@ -1,10 +1,13 @@
 export interface IColumn {
   field: string
   header: string
-  type?: 'text' | 'obj' | 'bool' | 'select' | 'local-select' | 'date' | 'image' | 'icon' | 'custom-badge'
+  type?: 'text' | 'obj' | 'bool' | 'select' | 'local-select' | 'date' | 'image' | 'icon' | 'custom-badge' | 'date-editable' | 'slot-select' | 'slot-icon' | 'slot-text'
   tooltip?: string
   widthTruncate?: string
   sortable?: boolean
+  columnClass?: string
+  showFilter?: boolean
+  frozen?: boolean
   width?: string
   icon?: string
   badge?: {
@@ -23,6 +26,8 @@ export interface IColumn {
     name: string
   }[]
   statusClassMap?: IStatusClass[]
+  props?: any
+  hidden?: boolean
 }
 
 export interface IPagination {

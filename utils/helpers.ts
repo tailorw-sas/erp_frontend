@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { z } from 'zod'
+import { usePrimeVue } from 'primevue/config'
 import type { IFilter } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IColumn } from '~/components/table/interfaces/ITableInterfaces'
@@ -17,6 +17,51 @@ export function helpers() {
   }
 }
 
+export function isValidUrl(urlString: string) {
+  try {
+    return new URL(urlString) // Solo se usa para la validación, no se asigna
+  }
+  catch (e) {
+    return false
+  }
+}
+
+export function formatSize(bytes: number) {
+  const $primevue = usePrimeVue()
+  const k = 1024
+  const dm = 3
+  const sizes = $primevue.config.locale?.fileSizeTypes || ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+  if (bytes === 0) {
+    return `0 ${sizes[0]}`
+  }
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  const formattedSize = Number.parseFloat((bytes / k ** i).toFixed(dm))
+
+  return `${formattedSize} ${sizes[i]}`
+}
+
+export function toNegative(number: number | string | any) {
+  if (!number || isNaN(number)) { return 0 }
+
+  if (Number(number) < 0) {
+    return Number(number)
+  }
+
+  return -number
+}
+
+export function toPositive(number: number | string | any) {
+  if (!number || isNaN(number)) { return 0 }
+
+  if (Number(number) > 0) {
+    return Number(number)
+  }
+
+  return -number
+}
+
 export function statusToBoolean(status: string): boolean {
   if (status in E_STATUS) {
     return E_STATUS[status as keyof typeof E_STATUS] === E_STATUS.ACTIVE
@@ -32,7 +77,7 @@ export function statusToString(isActive: boolean): string {
 
 function isSelectField(field: any, columns: IColumn[]) {
   const column = columns.find(column => column.field === field)
-  return column && (column.type === 'select' || column.type === 'local-select')
+  return column && (column.type === 'select' || column.type === 'local-select' || column.type === 'slot-select')
 }
 
 function isLocalItemsField(field: any, columns: IColumn[]) {
@@ -203,4 +248,21 @@ export function updateFieldProperty(fields: Array<FieldDefinitionType>, fieldNam
   if (field) {
     field[fieldProperty] = propertyValue
   }
+}
+
+export async function fileToBase64(file: File) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => {
+      resolve(reader.result) // Elimina el prefijo 'data:image/png;base64,'
+    }
+    reader.onerror = error => reject(error)
+  })
+}
+
+export function getLastDayOfMonth(date: Date): Date {
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  return new Date(year, month + 1, 0)
 }

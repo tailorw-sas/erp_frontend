@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import dayjs from 'dayjs'
 
 const props = defineProps({
   fields: {
@@ -85,6 +86,31 @@ onMounted(() => {
             @update:model-value="onUpdate('invoiceAmount', $event)"
           />
         </template>
+
+        <template #field-checkIn="{ item: data, onUpdate }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.checkIn"
+            date-format="yy-mm-dd"
+            :max-date="data.checkOut ? new Date(data.checkOut) : undefined"
+            @update:model-value="($event) => {
+
+              onUpdate('checkIn', dayjs($event).startOf('day').toDate())
+            }"
+          />
+        </template>
+        <template #field-checkOut="{ item: data, onUpdate }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.checkOut"
+            date-format="yy-mm-dd"
+            :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
+            @update:model-value="($event) => {
+              
+              onUpdate('checkOut',   dayjs($event).endOf('day').toDate())
+            }"
+          />
+        </template>
         <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
@@ -97,7 +123,7 @@ onMounted(() => {
             v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
             @click="props.item.submitForm($event)"
           />
-          <Button v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
+          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
         </template>
       </EditFormV2WithContainer>
     </div>

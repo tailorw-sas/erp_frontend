@@ -42,7 +42,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'code',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(20, 'Maximum 20 characters').regex(/^[a-z0-9]+$/i, 'Only letters and numbers are allowed')
+    validation: z.string().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(20, 'Maximum 20 characters').regex(/^[a-z]+$/i, 'Only letters are allowed')
   },
   {
     field: 'cif',
@@ -162,6 +162,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    validation: z.string().regex(/^\+?\d+$/, 'Only numeric characters allowed').or(z.string().length(0))
   },
   {
     field: 'alternativePhone',
@@ -169,6 +170,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    validation: z.string().regex(/^\+?\d+$/, 'Only numeric characters allowed').or(z.string().length(0))
   },
   {
     field: 'email',
@@ -194,10 +196,17 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
   },
   {
+    field: 'isDefault',
+    header: 'Default',
+    dataType: 'check',
+    class: 'field col-12 mt-3',
+    headerClass: 'mb-1',
+  },
+  {
     field: 'autoReconcile',
     header: 'Auto Reconcile',
     dataType: 'check',
-    class: 'field col-12 mt-3 mb-3',
+    class: 'field col-12 mb-3',
     headerClass: 'mb-1',
   },
   {
@@ -282,6 +291,7 @@ const item = ref<GenericObject>({
   email: '',
   alternativeEmail: '',
   contactName: '',
+  isDefault: false,
   autoReconcile: false,
   creditDay: 0,
   rfc: '',
@@ -313,6 +323,7 @@ const itemTemp = ref<GenericObject>({
   email: '',
   alternativeEmail: '',
   contactName: '',
+  isDefault: false,
   autoReconcile: false,
   creditDay: 0,
   rfc: '',
@@ -409,7 +420,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -530,6 +541,7 @@ async function getItemById(id: string) {
         item.value.email = response.email
         item.value.alternativeEmail = response.alternativeEmail
         item.value.contactName = response.contactName
+        item.value.isDefault = response.isDefault
         item.value.autoReconcile = response.autoReconcile
         item.value.creditDay = response.creditDay
         item.value.rfc = response.rfc
@@ -555,6 +567,7 @@ async function getItemById(id: string) {
         item.value.country = response.country
         cityStateList.value = [response.cityState]
         item.value.cityState = response.cityState
+        item.value.isDefault = response.isDefault ?? false
         item.value.generationType = ENUM_GENERATION_TYPE.find(i => i.id === response.generationType)
       }
       fields[0].disabled = true
@@ -633,7 +646,6 @@ async function saveItem(item: { [key: string]: any }) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
-    idItem.value = ''
   }
   else {
     try {
@@ -681,7 +693,7 @@ async function getAgencyTypeList(query: string) {
           pageSize: 20,
           page: 0,
           sortBy: 'code',
-          sortType: 'DES'
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     const response = await GenericService.search(confAgencyTypeApi.moduleApi, confAgencyTypeApi.uriApi, payload)
@@ -758,7 +770,7 @@ async function getClientList(param: any) {
           pageSize: 20,
           page: 0,
           sortBy: 'code',
-          sortType: 'DES'
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     const response = await GenericService.search(confClientApi.moduleApi, confClientApi.uriApi, payload)
@@ -801,7 +813,7 @@ async function getB2BPartnerList(param: any) {
           pageSize: 20,
           page: 0,
           sortBy: 'code',
-          sortType: 'DES'
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     const response = await GenericService.search(confB2BPartnerApi.moduleApi, confB2BPartnerApi.uriApi, payload)
@@ -844,7 +856,7 @@ async function getCountryList(param: any) {
           pageSize: 20,
           page: 0,
           sortBy: 'code',
-          sortType: 'DES'
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     const response = await GenericService.search(confCountryApi.moduleApi, confCountryApi.uriApi, payload)
@@ -882,7 +894,7 @@ async function getCityStateList(countryId: string, query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search(confCityStateApi.moduleApi, confCityStateApi.uriApi, payload)
@@ -1216,7 +1228,7 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
 
-            <template #field-phone="{ item: data }">
+            <template #field-phone="{ item: data, onUpdate }">
               <div class="flex">
                 <InputGroup icon-position="left" class="w-full">
                   <InputText
@@ -1226,6 +1238,7 @@ onMounted(() => {
                     placeholder="Phone"
                     show-clear
                     required
+                    @update:model-value="onUpdate('phone', $event)"
                   />
                   <Skeleton v-else height="2rem" class="mb-2" />
 
@@ -1234,7 +1247,7 @@ onMounted(() => {
               </div>
             </template>
 
-            <template #field-alternativePhone="{ item: data }">
+            <template #field-alternativePhone="{ item: data, onUpdate }">
               <div class="flex">
                 <InputGroup icon-position="left" class="w-full">
                   <InputText
@@ -1244,6 +1257,7 @@ onMounted(() => {
                     placeholder="Alternative Phone"
                     show-clear
                     required
+                    @update:model-value="onUpdate('alternativePhone', $event)"
                   />
                   <Skeleton v-else height="2rem" class="mb-2" />
 

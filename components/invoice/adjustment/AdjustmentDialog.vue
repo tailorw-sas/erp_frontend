@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import dayjs from 'dayjs'
 
 const props = defineProps({
   fields: {
@@ -82,11 +83,24 @@ onMounted(() => {
         :loading-save="loadingSaveAll" :container-class="containerClass" class="w-full h-fit m-4"
         @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
       >
+
+      <template #field-date="{ item: data, onUpdate }">
+        <Calendar
+          v-if="!loadingSaveAll"
+          v-model="data.date"
+          date-format="yy-mm-dd"
+          :max-date="dayjs().endOf('day').toDate()"
+          @update:model-value="($event) => {
+
+            onUpdate('date', dayjs($event).startOf('day').toDate())
+          }"
+        />
+      </template>
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
-            field="name"
+            field="fullName"
             item-value="id"
             :model="data.transactionType"
             :suggestions="transactionTypeList"
@@ -103,7 +117,7 @@ onMounted(() => {
             @click="props.item.submitForm($event)"
           />
           <Button
-            v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
+            v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 
               clearForm()
               closeDialog()

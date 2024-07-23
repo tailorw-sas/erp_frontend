@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue'
-import { useToast } from 'primevue/usetoast'
+import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import type { IData, IPatient } from '~/components/table/interfaces/IModelData'
 import { GenericService } from '~/services/generic-services'
-import type { IFilter, IFormField, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const listItems = ref<IPatient[]>([])
@@ -72,7 +72,7 @@ function searchAndFilter() {
     pageSize: 50,
     page: 0,
     sortBy: 'name',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
@@ -92,7 +92,7 @@ function clearFilterToSearch() {
     pageSize: 50,
     page: 0,
     sortBy: 'name',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''

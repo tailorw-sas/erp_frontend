@@ -130,7 +130,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'ASC'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -306,13 +306,13 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
+      idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: 'Item could not be updated', life: 10000 })
     }
-    idItem.value = ''
   }
   else {
     try {

@@ -88,6 +88,7 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  sortBooking: Function as any
 })
 
 const toast = useToast()
@@ -115,6 +116,9 @@ const roomCategoryList = ref<any[]>([])
 const roomTypeList = ref<any[]>([])
 const nightTypeList = ref<any[]>([])
 const ratePlanList = ref<any[]>([])
+
+const bookingContextMenu = ref()
+const selectedBooking = ref<any>()
 
 const totalInvoiceAmount = ref<number>(0)
 const totalHotelAmount = ref<number>(0)
@@ -149,7 +153,7 @@ const Fields = ref<Array<Container>>([
   {
     childs: [
       {
-        field: 'booking_id',
+        field: 'bookingId',
         header: 'Id',
         dataType: 'text',
         class: 'field col-12 md: required',
@@ -247,11 +251,11 @@ const Fields = ref<Array<Container>>([
       },
       {
         field: 'couponNumber',
-        header: 'Coupon Number',
+        header: 'Coupon No.',
         dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        ...(couponNumberValidation.value ? { validation: z.string().min(1, 'The coupon number field is required').regex(new RegExp(couponNumberValidation.value), 'The coupon number field is invalid') } : { validation: z.string().min(1, 'The coupon number field is required') })
+        ...(couponNumberValidation.value ? { validation: z.string().min(1, 'The coupon no. field is required').regex(new RegExp(couponNumberValidation.value), 'The coupon no. field is invalid') } : { validation: z.string().min(1, 'The coupon no. field is required') })
 
       },
       {
@@ -433,7 +437,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/(I*G*) \d+\s\d+/, 'The Hotel Booking No. field has an invalid format')
+    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] \d+ \d{2,}$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
   },
 
   // First Name
@@ -462,7 +466,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType === ENUM_INVOICE_TYPE[3]?.id || props.invoiceObj?.invoiceType === ENUM_INVOICE_TYPE[2]?.id ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must be greater than 0' }) })
+    ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[3]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must be greater than 0' }) })
   },
 
   // Room Number
@@ -484,14 +488,14 @@ const fieldsV2: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
   },
 
-  // Coupon Number
+  // Coupon No.
   {
     field: 'couponNumber',
-    header: 'Coupon Number',
+    header: 'Coupon No.',
     dataType: 'text',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    ...(couponNumberValidation.value ? { validation: z.string().min(1, 'The coupon number field is required').regex(new RegExp(couponNumberValidation.value), 'The coupon number field is invalid') } : { validation: z.string().min(1, 'The coupon number field is required') })
+    ...(couponNumberValidation.value ? { validation: z.string().min(1, 'The coupon no. field is required').regex(new RegExp(couponNumberValidation.value), 'The coupon no. field is invalid') } : { validation: z.string().min(1, 'The coupon no. field is required') })
   },
 
   // Room Category
@@ -592,10 +596,10 @@ const fieldsV2: Array<FieldDefinitionType> = [
   {
     field: 'hotelAmount',
     header: 'Hotel Amount',
-    dataType: 'number',
-    class: 'field col-12 md:col-3 required',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-    validation: z.string().refine(val => +val > 0, 'The Hotel Amount field must be greater than 0').nullable()
+    validation: z.string().trim().regex(/^\d+$/, 'Only numeric characters allowed')
   },
   // Description
   {
@@ -608,7 +612,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
 ]
 
 const item = ref<GenericObject>({
-  booking_id: '-',
+  bookingId: '-',
   hotelCreationDate: new Date(),
   bookingDate: new Date(),
   checkIn: new Date(),
@@ -617,7 +621,7 @@ const item = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-  invoiceAmount: 0,
+  invoiceAmount: '0',
   roomNumber: '',
   couponNumber: '',
   adults: 0,
@@ -626,7 +630,7 @@ const item = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: 0,
+  hotelAmount: '0',
   description: '',
   invoice: '',
   ratePlan: null,
@@ -637,7 +641,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
-  booking_id: '-',
+  bookingId: '-',
   hotelCreationDate: new Date(),
   bookingDate: new Date(),
   checkIn: new Date(),
@@ -647,7 +651,7 @@ const itemTemp = ref<GenericObject>({
   firstName: '',
   lastName: '',
 
-  invoiceAmount: 0,
+  invoiceAmount: '0',
   roomNumber: '',
   couponNumber: '',
   adults: 0,
@@ -656,7 +660,7 @@ const itemTemp = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '',
+  hotelAmount: '0',
   description: '',
   invoice: '',
   ratePlan: null,
@@ -686,19 +690,20 @@ const confApi = reactive({
 })
 
 const Columns: IColumn[] = [
-  { field: 'booking_id', header: 'Id', type: 'text' },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi },
+  { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-pen-to-square', sortable: false },
+  { field: 'bookingId', header: 'Id', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable:!props.isDetailView  && !props.isCreationDialog  },
 
-  { field: 'fullName', header: 'Full Name', type: 'text' },
-  { field: 'hotelBookingNumber', header: 'Reservation Number', type: 'text' },
-  { field: 'couponNumber', header: 'Coupon Number', type: 'text' },
-  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confroomTypeApi },
-  { field: 'checkIn', header: 'Check In', type: 'date' },
-  { field: 'checkOut', header: 'Check Out', type: 'date' },
-  { field: 'nights', header: 'Nights', type: 'text' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  { field: 'fullName', header: 'Full Name', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confroomTypeApi , sortable:!props.isDetailView  && !props.isCreationDialog },
+  { field: 'checkIn', header: 'Check In', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'checkOut', header: 'Check Out', type: 'date' , sortable:!props.isDetailView  && !props.isCreationDialog },
+  { field: 'nights', header: 'Nights', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
 
 ]
 
@@ -731,26 +736,17 @@ async function deleteBookingOption(item: any) {
   }
 }
 
-const menuModel = ref([
-  { label: 'Add Room Rate', command: props.openRoomRateDialog },
-  { label: 'Edit booking', command: openEditBooking },
-
-])
+const menuModel = <any>ref()
 
 const Options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
+  
+  messageToDelete: 'Do you want to save the change?',
   loading: false,
   showFilters: false,
   actionsAsMenu: false,
-  showAcctions: !props.isDetailView,
-  showEdit: false,
-  messageToDelete: 'Do you want to save the change?',
-  showContextMenu: !props.isDetailView,
-  menuModel,
-  showDelete: false,
-  isTabView: props.isTabView
 })
 
 const PayloadOnChangePage = ref<PageState>()
@@ -760,7 +756,7 @@ const Payload = ref<IQueryRequest>({
   pageSize: 10,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'ASC'
+  sortType: ENUM_SHORT_TYPE.ASC
 })
 const Pagination = ref<IPagination>({
   page: 0,
@@ -792,17 +788,17 @@ async function getratePlanList() {
   try {
     const payload
       = {
-        filter: [],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: 'DES'
-      }
+      filter: [],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
-    ratePlanList.value = []
     const response = await GenericService.search(confratePlanApi.moduleApi, confratePlanApi.uriApi, payload)
     const { data: dataList } = response
+    ratePlanList.value = []
     for (const iterator of dataList) {
       ratePlanList.value = [...ratePlanList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
     }
@@ -816,17 +812,17 @@ async function getRoomTypeList() {
   try {
     const payload
       = {
-        filter: [],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: 'DES'
-      }
+      filter: [],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
-    roomTypeList.value = []
     const response = await GenericService.search(confroomTypeApi.moduleApi, confroomTypeApi.uriApi, payload)
     const { data: dataList } = response
+    roomTypeList.value = []
     for (const iterator of dataList) {
       roomTypeList.value = [...roomTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
     }
@@ -840,17 +836,17 @@ async function getNightTypeList() {
   try {
     const payload
       = {
-        filter: [],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: 'DES'
-      }
+      filter: [],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
-    nightTypeList.value = []
     const response = await GenericService.search(confnightTypeApi.moduleApi, confnightTypeApi.uriApi, payload)
     const { data: dataList } = response
+    nightTypeList.value = []
     for (const iterator of dataList) {
       nightTypeList.value = [...nightTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
     }
@@ -864,17 +860,17 @@ async function getRoomCategoryList() {
   try {
     const payload
       = {
-        filter: [],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: 'DES'
-      }
+      filter: [],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
-    roomCategoryList.value = []
     const response = await GenericService.search(confroomCategoryApi.moduleApi, confroomCategoryApi.uriApi, payload)
     const { data: dataList } = response
+    roomCategoryList.value = []
     for (const iterator of dataList) {
       roomCategoryList.value = [...roomCategoryList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
     }
@@ -905,17 +901,15 @@ async function getBookingList(clearFilter: boolean = false) {
         loadingEdit: false,
         loadingDelete: false,
         agency: iterator?.invoice?.agency,
-        nights: dayjs(iterator?.checkOut).diff(dayjs(iterator?.checkIn), 'day', false),
-        checkIn: new Date(iterator?.checkIn),
-        checkOut: new Date(iterator?.checkOut),
-        fullName: `${iterator.fistName ?? ''} ${iterator.lastName ?? ''}`
+        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
-        totalInvoiceAmount.value += +iterator.invoiceAmount
+        totalInvoiceAmount.value += Number(iterator.invoiceAmount)
       }
 
       if (typeof +iterator.hotelAmount === 'number') {
-        totalHotelAmount.value += +iterator.hotelAmount
+        totalHotelAmount.value += Number(iterator.hotelAmount)
       }
     }
     if (ListItems.value.length > 0) {
@@ -944,7 +938,7 @@ function searchAndFilter() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     Payload.value.filter = [...Payload.value.filter, {
@@ -964,7 +958,7 @@ function clearFilterToSearch() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''
@@ -979,7 +973,7 @@ async function GetItemById(id: string) {
       // @ts-expect-error
       const element: any = props.listItems.find((item: any) => item.id === id)
       item.value.id = element.id
-      item.value.booking_id = element.booking_id
+      item.value.bookingId = element.bookingId
       idItem.value = element?.id
       item.value.hotelCreationDate = new Date(element.hotelCreationDate)
       item.value.bookingDate = new Date(element.bookingDate)
@@ -1014,7 +1008,7 @@ async function GetItemById(id: string) {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
       if (response) {
         item.value.id = response.id
-        item.value.booking_id = response.booking_id
+        item.value.bookingId = response.bookingId
         idItem.value = response?.id
         item.value.hotelCreationDate = new Date(response.hotelCreationDate)
         item.value.bookingDate = new Date(response.bookingDate)
@@ -1121,6 +1115,7 @@ async function saveBooking(item: { [key: string]: any }) {
     }
     catch (error: any) {
       successOperation = false
+      console.log(error)
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
@@ -1137,6 +1132,7 @@ async function saveBooking(item: { [key: string]: any }) {
     }
     catch (error: any) {
       successOperation = false
+      console.log(error)
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
@@ -1144,7 +1140,7 @@ async function saveBooking(item: { [key: string]: any }) {
   if (successOperation) {
     ClearForm()
     if (!props.isCreationDialog) {
-      getBookingList()
+      props.toggleForceUpdate()
     }
   }
 }
@@ -1191,9 +1187,39 @@ async function ParseDataTableFilter(payloadFilter: any) {
 
 function OnSortField(event: any) {
   if (event) {
-    Payload.value.sortBy = event.sortField
+
+    if (props?.isCreationDialog) {
+      return props.sortBooking(event)
+    }
+
+
+
+
+
+    Payload.value.sortBy = getSortField(event.sortField)
+
+
     Payload.value.sortType = event.sortOrder
-    ParseDataTableFilter(event.filter)
+
+    getBookingList()
+
+
+
+  }
+}
+
+function getSortField(field: any) {
+  
+  switch (field) {
+    case 'agency':
+      return 'invoice.agency'
+
+    case 'fullName':
+      return 'firstName'
+
+
+    default: return field
+      
   }
 }
 
@@ -1205,12 +1231,28 @@ watch(() => props.invoiceAgency?.bookingCouponFormat, () => {
   couponNumberValidation.value = props.invoiceAgency?.bookingCouponFormat
 })
 
+watch(() => props.listItems, () => {
+  if (props.isCreationDialog) {
+    totalHotelAmount.value = 0
+    totalInvoiceAmount.value = 0
+    props?.listItems?.forEach((listItem: any) => {
+      totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
+      totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
+    })
+  }
+}, { deep: true })
+
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
     getBookingList()
-    props.toggleForceUpdate()
   }
 })
+
+function onRowRightClick(event: any) {
+  
+  selectedBooking.value = event.data
+  bookingContextMenu.value.show(event.originalEvent)
+}
 
 onMounted(() => {
   if (props.selectedInvoice) {
@@ -1224,20 +1266,30 @@ onMounted(() => {
 
   if (props.isDetailView) {
     finalColumns.value = [
-      { field: 'booking_id', header: 'Id', type: 'text' },
+      { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-pen-to-square', sortable: false },
+      { field: 'bookingId', header: 'Id', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog  },
 
-      { field: 'fullName', header: 'Full Name', type: 'text' },
-      { field: 'checkIn', header: 'Check In', type: 'date' },
-      { field: 'checkOut', header: 'Check Out', type: 'date' },
-      { field: 'adults', header: 'Adult', type: 'text' },
-      { field: 'children', header: 'Children', type: 'text' },
-      { field: 'couponNumber', header: 'Coupon No.', type: 'text' },
-      { field: 'reservationNumber', header: 'Reservation No.', type: 'text' },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+      { field: 'fullName', header: 'Full Name', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'checkIn', header: 'Check In', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'checkOut', header: 'Check Out', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'adults', header: 'Adult', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'children', header: 'Children', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'couponNumber', header: 'Coupon No.', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'reservationNumber', header: 'Reservation No.', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
 
     ]
   }
+
+  menuModel.value = [{ label: 'Add Room Rate', command: () => props.openRoomRateDialog(selectedBooking.value) },
+  { label: 'Edit booking', command: () => openEditBooking(selectedBooking.value) }
+  ]
+
+   if(route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
+     menuModel.value =  [{ label: 'Edit booking', command: () => openEditBooking(selectedBooking.value) },
+   ]
+   }
 
   if (!props.isCreationDialog) {
     getBookingList()
@@ -1249,53 +1301,66 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTableWithContextMenu
-      :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns"
+    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns"
       :options="Options" :pagination="Pagination" @on-confirm-create="ClearForm"
-      @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-sort-field="OnSortField" @update:double-clicked="($event) => {
+      @open-edit-dialog="OpenEditDialog($event)" @on-change-pagination="PayloadOnChangePage = $event"
+      @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField" 
+      @on-row-right-click="onRowRightClick"
+      @on-row-double-click="($event) => {
 
-        if (route.query.type === ENUM_INVOICE_TYPE[3]?.id && isCreationDialog){ return }
+      // if (route.query.type === ENUM_INVOICE_TYPE[3]?.id && isCreationDialog){ return }
 
-        openEditBooking({ id: $event })
+      console.log($event);
 
-      }"
-    >
-      <template v-if="!isDetailView" #row-selector-body="itemProps">
-        <span class="pi pi-pen-to-square" @click="openEditBooking(itemProps.item)" />
+      openEditBooking($event)
+
+    }">
+     
+
+      <template #datatable-footer>
+        <ColumnGroup type="footer" class="flex align-items-center">
+          <Row>
+            <Column footer="Totals:" :colspan="!isDetailView ? 11: 9" footer-style="text-align:right" />
+            <Column :footer="totalHotelAmount" />
+            <Column :footer="totalInvoiceAmount" />
+            
+            
+          </Row>
+        </ColumnGroup>
       </template>
 
-      <template v-if="showTotals" #pagination-right="props">
-        <div
-          class="flex align-items-center  rounded-full" style="height: 10px; margin-left: 40px;"
-        >
-          <Badge class="px-2 mr-7 flex align-items-center text-xs text-white" severity="contrast">
-            <span class="font-bold">
-              Total hotel amount: ${{ totalHotelAmount }}
-            </span>
-          </Badge>
-          <Badge class="px-2 ml-1 mr-6  flex align-items-center text-xs text-white" severity="contrast">
-            <span class="font-bold">
-
-              Total invoice amount: ${{ totalInvoiceAmount }}
-            </span>
-          </Badge>
-        </div>
+      <template v-if="isCreationDialog" #pagination-total="props">
+        <span class="font-bold font">
+          {{ listItems?.length }}
+        </span>
       </template>
-    </DynamicTableWithContextMenu>
+
+     
+    </DynamicTable>
   </div>
+  <ContextMenu v-if="!isDetailView" ref="bookingContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen" style="h-fit">
-    <BookingDialog
-      :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
-      :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
-      :require-confirmation-to-save="requireConfirmationToSaveBooking"
-      :require-confirmation-to-delete="requireConfirmationToDeleteBooking" :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'"
-      :close-dialog="closeDialog" container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full"
-      class="h-fit p-2 overflow-y-hidden" content-class="w-full" :night-type-list="nightTypeList"
-      :rate-plan-list="ratePlanList" :room-category-list="roomCategoryList" :room-type-list="roomTypeList" :get-night-type-list="getNightTypeList" :get-room-category-list="getRoomCategoryList" :get-room-type-list="getRoomTypeList" :getrate-plan-list="getratePlanList"
-      :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-night-type-required="nightTypeRequired" :coupon-number-validation="couponNumberValidation"
-    />
+    <BookingDialog :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen"
+      :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
+      :require-confirmation-to-save="saveBooking" :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
+      :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" :close-dialog="() => {
+      ClearForm()
+      closeDialog()
+    }" container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
+      content-class="w-full" :night-type-list="nightTypeList" :rate-plan-list="ratePlanList"
+      :room-category-list="roomCategoryList" :room-type-list="roomTypeList" :get-night-type-list="getNightTypeList"
+      :get-room-category-list="getRoomCategoryList" :get-room-type-list="getRoomTypeList"
+      :getrate-plan-list="getratePlanList" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel"
+      :is-night-type-required="nightTypeRequired" :coupon-number-validation="couponNumberValidation"
+      :invoice-obj="currentInvoice" />
   </div>
 </template>
+
+<style >
+.p-datatable-tfoot {
+  background-color: #42A5F5;
+  tr td {
+    color: #fff;
+  }
+}</style>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import dayjs from 'dayjs'
 
 const props = defineProps({
   fields: {
@@ -96,8 +97,11 @@ const props = defineProps({
     type: Boolean,
     required: false
   },
+  invoiceObj: Object as any
 
 })
+
+const route = useRoute()
 
 const dialogVisible = ref(props.openDialog)
 const formFields = ref<FieldDefinitionType[]>([])
@@ -151,11 +155,31 @@ onMounted(() => {
             }"
           />
         </template>
+        <template #field-hotelCreationDate="{ item: data, onUpdate }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.hotelCreationDate"
+            date-format="yy-mm-dd"
+            :max-date="new Date()"
+            @update:model-value="($event) => {
+              onUpdate('hotelCreationDate', $event)
+            }"
+          />
+          </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.invoiceAmount"
-            show-clear :disabled="!!item?.id"
-            @update:model-value="onUpdate('invoiceAmount', $event)"
+            show-clear :disabled="!!item?.id && route.query.type !== ENUM_INVOICE_TYPE[2]?.id"
+            @update:model-value="($event) => {
+              console.log(invoiceObj)
+              let value: any = $event
+              if (route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[3]?.id || invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
+                value = toNegative(value)
+              }else{
+                value = toPositive(value)
+              }
+              onUpdate('invoiceAmount', String(value))
+            }"
           />
         </template>
         <template #field-hotelAmount="{ onUpdate, item: data }">
@@ -251,7 +275,7 @@ onMounted(() => {
             v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
             @click="props.item.submitForm($event)"
           />
-          <Button v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
+          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
         </template>
       </EditFormV2>
 
@@ -310,7 +334,8 @@ onMounted(() => {
             date-format="yy-mm-dd"
             :max-date="data.checkOut ? new Date(data.checkOut) : undefined"
             @update:model-value="($event) => {
-              onUpdate('checkIn', $event)
+
+              onUpdate('checkIn', dayjs($event).startOf('day').toDate())
             }"
           />
         </template>
@@ -321,7 +346,8 @@ onMounted(() => {
             date-format="yy-mm-dd"
             :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
             @update:model-value="($event) => {
-              onUpdate('checkOut', $event)
+              
+              onUpdate('checkOut',   dayjs($event).endOf('day').toDate())
             }"
           />
         </template>
@@ -390,7 +416,7 @@ onMounted(() => {
             @click="props.item.submitForm($event)"
           />
           <Button
-            v-tooltip.top="'Cancel'" severity="danger" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
+            v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 
               clearForm()
               closeDialog()

@@ -25,24 +25,24 @@ const form = reactive(
     },
     newPassword: {
       value: '',
-      label: 'Nueva Contraseña',
+      label: 'New Password',
       type: 'password',
       isRequired: true,
       showRequiredLabel: false,
       showFeedBack: false,
-      placeholder: 'Escriba su contraseña',
+      placeholder: 'Enter your new password here',
       validationKeywords: [],
       errorMessage: [],
       haveError: false
     },
     confirmPassword: {
       value: '',
-      label: 'Confirmar Contraseña',
+      label: 'Confirm Password',
       type: 'password',
       isRequired: true,
       showRequiredLabel: false,
       showFeedBack: false,
-      placeholder: 'Escriba su contraseña',
+      placeholder: 'Confirm your new password here',
       validationKeywords: [],
       errorMessage: [],
       haveError: false
@@ -88,35 +88,29 @@ function goHome() {
 
 <template>
   <div :class="`login-body flex min-h-screen  ${layoutConfig.colorScheme.value === 'light' ? 'layout-light' : 'layout-dark'}`">
-    <div class="login-image w-6 h-screen hidden md:block" style="max-width: 490px">
-      <NuxtImg :src="`/demo/images/pages/verification-${layoutConfig.colorScheme.value === 'dark' ? 'ondark' : 'onlight'}.png`" alt="atlantis" class="h-screen w-full" />
-    </div>
-    <div class="w-full" style="background: var(--surface-ground)">
+    <div id="login-image" class="login-image w-9 h-screen hidden md:block" />
+    <div id="login-panel" class="login-panel w-full">
       <div
-        class="p-fluid min-h-screen bg-auto md:bg-contain bg-no-repeat text-center w-full flex align-items-center md:align-items-start justify-content-center flex-column bg-auto md:bg-contain bg-no-repeat"
-        style="padding: 20% 10% 20% 10%; background: var(--exception-pages-image)"
+        class="p-fluid min-h-screen bg-auto md:bg-contain bg-no-repeat text-center w-full flex align-items-center md:align-items-center justify-content-center flex-column bg-auto md:bg-contain bg-no-repeat"
+        style="background: var(--exception-pages-image)"
       >
         <div class="flex flex-column">
-          <div class="flex justify-content-center mb-6 logo-container">
-            <NuxtImg
-              :src="`/layout/images/logo/logo-${layoutConfig.colorScheme.value === 'light' ? 'dark' : 'light'}.svg`"
-              class="login-logo" style="width: 150px"
-            />
+          <div class="flex justify-content-center mb-5 logo-container">
+            <NuxtImg src="/images/logo.svg" class="login-logo" style="width: 150px" />
           </div>
-          <div class="form-container">
-            <h4 class="mb-5">
-              Código de Verificación
-            </h4>
-            <div class="flex mt-1 mb-2" style="width: 300px; text-align: center">
-              <span class="text-600 font-medium">
-                Escriba el código de seguridad enviado a su correo electrónico:</span>
+          <div class="form-container flex flex-column align-items-center justify-content-center">
+            <div class="flex flex-column align-items-center mb-4">
+              <h4 class="mb-5">
+                Verification Code
+              </h4>
+              <span class="text-600 font-medium mb-2">
+                Enter the security code sent to your email:</span>
+              <div class="flex mb-3 justify-content-center" style="width: 300px; text-align: center !important">
+                <span class="text-900 font-bold justify-content-center">{{ email }}</span>
+              </div>
             </div>
-            <div class="flex mb-3 justify-content-center" style="width: 300px; text-align: center !important">
-              <span class="text-900 font-bold justify-content-center">{{ email }}</span>
-            </div>
-
-            <div class="mb-5" style="text-align: start">
-              <InputOtp v-model="form.otp.value" mask :length="6" style="width: 300px;" />
+            <div class="mb-4" style="text-align: start">
+              <InputOtp v-model="form.otp.value" mask :length="6" style="width: 250px;" />
             </div>
             <hr>
             <div class="mb-3">
@@ -138,24 +132,20 @@ function goHome() {
               />
             </div>
           </div>
-          <div class="button-container mt-4 text-left" style="max-width: 320px; min-width: 270px">
-            <div class="buttons flex align-items-center gap-3">
-              <Button class="block" severity="danger" outlined style="max-width: 320px; margin-bottom: 32px" @click="goHome">
-                Cancelar
-              </Button>
-              <Button class="block" style="max-width: 320px; margin-bottom: 32px" :disabled="loading" @click="changePassword">
-                Verificar
-              </Button>
-            </div>
+          <div class="button-container mb-3 mt-2" style="width: 300px;">
+            <Button
+              type="button" icon="pi pi-ref" class="w-full flex justify-content-center"
+              style="height: 35px; background-color: #101253; border: none;" :disabled="loading" @click="changePassword"
+            >
+              <i v-if="loading" class="pi pi-spin pi-spinner" style="font-size: 1.5rem" />
+              <span v-else class="font-semibold">Change Password</span>
+            </Button>
           </div>
         </div>
 
-        <div class="login-footer flex justify-content-center align-items-center absolute" style="bottom: 75px;">
+        <div class="login-footer flex justify-content-center align-items-center mt-1" style="bottom: 75px;">
           <div class="flex align-items-center login-footer-logo-container pr-4 mr-4 border-right-1 surface-border">
-            <NuxtImg
-              :src="`/layout/images/logo/logo-${layoutConfig.colorScheme.value === 'light' ? 'dark' : 'light'}.svg`"
-              class="login-logo" style="width: 100px"
-            />
+            <NuxtImg src="/images/logo.svg" class="login-logo" style="width: 57px" />
           </div>
           <span class="text-sm text-color-secondary mr-3">Copyright 2024</span>
         </div>
@@ -165,6 +155,18 @@ function goHome() {
 </template>
 
 <style scoped lang="scss">
+#login-image {
+  background-image: url('/images/login_image.webp');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#login-panel {
+  background: rgb(98, 161, 226);
+  background: linear-gradient(0deg, rgba(98, 161, 226, 0.9) 0%, rgba(164, 200, 237, 1) 56%, rgba(245, 247, 251, 0.9) 100%);
+}
+
 :deep(input) {
   background-color: white !important;
 }

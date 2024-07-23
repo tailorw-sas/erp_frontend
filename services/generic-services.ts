@@ -1,5 +1,5 @@
 import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { SearchResponse } from '~/types'
+import type { PaginatedResponse, SearchResponse } from '~/types'
 
 export const GenericService = {
 
@@ -9,6 +9,17 @@ export const GenericService = {
     const serverUrl = useRequestURL()
     const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/search`
     return $api<SearchResponse>(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
+  async export(MODULE_NAME: string, URI_API: string, payload: IQueryRequest) {
+    const { $api } = useNuxtApp()
+
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/export`
+    return await $api<any>(url, {
       method: 'POST',
       body: payload
     })
@@ -66,12 +77,12 @@ export const GenericService = {
     })
   },
 
-  async update(MODULE_NAME: string, URI_API: string, ID: string, payload: any) {
+  async update(MODULE_NAME: string, URI_API: string, ID: string, payload: any, method: 'PATCH' | 'PUT' = 'PATCH') {
     const { $api } = useNuxtApp()
     const serverUrl = useRequestURL()
     const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/${ID}`
     return $api(url, {
-      method: 'PATCH',
+      method,
       body: payload
     })
   },
@@ -100,10 +111,16 @@ export const GenericService = {
     })
   },
 
-  async deleteItem(MODULE_NAME: string, URI_API: string, ID: string) {
+  async deleteItem(MODULE_NAME: string, URI_API: string, ID: string, SUB_CONTROLLER = '', ID2: string = '') {
     const { $api } = useNuxtApp()
     const serverUrl = useRequestURL()
-    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/${ID}`
+    let url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/${ID}`
+    if (SUB_CONTROLLER !== '') {
+      url += `/${SUB_CONTROLLER}`
+    }
+    if (ID2 !== '') {
+      url += `/${ID2}`
+    }
     return $api(url, {
       method: 'DELETE',
     })
@@ -114,5 +131,15 @@ export const GenericService = {
       const response = await GenericService.uploadFile('cloudbridges', 'files', file)
       return (response as any)?.data.url
     }
-  }
+  },
+
+  async importSearch(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/import-search`
+    return $api<PaginatedResponse>(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
 }

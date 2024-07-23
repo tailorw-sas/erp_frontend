@@ -857,12 +857,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
         {
           label: 'Virtual Credit Card',
           items: [
-            {
-              label: 'Collection Status',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/collection-status'),
-              items: []
-            },
+            // {
+            //   label: 'Collection Status',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/settings/collection-status'),
+            //   items: []
+            // },
             {
               label: 'Credit Card Type',
               icon: 'pi pi-fw pi-file',
@@ -911,12 +911,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/settings/reconcile-transaction-status'),
               items: []
             },
-            // {
-            //   label: 'Transaction Status',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/transaction-status'),
-            //   items: []
-            // }
+            {
+              label: 'Transaction Status',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/transaction-status'),
+              items: []
+            }
           ]
         }
 

@@ -19,6 +19,7 @@ const listItems = ref<any[]>([])
 const loadingSearch = ref(false)
 const formReload = ref(0)
 
+const existElementISBankChecked = ref(false)
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 const idItem = ref('')
@@ -123,7 +124,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -142,6 +143,10 @@ function clearForm() {
   fields[1].disabled = false
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
+}
+
+function existAnyElementWithBankCheckChecked(listItems: any[]) {
+  return listItems.some(item => item.isBank === true)
 }
 
 async function getList() {
@@ -179,6 +184,8 @@ async function getList() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
+
+    existElementISBankChecked.value = existAnyElementWithBankCheckChecked(listItems.value)
 
     if (listItems.value.length > 0) {
       idItemToLoadFirstTime.value = listItems.value[0].id
@@ -287,13 +294,13 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
+      idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
-    idItem.value = ''
   }
   else {
     try {

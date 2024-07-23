@@ -80,11 +80,19 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  sortRoomRate: Function as any,
+  invoiceObj: {
+    type: Object,
+    required: true
+  }
 
 })
-
+const route = useRoute()
 const totalInvoiceAmount = ref<number>(0)
 const totalHotelAmount = ref<number>(0)
+
+const roomRateContextMenu = ref()
+const selectedRoomRate = ref<any>()
 
 const toast = useToast()
 const loadingSaveAll = ref(false)
@@ -113,6 +121,11 @@ const confbookingListApi = reactive({
 const dialogOpen = ref<boolean>(props.isDialogOpen)
 
 async function openEditDialog(item: any) {
+
+  if(route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
+    return null;
+  }
+
   props.openDialog()
   if (item?.id) {
     idItem.value = item?.id
@@ -134,8 +147,8 @@ async function deleteRoomRateOption(item: any) {
 }
 
 const menuModel = ref([
-  { label: 'Add Adjustment', command: props.openAdjustmentDialog },
-  { label: 'Edit Room Rate', command: openEditDialog },
+  { label: 'Add Adjustment', command: ()=> props.openAdjustmentDialog(selectedRoomRate.value) },
+  { label: 'Edit Room Rate', command: ()=> openEditDialog(selectedRoomRate.value) },
 
 ])
 
@@ -143,7 +156,7 @@ const Fields: Array<Container> = [
   {
     childs: [
       {
-        field: 'room_rate_id',
+        field: 'roomRateId',
         header: 'Id',
         dataType: 'text',
         class: 'field col-12 md: required',
@@ -198,7 +211,7 @@ const Fields: Array<Container> = [
             }
           }
           return true
-        }, { message: 'The Room Number field must not be negative' }).nullable()
+        }, { message: 'The Room Number field must not be negative' })
 
       },
 
@@ -259,11 +272,11 @@ const Fields: Array<Container> = [
 ]
 
 const item = ref<GenericObject>({
-  room_rate_id: '',
+  roomRateId: '',
   checkIn: new Date(),
   checkOut: new Date(),
   invoiceAmount: 0,
-  roomNumber: 0,
+  roomNumber: '0',
   adults: 0,
   children: 0,
   rateAdult: 0,
@@ -274,11 +287,11 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
-  room_rate_id: '',
+  roomRateId: '',
   checkIn: new Date(),
   checkOut: new Date(),
   invoiceAmount: 0,
-  roomNumber: 0,
+  roomNumber: '0',
   adults: 0,
   children: 0,
   rateAdult: 0,
@@ -322,19 +335,20 @@ const confratePlanApi = reactive({
 })
 
 const Columns: IColumn[] = [
-  { field: 'room_rate_id', header: 'Id', type: 'text' },
+  { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-pen-to-square', sortable: false },
+  { field: 'roomRateId', header: 'Id', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
 
-  { field: 'fullName', header: 'Full Name', type: 'text' },
+  { field: 'fullName', header: 'Full Name', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
 
-  { field: 'checkIn', header: 'Check In', type: 'date' },
-  { field: 'checkOut', header: 'Check Out', type: 'date' },
-  { field: 'adults', header: 'Adults', type: 'text' },
-  { field: 'children', header: 'Children', type: 'text' },
-  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi },
-  { field: 'nights', header: 'Nights', type: 'text' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'select' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  { field: 'checkIn', header: 'Check In', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'checkOut', header: 'Check Out', type: 'date' , sortable:!props.isDetailView  && !props.isCreationDialog },
+  { field: 'adults', header: 'Adults', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'children', header: 'Children', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'nights', header: 'Nights', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi , sortable:!props.isDetailView  && !props.isCreationDialog },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
 
 ]
 
@@ -351,14 +365,10 @@ const Options = ref({
   moduleApi: 'invoicing',
   uriApi: 'manage-room-rate',
   loading: false,
-  showDelete: false,
-  showAcctions: !props.isDetailView,
-  showEdit: false,
   showFilters: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
-  showContextMenu: !props.isDetailView,
-  menuModel
+ 
 })
 
 const PayloadOnChangePage = ref<PageState>()
@@ -367,8 +377,8 @@ const Payload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'code',
-  sortType: 'ASC'
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const Pagination = ref<IPagination>({
   page: 0,
@@ -391,6 +401,13 @@ const errorInTab = ref({
   tabServices: false,
   tabPermissions: false
 })
+
+function onRowRightClick(event: any) {
+  
+  selectedRoomRate.value = event.data
+  roomRateContextMenu.value.show(event.originalEvent)
+}
+
 
 const OpenCreateDialog = async () => await navigateTo({ path: 'invoice/create' })
 
@@ -417,14 +434,11 @@ async function getRoomRateList() {
 
       ListItems.value = [...ListItems.value, {
         ...iterator,
-        checkIn: new Date(iterator?.checkIn),
-        checkOut: new Date(iterator?.checkOut),
-        nights: dayjs(iterator?.checkOut).diff(dayjs(iterator?.checkIn), 'day', false),
-        room_rate_id: iterator?.room_rate_id ? +iterator?.room_rate_id + +iterator?.booking?.booking_id : countRR + +iterator?.booking?.booking_id,
+        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         loadingEdit: false,
         loadingDelete: false,
-        fullName: `${iterator.booking.fistName ?? ''} ${iterator.booking.lastName ?? ''}`,
-        booking_id: iterator.booking.booking_id,
+        fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
+        bookingId: iterator.booking.bookingId,
         roomType: iterator.booking.roomType,
         nightType: iterator.booking.nightType,
         ratePlan: iterator.booking.ratePlan,
@@ -432,11 +446,11 @@ async function getRoomRateList() {
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
-        totalInvoiceAmount.value += +iterator.invoiceAmount
+        totalInvoiceAmount.value += Number(iterator.invoiceAmount)
       }
 
       if (typeof +iterator.hotelAmount === 'number') {
-        totalHotelAmount.value += +iterator.hotelAmount
+        totalHotelAmount.value += Number(iterator.hotelAmount)
       }
     }
     if (ListItems.value.length > 0) {
@@ -465,7 +479,7 @@ function searchAndFilter() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     Payload.value.filter = [...Payload.value.filter, {
@@ -485,7 +499,7 @@ function clearFilterToSearch() {
     pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
-    sortType: 'DES'
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''
@@ -500,7 +514,7 @@ async function GetItemById(id: string) {
       // @ts-expect-error
       const element: any = props.listItems.find((item: any) => item.id === id)
       item.value.id = element.id
-      item.value.room_rate_id = element.room_rate_id
+      item.value.roomRateId = element.roomRateId
       item.value.checkIn = new Date(element.checkIn)
       item.value.checkOut = new Date(element.checkOut)
       item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : 0
@@ -512,13 +526,15 @@ async function GetItemById(id: string) {
       item.value.hotelAmount = element.hotelAmount ? element.hotelAmount : 0
       item.value.remark = element.remark
       item.value.booking = element.booking
+
+      return loadingSaveAll.value = false
     }
 
     try {
       const response = await GenericService.getById(confApi.roomrate.moduleApi, confApi.roomrate.uriApi, id)
       if (response) {
         item.value.id = response.id
-        item.value.room_rate_id = response.room_rate_id
+        item.value.roomRateId = response.roomRateId
         item.value.checkIn = new Date(response.checkIn)
         item.value.checkOut = new Date(response.checkOut)
         item.value.invoiceAmount = response.invoiceAmount ? response.invoiceAmount : 0
@@ -579,6 +595,7 @@ async function deleteRoomRate(id: string) {
 async function saveRoomRate(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  item.nights = dayjs(item.checkOut).endOf('day').diff(dayjs(item.checkIn).startOf('day'), 'day', false)
   item.booking = props.selectedBooking
   if (idItem.value || item?.id) {
     try {
@@ -672,9 +689,19 @@ async function ParseDataTableFilter(payloadFilter: any) {
 
 function OnSortField(event: any) {
   if (event) {
-    Payload.value.sortBy = event.sortField
+    if(props?.isCreationDialog){
+     return props.sortRoomRate(event)
+    }
+    
+
+    if(event.sortField === 'fullName'){
+      Payload.value.sortBy = 'booking.firstName'
+    }else{
+      Payload.value.sortBy = event.sortField
+    }
+
     Payload.value.sortType = event.sortOrder
-    ParseDataTableFilter(event.filter)
+    getRoomRateList()
   }
 }
 
@@ -684,6 +711,17 @@ watch(() => props.forceUpdate, () => {
     props.toggleForceUpdate()
   }
 })
+
+watch(() => props.listItems, () => {
+  if (props.isCreationDialog) {
+    totalHotelAmount.value = 0
+totalInvoiceAmount.value = 0
+    props?.listItems?.forEach((listItem: any) => {
+      totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
+      totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
+    })
+  }
+}, { deep: true })
 
 onMounted(() => {
   if (props.selectedInvoice) {
@@ -697,20 +735,25 @@ onMounted(() => {
 
   if (props.isDetailView) {
     finalColumns.value = [
-      { field: 'room_rate_id', header: 'Id', type: 'text' },
-      { field: 'booking_id', header: 'Booking id', type: 'text' },
-      { field: 'fullName', header: 'Full Name', type: 'text' },
-      { field: 'checkIn', header: 'Check In', type: 'date' },
-      { field: 'checkOut', header: 'Check Out', type: 'date' },
-      { field: 'nights', header: 'Nights', type: 'date' },
-      { field: 'adults', header: 'Adult', type: 'text' },
-      { field: 'children', header: 'Children', type: 'text' },
-      { field: 'roomType', header: 'Room Type', type: 'select' },
-      { field: 'ratePlan', header: 'Rate Plan', type: 'select' },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+      { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-pen-to-square', sortable: false },
+      { field: 'roomRateId', header: 'Id', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'bookingId', header: 'Booking id', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'fullName', header: 'Full Name', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'checkIn', header: 'Check In', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'checkOut', header: 'Check Out', type: 'date' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'nights', header: 'Nights', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'adults', header: 'Adult', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'children', header: 'Children', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'roomType', header: 'Room Type', type: 'select', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'ratePlan', header: 'Rate Plan', type: 'select' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
 
     ]
+  }
+
+  if(route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
+    menuModel.value =  [{ label: 'Add Adjustment', command: ()=> props.openAdjustmentDialog(selectedRoomRate.value) }]
   }
 
   if (!props.isCreationDialog) {
@@ -721,46 +764,48 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTableWithContextMenu
+    <DynamicTable
       :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns"
       :options="Options" :pagination="Pagination" @on-confirm-create="ClearForm"
       @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-sort-field="OnSortField" @update:double-clicked="($event) => {
+      @on-change-pagination="PayloadOnChangePage = $event" @on-row-right-click="onRowRightClick" @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems" @on-sort-field="OnSortField" @on-row-double-click="($event) => {
 
-        openEditDialog({ id: $event })
+        openEditDialog($event)
 
       }"
     >
-      <template v-if="!isDetailView" #row-selector-body="itemProps">
-        <span class="pi pi-pen-to-square" @click="openEditDialog(itemProps.item)" />
-      </template>
 
-      <template v-if="showTotals" #pagination-right="props">
-        <div class="flex align-items-center  justify-content-end pr-4 rounded-full" style="height: 10px;">
-          <Badge class="px-2 mr-8 flex align-items-center text-xs text-white" severity="contrast">
-            <span class="font-bold">
-
-              Total hotel amount: ${{ totalHotelAmount }}
-            </span>
-          </Badge>
-          <Badge class="px-2 mx-8  flex align-items-center text-xs text-white" severity="contrast">
-            <span class="font-bold">
-              Total invoice amount: ${{ totalInvoiceAmount }}
-            </span>
-          </Badge>
-        </div>
-      </template>
-    </DynamicTableWithContextMenu>
+    <template v-if="isCreationDialog" #pagination-total="props">
+      <span class="font-bold font">
+        {{ listItems?.length }}
+      </span>
+    </template>
+    <template #datatable-footer>
+      <ColumnGroup type="footer" class="flex align-items-center">
+        <Row>
+          <Column footer="Totals:" :colspan="!isDetailView ? 10 : 11" footer-style="text-align:right" />
+          <Column :footer="totalHotelAmount" />
+          <Column :footer="totalInvoiceAmount" />
+          
+          
+        </Row>
+      </ColumnGroup>
+    </template>
+    </DynamicTable>
   </div>
+  <ContextMenu v-if="!isDetailView" ref="roomRateContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen">
     <RoomRateDialog
       :fields="Fields" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
       :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
-      :require-confirmation-to-save="requireConfirmationToSaveRoomRate"
+      :require-confirmation-to-save="saveRoomRate"
       :require-confirmation-to-delete="requireConfirmationToDeleteRoomRate" :header="isCreationDialog || !idItem ? 'New Room Rate' : 'Update Room Rate'"
-      :close-dialog="closeDialog" container-class="flex flex-row justify-content-between mx-4 my-2 w-full"
+      :close-dialog="() => {
+        ClearForm()
+        closeDialog()
+      }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full"
       class="h-fit p-2 overflow-y-hidden" content-class="w-full h-full" :booking-list="bookingList"
     />
   </div>

@@ -176,7 +176,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -414,7 +414,7 @@ async function getIdentityModuleList(query: string = '') {
           pageSize: 100,
           page: 0,
           sortBy: 'name',
-          sortType: 'DES'
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     const response = await GenericService.search(confModuleApi.moduleApi, confModuleApi.uriApi, payload)
@@ -457,7 +457,7 @@ async function getForSelectNavigateList(query: string = '') {
           pageSize: 200,
           page: 0,
           sortBy: 'code',
-          sortType: 'DES'
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     navigateListItems.value = []

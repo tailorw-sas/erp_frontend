@@ -258,7 +258,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -360,6 +360,7 @@ async function resetListItems() {
 
 async function getItemById(id: string) {
   if (id) {
+    clearForm()
     idItem.value = id
     loadingSaveAll.value = true
     try {
@@ -434,7 +435,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.manageCityState = typeof payload.manageCityState === 'object' ? payload.manageCityState.id : payload.manageCityState
   payload.manageCurrency = typeof payload.manageCurrency === 'object' ? payload.manageCurrency.id : payload.manageCurrency
   payload.manageRegion = typeof payload.manageRegion === 'object' ? payload.manageRegion.id : payload.manageRegion
-  payload.manageTradingCompanies = typeof payload.manageTradingCompanies === 'object' ? payload.manageTradingCompanies.id : payload.manageTradingCompanies
+  payload.manageTradingCompanies = !payload.manageTradingCompanies ? '' : typeof payload.manageTradingCompanies === 'object' ? payload.manageTradingCompanies.id : payload.manageTradingCompanies
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -461,13 +462,13 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
+      idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
-    idItem.value = ''
   }
   else {
     try {
@@ -562,7 +563,7 @@ async function getCountriesList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search('settings', 'manage-country', payload)
@@ -600,7 +601,7 @@ async function getCityStatesList(countryId: string, query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search('settings', 'manage-city-state', payload)
@@ -642,7 +643,7 @@ async function getCurrencyList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search('settings', 'manage-currency', payload)
@@ -675,7 +676,7 @@ async function getRegionList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search('settings', 'manage-region', payload)
@@ -707,7 +708,7 @@ async function getTradingCompanyList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'company',
-      sortType: 'DES'
+      sortType: ENUM_SHORT_TYPE.DESC
     }
 
     const response = await GenericService.search('settings', 'manage-trading-companies', payload)

@@ -1,90 +1,31 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
-import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
+import Menu from 'primevue/menu'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
-import type { FieldDefinitionType } from '~/components/form/EditFormV2'
-import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import { validateEntityStatus } from '#imports'
-
+import { getLastDayOfMonth } from '~/utils/helpers'
+import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
-const confirm = useConfirm()
 const listItems = ref<any[]>([])
-const formReload = ref(0)
-const loadingSaveAll = ref(false)
-const idItem = ref('')
-const idItemToLoadFirstTime = ref('')
+const selectedElements = ref<string[]>([])
+const selectedDate = ref<Date>()
 const loadingSearch = ref(false)
-const loadingDelete = ref(false)
+const menu = ref() // Reference for the menu component
+const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
   search: '',
-  hotel: [],
+  active: true,
+  hotel: [allDefaultItem],
 })
 const confApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'invoice-close-operation',
-})
-
-const fields: Array<FieldDefinitionType> = [
-  {
-    field: 'hotel',
-    header: 'Hotel',
-    dataType: 'select',
-    class: 'field col-12 required',
-    headerClass: 'mb-1',
-    validation: validateEntityStatus('hotel'),
-  },
-  {
-    field: 'beginDate',
-    header: 'Begin Date',
-    dataType: 'date',
-    class: 'field col-12 required',
-    headerClass: 'mb-1',
-    validation: z.date({
-      required_error: 'The begin date field is required',
-      invalid_type_error: 'The begin date field is required',
-    })
-  },
-  {
-    field: 'endDate',
-    header: 'End Date',
-    dataType: 'date',
-    class: 'field col-12 required',
-    headerClass: 'mb-1',
-    validation: z.date({
-      required_error: 'The end date field is required',
-      invalid_type_error: 'The end date field is required',
-    })
-  },
-  {
-    field: 'status',
-    header: 'Active',
-    dataType: 'check',
-    disabled: true,
-    class: 'field col-12 required mt-3 mb-3',
-    headerClass: 'mb-1'
-  },
-]
-
-const item = ref<GenericObject>({
-  hotel: null,
-  beginDate: '',
-  endDate: '',
-  status: true
-})
-
-const itemTemp = ref<GenericObject>({
-  hotel: null,
-  beginDate: '',
-  endDate: '',
-  status: true
 })
 
 const hotelList = ref<any[]>([])
@@ -93,17 +34,13 @@ const confHotelApi = reactive({
   uriApi: 'manage-hotel',
 })
 
-const formTitle = computed(() => {
-  return idItem.value ? 'Edit' : 'Create'
-})
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'hotel', header: 'Hotel', type: 'text', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'code' }, sortable: true },
-  { field: 'beginDate', header: 'From', type: 'date' },
-  { field: 'endDate', header: 'To', type: 'date' },
-  { field: 'status', header: 'Active', type: 'bool' },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
+  { field: 'date', header: 'Current Close Operation', type: 'date-editable', width: '50px', widthTruncate: '50px', props: { isRange: true } },
+  { field: 'status', header: 'Active', type: 'bool', width: '25px', widthTruncate: '25px', showFilter: false },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -114,16 +51,23 @@ const options = ref({
   uriApi: 'invoice-close-operation',
   loading: false,
   actionsAsMenu: false,
-  messageToDelete: ''
+  messageToDelete: '',
+  selectionMode: 'multiple'
 })
 const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
-  filter: [],
+  filter: [{
+    key: 'hotel.status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND',
+    type: 'filterSearch',
+  }],
   query: '',
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -134,26 +78,14 @@ const pagination = ref<IPagination>({
 })
 // -------------------------------------------------------------------------------------------------------
 
-// FUNCTIONS ---------------------------------------------------------------------------------------------
-function clearForm() {
-  item.value = { ...itemTemp.value }
-  idItem.value = ''
-  fields[0].disabled = false
-  updateFieldProperty(fields, 'status', 'disabled', true)
-  formReload.value++
-}
-
 async function getList() {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
   try {
-    idItemToLoadFirstTime.value = ''
     options.value.loading = true
     listItems.value = []
-    const newListItems = []
-
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -162,28 +94,18 @@ async function getList() {
     pagination.value.limit = size
     pagination.value.totalElements = totalElements
     pagination.value.totalPages = totalPages
-
-    const existingIds = new Set(listItems.value.map(item => item.id))
-
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
+        iterator.status = statusToBoolean(iterator.hotel.status)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel')) {
-        iterator.hotel = `${iterator.hotel.code} - ${iterator.hotel.name}`
+        iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
-      // Verificar si el ID ya existe en la lista
-      if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
-        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      if (Object.prototype.hasOwnProperty.call(iterator, 'beginDate')) {
+        iterator.date = iterator.beginDate
       }
     }
-
-    listItems.value = [...listItems.value, ...newListItems]
-
-    if (listItems.value.length > 0) {
-      idItemToLoadFirstTime.value = listItems.value[0].id
-    }
+    listItems.value = [...dataList]
   }
   catch (error) {
     console.error(error)
@@ -197,22 +119,40 @@ function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
 
   if (filterToSearch.value.hotel.length > 0) {
-    const ids = filterToSearch.value.hotel.map((e: any) => e.id)
-    payload.value.filter = [...payload.value.filter, {
-      key: 'hotel.id',
-      operator: 'IN',
-      value: ids,
-      logicalOperation: 'AND',
-      type: 'filterSearch',
-    }]
+    const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
+    if (filteredItems.length > 0) {
+      const ids = filterToSearch.value.hotel.map((e: any) => e.id)
+      payload.value.filter = [...payload.value.filter, {
+        key: 'hotel.id',
+        operator: 'IN',
+        value: ids,
+        logicalOperation: 'AND',
+        type: 'filterSearch',
+      }]
+    }
   }
+  payload.value.filter = [...payload.value.filter, {
+    key: 'hotel.status',
+    operator: 'EQUALS',
+    value: filterToSearch.value.active ? 'ACTIVE' : 'INACTIVE',
+    logicalOperation: 'AND',
+    type: 'filterSearch',
+  }]
   getList()
 }
 
 function clearFilterToSearch() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  payload.value.filter = [...payload.value.filter, {
+    key: 'hotel.status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND',
+    type: 'filterSearch',
+  }]
   filterToSearch.value.search = ''
-  filterToSearch.value.hotel = []
+  filterToSearch.value.hotel = [allDefaultItem]
+  filterToSearch.value.active = true
   getList()
 }
 
@@ -221,161 +161,90 @@ function resetListItems() {
   getList()
 }
 
-async function getItemById(id: string) {
-  if (id) {
-    idItem.value = id
-    loadingSaveAll.value = true
-    try {
-      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-
-      if (response) {
-        hotelList.value = [response.hotel]
-        item.value.id = response.id
-        item.value.hotel = response.hotel
-        item.value.hotel.status = 'ACTIVE' // todo: temnporal hasta que se arregle en el back
-        item.value.status = statusToBoolean(response.status)
-        const newDate = new Date(response.beginDate)
-        newDate.setDate(newDate.getDate() + 1)
-        item.value.beginDate = newDate || null
-        item.value.endDate = response.endDate ? dayjs(response.endDate).format('YYYY-MM-DD') : null
-      }
-      fields[0].disabled = true
-      updateFieldProperty(fields, 'status', 'disabled', false)
-      formReload.value += 1
-    }
-    catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Item could not be loaded', life: 3000 })
-      }
-    }
-    finally {
-      loadingSaveAll.value = false
-    }
-  }
-}
-
-async function createItem(item: { [key: string]: any }) {
-  if (item) {
-    loadingSaveAll.value = true
-    const payload: { [key: string]: any } = { ...item }
-
-    payload.beginDate = payload.beginDate ? dayjs(payload.beginDate).format('YYYY-MM-DD') : ''
-    payload.endDate = payload.endDate ? dayjs(payload.endDate).format('YYYY-MM-DD') : ''
-    payload.hotel = typeof payload.hotel === 'object' ? payload.hotel.id : payload.hotel
-    payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-  }
+async function onMultipleSelect(data: any) {
+  selectedElements.value = data
 }
 
 async function updateItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  const payload: { [key: string]: any } = { ...item }
-
-  payload.beginDate = payload.beginDate ? dayjs(payload.beginDate).format('YYYY-MM-DD') : ''
-  payload.endDate = payload.endDate ? dayjs(payload.endDate).format('YYYY-MM-DD') : ''
-  payload.hotel = typeof payload.hotel === 'object' ? payload.hotel.id : payload.hotel
-  payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  const payload: { [key: string]: any } = {}
+  payload.beginDate = item.newDate ? dayjs(item.newDate).format('YYYY-MM-DD') : ''
+  const lastDay = getLastDayOfMonth(item.newDate)
+  payload.endDate = item.newDate ? dayjs(lastDay).format('YYYY-MM-DD') : ''
+  payload.hotel = typeof item.data.hotel === 'object' ? item.data.hotel.id : item.data.hotel
+  payload.status = statusToString(item.data.status)
+  await GenericService.update(confApi.moduleApi, confApi.uriApi, item.data.id || '', payload)
   toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
 }
 
-async function deleteItem(id: string) {
+async function saveItem(item: { [key: string]: any }) {
+  options.value.loading = true
+  const currentList = [...listItems.value]
+  listItems.value = []
+  let successOperation = true
   try {
-    loadingDelete.value = true
-    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
-    clearForm()
-    getList()
+    await updateItem(item)
   }
   catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
-    loadingDelete.value = false
+    successOperation = false
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
   finally {
-    loadingDelete.value = false
+    options.value.loading = false
+    if (successOperation) {
+      getList()
+    }
+    else {
+      listItems.value = [...currentList]
+    }
   }
 }
 
-async function saveItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
+async function saveMultiple() {
+  options.value.loading = true
+  const currentList = [...listItems.value]
+  listItems.value = []
   let successOperation = true
-  if (idItem.value) {
-    try {
-      await updateItem(item)
+  try {
+    const payload: { [key: string]: any } = {}
+    payload.beginDate = selectedDate.value ? dayjs(selectedDate.value).format('YYYY-MM-DD') : ''
+    const lastDay = selectedDate.value ? getLastDayOfMonth(selectedDate.value) : ''
+    payload.endDate = selectedDate.value ? dayjs(lastDay).format('YYYY-MM-DD') : ''
+    const selectedHotels = currentList.filter(item => selectedElements.value.includes(item.id))
+    payload.hotels = selectedHotels.map((e: any) => e.hotel.id)
+    await GenericService.update(confApi.moduleApi, confApi.uriApi, 'all', payload, 'PUT')
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+  }
+  catch (error: any) {
+    successOperation = false
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+    if (successOperation) {
+      getList()
     }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    else {
+      listItems.value = [...currentList]
     }
-  }
-  else {
-    try {
-      await createItem(item)
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-  }
-  loadingSaveAll.value = false
-  if (successOperation) {
-    clearForm()
-    getList()
-  }
-}
-
-function requireConfirmationToSave(item: any) {
-  if (!useRuntimeConfig().public.showSaveConfirm) {
-    saveItem(item)
-  }
-  else {
-    const { event } = item
-    confirm.require({
-      target: event.currentTarget,
-      group: 'headless',
-      header: 'Save the record',
-      message: 'Do you want to save the change?',
-      rejectLabel: 'Cancel',
-      acceptLabel: 'Accept',
-      accept: () => {
-        saveItem(item)
-      },
-      reject: () => {}
-    })
-  }
-}
-function requireConfirmationToDelete(event: any) {
-  if (!useRuntimeConfig().public.showDeleteConfirm) {
-    deleteItem(idItem.value)
-  }
-  else {
-    confirm.require({
-      target: event.currentTarget,
-      group: 'headless',
-      header: 'Save the record',
-      message: 'Do you want to save the change?',
-      acceptClass: 'p-button-danger',
-      rejectLabel: 'Cancel',
-      acceptLabel: 'Accept',
-      accept: () => {
-        deleteItem(idItem.value)
-      },
-      reject: () => {}
-    })
   }
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  if (parseFilter) {
+    const index = parseFilter.findIndex((filter: IFilter) => filter.key === 'date')
+    if (index !== -1) {
+      parseFilter[index].key = 'beginDate'
+    }
+  }
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getList()
 }
 
 function onSortField(event: any) {
   if (event) {
-    payload.value.sortBy = event.sortField
+    payload.value.sortBy = event.sortField === 'date' ? 'beginDate' : event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
   }
@@ -386,7 +255,7 @@ const disabledSearch = computed(() => {
 })
 
 const disabledClearSearch = computed(() => {
-  return (filterToSearch.value.hotel.length === 0)
+  return filterToSearch.value.active && filterToSearch.value.hotel.length === 0
 })
 
 async function getHotelList(query: string) {
@@ -416,13 +285,13 @@ async function getHotelList(query: string) {
           query: '',
           pageSize: 20,
           page: 0,
-          sortBy: 'description',
-          sortType: 'DES'
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     const response = await GenericService.search(confHotelApi.moduleApi, confHotelApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = []
+    hotelList.value = [allDefaultItem]
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status, code: iterator.code }]
     }
@@ -432,24 +301,14 @@ async function getHotelList(query: string) {
   }
 }
 
-function getLastDayOfMonth(date: Date): Date {
-  const year = date.getFullYear()
-  const month = date.getMonth()
-
-  // Crear una nueva fecha con el mes siguiente y el día 0 (el día anterior al primero del mes siguiente)
-  const lastDay = new Date(year, month + 1, 0)
-  return lastDay
+function handleCalendarSelect(date: Date) {
+  selectedDate.value = date
+  menu.value.hide()
+  saveMultiple()
 }
 
-function isInCurrentMonth(date: Date): boolean {
-  const currentDate = new Date()
-  const currentYear = currentDate.getFullYear()
-  const currentMonth = currentDate.getMonth()
-
-  const givenYear = date.getFullYear()
-  const givenMonth = date.getMonth()
-
-  return currentYear === givenYear && currentMonth === givenMonth
+function toggle(event: any) {
+  menu.value.toggle(event)
 }
 
 // -------------------------------------------------------------------------------------------------------
@@ -459,15 +318,6 @@ watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
   getList()
-})
-
-watch(() => idItemToLoadFirstTime.value, async (newValue) => {
-  if (!newValue) {
-    clearForm()
-  }
-  else {
-    await getItemById(newValue)
-  }
 })
 
 // -------------------------------------------------------------------------------------------------------
@@ -484,16 +334,19 @@ onMounted(async () => {
 <template>
   <div class="flex justify-content-between align-items-center">
     <h3 class="mb-0">
-      Invoice Close Operation
+      Invoice Closing Date
     </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
-      <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
+    <div class="my-2 flex justify-content-end px-0">
+      <Button
+        v-tooltip.left="'Multiple Close Operation'" label="Select Date" icon="pi pi-calendar" severity="primary"
+        :disabled="selectedElements.length < 2" @click="toggle"
+      />
     </div>
   </div>
   <div class="grid">
-    <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
-        <Accordion :active-index="0" class="mb-2">
+    <div class="col-12 order-0 md:order-1">
+      <div class="card p-0 m-0">
+        <Accordion :active-index="0">
           <AccordionTab>
             <template #header>
               <div class="text-white font-bold custom-accordion-header">
@@ -502,7 +355,7 @@ onMounted(async () => {
             </template>
             <div class="flex gap-4 flex-column lg:flex-row">
               <div class="flex align-items-center gap-2">
-                <label for="email">Select</label>
+                <label for="email">Hotel</label>
                 <DebouncedAutoCompleteComponent
                   id="autocomplete"
                   field="code"
@@ -511,7 +364,12 @@ onMounted(async () => {
                   :model="filterToSearch.hotel"
                   :suggestions="hotelList"
                   @change="($event) => {
-                    filterToSearch.hotel = $event
+                    if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                      filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                    }
+                    else {
+                      filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                    }
                   }"
                   @load="($event) => getHotelList($event)"
                 >
@@ -521,6 +379,10 @@ onMounted(async () => {
                 </DebouncedAutoCompleteComponent>
               </div>
               <div class="flex align-items-center">
+                <Checkbox v-model="filterToSearch.active" :binary="true" />
+                <label class="ml-2 font-bold"> Active </label>
+              </div>
+              <div class="flex align-items-center">
                 <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter" />
                 <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :disabled="disabledClearSearch" :loading="loadingSearch" @click="clearFilterToSearch" />
               </div>
@@ -528,81 +390,38 @@ onMounted(async () => {
           </AccordionTab>
         </Accordion>
       </div>
+      <!--      <div v-if="selectedElements.length > 1" class="flex justify-content-end custom-icon-button-container">
+        <Button v-tooltip.left="'Select date'" icon="pi pi-calendar" text rounded class="mr-1" @click="clearForm" />
+      </div> -->
       <DynamicTable
         :data="listItems"
         :columns="columns"
         :options="options"
         :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @open-edit-dialog="getItemById($event)"
-        @update:clicked-item="getItemById($event)"
+        @update:clicked-item="onMultipleSelect($event)"
         @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
+        @on-cell-edit-complete="saveItem"
       />
-    </div>
-    <div class="col-12 order-1 md:order-0 md:col-6 xl:col-3">
-      <div>
-        <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-          {{ formTitle }}
-        </div>
-        <div class="card">
-          <EditFormV2
-            :key="formReload"
-            :fields="fields"
-            :item="item"
-            :show-actions="true"
-            :loading-save="loadingSaveAll"
-            @update:item="($event) => item = $event"
-            @cancel="clearForm"
-            @delete="requireConfirmationToDelete($event)"
-            @submit="requireConfirmationToSave($event)"
-          >
-            <template #field-hotel="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="data.hotel"
-                :suggestions="hotelList"
-                @change="($event) => {
-                  onUpdate('hotel', $event)
-                }"
-                @load="($event) => getHotelList($event)"
-              />
-              <Skeleton v-else height="2rem" class="mb-2" />
-            </template>
-            <template #field-beginDate="{ item: data, onUpdate }">
-              <Calendar
-                v-if="!loadingSaveAll"
-                v-model="data.beginDate"
-                date-format="yy-mm-dd"
-                :min-date="new Date('2020-01-01')"
-                :max-date="new Date()"
-                @update:model-value="($event) => {
-                  onUpdate('beginDate', $event)
-                }"
-              />
-              <Skeleton v-else height="2rem" />
-            </template>
-            <template #field-endDate="{ item: data, onUpdate }">
-              <Calendar
-                v-if="!loadingSaveAll"
-                v-model="data.endDate"
-                date-format="yy-mm-dd"
-                :min-date="data.beginDate ? new Date(data.beginDate) : undefined"
-                :max-date="data.beginDate && !isInCurrentMonth(data.beginDate) ? getLastDayOfMonth(data.beginDate) : new Date()"
-                @update:model-value="($event) => {
-                  onUpdate('endDate', $event)
-                }"
-              />
-              <Skeleton v-else height="2rem" />
-            </template>
-          </EditFormV2>
-        </div>
+      <div class="flex justify-content-end">
+        <Button class="ml-2" icon="pi pi-times" label="Cancel" severity="secondary" @click="() => { navigateTo('/') }" />
       </div>
     </div>
   </div>
+  <Menu id="invoice_co" ref="menu" :popup="true" style="max-width: 220px">
+    <template #start>
+      <Calendar v-model="selectedDate" inline view="month" @update:model-value="handleCalendarSelect" />
+    </template>
+  </Menu>
 </template>
+
+<style lang="scss">
+.custom-icon-button-container {
+  background-color: #E7F5FF;
+  .p-button-icon-only .pi {
+    font-size: 1.3em;
+  }
+}
+</style>

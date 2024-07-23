@@ -195,7 +195,7 @@ const payload = ref<IQueryRequest>({
   pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
-  sortType: 'DES'
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -448,7 +448,7 @@ async function getCreditCardTypeList(query: string = '') {
           pageSize: 200,
           page: 0,
           sortBy: 'code',
-          sortType: 'DES'
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     const response = await GenericService.search(confCreditCardTypeApi.moduleApi, confCreditCardTypeApi.uriApi, payload)
@@ -558,7 +558,7 @@ async function getMerchantList(query: string) {
           pageSize: 20,
           page: 0,
           sortBy: 'description',
-          sortType: 'DES'
+          sortType: ENUM_SHORT_TYPE.DESC
         }
 
     const response = await GenericService.search(confMerchantApi.moduleApi, confMerchantApi.uriApi, payload)

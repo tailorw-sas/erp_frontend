@@ -8,10 +8,10 @@ export const fields: Array<Container> = [
   {
     childs: [
       {
-        field: 'invoice_id',
+        field: 'invoiceId',
         header: 'Id',
         dataType: 'text',
-        class: `w-full px-4  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3]?.id ? 'required' : ''}`,
+        class: `w-full px-3  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3]?.id ? 'required' : ''}`,
         disabled: true,
         containerFieldClass: 'ml-10'
 
@@ -20,7 +20,7 @@ export const fields: Array<Container> = [
         field: 'invoiceNumber',
         header: 'Invoice Number',
         dataType: 'text',
-        class: 'w-full px-4 ',
+        class: 'w-full px-3 ',
         disabled: true,
 
       },
@@ -36,15 +36,16 @@ export const fields: Array<Container> = [
         field: 'hotel',
         header: 'Hotel',
         dataType: 'select',
-        class: 'w-full px-4 required',
+        class: 'w-full px-3 required',
+        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id 
 
       },
       {
         field: 'agency',
         header: 'Agency',
         dataType: 'select',
-        class: 'w-full px-4 required',
-
+        class: 'w-full px-3 required',
+        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id 
       },
 
     ],
@@ -57,14 +58,14 @@ export const fields: Array<Container> = [
         field: 'invoiceDate',
         header: 'Invoice Date',
         dataType: 'date',
-        class: 'w-full px-4  required',
+        class: 'w-full px-3  required',
         validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
       },
       {
         field: 'invoiceAmount',
         header: 'Invoice Amount',
         dataType: 'text',
-        class: 'w-full px-4  required',
+        class: 'w-full px-3  required',
         disabled: true,
         ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
       },
@@ -79,7 +80,7 @@ export const fields: Array<Container> = [
         field: 'invoiceType',
         header: 'Type',
         dataType: 'select',
-        class: 'w-full px-4 mb-5',
+        class: 'w-full px-3 mb-5',
         containerFieldClass: '',
         disabled: true
       },
@@ -87,7 +88,7 @@ export const fields: Array<Container> = [
         field: 'isManual',
         header: 'Manual',
         dataType: 'check',
-        class: `w-full px-4  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3] ? 'required' : ''}`,
+        class: `w-full px-3  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3] ? 'required' : ''}`,
         disabled: true
       },
 

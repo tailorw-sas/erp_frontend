@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
-import { z } from 'zod'
+import { date, z } from 'zod'
 import type { IData } from '../table/interfaces/IModelData'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
@@ -9,7 +9,36 @@ import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import { getUrlOrIdByFile } from '~/composables/files'
 
-const props = defineProps({
+interface ResourceType {
+  id: string
+  code?: string
+  name: string
+  description?: string
+  status: string
+}
+
+interface AttachmentType {
+  id: string
+  code?: string
+  name: string
+  description?: string
+  status: string
+  defaults?: boolean
+}
+
+export interface FileObject {
+  id: string
+  status: string
+  resource: string
+  resourceType: ResourceType
+  attachmentType: AttachmentType
+  fileName: string
+  fileWeight: number | null
+  path: string
+  remark: string
+}
+
+const externalProps = defineProps({
 
   header: {
     type: String,
@@ -43,12 +72,19 @@ const props = defineProps({
   selectedPayment: {
     type: Object,
     required: true
+  },
+  isCreateOrEditPayment: {
+    type: String,
+    required: true
   }
 })
+
+const emits = defineEmits(['update:listItems', 'update:closeDialog', 'update:openDialog', 'update:isCreationDialog', 'update:isCreateOrEditPayment'])
 
 const attachmentTypeList = ref<any[]>([])
 const resourceTypeList = ref<any[]>([])
 const employeeList = ref<any[]>([])
+const pathFileLocal = ref('')
 
 const filterToSearch = ref<IData>({
   criterial: null,
@@ -59,10 +95,13 @@ const $primevue = usePrimeVue()
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
+const { data: userData } = useAuth()
 
 const openDialogHistory = ref(false)
-
+const historyList = ref<any[]>([])
+const clickedItem = ref<any>([])
 const loadingDelete = ref(false)
+const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
 
 const idItem = ref('')
 
@@ -92,7 +131,8 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
-    disabled: false
+    disabled: false,
+    validation: validateEntityStatus('Resource Type'),
   },
 
   {
@@ -101,37 +141,16 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    }).nullable()
-      .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
-      .refine((value: any) => value.status !== 'ACTIVE', {
-        message: `This Attachment Type is not active`
-      })
+    validation: validateEntityStatus('Attachment Type'),
 
   },
   {
     field: 'employee',
     header: 'Employee',
     dataType: 'select',
-    class: 'field col-12 md: required',
+    class: 'field col-12',
     headerClass: 'mb-1',
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    }).nullable()
-      .refine((value: any) => value && value.id && value.name, { message: `The Employee field is required` })
-  },
-  {
-    field: 'fileName',
-    header: 'Filename',
-    dataType: 'text',
-    class: 'field col-12 required',
-    headerClass: 'mb-1',
-
+    hidden: true,
   },
   {
     field: 'path',
@@ -139,7 +158,15 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-
+  },
+  {
+    field: 'fileName',
+    header: 'Filename',
+    dataType: 'text',
+    class: 'field col-12 required',
+    headerClass: 'mb-1',
+    disabled: true,
+    validation: z.string().trim().min(1, 'This is a required field')
   },
   {
     field: 'remark',
@@ -153,24 +180,27 @@ const fieldsV2: Array<FieldDefinitionType> = [
 ]
 
 const item = ref<GenericObject>({
-  paymentId: props.selectedPayment.paymentId || '',
-  resource: props.selectedPayment.id || '',
+
+  paymentId: externalProps.selectedPayment.paymentId || '',
+  resource: externalProps.selectedPayment.id || '',
   resourceType: null,
   attachmentType: null,
   employee: null,
   fileName: '',
+  fileWeight: '',
   path: '',
   remark: '',
   status: 'ACTIVE'
 })
 
 const itemTemp = ref<GenericObject>({
-  paymentId: props.selectedPayment.paymentId || '',
-  resource: props.selectedPayment.id || '',
+  paymentId: externalProps.selectedPayment.paymentId || '',
+  resource: externalProps.selectedPayment.id || '',
   resourceType: null,
   attachmentType: null,
   employee: null,
   fileName: '',
+  fileWeight: '',
   path: '',
   remark: '',
   status: 'ACTIVE'
@@ -183,21 +213,47 @@ const objApis = ref({
 })
 
 const Columns: IColumn[] = [
-  { field: 'attachment_id', header: 'Id', type: 'text', width: '200px' },
-  { field: 'type', header: 'Type', type: 'select', width: '200px' },
-  { field: 'filename', header: 'Filename', type: 'text', width: '200px' },
-  { field: 'remark', header: 'Remark', width: '200px' },
-
+  // { field: 'attachment_id', header: 'Id', type: 'text', width: '200px' },
+  { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
+  { field: 'attachmentType', header: 'Attachment Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
+  { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
+  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
+]
+const columnsAttachment: IColumn[] = [
+  // { field: 'attachment_id', header: 'Id', type: 'text', width: '200px' },
+  { field: 'resourceType.name', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
+  { field: 'attachmentType.name', header: 'Attachment Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
+  { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
+  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
 ]
 
-const dialogVisible = ref(props.openDialog)
+const historyColumns: IColumn[] = [
+  { field: 'paymentId', header: 'Payment Id', type: 'text', width: 'auto' },
+  { field: 'createdAt', header: 'Date', type: 'date', width: 'auto' },
+  { field: 'employee', header: 'Employee', type: 'select', width: 'auto', objApi: { moduleApi: 'settings', uriApi: 'manage-employee', keyValue: 'firstName' } },
+  { field: 'description', header: 'Description', type: 'text', width: '200px' },
+  { field: 'status', header: 'Active', type: 'bool', width: '60px' },
+]
+
+const historyOptions = ref({
+  tableName: 'Payment Attachment',
+  moduleApi: 'payment',
+  uriApi: 'attachment-status-history',
+  loading: false,
+  showDelete: false,
+  showFilters: false,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+
+const dialogVisible = ref(externalProps.openDialog)
 const options = ref({
   tableName: 'Payment Attachment',
   moduleApi: 'payment',
   uriApi: 'master-payment-attachment',
   loading: false,
   showDelete: false,
-  showFilters: false,
+  showFilters: true,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
 })
@@ -219,12 +275,29 @@ const payload = ref<IQueryRequest>({
   sortBy: 'createdAt',
   sortType: 'ASC'
 })
+const payloadHistory = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: 'ASC'
+})
+
+const historyPagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
 
 const formTitle = computed(() => {
   return idItem.value ? 'Edit' : 'Create'
 })
 
 const ListItems = ref<any[]>([])
+const listItemsLocal = ref<any[]>([...externalProps.listItems])
 const idItemToLoadFirstTime = ref('')
 
 async function ResetListItems() {
@@ -233,6 +306,12 @@ async function ResetListItems() {
 
 function OnSortField(event: any) {
   if (event) {
+    if (event.sortField === 'attachmentType') {
+      event.sortField = 'attachmentType.name'
+    }
+    if (event.sortField === 'resourceType') {
+      event.sortField = 'resourceType.name'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     ParseDataTableFilter(event.filter)
@@ -248,10 +327,24 @@ function clearForm() {
 
 async function getList() {
   try {
-    idItemToLoadFirstTime.value = ''
+    idItem.value = ''
     options.value.loading = true
     ListItems.value = []
+    let attachmentList: any[] = []
 
+    const objFilter = payload.value.filter.find(item => item.key === 'resource.id')
+
+    if (objFilter) {
+      objFilter.value = externalProps.selectedPayment?.id || ''
+    }
+    else {
+      payload.value.filter.push({
+        key: 'resource.id',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: externalProps.selectedPayment?.id || ''
+      })
+    }
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -262,10 +355,17 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, room_rate_id: iterator?.roomRate?.room_rate_id }]
+      attachmentList = [...attachmentList, { ...iterator }]
     }
+
+    ListItems.value = [...attachmentList]
+
+    // for (const iterator of dataList) {
+    //   ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId }]
+    // }
+
     if (ListItems.value.length > 0) {
-      idItemToLoadFirstTime.value = ListItems.value[0].id
+      idItem.value = ListItems.value[0].id
     }
   }
   catch (error) {
@@ -276,16 +376,96 @@ async function getList() {
   }
 }
 
+async function historyGetList() {
+  if (historyOptions.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    historyOptions.value.loading = true
+    historyList.value = []
+    const newListItems = []
+    const objFilter = payloadHistory.value.filter.find(item => item.key === 'payment.id')
+
+    if (objFilter) {
+      objFilter.value = externalProps.selectedPayment.id || ''
+    }
+    else {
+      payloadHistory.value.filter.push({
+        key: 'payment.id',
+        operator: 'EQUALS',
+        value: externalProps.selectedPayment.id || '',
+        logicalOperation: 'AND'
+      })
+    }
+
+    const response = await GenericService.search(historyOptions.value.moduleApi, historyOptions.value.uriApi, payloadHistory.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    historyPagination.value.page = page
+    historyPagination.value.limit = size
+    historyPagination.value.totalElements = totalElements
+    historyPagination.value.totalPages = totalPages
+
+    const existingIds = new Set(historyList.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      iterator.paymentId = externalProps.selectedPayment.paymentId
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.status = statusToBoolean(iterator.status)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
+        if (iterator.employee.firstName && iterator.employee.lastName) {
+          iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
+        }
+      }
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    historyList.value = [...historyList.value, ...newListItems]
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    historyOptions.value.loading = false
+  }
+}
+
+async function loadHistoryList() {
+  await historyGetList()
+  openDialogHistory.value = true
+}
+
+function clearFilterToSearch() {
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  filterToSearch.value.search = ''
+  getList()
+}
+
 function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  if (filterToSearch.value.criterial && filterToSearch.value.search) {
+  if (filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
-      key: filterToSearch.value.criterial ? filterToSearch.value.criterial.id : '',
+      key: 'fileName',
       operator: 'LIKE',
       value: filterToSearch.value.search,
-      logicalOperation: 'AND',
+      logicalOperation: 'OR',
       type: 'filterSearch',
-    }]
+    }, {
+      key: 'remark',
+      operator: 'LIKE',
+      value: filterToSearch.value.search,
+      logicalOperation: 'OR',
+      type: 'filterSearch',
+    },]
   }
   getList()
 }
@@ -343,8 +523,8 @@ async function getResourceTypeList(moduleApi: string, uriApi: string, queryObj: 
   resourceTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
 }
 
-async function getAttachmentTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  attachmentTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
+async function getAttachmentTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  attachmentTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
 }
 
 interface DataListItemEmployee {
@@ -372,6 +552,51 @@ async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { qu
   attachmentTypeList.value = await getDataList<DataListItemEmployee, ListItemEmployee>(moduleApi, uriApi, [], queryObj, mapFunctionEmployee)
 }
 
+async function createItemLocal(item: any) {
+  if (item) {
+    item.id = listItemsLocal.value.length + 1
+    const payload: { [key: string]: any } = { ...item }
+    payload.employee = userData?.value?.user?.userId
+    if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+      const file = payload.path.files[0]
+      if (file) {
+        const objFile = await getUrlOrIdByFile(file)
+        payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+      }
+      else {
+        payload.path = ''
+      }
+    }
+    else {
+      payload.path = ''
+    }
+    listItemsLocal.value = [...listItemsLocal.value, payload]
+  }
+}
+
+async function updateItemLocal(item: any) {
+  if (item) {
+    const index = listItemsLocal.value.findIndex((x: any) => x.id === item.id)
+    const payload: { [key: string]: any } = { ...item }
+    payload.employee = userData?.value?.user?.userId
+    if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+      const file = payload.path.files[0]
+      if (file) {
+        const objFile = await getUrlOrIdByFile(file)
+        payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+      }
+      else {
+        payload.path = ''
+      }
+    }
+    else {
+      payload.path = ''
+    }
+    payload.employee = userData?.value?.user?.id || ''
+    listItemsLocal.value[index] = payload
+  }
+}
+
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
@@ -381,7 +606,7 @@ async function createItem(item: { [key: string]: any }) {
       const file = payload.path.files[0]
       if (file) {
         const objFile = await getUrlOrIdByFile(file)
-        payload.path = objFile && typeof objFile === 'object' ? objFile.id : objFile.url
+        payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
       }
       else {
         payload.path = ''
@@ -393,7 +618,9 @@ async function createItem(item: { [key: string]: any }) {
     payload.attachmentType = item.attachmentType?.id
     payload.resourceType = item.resourceType?.id
     payload.status = 'ACTIVE'
-    payload.employee = typeof item.employee === 'object' ? item.employee.id : item.employee
+    payload.employee = userData?.value?.user?.userId || 'd4778d5f-8c35-40bd-83ec-4b66bb41f87f'
+    // payload.employee = 'a6ca5849-b312-4bf3-89aa-a5fafeee963f'
+    payload.resource = externalProps.selectedPayment.id
     delete payload.event
     delete payload.paymentId
     await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
@@ -403,6 +630,7 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
+  payload.employee = userData?.value?.user?.id || ''
   payload.type = item.type?.id
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
@@ -410,11 +638,13 @@ async function updateItem(item: { [key: string]: any }) {
 async function deleteItem(id: string) {
   try {
     loadingDelete.value = true
-    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+    const employeeId = userData?.value?.user?.userId || ''
+    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id, 'employee', employeeId)
     clearForm()
+    getList()
   }
   catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete detail', life: 3000 })
     loadingDelete.value = false
   }
   finally {
@@ -427,7 +657,13 @@ async function saveItem(item: { [key: string]: any }) {
   let successOperation = true
   if (idItem.value) {
     try {
-      await updateItem(item)
+      if (externalProps.isCreateOrEditPayment === 'create') {
+        item.id = idItem.value
+        updateItemLocal(item)
+      }
+      else {
+        await updateItem(item)
+      }
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -438,7 +674,12 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      if (externalProps.isCreateOrEditPayment === 'create') {
+        createItemLocal(item)
+      }
+      else {
+        await createItem(item)
+      }
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -455,15 +696,9 @@ async function saveItem(item: { [key: string]: any }) {
 
 async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
   const file = event.files[0]
-  // objFile.value = file
   listFields[fieldKey] = file
 }
-function clearFile(listField: any, fieldKey: any) {
-  console.log(listField, fieldKey)
 
-  // listField[fieldKey] = null
-  // objFile.value = null
-}
 function formatSize(bytes: number) {
   const k = 1024
   const dm = 3
@@ -479,24 +714,24 @@ function formatSize(bytes: number) {
   return `${formattedSize} ${sizes[i]}`
 }
 
-function requireConfirmationToDelete(event: any) {
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    acceptClass: 'p-button-danger',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      deleteItem(idItem.value)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
-}
+// function requireConfirmationToDelete(event: any) {
+//   confirm.require({
+//     target: event.currentTarget,
+//     group: 'headless',
+//     header: 'Save the record',
+//     message: 'Do you want to save the change?',
+//     acceptClass: 'p-button-danger',
+//     rejectLabel: 'Cancel',
+//     acceptLabel: 'Accept',
+//     accept: () => {
+//       deleteItem(idItem.value)
+//       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
+//     },
+//     reject: () => {
+//       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+//     }
+//   })
+// }
 
 async function getItemById(id: string) {
   if (id) {
@@ -504,15 +739,45 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-
       if (response) {
         item.value.id = response.id
-        item.value.type = response.type
-        item.value.filename = response.filename
+        item.value.resource = response.resource
+        item.value.resourceType = response.resourceType
+        item.value.attachmentType = response.attachmentType
+        item.value.fileName = response.fileName
         item.value.file = response.file
         item.value.remark = response.remark
         item.value.invoice = response.invoice
+        pathFileLocal.value = response.path
       }
+
+      formReload.value += 1
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+      }
+    }
+    finally {
+      loadingSaveAll.value = false
+    }
+  }
+}
+
+async function getItemByIdLocal(itemLocal: FileObject) {
+  if (itemLocal) {
+    idItem.value = itemLocal.id
+    loadingSaveAll.value = true
+    try {
+      item.value.id = itemLocal.id
+      item.value.resource = itemLocal.resource
+      item.value.resourceType = itemLocal.resourceType
+      item.value.attachmentType = itemLocal.attachmentType
+      item.value.fileName = itemLocal.fileName
+      // item.value.file = itemLocal.file
+      item.value.remark = itemLocal.remark
+      // item.value.invoice = itemLocal.invoice
+      pathFileLocal.value = itemLocal.path
 
       formReload.value += 1
     }
@@ -549,6 +814,86 @@ function requireConfirmationToSave(item: any) {
     })
   }
 }
+
+function requireConfirmationToDelete(event: any) {
+  if (!useRuntimeConfig().public.showDeleteConfirm) {
+    deleteItem(idItem.value)
+  }
+  else {
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      acceptClass: 'p-button-danger',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        deleteItem(idItem.value)
+      },
+      reject: () => {}
+    })
+  }
+}
+
+function openOrDownloadFile(url: string) {
+  if (isValidUrl(url)) {
+    window.open(url, '_blank')
+  }
+  else {
+    console.error('Invalid URL')
+  }
+}
+
+async function loadDefaultsValues() {
+  const filter: FilterCriteria[] = [
+    {
+      key: 'defaults',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: true,
+    },
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+    },
+  ]
+  await getAttachmentTypeList(objApis.value.attachmentType.moduleApi, objApis.value.attachmentType.uriApi, {
+    query: '',
+    keys: ['name', 'code'],
+  }, filter)
+  item.value.attachmentType = attachmentTypeList.value.length > 0 ? attachmentTypeList.value[0] : null
+  formReload.value++
+}
+
+watch(() => idItemToLoadFirstTime.value, async (newValue) => {
+  if (!newValue) {
+    clearForm()
+  }
+  else {
+    await getItemById(newValue)
+  }
+})
+
+watch(() => listItemsLocal.value, async (newValue) => {
+  if (newValue) {
+    emits('update:listItems', listItemsLocal.value)
+  }
+}, { deep: true })
+
+onMounted(async () => {
+  if (externalProps.isCreateOrEditPayment !== 'create') {
+    await getList()
+    if (idItem.value) {
+      await getItemById(idItem.value)
+    }
+  }
+  else {
+    loadDefaultsValues()
+  }
+})
 </script>
 
 <template>
@@ -567,7 +912,7 @@ function requireConfirmationToSave(item: any) {
                   <div>Filters</div>
                   <div>
                     <strong class="mx-2">Payment:</strong>
-                    <span>{{ props.selectedPayment.paymentId }}</span>
+                    <span>{{ externalProps.selectedPayment.paymentId }}</span>
                   </div>
                 </div>
               </template>
@@ -584,18 +929,50 @@ function requireConfirmationToSave(item: any) {
                 </div>
                 <div class="flex align-items-center">
                   <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch" @click="searchAndFilter" />
-                  <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :loading="loadingSearch" @click="clearFilterToSearch" />
+                  <Button v-tooltip.top="'Clear'" class="w-3rem" outlined icon="pi pi-filter-slash" :loading="loadingSearch" @click="clearFilterToSearch" />
                 </div>
               </div>
             </AccordionTab>
           </Accordion>
+          <DataTable
+            v-if="isCreateOrEditPayment === 'create'"
+            v-model:selection="clickedItem"
+            :value="listItemsLocal"
+            selection-mode="single"
+            striped-rows
+            show-gridlines
+            class="card p-0 m-0"
+            @update:selection="getItemByIdLocal($event)"
+          >
+            <template #empty>
+              <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                  <div class="row">
+                    <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                  </div>
+                  <div class="row">
+                    <p>{{ messageForEmptyTable }}</p>
+                  </div>
+                </span>
+                <span v-else class="flex flex-column align-items-center justify-content-center">
+                  <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                </span>
+              </div>
+            </template>
+            <Column v-for="column of columnsAttachment" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+          </DataTable>
           <DynamicTable
+            v-else
             class="card p-0"
-            :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns"
-            :options="options" :pagination="Pagination"
+            :data="ListItems"
+            :columns="Columns"
+            :options="options"
+            :pagination="Pagination"
+            @on-change-filter="ParseDataTableFilter"
             @update:clicked-item="getItemById($event)"
             @on-confirm-create="clearForm"
-            @on-change-pagination="payloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+            @on-change-pagination="payloadOnChangePage = $event"
+            @on-list-item="ResetListItems" @on-sort-field="OnSortField"
           />
         </div>
         <div class="col-12 order-2 md:order-0 md:col-3 pt-5">
@@ -678,6 +1055,7 @@ function requireConfirmationToSave(item: any) {
                       onUpdate('path', $event)
                       if ($event && $event.files.length > 0) {
                         onUpdate('fileName', $event?.files[0]?.name)
+                        onUpdate('fileSize', formatSize($event?.files[0]?.size))
                       }
                       else {
                         onUpdate('fileName', '')
@@ -718,15 +1096,20 @@ function requireConfirmationToSave(item: any) {
 
                 <template #form-footer="props">
                   <Button
-                    v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+                    v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save"
                     @click="props.item.submitForm($event)"
                   />
+                  <Button v-tooltip.top="'View File'" :disabled="!idItem" class="w-3rem ml-1 sticky" icon="pi pi-file" @click="openOrDownloadFile(pathFileLocal)" />
                   <Button
                     v-if="true"
-                    v-tooltip.top="'Show History'" class="w-3rem sticky" icon="pi pi-book"
-                    @click="openDialogHistory = true"
+                    v-tooltip.top="'Show History'" :disabled="!idItem && externalProps.isCreateOrEditPayment === 'create'" class="w-3rem ml-1 sticky" icon="pi pi-book"
+                    @click="loadHistoryList"
                   />
+                  <Button v-tooltip.top="'New'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearForm" />
+                  <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                  <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialog" />
                 </template>
+                <!-- Save, View File, Show History, Add, Delete y Cancel -->
               </EditFormV2>
             </div>
           </div>
@@ -741,6 +1124,17 @@ function requireConfirmationToSave(item: any) {
     class="mx-3 sm:mx-0"
     content-class="border-round-bottom border-top-1 surface-border"
     :style="{ width: '60%' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+      mask: {
+        style: 'backdrop-filter: blur(5px)',
+      },
+    }"
     @hide="openDialogHistory = false"
   >
     <template #header>
@@ -754,9 +1148,9 @@ function requireConfirmationToSave(item: any) {
       <div class="p-fluid pt-3">
         <DynamicTable
           class="card p-0"
-          :data="isCreationDialog ? listItems as any : ListItems"
-          :columns="Columns"
-          :options="options"
+          :data="historyList"
+          :columns="historyColumns"
+          :options="historyOptions"
           :pagination="Pagination"
           @on-change-pagination="payloadOnChangePage = $event"
           @on-change-filter="ParseDataTableFilter"

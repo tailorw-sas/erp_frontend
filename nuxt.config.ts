@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     'nuxt-primevue',
     '@nuxt/image',
     '@pinia/nuxt',
-    '@vueuse/nuxt'
+    '@vueuse/nuxt',
   ],
   typescript: {
     shim: false
