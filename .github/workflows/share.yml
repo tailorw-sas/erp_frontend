@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
+        run: cd share && mvn -B package --file pom.xml
 
       - name: Publish to GitHub Packages Apache Maven
         run: cd share && mvn --batch-mode deploy
