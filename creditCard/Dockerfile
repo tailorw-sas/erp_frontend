@@ -40,7 +40,7 @@ ENV PACKAGE_TOKEN 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
 
 RUN mkdir -p ~/.m2
 RUN ls
-#RUN cp creditCard/rc-settings.xml ~/.m2/rc-settings.xml
+RUN cp rc-settings.xml ~/.m2/rc-settings.xml
 
 # Build
 RUN mvn dependency:go-offline -f pom.xml -s rc-settings.xml
