@@ -38,8 +38,8 @@ COPY . /build
 ARG PACKAGE_TOKEN
 ENV PACKAGE_TOKEN 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
 
-sh "mkdir -p ~/.m2"
-sh "cp creditCard/rc-settings.xml ~/.m2/rc-settings.xml"
+RUN mkdir -p ~/.m2
+RUN cp /build/creditCard/rc-settings.xml ~/.m2/rc-settings.xml
 
 # Build
 RUN mvn dependency:go-offline -f pom.xml -s rc-settings.xml
