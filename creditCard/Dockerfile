@@ -39,7 +39,9 @@ COPY . /build
 ARG PACKAGE_TOKEN
 ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 
-RUN git config --global url."https://${PACKAGE_TOKEN}@github.com".insteadOf "ssh://git@github.com"
+RUN --mount=type=secret,id=PACKAGE_TOKEN \
+    echo "machine github.com login x password $(head -n 1 /run/secrets/PACKAGE_TOKEN)" > ~/.netrc && \
+    git config --global url."https://${PACKAGE_TOKEN}@github.com".insteadOf "ssh://git@github.com"
 RUN mkdir -p ~/.m2
 RUN ls
 RUN cp rc-settings.xml ~/.m2/settings.xml
