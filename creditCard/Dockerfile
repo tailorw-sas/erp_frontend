@@ -38,7 +38,7 @@ COPY . /build
 # Setup environment vairables for maven resposiory
 ARG PACKAGE_TOKEN
 ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
-
+RUN ls /run/secrets
 RUN --mount=type=secret,id=PACKAGE_TOKEN \
     echo "machine github.com login x password $(head -n 1 /run/secrets/PACKAGE_TOKEN)" > ~/.netrc && \
     git config --global url."https://${PACKAGE_TOKEN}@github.com".insteadOf "ssh://git@github.com"
