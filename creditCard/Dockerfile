@@ -24,7 +24,7 @@ RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
 ENV MAVEN_HOME /usr/share/maven/bin/
-ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+#ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
 
 # Set the working directory to /home/app
 WORKDIR /build
@@ -37,6 +37,9 @@ COPY . /build
 # Setup environment vairables for maven resposiory
 ARG PACKAGE_TOKEN
 ENV PACKAGE_TOKEN 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
+
+sh "mkdir -p ~/.m2"
+sh "cp creditCard/rc-settings.xml ~/.m2/rc-settings.xml"
 
 # Build
 RUN mvn dependency:go-offline -f pom.xml -s rc-settings.xml
