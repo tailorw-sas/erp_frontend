@@ -16,7 +16,7 @@ pipeline {
 	stage ('Create docker image'){
 		steps {
 			dir('creditCard'){
-				sh 'docker build -t tailorw/fin-credit-card:dev .'
+				sh 'docker build -t tailorw/fin-credit-card:dev --build-arg PACKAGE_TOKEN=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 .'
 				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
                 			sh 'docker push tailorw/fin-credit-card:dev'
                 		}
