@@ -42,6 +42,7 @@ ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 #RUN ls
 #RUN cp rc-settings.xml ~/.m2/settings.xml
 #RUN cat ~/.m2/settings.xml
+RUN git config --global url."https://${PACKAGE_TOKEN}@github.com".insteadOf "ssh://git@github.com"
 
 # Build
 RUN mvn -e dependency:go-offline -f pom.xml -s rc-settings.xml
