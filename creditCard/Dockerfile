@@ -36,12 +36,12 @@ COPY . /build
 
 # Setup environment vairables for maven resposiory
 ARG PACKAGE_TOKEN
-ENV PACKAGE_TOKEN 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
+ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 
-RUN mkdir -p ~/.m2
-RUN ls
-RUN cp rc-settings.xml ~/.m2/settings.xml
-RUN cat ~/.m2/settings.xml
+#RUN mkdir -p ~/.m2
+#RUN ls
+#RUN cp rc-settings.xml ~/.m2/settings.xml
+#RUN cat ~/.m2/settings.xml
 
 # Build
 RUN mvn -e dependency:go-offline -f pom.xml -s rc-settings.xml
