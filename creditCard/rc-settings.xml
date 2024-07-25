@@ -20,12 +20,4 @@
             </repositories>
         </profile>
     </profiles>
-
-    <servers>
-        <server>
-            <id>github</id>
-            <username>dany0919</username>
-            <password>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</password>
-        </server>
-    </servers>
 </settings>
