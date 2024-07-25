@@ -1,7 +1,10 @@
 pipeline {
     
     agent any
-    
+	environment {
+		GITHUB_PACKAGE_TOKEN = credentials("DanyGitHubToken")
+	}		
+	
 	triggers {
         githubPush()
     }
@@ -16,7 +19,7 @@ pipeline {
 	stage ('Create docker image'){
 		steps {
 			dir('creditCard'){
-				sh 'docker build -t tailorw/fin-credit-card:dev --build-arg PACKAGE_TOKEN=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 .'
+				sh 'docker build -t tailorw/fin-credit-card:dev --build-arg PACKAGE_TOKEN=$GITHUB_PACKAGE_TOKEN .'
 				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
                 			sh 'docker push tailorw/fin-credit-card:dev'
                 		}
