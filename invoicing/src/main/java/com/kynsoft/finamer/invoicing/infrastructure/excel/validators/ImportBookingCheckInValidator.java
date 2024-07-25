@@ -9,26 +9,22 @@ import org.springframework.context.ApplicationEventPublisher;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.List;
 
 public class ImportBookingCheckInValidator extends ExcelRuleValidator<BookingRow> {
     private final String[] validDateFormat = new String[]{"yyyymmdd", "mm/dd/yyyy"};
-
-    public ImportBookingCheckInValidator(ApplicationEventPublisher applicationEventPublisher) {
-        super(applicationEventPublisher);
-    }
-
     @Override
-    public boolean validate(BookingRow obj) {
-        if (!this.validateDate(obj)) {
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+        if (!this.validateDate(obj,errorFieldList)) {
             return false;
         }
-        if (!this.validateDateRange(obj)) {
+        if (!this.validateDateRange(obj,errorFieldList)) {
             return false;
         }
         return true;
     }
 
-    private boolean validateDate(BookingRow obj) {
+    private boolean validateDate(BookingRow obj,List<ErrorField> errorFieldList) {
         String date = obj.getCheckIn();
         boolean valid = false;
         for (String format : validDateFormat) {
@@ -42,18 +38,18 @@ public class ImportBookingCheckInValidator extends ExcelRuleValidator<BookingRow
             }
         }
         if (!valid) {
-            sendErrorEvent(obj.getRowNumber(), new ErrorField("CheckIn", "Invalid date format"),obj);
+           errorFieldList.add(new ErrorField("CheckIn", "CheckIn has invalid date format"));
             return false;
         }
         return true;
     }
 
-    private boolean validateDateRange(BookingRow obj) {
+    private boolean validateDateRange(BookingRow obj,List<ErrorField> errorFieldList) {
         LocalDate checkIn = DateUtil.parseDateToLocalDate(obj.getCheckIn());
         LocalDate checkOut = DateUtil.parseDateToLocalDate(obj.getCheckOut());
 
         if (checkIn.isAfter(checkOut)) {
-            sendErrorEvent(obj.getRowNumber(), new ErrorField("CheckIn", "Greater than CheckOut Date"),obj);
+            errorFieldList.add(new ErrorField("CheckIn", "CheckIn is greater than CheckOut Date"));
             return false;
         }
         return true;

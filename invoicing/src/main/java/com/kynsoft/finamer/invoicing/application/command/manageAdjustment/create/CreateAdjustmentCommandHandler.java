@@ -53,7 +53,11 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
                 roomRateDto,
                 command.getEmployee()));
 
-                roomRateService.calculateInvoiceAmount(this.roomRateService.findById(roomRateDto.getId()));
+               
+                if(command.getAmount() != null){
+                roomRateDto.setInvoiceAmount(roomRateDto.getInvoiceAmount() + command.getAmount());
+                }
+
                 bookingService.calculateInvoiceAmount(this.bookingService.findById(roomRateDto.getBooking().getId()));
                 invoiceService.calculateInvoiceAmount(this.invoiceService.findById(roomRateDto.getBooking().getInvoice().getId()));
     }

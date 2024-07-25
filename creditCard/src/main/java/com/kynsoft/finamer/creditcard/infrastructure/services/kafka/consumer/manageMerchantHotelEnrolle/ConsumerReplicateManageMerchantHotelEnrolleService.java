@@ -21,7 +21,7 @@ public class ConsumerReplicateManageMerchantHotelEnrolleService {
     @KafkaListener(topics = "finamer-replicate-manage-merchant-hotel-enrolle", groupId = "vcc-entity-replica")
     public void listen(ReplicateManageMerchantHotelEnrolleKafka entity) {
         try {
-            CreateManageMerchantHotelEnrolleCommand command = new CreateManageMerchantHotelEnrolleCommand(entity.getId(), entity.getManagerMerchant(), entity.getManagerHotel(), entity.getEnrrolle());
+            CreateManageMerchantHotelEnrolleCommand command = new CreateManageMerchantHotelEnrolleCommand(entity.getId(), entity.getManagerMerchant(), entity.getManagerHotel(), entity.getEnrrolle(), entity.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageMerchantHotelEnrolleService.class.getName()).log(Level.SEVERE, null, ex);

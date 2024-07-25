@@ -29,13 +29,15 @@ public class CreatePaymentCommand implements ICommand {
     private Double paymentAmount;
     private String remark;
     private Status status;
+    private UUID employee;
 
     private PaymentDto payment;
     private List<CreateAttachmentRequest> attachments;
 
     public CreatePaymentCommand(Status status, UUID paymentSource, String reference, LocalDate transactionDate, 
                                 UUID paymentStatus, UUID client, UUID agency, UUID hotel, UUID bankAccount, 
-                                UUID attachmentStatus, Double paymentAmount, String remark, List<CreateAttachmentRequest> attachments) {
+                                UUID attachmentStatus, Double paymentAmount, String remark, List<CreateAttachmentRequest> attachments,
+                                UUID employee) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.paymentSource = paymentSource;
@@ -50,6 +52,7 @@ public class CreatePaymentCommand implements ICommand {
         this.paymentAmount = paymentAmount;
         this.remark = remark;
         this.attachments = attachments;
+        this.employee = employee;
     }
 
     public static CreatePaymentCommand fromRequest(CreatePaymentRequest request) {
@@ -66,7 +69,8 @@ public class CreatePaymentCommand implements ICommand {
                 request.getAttachmentStatus(),
                 request.getPaymentAmount(),
                 request.getRemark(),
-                request.getAttachments()
+                request.getAttachments(),
+                request.getEmployee()
         );
     }
 

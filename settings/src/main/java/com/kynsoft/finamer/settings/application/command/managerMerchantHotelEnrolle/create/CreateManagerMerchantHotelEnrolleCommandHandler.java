@@ -64,6 +64,6 @@ public class CreateManagerMerchantHotelEnrolleCommandHandler implements ICommand
                                                 command.getStatus()
                                         ));
 
-        this.producerHotelEnrolleService.create(new ReplicateManageMerchantHotelEnrolleKafka(command.getId(), command.getManagerMerchant(), command.getManagerHotel(), command.getEnrolle()));
+        this.producerHotelEnrolleService.create(new ReplicateManageMerchantHotelEnrolleKafka(command.getId(), command.getManagerMerchant(), command.getManagerHotel(), command.getEnrolle(), command.getStatus().name()));
     }
 }

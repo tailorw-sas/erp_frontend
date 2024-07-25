@@ -121,6 +121,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                         command.getBookingCommands().get(i).getFirstName(),
                                         command.getBookingCommands().get(i).getLastName(),
                                         command.getBookingCommands().get(i).getInvoiceAmount(),
+                                        command.getBookingCommands().get(i).getInvoiceAmount(),
                                         command.getBookingCommands().get(i).getRoomNumber(),
                                         command.getBookingCommands().get(i).getCouponNumber(),
                                         command.getBookingCommands().get(i).getAdults(),
@@ -238,13 +239,19 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
                 String invoiceNumber = InvoiceType.getInvoiceTypeCode(command.getInvoiceCommand().getInvoiceType());
 
+                if(hotelDto.getManageTradingCompanies() != null && hotelDto.getManageTradingCompanies().getIsApplyInvoice()){
+                        invoiceNumber+= "-" + hotelDto.getManageTradingCompanies().getCode();
+                }else{
+                        invoiceNumber+= "-" + hotelDto.getCode();
+                }
+
                 ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
                                 invoiceNumber,
                                 command.getInvoiceCommand().getInvoiceDate(), command.getInvoiceCommand().getDueDate(),
                                 command.getInvoiceCommand().getIsManual(),
-                                command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
+                                command.getInvoiceCommand().getInvoiceAmount(), command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
                                 command.getInvoiceCommand().getInvoiceType(), EInvoiceStatus.PROCECSED,
-                                false, bookings, attachmentDtos, null, null, null, null);
+                                false, bookings, attachmentDtos, null, null, null, null, null);
 
                 ManageInvoiceDto created = service.create(invoiceDto);
 

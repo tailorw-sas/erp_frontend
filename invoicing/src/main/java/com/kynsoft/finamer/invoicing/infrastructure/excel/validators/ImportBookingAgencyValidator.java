@@ -6,18 +6,20 @@ import com.kynsoft.finamer.invoicing.application.excel.ExcelRuleValidator;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.List;
+
 public class ImportBookingAgencyValidator extends ExcelRuleValidator<BookingRow> {
 
     private final IManageAgencyService manageAgencyService;
-    public ImportBookingAgencyValidator(ApplicationEventPublisher applicationEventPublisher, IManageAgencyService manageAgencyService) {
-        super(applicationEventPublisher);
+    public ImportBookingAgencyValidator( IManageAgencyService manageAgencyService) {
+
         this.manageAgencyService = manageAgencyService;
     }
 
     @Override
-    public boolean validate(BookingRow obj) {
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         if(!manageAgencyService.existByCode(obj.getManageAgencyCode())){
-            sendErrorEvent(obj.getRowNumber(),new ErrorField("Agency","Agency not exist"),obj);
+            errorFieldList.add(new ErrorField("Agency","Agency not exist"));
             return false;
         }
         return true;

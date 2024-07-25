@@ -8,6 +8,7 @@ import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeCantBeNullRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeSizeRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageModuleService;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentAttachmentStatusService;
@@ -37,6 +38,10 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
         RulesChecker.checkRule(new ManagePaymentAttachmentStatusCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManagePaymentAttachmentStatusCodeMustBeUniqueRule(service, command.getCode(), command.getId()));
         RulesChecker.checkRule(new ManagePaymentAttachmentStatusNameMustBeUniqueRule(service, command.getName(), command.getId()));
+        if (command.getDefaults()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusDefaultMustBeUniqueRule(service, command.getId()));
+        }
+
         List<ManagePaymentAttachmentStatusDto> managePaymentAttachmentStatusDtoList = service.findByIds(command.getNavigate());
 
         ManageModuleDto moduleDto = moduleService.findById(command.getModule());

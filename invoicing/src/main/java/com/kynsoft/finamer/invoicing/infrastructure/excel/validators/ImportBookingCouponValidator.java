@@ -1,16 +1,15 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.validators;
 
+import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.application.excel.ExcelRuleValidator;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import org.springframework.context.ApplicationEventPublisher;
 
-public class ImportBookingCouponValidator extends ExcelRuleValidator<BookingRow> {
+import java.util.List;
 
-    public ImportBookingCouponValidator(ApplicationEventPublisher applicationEventPublisher) {
-        super(applicationEventPublisher);
-    }
+public class ImportBookingCouponValidator extends ExcelRuleValidator<BookingRow> {
     @Override
-    public boolean validate(BookingRow obj) {
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
        //Manage agency
         return true;
     }

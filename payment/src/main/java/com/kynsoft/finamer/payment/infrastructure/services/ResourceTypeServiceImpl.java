@@ -105,4 +105,9 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
         return this.repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public Long countByDefaultAndNotId(UUID id) {
+        return this.repositoryQuery.countByDefaultAndNotId(id);
+    }
+
 }

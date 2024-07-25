@@ -40,6 +40,15 @@ public class UpdateManagePaymentAttachmentStatusCommand implements ICommand {
     
     public static UpdateManagePaymentAttachmentStatusCommand fromRequest(UpdateManagePaymentAttachmentStatusRequest request,
                                                                          UUID id){
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("LLega: " + request.getModule());
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
         return new UpdateManagePaymentAttachmentStatusCommand(id, request.getCode(), request.getName(),
                 request.getStatus(), request.getNavigate(), request.getModule(), request.getShow(), request.getDefaults(),
                 request.getPermissionCode(), request.getDescription());

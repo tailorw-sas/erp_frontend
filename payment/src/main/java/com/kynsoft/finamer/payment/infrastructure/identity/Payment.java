@@ -11,6 +11,7 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -67,8 +68,11 @@ public class Payment implements Serializable {
     @JoinColumn(name = "attachment_status_id")
     private ManagePaymentAttachmentStatus attachmentStatus;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "resource")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "resource")
     private List<MasterPaymentAttachment> attachments;
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "payment")
+    private List<PaymentDetail> paymentDetails;
 
     private Double paymentAmount;
     private Double paymentBalance;
@@ -106,11 +110,6 @@ public class Payment implements Serializable {
         this.identified = dto.getIdentified();
         this.notIdentified = dto.getNotIdentified();
         this.remark = dto.getRemark();
-        this.attachments = dto.getAttachments() != null ? dto.getAttachments().stream().map(_attachment -> {
-            MasterPaymentAttachment attachment = new MasterPaymentAttachment(_attachment);
-            attachment.setResource(this);
-            return attachment;
-        }).collect(Collectors.toList()) : null;
     }
 
     public PaymentDto toAggregate(){

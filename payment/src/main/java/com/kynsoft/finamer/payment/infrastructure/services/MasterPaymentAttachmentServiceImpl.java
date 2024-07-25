@@ -42,6 +42,15 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
     }
 
     @Override
+    public void create(List<MasterPaymentAttachmentDto> dtos) {
+        List<MasterPaymentAttachment> masterPaymentAttachments = new ArrayList<>();
+        for (MasterPaymentAttachmentDto dto : dtos) {
+            masterPaymentAttachments.add(new MasterPaymentAttachment(dto));
+        }
+        this.repositoryCommand.saveAll(masterPaymentAttachments);
+    }
+
+    @Override
     public void update(MasterPaymentAttachmentDto dto) {
         MasterPaymentAttachment update = new MasterPaymentAttachment(dto);
 

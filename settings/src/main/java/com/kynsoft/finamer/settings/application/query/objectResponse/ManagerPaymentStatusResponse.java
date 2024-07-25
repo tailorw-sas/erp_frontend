@@ -21,6 +21,7 @@ public class ManagerPaymentStatusResponse implements IResponse {
     private Status status;
     private Boolean collected;
     private String description;
+    private Boolean defaults;
 
     public ManagerPaymentStatusResponse(ManagerPaymentStatusDto dto) {
         this.id = dto.getId();
@@ -29,5 +30,6 @@ public class ManagerPaymentStatusResponse implements IResponse {
         this.status = dto.getStatus();
         this.collected = dto.getCollected();
         this.description = dto.getDescription();
+        this.defaults = dto.getDefaults() != null ? dto.getDefaults() : null;
     }
 }

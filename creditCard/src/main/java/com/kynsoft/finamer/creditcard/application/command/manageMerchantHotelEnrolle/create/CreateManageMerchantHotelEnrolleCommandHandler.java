@@ -33,6 +33,6 @@ public class CreateManageMerchantHotelEnrolleCommandHandler implements ICommandH
                                                 command.getId(),
                                                 manageMerchantDto,
                                                 hotelDto,
-                                                command.getEnrolle()));
+                                                command.getEnrolle(), command.getStatus()));
     }
 }

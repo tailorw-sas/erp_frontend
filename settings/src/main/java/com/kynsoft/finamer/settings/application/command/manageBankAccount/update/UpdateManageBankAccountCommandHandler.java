@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageBankAccount.updat
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageBankAccountKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -14,6 +15,7 @@ import com.kynsoft.finamer.settings.domain.services.IManageBankAccountService;
 import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import com.kynsoft.finamer.settings.domain.services.IManagerAccountTypeService;
 import com.kynsoft.finamer.settings.domain.services.IManagerBankService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageBankAccount.ProducerUpdateManageBankAccount;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -30,11 +32,18 @@ public class UpdateManageBankAccountCommandHandler implements ICommandHandler<Up
 
     private final IManagerAccountTypeService accountTypeService;
 
-    public UpdateManageBankAccountCommandHandler(IManageBankAccountService service, IManagerBankService bankService, IManageHotelService hotelService, IManagerAccountTypeService accountTypeService) {
+    private final ProducerUpdateManageBankAccount producerUpdateManageBankAccount;
+
+    public UpdateManageBankAccountCommandHandler(IManageBankAccountService service, 
+                                                 IManagerBankService bankService, 
+                                                 IManageHotelService hotelService, 
+                                                 IManagerAccountTypeService accountTypeService,
+                                                 ProducerUpdateManageBankAccount producerUpdateManageBankAccount) {
         this.service = service;
         this.bankService = bankService;
         this.hotelService = hotelService;
         this.accountTypeService = accountTypeService;
+        this.producerUpdateManageBankAccount = producerUpdateManageBankAccount;
     }
 
     @Override
@@ -53,6 +62,7 @@ public class UpdateManageBankAccountCommandHandler implements ICommandHandler<Up
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerUpdateManageBankAccount.update(new UpdateManageBankAccountKafka(dto.getId(), dto.getAccountNumber(), dto.getStatus().name(), dto.getManageBank().getName()));
         }
     }
 

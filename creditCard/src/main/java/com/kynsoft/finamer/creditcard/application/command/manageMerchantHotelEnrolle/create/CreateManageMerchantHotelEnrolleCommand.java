@@ -17,6 +17,7 @@ public class CreateManageMerchantHotelEnrolleCommand implements ICommand {
     private UUID manageMerchant;
     private UUID manageHotel;
     private String enrolle;
+    private String status;
 
     @Override
     public ICommandMessage getMessage() {

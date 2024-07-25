@@ -16,4 +16,5 @@ public class ManageBankAccountDto {
     private UUID id;
     private String accountNumber;
     private String status;
+    private String nameOfBank;
 }

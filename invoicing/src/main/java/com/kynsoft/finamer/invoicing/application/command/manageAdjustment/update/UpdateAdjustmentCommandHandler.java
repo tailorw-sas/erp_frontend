@@ -45,7 +45,7 @@ public class UpdateAdjustmentCommandHandler implements ICommandHandler<UpdateAdj
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateDouble(dto::setAmount, command.getAmount(), dto.getAmount(), update::setUpdate);
+        
         UpdateIfNotNull.updateLocalDateTime(dto::setDate, command.getDate(), dto.getDate(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
 
@@ -59,14 +59,19 @@ public class UpdateAdjustmentCommandHandler implements ICommandHandler<UpdateAdj
 
 
 
-        if(!command.getAmount().equals(dto.getAmount())){
-            roomRateDto.setInvoiceAmount(roomRateDto.getInvoiceAmount() + command.getAmount()
-            );
-        this.roomRateService.update(roomRateDto);
+        if(command.getAmount() != null){
+           
+            if(command.getAmount() != null){
+                roomRateDto.setInvoiceAmount(roomRateDto.getInvoiceAmount() - dto.getAmount());
+                roomRateDto.setInvoiceAmount(roomRateDto.getInvoiceAmount() + command.getAmount());
+                }
 
         bookingService.calculateInvoiceAmount(this.bookingService.findById(roomRateDto.getBooking().getId()));
                 invoiceService.calculateInvoiceAmount(this.invoiceService.findById(roomRateDto.getBooking().getInvoice().getId()));
         }
+
+        UpdateIfNotNull.updateDouble(dto::setAmount, command.getAmount(), dto.getAmount(), update::setUpdate);
+
         if (update.getUpdate() > 0) {
             this.adjustmentService.update(dto);
         }

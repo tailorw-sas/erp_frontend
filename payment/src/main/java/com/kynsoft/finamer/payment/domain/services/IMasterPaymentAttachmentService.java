@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface IMasterPaymentAttachmentService {
     UUID create(MasterPaymentAttachmentDto dto);
 
+    void create(List<MasterPaymentAttachmentDto> dtos);
+
     void update(MasterPaymentAttachmentDto dto);
 
     void delete(MasterPaymentAttachmentDto dto);

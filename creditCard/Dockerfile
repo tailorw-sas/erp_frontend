@@ -5,7 +5,6 @@ RUN microdnf update \
     && microdnf install --nodocs \
     tar \
     gzip \
-    git \
     && microdnf clean all \
     && rm -rf /var/cache/yum
 

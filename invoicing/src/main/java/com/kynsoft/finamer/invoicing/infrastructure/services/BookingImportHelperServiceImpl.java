@@ -5,11 +5,13 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRatePlanDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupBy;
 import com.kynsoft.finamer.invoicing.domain.services.IBookingImportHelperService;
@@ -20,6 +22,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportCacheRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportRowErrorRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -46,16 +48,19 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private final BookingImportCacheRedisRepository repository;
 
+    private final BookingImportRowErrorRedisRepository errorRedisRepository;
+
 
     public BookingImportHelperServiceImpl(IManageAgencyService agencyService, IManageHotelService manageHotelService,
-                                          IManageInvoiceService invoiceService, IManageRatePlanService ratePlanService, IManageRoomTypeService roomTypeService,
-                                          BookingImportCacheRedisRepository repository) {
+                                          IManageInvoiceService invoiceService, IManageRatePlanService ratePlanService,
+                                          IManageRoomTypeService roomTypeService, BookingImportCacheRedisRepository repository, BookingImportRowErrorRedisRepository errorRedisRepository) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.invoiceService = invoiceService;
         this.ratePlanService = ratePlanService;
         this.roomTypeService = roomTypeService;
         this.repository = repository;
+        this.errorRedisRepository = errorRedisRepository;
     }
 
     @Override
@@ -67,8 +72,10 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     @Transactional
     @Override
     public void createInvoiceFromGroupedBooking(String importProcessId) {
-        this.createInvoiceGroupingByCoupon(importProcessId);
-        this.createInvoiceGroupingByBooking(importProcessId);
+        if(!errorRedisRepository.existsByImportProcessId(importProcessId)) {
+            this.createInvoiceGroupingByCoupon(importProcessId);
+            this.createInvoiceGroupingByBooking(importProcessId);
+        }
     }
 
     @Override
@@ -79,6 +86,11 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     @Override
     public boolean canImportRow(BookingRow bookingRow,EImportType importType) {
+       if(!manageHotelService.existByCode(bookingRow.getManageHotelCode())){
+           //En caso de que el hotel no exista , retornamos que se puede importar,
+           //para que los se muestren en los errores la ausencia del hotel
+           return true;
+       }
         ManageHotelDto hotelDto= manageHotelService.findByCode(bookingRow.getManageHotelCode());
         if (importType.equals(EImportType.VIRTUAL)){
             return hotelDto.isVirtual();
@@ -91,8 +103,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private void createInvoiceGroupingByCoupon(String importProcessId) {
         Map<GroupBy, List<BookingRow>> grouped;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
-        grouped = bookingImportCacheStream.stream().parallel().map(BookingImportCache::getBookingRow)
-                .collect(Collectors.groupingByConcurrent(bookingRow ->
+        grouped = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
+                .collect(Collectors.groupingBy(bookingRow ->
                         new GroupBy(bookingRow.getManageAgencyCode(), bookingRow.getManageHotelCode(), bookingRow.getCoupon()))
                 );
 
@@ -109,9 +121,9 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private void createInvoiceGroupingByBooking(String importProcessId) {
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByBooking.name(), importProcessId);
         bookingImportCacheStream.stream().parallel().forEach(bookingImportCache -> {
-            ManageAgencyDto agency = agencyService.findByCode(bookingImportCache.getBookingRow().getManageAgencyCode());
-            ManageHotelDto hotel = manageHotelService.findByCode(bookingImportCache.getBookingRow().getManageHotelCode());
-            this.createInvoiceWithBooking(agency, hotel, List.of(bookingImportCache.getBookingRow()));
+            ManageAgencyDto agency = agencyService.findByCode(bookingImportCache.toAggregate().getManageAgencyCode());
+            ManageHotelDto hotel = manageHotelService.findByCode(bookingImportCache.toAggregate().getManageHotelCode());
+            this.createInvoiceWithBooking(agency, hotel, List.of(bookingImportCache.toAggregate()));
         });
     }
 
@@ -129,21 +141,36 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             bookingDto.setRatePlan(ratePlanDto);
             bookingDto.setRoomType(roomTypeDto);
             bookingDto.setId(UUID.randomUUID());
+            ManageRoomRateDto manageRoomRateDto = new ManageRoomRateDto();
+            manageRoomRateDto.setId(UUID.randomUUID());
+            manageRoomRateDto.setAdults(bookingDto.getAdults());
+            manageRoomRateDto.setChildren(bookingDto.getChildren());
+            manageRoomRateDto.setCheckIn(bookingDto.getCheckIn());
+            manageRoomRateDto.setCheckOut(bookingDto.getCheckOut());
+            manageRoomRateDto.setHotelAmount(bookingDto.getHotelAmount());
+            manageRoomRateDto.setNights(bookingDto.getNights());
+            manageRoomRateDto.setRoomNumber(bookingDto.getRoomNumber());
+            bookingDto.setRoomRates(List.of(manageRoomRateDto));
             return bookingDto;
         }).toList();
         manageInvoiceDto.setBookings(bookingDtos);
         manageInvoiceDto.setId(UUID.randomUUID());
         manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
         manageInvoiceDto.setInvoiceAmount(InvoiceUtils.calculateInvoiceAmount(manageInvoiceDto));
+        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
+        if(hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()){
+            invoiceNumber+= "-" + hotel.getManageTradingCompanies().getCode();
+        }else{
+            invoiceNumber+= "-" + hotel.getCode();
+        }
+        manageInvoiceDto.setInvoiceNumber(invoiceNumber);
         invoiceService.create(manageInvoiceDto);
-
-
     }
     private void createCache(BookingRow bookingRow,String generationType){
-        BookingImportCache bookingImportCache = new BookingImportCache();
-        bookingImportCache.setBookingRow(bookingRow);
+        BookingImportCache bookingImportCache = new BookingImportCache(bookingRow);
         bookingImportCache.setGenerationType(generationType);
         bookingImportCache.setImportProcessId(bookingRow.getImportProcessId());
         repository.save(bookingImportCache);
     }
+
 }

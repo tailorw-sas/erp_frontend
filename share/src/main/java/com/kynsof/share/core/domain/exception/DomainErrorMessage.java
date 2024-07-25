@@ -280,7 +280,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     PAYMENT_TRANSACTION_DATE_IS_BEFORE_CURRENT_DATE(1061, Series.DOMAIN_ERROR, "The provided transaction date must be before the current date."),
     PAYMENT_TRANSACTION_DATE_VALIDATE_CLOSE_OPERATION(1062, Series.DOMAIN_ERROR, "The selected date does not comply with the Close Operation."),
     EXCEL_IMPORT_FORMAT_ERROR(1061,Series.DOMAIN_ERROR,"Invalid excel content."),
-    EXCEL_SHEET_EMPTY_FORMAT_ERROR(1062,Series.DOMAIN_ERROR,"Excel sheet is empty."),
+    EXCEL_SHEET_EMPTY_FORMAT_ERROR(1062,Series.DOMAIN_ERROR,"There is no data to import."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_CASH(1063, Series.DOMAIN_ERROR,"Payment Transaction Type marked with cash is not acceptable: neither deposit nor applies to deposit should be marked."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_DEPOSIT(1064, Series.DOMAIN_ERROR,"Payment Transaction Type marked with deposit is not acceptable: neither cash nor applies to deposit should be marked."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_APPLY_DEPOSIT(1065, Series.DOMAIN_ERROR, "Payment Transaction Type marked with apply deposit is not acceptable: neither cash nor deposit should be marked."),
@@ -289,7 +289,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     INVOICE_CLOSE_OPERATION_OUT_OF_RANGE(1068, Series.DOMAIN_ERROR, "Invoice date out of schedule range"),
     CHECK_INVOICE_OF_TYPE_INCOME(1069, Series.DOMAIN_ERROR, "Invoice of type income. It is not possible to create a new booking."),
     VCC_WRONG_CALCULATION_TYPE(1070, Series.DOMAIN_ERROR, "The calculation type is wrong."),
-    VCC_TRANSACTION_CANNOT_BE_REFUNDED(1071, Series.DOMAIN_ERROR, "This transaction cannot be refunded.");
+    VCC_TRANSACTION_CANNOT_BE_REFUNDED(1071, Series.DOMAIN_ERROR, "This transaction cannot be refunded."),
+    PAYMENT_ATTACHMENT_STATUS_HISTORY_NOT_FOUND(1072, Series.DOMAIN_ERROR, "Payment Attachment Status History not found.");
 
     private static final DomainErrorMessage[] VALUES;
 

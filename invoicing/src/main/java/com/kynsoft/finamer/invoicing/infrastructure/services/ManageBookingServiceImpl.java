@@ -55,6 +55,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
             }
 
             dto.setInvoiceAmount(InvoiceAmount);
+            dto.setDueAmount(InvoiceAmount);
 
             this.update(dto);
         }

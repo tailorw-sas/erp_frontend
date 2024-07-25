@@ -154,7 +154,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_BANK_ACCOUNT -> {//
                     for (ManageBankAccountDto bankAccountDto : this.manageBankAccountService.findAllToReplicate()) {
-                        this.replicateManageBankAccount.create(new ReplicateManageBankAccountKafka(bankAccountDto.getId(), bankAccountDto.getAccountNumber(), bankAccountDto.getStatus().name()));
+                        this.replicateManageBankAccount.create(new ReplicateManageBankAccountKafka(bankAccountDto.getId(), bankAccountDto.getAccountNumber(), bankAccountDto.getStatus().name(), bankAccountDto.getManageBank().getName()));
                     }
                 }
                 case MANAGE_EMPLOYEE -> {//

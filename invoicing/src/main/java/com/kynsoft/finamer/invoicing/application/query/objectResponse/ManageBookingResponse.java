@@ -28,6 +28,7 @@ public class ManageBookingResponse implements IResponse {
     private String firstName;
     private String lastName;
     private Double invoiceAmount;
+    private Double dueAmount;
     private String roomNumber;
     private String couponNumber;
     private Integer adults;
@@ -57,6 +58,7 @@ public class ManageBookingResponse implements IResponse {
         this.lastName = dto.getLastName();
         this.firstName = dto.getFirstName();
         this.invoiceAmount = dto.getInvoiceAmount();
+        this.dueAmount = dto.getDueAmount();
         this.roomNumber = dto.getRoomNumber();
         this.couponNumber = dto.getCouponNumber();
         this.adults = dto.getAdults();

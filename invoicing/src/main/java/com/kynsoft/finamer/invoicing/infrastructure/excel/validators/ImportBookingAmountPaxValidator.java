@@ -5,21 +5,18 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.List;
+
 public class ImportBookingAmountPaxValidator extends ExcelRuleValidator<BookingRow> {
 
-
-    public ImportBookingAmountPaxValidator(ApplicationEventPublisher applicationEventPublisher) {
-        super(applicationEventPublisher);
-    }
-
     @Override
-    public boolean validate(BookingRow obj) {
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         if (obj.getAmountPAX()==0){
-            sendErrorEvent(obj.getRowNumber(),new ErrorField("Amount PAX", "Amount PAX must be not 0"),obj);
+            errorFieldList.add(new ErrorField("Amount PAX", "Amount PAX must be not 0"));
             return false;
         }
         else if (obj.getAdults() + obj.getChildren() != obj.getAmountPAX()){
-            sendErrorEvent(obj.getRowNumber(),new ErrorField("Amount PAX","Amount PAX is different from amount of the people in the reservation "),obj);
+            errorFieldList.add(new ErrorField("Amount PAX","Amount PAX is different from amount of the people in the reservation"));
             return false;
         }
         return true;

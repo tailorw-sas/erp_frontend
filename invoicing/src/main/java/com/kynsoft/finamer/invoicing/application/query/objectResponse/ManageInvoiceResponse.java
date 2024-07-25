@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -26,6 +27,7 @@ public class ManageInvoiceResponse implements IResponse {
     private LocalDate invoiceDate;
     private Boolean isManual;
     private Double invoiceAmount;
+    private Double dueAmount;
     private ManageHotelDto hotel;
     private ManageAgencyDto agency;
     private EInvoiceType invoiceType;
@@ -36,6 +38,7 @@ public class ManageInvoiceResponse implements IResponse {
     private LocalDate reSendDate;
     private ManageInvoiceTypeResponse manageInvoiceType;
     private ManageInvoiceStatusResponse manageInvoiceStatus;
+    private LocalDateTime createdAt;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -44,6 +47,7 @@ public class ManageInvoiceResponse implements IResponse {
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
         this.invoiceAmount = dto.getInvoiceAmount();
+        this.dueAmount = dto.getDueAmount();
         this.hotel = dto.getHotel();
         this.agency = dto.getAgency();
         this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
@@ -54,5 +58,6 @@ public class ManageInvoiceResponse implements IResponse {
         this.reSendDate = dto.getReSendDate();
         this.manageInvoiceType = dto.getManageInvoiceType() != null ? new ManageInvoiceTypeResponse(dto.getManageInvoiceType()) : null;
         this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null ? new ManageInvoiceStatusResponse(dto.getManageInvoiceStatus()) : null;
+        this.createdAt = dto.getCreatedAt();
     }
 }

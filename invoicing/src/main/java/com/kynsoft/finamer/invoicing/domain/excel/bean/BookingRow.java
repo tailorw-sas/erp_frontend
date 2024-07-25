@@ -3,13 +3,15 @@ package com.kynsoft.finamer.invoicing.domain.excel.bean;
 import com.kynsof.share.core.application.excel.CustomCellType;
 import com.kynsof.share.core.application.excel.annotation.Cell;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.data.redis.core.index.Indexed;
 
 @Data
 public class BookingRow {
     private String importProcessId;
-
     @Cell(position = -1)
     private int rowNumber;
     @Cell(position = 0,cellType = CustomCellType.DATAFORMAT)
@@ -73,6 +75,7 @@ public class BookingRow {
         manageBookingDto.setDescription(this.remarks);
         manageBookingDto.setRoomNumber(String.valueOf(this.roomNumber));
         manageBookingDto.setInvoiceAmount(this.invoiceAmount);
+        manageBookingDto.setDueAmount(this.invoiceAmount);
         // manageBookingDto.setAmountPax();
         manageBookingDto.setBookingDate(DateUtil.parseDateToDateTime(this.bookingDate));
         return manageBookingDto;

@@ -66,7 +66,7 @@ public class UpdateManagerMerchantHotelEnrolleCommandHandler implements ICommand
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerUpdateManageMerchantHotelEnrolleService.update(new UpdateManageMerchantHotelEnrolleKafka(test.getId(), test.getManagerMerchant().getId(), test.getManagerHotel().getId(), test.getEnrrolle()));
+            this.producerUpdateManageMerchantHotelEnrolleService.update(new UpdateManageMerchantHotelEnrolleKafka(test.getId(), test.getManagerMerchant().getId(), test.getManagerHotel().getId(), test.getEnrrolle(), test.getStatus().name()));
         }
 
     }

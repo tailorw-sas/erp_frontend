@@ -16,7 +16,7 @@ public class MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule extends Busin
     public MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(IMasterPaymentAttachmentService service, UUID resourceId, String fileName) {
         super(
                 DomainErrorMessage.ATTACHMENT_TYPE_CHECK_DEFAULT,
-                new ErrorField("defaults", "Error uploading attachment file name " + fileName + " " + DomainErrorMessage.ATTACHMENT_TYPE_CHECK_DEFAULT.getReasonPhrase())
+                new ErrorField("defaults", DomainErrorMessage.ATTACHMENT_TYPE_CHECK_DEFAULT.getReasonPhrase())
         );
         this.service = service;
         this.resourceId = resourceId;
