@@ -12,7 +12,7 @@
                 </repository>
                 <repository>
                     <id>github</id>
-                    <url>https://maven.pkg.github.com/dany0919/share</url>
+                    <url>https://maven.pkg.github.com/tailorwr/finamer-backend</url>
                     <snapshots>
                         <enabled>true</enabled>
                     </snapshots>
@@ -24,7 +24,7 @@
     <servers>
         <server>
             <id>github</id>
-            <username>dany0919</username>
+            <username>tailorwr</username>
             <password></password>
         </server>
     </servers>
