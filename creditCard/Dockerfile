@@ -40,10 +40,7 @@ ARG PACKAGE_TOKEN
 ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 
 COPY rc-settings.xml settings.xml
-ARG PASSWORD_LITERAL=<password></password>
-ARG NEW_PASSWORD_LITERAL=<password>$PACKAGE_TOKEN</password>
-RUN sed -i "s|$PASSWORD_LITERAL|$NEW_PASSWORD_LITERAL |g" settings.xml
-RUN cat settings.xml
+RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN |g" settings.xml
 
 # Build
 RUN mvn dependency:go-offline -f pom.xml -s settings.xml
