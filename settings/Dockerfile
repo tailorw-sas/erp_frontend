@@ -38,8 +38,11 @@ COPY . /build
 ARG PACKAGE_TOKEN
 ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 
+COPY rc-settings.xml settings.xml
+RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN |g" settings.xml
+
 # Build
-RUN mvn dependency:go-offline -f pom.xml -s rc-settings.xml
+RUN mvn dependency:go-offline -f pom.xml -s settings.xml
 # RUN mvn -B clean package -Pnative  --no-transfer-progress
 # RUN mvn package -Pnative -f pom.xml
 RUN mvn --no-transfer-progress clean package -DskipTests
