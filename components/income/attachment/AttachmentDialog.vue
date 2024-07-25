@@ -2,7 +2,7 @@
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { Container } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -50,12 +50,13 @@ const props = defineProps({
 
 const { data: userData } = useAuth()
 
+console.log(userData)
+
 const invoice = ref<any>(props.selectedInvoiceObj)
-const defaultAttachmentType = ref<any>(null)
 
 const filterToSearch = ref({
   criteria: 'invoice.invoiceId',
-  search: invoice.value.invoiceId
+  search: invoice.value.incomeId
 })
 
 const typeError = ref(false)
@@ -72,6 +73,8 @@ const confirm = useConfirm()
 
 const loadingSearch = ref(false)
 
+console.log(invoice.value)
+
 const loadingDelete = ref(false)
 
 const idItem = ref('')
@@ -82,7 +85,7 @@ const item = ref<GenericObject>({
   remark: '',
   invoice: props.selectedInvoice,
   attachment_id: '',
-  resource: invoice.value.invoiceId,
+  resource: invoice.value.incomeId,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId,
   // @ts-expect-error
@@ -96,7 +99,7 @@ const itemTemp = ref<GenericObject>({
   remark: '',
   invoice: props.selectedInvoice,
   attachment_id: '',
-  resource: invoice.value.invoiceId,
+  resource: invoice.value.incomeId,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId,
   // @ts-expect-error
@@ -111,7 +114,7 @@ const Fields: Array<Container> = [
         field: 'resource',
         header: 'Resource',
         dataType: 'number',
-        class: 'field mb-3 col-12 md: required',
+        class: 'field col-12 md: required',
         headerClass: 'mb-1',
         disabled: true
       },
@@ -119,7 +122,7 @@ const Fields: Array<Container> = [
         field: 'resourceType',
         header: 'Transaction Type',
         dataType: 'text',
-        class: 'field mb-3 col-12 md: required',
+        class: 'field col-12 md: required',
         headerClass: 'mb-1',
         disabled: true
       },
@@ -128,7 +131,7 @@ const Fields: Array<Container> = [
         field: 'type',
         header: 'Attachment Type',
         dataType: 'select',
-        class: 'field mb-3 col-12 md: required',
+        class: 'field col-12 md: required',
         headerClass: 'mb-1',
         validation: z.object({
           id: z.string(),
@@ -143,7 +146,7 @@ const Fields: Array<Container> = [
         field: 'file',
         header: 'Path',
         dataType: 'fileupload',
-        class: 'field mb-3 col-12 required',
+        class: 'field col-12 required',
         headerClass: 'mb-1',
 
       },
@@ -151,7 +154,7 @@ const Fields: Array<Container> = [
         field: 'filename',
         header: 'Filename',
         dataType: 'text',
-        class: 'field mb-3 col-12 required',
+        class: 'field col-12 required',
         headerClass: 'mb-1',
 
       },
@@ -227,7 +230,6 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
 
-  getInvoiceSupportAttachment()
   formReload.value++
 }
 
@@ -263,37 +265,6 @@ async function ParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
   Payload.value.filter = [...parseFilter || []]
   getList()
-}
-
-async function getInvoiceSupportAttachment() {
-  try {
-    const payload
-      = {
-        filter: [{
-          key: 'code',
-          operator: 'EQUALS',
-          value: 'INV',
-          logicalOperation: 'AND',
-
-        }],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    const response = await GenericService.search(confattachmentTypeListApi.moduleApi, confattachmentTypeListApi.uriApi, payload)
-
-    if (response?.data?.length > 0) {
-      defaultAttachmentType.value = { ...response?.data[0], fullName: `${response?.data[0]?.code}-${response?.data[0]?.name}` }
-      item.value.type = defaultAttachmentType.value
-      formReload.value++
-    }
-  }
-  catch (error) {
-    console.error('Error loading Attachment Type list:', error)
-  }
 }
 
 async function getAttachmentTypeList() {
@@ -516,10 +487,10 @@ function downloadFile() {
 
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
+  console.log(invoice.value)
 })
 
 onMounted(() => {
-  getInvoiceSupportAttachment()
   if (props.selectedInvoice) {
     Payload.value.filter = [{
       key: 'invoice.id',
@@ -537,12 +508,12 @@ onMounted(() => {
 <template>
   <Dialog
     v-model:visible="dialogVisible" modal :header="header" class=" h-fit w-fit"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
+    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" style="width: 800px;"
     @hide="closeDialog"
   >
     <div class=" w-fit h-fit overflow-auto p-2">
       <div class="flex lg:flex-row flex-column align-items-start">
-        <div class="flex flex-column" style="max-width: 900px;">
+        <div class="flex flex-column" style="max-width: 700px;">
           <div class="card p-0">
             <Accordion :active-index="0" class="mb-2">
               <AccordionTab header="Filters">

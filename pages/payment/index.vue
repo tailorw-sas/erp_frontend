@@ -53,7 +53,7 @@ const legend = ref(
     },
   ]
 )
-const filterAllDateRange = ref(true)
+const filterAllDateRange = ref(false)
 const filterToSearch = ref<GenericObject>({
   client: [allDefaultItem],
   agency: [allDefaultItem],
@@ -67,7 +67,7 @@ const filterToSearch = ref<GenericObject>({
   value: '',
   type: allDefaultItem,
   payApplied: null,
-  detail: null,
+  detail: true,
 })
 
 const filterToSearchTemp = ref<GenericObject>({
@@ -83,7 +83,7 @@ const filterToSearchTemp = ref<GenericObject>({
   value: '',
   type: allDefaultItem,
   payApplied: null,
-  detail: null,
+  detail: true,
 })
 
 // -------------------------------------------------------------------------------------------------------
@@ -360,7 +360,7 @@ function searchAndFilter() {
     }
     payload.value.filter = [...payload.value.filter, {
       key: keyValue || (filterToSearch.value.criteria ? filterToSearch.value.criteria.id : ''),
-      operator: 'LIKE',
+      operator: 'EQUALS',
       value: filterToSearch.value.value,
       logicalOperation: 'AND',
       type: 'filterSearch',
@@ -456,16 +456,16 @@ function searchAndFilter() {
       }]
     }
 
-    // Detail
-    if (filterToSearch.value.detail !== null) {
-      payload.value.filter = [...payload.value.filter, {
-        key: 'detail',
-        operator: 'LIKE',
-        value: filterToSearch.value.detail,
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      }]
-    }
+    // // Detail
+    // if (filterToSearch.value.detail !== null) {
+    //   payload.value.filter = [...payload.value.filter, {
+    //     key: 'paymentDetails',
+    //     operator: 'EXISTS',
+    //     value: '',
+    //     logicalOperation: 'AND',
+    //     type: 'filterSearch'
+    //   }]
+    // }
   }
   getList()
 }
@@ -931,7 +931,7 @@ function toggle(event: Event, index: number) {
                   </div>
                   <div class="flex align-items-center">
                     <label for="" class="w-4rem font-bold">Value</label>
-                    <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-10rem" />
+                    <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-10rem" style="max-width: 10rem;" />
                   </div>
                 </div>
               </div>
@@ -965,14 +965,14 @@ function toggle(event: Event, index: number) {
                       />
                     </div>
 
-                    <div class="flex align-items-center ml-2">
+                    <!-- <div class="flex align-items-center ml-2">
                       <label for="detail" class="mr-2 font-bold"> Details</label>
                       <TriStateCheckbox
                         id="detail"
                         v-model="filterToSearch.detail"
                         :binary="true"
                       />
-                    </div>
+                    </div> -->
                   </div>
                 </div>
               </div>
@@ -1038,11 +1038,11 @@ function toggle(event: Event, index: number) {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
-            <Column :footer="Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100" />
-            <Column :footer="Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100" />
-            <Column :footer="Math.round((subTotals.applied + Number.EPSILON) * 100) / 100" />
-            <Column :footer="Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100" />
+            <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold;" />
+            <Column :footer="Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
+            <Column :footer="Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
+            <Column :footer="Math.round((subTotals.applied + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
+            <Column :footer="Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
             <Column :colspan="0" />
             <Column :colspan="0" />
           </Row>

@@ -12,8 +12,9 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import DialogPaymentDetailForm from '~/components/payment/DialogPaymentDetailForm.vue'
-import PaymentAttachmentDialog from '~/components/payment/PaymentAttachmentDialog.vue'
-import { statusToBoolean, statusToString } from '~/utils/helpers'
+import AttachmentIncomeDialog from '~/components/income/attachment/AttachmentDialog.vue'
+import AttachmentIncomeHistoryDialog from '~/components/income/attachment/AttachmentIncomeHistoryDialog.vue'
+import { statusToString } from '~/utils/helpers'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const route = useRoute()
@@ -29,6 +30,7 @@ const formReload = ref(0)
 const formReloadAgency = ref(0)
 const dialogPaymentDetailFormReload = ref(0)
 const loadingSaveAll = ref(false)
+const loadingSaveAdjustment = ref(false)
 const loadingDelete = ref(false)
 const forceSave = ref(false)
 const submitEvent = new Event('')
@@ -45,7 +47,7 @@ const roomRateList = ref<any[]>([])
 const paymentStatusList = ref<any[]>([])
 const attachmentStatusList = ref<any[]>([])
 const onOffDialogPaymentDetail = ref(false)
-
+const attachmentHistoryDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 const paymentDetailsList = ref<any[]>([])
@@ -65,6 +67,16 @@ const confApiPaymentDetail = reactive({
 const confRoomRateApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-room-rate'
+})
+
+const confAdjustmentApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-adjustment'
+})
+
+const confInvoiceApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice'
 })
 
 const confBookingApi = reactive({
@@ -88,6 +100,21 @@ const roomRateOptions = ref({
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
 })
+
+const adjustmentOptions = ref({
+  tableName: 'Adjustments',
+  loading: false,
+  actionsAsMenu: false,
+})
+
+function handleAttachmentHistoryDialogOpen() {
+  attachmentHistoryDialogOpen.value = true
+}
+
+// Attachments
+function handleAttachmentDialogOpen() {
+  attachmentDialogOpen.value = true
+}
 
 const roomRatePayload = ref<IQueryRequest>({
   filter: [],
@@ -131,6 +158,15 @@ const bookingPayload = ref<IQueryRequest>({
   sortType: ENUM_SHORT_TYPE.DESC
 })
 
+const adjustmentPayload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 50,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
+
 const objApis = ref({
   invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
   invoiceStatus: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
@@ -142,7 +178,7 @@ const objApis = ref({
 })
 
 const columns: IColumn[] = [
-  { field: 'invoiceId', header: 'ID', type: 'text' },
+  { field: 'bookingId', header: 'ID', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'reservationNumber', header: 'Reservation No.', type: 'text' },
@@ -384,13 +420,13 @@ const fields: Array<FieldDefinitionType> = [
     field: 'reSendDate',
     header: 'Re-Send Date',
     dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
+    class: 'field col-12 md:col-2',
     headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Re-Send Date field is required',
-      invalid_type_error: 'The Re-Send Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Re-Send Date field cannot be greater than current date')
+    validation: z
+      .union([z.date(), z.null()])
+      .refine(date => !date || date <= dayjs().endOf('day').toDate(), {
+        message: 'The Re-Send Date field cannot be greater than current date',
+      })
   },
 
   {
@@ -402,14 +438,14 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'invoiceStatus',
-    header: 'Invoice Status',
+    header: 'Status',
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('Invoice Status'),
+    validation: validateEntityStatus('Status'),
   },
   {
     field: 'status',
-    header: 'Status',
+    header: 'Active',
     dataType: 'check',
     class: 'field col-12 md:col-1 mt-3 mb-3',
     headerClass: 'mb-1',
@@ -428,7 +464,7 @@ const item = ref({
   hotel: null,
   invoiceDate: new Date(),
   dueDate: new Date(),
-  reSendDate: '',
+  reSendDate: null,
   reSend: false,
   bankAccount: null,
   attachmentStatus: null,
@@ -449,7 +485,7 @@ const itemTemp = ref({
   invoiceType: null,
   invoiceStatus: null,
   invoiceNumber: '',
-  reSendDate: '',
+  reSendDate: null,
   reSend: false,
   invoiceDate: new Date(),
   dueDate: new Date(),
@@ -481,7 +517,9 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     dataType: 'text',
 
     class: 'field col-12 required',
-    validation: decimalSchema.shape.amount
+    validation: z.string().min(1, { message: 'The amount field is required' })
+      .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
+      .refine(value => Number.parseFloat(value) !== 0, { message: 'The amount field must be different from zero' }),
   },
   {
     field: 'date',
@@ -499,8 +537,8 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     field: 'transactionType',
     header: 'Transaction',
     dataType: 'select',
-    class: 'field col-12 required',
-    validation: validateEntityStatus('transaction'),
+    class: 'field col-12 ',
+
   },
   {
     field: 'remark',
@@ -514,8 +552,8 @@ const itemDetails = ref({
   payment: '',
   transactionType: null,
   income: null,
-  amount: 0,
-  date: '',
+  amount: '0',
+  date: new Date(),
   remark: '',
   status: true,
   employee: null,
@@ -526,9 +564,9 @@ const itemDetailsTemp = ref({
   employee: null,
   transactionType: null,
   income: null,
-  amount: 0,
+  amount: '0',
   remark: '',
-  date: '',
+  date: new Date(),
   status: true,
 })
 
@@ -539,12 +577,6 @@ const options = ref({
   loading: false,
   actionsAsMenu: false,
   messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
-})
-
-const adjustmentOptions = ref({
-  tableName: 'Adjustments',
-  loading: false,
-  actionsAsMenu: false,
 })
 
 const payloadOnChangePage = ref<PageState>()
@@ -657,6 +689,40 @@ async function getRoomRateList() {
   }
 }
 
+// Listado de booking
+async function getAdjustmentList() {
+  try {
+    adjustmentOptions.value.loading = true
+    AdjustmentTableList.value = []
+
+    const response = await GenericService.search(confAdjustmentApi.moduleApi, confAdjustmentApi.uriApi, adjustmentPayload.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+      AdjustmentTableList.value = [...AdjustmentTableList.value, {
+        ...iterator,
+        loadingEdit: false,
+        loadingDelete: false,
+        date: iterator.date.substring(0, 10),
+        transaction: `${iterator.transaction.code} - ${iterator.transaction.name}`,
+        remark: iterator.description,
+      }]
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    adjustmentOptions.value.loading = false
+  }
+}
+
 watch(idItem, () => {
   if (idItem.value) {
     bookingPayload.value.filter = [{
@@ -667,6 +733,12 @@ watch(idItem, () => {
     }]
     roomRatePayload.value.filter = [{
       key: 'booking.invoice.id',
+      operator: 'EQUALS',
+      value: idItem.value,
+      logicalOperation: 'AND'
+    }]
+    adjustmentPayload.value.filter = [{
+      key: 'roomRate.booking.invoice.id',
       operator: 'EQUALS',
       value: idItem.value,
       logicalOperation: 'AND'
@@ -731,17 +803,13 @@ async function saveItem(item: { [key: string]: any }) {
       if (AdjustmentList.value.length > 0) {
         await createPaymentDetails(AdjustmentList.value[0])
       }
-      // navigateTo('/invoice')
+      await getItemById(idItem.value)
     }
     catch (error: any) {
-      // successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
   loadingSaveAll.value = false
-  // if (successOperation) {
-  //   clearForm()
-  // }
 }
 
 async function getItemById(id: string) {
@@ -749,25 +817,11 @@ async function getItemById(id: string) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
-      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+      const response = await GenericService.getById('invoicing', 'manage-invoice', id)
       if (response) {
         item.value.id = id
-        item.value.incomeId = response.incomeId
+        item.value.incomeId = response.invoiceId
         item.value.invoiceNumber = response.invoiceNumber
-        item.value.transactionDate = response.transactionDate
-        const newDate = new Date(response.transactionDate)
-        newDate.setDate(newDate.getDate() + 1)
-        item.value.transactionDate = newDate || null
-
-        item.value.invoiceAmount = String(response.invoiceAmount)
-        item.value.paymentBalance = response.paymentBalance
-        item.value.depositAmount = response.depositAmount
-        item.value.depositBalance = response.depositBalance
-        item.value.otherDeductions = response.otherDeductions
-        item.value.identified = response.identified
-        item.value.notIdentified = response.notIdentified
-        item.value.remark = response.remark
-
         invoiceStatusList.value = [response.invoiceStatus]
         item.value.invoiceStatus = response.invoiceStatus
 
@@ -776,28 +830,16 @@ async function getItemById(id: string) {
 
         hotelList.value = [response.hotel]
         item.value.hotel = response.hotel
-
-        bankAccountList.value = typeof response.bankAccount === 'object' ? [{ id: response.bankAccount.id, name: response.bankAccount.accountNumber }] : []
-        item.value.bankAccount = typeof response.bankAccount === 'object' ? { id: response.bankAccount.id, name: response.bankAccount.accountNumber } : response.bankAccount
-
-        attachmentStatusList.value = [response.attachmentStatus]
-        item.value.attachmentStatus = response.attachmentStatus
-
-        paymentStatusList.value = [response.paymentStatus]
-        item.value.paymentStatus = response.paymentStatus
-
-        invoiceTypeList.value = [response.invoiceType]
-        item.value.invoiceType = response.invoiceType
+        item.value.invoiceDate = new Date()
+        item.value.isManual = response.isManual
+        item.value.invoiceAmount = response.invoiceAmount
+        item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[1]
       }
-      fields[0].disabled = true
-      updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
-
-      await getListPaymentDetail()
     }
     catch (error) {
       if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Account type methods could not be loaded', life: 3000 })
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Income could not be loaded', life: 3000 })
       }
     }
     finally {
@@ -805,7 +847,7 @@ async function getItemById(id: string) {
     }
   }
 }
-
+/*
 async function getListPaymentDetail() {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -867,24 +909,32 @@ async function getListPaymentDetail() {
     options.value.loading = false
   }
 }
-
+*/
 async function createPaymentDetails(item: { [key: string]: any }) {
-  if (item) {
-    const payload: { [key: string]: any } = { ...item }
-    payload.amount = Number.parseFloat(payload.amount)
-    payload.employee = userData?.value?.user?.userId
-    payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
-    payload.income = idItem.value // Usar el ID del registro de "income" creado anteriormente
-    payload.remark = item.remark
-    payload.status = 'ACTIVE'
-    payload.date = payload.date ? dayjs(payload.date).format('YYYY-MM-DD') : ''
+  try {
+    if (item) {
+      loadingSaveAdjustment.value = true
+      const payload: { [key: string]: any } = { ...item }
+      payload.amount = Number.parseFloat(payload.amount)
+      payload.employee = userData?.value?.user?.userId
+      payload.transactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+      payload.income = idItem.value // Usar el ID del registro de "income" creado anteriormente
+      payload.remark = item.remark
+      payload.status = 'ACTIVE'
+      payload.date = payload.date ? dayjs(payload.date).format('YYYY-MM-DD') : ''
 
-    await GenericService.create(confApiPaymentDetail.moduleApi, 'income-adjustment', payload)
+      await GenericService.create(confApiPaymentDetail.moduleApi, 'income-adjustment', payload)
 
-    onOffDialogPaymentDetail.value = false
-    clearFormDetails()
-    await getBookingList()
-    await getRoomRateList()
+      onOffDialogPaymentDetail.value = false
+      loadingSaveAdjustment.value = false
+      clearFormDetails()
+      await getBookingList()
+      await getRoomRateList()
+      await getAdjustmentList()
+    }
+  }
+  finally {
+    loadingSaveAdjustment.value = false
   }
 }
 async function updateItem(item: { [key: string]: any }) {
@@ -899,15 +949,28 @@ async function updateItem(item: { [key: string]: any }) {
   clearFormDetails()
 }
 
-async function saveAndReload(item: { [key: string]: any }) {
-  const data: { [key: string]: any } = { ...item }
-  data.date = item.date ? dayjs(item.date).format('YYYY-MM-DD') : ''
-  AdjustmentList.value = [data]
-  AdjustmentTableList.value = [...AdjustmentList.value].map(({ transactionType, ...rest }) => ({
-    transaction: transactionType.name,
-    ...rest
-  }))
-  onOffDialogPaymentDetail.value = false
+async function saveAndReload(itemP: { [key: string]: any }) {
+  try {
+    if (idItem.value) {
+      await createPaymentDetails(itemP)
+    }
+    else {
+      const data: { [key: string]: any } = { ...itemP }
+      data.date = itemP.date ? dayjs(itemP.date).format('YYYY-MM-DD') : ''
+      AdjustmentList.value = [data]
+      AdjustmentTableList.value = [...AdjustmentList.value].map(({ transactionType, ...rest }) => ({
+        transaction: transactionType?.name ?? '',
+        ...rest
+      }))
+    }
+    // await getItemById(idItem.value)
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    onOffDialogPaymentDetail.value = false
+  }
   /* try {
     if (item?.id && !isSplitAction.value) {
       await updateItem(item)
@@ -1049,19 +1112,41 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
     invoiceStatusList.value = []
   }
 }
-
+/*
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
-}
+}*/
 
+async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  const additionalFilter: FilterCriteria[] = [
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE'
+    }
+  ];
+
+  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction);
+}
+/*
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
   hotelList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
+}*/
+
+async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  const additionalFilter: FilterCriteria[] = [
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE'
+    }
+  ];
+
+  hotelList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction);
 }
 
-// Attachments
-function handleAttachmentDialogOpen() {
-  attachmentDialogOpen.value = true
-}
 function addAttachment(attachment: any) {
   attachmentList.value = [...attachmentList.value, attachment]
 }
@@ -1106,14 +1191,8 @@ async function handleSave(event: any) {
 onMounted(async () => {
   // getBookingList()
   // getRoomRateList()
-  if (route?.query?.id) {
-    const id = route.query.id.toString()
-    await getItemById(id)
-  }
-  else {
-    clearForm()
-    loadDefaultsValues()
-  }
+  clearForm()
+  loadDefaultsValues()
   onOffDialogPaymentDetail.value = true
 })
 </script>
@@ -1348,56 +1427,44 @@ onMounted(async () => {
 
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" @click="forceSave = true" />
-      <Button v-tooltip.top="'New Adjustment'" class="w-3rem mx-1" icon="pi pi-plus" severity="primary" @click="openDialogPaymentDetails($event)" />
-      <Button v-tooltip.top="'Save'" class="w-3rem" disabled icon="pi pi-dollar" />
-      <Button v-tooltip.top="'Save'" class="w-3rem ml-1" disabled icon="pi pi-credit-card" />
-      <Button v-tooltip.top="'Save'" class="w-3rem ml-1" :disabled="idItemDetail === '' || idItemDetail === null || idItemDetail === undefined" @click="openDialogPaymentDetailsForSplit(idItemDetail, true)">
-        <template #icon>
-          <span class="flex align-items-center justify-content-center p-0">
-            <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4.08337 12.75C5.04987 12.75 5.83337 11.9665 5.83337 11C5.83337 10.0335 5.04987 9.25 4.08337 9.25C3.11688 9.25 2.33337 10.0335 2.33337 11C2.33337 11.9665 3.11688 12.75 4.08337 12.75Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M8.75004 9.25L4.08337 2.25M5.25004 9.25L7.00004 6.625M9.91671 2.25L8.16671 4.875" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M9.91675 12.75C10.8832 12.75 11.6667 11.9665 11.6667 11C11.6667 10.0335 10.8832 9.25 9.91675 9.25C8.95025 9.25 8.16675 10.0335 8.16675 11C8.16675 11.9665 8.95025 12.75 9.91675 12.75Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-        </template>
-      </Button>
-      <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
+      <Button v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" />
       <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
-      <Button v-tooltip.top="'Save'" class="w-3rem ml-1" disabled icon="pi pi-download" />
-      <Button v-tooltip.top="'Save'" class="w-3rem ml-1" disabled icon="pi pi-print" />
-      <Button v-tooltip.top="'Save'" class="w-3rem ml-1" disabled>
+      <Button v-tooltip.top="'Show history'" class="w-3rem ml-1" @click="handleAttachmentHistoryDialogOpen">
         <template #icon>
           <span class="flex align-items-center justify-content-center p-0">
             <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#e8eaed"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" /></svg>
           </span>
         </template>
       </Button>
-      <Button v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" />
-      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
+      <Button v-tooltip.top="'Add booking'" class="w-3rem ml-1" disabled icon="pi pi-plus" />
+      <Button v-tooltip.top="'New Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" severity="primary" @click="openDialogPaymentDetails($event)" />
+
+      <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
+      <Button v-tooltip.top="'Import'" class="w-3rem ml-1" disabled icon="pi pi-download" />
+
+      <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
+
+      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-1" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
     <DialogPaymentDetailForm
       :key="dialogPaymentDetailFormReload"
       :visible="onOffDialogPaymentDetail"
       :fields="fieldAdjustments"
       :item="itemDetails"
+      :loading-save-all="loadingSaveAdjustment"
       title=" New Adjustment"
       :selected-payment="item"
       :is-split-action="isSplitAction"
       @update:visible="onCloseDialog($event)"
       @save="saveAndReload($event)"
     />
+
     <div v-if="attachmentDialogOpen">
-      <PaymentAttachmentDialog
-        :add-item="addAttachment"
-        :close-dialog="() => { attachmentDialogOpen = false }"
-        :is-creation-dialog="true"
-        header="Manager Payment Attachment"
-        :list-items="attachmentList"
-        :open-dialog="attachmentDialogOpen"
-        :update-item="updateAttachment"
-        :selected-payment="item"
-      />
+      <AttachmentIncomeDialog :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Manage Income Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" />
+    </div>
+
+    <div v-if="attachmentHistoryDialogOpen">
+      <AttachmentIncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" :is-creation-dialog="false" />
     </div>
   </div>
 </template>

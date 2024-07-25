@@ -121,9 +121,8 @@ const confbookingListApi = reactive({
 const dialogOpen = ref<boolean>(props.isDialogOpen)
 
 async function openEditDialog(item: any) {
-
-  if(route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
-    return null;
+  if (route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id) {
+    return null
   }
 
   props.openDialog()
@@ -147,8 +146,8 @@ async function deleteRoomRateOption(item: any) {
 }
 
 const menuModel = ref([
-  { label: 'Add Adjustment', command: ()=> props.openAdjustmentDialog(selectedRoomRate.value) },
-  { label: 'Edit Room Rate', command: ()=> openEditDialog(selectedRoomRate.value) },
+  { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value) },
+  { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value) },
 
 ])
 
@@ -335,20 +334,20 @@ const confratePlanApi = reactive({
 })
 
 const Columns: IColumn[] = [
-  { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-pen-to-square', sortable: false },
-  { field: 'roomRateId', header: 'Id', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
 
-  { field: 'fullName', header: 'Full Name', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+  { field: 'roomRateId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
-  { field: 'checkIn', header: 'Check In', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'checkOut', header: 'Check Out', type: 'date' , sortable:!props.isDetailView  && !props.isCreationDialog },
-  { field: 'adults', header: 'Adults', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'children', header: 'Children', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'nights', header: 'Nights', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi , sortable:!props.isDetailView  && !props.isCreationDialog },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+  { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+
+  { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'adults', header: 'Adults', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
 ]
 
@@ -368,7 +367,7 @@ const Options = ref({
   showFilters: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
- 
+
 })
 
 const PayloadOnChangePage = ref<PageState>()
@@ -403,11 +402,9 @@ const errorInTab = ref({
 })
 
 function onRowRightClick(event: any) {
-  
   selectedRoomRate.value = event.data
   roomRateContextMenu.value.show(event.originalEvent)
 }
-
 
 const OpenCreateDialog = async () => await navigateTo({ path: 'invoice/create' })
 
@@ -429,6 +426,8 @@ async function getRoomRateList() {
     Pagination.value.totalPages = totalPages
 
     let countRR = 0
+    totalInvoiceAmount.value = 0
+    totalHotelAmount.value = 0
     for (const iterator of dataList) {
       countRR++
 
@@ -689,14 +688,14 @@ async function ParseDataTableFilter(payloadFilter: any) {
 
 function OnSortField(event: any) {
   if (event) {
-    if(props?.isCreationDialog){
-     return props.sortRoomRate(event)
+    if (props?.isCreationDialog) {
+      return props.sortRoomRate(event)
     }
-    
 
-    if(event.sortField === 'fullName'){
+    if (event.sortField === 'fullName') {
       Payload.value.sortBy = 'booking.firstName'
-    }else{
+    }
+    else {
       Payload.value.sortBy = event.sortField
     }
 
@@ -715,7 +714,7 @@ watch(() => props.forceUpdate, () => {
 watch(() => props.listItems, () => {
   if (props.isCreationDialog) {
     totalHotelAmount.value = 0
-totalInvoiceAmount.value = 0
+    totalInvoiceAmount.value = 0
     props?.listItems?.forEach((listItem: any) => {
       totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
       totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
@@ -735,25 +734,25 @@ onMounted(() => {
 
   if (props.isDetailView) {
     finalColumns.value = [
-      { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-pen-to-square', sortable: false },
-      { field: 'roomRateId', header: 'Id', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'bookingId', header: 'Booking id', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'fullName', header: 'Full Name', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'checkIn', header: 'Check In', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'checkOut', header: 'Check Out', type: 'date' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'nights', header: 'Nights', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'adults', header: 'Adult', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'children', header: 'Children', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'roomType', header: 'Room Type', type: 'select', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'ratePlan', header: 'Rate Plan', type: 'select' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+
+      { field: 'roomRateId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'bookingId', header: 'Booking id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'adults', header: 'Adult', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'roomType', header: 'Room Type', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'ratePlan', header: 'Rate Plan', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
     ]
   }
 
-  if(route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
-    menuModel.value =  [{ label: 'Add Adjustment', command: ()=> props.openAdjustmentDialog(selectedRoomRate.value) }]
+  if (route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id) {
+    menuModel.value = [{ label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value) }]
   }
 
   if (!props.isCreationDialog) {
@@ -775,23 +774,20 @@ onMounted(() => {
 
       }"
     >
-
-    <template v-if="isCreationDialog" #pagination-total="props">
-      <span class="font-bold font">
-        {{ listItems?.length }}
-      </span>
-    </template>
-    <template #datatable-footer>
-      <ColumnGroup type="footer" class="flex align-items-center">
-        <Row>
-          <Column footer="Totals:" :colspan="!isDetailView ? 10 : 11" footer-style="text-align:right" />
-          <Column :footer="totalHotelAmount" />
-          <Column :footer="totalInvoiceAmount" />
-          
-          
-        </Row>
-      </ColumnGroup>
-    </template>
+      <template v-if="isCreationDialog" #pagination-total="props">
+        <span class="font-bold font">
+          {{ listItems?.length }}
+        </span>
+      </template>
+      <template #datatable-footer>
+        <ColumnGroup type="footer" class="flex align-items-center">
+          <Row>
+            <Column footer="Totals:" :colspan="!isDetailView ? 9 : 10" footer-style="text-align:right" />
+            <Column :footer="totalHotelAmount" />
+            <Column :footer="totalInvoiceAmount" />
+          </Row>
+        </ColumnGroup>
+      </template>
     </DynamicTable>
   </div>
   <ContextMenu v-if="!isDetailView" ref="roomRateContextMenu" :model="menuModel" />

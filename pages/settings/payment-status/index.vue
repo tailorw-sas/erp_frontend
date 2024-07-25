@@ -51,6 +51,12 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'This is a required field').max(50, 'Maximum 50 characters')
   },
   {
+    field: 'defaults',
+    header: 'Defaults',
+    dataType: 'check',
+    class: 'field col-12 mb-3 mt-3',
+  },
+  {
     field: 'collected',
     header: 'Collected',
     dataType: 'check',
@@ -78,6 +84,7 @@ const item = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  defaults: false,
   collected: false,
   status: true
 })
@@ -86,6 +93,7 @@ const itemTemp = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  defaults: false,
   collected: false,
   status: true
 })
@@ -98,10 +106,11 @@ const formTitle = computed(() => {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'code', header: 'Code', type: 'text' },
+  { field: 'code', header: 'Code', type: 'text', width: '120px' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
-  { field: 'status', header: 'Active', type: 'bool' },
+  { field: 'defaults', header: 'Defaults', type: 'bool', width: '120px' },
+  { field: 'status', header: 'Active', type: 'bool', width: '120px' },
 ]
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
@@ -167,6 +176,9 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'defaults')) {
+        iterator.defaults = !!iterator.defaults
+      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
@@ -231,6 +243,7 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
         item.value.collected = response.collected
+        item.value.defaults = response.defaults
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)

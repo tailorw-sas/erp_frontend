@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import dayjs from 'dayjs'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 
 const props = defineProps({
   fields: {
@@ -146,15 +146,6 @@ onMounted(() => {
         @delete="requireConfirmationToDelete($event)"
         @submit="requireConfirmationToSave($event)"
       >
-        <template #field-couponNumber="{ item: data, errors, onUpdate }">
-          <InputText
-            v-model="data.couponNumber"
-            show-clear
-            @update:model-value="($event) => {
-              onUpdate('couponNumber', $event)
-            }"
-          />
-        </template>
         <template #field-hotelCreationDate="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
@@ -165,7 +156,7 @@ onMounted(() => {
               onUpdate('hotelCreationDate', $event)
             }"
           />
-          </template>
+        </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.invoiceAmount"
@@ -175,7 +166,8 @@ onMounted(() => {
               let value: any = $event
               if (route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[3]?.id || invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
                 value = toNegative(value)
-              }else{
+              }
+              else {
                 value = toPositive(value)
               }
               onUpdate('invoiceAmount', String(value))
@@ -346,8 +338,8 @@ onMounted(() => {
             date-format="yy-mm-dd"
             :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
             @update:model-value="($event) => {
-              
-              onUpdate('checkOut',   dayjs($event).endOf('day').toDate())
+
+              onUpdate('checkOut', dayjs($event).endOf('day').toDate())
             }"
           />
         </template>

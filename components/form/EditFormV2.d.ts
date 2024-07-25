@@ -23,6 +23,7 @@ interface FieldDefinition {
   toUppercase?: boolean
   validation?: z.ZodTypeAny
   backendValidation?: Array<ValidationErrorType>
+  helpText?: string
   onUpdate?: (value: any) => void
 }
 

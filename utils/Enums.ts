@@ -21,7 +21,7 @@ export enum ENUM_SHORT_TYPE {
 export const ENUM_INVOICE_TYPE = [
   { id: 'INVOICE', name: 'Invoice', code: 'INV' },
   { id: 'INCOME', name: 'Income', code: 'INC' },
-  { id: 'CREDIT', name: 'Credit', code: 'CRD' },
+  { id: 'CREDIT', name: 'Credit', code: 'CRE' },
   { id: 'OLD_CREDIT', name: 'Old Credit', code: 'OLD' }
 ]
 
@@ -34,7 +34,7 @@ export const OBJ_ENUM_INVOICE = {
 export const OBJ_ENUM_INVOICE_TYPE_CODE = {
   INVOICE: 'INV',
   INCOME: 'INC',
-  CREDIT: 'CRD',
+  CREDIT: 'CRE',
   OLD_CREDIT: 'OLD',
 }
 
@@ -43,7 +43,7 @@ export const ENUM_INVOICE_CRITERIA = [
   { id: 'invoiceNumber', name: 'Invoice No' },
   { id: 'bookings.bookingId', name: 'Booking Id' },
   { id: 'bookings.fullName', name: 'Full Name' },
-  { id: 'bookings.reservationNumber', name: 'Reservation No' },
+  { id: 'bookings.hotelBookingNumber', name: 'Reservation No' },
   { id: 'bookings.couponNumber', name: 'Coupon No' },
 ]
 

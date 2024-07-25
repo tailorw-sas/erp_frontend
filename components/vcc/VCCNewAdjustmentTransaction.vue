@@ -76,15 +76,19 @@ const fields: Array<FieldDefinitionType> = [
     field: 'reservationNumber',
     header: 'Reservation Number',
     dataType: 'text',
-    class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The reservation number field is required').regex(/^([IG]) \d{3} \d{2}$/i, 'Invalid reservation number format')
+    class: 'field col-12',
+    validation: z.string().trim().refine(value => value === '' || /^([IG]) \d+ \d+$/i.test(value), {
+      message: 'Invalid reservation number format'
+    })
   },
   {
     field: 'referenceNumber',
     header: 'Reference Number',
     dataType: 'text',
-    class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The reference number field is required').regex(/^\d+$/, 'Only numeric characters allowed')
+    class: 'field col-12',
+    validation: z.string().trim().refine(value => value === '' || /^\d+$/.test(value), {
+      message: 'Only numeric characters allowed'
+    })
   },
 ]
 
@@ -214,7 +218,7 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
     CategoryList.value = []
 
     for (const iterator of dataList) {
-      CategoryList.value = [...CategoryList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      CategoryList.value = [...CategoryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
     if (isDefault && CategoryList.value.length > 0) {
       item.value.transactionCategory = CategoryList.value[0]
@@ -281,7 +285,7 @@ async function getSubCategoryList(query: string, isDefault: boolean = false) {
     SubCategoryList.value = []
 
     for (const iterator of dataList) {
-      SubCategoryList.value = [...SubCategoryList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      SubCategoryList.value = [...SubCategoryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
     if (isDefault && SubCategoryList.value.length > 0) {
       item.value.transactionSubCategory = SubCategoryList.value[0]
@@ -338,7 +342,7 @@ async function getAgencyList(query: string, isDefault: boolean = false) {
     AgencyList.value = []
 
     for (const iterator of dataList) {
-      AgencyList.value = [...AgencyList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      AgencyList.value = [...AgencyList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
     if (isDefault && AgencyList.value.length > 0) {
       item.value.agency = AgencyList.value[0]

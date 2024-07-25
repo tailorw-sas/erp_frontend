@@ -108,7 +108,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12 md:col-6 required',
-    validation: z.string().trim().min(1, 'The reservation number field is required')
+    validation: z.string().trim().min(1, 'The reservation number field is required').regex(/^([IG]) \d+ \d+$/i, 'Invalid reservation number format')
   },
   {
     field: 'referenceNumber',
@@ -308,7 +308,7 @@ async function getHotelList(merchant: any) {
     HotelList.value = []
 
     for (const iterator of dataList) {
-      HotelList.value = [...HotelList.value, { id: iterator.id, name: iterator.name }]
+      HotelList.value = [...HotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -341,7 +341,7 @@ async function getAgencyList(query: string) {
     AgencyList.value = []
 
     for (const iterator of dataList) {
-      AgencyList.value = [...AgencyList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      AgencyList.value = [...AgencyList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -374,7 +374,7 @@ async function getLanguageList(query: string) {
     LanguageList.value = []
 
     for (const iterator of dataList) {
-      LanguageList.value = [...LanguageList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      LanguageList.value = [...LanguageList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -489,7 +489,8 @@ watch(() => props.openDialog, async (newValue) => {
             @update:model-value="($event) => {
               onUpdate('hotel', $event)
             }"
-          />
+          >
+          </Dropdown>
           <Skeleton v-else height="2rem" class="" />
         </template>
         <template #field-agency="{ item: data, onUpdate }">

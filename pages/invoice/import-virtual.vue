@@ -96,6 +96,7 @@ async function getErrorList() {
       filter: []
     }
 
+    let rowError = ''
     listItems.value = []
     const newListItems = []
     const response = await GenericService.importSearch(confErrorApi.moduleApi, confErrorApi.uriApi, param)
@@ -110,22 +111,25 @@ async function getErrorList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
+      rowError = ''
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator.row, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning ${iterator.errorField.message}`, loadingEdit: false, loadingDelete: false })
+        for (const err of iterator.errorFields) {
+          rowError += `- ${err.message} \n`
+        }
+        newListItems.push({ ...iterator.row, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
-
-      // totalInvoiceAmount.value += iterator.invoiceAmount
     }
 
     listItems.value = [...listItems.value, ...newListItems]
     if (listItems.value.length === 0) {
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
       await clearForm()
     }
   }
   catch (error) {
-    console.error('Error loading bookings:', error)
+    console.error('Error loading file:', error)
   }
 }
 
@@ -160,8 +164,6 @@ async function importFile() {
       file: base64
     }
     await GenericService.create(confApi.moduleApi, confApi.uriApi, objTemp)
-
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The bookings was imported successfully', life: 10000 })
   }
   catch (error: any) {
     successOperation = false

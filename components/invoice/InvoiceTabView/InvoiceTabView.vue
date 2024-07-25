@@ -97,20 +97,22 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  refetchInvoice: { type: Function, default: () => {} },
   setActive: { type: Function, required: true },
   active: { type: Number, required: true },
   bookingList: Array<any>,
   roomRateList: Array<any>,
   adjustmentList: Array<any>,
-    sortRoomRate: Function as any,
-    sortAdjustment: Function as any,
-    sortBooking: Function as any,
+  sortRoomRate: Function as any,
+  sortAdjustment: Function as any,
+  sortBooking: Function as any,
 })
 
 const activeTab = ref(props.active)
 
-const toast = useToast()
+const route = useRoute()
 
+const toast = useToast()
 
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
@@ -244,7 +246,6 @@ async function getItemById(id: string) {
   }
 }
 
-
 function openRoomRateDialog(booking?: any) {
   activeTab.value = 1
 
@@ -308,7 +309,7 @@ onMounted(async () => {
             :is-creation-dialog="isCreationDialog" :invoice-obj="invoiceObj" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-detail-view="isDetailView" :show-totals="showTotals"
           />
         </TabPanel>
-        <TabPanel>
+        <TabPanel v-if="route.query.type !== ENUM_INVOICE_TYPE[2]?.id">
           <template #header>
             <div class="flex align-items-center gap-2 p-2" :style="`${active === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-receipt" style="font-size: 1.5rem" />
@@ -322,6 +323,7 @@ onMounted(async () => {
             </div>
           </template>
           <RoomRateTab
+
             :is-dialog-open="roomRateDialogOpen" :close-dialog="() => { roomRateDialogOpen = false }"
             :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
             :open-adjustment-dialog="openAdjustmentDialog" :sort-room-rate="sortRoomRate" :force-update="forceUpdate"
@@ -329,7 +331,7 @@ onMounted(async () => {
             :update-item="updateRoomRate" :is-creation-dialog="isCreationDialog" :is-detail-view="isDetailView" :selected-invoice="selectedInvoice as any" :show-totals="showTotals"
           />
         </TabPanel>
-        <TabPanel>
+        <TabPanel v-if="route.query.type !== ENUM_INVOICE_TYPE[2]?.id">
           <template #header>
             <div class="flex align-items-center gap-2 p-2" :style="`${active === 2 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
@@ -343,8 +345,13 @@ onMounted(async () => {
             </div>
           </template>
           <AdjustmentTab
+
             :is-dialog-open="adjustmentDialogOpen"
-            :close-dialog="() => { adjustmentDialogOpen = false }" :open-dialog="handleDialogOpen"
+            :close-dialog="() => {
+
+              adjustmentDialogOpen = false;
+
+            }" :open-dialog="handleDialogOpen" :refetch-invoice="refetchInvoice"
             :selected-room-rate="selectedRoomRate" :sort-adjustment="sortAdjustment" :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate" :list-items="adjustmentList" :add-item="addAdjustment"
             :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any" :is-detail-view="isDetailView" :show-totals="showTotals"
