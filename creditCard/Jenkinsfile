@@ -2,7 +2,7 @@ pipeline {
     
     agent any
 	environment {
-		GITHUB_PACKAGE_TOKEN = credentials("DanyGitHubToken")
+		GITHUB_PACKAGE_TOKEN = credentials("DanyToken")
 	}		
 	
 	triggers {
