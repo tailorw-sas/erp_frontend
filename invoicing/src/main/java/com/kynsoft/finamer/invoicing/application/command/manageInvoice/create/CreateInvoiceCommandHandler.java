@@ -36,11 +36,17 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
 
         String invoiceNumber = InvoiceType.getInvoiceTypeCode(command.getInvoiceType());
 
+        if(hotelDto.getManageTradingCompanies() != null && hotelDto.getManageTradingCompanies().getIsApplyInvoice()){
+            invoiceNumber+= "-" + hotelDto.getManageTradingCompanies().getCode();
+        }else{
+            invoiceNumber+= "-" + hotelDto.getCode();
+        }
+
         ManageInvoiceDto invoiceDto = service.create(new ManageInvoiceDto(command.getId(), 0L, 0L,
                 invoiceNumber, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),
-                command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCECSED,
+                command.getInvoiceAmount(),command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCECSED,
                 false,
-                null, null, null, null, null, null));
+                null, null, null, null, null, null, null));
         command.setInvoiceId(invoiceDto.getInvoiceId());
     }
 }

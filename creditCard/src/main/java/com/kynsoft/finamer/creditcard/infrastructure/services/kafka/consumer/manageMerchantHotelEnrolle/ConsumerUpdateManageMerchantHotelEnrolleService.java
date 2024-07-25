@@ -21,7 +21,7 @@ public class ConsumerUpdateManageMerchantHotelEnrolleService {
     @KafkaListener(topics = "finamer-update-manage-merchant-hotel-enrolle", groupId = "vcc-entity-replica")
     public void listen(UpdateManageMerchantHotelEnrolleKafka objKafka) {
         try {
-            UpdateManagerMerchantHotelEnrolleCommand command = new UpdateManagerMerchantHotelEnrolleCommand(objKafka.getId(), objKafka.getManagerMerchant(), objKafka.getManagerHotel(), objKafka.getEnrrolle());
+            UpdateManagerMerchantHotelEnrolleCommand command = new UpdateManagerMerchantHotelEnrolleCommand(objKafka.getId(), objKafka.getManagerMerchant(), objKafka.getManagerHotel(), objKafka.getEnrrolle(), objKafka.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageMerchantHotelEnrolleService.class.getName()).log(Level.SEVERE, null, ex);

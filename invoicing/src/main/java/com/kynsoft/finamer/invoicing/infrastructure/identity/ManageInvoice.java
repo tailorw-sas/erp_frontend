@@ -60,6 +60,7 @@ public class ManageInvoice {
     private ManageInvoiceStatus manageInvoiceStatus;
 
     private Double invoiceAmount;
+    private Double dueAmount;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_hotel")
@@ -123,24 +124,25 @@ public class ManageInvoice {
         this.reSendDate = dto.getReSendDate();
         this.manageInvoiceType = dto.getManageInvoiceType() != null ? new ManageInvoiceType(dto.getManageInvoiceType()) : null;
         this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null ? new ManageInvoiceStatus(dto.getManageInvoiceStatus()) : null;
+        this.dueAmount = dto.getDueAmount();
 
     }
 
     public ManageInvoiceDto toAggregateSample() {
 
         return new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
-                invoiceAmount,
+                invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, null, null, reSend, reSendDate, 
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null, 
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt
         );
 
     }
 
     public ManageInvoiceDto toAggregate() {
         return new ManageInvoiceDto(id, invoiceId,
-                invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount,
+                invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, bookings != null ? bookings.stream().map(b -> {
                     return b.toAggregateSample();
@@ -150,7 +152,7 @@ public class ManageInvoice {
                 reSend,
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null, 
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null,  createdAt
         );
     }
 

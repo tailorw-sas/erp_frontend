@@ -30,4 +30,6 @@ public class UpdatePaymentRequest {
     private Double notIdentified;
     private String remark;
     private Status status;
+
+    private UUID employee;
 }

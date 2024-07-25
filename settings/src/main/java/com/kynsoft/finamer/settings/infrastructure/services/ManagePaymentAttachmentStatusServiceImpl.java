@@ -110,4 +110,9 @@ public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentA
         return objectDtos;
     }
 
+    @Override
+    public Long countByDefaultAndNotId(UUID id) {
+        return this.repositoryQuery.countByDefaultAndNotId(id);
+    }
+
 }

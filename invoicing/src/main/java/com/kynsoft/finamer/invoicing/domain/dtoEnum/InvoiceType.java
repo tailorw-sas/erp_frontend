@@ -9,7 +9,7 @@ public class InvoiceType {
                 return "INV";
 
             case CREDIT:
-                return "CRD";
+                return "CRE";
             case INCOME:
                 return "INC";
 

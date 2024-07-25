@@ -18,4 +18,8 @@ public interface ManagePaymentAttachmentStatusReadDataJpaRepository extends JpaR
 
     @Query("SELECT COUNT(b) FROM ManagePaymentAttachmentStatus b WHERE b.name = :name AND b.id <> :id")
     Long countByNameAndNotId(@Param("name") String name, @Param("id") UUID id);
+    
+    @Query("SELECT COUNT(b) FROM ManagePaymentAttachmentStatus b WHERE b.defaults = true AND b.id <> :id")
+    Long countByDefaultAndNotId(@Param("id") UUID id);
+
 }

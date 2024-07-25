@@ -34,6 +34,8 @@ public class ManageMerchantHotelEnrolle implements Serializable {
 
     private String enrolle;
 
+    private String status;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -49,6 +51,7 @@ public class ManageMerchantHotelEnrolle implements Serializable {
         this.manageMerchant = new ManageMerchant(dto.getManageMerchant());
         this.manageHotel = new ManageHotel(dto.getManageHotel());
         this.enrolle = dto.getEnrolle();
+        this.status = dto.getStatus();
     }
 
     public ManageMerchantHotelEnrolleDto toAggregate() {
@@ -56,7 +59,7 @@ public class ManageMerchantHotelEnrolle implements Serializable {
                 id,
                 manageMerchant != null ? manageMerchant.toAggregate() : null,
                 manageHotel != null ? manageHotel.toAggregate() : null,
-                enrolle);
+                enrolle, status);
     }
 
 }

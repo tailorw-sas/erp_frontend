@@ -88,6 +88,7 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                 command.getFirstName(),
                 command.getLastName(),
                 command.getInvoiceAmount(),
+                command.getInvoiceAmount(),
                 command.getRoomNumber(),
                 command.getCouponNumber(),
                 command.getAdults(),

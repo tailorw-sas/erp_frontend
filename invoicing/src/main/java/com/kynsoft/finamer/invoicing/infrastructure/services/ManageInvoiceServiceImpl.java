@@ -46,6 +46,13 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         this.repositoryQuery = repositoryQuery;
     }
 
+    public String getInvoiceNumberSequence(String invoiceNumber){
+        Long lastInvoiceNo = this.repositoryQuery.findByInvoiceNumber(invoiceNumber);
+
+        lastInvoiceNo += 1;
+        return invoiceNumber + "-" + lastInvoiceNo;
+    }
+
 
     @Override
     public void calculateInvoiceAmount(ManageInvoiceDto dto) {
@@ -61,6 +68,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             }
 
             dto.setInvoiceAmount(InvoiceAmount);
+            dto.setDueAmount(InvoiceAmount);
 
             this.update(dto);
         }
@@ -69,6 +77,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
         ManageInvoice entity = new ManageInvoice(dto);
+        String invoiceNumber = getInvoiceNumberSequence(dto.getInvoiceNumber());
+        entity.setInvoiceNumber(invoiceNumber);
         ManageInvoice saved = repositoryCommand.saveAndFlush(entity);
 
 

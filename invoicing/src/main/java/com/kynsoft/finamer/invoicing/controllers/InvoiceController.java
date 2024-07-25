@@ -66,7 +66,7 @@ public class InvoiceController {
                     return rr.getId();
                 }).collect(Collectors.toList())));
 
-        this.mediator.send(new UpdateInvoiceCommand(message.getId(), null, null, null, null, null, null,null));
+        
 
         return ResponseEntity.ok(message);
 

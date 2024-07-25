@@ -8,6 +8,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 @RedisHash(value = "bookingrowerror",timeToLive = 3600)
@@ -17,6 +19,6 @@ public class BookingRowError {
     public int rowNumber;
     @Indexed
     public String importProcessId;
-    public ErrorField errorField;
+    public List<ErrorField> errorFields;
     public BookingRow row;
 }

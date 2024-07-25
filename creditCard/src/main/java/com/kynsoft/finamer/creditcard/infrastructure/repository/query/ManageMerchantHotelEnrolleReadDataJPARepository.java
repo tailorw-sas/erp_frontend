@@ -23,6 +23,6 @@ public interface ManageMerchantHotelEnrolleReadDataJPARepository extends JpaRepo
     @Query("SELECT e FROM ManageMerchantHotelEnrolle e WHERE e.manageMerchant = :manageMerchant AND e.manageHotel = :manageHotel AND e.deleted = false")
     Optional<ManageMerchantHotelEnrolle> findByManageMerchantAndManageHotel(@Param("manageMerchant") ManageMerchant managerMerchant, @Param("manageHotel") ManageHotel managerHotel);
 
-    @Query("SELECT e.manageHotel FROM ManageMerchantHotelEnrolle e WHERE e.manageMerchant = :manageMerchant AND e.manageHotel.isApplyByVcc = true AND e.deleted = false")
+    @Query("SELECT e.manageHotel FROM ManageMerchantHotelEnrolle e WHERE e.manageMerchant = :manageMerchant AND e.manageHotel.isApplyByVcc = true AND e.status = 'ACTIVE' AND e.manageHotel.status = 'ACTIVE' AND e.deleted = false")
     List<ManageHotel> findHotelsByManageMerchant(@Param("manageMerchant") ManageMerchant manageMerchant);
 }

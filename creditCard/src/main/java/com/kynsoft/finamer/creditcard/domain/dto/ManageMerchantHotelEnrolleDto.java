@@ -17,5 +17,5 @@ public class ManageMerchantHotelEnrolleDto {
     private ManageMerchantDto manageMerchant;
     private ManageHotelDto manageHotel;
     private String enrolle;
-
+    private String status;
 }

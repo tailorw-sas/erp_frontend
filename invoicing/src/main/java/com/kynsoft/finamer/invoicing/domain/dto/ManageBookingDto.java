@@ -32,6 +32,7 @@ public class ManageBookingDto {
     private String lastName;
 
     private Double invoiceAmount;
+    private Double dueAmount;
     private String roomNumber;
     private String couponNumber;
     private Integer adults;

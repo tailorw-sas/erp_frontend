@@ -6,20 +6,21 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.List;
+import java.util.Objects;
+
 public class ImportBookingRoomTypeValidator extends ExcelRuleValidator<BookingRow> {
 
     private final IManageRoomTypeService roomTypeService;
 
-    public ImportBookingRoomTypeValidator(ApplicationEventPublisher applicationEventPublisher, IManageRoomTypeService roomTypeService) {
-        super(applicationEventPublisher);
+    public ImportBookingRoomTypeValidator( IManageRoomTypeService roomTypeService) {
         this.roomTypeService = roomTypeService;
     }
 
     @Override
-    public boolean validate(BookingRow obj) {
-        if (!obj.getRoomType().isEmpty() &&
-                !roomTypeService.existByCode(obj.getRoomType())) {
-            sendErrorEvent(obj.getRowNumber(),new ErrorField("Room Type", "Room Type not exist"),obj);
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+        if (Objects.isNull(obj.getRoomType()) ||(!obj.getRoomType().isEmpty() && !roomTypeService.existByCode(obj.getRoomType()))) {
+            errorFieldList.add(new ErrorField("Room Type", "Room Type not exist"));
             return false;
         }
         return true;

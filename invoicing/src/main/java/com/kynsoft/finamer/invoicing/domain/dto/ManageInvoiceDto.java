@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +26,7 @@ public class ManageInvoiceDto {
     private LocalDate dueDate;
     private Boolean isManual;
     private Double invoiceAmount;
+    private Double dueAmount;
     private ManageHotelDto hotel;
     private ManageAgencyDto agency;
     private EInvoiceType invoiceType;
@@ -37,5 +39,6 @@ public class ManageInvoiceDto {
     private LocalDate reSendDate;
     private ManageInvoiceTypeDto manageInvoiceType;
     private ManageInvoiceStatusDto manageInvoiceStatus;
+    private LocalDateTime createdAt;
 
 }

@@ -14,6 +14,7 @@ import com.kynsoft.finamer.payment.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentSourceDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentAttachmentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
@@ -33,6 +34,8 @@ import com.kynsoft.finamer.payment.domain.services.IManagePaymentAttachmentStatu
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentSourceService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
+import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentAttachmentStatusHistoryService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import java.util.ArrayList;
@@ -59,6 +62,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageEmployeeService manageEmployeeService;
 
+    private final IPaymentAttachmentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IMasterPaymentAttachmentService masterPaymentAttachmentService;
+
     public CreatePaymentCommandHandler(IManagePaymentSourceService sourceService,
             IManagePaymentStatusService statusService,
             IManageClientService clientService,
@@ -71,7 +77,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
             IManageAttachmentTypeService manageAttachmentTypeService,
             IManageResourceTypeService manageResourceTypeService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IManageEmployeeService manageEmployeeService) {
+            IManageEmployeeService manageEmployeeService,
+            IPaymentAttachmentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IMasterPaymentAttachmentService masterPaymentAttachmentService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -85,6 +93,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         this.manageResourceTypeService = manageResourceTypeService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.manageEmployeeService = manageEmployeeService;
+        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.masterPaymentAttachmentService = masterPaymentAttachmentService;
     }
 
     @Override
@@ -133,16 +143,34 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 0.0,
                 command.getPaymentAmount(),
                 command.getRemark(),
-                command.getAttachments() != null ? this.createAttachment(command.getAttachments()) : null
+                null
         );
+
         command.setPayment(this.paymentService.create(paymentDto));
         if (command.getAttachments() != null) {
+            paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto));
             this.createAttachmentStatusHistory(command.getAttachments().get(0).getEmployee(), paymentDto);
         }
 
+        this.createPaymentAttachmentStatusHistory(command.getEmployee(), paymentDto);
     }
 
-    private List<MasterPaymentAttachmentDto> createAttachment(List<CreateAttachmentRequest> attachments) {
+    private void createPaymentAttachmentStatusHistory(UUID employee, PaymentDto payment) {
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(employee, "id", "Employee ID cannot be null."));
+
+        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(employee);
+
+        PaymentAttachmentStatusHistoryDto attachmentStatusHistoryDto = new PaymentAttachmentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("An attachment to the payment was inserted. The file name");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(payment.getAttachmentStatus().getCode() + "-" + payment.getAttachmentStatus().getName());
+
+        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
+    }
+
+    private List<MasterPaymentAttachmentDto> createAttachment(List<CreateAttachmentRequest> attachments, PaymentDto paymentDto) {
         List<MasterPaymentAttachmentDto> dtos = new ArrayList<>();
         Integer countDefaults = 0;
         for (CreateAttachmentRequest attachment : attachments) {
@@ -151,7 +179,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
             dtos.add(new MasterPaymentAttachmentDto(
                     UUID.randomUUID(),
                     Status.ACTIVE,
-                    null,
+                    paymentDto,
                     manageResourceTypeDto,
                     manageAttachmentTypeDto,
                     attachment.getFileName(),
@@ -165,6 +193,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         }
 
         RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule(countDefaults));
+        this.masterPaymentAttachmentService.create(dtos);
         return dtos;
     }
 

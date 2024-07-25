@@ -28,7 +28,7 @@ public class CalculateInvoiceAmountCommandHandler implements ICommandHandler<Cal
     public void handle(CalculateInvoiceAmountCommand command) {
 
         for (int i = 0; i < command.getRoomRates().size(); i++) {
-            this.rateService.calculateInvoiceAmount(this.rateService.findById(command.getRoomRates().get(i)));
+            this.rateService.calculateInvoiceAmount(this.rateService.findById(command.getRoomRates().get(i)), null, null);
     }
 
     for (int i = 0; i < command.getBookings().size(); i++) {

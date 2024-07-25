@@ -5,18 +5,17 @@ import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.importbooking.ImportBookingFromFileRequest;
+import com.kynsoft.finamer.invoicing.application.excel.ValidatorFactory;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingErrorRequest;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingFromFileErrorResponse;
+import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
-import com.kynsoft.finamer.invoicing.domain.services.IBookingImportHelperService;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.ImportProcess;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
-import com.kynsoft.finamer.invoicing.application.excel.IValidatorFactory;
+import com.kynsoft.finamer.invoicing.domain.services.IBookingImportHelperService;
 import com.kynsoft.finamer.invoicing.domain.services.ImportBookingService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingProcessEvent;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.ImportProcess;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportProcessRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportRowErrorRedisRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,7 +30,7 @@ import java.util.Optional;
 @Service
 public class BookingServiceImpl implements ImportBookingService {
 
-    private final IValidatorFactory<BookingRow> validatorFactory;
+    private final ValidatorFactory<BookingRow> validatorFactory;
 
     private final BookingImportProcessRedisRepository bookingImportProcessRedisRepository;
 
@@ -41,7 +40,7 @@ public class BookingServiceImpl implements ImportBookingService {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public BookingServiceImpl(IValidatorFactory<BookingRow> validatorFactory,
+    public BookingServiceImpl(ValidatorFactory<BookingRow> validatorFactory,
                               BookingImportProcessRedisRepository bookingImportProcessRedisRepository,
                               BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
                               ApplicationEventPublisher applicationEventPublisher
@@ -71,14 +70,13 @@ public class BookingServiceImpl implements ImportBookingService {
             if (bookingImportHelperService.canImportRow(bookingRow,request.getImportType())) {
                 if (validatorFactory.validate(bookingRow)) {
                     bookingImportHelperService.groupAndCachingImportBooking(bookingRow, importBookingFromFileRequest.getRequest().getImportType());
-                } else {
-                    bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
-                    break;
                 }
             }
         }
+        validatorFactory.removeValidators();
         bookingImportHelperService.createInvoiceFromGroupedBooking(request.getImportProcessId());
         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(request.getImportProcessId()));
+        bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
 
     }
 

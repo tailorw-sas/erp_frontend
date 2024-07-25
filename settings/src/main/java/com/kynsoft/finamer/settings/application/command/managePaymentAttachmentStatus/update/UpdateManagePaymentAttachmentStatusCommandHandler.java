@@ -9,6 +9,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageModuleDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageModuleService;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentAttachmentStatusService;
@@ -29,7 +30,7 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
     private final ProducerUpdateManagePaymentAttachmentStatusService producerUpdateManagePaymentAttachmentStatusService;
 
     public UpdateManagePaymentAttachmentStatusCommandHandler(final IManagePaymentAttachmentStatusService service, IManageModuleService moduleService,
-                                                             ProducerUpdateManagePaymentAttachmentStatusService producerUpdateManagePaymentAttachmentStatusService) {
+            ProducerUpdateManagePaymentAttachmentStatusService producerUpdateManagePaymentAttachmentStatusService) {
         this.service = service;
         this.moduleService = moduleService;
         this.producerUpdateManagePaymentAttachmentStatusService = producerUpdateManagePaymentAttachmentStatusService;
@@ -44,6 +45,10 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         if (UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate)) {
             RulesChecker.checkRule(new ManagePaymentAttachmentStatusNameMustBeUniqueRule(service, command.getName(), command.getId()));
         }
+
+        if (command.getDefaults()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusDefaultMustBeUniqueRule(service, command.getId()));
+        }
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setPermissionCode, command.getPermissionCode(), dto.getPermissionCode(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setShow, command.getShow(), dto.getShow(), update::setUpdate);
@@ -51,8 +56,27 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         List<ManagePaymentAttachmentStatusDto> managePaymentAttachmentStatusDtoList = service.findByIds(command.getNavigate());
         dto.setRelatedStatuses(managePaymentAttachmentStatusDtoList);
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
+
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("LLega: " + dto.getModule());
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
         this.updateModule(dto::setModule, command.getModule(), dto.getModule().getId(), update::setUpdate);
 
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
+        System.err.println("###################################################");
         this.service.update(dto);
         this.producerUpdateManagePaymentAttachmentStatusService.update(new UpdateManagePaymentAttachmentStatusKafka(dto.getId(), dto.getName(), command.getStatus().name()));
 //        if (update.getUpdate() > 0) {

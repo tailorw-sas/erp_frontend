@@ -6,18 +6,19 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.List;
+
 public class ImportBookingHotelValidator extends ExcelRuleValidator<BookingRow> {
 
     private final IManageHotelService manageHotelService;
-    public ImportBookingHotelValidator(ApplicationEventPublisher applicationEventPublisher, IManageHotelService manageHotelService) {
-        super(applicationEventPublisher);
+    public ImportBookingHotelValidator(IManageHotelService manageHotelService) {
         this.manageHotelService = manageHotelService;
     }
 
     @Override
-    public boolean validate(BookingRow obj) {
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         if(!manageHotelService.existByCode(obj.getManageHotelCode())){
-            sendErrorEvent(obj.getRowNumber(),new ErrorField("Hotel","Hotel not exist"),obj);
+            errorFieldList.add(new ErrorField("Hotel"," Hotel not exists"));
             return false;
         }
         return true;

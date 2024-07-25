@@ -17,4 +17,5 @@ public class UpdateManageMerchantHotelEnrolleKafka {
     private UUID managerMerchant;
     private UUID managerHotel;
     private String enrrolle;
+    private String status;
 }

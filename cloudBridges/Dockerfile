@@ -40,7 +40,6 @@ ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 
 COPY rc-settings.xml settings.xml
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN |g" settings.xml
-RUN cat settings.xml
 
 # Build
 RUN mvn dependency:go-offline -f pom.xml -s settings.xml

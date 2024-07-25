@@ -21,6 +21,7 @@ public class CreatePaymentRequest {
     private UUID hotel;
     private UUID bankAccount;
     private UUID attachmentStatus;
+    private UUID employee;
 
     private Double paymentAmount;
     private String remark;

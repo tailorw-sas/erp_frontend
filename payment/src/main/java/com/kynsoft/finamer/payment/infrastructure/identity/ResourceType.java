@@ -38,6 +38,8 @@ public class ResourceType {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    private Boolean defaults;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,11 +53,13 @@ public class ResourceType {
         this.code = dto.getCode();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
+        this.defaults = dto.getDefaults();
     }
 
     public ResourceTypeDto toAggregate() {
         return new ResourceTypeDto(
-                id, code, name, description, status
+                id, code, name, description, status,
+                defaults != null ? defaults : null
         );
     }
 }

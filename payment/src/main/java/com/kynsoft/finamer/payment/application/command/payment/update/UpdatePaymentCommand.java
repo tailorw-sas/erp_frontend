@@ -32,12 +32,13 @@ public class UpdatePaymentCommand implements ICommand {
     private Double notIdentified;
     private String remark;
     private Status status;
+    private UUID employee;
 
     public UpdatePaymentCommand(UUID id, UUID paymentSource, String reference, LocalDate transactionDate, 
                                 UUID paymentStatus, UUID client, UUID agency, UUID hotel, UUID bankAccount, 
                                 UUID attachmentStatus, Double paymentAmount, Double paymentBalance, Double depositAmount, 
                                 Double depositBalance, Double otherDeductions, Double identified, Double notIdentified, 
-                                String remark, Status status) {
+                                String remark, Status status, UUID employee) {
         this.id = id;
         this.paymentSource = paymentSource;
         this.reference = reference;
@@ -57,6 +58,7 @@ public class UpdatePaymentCommand implements ICommand {
         this.notIdentified = notIdentified;
         this.remark = remark;
         this.status = status;
+        this.employee = employee;
     }
 
     public static UpdatePaymentCommand fromRequest(UpdatePaymentRequest request, UUID id) {
@@ -79,7 +81,8 @@ public class UpdatePaymentCommand implements ICommand {
                 request.getIdentified(),
                 request.getNotIdentified(),
                 request.getRemark(),
-                request.getStatus()
+                request.getStatus(),
+                request.getEmployee()
         );
     }
 

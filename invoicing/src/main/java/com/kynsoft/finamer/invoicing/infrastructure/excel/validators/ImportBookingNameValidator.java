@@ -5,17 +5,16 @@ import com.kynsoft.finamer.invoicing.application.excel.ExcelRuleValidator;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.List;
+import java.util.Objects;
+
 public class ImportBookingNameValidator extends ExcelRuleValidator<BookingRow> {
-
-    public ImportBookingNameValidator(ApplicationEventPublisher applicationEventPublisher) {
-        super(applicationEventPublisher);
-    }
-
     @Override
-    public boolean validate(BookingRow obj) {
-
-        if (obj.getFirstName().isEmpty() && obj.getLastName().isEmpty()) {
-            sendErrorEvent(obj.getRowNumber(), new ErrorField("FirstName and LastName", "FirstName and LastName must be not empty"), obj);
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+            String firstName=Objects.nonNull(obj.getFirstName())?obj.getFirstName():"";
+            String lastName=Objects.nonNull(obj.getLastName())?obj.getLastName():"";
+        if (firstName.isEmpty() && lastName.isEmpty()) {
+            errorFieldList.add( new ErrorField("FirstName and LastName", "FirstName and LastName must be not empty"));
             return false;
         }
 

@@ -35,6 +35,7 @@ public class UpdatePaymentStatusCommandHandler implements ICommandHandler<Update
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setCollected, command.getCollected(), dto.getCollected(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 

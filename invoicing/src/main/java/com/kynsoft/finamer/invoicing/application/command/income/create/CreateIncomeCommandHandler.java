@@ -68,6 +68,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                 command.getDueDate(), 
                 command.getManual(), 
                 0.0, 
+                0.0, 
                 hotelDto, 
                 agencyDto, 
                 EInvoiceType.INCOME, 
@@ -78,7 +79,8 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                 command.getReSend(), 
                 command.getReSendDate(), 
                 invoiceTypeDto, 
-                invoiceStatusDto
+                invoiceStatusDto,
+                null
         ));
     }
 }

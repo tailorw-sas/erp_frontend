@@ -7,17 +7,14 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 public class ImportBookingCheckOutValidator extends ExcelRuleValidator<BookingRow> {
 
     private final String[] validDateFormat = new String[]{"yyyymmdd", "mm/dd/yyyy"};
 
-    public ImportBookingCheckOutValidator(ApplicationEventPublisher applicationEventPublisher) {
-        super(applicationEventPublisher);
-    }
-
     @Override
-    public boolean validate(BookingRow obj) {
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         String date = obj.getTransactionDate();
         boolean valid = false;
         for (String format : validDateFormat) {
@@ -31,7 +28,7 @@ public class ImportBookingCheckOutValidator extends ExcelRuleValidator<BookingRo
             }
         }
         if (!valid) {
-            sendErrorEvent(obj.getRowNumber(),new ErrorField("CheckOut", "Invalid date format"),obj);
+            errorFieldList.add(new ErrorField("CheckOut", "CheckOut has invalid date format"));
             return false;
         }
         return true;

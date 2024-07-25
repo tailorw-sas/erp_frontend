@@ -5,16 +5,14 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.List;
+
 public class ImportBookingInvoiceAmountValidator extends ExcelRuleValidator<BookingRow> {
 
-    public ImportBookingInvoiceAmountValidator(ApplicationEventPublisher applicationEventPublisher) {
-        super(applicationEventPublisher);
-    }
-
     @Override
-    public boolean validate(BookingRow obj) {
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         if (obj.getInvoiceAmount() == 0) {
-            sendErrorEvent(obj.getRowNumber(), new ErrorField("Invoice Amount", "Invoice Amount must be greater than 0"),obj);
+            errorFieldList.add( new ErrorField("Invoice Amount", "Invoice Amount must be greater than 0"));
             return false;
         }
         return true;

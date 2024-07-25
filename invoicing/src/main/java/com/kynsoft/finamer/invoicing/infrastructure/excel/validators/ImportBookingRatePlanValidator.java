@@ -6,23 +6,25 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.List;
+import java.util.Objects;
+
 public class ImportBookingRatePlanValidator extends ExcelRuleValidator<BookingRow> {
 
     private final IManageRatePlanService ratePlanService;
 
-    public ImportBookingRatePlanValidator(ApplicationEventPublisher applicationEventPublisher, IManageRatePlanService ratePlanService) {
-        super(applicationEventPublisher);
+    public ImportBookingRatePlanValidator(IManageRatePlanService ratePlanService) {
         this.ratePlanService = ratePlanService;
     }
 
     @Override
-    public boolean validate(BookingRow obj) {
-        if (obj.getRatePlan().isEmpty()){
-            sendErrorEvent(obj.getRowNumber(),new ErrorField("Rate Plan", "Rate Plan  must be not empty"),obj);
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+        if (Objects.isNull(obj.getRatePlan()) ||obj.getRatePlan().isEmpty()){
+            errorFieldList.add(new ErrorField("Rate Plan", "Rate Plan  must be not empty"));
             return false;
         }
         else if (!ratePlanService.existByCode(obj.getRatePlan())) {
-            sendErrorEvent(obj.getRowNumber(),new ErrorField("Rate Plan", "Rate Plan not exist"),obj);
+            errorFieldList.add(new ErrorField("Rate Plan", "Rate Plan not exist"));
             return false;
         }
         return true;

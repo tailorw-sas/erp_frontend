@@ -24,7 +24,14 @@ public class ManualTransactionReservationNumberRule extends BusinessRule {
 
     @Override
     public boolean isBroken() {
-        return !validateCode(reservationNumber, bookingCouponFormat);
+        return !validateFormat(reservationNumber);
+    }
+
+    private boolean validateFormat(String reservationNumber){
+        Pattern pattern = Pattern.compile("^([IG])\\s\\d+\\s\\d+$");
+        Matcher matcher = pattern.matcher(reservationNumber);
+
+        return matcher.matches();
     }
 
     private boolean validateCode(String reservationNumber, String bookingCouponFormat) {

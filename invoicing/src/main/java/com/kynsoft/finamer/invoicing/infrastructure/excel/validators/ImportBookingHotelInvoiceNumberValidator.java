@@ -7,20 +7,24 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.List;
+
 public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator<BookingRow> {
 
     private final IManageHotelService manageHotelService;
 
-    public ImportBookingHotelInvoiceNumberValidator(ApplicationEventPublisher applicationEventPublisher, IManageHotelService manageHotelService) {
-        super(applicationEventPublisher);
+    public ImportBookingHotelInvoiceNumberValidator(IManageHotelService manageHotelService) {
         this.manageHotelService = manageHotelService;
     }
 
     @Override
-    public boolean validate(BookingRow obj) {
+    public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+       if(!manageHotelService.existByCode(obj.getManageHotelCode())){
+           return false;
+       }
         ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
         if ( manageHotelDto.isVirtual() && (obj.getHotelInvoiceNumber().isEmpty() || Integer.parseInt(obj.getHotelInvoiceNumber()) ==0 )){
-            sendErrorEvent(obj.getRowNumber(),new ErrorField("HotelInvoiceNumber","Hotel Invoice Number must not 0 if hotel is virtual"),obj);
+            errorFieldList.add(new ErrorField("HotelInvoiceNumber","Hotel Invoice Number must not 0 if hotel is virtual"));
             return false;
         }
         return true;

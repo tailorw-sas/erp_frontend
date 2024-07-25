@@ -95,6 +95,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 null, 
                 null, 
                 command.getAmount(), 
+                command.getAmount(), 
                 null, 
                 null, 
                 null, 

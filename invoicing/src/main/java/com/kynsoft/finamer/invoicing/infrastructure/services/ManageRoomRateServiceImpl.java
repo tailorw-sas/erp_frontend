@@ -40,10 +40,21 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     }
 
     @Override
-     public void calculateInvoiceAmount(ManageRoomRateDto dto){
+     public void calculateInvoiceAmount(ManageRoomRateDto dto, Double adjustmentOldAmount, Double adjustmentNewAmount){
         Double InvoiceAmount = dto.getInvoiceAmount() != null ? dto.getInvoiceAmount() : 0;
 
 
+
+        if(adjustmentOldAmount != null && adjustmentNewAmount != null){
+
+            InvoiceAmount -= adjustmentOldAmount;
+            InvoiceAmount += adjustmentNewAmount;
+
+            dto.setInvoiceAmount(InvoiceAmount);
+
+             this.update(dto);
+             return;
+        }
         
 
         if (dto.getAdjustments() != null) {

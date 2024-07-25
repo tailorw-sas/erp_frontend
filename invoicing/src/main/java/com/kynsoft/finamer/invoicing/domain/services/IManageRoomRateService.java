@@ -16,7 +16,7 @@ public interface IManageRoomRateService {
 
     void update(ManageRoomRateDto dto);
 
-    void calculateInvoiceAmount(ManageRoomRateDto dto);
+    void calculateInvoiceAmount(ManageRoomRateDto dto, Double adjustmentOldAmount, Double adjustmentNewAmount);
 
     void delete(ManageRoomRateDto dto);
 

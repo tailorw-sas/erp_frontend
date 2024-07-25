@@ -51,8 +51,10 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         this.updateAgency(dto::setAgency, command.getAgency(), dto.getAgency().getId(), update::setUpdate);
         this.updateHotel(dto::setHotel, command.getHotel(), dto.getHotel().getId(), update::setUpdate);
 
-        dto.setInvoiceNumber(InvoiceType.getInvoiceTypeCode(dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE) + "-" + dto.getInvoiceNo().toString());
-        update.setUpdate(1);
+        // dto.setInvoiceNumber(InvoiceType.getInvoiceTypeCode(dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE) + "-" + dto.getInvoiceNo().toString());
+        // update.setUpdate(1);
+
+        this.service.calculateInvoiceAmount(dto);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);

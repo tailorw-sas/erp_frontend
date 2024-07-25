@@ -11,4 +11,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BookingImportRowErrorRedisRepository extends CrudRepository<BookingRowError, String>, PagingAndSortingRepository<BookingRowError,String> {
     Page<BookingRowError> findAllByImportProcessId(String importProcessId, Pageable pageable);
+
+    boolean existsByImportProcessId(String importProcessId);
 }

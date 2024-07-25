@@ -17,18 +17,20 @@ public class CreateManageResourceTypeCommand implements ICommand {
     private String name;
     private String description;
     private Status status;
+    private Boolean defaults;
 
-    public CreateManageResourceTypeCommand(String code, String name, String description, Status status) {
+    public CreateManageResourceTypeCommand(String code, String name, String description, Status status, Boolean defaults) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
         this.description = description;
         this.status = status;
+        this.defaults = defaults;
     }
 
     public static CreateManageResourceTypeCommand fromRequest(CreateManageResourceTypeRequest request) {
         return new CreateManageResourceTypeCommand(
-               request.getCode(), request.getName(), request.getDescription(), request.getStatus()
+               request.getCode(), request.getName(), request.getDescription(), request.getStatus(), request.getDefaults()
         );
     }
 

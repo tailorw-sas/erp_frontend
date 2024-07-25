@@ -32,6 +32,7 @@ public class UpdateManagerMerchantHotelEnrolleCommandHandler implements ICommand
         test.setManageMerchant(merchantDto);
         test.setManageHotel(hotelDto);
         test.setEnrolle(command.getEnrolle());
+        test.setStatus(command.getStatus());
         this.service.update(test);
     }
 }

@@ -45,6 +45,7 @@ public class ManageBooking {
     private String firstName;
     private String lastName;
     private Double invoiceAmount;
+    private Double dueAmount;
     private String roomNumber;
     private String couponNumber;
     private Integer adults;
@@ -132,7 +133,7 @@ public class ManageBooking {
     public ManageBookingDto toAggregate() {
         return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
                 checkOut,
-                hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, roomNumber, couponNumber, adults,
+                hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, dueAmount, roomNumber, couponNumber, adults,
                 children,
                 rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
                 invoice != null ? invoice.toAggregate() : null, ratePlan != null ? ratePlan.toAggregate() : null,
@@ -146,7 +147,7 @@ public class ManageBooking {
     public ManageBookingDto toAggregateSample() {
         return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
                 checkOut,
-                hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, roomNumber, couponNumber, adults,
+                hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, dueAmount, roomNumber, couponNumber, adults,
                 children,
                 rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
                 null, ratePlan != null ? ratePlan.toAggregate() : null,

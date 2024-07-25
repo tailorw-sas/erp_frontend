@@ -17,4 +17,6 @@ public class UpdateManageBankAccountKafka implements Serializable {
     private String accountNumber;
     @JsonProperty("status")
     private String status;
+    @JsonProperty("nameOfBank")
+    private String nameOfBank;
 }

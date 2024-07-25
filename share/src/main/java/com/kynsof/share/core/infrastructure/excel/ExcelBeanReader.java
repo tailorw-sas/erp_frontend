@@ -31,7 +31,7 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
     public T readSingleLine() {
 
         if (ExcelUtils.isSheetEmpty(sheetToRead)) {
-            throw new EmptySheetException(DomainErrorMessage.EXCEL_SHEET_EMPTY_FORMAT_ERROR, new ErrorField("Active Sheet", "The active sheet is empty."));
+            throw new EmptySheetException(DomainErrorMessage.EXCEL_SHEET_EMPTY_FORMAT_ERROR, new ErrorField("Empty excel", "There is no data to import."));
         }
         T bean;
         if (!ExcelUtils.isEndOfContent(rowCursor, sheetToRead)) {
