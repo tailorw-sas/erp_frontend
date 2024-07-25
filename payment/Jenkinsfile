@@ -1,7 +1,11 @@
 pipeline {
     
     agent any
-    
+
+	environment {
+		GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
+	}
+	
 	triggers {
         githubPush()
     }
@@ -16,7 +20,7 @@ pipeline {
 	stage ('Create docker image'){
 		steps {
 			dir('payment'){
-				sh 'docker build -t tailorw/fin-payments:dev .'
+				sh 'docker build -t tailorw/fin-payments:dev --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN .'
 				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
                 			sh 'docker push tailorw/fin-payments:dev'
                 		}
