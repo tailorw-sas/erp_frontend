@@ -15,6 +15,8 @@ import { GenericService } from '~/services/generic-services'
 import { statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import getUrlByImage from '~/composables/files'
+import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
+import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const menu = ref()
@@ -26,6 +28,7 @@ const formReload = ref(0)
 const invoiceTypeList = ref<any[]>()
 
 const totalInvoiceAmount = ref(0)
+const totalDueAmount = ref(0)
 
 const bookingDialogOpen = ref<boolean>(false)
 
@@ -46,7 +49,7 @@ const filterToSearch = ref<IData>({
   search: '',
   client: [],
   agency: [],
-  hotel: [],
+  hotel: [{ id: 'All', name: 'All', code: 'All' }],
   status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
   invoiceType: [{ id: 'All', name: 'All', code: 'All' }],
   from: dayjs(new Date()).startOf('month').toDate(),
@@ -102,13 +105,13 @@ const invoiceAllContextMenuItems = ref([
     label: 'New Credit',
     icon: 'pi pi-credit-card',
     command: () => {
-      navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[2].id}&selected=${attachmentInvoice.value.id}`)
+      navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[2].id}&selected=${attachmentInvoice.value.id}`, {open: {target: '_blank'}})
     },
     default: true,
   },
   {
     label: 'Status History',
-    icon: 'pi pi-history',
+    icon: 'pi pi-file',
     command: handleAttachmentHistoryDialogOpen,
     default: true,
   },
@@ -229,10 +232,10 @@ const columns: IColumn[] = [
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
   { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
-  { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
-  { field: 'isManual', header: 'Manual', type: 'bool' },
+  { field: 'createdAt', header: 'Gen. Date', type: 'date' },
+  { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
   { field: 'invoiceAmount', header: 'Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Invoice Balance', type: 'text' },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
   // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
   { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
 ]
@@ -262,8 +265,8 @@ const payload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'createdAt',
-  sortType: ENUM_SHORT_TYPE.DESC
+  sortBy: 'invoiceId',
+  sortType: ENUM_SHORT_TYPE.ASC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -348,11 +351,18 @@ async function getList() {
     for (const iterator of dataList) {
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code })
+        let  invoiceNumber
+        if(iterator?.invoiceNumber?.split('-')?.length === 3){
+        invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
+      }else{
+        invoiceNumber = iterator?.invoiceNumber
+      }
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code, dueAmount: iterator?.dueAmount || '0', invoiceNumber })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
 
       totalInvoiceAmount.value += iterator.invoiceAmount
+      totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
 
     listItems.value = [...listItems.value, ...newListItems]
@@ -378,14 +388,32 @@ function searchAndFilter() {
     query: '',
     pageSize: 50,
     page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
+    sortBy: 'invoiceId',
+    sortType: ENUM_SHORT_TYPE.ASC
   }
+
+  if(filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[0]?.id && filterToSearch.value.search){
+
+  if(filterToSearch.value.includeInvoicePaid){
+    payload.value.filter = [...payload.value.filter, {
+      key: 'dueAmount',
+      operator: 'LESS_THAN_OR_EQUAL_TO',
+      value: 0,
+      logicalOperation: 'AND'
+    }]
+  }else{
+    payload.value.filter = [...payload.value.filter, {
+      key: 'dueAmount',
+      operator: 'GREATER_THAN_OR_EQUAL_TO',
+      value: 1,
+      logicalOperation: 'AND'
+    }]
+  }}
 
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-      operator: 'LIKE',
+      operator: 'EQUALS',
       value: filterToSearch.value.search,
       logicalOperation: 'AND'
     }]
@@ -479,8 +507,8 @@ function clearFilterToSearch() {
     query: '',
     pageSize: 50,
     page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
+    sortBy: 'invoiceId',
+    sortType: ENUM_SHORT_TYPE.ASC
   }
   filterToSearch.value = {
     criteria: ENUM_INVOICE_CRITERIA[0],
@@ -901,7 +929,7 @@ const legend = ref(
           </template>
         </PopupNavigationMenu>
 
-        <Button v-tooltip.left="'Import'" class="ml-2" label="import" icon="pi pi-download" severity="primary" aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport" />
+        <Button v-tooltip.left="'Import'" class="ml-2" label="import" icon="pi pi-upload" severity="primary" aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport" />
         <Menu id="overlay_menu_import" ref="menu_import" class="ml-2" :model="itemsMenuImport" :popup="true" />
         <PopupNavigationMenu v-if="false" :items="itemsMenuImport" icon="pi pi-plus" label="Import">
           <template #item="props">
@@ -1233,7 +1261,7 @@ const legend = ref(
             <Row>
               <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
               <Column :footer="totalInvoiceAmount" />
-              <Column :footer="totalInvoiceAmount" />
+              <Column :footer="totalDueAmount" />
               <Column :colspan="9" />
               
               

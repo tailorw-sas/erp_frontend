@@ -58,6 +58,13 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1'
   },
   {
+    field: 'defaults',
+    header: 'Defaults',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 required mb-2',
+  },
+  {
     field: 'status',
     header: 'Active',
     dataType: 'check',
@@ -70,6 +77,7 @@ const item = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  defaults: false,
   status: true
 })
 
@@ -77,6 +85,7 @@ const itemTemp = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  defaults: false,
   status: true
 })
 
@@ -94,7 +103,8 @@ const columns: IColumn[] = [
   { field: 'code', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
-  { field: 'status', header: 'Active', type: 'bool' },
+  { field: 'defaults', header: 'Default', type: 'text', badge: { color: 'green' } },
+  { field: 'status', header: 'Active', type: 'bool', width: '120px' },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -104,7 +114,6 @@ const options = ref({
   moduleApi: 'payment',
   uriApi: 'resource-type',
   loading: false,
-  actionsAsMenu: false,
   messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
 })
 const payloadOnChangePage = ref<PageState>()
@@ -218,6 +227,7 @@ async function getItemById(id: string) {
         item.value.id = response.id
         item.value.name = response.name
         item.value.description = response.description
+        item.value.defaults = response.defaults
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
       }
@@ -486,10 +496,10 @@ onMounted(() => {
           >
             <template #form-footer="props">
               <div class="flex justify-content-end">
-                <IfCan :perms="idItem ? ['ACCOUNT-TYPE:EDIT'] : ['ACCOUNT-TYPE:CREATE']">
+                <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT-RESOURCE-TYPE:EDIT'] : ['PAYMENT-MANAGEMENT-RESOURCE-TYPE:CREATE']">
                   <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
                 </IfCan>
-                <IfCan :perms="['ACCOUNT-TYPE:DELETE']">
+                <IfCan :perms="['PAYMENT-MANAGEMENT-RESOURCE-TYPE:DELETE']">
                   <Button v-tooltip.top="'Delete'" class="w-3rem" severity="danger" outlined :loading="loadingDelete" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
                 </IfCan>
               </div>

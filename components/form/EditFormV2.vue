@@ -316,6 +316,8 @@ watch(() => props.forceSave, () => {
               <label :for="field.field" class="ml-2 font-bold"> {{ typeof field.header === 'function' ? field.header() : field.header }} </label>
             </span>
           </slot>
+          <!-- Field Help -->
+          <small v-if="field.helpText">{{ field.helpText }}</small>
 
           <!-- Validation errors -->
           <div v-if="true" class="flex">

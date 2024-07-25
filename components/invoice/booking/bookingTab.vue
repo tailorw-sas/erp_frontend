@@ -495,7 +495,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    ...(couponNumberValidation.value ? { validation: z.string().min(1, 'The coupon no. field is required').regex(new RegExp(couponNumberValidation.value), 'The coupon no. field is invalid') } : { validation: z.string().min(1, 'The coupon no. field is required') })
+    
   },
 
   // Room Category
@@ -690,7 +690,7 @@ const confApi = reactive({
 })
 
 const Columns: IColumn[] = [
-  { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-pen-to-square', sortable: false },
+  
   { field: 'bookingId', header: 'Id', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable:!props.isDetailView  && !props.isCreationDialog  },
 
@@ -704,6 +704,7 @@ const Columns: IColumn[] = [
   { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable:!props.isDetailView  && !props.isCreationDialog  },
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'invoiceAmount', header: 'Due Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
 
 ]
 
@@ -895,6 +896,9 @@ async function getBookingList(clearFilter: boolean = false) {
     Pagination.value.totalElements = totalElements
     Pagination.value.totalPages = totalPages
 
+    totalInvoiceAmount.value = 0
+    totalHotelAmount.value = 0
+
     for (const iterator of dataList) {
       ListItems.value = [...ListItems.value, {
         ...iterator,
@@ -975,7 +979,7 @@ async function GetItemById(id: string) {
       item.value.id = element.id
       item.value.bookingId = element.bookingId
       idItem.value = element?.id
-      item.value.hotelCreationDate = new Date(element.hotelCreationDate)
+      item.value.hotelCreationDate = dayjs(element.hotelCreationDate).startOf('day').toDate()
       item.value.bookingDate = new Date(element.bookingDate)
       item.value.checkIn = new Date(element.checkIn)
       item.value.checkOut = new Date(element.checkOut)
@@ -1140,7 +1144,7 @@ async function saveBooking(item: { [key: string]: any }) {
   if (successOperation) {
     ClearForm()
     if (!props.isCreationDialog) {
-      props.toggleForceUpdate()
+      props?.toggleForceUpdate()
     }
   }
 }
@@ -1266,7 +1270,7 @@ onMounted(() => {
 
   if (props.isDetailView) {
     finalColumns.value = [
-      { field: 'icon', header: '', width: '25px', type: 'icon', icon: 'pi pi-pen-to-square', sortable: false },
+      
       { field: 'bookingId', header: 'Id', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog  },
 
       { field: 'fullName', header: 'Full Name', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
@@ -1275,9 +1279,10 @@ onMounted(() => {
       { field: 'adults', header: 'Adult', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
       { field: 'children', header: 'Children', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
       { field: 'couponNumber', header: 'Coupon No.', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'reservationNumber', header: 'Reservation No.', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
       { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
       { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Due Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
 
     ]
   }
@@ -1310,9 +1315,10 @@ onMounted(() => {
 
       // if (route.query.type === ENUM_INVOICE_TYPE[3]?.id && isCreationDialog){ return }
 
-      console.log($event);
+      if(!props.isDetailView){
+        openEditBooking($event)}
 
-      openEditBooking($event)
+      
 
     }">
      
@@ -1320,8 +1326,9 @@ onMounted(() => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="!isDetailView ? 11: 9" footer-style="text-align:right" />
+            <Column footer="Totals:" :colspan="!isDetailView ? 10: 8" footer-style="text-align:right" />
             <Column :footer="totalHotelAmount" />
+            <Column :footer="totalInvoiceAmount" />
             <Column :footer="totalInvoiceAmount" />
             
             

@@ -1,59 +1,56 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
 import { v4 as uuidv4 } from 'uuid'
 import type { PageState } from 'primevue/paginator'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import { itemMenuList } from '~/components/payment/indexBtns'
 
 const toast = useToast()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
-const invoiceFile = ref('')
+const importModel = ref({
+  invoiceFile: '',
+  totalAmount: 0,
+  documentId: null,
+  attachFile: null
+})
+const documents = ref([])
 const uploadComplete = ref(false)
 
 const loadingSaveAll = ref(false)
 
 const confApi = reactive({
-  moduleApi: 'invoicing',
+  moduleApi: 'payment',
   uriApi: 'manage-booking/import',
 })
 
 const confErrorApi = reactive({
-  moduleApi: 'invoicing',
+  moduleApi: 'payment',
   uriApi: 'manage-booking',
 })
-
 // VARIABLES -----------------------------------------------------------------------------------------
-
-//
 const idItem = ref('')
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
+  { field: 'manageClientCode', header: 'Client', type: 'text' },
   { field: 'manageAgencyCode', header: 'Agency', type: 'text' },
-  { field: 'bookingDate', header: 'Booking Date', type: 'date' },
-  { field: 'fullName', header: 'Full Name', type: 'text' },
-  { field: 'hotelBookingNumber', header: 'Reserv No', type: 'text' },
-  { field: 'coupon', header: 'Coupon No', type: 'text' },
-  { field: 'roomType', header: 'Room Type', type: 'text' },
-  { field: 'checkIn', header: 'Check In', type: 'date' },
-  { field: 'checkOut', header: 'Check Out', type: 'date' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Amount', type: 'text' },
-  { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', showFilter: false },
+  { field: 'totalAmount', header: 'Total Amount', type: 'text' },
+  { field: 'TransfDate', header: 'Trans. Date', type: 'date' },
+  { field: 'remark', header: 'Remark', type: 'text' },
+  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false },
 ]
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Invoice',
-  moduleApi: 'invoicing',
+  moduleApi: 'payment',
   uriApi: 'manage-booking/import',
   loading: false,
   showDelete: false,
@@ -110,14 +107,12 @@ async function getErrorList() {
       rowError = ''
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        for (const err of iterator.errorFields) {
+        for (const err of iterator.errorField) {
           rowError += `- ${err.message} \n`
         }
         newListItems.push({ ...iterator.row, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
-
-      // totalInvoiceAmount.value += iterator.invoiceAmount
     }
 
     listItems.value = [...listItems.value, ...newListItems]
@@ -138,7 +133,7 @@ async function clearForm() {
 async function onChangeFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     inputFile.value = event.target.files[0]
-    invoiceFile.value = inputFile.value.name
+    importModel.value.invoiceFile = inputFile.value.name
     uploadComplete.value = false
   }
 }
@@ -220,23 +215,24 @@ onMounted(async () => {
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
-                  Bookings import from file
+                  Import Anti to Income
                 </div>
-                <!-- <div>
-                  <PaymentLegend :legend="legend" />
-                </div>
--->
               </div>
             </template>
             <div class="flex flex-column lg:flex-row w-full">
+              <div class="col-12 w-full md:col-3 lg:col-3">
+                <label class="w-7rem">Document: </label>
+                <div>
+                  <Dropdown v-model="importModel.documentId" :options="documents" option-label="label" option-value="value" placeholder="Select Document" />
+                </div>
+              </div>
               <div class="flex flex-row w-full align-items-center">
                 <label class="w-7rem">Import Data: </label>
-
                 <div class="w-full ">
                   <div class="p-inputgroup">
                     <InputText
                       ref="fileUpload"
-                      v-model="invoiceFile"
+                      v-model="importModel.invoiceFile"
                       placeholder="Choose file"
                       class="w-full"
                       show-clear
@@ -261,8 +257,8 @@ onMounted(async () => {
         @on-list-item="resetListItems" @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
-            <span style="color: red;">{{ data.impSta }}</span>
+          <div id="fieldError">
+            <span v-tooltip.bottom="data.impSta" style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
       </DynamicTable>
@@ -280,13 +276,5 @@ onMounted(async () => {
   background-color: transparent !important;
   border: none !important;
   text-align: left !important;
-}
-
-.ellipsis-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>

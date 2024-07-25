@@ -107,7 +107,7 @@ onMounted(() => {
             :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
             @update:model-value="($event) => {
               
-              onUpdate('checkOut',   dayjs($event).endOf('day').toDate())
+              onUpdate('checkOut',   dayjs($event).startOf('day').toDate())
             }"
           />
         </template>

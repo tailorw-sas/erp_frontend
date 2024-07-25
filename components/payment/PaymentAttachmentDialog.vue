@@ -213,11 +213,11 @@ const objApis = ref({
 })
 
 const Columns: IColumn[] = [
-  // { field: 'attachment_id', header: 'Id', type: 'text', width: '200px' },
-  { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
-  { field: 'attachmentType', header: 'Attachment Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
+  { field: 'paymentId', header: 'Id', type: 'text', width: '100px' },
+  // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
+  { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
-  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
+  { field: 'remark', header: 'Description', width: '200px', type: 'text' },
 ]
 const columnsAttachment: IColumn[] = [
   // { field: 'attachment_id', header: 'Id', type: 'text', width: '200px' },
@@ -355,7 +355,7 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      attachmentList = [...attachmentList, { ...iterator }]
+      attachmentList = [...attachmentList, { ...iterator, paymentId: externalProps.selectedPayment?.paymentId || '' }]
     }
 
     ListItems.value = [...attachmentList]
@@ -519,8 +519,8 @@ function mapFunction(data: DataListItem): ListItem {
     status: data.status
   }
 }
-async function getResourceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  resourceTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
+async function getResourceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  resourceTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
 }
 
 async function getAttachmentTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -589,10 +589,12 @@ async function updateItemLocal(item: any) {
         payload.path = ''
       }
     }
+    else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
+      payload.path = pathFileLocal.value
+    }
     else {
       payload.path = ''
     }
-    payload.employee = userData?.value?.user?.id || ''
     listItemsLocal.value[index] = payload
   }
 }
@@ -618,8 +620,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.attachmentType = item.attachmentType?.id
     payload.resourceType = item.resourceType?.id
     payload.status = 'ACTIVE'
-    payload.employee = userData?.value?.user?.userId || 'd4778d5f-8c35-40bd-83ec-4b66bb41f87f'
-    // payload.employee = 'a6ca5849-b312-4bf3-89aa-a5fafeee963f'
+    payload.employee = userData?.value?.user?.userId || ''
     payload.resource = externalProps.selectedPayment.id
     delete payload.event
     delete payload.paymentId
@@ -630,8 +631,27 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
-  payload.employee = userData?.value?.user?.id || ''
-  payload.type = item.type?.id
+  payload.employee = userData?.value?.user?.userId
+  payload.attachmentType = item.attachmentType?.id
+  payload.resourceType = item.resourceType?.id
+  payload.resource = externalProps.selectedPayment.id
+  if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+    const file = payload.path.files[0]
+    if (file) {
+      const objFile = await getUrlOrIdByFile(file)
+      payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+    }
+    else {
+      payload.path = ''
+    }
+  }
+  else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
+    payload.path = pathFileLocal.value
+  }
+  else {
+    payload.path = ''
+  }
+  delete payload.event
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
@@ -670,7 +690,6 @@ async function saveItem(item: { [key: string]: any }) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
-    idItem.value = ''
   }
   else {
     try {
@@ -737,6 +756,7 @@ async function getItemById(id: string) {
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
+    idItemToLoadFirstTime.value = id
     try {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
       if (response) {
@@ -865,6 +885,13 @@ async function loadDefaultsValues() {
     keys: ['name', 'code'],
   }, filter)
   item.value.attachmentType = attachmentTypeList.value.length > 0 ? attachmentTypeList.value[0] : null
+
+  await getResourceTypeList(objApis.value.resourceType.moduleApi, objApis.value.resourceType.uriApi, {
+    query: '',
+    keys: ['name', 'code'],
+  }, filter)
+  item.value.resourceType = resourceTypeList.value.length > 0 ? resourceTypeList.value[0] : null
+
   formReload.value++
 }
 
@@ -884,15 +911,16 @@ watch(() => listItemsLocal.value, async (newValue) => {
 }, { deep: true })
 
 onMounted(async () => {
+  loadDefaultsValues()
   if (externalProps.isCreateOrEditPayment !== 'create') {
     await getList()
     if (idItem.value) {
       await getItemById(idItem.value)
     }
   }
-  else {
-    loadDefaultsValues()
-  }
+
+  // else {
+  // }
 })
 </script>
 
@@ -1001,6 +1029,7 @@ onMounted(async () => {
                     item-value="id"
                     :model="data.resourceType"
                     :suggestions="resourceTypeList"
+                    :disabled="idItem === ''"
                     @change="($event) => {
                       onUpdate('resourceType', $event)
                     }" @load="($event) => getResourceTypeList(objApis.resourceType.moduleApi, objApis.resourceType.uriApi, $event)"
@@ -1099,14 +1128,14 @@ onMounted(async () => {
                     v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save"
                     @click="props.item.submitForm($event)"
                   />
-                  <Button v-tooltip.top="'View File'" :disabled="!idItem" class="w-3rem ml-1 sticky" icon="pi pi-file" @click="openOrDownloadFile(pathFileLocal)" />
+                  <Button v-tooltip.top="'View File'" :disabled="!idItem" class="w-3rem ml-1 sticky" icon="pi pi-eye" @click="openOrDownloadFile(pathFileLocal)" />
                   <Button
                     v-if="true"
                     v-tooltip.top="'Show History'" :disabled="!idItem && externalProps.isCreateOrEditPayment === 'create'" class="w-3rem ml-1 sticky" icon="pi pi-book"
                     @click="loadHistoryList"
                   />
-                  <Button v-tooltip.top="'New'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearForm" />
-                  <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                  <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearForm" />
+                  <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
                   <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialog" />
                 </template>
                 <!-- Save, View File, Show History, Add, Delete y Cancel -->

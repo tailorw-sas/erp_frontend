@@ -12,6 +12,8 @@ import type { FieldDefinitionType, Container } from '~/components/form/EditFormV
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import dayjs from 'dayjs'
+import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
+import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 
 
 
@@ -31,6 +33,8 @@ const selectedRoomRate = ref<string>('')
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
+
+const invoiceAmount = ref(0)
 
 const bookingDialogOpen = ref<boolean>(false)
 const roomRateDialogOpen = ref<boolean>(false)
@@ -346,12 +350,45 @@ async function getInvoiceTypeList() {
   }
 }
 
+function refetchInvoice(){
+  console.log("REFETCH");
+  getInvoiceAmountById(route.params.id as string)
+}
+
 
 function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
 
   formReload.value++
+}
+
+async function getInvoiceAmountById(id: string) {
+
+if (id) {
+  idItem.value = id
+  
+  try {
+    const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+
+    if (response) {
+     
+      item.value.invoiceAmount = response.invoiceAmount
+      invoiceAmount.value = response.invoiceAmount
+      
+    }
+
+    
+  }
+  catch (error) {
+    if (error) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+    }
+  }
+  finally {
+    
+  }
+}
 }
 
 async function getItemById(id: string) {
@@ -369,6 +406,7 @@ async function getItemById(id: string) {
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
+        invoiceAmount.value = response.invoiceAmount
         item.value.hotel = response.hotel
         item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
         item.value.agency = response.agency
@@ -610,6 +648,14 @@ onMounted(async () => {
           />
         </template>
 
+        <template #field-invoiceAmount="{ onUpdate, item: data }">
+          <InputText
+            v-model="invoiceAmount"  :disabled="true"
+            
+          />
+          
+        </template>
+
         <template #field-invoiceType="{ item: data, onUpdate }">
           <Dropdown
               v-if="!loadingSaveAll"
@@ -675,6 +721,7 @@ onMounted(async () => {
                 :force-update="forceUpdate"
                 :toggle-force-update="update"
                 :invoice-obj="item"
+                :refetch-invoice="refetchInvoice"
                 :is-creation-dialog="false" :selected-invoice="selectedInvoice as any"  :active="active" :set-active="($event) => { active = $event }" :showTotals="true"
 
             />
@@ -697,8 +744,8 @@ onMounted(async () => {
                     :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
                 />
                  <Button
-                v-tooltip.top="'Show History'" class="w-3rem mx-1" icon="pi pi-history"
-                :loading="loadingSaveAll" @click="handleAttachmentHistoryDialogOpen()"
+                v-tooltip.top="'Show History'" class="w-3rem mx-1" icon="pi pi-file"
+                :loading="loadingSaveAll" @click="handleAttachmentHistoryDialogOpen()" :disabled="!item?.hasAttachments"
               />
                
                 <Button

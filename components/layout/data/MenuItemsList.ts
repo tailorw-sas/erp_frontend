@@ -584,7 +584,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
             {
-              label: 'Payment Closed Operation',
+              label: 'Payment Close Operation',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/close-operation/payment'),
               items: []
@@ -816,7 +816,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
             },
             // Ocultar ambos en produccion
             {
-              label: 'Payment Reource Type',
+              label: 'Payment Resource Type',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/payment/resource-type'),
               items: []

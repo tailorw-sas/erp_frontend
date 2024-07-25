@@ -33,7 +33,7 @@ const items = ref([
       },
       {
         label: 'Income',
-        command: () => navigateTo('/payment/income'),
+        command: () => window.open('/payment/income?type=INCOME', '_blank'),
       },
       {
         label: 'Group',
@@ -45,8 +45,8 @@ const items = ref([
 const itemsImport = ref([
   {
     items: [
-      { label: 'Payment Of Bank', command: () => navigateTo('#') },
-      { label: 'Payment Of Expense', command: () => navigateTo('#') },
+      { label: 'Payment Of Bank', command: () => navigateTo('/payment/import-of-bank') },
+      { label: 'Payment Of Expense', command: () => navigateTo('/payment/import-of-expense') },
       { label: 'Anti To Income', command: () => navigateTo('#') },
       { label: 'Expense To Booking', command: () => navigateTo('#') },
       { label: 'Payment Details', command: () => navigateTo('#') },

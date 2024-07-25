@@ -26,6 +26,8 @@ const selectedRoomRate = ref<string>('')
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
+const agencyError = ref(false)
+const hotelError = ref(false)
 
 const bookingDialogOpen = ref<boolean>(false)
 const roomRateDialogOpen = ref<boolean>(false)
@@ -35,6 +37,7 @@ const attachmentHistoryDialogOpen = ref<boolean>(false)
 
 const bookingList = ref<any[]>([])
 const roomRateList = ref<any[]>([])
+const loadedRoomRates = ref<any[]>([])
 const adjustmentList = ref<any[]>([])
 const attachmentList = ref<any[]>([])
 
@@ -50,8 +53,6 @@ const invoiceAmountError = ref(false)
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 const invoiceTypeList = ref<any[]>([])
-
-
 
 const confhotelListApi = reactive({
   moduleApi: 'settings',
@@ -125,7 +126,6 @@ const creditFields: Array<Container> = [
         ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
       },
 
-
     ],
     containerClass: 'flex flex-column justify-content-evenly w-full mt-4'
   },
@@ -159,8 +159,6 @@ const creditFields: Array<Container> = [
 
     containerClass: 'flex flex-column justify-content-evenly w-full '
   },
-
-
 
 ]
 
@@ -197,7 +195,14 @@ const fields: Array<Container> = [
         header: 'Hotel',
         dataType: 'select',
         class: 'w-full px-3 required',
-        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id
+        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id,
+        validation: z.object({
+          id: z.string(),
+          name: z.string(),
+
+        })
+          .required()
+          .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` })
 
       },
       {
@@ -205,7 +210,13 @@ const fields: Array<Container> = [
         header: 'Agency',
         dataType: 'select',
         class: 'w-full px-3 required',
-        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id
+        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id,
+        validation: z.object({
+          id: z.string(),
+          name: z.string(),
+
+        }).required()
+          .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
       },
 
     ],
@@ -347,24 +358,24 @@ async function getHotelList() {
   try {
     const payload
       = {
-      filter: [{
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [{
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
     hotelList.value = []
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+      hotelList.value = [...hotelList.value, { isNightType: iterator?.isNightType, id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
     }
   }
   catch (error) {
@@ -376,18 +387,18 @@ async function getAgencyList() {
   try {
     const payload
       = {
-      filter: [{
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [{
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
@@ -409,11 +420,11 @@ function clearForm() {
 }
 
 async function createItem(item: { [key: string]: any }) {
-  
   if (item) {
-    console.log(item);
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
+
+    const nightTypeRequired = item?.hotel?.isNightType
 
     payload.invoiceId = item.invoiceId
     payload.invoiceNumber = item.invoiceNumber
@@ -425,12 +436,15 @@ async function createItem(item: { [key: string]: any }) {
     payload.invoiceType = route.query.type
     payload.id = v4()
 
-    let adjustments = []
-    let bookings = []
+    const adjustments = []
+    const bookings = []
     let roomRates = []
-    let attachments = []
+    const attachments = []
 
     for (let i = 0; i < bookingList?.value?.length; i++) {
+      if (nightTypeRequired && !bookingList.value[i].nightType?.id) {
+        throw new Error('The Night Type field is required for this hotel')
+      }
 
       bookings.push({
         ...bookingList.value[i],
@@ -440,7 +454,6 @@ async function createItem(item: { [key: string]: any }) {
         roomType: bookingList.value[i].roomType?.id,
         nightType: bookingList.value[i].nightType?.id,
       })
-
     }
 
     for (let i = 0; i < adjustmentList?.value.length; i++) {
@@ -450,7 +463,7 @@ async function createItem(item: { [key: string]: any }) {
       })
     }
 
-    roomRates = [...roomRateList.value]
+    roomRates = [...roomRateList.value, ...loadedRoomRates.value]
 
     for (let i = 0; i < attachmentList.value.length; i++) {
       const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
@@ -459,7 +472,6 @@ async function createItem(item: { [key: string]: any }) {
         type: attachmentList.value[i]?.type?.id,
         file: fileurl,
       })
-
     }
 
     const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments })
@@ -497,18 +509,29 @@ async function deleteItem(id: string) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if(invoiceAmountError.value){return null}
+  if (!item?.hotel?.id) {
+    hotelError.value = true
+  }
+  if (!item?.agency?.id) {
+    agencyError.value = true
+  }
+
+  if (hotelError.value || agencyError.value) {
+    return null
+  }
+
+  if (invoiceAmountError.value) { return null }
   loadingSaveAll.value = true
   let successOperation = true
 
   try {
     const response: any = await createItem(item)
-    navigateTo('/invoice')
+    navigateTo({ path: `/invoice/edit/${response?.id}` })
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${response?.invoiceId} was created successfully`, life: 10000 })
   }
   catch (error: any) {
     successOperation = false
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 })
   }
 
   loadingSaveAll.value = false
@@ -581,9 +604,10 @@ function openAdjustmentDialog(roomRate?: any) {
 function sortBooking(event: any) {
   if (event) {
     bookingList.value.sort((a, b) => {
-      if (event.sortOrder === "ASC") {
+      if (event.sortOrder === 'ASC') {
         return a[event.sortField] - b[event.sortField]
-      } else {
+      }
+      else {
         return b[event.sortField] - a[event.sortField]
       }
     })
@@ -592,9 +616,10 @@ function sortBooking(event: any) {
 function sortAdjustment(event: any) {
   if (event) {
     adjustmentList.value.sort((a, b) => {
-      if (event.sortOrder === "ASC") {
+      if (event.sortOrder === 'ASC') {
         return a[event.sortField] - b[event.sortField]
-      } else {
+      }
+      else {
         return b[event.sortField] - a[event.sortField]
       }
     })
@@ -603,9 +628,10 @@ function sortAdjustment(event: any) {
 function sortRoomRate(event: any) {
   if (event) {
     roomRateList.value.sort((a, b) => {
-      if (event.sortOrder === "ASC") {
+      if (event.sortOrder === 'ASC') {
         return a[event.sortField] - b[event.sortField]
-      } else {
+      }
+      else {
         return b[event.sortField] - a[event.sortField]
       }
     })
@@ -614,12 +640,14 @@ function sortRoomRate(event: any) {
 
 function addBooking(booking: any) {
   bookingList.value = [...bookingList.value, {
-    ...booking, checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
-    checkOut: dayjs(booking?.checkOut).endOf('day').toISOString(), nights: dayjs(booking?.checkOut).endOf('day').diff(dayjs(booking?.checkIn).startOf('day'), 'day', false)
+    ...booking,
+    checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
+    checkOut: dayjs(booking?.checkOut).startOf('day').toISOString(),
+    nights: dayjs(booking?.checkOut).endOf('day').diff(dayjs(booking?.checkIn).startOf('day'), 'day', false)
   }]
   roomRateList.value = [...roomRateList.value, {
     checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
-    checkOut: dayjs(booking?.checkOut).endOf('day').toISOString(),
+    checkOut: dayjs(booking?.checkOut).startOf('day').toISOString(),
     invoiceAmount: booking?.invoiceAmount,
     roomNumber: booking?.roomNumber,
     adults: booking?.adults,
@@ -665,7 +693,6 @@ async function getItemById(id: any) {
           item.value.originalAmount = response.invoiceAmount
           item.value.invoiceDate = new Date()
         }
-
       }
 
       formReload.value += 1
@@ -681,10 +708,8 @@ async function getItemById(id: any) {
   }
 }
 
-
 async function getBookingList(clearFilter: boolean = false) {
   try {
-
     const Payload: any = ({
       filter: [{
 
@@ -712,75 +737,70 @@ async function getBookingList(clearFilter: boolean = false) {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      let id = v4()
+      const id = v4()
       bookingList.value = [...bookingList.value, {
         ...iterator,
-        id: id,
+        id,
         bookingId: '',
         loadingEdit: false,
         loadingDelete: false,
         agency: iterator?.invoice?.agency,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
-        fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`
+        fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
 
-      roomRateList.value = [...roomRateList.value, {
-    checkIn: dayjs(iterator?.checkIn).startOf('day').toISOString(),
-    checkOut: dayjs(iterator?.checkOut).endOf('day').toISOString(),
-    invoiceAmount: iterator?.invoiceAmount,
-    roomNumber: iterator?.roomNumber,
-    adults: iterator?.adults,
-    children: iterator?.children,
-    rateAdult: iterator?.rateAdult,
-    rateChild: iterator?.rateChild,
-    hotelAmount: Number(iterator?.hotelAmount),
-    remark: iterator?.description,
-    booking: id,
-    nights: dayjs(iterator?.checkOut).diff(dayjs(iterator?.checkIn), 'day', false),
-    ratePlan: iterator?.ratePlan,
-    roomType: iterator?.roomType,
-    fullName: `${iterator?.firstName ?? ''} ${iterator?.lastName ?? ''}`,
-    firstName: iterator?.firstName,
-    lastName: iterator?.lastName,
-    id: v4()
-  }]
-
+      loadedRoomRates.value = [...loadedRoomRates.value, {
+        checkIn: dayjs(iterator?.checkIn).startOf('day').toISOString(),
+        checkOut: dayjs(iterator?.checkOut).endOf('day').toISOString(),
+        invoiceAmount: iterator?.invoiceAmount,
+        roomNumber: iterator?.roomNumber,
+        adults: iterator?.adults,
+        children: iterator?.children,
+        rateAdult: iterator?.rateAdult,
+        rateChild: iterator?.rateChild,
+        hotelAmount: Number(iterator?.hotelAmount),
+        remark: iterator?.description,
+        booking: id,
+        nights: dayjs(iterator?.checkOut).diff(dayjs(iterator?.checkIn), 'day', false),
+        ratePlan: iterator?.ratePlan,
+        roomType: iterator?.roomType,
+        fullName: `${iterator?.firstName ?? ''} ${iterator?.lastName ?? ''}`,
+        firstName: iterator?.firstName,
+        lastName: iterator?.lastName,
+        id: v4()
+      }]
     }
-
   }
   catch (error) {
     console.error(error)
   }
   finally {
-    //Options.value.loading = false
+    // Options.value.loading = false
   }
 }
 
 function calcBookingInvoiceAmount(roomRate: any) {
-  const bookingIndex = bookingList.value.findIndex((b) => b?.id === roomRate?.booking)
+  const bookingIndex = bookingList.value.findIndex(b => b?.id === roomRate?.booking)
 
   bookingList.value[bookingIndex].invoiceAmount = 0
 
   const roomRates = roomRateList.value.filter((roomRate: any) => roomRate.booking === bookingList.value[bookingIndex]?.id)
 
-  roomRates.forEach(roomRate => {
+  roomRates.forEach((roomRate) => {
     bookingList.value[bookingIndex].invoiceAmount += Number(roomRate.invoiceAmount)
   })
   calcInvoiceAmount()
-
 
   // if (bookingIndex > -1) {
   //   bookingList.value[bookingIndex].invoiceAmount = Number(bookingList.value[bookingIndex].invoiceAmount) + Number(roomRate.invoiceAmount)
 
   // }
-
-
 }
 function calcRoomRateInvoiceAmount(newAdjustment: any) {
-  const roomRateIndex = roomRateList.value.findIndex((rr) => rr?.id === newAdjustment?.roomRate)
-  const adjustmentIndex = adjustmentList.value.findIndex((rr) => rr?.id === newAdjustment?.id)
-  
-  if(adjustmentIndex > -1) {
+  const roomRateIndex = roomRateList.value.findIndex(rr => rr?.id === newAdjustment?.roomRate)
+  const adjustmentIndex = adjustmentList.value.findIndex(rr => rr?.id === newAdjustment?.id)
+
+  if (adjustmentIndex > -1) {
     roomRateList.value[roomRateIndex].invoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) - Number(adjustmentList.value[adjustmentIndex]?.amount)
   }
 
@@ -788,12 +808,10 @@ function calcRoomRateInvoiceAmount(newAdjustment: any) {
     roomRateList.value[roomRateIndex].invoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) + Number(newAdjustment.amount)
     calcBookingInvoiceAmount(roomRateList.value[roomRateIndex])
   }
-
 }
 
 function calcInvoiceAmount() {
   invoiceAmount.value = 0
-
 
   bookingList.value.forEach((b) => {
     invoiceAmount.value = Number(invoiceAmount.value) + Number(b?.invoiceAmount)
@@ -803,16 +821,13 @@ function calcInvoiceAmount() {
 function updateBooking(booking: any) {
   const index = bookingList.value.findIndex(item => item.id === booking.id)
 
-  if (bookingList.value[index]?.invoiceAmount !== booking?.invoiceAmount) {
-    calcInvoiceAmount()
-  }
-
   for (let i = 0; i < roomRateList.value.length; i++) {
-    const element = roomRateList.value[i];
+    const element = roomRateList.value[i]
 
     if (element?.booking === booking?.id) {
       roomRateList.value[i] = {
-        ...element, ratePlan: booking?.ratePlan,
+        ...element,
+        ratePlan: booking?.ratePlan,
         roomType: booking?.roomType,
         fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
         firstName: booking?.firstName,
@@ -820,25 +835,26 @@ function updateBooking(booking: any) {
 
       }
     }
-
   }
 
-
   bookingList.value[index] = {
-    ...booking, checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
+    ...booking,
+    checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
     checkOut: dayjs(booking?.checkOut).endOf('day').toISOString(),
   }
   bookingList.value[index].nights = dayjs(booking?.checkOut).endOf('day').diff(dayjs(booking?.checkIn).startOf('day'), 'day', false)
 
-
+  calcInvoiceAmount()
 }
 
 function addRoomRate(rate: any) {
   const booking = bookingList.value.find((b => b?.id === rate?.booking))
 
-
   roomRateList.value = [...roomRateList.value, {
-    ...rate, nights: dayjs(rate?.checkOut).endOf('day').diff(dayjs(rate?.checkIn).startOf('day'), 'day', false), ratePlan: booking?.ratePlan, roomType: booking?.roomType,
+    ...rate,
+    nights: dayjs(rate?.checkOut).endOf('day').diff(dayjs(rate?.checkIn).startOf('day'), 'day', false),
+    ratePlan: booking?.ratePlan,
+    roomType: booking?.roomType,
     fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
     checkIn: dayjs(rate?.checkIn).startOf('day').toISOString(),
     checkOut: dayjs(rate?.checkOut).endOf('day').toISOString(),
@@ -847,13 +863,14 @@ function addRoomRate(rate: any) {
 }
 
 function updateRoomRate(roomRate: any) {
-  console.log(roomRate);
+  console.log(roomRate)
   const index = roomRateList.value.findIndex(item => item.id === roomRate.id)
 
   const booking = bookingList.value.find((b => b?.id === roomRateList.value[index]?.booking))
 
   roomRateList.value[index] = {
-    ...roomRate, booking: roomRateList.value[index]?.booking,
+    ...roomRate,
+    booking: roomRateList.value[index]?.booking,
     ratePlan: booking?.ratePlan,
     roomType: booking?.roomType,
     fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
@@ -885,8 +902,7 @@ function updateAttachment(attachment: any) {
 }
 
 watch(invoiceAmount, () => {
-
-  console.log(item);
+  console.log(item)
 
   invoiceAmountError.value = false
 
@@ -914,31 +930,39 @@ onMounted(async () => {
       : "" }}
   </div>
   <div cactiveTab class="p-3 pt-0">
-    <EditFormV2WithContainer :key="formReload"
+    <EditFormV2WithContainer
+      :key="formReload"
       :fields-with-containers="route.query.type === ENUM_INVOICE_TYPE[2]?.id ? creditFields : fields" :item="item"
       :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete"
       container-class="flex flex-row justify-content-evenly card w-full mb-2" @cancel="clearForm"
-      @delete="requireConfirmationToDelete($event)">
+      @delete="requireConfirmationToDelete($event)"
+    >
       <template #field-invoiceDate="{ item: data, onUpdate }">
-        <Calendar v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
+        <Calendar
+          v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
           @update:model-value="($event) => {
-      onUpdate('invoiceDate', $event)
-    }" />
+            onUpdate('invoiceDate', $event)
+          }"
+        />
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
-        <InputText v-model="invoiceAmount" show-clear :disabled="route.query.type !== ENUM_INVOICE_TYPE[2]?.id"
+        <InputText
+          v-model="invoiceAmount" show-clear :disabled="route.query.type !== ENUM_INVOICE_TYPE[2]?.id"
           @update:model-value="($event) => {
-      invoiceAmountError = false
-      onUpdate('invoiceAmount', $event)
-    }" />
+            invoiceAmountError = false
+            onUpdate('invoiceAmount', $event)
+          }"
+        />
         <span v-if="invoiceAmountError" class="error-message p-error text-xs">New value must be less or equal than
           original amount</span>
       </template>
       <template #field-invoiceType="{ item: data, onUpdate }">
-        <Dropdown v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
+        <Dropdown
+          v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
           option-label="name" return-object="false" show-clear disabled @update:model-value="($event) => {
-      onUpdate('invoiceType', $event)
-    }">
+            onUpdate('invoiceType', $event)
+          }"
+        >
           <template #option="props">
             {{ props.option?.code }}-{{ props.option?.name }}
           </template>
@@ -949,11 +973,14 @@ onMounted(async () => {
         <Skeleton v-else height="2rem" class="mb-2" />
       </template>
       <template #field-hotel="{ item: data, onUpdate }">
-        <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
+        <DebouncedAutoCompleteComponent
+          v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
           :model="data.hotel" :disabled="String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id"
           :suggestions="hotelList" @change="($event) => {
-      onUpdate('hotel', $event)
-    }" @load="($event) => getHotelList($event)">
+            hotelError = false
+            onUpdate('hotel', $event)
+          }" @load="($event) => getHotelList($event)"
+        >
           <template #option="props">
             <span>{{ props.item.fullName }}</span>
           </template>
@@ -963,13 +990,17 @@ onMounted(async () => {
             </div>
           </template>
         </DebouncedAutoCompleteComponent>
+        <span v-if="hotelError" class="error-message p-error text-xs">The hotel field is required</span>
       </template>
       <template #field-agency="{ item: data, onUpdate }">
-        <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
+        <DebouncedAutoCompleteComponent
+          v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
           :model="data.agency" :disabled="String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id"
           :suggestions="agencyList" @change="($event) => {
-      onUpdate('agency', $event)
-    }" @load="($event) => getAgencyList($event)">
+            agencyError = false
+            onUpdate('agency', $event)
+          }" @load="($event) => getAgencyList($event)"
+        >
           <template #option="props">
             <span>{{ props.item.fullName }}</span>
           </template>
@@ -979,11 +1010,13 @@ onMounted(async () => {
             </div>
           </template>
         </DebouncedAutoCompleteComponent>
+        <span v-if="agencyError" class="error-message p-error text-xs">The agency field is required</span>
       </template>
 
       <template #form-footer="props">
         <div style="width: 100%; height: 100%;">
-          <InvoiceTabView :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
+          <InvoiceTabView
+            :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
             :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
             :open-adjustment-dialog="openAdjustmentDialog" :force-update="forceUpdate" :sort-adjustment="sortAdjustment"
             :sort-booking="sortBooking" :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate"
@@ -992,43 +1025,59 @@ onMounted(async () => {
             :add-booking="addBooking" :update-booking="updateBooking" :adjustment-list="adjustmentList"
             :add-adjustment="addAdjustment" :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
 
-      active = $event
-    }" />
+              active = $event
+            }"
+          />
 
           <div>
-
             <div class="flex justify-content-end">
-              <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
+              <Button
+                v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
                 :disabled="bookingList.length === 0" @click="() => {
-      saveItem(props.item.fieldValues)
-    }" />
-              <Button v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-print" :loading="loadingSaveAll"
-                disabled />
+                  saveItem(props.item.fieldValues)
+                }"
+              />
+              <Button
+                v-if="route.query.type !== ENUM_INVOICE_TYPE[3]?.id" v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-print" :loading="loadingSaveAll"
+                disabled
+              />
 
-              <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                :loading="loadingSaveAll" disabled @click="handleAttachmentDialogOpen()" />
-              <Button v-tooltip.top="'Show History'" class="w-3rem mx-1" icon="pi pi-history" :loading="loadingSaveAll"
-                disabled @click="handleAttachmentHistoryDialogOpen()" />
+              <Button
+                v-tooltip.top="'Add Attachment'" class="w-3rem mx-1"
+                icon="pi pi-paperclip" :loading="loadingSaveAll" disabled @click="handleAttachmentDialogOpen()"
+              />
+              <Button
+                v-if="route.query.type !== ENUM_INVOICE_TYPE[3]?.id" v-tooltip.top="'Show History'" class="w-3rem mx-1" icon="pi pi-file"
+                :loading="loadingSaveAll" disabled @click="handleAttachmentHistoryDialogOpen()"
+              />
 
-              <Button v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                :loading="loadingSaveAll" @click="handleDialogOpen()" />
+              <Button
+                v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
+                :loading="loadingSaveAll" @click="handleDialogOpen()"
+              />
 
-              <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
-              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times"
-                @click="goToList" />
+              <Button v-if="route.query.type !== ENUM_INVOICE_TYPE[3]?.id" v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
+              <Button
+                v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times"
+                @click="goToList"
+              />
             </div>
           </div>
         </div>
         <div v-if="attachmentDialogOpen">
-          <AttachmentDialog :add-item="addAttachment" :close-dialog="() => { attachmentDialogOpen = false }"
+          <AttachmentDialog
+            :add-item="addAttachment" :close-dialog="() => { attachmentDialogOpen = false }"
             :is-creation-dialog="true" header="Manage Invoice Attachment" :list-items="attachmentList"
             :open-dialog="attachmentDialogOpen" :update-item="updateAttachment" selected-invoice=""
-            :selected-invoice-obj="{}" />
+            :selected-invoice-obj="{}"
+          />
         </div>
         <div v-if="attachmentHistoryDialogOpen" class="w-fit h-fit">
-          <AttachmentHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+          <AttachmentHistoryDialog
+            :close-dialog="() => { attachmentHistoryDialogOpen = false }"
             header="Attachment Status History" :list-items="attachmentList" :open-dialog="attachmentHistoryDialogOpen"
-            selected-invoice="" :selected-invoice-obj="{}" :is-creation-dialog="true" />
+            selected-invoice="" :selected-invoice-obj="{}" :is-creation-dialog="true"
+          />
         </div>
       </template>
     </EditFormV2WithContainer>

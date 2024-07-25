@@ -5,6 +5,14 @@ export interface IQueryToSearch {
   keys: string[]
 }
 
+export interface IQueryToSort {
+  query?: string
+  pageSize?: number
+  page?: number
+  sortBy?: string
+  sortType?: string
+}
+
 // export interface FilterCriteria {
 //   key: string
 //   operator: string
@@ -17,7 +25,8 @@ export async function getDataList<T, U>(
   uriApi: string,
   filter: FilterCriteria[] = [],
   objToSearch?: IQueryToSearch,
-  mapFunction?: (data: T) => U
+  mapFunction?: (data: T) => U,
+  optionsToSort?: IQueryToSort,
 ): Promise<U[]> {
   let listItem: U[] = []
   try {
@@ -30,11 +39,11 @@ export async function getDataList<T, U>(
         : [
             ...filter
           ],
-      query: '',
-      pageSize: 50,
-      page: 0,
-      // sortBy: 'createdAt',
-      // sortType: 'DES'
+      query: optionsToSort?.query || '',
+      pageSize: optionsToSort?.pageSize || 50,
+      page: optionsToSort?.page || 0,
+      sortBy: optionsToSort?.sortBy || 'createdAt',
+      sortType: optionsToSort?.sortType || 'ASC'
     }
 
     const response = await GenericService.search(moduleApi, uriApi, payload)
