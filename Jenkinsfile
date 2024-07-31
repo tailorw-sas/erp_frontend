@@ -24,7 +24,7 @@ pipeline {
 
 	stage ('Publish to Kubernetes') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'KubernetesCredential', namespace: 'finamer', restrictKubeConfigAccess: false, serverUrl: 'https://172.20.41.100:5443') {
+                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'KubernetesCredential', namespace: 'finamer', restrictKubeConfigAccess: false, serverUrl: 'https://172.20.41.150:5443') {
                     sh 'kubectl apply -f finamer-admin.yaml'
                 }
             }
