@@ -39,6 +39,8 @@ public class UserPermissionBusiness {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     public UserPermissionBusiness(UserPermissionBusinessDto userRoleBusinessDto) {
         this.id = userRoleBusinessDto.getId();
