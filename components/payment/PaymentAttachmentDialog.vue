@@ -8,6 +8,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import { getUrlOrIdByFile } from '~/composables/files'
+import { applyFiltersAndSort } from '~/pages/payment/utils/helperFilters'
 
 interface ResourceType {
   id: string
@@ -123,7 +124,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
-    disabled: false,
+    disabled: true,
   },
   {
     field: 'resourceType',
@@ -213,27 +214,30 @@ const objApis = ref({
 })
 
 const Columns: IColumn[] = [
-  { field: 'paymentId', header: 'Id', type: 'text', width: '100px' },
+  { field: 'attachmentId', header: 'Id', type: 'text', width: '100px' },
+  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
   // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
   { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
-  { field: 'remark', header: 'Description', width: '200px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
 ]
 const columnsAttachment: IColumn[] = [
-  // { field: 'attachment_id', header: 'Id', type: 'text', width: '200px' },
-  { field: 'resourceType.name', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
-  { field: 'attachmentType.name', header: 'Attachment Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
+  { field: 'attachmentId', header: 'Id', type: 'text', width: '100px', sortable: false, showFilter: false },
+  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
+  // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
+  { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
   { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
 ]
 
-const historyColumns: IColumn[] = [
-  { field: 'paymentId', header: 'Payment Id', type: 'text', width: 'auto' },
+const historyColumns = ref<IColumn[]>([
+  { field: 'attachmentId', header: 'Id', type: 'text', width: '50px' },
+  { field: 'paymentId', header: 'Payment Id', type: 'text', width: 'auto', sortable: false, showFilter: false },
   { field: 'createdAt', header: 'Date', type: 'date', width: 'auto' },
-  { field: 'employee', header: 'Employee', type: 'select', width: 'auto', objApi: { moduleApi: 'settings', uriApi: 'manage-employee', keyValue: 'firstName' } },
+  { field: 'employee', header: 'Employee', type: 'select', width: 'auto', localItems: [] },
   { field: 'description', header: 'Description', type: 'text', width: '200px' },
-  { field: 'status', header: 'Active', type: 'bool', width: '60px' },
-]
+  { field: 'attachmentStatus', header: 'Status', type: 'text', width: '120px' },
+])
 
 const historyOptions = ref({
   tableName: 'Payment Attachment',
@@ -241,7 +245,7 @@ const historyOptions = ref({
   uriApi: 'attachment-status-history',
   loading: false,
   showDelete: false,
-  showFilters: false,
+  showFilters: true,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
 })
@@ -265,7 +269,23 @@ const Pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+const PaginationHistory = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
 const payloadOnChangePage = ref<PageState>()
+const payloadOnChangePageHistory = ref<PageState>()
+const payloadLocal = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: 'ASC'
+})
 
 const payload = ref<IQueryRequest>({
   filter: [],
@@ -298,6 +318,7 @@ const formTitle = computed(() => {
 
 const ListItems = ref<any[]>([])
 const listItemsLocal = ref<any[]>([...externalProps.listItems])
+const listItemsLocalTemp = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
 
 async function ResetListItems() {
@@ -306,6 +327,9 @@ async function ResetListItems() {
 
 function OnSortField(event: any) {
   if (event) {
+    if (event.sortField === 'paymentId') {
+      event.sortField = 'paymentId.id'
+    }
     if (event.sortField === 'attachmentType') {
       event.sortField = 'attachmentType.name'
     }
@@ -318,9 +342,46 @@ function OnSortField(event: any) {
   }
 }
 
-function clearForm() {
+function onSortFieldHistory(event: any) {
+  if (event) {
+    if (event.sortField === 'paymentId') {
+      event.sortField = 'paymentId.id'
+    }
+    if (event.sortField === 'employee') {
+      event.sortField = 'employee.firstName'
+    }
+    // if (event.sortField === 'attachmentStatus') {
+    //   event.sortField = 'attachmentStatus.name'
+    // }
+    payloadHistory.value.sortBy = event.sortField
+    payloadHistory.value.sortType = event.sortOrder
+    historyParseDataTableFilter(event.filter)
+  }
+}
+
+async function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
+
+  const filter: FilterCriteria[] = [
+    {
+      key: 'defaults',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: true,
+    },
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+    },
+  ]
+  await getResourceTypeList(objApis.value.resourceType.moduleApi, objApis.value.resourceType.uriApi, {
+    query: '',
+    keys: ['name', 'code'],
+  }, filter)
+  item.value.resourceType = resourceTypeList.value.length > 0 ? resourceTypeList.value[0] : null
 
   formReload.value++
 }
@@ -329,6 +390,7 @@ async function getList() {
   try {
     idItem.value = ''
     options.value.loading = true
+    idItemToLoadFirstTime.value = ''
     ListItems.value = []
     let attachmentList: any[] = []
 
@@ -355,7 +417,7 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      attachmentList = [...attachmentList, { ...iterator, paymentId: externalProps.selectedPayment?.paymentId || '' }]
+      attachmentList = [...attachmentList, { ...iterator, paymentId: iterator.resource?.paymentId || '' }]
     }
 
     ListItems.value = [...attachmentList]
@@ -412,10 +474,8 @@ async function historyGetList() {
 
     for (const iterator of dataList) {
       iterator.paymentId = externalProps.selectedPayment.paymentId
+      iterator.attachmentStatus = iterator.status
 
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
         if (iterator.employee.firstName && iterator.employee.lastName) {
           iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
@@ -424,7 +484,7 @@ async function historyGetList() {
 
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        newListItems.push({ ...iterator })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -450,10 +510,18 @@ function clearFilterToSearch() {
   getList()
 }
 
+// paymentId
+
 function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   if (filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
+      key: 'resource.paymentId',
+      operator: 'EQUALS',
+      value: filterToSearch.value.search,
+      logicalOperation: 'OR',
+      type: 'filterSearch',
+    }, {
       key: 'fileName',
       operator: 'LIKE',
       value: filterToSearch.value.search,
@@ -475,48 +543,65 @@ async function ParseDataTableFilter(payloadFilter: any) {
   getList()
 }
 
-// async function getAttachmentTypeList() {
-//   try {
-//     const payload
-//       = {
-//         filter: [],
-//         query: '',
-//         pageSize: 200,
-//         page: 0,
-//         sortBy: 'createdAt',
-//         sortType: 'DES'
-//       }
+async function historyParseDataTableFilter(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, historyColumns.value)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'employee') {
+        parseFilter[i].key = 'employee.id'
+      }
+    }
+  }
+  payloadHistory.value.filter = [...parseFilter || []]
+  historyGetList()
+}
 
-//     attachmentTypeList.value = []
-//     const response = await GenericService.search(confattachmentTypeListApi.moduleApi, confattachmentTypeListApi.uriApi, payload)
-//     const { data: dataList } = response
-//     for (const iterator of dataList) {
-//       attachmentTypeList.value = [...attachmentTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
-//     }
-//   }
-//   catch (error) {
-//     console.error('Error loading Attachment Type list:', error)
-//   }
-// }
+async function parseDataTableFilterLocal(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
+  payloadLocal.value.filter = [...parseFilter || []]
+
+  listItemsLocal.value = JSON.parse(JSON.stringify(listItemsLocalTemp.value))
+  listItemsLocal.value = [...applyFiltersAndSort(payloadLocal.value, listItemsLocal.value)]
+}
+
+function onSortFieldLocal(event: any) {
+  if (event) {
+    if (event.sortField === 'paymentId') {
+      event.sortField = 'paymentId'
+    }
+    if (event.sortField === 'attachmentType') {
+      event.sortField = 'attachmentType.name'
+    }
+    if (event.sortField === 'resourceType') {
+      event.sortField = 'resourceType.name'
+    }
+    payloadLocal.value.sortBy = event.sortField
+    payloadLocal.value.sortType = event.sortOrder
+    parseDataTableFilterLocal(event.filter)
+  }
+}
 
 interface DataListItem {
   id: string
   name: string
   code: string
   status: string
+  defaults?: boolean
 }
 
 interface ListItem {
   id: string
   name: string
   status: boolean | string
+  defaults?: boolean
 }
 
 function mapFunction(data: DataListItem): ListItem {
   return {
     id: data.id,
     name: `${data.name}`,
-    status: data.status
+    status: data.status,
+    defaults: data?.defaults
   }
 }
 async function getResourceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -548,54 +633,80 @@ function mapFunctionEmployee(data: DataListItemEmployee): ListItemEmployee {
   }
 }
 
-async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  attachmentTypeList.value = await getDataList<DataListItemEmployee, ListItemEmployee>(moduleApi, uriApi, [], queryObj, mapFunctionEmployee)
+async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  employeeList.value = await getDataList<DataListItemEmployee, ListItemEmployee>(moduleApi, uriApi, filter, queryObj, mapFunctionEmployee)
+  const columnEmployee = historyColumns.value.find(item => item.field === 'employee')
+  if (columnEmployee) {
+    columnEmployee.localItems = [...JSON.parse(JSON.stringify(employeeList.value))]
+  }
 }
+
+const haveError = ref(false)
 
 async function createItemLocal(item: any) {
   if (item) {
-    item.id = listItemsLocal.value.length + 1
-    const payload: { [key: string]: any } = { ...item }
-    payload.employee = userData?.value?.user?.userId
-    if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
-      const file = payload.path.files[0]
-      if (file) {
-        const objFile = await getUrlOrIdByFile(file)
-        payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+    const hasDefaultAttachmentType = listItemsLocal.value.some(item => item.attachmentType.defaults)
+
+    if (hasDefaultAttachmentType && item.attachmentType.defaults) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Only a payment support by payment is allowed', life: 3000 })
+      haveError.value = true
+    }
+    else {
+      item.id = listItemsLocal.value.length + 1
+      const payload: { [key: string]: any } = { ...item }
+      payload.employee = userData?.value?.user?.userId
+      if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+        const file = payload.path.files[0]
+        if (file) {
+          const objFile = await getUrlOrIdByFile(file)
+          payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+        }
+        else {
+          payload.path = ''
+        }
       }
       else {
         payload.path = ''
       }
+      listItemsLocal.value = [...listItemsLocal.value, payload]
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+      haveError.value = false
     }
-    else {
-      payload.path = ''
-    }
-    listItemsLocal.value = [...listItemsLocal.value, payload]
   }
+  listItemsLocalTemp.value = JSON.parse(JSON.stringify(listItemsLocal.value))
 }
 
 async function updateItemLocal(item: any) {
   if (item) {
-    const index = listItemsLocal.value.findIndex((x: any) => x.id === item.id)
-    const payload: { [key: string]: any } = { ...item }
-    payload.employee = userData?.value?.user?.userId
-    if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
-      const file = payload.path.files[0]
-      if (file) {
-        const objFile = await getUrlOrIdByFile(file)
-        payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+    const hasDefaultAttachmentType = listItemsLocal.value.some(itemLocal => itemLocal.id !== item.id && itemLocal.attachmentType.defaults)
+
+    if (hasDefaultAttachmentType && item.attachmentType.defaults) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Only a payment support by payment is allowed', life: 3000 })
+    }
+    else {
+      const index = listItemsLocal.value.findIndex((x: any) => x.id === item.id)
+      const payload: { [key: string]: any } = { ...item }
+      payload.employee = userData?.value?.user?.userId
+      if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+        const file = payload.path.files[0]
+        if (file) {
+          const objFile = await getUrlOrIdByFile(file)
+          payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+        }
+        else {
+          payload.path = ''
+        }
+      }
+      else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
+        payload.path = pathFileLocal.value
       }
       else {
         payload.path = ''
       }
+      listItemsLocal.value[index] = payload
+      listItemsLocalTemp.value[index] = JSON.parse(JSON.stringify(payload))
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
-    else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
-      payload.path = pathFileLocal.value
-    }
-    else {
-      payload.path = ''
-    }
-    listItemsLocal.value[index] = payload
   }
 }
 
@@ -683,8 +794,8 @@ async function saveItem(item: { [key: string]: any }) {
       }
       else {
         await updateItem(item)
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
       }
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
@@ -694,12 +805,18 @@ async function saveItem(item: { [key: string]: any }) {
   else {
     try {
       if (externalProps.isCreateOrEditPayment === 'create') {
-        createItemLocal(item)
+        try {
+          createItemLocal(item)
+        }
+        catch (error) {
+          successOperation = false
+          toast.add({ severity: 'error', summary: 'Error', detail: 'Only a payment support by payment is allowed', life: 3000 })
+        }
       }
       else {
         await createItem(item)
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
       }
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
@@ -707,7 +824,7 @@ async function saveItem(item: { [key: string]: any }) {
     }
   }
   loadingSaveAll.value = false
-  if (successOperation) {
+  if (successOperation && !haveError.value) {
     clearForm()
     getList()
   }
@@ -784,30 +901,33 @@ async function getItemById(id: string) {
   }
 }
 
-async function getItemByIdLocal(itemLocal: FileObject) {
-  if (itemLocal) {
-    idItem.value = itemLocal.id
-    loadingSaveAll.value = true
-    try {
-      item.value.id = itemLocal.id
-      item.value.resource = itemLocal.resource
-      item.value.resourceType = itemLocal.resourceType
-      item.value.attachmentType = itemLocal.attachmentType
-      item.value.fileName = itemLocal.fileName
-      // item.value.file = itemLocal.file
-      item.value.remark = itemLocal.remark
-      // item.value.invoice = itemLocal.invoice
-      pathFileLocal.value = itemLocal.path
+async function getItemByIdLocal(idItemLocal: string) {
+  if (idItemLocal) {
+    const objToEdit = listItemsLocal.value.find(x => x.id === idItemLocal)
+    if (objToEdit) {
+      idItem.value = idItemLocal
+      loadingSaveAll.value = true
+      try {
+        item.value.id = idItemLocal
+        item.value.resource = objToEdit.resource
+        item.value.resourceType = objToEdit.resourceType
+        item.value.attachmentType = objToEdit.attachmentType
+        item.value.fileName = objToEdit.fileName
+        // item.value.file = itemLocal.file
+        item.value.remark = objToEdit.remark
+        // item.value.invoice = itemLocal.invoice
+        pathFileLocal.value = objToEdit.path
 
-      formReload.value += 1
-    }
-    catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+        formReload.value += 1
       }
-    }
-    finally {
-      loadingSaveAll.value = false
+      catch (error) {
+        if (error) {
+          toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+        }
+      }
+      finally {
+        loadingSaveAll.value = false
+      }
     }
   }
 }
@@ -835,8 +955,17 @@ function requireConfirmationToSave(item: any) {
   }
 }
 
+async function clearFormAndReload() {
+  clearForm()
+  // await loadDefaultsValues()
+}
+
 function requireConfirmationToDelete(event: any) {
-  if (!useRuntimeConfig().public.showDeleteConfirm) {
+  if (externalProps.isCreateOrEditPayment === 'create') {
+    listItemsLocal.value = listItemsLocal.value.filter((item: any) => item.id !== idItem.value)
+    clearFormAndReload()
+  }
+  else if (!useRuntimeConfig().public.showDeleteConfirm) {
     deleteItem(idItem.value)
   }
   else {
@@ -866,6 +995,18 @@ function openOrDownloadFile(url: string) {
 }
 
 async function loadDefaultsValues() {
+  const filterForEmployee: FilterCriteria[] = [
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+    },
+  ]
+  await getEmployeeList(objApis.value.employee.moduleApi, objApis.value.employee.uriApi, {
+    query: '',
+    keys: ['name', 'code'],
+  }, filterForEmployee)
   const filter: FilterCriteria[] = [
     {
       key: 'defaults',
@@ -895,6 +1036,33 @@ async function loadDefaultsValues() {
   formReload.value++
 }
 
+function disabledOrEnabledShowHistory() {
+  if (externalProps.isCreateOrEditPayment === 'create') {
+    return true
+  }
+  else if (idItem.value) {
+    return false
+  }
+  else {
+    return true
+  }
+}
+
+function disabledOrEnabledResourceType() {
+  if (externalProps.isCreateOrEditPayment === 'create') {
+    if (listItemsLocal.value.length === 0) {
+      return true
+    }
+    return false
+  }
+  else if (ListItems.value.length === 0) {
+    return true
+  }
+  else {
+    return false
+  }
+}
+
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
     clearForm()
@@ -905,7 +1073,33 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 })
 
 watch(() => listItemsLocal.value, async (newValue) => {
+  if (!newValue) {
+    clearForm()
+  }
+  else {
+    await getItemByIdLocal(listItemsLocal.value[0].id)
+  }
+})
+
+watch(() => idItem.value, async (newValue) => {
+  if (!newValue) {
+    clearForm()
+  }
+  else if (externalProps.isCreateOrEditPayment !== 'create') {
+    await getItemById(newValue)
+  }
+  else {
+    const itemLocal = listItemsLocal.value.find((item: any) => item.id === newValue)
+    if (itemLocal) {
+      getItemByIdLocal(itemLocal)
+    }
+  }
+})
+
+watch(() => listItemsLocal.value, async (newValue) => {
   if (newValue) {
+    getItemByIdLocal(newValue[0])
+
     emits('update:listItems', listItemsLocal.value)
   }
 }, { deep: true })
@@ -933,7 +1127,11 @@ onMounted(async () => {
     <template #default>
       <div class="grid p-fluid formgrid">
         <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
-          <Accordion :active-index="0" class="mb-2 card p-0">
+          <div v-if="false" class="bg-primary text-white font-bold mb-3" style="border-radius: 5px; padding: 0.8rem">
+            <strong class="mx-2">Payment:</strong>
+            <span>{{ externalProps.selectedPayment.paymentId }}</span>
+          </div>
+          <Accordion v-if="true" :active-index="0" class="mb-2 card p-0">
             <AccordionTab>
               <template #header>
                 <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full">
@@ -950,7 +1148,7 @@ onMounted(async () => {
                   <label for="email">Payment:</label>
                   <div class="w-full lg:w-auto">
                     <IconField icon-position="left" class="w-full">
-                      <InputText v-model="filterToSearch.search" type="text" placeholder="Search" class="w-full" />
+                      <InputText v-model="filterToSearch.search" :disabled="externalProps.isCreateOrEditPayment === 'create'" type="text" placeholder="Search" class="w-full" />
                       <InputIcon class="pi pi-search" />
                     </IconField>
                   </div>
@@ -962,33 +1160,20 @@ onMounted(async () => {
               </div>
             </AccordionTab>
           </Accordion>
-          <DataTable
+
+          <DynamicTable
             v-if="isCreateOrEditPayment === 'create'"
-            v-model:selection="clickedItem"
-            :value="listItemsLocal"
-            selection-mode="single"
-            striped-rows
-            show-gridlines
-            class="card p-0 m-0"
-            @update:selection="getItemByIdLocal($event)"
-          >
-            <template #empty>
-              <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
-                  <div class="row">
-                    <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
-                  </div>
-                  <div class="row">
-                    <p>{{ messageForEmptyTable }}</p>
-                  </div>
-                </span>
-                <span v-else class="flex flex-column align-items-center justify-content-center">
-                  <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-                </span>
-              </div>
-            </template>
-            <Column v-for="column of columnsAttachment" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
-          </DataTable>
+            class="card p-0"
+            :data="listItemsLocal"
+            :columns="columnsAttachment"
+            :options="options"
+            :pagination="Pagination"
+            @on-change-filter="parseDataTableFilterLocal"
+            @update:clicked-item="getItemByIdLocal($event)"
+            @on-confirm-create="clearForm"
+            @on-change-pagination="payloadOnChangePage = $event"
+            @on-list-item="ResetListItems" @on-sort-field="onSortFieldLocal"
+          />
           <DynamicTable
             v-else
             class="card p-0"
@@ -1029,10 +1214,18 @@ onMounted(async () => {
                     item-value="id"
                     :model="data.resourceType"
                     :suggestions="resourceTypeList"
-                    :disabled="idItem === ''"
+                    :disabled="disabledOrEnabledResourceType()"
                     @change="($event) => {
                       onUpdate('resourceType', $event)
-                    }" @load="($event) => getResourceTypeList(objApis.resourceType.moduleApi, objApis.resourceType.uriApi, $event)"
+                    }" @load="($event) => {
+                      const filter: FilterCriteria[] = [{
+                        key: 'status',
+                        logicalOperation: 'AND',
+                        operator: 'EQUALS',
+                        value: 'ACTIVE',
+                      }]
+                      getResourceTypeList(objApis.resourceType.moduleApi, objApis.resourceType.uriApi, $event, filter)
+                    }"
                   >
                     <template #option="props">
                       <span>{{ props.item.name }}</span>
@@ -1050,7 +1243,16 @@ onMounted(async () => {
                     :suggestions="attachmentTypeList"
                     @change="($event) => {
                       onUpdate('attachmentType', $event)
-                    }" @load="($event) => getAttachmentTypeList(objApis.attachmentType.moduleApi, objApis.attachmentType.uriApi, $event)"
+                    }" @load="($event) => {
+                      const filter: FilterCriteria[] = [{
+                        key: 'status',
+                        logicalOperation: 'AND',
+                        operator: 'EQUALS',
+                        value: 'ACTIVE',
+                      }]
+                      getAttachmentTypeList(objApis.attachmentType.moduleApi, objApis.attachmentType.uriApi, $event, filter)
+
+                    }"
                   >
                     <template #option="props">
                       <span>{{ props.item.name }}</span>
@@ -1065,7 +1267,7 @@ onMounted(async () => {
                     field="name"
                     item-value="id"
                     :model="data.employee"
-                    :suggestions="attachmentTypeList"
+                    :suggestions="employeeList"
                     @change="($event) => {
                       onUpdate('employee', $event)
                     }" @load="($event) => getEmployeeList(objApis.employee.moduleApi, objApis.employee.uriApi, $event)"
@@ -1131,10 +1333,10 @@ onMounted(async () => {
                   <Button v-tooltip.top="'View File'" :disabled="!idItem" class="w-3rem ml-1 sticky" icon="pi pi-eye" @click="openOrDownloadFile(pathFileLocal)" />
                   <Button
                     v-if="true"
-                    v-tooltip.top="'Show History'" :disabled="!idItem && externalProps.isCreateOrEditPayment === 'create'" class="w-3rem ml-1 sticky" icon="pi pi-book"
+                    v-tooltip.top="'Show History'" :disabled="disabledOrEnabledShowHistory()" class="w-3rem ml-1 sticky" icon="pi pi-book"
                     @click="loadHistoryList"
                   />
-                  <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearForm" />
+                  <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearFormAndReload" />
                   <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
                   <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialog" />
                 </template>
@@ -1180,10 +1382,10 @@ onMounted(async () => {
           :data="historyList"
           :columns="historyColumns"
           :options="historyOptions"
-          :pagination="Pagination"
-          @on-change-pagination="payloadOnChangePage = $event"
-          @on-change-filter="ParseDataTableFilter"
-          @on-sort-field="OnSortField"
+          :pagination="historyPagination"
+          @on-change-pagination="payloadOnChangePageHistory = $event"
+          @on-change-filter="historyParseDataTableFilter"
+          @on-sort-field="onSortFieldHistory"
         />
       </div>
     </template>

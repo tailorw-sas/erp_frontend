@@ -5,6 +5,7 @@ import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import dayjs from 'dayjs'
+import RoomRateDialog from './RoomRateDialog.vue'
 import getUrlByImage from '~/composables/files'
 import { ModulesService } from '~/services/modules-services'
 import { GenericService } from '~/services/generic-services'
@@ -81,6 +82,7 @@ const props = defineProps({
     default: false,
   },
   sortRoomRate: Function as any,
+  refetchInvoice: { type: Function, default: () => {} },
   invoiceObj: {
     type: Object,
     required: true
@@ -438,10 +440,10 @@ async function getRoomRateList() {
         loadingDelete: false,
         fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
         bookingId: iterator.booking.bookingId,
-        roomType: iterator.booking.roomType,
-        nightType: iterator.booking.nightType,
-        ratePlan: iterator.booking.ratePlan,
-        agency: iterator?.booking?.invoice?.agency
+        roomType: {...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ""}-${iterator?.booking?.roomType?.name || ""}`},
+        nightType: {...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ""}-${iterator?.booking?.nightType?.name || ""}`},
+        ratePlan: {...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ""}-${iterator?.booking?.ratePlan?.name || ""}`},
+        agency: {...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ""}-${iterator?.booking?.invoice?.agency?.name || ""}`}
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
@@ -638,7 +640,8 @@ async function saveRoomRate(item: { [key: string]: any }) {
   if (successOperation) {
     ClearForm()
     if (!props.isCreationDialog) {
-      getRoomRateList()
+      props.refetchInvoice()
+     // getRoomRateList()
     }
   }
 }
@@ -751,7 +754,7 @@ onMounted(() => {
     ]
   }
 
-  if (route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id) {
+  if (route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id || route.query.type === ENUM_INVOICE_TYPE[1]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id) {
     menuModel.value = [{ label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value) }]
   }
 
@@ -770,6 +773,9 @@ onMounted(() => {
       @on-change-pagination="PayloadOnChangePage = $event" @on-row-right-click="onRowRightClick" @on-change-filter="ParseDataTableFilter"
       @on-list-item="ResetListItems" @on-sort-field="OnSortField" @on-row-double-click="($event) => {
 
+        if(route.query.type === ENUM_INVOICE_TYPE[1]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id){
+          return;
+        }
         openEditDialog($event)
 
       }"

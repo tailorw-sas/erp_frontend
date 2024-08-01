@@ -13,7 +13,7 @@ export default defineEventHandler(async (event): Promise<any> => {
     contentType: 'multipart/form-data',
   }
 
-  const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}`, {
+  const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}/import`, {
     method: 'POST',
     body,
     headers: defaultHeaders

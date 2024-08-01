@@ -31,6 +31,14 @@ export const OBJ_ENUM_INVOICE = {
   CREDIT: 'Credit',
   OLD_CREDIT: 'Old Credit',
 }
+
+export const OBJ_ENUM_INVOICE_STATUS = {
+  PROCECSED: 'Processed',
+  RECONCILED: 'Reconciled',
+  SENT: 'Sent',
+  PENDING: 'Pending',
+  CANCELED: 'Canceled'
+}
 export const OBJ_ENUM_INVOICE_TYPE_CODE = {
   INVOICE: 'INV',
   INCOME: 'INC',
@@ -302,3 +310,14 @@ export const ENUM_CALCULATION_TYPE = [
   { id: 'FIX', name: 'FIX' },
   { id: 'PER', name: 'PER' },
 ]
+
+export enum ENUM_INVOICE_IMPORT_TYPE {
+  VIRTUAL = 'VIRTUAL',
+  NO_VIRTUAL = 'NO_VIRTUAL',
+}
+
+export enum ENUM_PAYMENT_IMPORT_TYPE {
+  BANK = 'BANK',
+  EXPENSE = 'EXPENSE',
+  ANTI = 'ANTI'
+}

@@ -55,11 +55,18 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 ',
   },
   {
+    field: 'defaults',
+    header: 'Default',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 required mb-2',
+  },
+  {
     field: 'status',
     header: 'Active',
     dataType: 'check',
     disabled: true,
-    class: 'field col-12 required mt-3 mb-3',
+    class: 'field col-12 required mb-2',
   },
 ]
 
@@ -67,6 +74,7 @@ const item = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  defaults: false,
   status: true,
 })
 
@@ -74,6 +82,7 @@ const itemTemp = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  defaults: false,
   status: true,
 })
 
@@ -94,6 +103,7 @@ const columns: IColumn[] = [
   { field: 'code', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
+  { field: 'defaults', header: 'Default', type: 'text', badge: { color: 'green' } },
   { field: 'status', header: 'Active', type: 'bool' },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -160,7 +170,9 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
-
+      if (!iterator.defaults) {
+        iterator.defaults = ''
+      }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
@@ -219,6 +231,7 @@ async function getItemById(id: string) {
         item.value.name = response.name
         item.value.description = response.description
         item.value.status = statusToBoolean(response.status)
+        item.value.defaults = response.defaults
         item.value.code = response.code
       }
       fields[0].disabled = true

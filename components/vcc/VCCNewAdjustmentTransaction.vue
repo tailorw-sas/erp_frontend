@@ -78,7 +78,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     validation: z.string().trim().refine(value => value === '' || /^([IG]) \d+ \d+$/i.test(value), {
-      message: 'Invalid reservation number format'
+      message: 'The reservation number field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44'
     })
   },
   {

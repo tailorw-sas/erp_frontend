@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import dayjs from 'dayjs'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 
 const props = defineProps({
   fields: {
@@ -31,6 +31,9 @@ const props = defineProps({
   item: {
     type: Object
   },
+  idItem: {
+    type: String
+  },
   loadingSaveAll: { type: Boolean, required: true },
   clearForm: {
     required: true,
@@ -59,15 +62,60 @@ const props = defineProps({
   getTransactionTypeList: {
     type: Function,
     required: true
-  }
+  },
+  invoiceObj: {
+    type: Object,
+    required: true
+  },
+  invoiceAmount: { type: Number, required: true }
 })
 const dialogVisible = ref(props.openDialog)
 const formFields = ref<FieldDefinitionType[]>([])
+const route = useRoute()
+
+const invoiceType = ref('')
+const amountError = ref(false)
+
+function validateInvoiceAmount(newAmount: number) {
+  let amount = props.invoiceAmount
+
+  if (props.idItem) {
+    amount -= props.item?.amount
+  }
+
+  amountError.value = false
+  if (invoiceType.value === ENUM_INVOICE_TYPE[0]?.id) {
+    if (Number(amount) + newAmount < 0) {
+      amountError.value = true
+    }
+  }
+  if (invoiceType.value === ENUM_INVOICE_TYPE[2]?.id || invoiceType.value === ENUM_INVOICE_TYPE[3]?.id) {
+    if (Number(amount) + newAmount > 0) {
+      amountError.value = true
+    }
+  }
+}
+
+watch(() => props.invoiceObj, () => {
+  if (props.invoiceObj?.invoiceType?.id) {
+    invoiceType.value = props.invoiceObj?.invoiceType?.id
+  }
+  else {
+    invoiceType.value = route.query.type as string
+  }
+})
 
 onMounted(() => {
   props?.fields.forEach((container) => {
     formFields.value.push(...container.childs)
   })
+
+  if (props.invoiceObj?.invoiceType?.id) {
+    invoiceType.value = props.invoiceObj?.invoiceType?.id
+  }
+  else {
+    invoiceType.value = route.query.type as string
+  }
 })
 </script>
 
@@ -80,41 +128,64 @@ onMounted(() => {
     <div class="w-full h-full overflow-hidden p-2">
       <EditFormV2WithContainer
         :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
-        :loading-save="loadingSaveAll" :container-class="containerClass" class="w-full h-fit m-4"
-        @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
+        :loading-save="loadingSaveAll" :container-class="containerClass" class="w-full h-fit m-4" @cancel="clearForm"
+        @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
       >
+        <template #field-date="{ item: data, onUpdate }">
+          <Calendar
+            v-if="!loadingSaveAll" v-model="data.date" date-format="yy-mm-dd"
+            :max-date="dayjs().endOf('day').toDate()" @update:model-value="($event) => {
 
-      <template #field-date="{ item: data, onUpdate }">
-        <Calendar
-          v-if="!loadingSaveAll"
-          v-model="data.date"
-          date-format="yy-mm-dd"
-          :max-date="dayjs().endOf('day').toDate()"
-          @update:model-value="($event) => {
+              onUpdate('date', dayjs($event).startOf('day').toDate())
+            }"
+          />
+        </template>
 
-            onUpdate('date', dayjs($event).startOf('day').toDate())
-          }"
-        />
-      </template>
+        <template #field-amount="{ item: data, onUpdate }">
+          <InputNumber
+            v-model="data.amount" @update:model-value="($event: any) => {
+
+              let amount = invoiceAmount
+
+              if (idItem){
+                amount -= item?.amount
+              }
+
+              amountError = false
+              onUpdate('amount', $event)
+
+              if (invoiceType === ENUM_INVOICE_TYPE[0]?.id) {
+                if (Number(amount) + Number($event) < 0) {
+                  amountError = true
+                }
+              }
+              if (invoiceType === ENUM_INVOICE_TYPE[2]?.id || invoiceType === ENUM_INVOICE_TYPE[3]?.id) {
+                if (Number(amount) + Number($event) > 0) {
+                  amountError = true
+                }
+              }
+
+            }"
+          />
+          <span v-if="amountError" class="error-message p-error text-xs">The sum of the amount field and invoice amount field is {{ invoiceType === ENUM_INVOICE_TYPE[0]?.id ? 'under' : 'over' }} 0</span>
+        </template>
+
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
-            id="autocomplete"
-            field="fullName"
-            item-value="id"
-            :model="data.transactionType"
-            :suggestions="transactionTypeList"
-            @change="($event) => {
+            v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
+            :model="data.transactionType" :suggestions="transactionTypeList" @change="($event) => {
               onUpdate('transactionType', $event)
-            }"
-            @load="($event) => getTransactionTypeList($event)"
+            }" @load="($event) => getTransactionTypeList($event)"
           />
         </template>
 
         <template #form-footer="props">
           <Button
-            v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-            @click="props.item.submitForm($event)"
+            v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save" @click="($event) => {
+              if (!amountError) {
+                props.item.submitForm($event)
+              }
+            }"
           />
           <Button
             v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {

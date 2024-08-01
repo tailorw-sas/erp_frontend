@@ -47,11 +47,11 @@ export const model = ref([
       //   icon: 'pi pi-fw pi-folder',
       //   to: '/business'
       // },
-      {
-        label: 'User',
-        icon: 'pi pi-fw pi-folder',
-        to: '/user'
-      },
+      // {
+      //   label: 'User',
+      //   icon: 'pi pi-fw pi-folder',
+      //   to: '/user'
+      // },
       {
         label: 'Email',
         icon: 'pi pi-fw pi-envelope',
@@ -533,24 +533,24 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
           label: 'Administration',
           icon: 'pi pi-fw pi-folder',
           items: [
-            {
-              label: 'Module',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/modules'),
-              disabled: false,
-            },
-            {
-              label: 'Permission',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/permissions'),
-              items: []
-            },
-            {
-              label: 'User',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/user'),
-              items: []
-            },
+            // {
+            //   label: 'Module',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/modules'),
+            //   disabled: false,
+            // },
+            // {
+            //   label: 'Permission',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/permissions'),
+            //   items: []
+            // },
+            // {
+            //   label: 'User',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/user'),
+            //   items: []
+            // },
             {
               label: 'Configuration',
               icon: 'pi pi-fw pi-file',

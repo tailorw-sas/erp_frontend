@@ -179,6 +179,7 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
+      iterator.value = iterator.value ? iterator.value.toString() : '0'
       iterator.managerMerchant = { id: iterator.managerMerchant.id, name: iterator.managerMerchant.description }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)

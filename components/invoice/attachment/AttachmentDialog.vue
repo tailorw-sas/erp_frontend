@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
+import AttachmentHistoryDialog from './AttachmentHistoryDialog.vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -53,6 +54,8 @@ const { data: userData } = useAuth()
 const invoice = ref<any>(props.selectedInvoiceObj)
 const defaultAttachmentType = ref<any>(null)
 
+const route = useRoute()
+
 const filterToSearch = ref({
   criteria: 'invoice.invoiceId',
   search: invoice.value.invoiceId
@@ -81,7 +84,7 @@ const item = ref<GenericObject>({
   file: '',
   remark: '',
   invoice: props.selectedInvoice,
-  attachment_id: '',
+  attachmentId: '',
   resource: invoice.value.invoiceId,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId,
@@ -95,7 +98,7 @@ const itemTemp = ref<GenericObject>({
   file: '',
   remark: '',
   invoice: props.selectedInvoice,
-  attachment_id: '',
+  attachmentId: '',
   resource: invoice.value.invoiceId,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId,
@@ -117,7 +120,7 @@ const Fields: Array<Container> = [
       },
       {
         field: 'resourceType',
-        header: 'Transaction Type',
+        header: 'Resource Type',
         dataType: 'text',
         class: 'field mb-3 col-12 md: required',
         headerClass: 'mb-1',
@@ -170,8 +173,12 @@ const Fields: Array<Container> = [
 
 ]
 
+const attachmentHistoryDialogOpen = ref<boolean>(false)
+
+const selectedAttachment = ref<string>('')
+
 const Columns: IColumn[] = [
-  { field: 'attachment_id', header: 'Id', type: 'text', width: '70px' },
+  { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
   { field: 'remark', header: 'Remark', type: 'text', width: '100px', columnClass: 'w-10 overflow-hidden' },
@@ -248,7 +255,14 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false }]
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, type: {
+        ...iterator?.type,
+        name: `${iterator?.type?.code}-${iterator?.type?.name}`
+      } }]
+    }
+
+    if (ListItems.value.length > 0) {
+      idItemToLoadFirstTime.value = ListItems.value[0].id
     }
   }
   catch (error) {
@@ -335,17 +349,17 @@ function searchAndFilter() {
 
 async function createItem(item: { [key: string]: any }) {
   if (item) {
-    console.log(item)
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
 
     const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
 
-    console.log(file)
-
     payload.invoice = props.selectedInvoice
 
     payload.file = file
+
+    payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
 
     payload.type = item.type?.id
     await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
@@ -355,6 +369,13 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
+  const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
+
+  payload.file = file
+
+  payload.employee = userData?.value?.user?.name
+  payload.employeeId = userData?.value?.user?.userId
+
   payload.type = item.type?.id
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
@@ -364,6 +385,7 @@ async function deleteItem(id: string) {
     loadingDelete.value = true
     await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
     clearForm()
+    getList()
   }
   catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
@@ -452,6 +474,7 @@ async function getItemById(id: string) {
         item.value.invoice = response.invoice
         item.value.resource = response.invoice.invoiceId
         item.value.resourceType = `${`${OBJ_ENUM_INVOICE_TYPE_CODE[response.invoice.invoiceType]}-${OBJ_ENUM_INVOICE[response.invoice.invoiceType]}`}`
+        selectedAttachment.value = response.attachmentId
       }
 
       formReload.value += 1
@@ -502,6 +525,11 @@ function requireConfirmationToSave(item: any) {
   })
 }
 
+function showHistory() {
+  
+  attachmentHistoryDialogOpen.value = true
+}
+
 function downloadFile() {
   if (item.value) {
     const link = document.createElement('a')
@@ -516,6 +544,15 @@ function downloadFile() {
 
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
+})
+
+watch(() => idItemToLoadFirstTime.value, async (newValue) => {
+  if (!newValue) {
+    clearForm()
+  }
+  else {
+    await getItemById(newValue)
+  }
 })
 
 onMounted(() => {
@@ -537,8 +574,7 @@ onMounted(() => {
 <template>
   <Dialog
     v-model:visible="dialogVisible" modal :header="header" class=" h-fit w-fit"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
-    @hide="closeDialog"
+    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" @hide="closeDialog"
   >
     <div class=" w-fit h-fit overflow-auto p-2">
       <div class="flex lg:flex-row flex-column align-items-start">
@@ -551,13 +587,13 @@ onMounted(() => {
                     <label for="email">Invoice:</label>
                     <div class="w-full lg:w-auto flex align-items-center">
                       <IconField v-model="filterToSearch.search" icon-position="left" class="w-full">
-                        <InputText
-                          v-model="filterToSearch.search" type="number" placeholder="Search"
-                          class="w-full"
-                        />
+                        <InputText v-model="filterToSearch.search" type="number" placeholder="Search" class="w-full" />
                         <InputIcon class="pi pi-search" />
                       </IconField>
-                      <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch" @click="searchAndFilter" />
+                      <Button
+                        v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch"
+                        @click="searchAndFilter"
+                      />
                     </div>
                   </div>
                 </div>
@@ -665,10 +701,18 @@ onMounted(() => {
                   }"
                 />
                 <Button
-                  v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-file"
-                  :disabled="!idItem" @click="downloadFile"
+                  v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-file" :disabled="!idItem"
+                  @click="downloadFile"
                 />
-                <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash" :disabled="!idItem" @click="requireConfirmationToDelete" />
+
+                <Button
+                  v-if="selectedInvoiceObj.invoiceType === ENUM_INVOICE_TYPE[1]?.id" v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book"
+                  :disabled="!idItem" @click="showHistory"
+                />
+                <Button
+                  v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
+                  :disabled="!idItem" @click="requireConfirmationToDelete"
+                />
                 <Button
                   v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 
@@ -683,4 +727,13 @@ onMounted(() => {
       </div>
     </div>
   </Dialog>
+
+  <div v-if="attachmentHistoryDialogOpen">
+    <AttachmentHistoryDialog
+      :selected-attachment="selectedAttachment"
+      :close-dialog="() => { attachmentHistoryDialogOpen = false; selectedAttachment = '' }"
+      header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
+      :selected-invoice-obj="item" :is-creation-dialog="false"
+    />
+  </div>
 </template>

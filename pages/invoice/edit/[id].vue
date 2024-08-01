@@ -18,6 +18,7 @@ import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentH
 
 
 const toast = useToast()
+const { data: userData } = useAuth()
 
 const forceSave = ref(false)
 const forceUpdate = ref(false)
@@ -44,12 +45,6 @@ const exportAttachmentsDialogOpen = ref<boolean>(false)
 
 
 
-const errorInTab = ref({
-  tabGeneralData: false,
-  tabMedicalInfo: false,
-  tabServices: false,
-  tabPermissions: false
-})
 
 const invoiceAgency = ref<any>(null)
 const invoiceHotel = ref<any>(null)
@@ -174,9 +169,139 @@ const fields: Array<Container> = [
 
 ]
 
+const incomefields: Array<Container> = [
+  {childs: [{
+    field: 'invoiceId',
+    header: 'ID',
+    disabled: true,
+    dataType: 'text',
+    class: 'field col-12 md:col-1',
+  },
+  {
+    field: 'dueDate',
+    header: 'Due Date',
+    dataType: 'date',
+    class: 'field col-12 md:col-2 required ',
+    headerClass: 'mb-1',
+
+    validation: z.date({
+      required_error: 'The Due Date field is required',
+      invalid_type_error: 'The Due Date field is required',
+    }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
+  },
+
+  {
+    field: 'isManual',
+    header: 'Manual',
+    dataType: 'check',
+    disabled: true,
+    class: 'field col-12 md:col-1 mt-3 mb-3',
+    headerClass: 'mb-1',
+  },
+  {
+    field: 'invoiceAmount',
+    header: 'Income Amount',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-2 required',
+
+  },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    dataType: 'select',
+    class: 'field col-12 md:col-3 required',
+    validation: validateEntityStatus('hotel'),
+  },
+  {
+    field: 'agency',
+    header: 'Agency',
+    dataType: 'select',
+    class: 'field col-12 md:col-3 required',
+    disabled: false,
+    validation: validateEntityStatus('agency'),
+  }], containerClass: "flex flex-row"
+
+},
+  {childs: [{
+    field: 'invoiceNumber',
+    header: 'Invoice Number',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-1',
+  },
+  {
+    field: 'invoiceDate',
+    header: 'Invoice Date',
+    dataType: 'date',
+    class: 'field col-12 md:col-2 required ',
+    headerClass: 'mb-1',
+
+    validation: z.date({
+      required_error: 'The Invoice Date field is required',
+      invalid_type_error: 'The Invoice Date field is required',
+    }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
+  },
+  {
+    field: 'reSend',
+    header: 'Re-Send',
+    dataType: 'check',
+    class: 'field col-12 md:col-1 mt-3 mb-3',
+    headerClass: 'mb-1',
+    
+  },
+  {
+    field: 'reSendDate',
+    header: 'Re-Send Date',
+    dataType: 'date',
+    class: 'field col-12 md:col-2',
+    headerClass: 'mb-1',
+    
+    validation: z
+      .union([z.date(), z.null()])
+      .refine(date => !date || date <= dayjs().endOf('day').toDate(), {
+        message: 'The Re-Send Date field cannot be greater than current date',
+      })
+  },
+
+  {
+    field: 'invoiceType',
+    header: 'Invoice Type',
+    dataType: 'select',
+    class: 'field col-12 md:col-3 required',
+    validation: validateEntityStatus('Invoice Type'),
+  },
+  {
+    field: 'invoiceStatus',
+    header: 'Status',
+    dataType: 'select',
+    class: 'field col-12 md:col-3 required',
+    validation: validateEntityStatus('Status'),
+  },
+  ], containerClass: "flex flex-row"},
+  {childs: [{
+    field: 'status',
+    header: 'Active',
+    dataType: 'check',
+    class: 'field col-12 md:col-1 mt-3 mb-3',
+    headerClass: 'mb-1',
+    disabled: true,
+  }], containerClass: "flex flex-row"}
+]
+
+
 
 // VARIABLES -----------------------------------------------------------------------------------------
 
+const objApis = ref({
+  invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
+  invoiceStatus: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
+  agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
+  hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
+  bankAccount: { moduleApi: 'settings', uriApi: 'manage-bank-account' },
+  paymentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-status' },
+  attachmentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' },
+})
 
 //
 const confirm = useConfirm()
@@ -353,6 +478,7 @@ async function getInvoiceTypeList() {
 function refetchInvoice(){
   console.log("REFETCH");
   getInvoiceAmountById(route.params.id as string)
+  update()
 }
 
 
@@ -361,6 +487,61 @@ function clearForm() {
   idItem.value = ''
 
   formReload.value++
+}
+
+const objApisLoading = ref({
+  invoiceType: false,
+  invoiceStatus: false,
+})
+
+function mapFunction(data: any): any {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status
+  }
+}
+
+async function getInvoiceStatusListDefault(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  try {
+    objApisLoading.value.invoiceStatus = true
+    const additionalFilter: FilterCriteria[] = [
+      {
+        key: 'name',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'Sent'
+      }
+    ]
+    const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+    if (filteredList.length > 0) {
+      invoiceStatusList.value = [filteredList[0]]
+      item.value.invoiceStatus = invoiceStatusList.value[0]
+    }
+    else {
+      invoiceStatusList.value = []
+    }
+    formReload.value++
+  }
+  finally {
+    objApisLoading.value.invoiceStatus = false
+  }
+}
+
+
+async function loadDefaultsValues() {
+  const objQueryToSearch = {
+    query: '',
+    keys: ['name', 'code'],
+  }
+  const filter: FilterCriteria[] = [{
+    key: 'status',
+    logicalOperation: 'AND',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+  }]
+  
+  getInvoiceStatusListDefault(objApis.value.invoiceStatus.moduleApi, objApis.value.invoiceStatus.uriApi, objQueryToSearch, filter)
 }
 
 async function getInvoiceAmountById(id: string) {
@@ -402,11 +583,17 @@ async function getItemById(id: string) {
       if (response) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
-        item.value.invoiceNumber = response.invoiceNumber
+        item.value.dueDate = response.dueDate
+
+        const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
+
+        item.value.invoiceNumber =response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
         invoiceAmount.value = response.invoiceAmount
+        item.value.reSend = response.reSend
+        item.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate
         item.value.hotel = response.hotel
         item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
         item.value.agency = response.agency
@@ -415,6 +602,9 @@ async function getItemById(id: string) {
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
+
+        nightTypeRequired.value = response?.agency?.client?.isNightType
+
       }
 
       formReload.value += 1
@@ -449,13 +639,23 @@ async function createItem(item: { [key: string]: any }) {
   }
 }
 
+const nightTypeRequired = ref(false)
+
 async function updateItem(item: { [key: string]: any }) {
+
+  
+
+
   loadingSaveAll.value = true
-  const payload: { [key: string]: any } = {  }
+  const payload: { [key: string]: any } = {   }
+  payload.employee =  userData?.value?.user?.name
   payload.invoiceDate = item.invoiceDate
   payload.isManual = item.isManual
   payload.hotel = item.hotel.id
   payload.agency = item.agency.id
+  payload.dueDate = item?.dueDate
+  payload.reSend = item.reSend
+  payload.reSendDate = item.reSendDate
 
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
   navigateTo(
@@ -605,6 +805,28 @@ function handleAttachmentDialogOpen() {
   attachmentDialogOpen.value = true
 }
 
+const invoiceStatusList = ref<any[]>([])
+
+async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  const additionalFilter: FilterCriteria[] = [
+    {
+      key: 'name',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'Sent'
+    }
+  ]
+
+  const filteredList = await getDataList<any,any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+
+  if (filteredList.length > 0) {
+    invoiceStatusList.value = [filteredList[0]]
+  }
+  else {
+    invoiceStatusList.value = []
+  }
+}
+
 
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
@@ -623,6 +845,8 @@ onMounted(async () => {
   //@ts-ignore
   await getItemById(route.params.id.toString())
 
+  await loadDefaultsValues()
+
 
 })
 </script>
@@ -633,9 +857,10 @@ onMounted(async () => {
       {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
     </div>
     <div class="p-3 pt-0">
-      <EditFormV2WithContainer :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
+      <EditFormV2WithContainer 
+      :key="formReload" :fields-with-containers="route.query.type === ENUM_INVOICE_TYPE[1]?.id ? incomefields : fields" :item="item" :show-actions="true"
                                :loading-save="loadingSaveAll" :loading-delete="loadingDelete" @cancel="clearForm"
-                               @delete="requireConfirmationToDelete($event)" container-class="flex flex-row justify-content-evenly card w-full mb-2">
+                               @delete="requireConfirmationToDelete($event)" :container-class="route.query.type === ENUM_INVOICE_TYPE[1]?.id ? 'flex flex-column justify-content-evenly card w-full mb-2': 'flex flex-row justify-content-evenly card w-full mb-2'">
         <template #field-invoiceDate="{ item: data, onUpdate }">
           <Calendar
               v-if="!loadingSaveAll"
@@ -654,6 +879,35 @@ onMounted(async () => {
             
           />
           
+        </template>
+
+        <template #field-invoiceStatus="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll "
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :model="data.invoiceStatus"
+            :suggestions="[...invoiceStatusList]"
+            :disabled="idItem !== ''"
+            @change="async ($event) => {
+              onUpdate('invoiceStatus', $event)
+            }"
+            @load="async($event) => {
+              const objQueryToSearch = {
+                query: $event,
+                keys: ['name', 'code'],
+              }
+              const filter: FilterCriteria[] = [{
+                key: 'status',
+                logicalOperation: 'AND',
+                operator: 'EQUALS',
+                value: 'ACTIVE',
+              }]
+              await getInvoiceStatusList(objApis.invoiceStatus.moduleApi, objApis.invoiceStatus.uriApi, objQueryToSearch, filter)
+            }"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
         <template #field-invoiceType="{ item: data, onUpdate }">
@@ -716,6 +970,7 @@ onMounted(async () => {
         <template #form-footer="props">
           <div style="width: 100%; height: 100%;">
             <InvoiceTabView
+              :invoice-obj-amount="invoiceAmount"
                 :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
                 :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
                 :force-update="forceUpdate"
@@ -723,6 +978,7 @@ onMounted(async () => {
                 :invoice-obj="item"
                 :refetch-invoice="refetchInvoice"
                 :is-creation-dialog="false" :selected-invoice="selectedInvoice as any"  :active="active" :set-active="($event) => { active = $event }" :showTotals="true"
+                :night-type-required="nightTypeRequired"
 
             />
             <div >
@@ -733,7 +989,7 @@ onMounted(async () => {
                 }"
                 />
                 <Button
-                    v-tooltip.top="'Export'" class="w-3rem mx-1" icon="pi pi-print"
+                    v-tooltip.top="'Print'" class="w-3rem mx-1" icon="pi pi-print"
                     :loading="loadingSaveAll" :disabled="!item.hasAttachments" @click="()=>{
                       exportAttachmentsDialogOpen = true
                     }"
@@ -744,14 +1000,22 @@ onMounted(async () => {
                     :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
                 />
                  <Button
-                v-tooltip.top="'Show History'" class="w-3rem mx-1" icon="pi pi-file"
+                v-tooltip.top="'Show History'" class="w-3rem mx-1"
                 :loading="loadingSaveAll" @click="handleAttachmentHistoryDialogOpen()" :disabled="!item?.hasAttachments"
-              />
+                >
+                <template #icon>
+                  <span class="flex align-items-center justify-content-center p-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#e8eaed"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" /></svg>
+                  </span>
+                </template>
+              </Button>
                
                 <Button
                     v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                    :loading="loadingSaveAll" @click="handleDialogOpen()"
+                    :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id
+                    "
                 />
+                <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id" class="w-3rem ml-1" disabled icon="pi pi-download" />
                
                 <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" @click="update" />
                 <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="goToList" />
@@ -763,13 +1027,13 @@ onMounted(async () => {
     </div>
 
      <div v-if="attachmentDialogOpen">
-              <AttachmentDialog  :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Manage Invoice Attachment"  :open-dialog="attachmentDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
+              <AttachmentDialog  :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }" :is-creation-dialog="false" header="Manage Invoice Attachment"  :open-dialog="attachmentDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
             </div>
       </div>
       <div v-if="attachmentHistoryDialogOpen">
-          <AttachmentHistoryDialog  :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History"  :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" :is-creation-dialog="false" />
+          <InvoiceHistoryDialog selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History"  :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" :is-creation-dialog="false" />
         </div>
         <div v-if="exportAttachmentsDialogOpen">
-          <ExportAttachmentsDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen"  :invoice="item"  />
+          <PrintInvoiceDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen"  :invoice="item"  />
         </div>
 </template>

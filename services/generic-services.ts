@@ -128,7 +128,7 @@ export const GenericService = {
 
   async getUrlByImage(file: File) {
     if (file) {
-      const response = await GenericService.uploadFile('cloudbridges', 'files', file)
+      const response = await GenericService.uploadFile('CLOUDBRIDGES', 'files', file)
       return (response as any)?.data.url
     }
   },
@@ -140,6 +140,19 @@ export const GenericService = {
     return $api<PaginatedResponse>(url, {
       method: 'POST',
       body: payload
+    })
+  },
+
+  async importFile(MODULE_NAME: string, URI_API: string, formData: FormData) {
+    const { $api } = useNuxtApp()
+    // const formData = new FormData()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+
+    return $api(url, {
+      method: 'POST',
+      body: formData
+
     })
   },
 }

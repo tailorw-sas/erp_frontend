@@ -1,28 +1,26 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { z } from 'zod'
-import { onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
 import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
-import DialogPaymentDetailForm from '~/components/payment/DialogPaymentDetailForm.vue'
-import AttachmentIncomeDialog from '~/components/income/attachment/AttachmentDialog.vue'
-import AttachmentIncomeHistoryDialog from '~/components/income/attachment/AttachmentIncomeHistoryDialog.vue'
+import IncomeAdjustmentDialog from '~/components/income/IncomeAdjustmentDialog.vue'
+import AttachmentIncomeDialog from '~/components/income/attachment/AttachmentIncomeDialog.vue'
+import IncomeHistoryDialog from '~/components/income/IncomeHistoryDialog.vue'
 import { statusToString } from '~/utils/helpers'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
-const route = useRoute()
 const toast = useToast()
 const confirm = useConfirm()
 const { data: userData } = useAuth()
 const idItemToLoadFirstTime = ref('')
-const refForm: Ref = ref(null)
 const idItem = ref('')
 const idItemDetail = ref('')
 const isSplitAction = ref(false)
@@ -33,28 +31,27 @@ const loadingSaveAll = ref(false)
 const loadingSaveAdjustment = ref(false)
 const loadingDelete = ref(false)
 const forceSave = ref(false)
-const submitEvent = new Event('')
-const invoiceAmount = ref(0)
-const listItems = ref<any[]>([])
 const invoiceTypeList = ref<any[]>([])
 const invoiceStatusList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 const hotelList = ref<any[]>([])
-const bankAccountList = ref<any[]>([])
 const bookingList = ref<any[]>([])
 const roomRateList = ref<any[]>([])
-
-const paymentStatusList = ref<any[]>([])
-const attachmentStatusList = ref<any[]>([])
+const totalAmount = ref(0)
+const totalHotel = ref(0)
+const totalhotelbooking = ref(0)
+const totalamountbooking = ref(0)
+const totalInvoice = ref(0)
 const onOffDialogPaymentDetail = ref(false)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
-const attachmentList = ref<any[]>([])
-const paymentDetailsList = ref<any[]>([])
+const exportAttachmentsDialogOpen = ref<boolean>(false)
 const AdjustmentList = ref<any[]>([])
 const AdjustmentTableList = ref<any[]>([])
 const activeTab = ref(2)
 
+const selectedRoomRate = ref<any>()
+const roomRateContextMenu = ref()
 const confApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'income',
@@ -64,6 +61,10 @@ const confApiPaymentDetail = reactive({
   moduleApi: 'invoicing',
   uriApi: 'income-adjustment',
 })
+const confApiInvoiceAdjustment = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-adjustment',
+})
 const confRoomRateApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-room-rate'
@@ -72,11 +73,6 @@ const confRoomRateApi = reactive({
 const confAdjustmentApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-adjustment'
-})
-
-const confInvoiceApi = reactive({
-  moduleApi: 'invoicing',
-  uriApi: 'manage-invoice'
 })
 
 const confBookingApi = reactive({
@@ -90,7 +86,7 @@ const bookingOptions = ref({
   actionsAsMenu: false,
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
-
+  showFilters: false,
 })
 
 const roomRateOptions = ref({
@@ -99,6 +95,7 @@ const roomRateOptions = ref({
   actionsAsMenu: false,
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
+  showFilters: false,
 })
 
 const adjustmentOptions = ref({
@@ -111,9 +108,23 @@ function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
 
+function onRowRightClick(event: any) {
+  selectedRoomRate.value = event.data
+  roomRateContextMenu.value.show(event.originalEvent)
+}
+
+const menuModel = ref([
+  { label: 'Add Adjustment', command: () => AdjustmentDialogOpen() },
+])
+
 // Attachments
 function handleAttachmentDialogOpen() {
   attachmentDialogOpen.value = true
+}
+
+function AdjustmentDialogOpen() {
+  openDialogPaymentDetails()
+  activeTab.value = 2
 }
 
 const roomRatePayload = ref<IQueryRequest>({
@@ -177,6 +188,11 @@ const objApis = ref({
   attachmentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' },
 })
 
+const objApisLoading = ref({
+  invoiceType: false,
+  invoiceStatus: false,
+})
+
 const columns: IColumn[] = [
   { field: 'bookingId', header: 'ID', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
@@ -194,6 +210,7 @@ const columns: IColumn[] = [
 ]
 
 const adjustmentColumns: IColumn[] = [
+  { field: 'adjustmentId', header: 'ID', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'date', header: 'Date', type: 'text' },
   { field: 'transaction', header: 'Transaction', type: 'text' },
@@ -218,22 +235,6 @@ const formTitle = computed(() => {
   return 'New Income'
 })
 
-const decimalRegex = /^\d+(\.\d{1,2})?$/
-
-const decimalSchema = z.object(
-  {
-    amount: z
-      .string()
-      .min(1, { message: 'The amount field is required' })
-      .regex(decimalRegex, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' }),
-    // .refine(value => Number.parseFloat(value) >= 1, { message: 'The amount field must be at least 1' }),
-    paymentAmmount: z
-      .string()
-      .min(1, { message: 'The payment amount field is required' })
-      .regex(decimalRegex, { message: 'The payment amount does not meet the correct format of n integer digits and 2 decimal digits' })
-      .refine(value => Number.parseFloat(value) >= 1, { message: 'The payment amount field must be at least 1' })
-  },
-)
 /*
 const fields: Array<FieldDefinitionType> = [
   {
@@ -478,6 +479,7 @@ const item = ref({
   remark: '',
   status: '',
   manual: true,
+  hasAttachments: false
 } as GenericObject)
 
 const itemTemp = ref({
@@ -506,7 +508,7 @@ const itemTemp = ref({
   remark: '',
   status: true,
   manual: true,
-
+  hasAttachments: false
 })
 
 const fieldAdjustments = ref<FieldDefinitionType[]>([
@@ -515,7 +517,6 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     field: 'amount',
     header: 'Amount',
     dataType: 'text',
-
     class: 'field col-12 required',
     validation: z.string().min(1, { message: 'The amount field is required' })
       .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
@@ -527,7 +528,6 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     dataType: 'date',
     class: 'field col-12 required ',
     headerClass: 'mb-1',
-
     validation: z.date({
       required_error: 'The Date field is required',
       invalid_type_error: 'The Date field is required',
@@ -542,7 +542,7 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
   },
   {
     field: 'remark',
-    header: 'Description',
+    header: 'Remark',
     dataType: 'textarea',
     class: 'field col-12',
   },
@@ -569,25 +569,7 @@ const itemDetailsTemp = ref({
   date: new Date(),
   status: true,
 })
-
-const options = ref({
-  tableName: 'Payment Income',
-  moduleApi: 'invoicing',
-  uriApi: 'income',
-  loading: false,
-  actionsAsMenu: false,
-  messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
-})
-
 const payloadOnChangePage = ref<PageState>()
-const payload = ref<IQueryRequest>({
-  filter: [],
-  query: '',
-  pageSize: 50,
-  page: 0,
-  sortBy: 'createdAt',
-  sortType: ENUM_SHORT_TYPE.DESC
-})
 
 function clearForm() {
   item.value = { ...itemTemp.value }
@@ -598,18 +580,9 @@ function clearFormDetails() {
   itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
 }
 
-function openDialogPaymentDetails(event: any) {
-  if (event) {
-    itemDetails.value = { ...itemDetailsTemp.value }
-    const objToEdit = paymentDetailsList.value.find(x => x.id === event.id)
-
-    if (objToEdit) {
-      itemDetails.value = { ...objToEdit }
-    }
-
-    onOffDialogPaymentDetail.value = true
-  }
-
+function openDialogPaymentDetails() {
+  itemDetails.value = { ...itemDetailsTemp.value }
+  onOffDialogPaymentDetail.value = true
   onOffDialogPaymentDetail.value = true
 }
 
@@ -619,7 +592,8 @@ async function getBookingList() {
     idItemToLoadFirstTime.value = ''
     bookingOptions.value.loading = true
     bookingList.value = []
-
+    totalhotelbooking.value = 0
+    totalamountbooking.value = 0
     const response = await GenericService.search(confBookingApi.moduleApi, confBookingApi.uriApi, bookingPayload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -630,6 +604,9 @@ async function getBookingList() {
     bookingPagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
+      totalhotelbooking.value += iterator.hotelAmount // Asegúrate de que 'amount' esté definido en 'iterator'
+      totalamountbooking.value += iterator.invoiceAmount // Asegúrate de que 'invoiceAmount' esté definido en 'iterator'
+
       bookingList.value = [...bookingList.value, {
         ...iterator,
         loadingEdit: false,
@@ -653,7 +630,10 @@ async function getRoomRateList() {
     idItemToLoadFirstTime.value = ''
     roomRateOptions.value.loading = true
     roomRateList.value = []
+    const selectedRoomRateId = ref(null)
 
+    totalHotel.value = 0
+    totalInvoice.value = 0
     const response = await GenericService.search(confRoomRateApi.moduleApi, confRoomRateApi.uriApi, roomRatePayload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -664,6 +644,9 @@ async function getRoomRateList() {
     roomRatePagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
+      totalHotel.value += iterator.hotelAmount // Asegúrate de que 'amount' esté definido en 'iterator'
+      totalInvoice.value += iterator.invoiceAmount // Asegúrate de que 'invoiceAmount' esté definido en 'iterator'
+
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
@@ -679,6 +662,7 @@ async function getRoomRateList() {
     }
     if (roomRateList.value.length > 0) {
       idItemToLoadFirstTime.value = roomRateList.value[0].id
+      selectedRoomRateId.value = roomRateList.value[0].id
     }
   }
   catch (error) {
@@ -694,7 +678,7 @@ async function getAdjustmentList() {
   try {
     adjustmentOptions.value.loading = true
     AdjustmentTableList.value = []
-
+    totalAmount.value = 0
     const response = await GenericService.search(confAdjustmentApi.moduleApi, confAdjustmentApi.uriApi, adjustmentPayload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -705,6 +689,7 @@ async function getAdjustmentList() {
     pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
+      totalAmount.value += iterator.amount
       AdjustmentTableList.value = [...AdjustmentTableList.value, {
         ...iterator,
         loadingEdit: false,
@@ -757,6 +742,8 @@ async function createItem(item: { [key: string]: any }) {
     payload.agency = Object.prototype.hasOwnProperty.call(payload.agency, 'id') ? payload.agency.id : payload.agency
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.status = statusToString(payload.status)
+    payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
 
     let totalIncomeAmount = 0
     if (Array.isArray(payload.incomeAmount)) {
@@ -772,7 +759,7 @@ async function createItem(item: { [key: string]: any }) {
     if (response && response.id) {
       // Guarda el id del elemento creado
       idItem.value = response.id
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment ${response.invoiceId ?? ''} was created successful`, life: 10000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -801,7 +788,7 @@ async function saveItem(item: { [key: string]: any }) {
       updateFieldProperty(fields, 'reSend', 'disabled', true)
       updateFieldProperty(fields, 'reSendDate', 'disabled', true)
       if (AdjustmentList.value.length > 0) {
-        await createPaymentDetails(AdjustmentList.value[0])
+        await createAdjustment(AdjustmentList.value[0])
       }
       await getItemById(idItem.value)
     }
@@ -822,18 +809,31 @@ async function getItemById(id: string) {
         item.value.id = id
         item.value.incomeId = response.invoiceId
         item.value.invoiceNumber = response.invoiceNumber
-        invoiceStatusList.value = [response.invoiceStatus]
-        item.value.invoiceStatus = response.invoiceStatus
-
+        // if (response.invoiceStatus) {
+        //   response.invoiceStatus.name = `${response.invoiceStatus.code} - ${response.invoiceStatus.name}`
+        //   invoiceStatusList.value = [response.invoiceStatus]
+        //   item.value.invoiceStatus = response.invoiceStatus
+        // }
+        item.value.reSend = response.reSend
+        item.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate
+        response.agency.status = 'ACTIVE'
         agencyList.value = [response.agency]
         item.value.agency = response.agency
-
+        item.value.agency.name = `${response.agency.code} - ${response.agency.name}`
+        item.value.incomeAmount = response.invoiceAmount
         hotelList.value = [response.hotel]
         item.value.hotel = response.hotel
-        item.value.invoiceDate = new Date()
+        item.value.hotel.name = `${response.hotel.code} - ${response.hotel.name}`
+        item.value.invoiceDate = dayjs(response.invoiceDate).toDate()
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
-        item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[1]
+        item.value.hasAttachments = response.hasAttachments
+        if (response.manageInvoiceType) {
+          response.manageInvoiceType.name = `${response.manageInvoiceType.code} - ${response.manageInvoiceType.name}`
+          response.manageInvoiceType.status = 'ACTIVE'
+          invoiceTypeList.value = [response.manageInvoiceType]
+          item.value.invoiceType = response.manageInvoiceType
+        }
       }
       formReload.value += 1
     }
@@ -847,82 +847,22 @@ async function getItemById(id: string) {
     }
   }
 }
-/*
-async function getListPaymentDetail() {
-  if (options.value.loading) {
-    // Si ya hay una solicitud en proceso, no hacer nada.
-    return
-  }
-  try {
-    options.value.loading = true
-    paymentDetailsList.value = []
-    const newListItems = []
 
-    const objFilter = payload.value.filter.find(item => item.key === 'payment.id')
-
-    if (objFilter) {
-      objFilter.value = idItem.value
-    }
-    else {
-      payload.value.filter.push({
-        key: 'payment.id',
-        operator: 'EQUALS',
-        value: idItem.value,
-        logicalOperation: 'AND'
-      })
-    }
-
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-
-    const { data: dataList, page, size, totalElements, totalPages } = response
-
-    pagination.value.page = page
-    pagination.value.limit = size
-    pagination.value.totalElements = totalElements
-    pagination.value.totalPages = totalPages
-
-    const existingIds = new Set(paymentDetailsList.value.map(item => item.id))
-
-    for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
-        iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
-          ? Number.parseFloat(iterator.amount).toString()
-          : '0'
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
-      }
-
-      // Verificar si el ID ya existe en la lista
-      if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator })
-        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-      }
-    }
-
-    paymentDetailsList.value = [...paymentDetailsList.value, ...newListItems]
-  }
-  catch (error) {
-    console.error(error)
-  }
-  finally {
-    options.value.loading = false
-  }
-}
-*/
-async function createPaymentDetails(item: { [key: string]: any }) {
+async function createAdjustment(item: { [key: string]: any }) {
   try {
     if (item) {
       loadingSaveAdjustment.value = true
       const payload: { [key: string]: any } = { ...item }
       payload.amount = Number.parseFloat(payload.amount)
-      payload.employee = userData?.value?.user?.userId
+      payload.employee = userData?.value?.user?.name
       payload.transactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
       payload.income = idItem.value // Usar el ID del registro de "income" creado anteriormente
       payload.remark = item.remark
       payload.status = 'ACTIVE'
       payload.date = payload.date ? dayjs(payload.date).format('YYYY-MM-DD') : ''
-
+      if (selectedRoomRate.value) {
+        payload.roomRate = selectedRoomRate.value.id
+      }
       await GenericService.create(confApiPaymentDetail.moduleApi, 'income-adjustment', payload)
 
       onOffDialogPaymentDetail.value = false
@@ -937,6 +877,36 @@ async function createPaymentDetails(item: { [key: string]: any }) {
     loadingSaveAdjustment.value = false
   }
 }
+
+async function createInvoiceAdjustment(item: { [key: string]: any }) {
+  try {
+    if (item) {
+      loadingSaveAdjustment.value = true
+      const payload: { [key: string]: any } = { ...item }
+      payload.amount = Number.parseFloat(payload.amount)
+      payload.employee = userData?.value?.user?.name
+      payload.transactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+      payload.description = item.remark
+      // payload.date = payload.date
+      if (selectedRoomRate.value) {
+        payload.roomRate = selectedRoomRate.value.id
+      }
+      delete payload.remark
+      await GenericService.create(confApiInvoiceAdjustment.moduleApi, confApiInvoiceAdjustment.uriApi, payload)
+
+      onOffDialogPaymentDetail.value = false
+      loadingSaveAdjustment.value = false
+      await getBookingList()
+      await getRoomRateList()
+      await getAdjustmentList()
+      await getItemById(idItem.value)
+    }
+  }
+  finally {
+    loadingSaveAdjustment.value = false
+  }
+}
+
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
@@ -952,7 +922,7 @@ async function updateItem(item: { [key: string]: any }) {
 async function saveAndReload(itemP: { [key: string]: any }) {
   try {
     if (idItem.value) {
-      await createPaymentDetails(itemP)
+      await createInvoiceAdjustment(itemP)
     }
     else {
       const data: { [key: string]: any } = { ...itemP }
@@ -962,6 +932,8 @@ async function saveAndReload(itemP: { [key: string]: any }) {
         transaction: transactionType?.name ?? '',
         ...rest
       }))
+      pagination.value.totalElements = AdjustmentTableList.value.length
+      totalAmount.value = itemP.amount
     }
     // await getItemById(idItem.value)
   }
@@ -985,20 +957,6 @@ async function saveAndReload(itemP: { [key: string]: any }) {
   } */
 }
 
-function requireConfirmationToSave(item: any) {
-  confirm.require({
-    target: submitEvent.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: async () => {
-      await saveItem(item)
-    },
-    reject: () => {}
-  })
-}
 function requireConfirmationToDelete(event: any) {
   confirm.require({
     target: event.currentTarget,
@@ -1059,39 +1017,33 @@ async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: {
   }
 }
 
-async function getDefaultInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  const defaultInvoiceTypeList = ref<ListItem[]>([])
-  const filter: FilterCriteria[] = [
-    {
-      key: 'code',
-      logicalOperation: 'AND',
-      operator: 'LIKE',
-      value: 'bk',
-    },
-    {
-      key: 'name',
-      logicalOperation: 'AND',
-      operator: 'LIKE',
-      value: 'bank',
+async function getInvoiceTypeListDefault(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  try {
+    objApisLoading.value.invoiceType = true
+    const additionalFilter: FilterCriteria[] = [
+      {
+        key: 'name',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'Income'
+      }
+    ]
+
+    const filteredList = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+
+    if (filteredList.length > 0) {
+      invoiceTypeList.value = [filteredList[0]]
+      item.value.invoiceType = invoiceTypeList.value[0]
     }
-  ]
-  defaultInvoiceTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...filter], queryObj, mapFunction)
-  if (defaultInvoiceTypeList.value.length > 0) {
-    item.value.invoiceType = defaultInvoiceTypeList.value[0]
+    else {
+      invoiceTypeList.value = []
+    }
+    formReload.value++
+  }
+  finally {
+    objApisLoading.value.invoiceType = false
   }
 }
-
-function mapFunctionForClient(data: DataListItem): ListItem {
-  return {
-    id: data.id,
-    name: data.name,
-    status: data.status
-  }
-}
-
-/* async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  invoiceStatusList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
-} */
 
 async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   const additionalFilter: FilterCriteria[] = [
@@ -1112,10 +1064,32 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
     invoiceStatusList.value = []
   }
 }
-/*
-async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
-}*/
+
+async function getInvoiceStatusListDefault(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  try {
+    objApisLoading.value.invoiceStatus = true
+    const additionalFilter: FilterCriteria[] = [
+      {
+        key: 'name',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'Sent'
+      }
+    ]
+    const filteredList = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+    if (filteredList.length > 0) {
+      invoiceStatusList.value = [filteredList[0]]
+      item.value.invoiceStatus = invoiceStatusList.value[0]
+    }
+    else {
+      invoiceStatusList.value = []
+    }
+    formReload.value++
+  }
+  finally {
+    objApisLoading.value.invoiceStatus = false
+  }
+}
 
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   const additionalFilter: FilterCriteria[] = [
@@ -1125,14 +1099,10 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
       operator: 'EQUALS',
       value: 'ACTIVE'
     }
-  ];
+  ]
 
-  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction);
+  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
 }
-/*
-async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  hotelList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
-}*/
 
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   const additionalFilter: FilterCriteria[] = [
@@ -1142,18 +1112,9 @@ async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query
       operator: 'EQUALS',
       value: 'ACTIVE'
     }
-  ];
+  ]
 
-  hotelList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction);
-}
-
-function addAttachment(attachment: any) {
-  attachmentList.value = [...attachmentList.value, attachment]
-}
-
-function updateAttachment(attachment: any) {
-  const index = attachmentList.value.findIndex(item => item.id === attachment.id)
-  attachmentList.value[index] = attachment
+  hotelList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
 }
 
 function rowSelected(rowData: any) {
@@ -1174,11 +1135,18 @@ function onCloseDialog($event: any) {
 }
 
 async function loadDefaultsValues() {
-  await getDefaultInvoiceTypeList(objApis.value.invoiceType.moduleApi, objApis.value.invoiceType.uriApi, {
+  const objQueryToSearch = {
     query: '',
     keys: ['name', 'code'],
-  })
-  formReload.value++
+  }
+  const filter: FilterCriteria[] = [{
+    key: 'status',
+    logicalOperation: 'AND',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+  }]
+  getInvoiceTypeListDefault(objApis.value.invoiceType.moduleApi, objApis.value.invoiceType.uriApi, objQueryToSearch, filter)
+  getInvoiceStatusListDefault(objApis.value.invoiceStatus.moduleApi, objApis.value.invoiceStatus.uriApi, objQueryToSearch, filter)
 }
 
 async function handleSave(event: any) {
@@ -1224,7 +1192,7 @@ onMounted(async () => {
             date-format="yy-mm-dd"
             :max-date="new Date()"
             :disabled="idItem !== ''"
-            @update:model-value="($event) => {
+            @update:model-value="($event: any) => {
               onUpdate('invoiceDate', $event)
             }"
           />
@@ -1237,7 +1205,7 @@ onMounted(async () => {
             date-format="yy-mm-dd"
             :max-date="new Date()"
             :disabled="idItem !== ''"
-            @update:model-value="($event) => {
+            @update:model-value="($event: any) => {
               onUpdate('dueDate', $event)
             }"
           />
@@ -1248,7 +1216,7 @@ onMounted(async () => {
             v-if="!loadingSaveAll"
             v-model="data.incomeAmount"
             show-clear :disabled="true"
-            @update:model-value="($event) => {
+            @update:model-value="($event: any) => {
               onUpdate('incomeAmount', $event)
             }"
           />
@@ -1256,7 +1224,7 @@ onMounted(async () => {
         </template>
         <template #field-invoiceStatus="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
+            v-if="!loadingSaveAll && !objApisLoading.invoiceStatus"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -1284,7 +1252,7 @@ onMounted(async () => {
         </template>
         <template #field-invoiceType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
+            v-if="!loadingSaveAll && !objApisLoading.invoiceType"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -1382,8 +1350,17 @@ onMounted(async () => {
           :pagination="bookingPagination"
           @on-change-pagination="payloadOnChangePage = $event"
           @update:clicked-item="rowSelected($event)"
-          @on-row-double-click="openDialogPaymentDetails($event)"
-        />
+        >
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center ">
+              <Row>
+                <Column footer="Totals:" :colspan="10" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                <Column :footer="totalhotelbooking" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="totalamountbooking" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+              </Row>
+            </ColumnGroup>
+          </template>
+        </DynamicTable>
       </TabPanel>
       <TabPanel>
         <template #header>
@@ -1399,8 +1376,19 @@ onMounted(async () => {
           :pagination="roomRatePagination"
           @on-change-pagination="payloadOnChangePage = $event"
           @update:clicked-item="rowSelected($event)"
-          @on-row-double-click="openDialogPaymentDetails($event)"
-        />
+          @on-row-right-click="onRowRightClick($event)"
+        >
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center ">
+              <Row>
+                <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                <Column :footer="totalHotel" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="totalInvoice" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+              </Row>
+            </ColumnGroup>
+          </template>
+        </DynamicTable>
+        <ContextMenu ref="roomRateContextMenu" :model="menuModel" />
       </TabPanel>
       <TabPanel>
         <template #header>
@@ -1416,8 +1404,17 @@ onMounted(async () => {
           :pagination="pagination"
           @on-change-pagination="payloadOnChangePage = $event"
           @update:clicked-item="rowSelected($event)"
-          @on-row-double-click="openDialogPaymentDetails($event)"
-        />
+        >
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center ">
+              <Row>
+                <Column footer="Total:" :colspan="1" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                <Column :footer="totalAmount" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :colspan="4" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+              </Row>
+            </ColumnGroup>
+          </template>
+        </DynamicTable>
       </TabPanel>
     </TabView>
     <!-- @on-confirm-create="goToCreateForm"
@@ -1426,10 +1423,14 @@ onMounted(async () => {
       @on-sort-field="onSortField" -->
 
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" @click="forceSave = true" />
-      <Button v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" />
-      <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
-      <Button v-tooltip.top="'Show history'" class="w-3rem ml-1" @click="handleAttachmentHistoryDialogOpen">
+      <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :disabled="idItem.length > 0" @click="forceSave = true" />
+      <Button
+        v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" :disabled="!item.hasAttachments" @click="() => {
+          exportAttachmentsDialogOpen = true
+        }"
+      />
+      <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" :disabled="idItem.length === 0" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
+      <Button v-tooltip.top="'Show history'" class="w-3rem ml-1" :disabled="idItem.length === 0" @click="handleAttachmentHistoryDialogOpen">
         <template #icon>
           <span class="flex align-items-center justify-content-center p-0">
             <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#e8eaed"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" /></svg>
@@ -1437,34 +1438,42 @@ onMounted(async () => {
         </template>
       </Button>
       <Button v-tooltip.top="'Add booking'" class="w-3rem ml-1" disabled icon="pi pi-plus" />
-      <Button v-tooltip.top="'New Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" severity="primary" @click="openDialogPaymentDetails($event)" />
+      <!-- <Button v-tooltip.top="'New Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" severity="primary" @click="openDialogPaymentDetails()" /> -->
 
       <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
       <Button v-tooltip.top="'Import'" class="w-3rem ml-1" disabled icon="pi pi-download" />
 
       <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
 
-      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-1" icon="pi pi-times" severity="secondary" @click="goToList" />
+      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-1" icon="pi pi-times" severity="secondary" @click="() => navigateTo('/payment')" />
     </div>
-    <DialogPaymentDetailForm
+    <IncomeAdjustmentDialog
       :key="dialogPaymentDetailFormReload"
       :visible="onOffDialogPaymentDetail"
       :fields="fieldAdjustments"
       :item="itemDetails"
       :loading-save-all="loadingSaveAdjustment"
-      title=" New Adjustment"
-      :selected-payment="item"
+      title="New Adjustment"
+      :selected-room-rate="selectedRoomRate"
       :is-split-action="isSplitAction"
       @update:visible="onCloseDialog($event)"
       @save="saveAndReload($event)"
+      @on-close="() => navigateTo('/payment')"
     />
-
     <div v-if="attachmentDialogOpen">
-      <AttachmentIncomeDialog :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Manage Income Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" />
+      <AttachmentIncomeDialog
+        :close-dialog="(total: number) => {
+          attachmentDialogOpen = false
+          item.hasAttachments = total > 0
+        }" :is-creation-dialog="false" header="Manage Income Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item"
+      />
     </div>
 
     <div v-if="attachmentHistoryDialogOpen">
-      <AttachmentIncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" :is-creation-dialog="false" />
+      <IncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" header="Income Status History" />
+    </div>
+    <div v-if="exportAttachmentsDialogOpen">
+      <PrintInvoiceDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen" :invoice="item" />
     </div>
   </div>
 </template>
@@ -1490,7 +1499,11 @@ onMounted(async () => {
     padding: 0 !important;
   }
 }
-
+.footer-table{
+ background: #d8f2ff;
+    border-color: #0F8BFD;
+    color: #0F8BFD;
+}
 .no-global-style .p-tabview-nav li.p-highlight .p-tabview-nav-link {
     background: #d8f2ff;
     border-color: #0F8BFD;

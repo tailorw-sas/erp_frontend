@@ -974,10 +974,10 @@ onMounted(() => {
   color: #fff;
 }
 
-.p-datatable-tfoot {
-  background-color: #42A5F5;
-  tr td {
-    color: #fff;
-  }
-}
+// .p-datatable-tfoot {
+//   background-color: #42A5F5;
+//   tr td {
+//     color: #fff;
+//   }
+// }
 </style>

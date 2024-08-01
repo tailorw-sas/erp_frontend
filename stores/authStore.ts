@@ -17,5 +17,9 @@ export const useAuthStore = defineStore('authStore', () => {
     return userData.data?.businesses?.filter(item => item.businessId !== userData.data?.selectedBusiness) || []
   })
 
-  return { userData, getUserMe, availableCompanies, }
+  const can = computed(() => (permissions: string[]) => {
+    return permissions.some(permission => userData.data?.permissions.includes(permission))
+  })
+
+  return { userData, getUserMe, availableCompanies, can }
 })

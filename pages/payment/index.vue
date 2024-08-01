@@ -90,19 +90,18 @@ const filterToSearchTemp = ref<GenericObject>({
 
 const ENUM_FILTER = [
   { id: 'paymentId', name: 'Payment Id', disabled: false },
-  { id: 'transfNo', name: 'Transf. No', disabled: true },
-  { id: 'totalAmount', name: 'T. Amount', disabled: true },
+  { id: 'referenceNumber', name: 'Reference No', disabled: true },
+  { id: 'paymentAmount', name: 'P. Amount', disabled: false },
   { id: 'remark', name: 'Remark' },
-  { id: 'detailId', name: 'Detail Id', disabled: true },
-  { id: 'detailAmount', name: 'Detail Amount', disabled: true },
-  { id: 'detailRemark', name: 'Detail Remark', disabled: true },
+  { id: 'paymentDetails.paymentDetailId', name: 'Detail Id', disabled: false },
+  { id: 'paymentDetails.amount', name: 'Detail Amount', disabled: false },
+  { id: 'paymentDetails.remark', name: 'Detail Remark', disabled: false },
   { id: 'invoiceNo', name: 'Invoice No', disabled: true },
   { id: 'bookingId', name: 'Booking Id', disabled: true },
-  { id: 'guest', name: 'Guest', disabled: true },
   { id: 'firstName', name: 'Guest First Name', disabled: true },
   { id: 'lastName', name: 'Guest Last Name', disabled: true },
   { id: 'reservation', name: 'Reservation', disabled: true },
-  { id: 'cupon', name: 'Cupon', disabled: true },
+  { id: 'coupon', name: 'Coupon No', disabled: true },
 ]
 
 const ENUM_FILTER_TYPE = [
@@ -150,7 +149,7 @@ const columns: IColumn[] = [
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'text' },
   { field: 'noApplied', header: 'Not Applied', tooltip: 'Not Applied', width: '60px', type: 'text' },
   { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
-  { field: 'paymentStatus', header: 'Status', frozen: true, type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: true },
+  { field: 'paymentStatus', header: 'Status', width: '100px', frozen: true, type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: true },
   // { field: 'totalAmount', header: 'T.Amount', tooltip: 'Total Amount', width: '60px', type: 'text' },
   // { field: 'attachmentStatus', header: 'Attachment Status', width: '100px', type: 'select' },
   // { field: 'paymentBalance', header: 'Payment Balance', width: '200px', type: 'text' },
@@ -177,7 +176,7 @@ const payload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
-  sortBy: 'createdAt',
+  sortBy: 'paymentId',
   sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
@@ -307,8 +306,8 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'bankAccount')) {
         iterator.bankAccount = {
-          id: iterator.bankAccount.id,
-          name: iterator.bankAccount.accountNumber
+          id: iterator?.bankAccount?.id,
+          name: iterator?.bankAccount?.accountNumber
         }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
@@ -360,7 +359,7 @@ function searchAndFilter() {
     }
     payload.value.filter = [...payload.value.filter, {
       key: keyValue || (filterToSearch.value.criteria ? filterToSearch.value.criteria.id : ''),
-      operator: 'EQUALS',
+      operator: keyTemp === 'paymentDetails.remark' ? 'LIKE' : 'EQUALS',
       value: filterToSearch.value.value,
       logicalOperation: 'AND',
       type: 'filterSearch',
@@ -539,10 +538,10 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
-async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
+async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let clientTemp: any[] = []
   clientItemsList.value = [allDefaultItem]
-  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [], queryObj, mapFunction)
+  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
   clientItemsList.value = [...clientItemsList.value, ...clientTemp]
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -718,7 +717,13 @@ function toggle(event: Event, index: number) {
                             query: $event,
                             keys: ['name', 'code'],
                           }
-                          await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch)
+                          const filter: FilterCriteria[] = [{
+                            key: 'status',
+                            logicalOperation: 'AND',
+                            operator: 'EQUALS',
+                            value: 'ACTIVE',
+                          }]
+                          await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
                         }"
                       />
                     </div>
@@ -1070,16 +1075,9 @@ function toggle(event: Event, index: number) {
   color: #fff;
 }
 
-.p-datatable-tfoot {
-  background-color: var(--primary-color);
-  tr td {
-    color: #fff;
-  }
-}
-
-:deep(.p-datatable-tbody) {
-  background-color: #fff !important;
-}
+// :deep(.p-datatable-tbody) {
+//   background-color: #fff !important;
+// }
   // #accordion {
   //   .p-accordion-tab {
   //     .p-accordion-header-link {

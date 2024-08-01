@@ -266,3 +266,17 @@ export function getLastDayOfMonth(date: Date): Date {
   const month = date.getMonth()
   return new Date(year, month + 1, 0)
 }
+
+export async function base64ToFile(base64String: string, filename: string, mimeType: string) {
+  const byteCharacters = atob(base64String)
+  const byteNumbers = Array.from({ length: byteCharacters.length })
+
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i)
+  }
+
+  const byteArray = new Uint8Array(byteNumbers)
+  const blob = new Blob([byteArray], { type: mimeType })
+
+  return new File([blob], filename, { type: mimeType })
+}

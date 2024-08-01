@@ -1,4 +1,4 @@
-interface InvoiceParams {
+export interface InvoiceParams {
   companyName: string
   companyAddress: string
   companyCif: string
@@ -11,6 +11,10 @@ interface InvoiceParams {
   agencyCityState: string
   agencyCountry: string
   invoiceDate: string
+  bookings: BookingPrint[]
+}
+
+export interface BookingPrint {
   fullName: string
   description: string
   voucher: string
@@ -38,33 +42,14 @@ export function getPrintInvoiceTemplate(params: InvoiceParams): string {
     agencyCityState,
     agencyCountry,
     invoiceDate,
-    fullName,
-    description,
-    voucher,
-    adults,
-    children,
-    from,
-    to,
-    quantity,
-    plan,
-    price,
-    total
+    bookings
   } = params
 
-  return `<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-
-<body>
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+  return ` <div id="print-invoice-pdf" style=" width: 1150px;"> 
+  <div style="display: flex; align-items: center; justify-content: space-between; margin:auto">
 
     <div
-      style="display: flex; flex-direction: column;width: 55%;height: fit-content; align-items:start; padding-left: 10px; border: 1px black solid; border-radius: 12px; padding-top: 5px; padding-bottom: 5px; ">
+      style="display: flex; flex-direction: column;width: 400px;height: fit-content; align-items:start; padding-left: 10px; border: 1px black solid; border-radius: 12px; padding-top: 5px; padding-bottom: 5px; ">
       <h3 style="margin-top: 5px;">${companyName}</h3>
       <span style="font-size: 14px; ">${companyAddress}</span><br />
       
@@ -89,16 +74,16 @@ export function getPrintInvoiceTemplate(params: InvoiceParams): string {
   <div style="display: flex; align-items: start; justify-content: space-between; margin-top: 8px;">
 
     <div
-      style="display: flex; flex-direction: column;width: 55%;height: fit-content; align-items:start; padding-left: 10px; border: 1px black solid; border-radius: 12px; padding-top: 5px; padding-bottom: 5px; ">
+      style="display: flex; flex-direction: column;width: 400px;height: fit-content; align-items:start; padding-left: 10px; border: 1px black solid; border-radius: 12px; padding-top: 5px; padding-bottom: 5px; ">
       <div style="font-weight: bold; margin-bottom: 20px;">
         <p style="margin-top: 5px;">ACCOUNT: ${agencyCode}</p>
         <p>${agencyName}</p>
         <p>${agencyAddress}</p>
         <span style="font-size: 14px;font-weight: 100;">CIF: ${agencyCif}</span>
       </div>
-      <div style="display: flex; flex-direction: row;justify-content: space-between; margin-bottom: 5px;">
-        <span style="margin-right: 130px ;">${agencyCityState}</span>
-        <span style="margin-left: 130px;">${agencyCountry}</span>
+      <div style="display: flex; flex-direction: row;justify-content: space-between; width: 98%; margin-bottom: 5px;">
+        <span >${agencyCityState}</span>
+        <span >${agencyCountry}</span>
       </div>
     </div>
 
@@ -145,22 +130,28 @@ export function getPrintInvoiceTemplate(params: InvoiceParams): string {
         <td></td>
         <td></td>
       </tr>
-      <tr>
-        <td>${fullName}</td>
-        <td>${description}</td>
-        <td>${voucher}</td>
-        <td>${adults}</td>
-        <td>${children}</td>
-        <td>${from}</td>
-        <td>${to}</td>
-        <td>${quantity}</td>
-        <td>${plan}</td>
-        <td>${price}</td>
-        <td>${total}</td>
-      </tr>
+      ${
+        bookings?.map(booking => `
+        <tr>
+          <td>${booking?.fullName}</td>
+          <td>${booking?.description}</td>
+          <td>${booking?.voucher}</td>
+          <td>${booking?.adults}</td>
+          <td>${booking?.children}</td>
+          <td>${booking?.from}</td>
+          <td>${booking?.to}</td>
+          <td>${booking?.quantity}</td>
+          <td>${booking?.plan}</td>
+          <td>${booking?.price}</td>
+          <td>${booking?.total}</td>
+        </tr>
+        `)
+      }
+      
     </tbody>
   </table>
-</body>
-
-</html>`
+</div>
+  
+  
+  `
 }

@@ -11,9 +11,11 @@ import { itemMenuList } from '~/components/payment/indexBtns'
 const toast = useToast()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
+const attachUpload = ref()
 const inputFile = ref()
+const attachFile = ref()
 const importModel = ref({
-  invoiceFile: '',
+  importFile: '',
   totalAmount: 0,
   documentId: null,
   attachFile: null
@@ -25,12 +27,12 @@ const loadingSaveAll = ref(false)
 
 const confApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'manage-booking/import',
+  uriApi: 'payment-detail/import',
 })
 
 const confErrorApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'manage-booking',
+  uriApi: 'payment-detail',
 })
 // VARIABLES -----------------------------------------------------------------------------------------
 const idItem = ref('')
@@ -49,9 +51,9 @@ const columns: IColumn[] = [
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Invoice',
+  tableName: 'Payment Import of Anti Income',
   moduleApi: 'payment',
-  uriApi: 'manage-booking/import',
+  uriApi: 'payment-detail/import',
   loading: false,
   showDelete: false,
   showFilters: true,
@@ -133,12 +135,20 @@ async function clearForm() {
 async function onChangeFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     inputFile.value = event.target.files[0]
-    importModel.value.invoiceFile = inputFile.value.name
+    importModel.value.importFile = inputFile.value.name
     uploadComplete.value = false
   }
 }
 
-async function importFile() {
+async function onChangeAttachFile(event: any) {
+  if (event.target.files && event.target.files.length > 0) {
+    attachFile.value = event.target.files[0]
+    importModel.value.attachFile = attachFile.value.name
+    uploadComplete.value = false
+  }
+}
+
+async function importAntiIncome() {
   loadingSaveAll.value = true
   let successOperation = true
   uploadComplete.value = true
@@ -220,19 +230,25 @@ onMounted(async () => {
               </div>
             </template>
             <div class="flex flex-column lg:flex-row w-full">
-              <div class="col-12 w-full md:col-3 lg:col-3">
+              <div class="col-12 md:col-3 lg:col-3">
                 <label class="w-7rem">Document: </label>
                 <div>
                   <Dropdown v-model="importModel.documentId" :options="documents" option-label="label" option-value="value" placeholder="Select Document" />
                 </div>
               </div>
-              <div class="flex flex-row w-full align-items-center">
+              <div class="col-12 md:col-3 lg:col-3">
+                <label class="w-7rem">Document: </label>
+                <div>
+                  <Dropdown v-model="importModel.documentId" :options="documents" option-label="label" option-value="value" placeholder="Select Document" />
+                </div>
+              </div>
+              <div class="col-12 md:col-3 lg:col-3">
                 <label class="w-7rem">Import Data: </label>
-                <div class="w-full ">
+                <div class="col-12 w-full">
                   <div class="p-inputgroup">
                     <InputText
                       ref="fileUpload"
-                      v-model="importModel.invoiceFile"
+                      v-model="importModel.importFile"
                       placeholder="Choose file"
                       class="w-full"
                       show-clear
@@ -244,6 +260,26 @@ onMounted(async () => {
                   </div>
                   <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
                   <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile">
+                </div>
+              </div>
+              <div class="flex flex-row w-full align-items-center">
+                <label class="w-7rem">Attach File: </label>
+                <div class="col-12 md:col-4 lg:col-4">
+                  <div class="p-inputgroup">
+                    <InputText
+                      ref="attachUpload"
+                      v-model="importModel.attachFile"
+                      placeholder="Choose file"
+                      class="w-full"
+                      show-clear
+                      aria-describedby="inputtext-help"
+                    />
+                    <span class="p-inputgroup-addon">
+                      <Button icon="pi pi-upload" severity="secondary" class="w-3rem" @click="attachUpload.click()" />
+                    </span>
+                  </div>
+                  <small id="username-help" style="color: #808080;">Select a file of type PDF</small>
+                  <input ref="attachUpload" type="file" style="display: none;" accept="application/pdf" @change="onChangeAttachFile">
                 </div>
               </div>
             </div>
@@ -264,7 +300,7 @@ onMounted(async () => {
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete" @click="importFile" />
+        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete" @click="importAntiIncome" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>

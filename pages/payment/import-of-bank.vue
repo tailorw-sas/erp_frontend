@@ -6,6 +6,7 @@ import type { PageState } from 'primevue/paginator'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import { base64ToFile } from '~/utils/helpers'
 
 const toast = useToast()
 const listItems = ref<any[]>([])
@@ -18,12 +19,12 @@ const loadingSaveAll = ref(false)
 
 const confApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'manage-booking/import',
+  uriApi: 'payment/import',
 })
 
 const confErrorApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'manage-booking',
+  uriApi: 'payment',
 })
 // VARIABLES -----------------------------------------------------------------------------------------
 const idItem = ref('')
@@ -44,9 +45,9 @@ const columns: IColumn[] = [
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Invoice',
+  tableName: 'Payment Import of Bank',
   moduleApi: 'payment',
-  uriApi: 'manage-booking/import',
+  uriApi: 'payment/import',
   loading: false,
   showDelete: false,
   showFilters: true,
@@ -102,7 +103,7 @@ async function getErrorList() {
       rowError = ''
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        for (const err of iterator.errorField) {
+        for (const err of iterator.errorFields) {
           rowError += `- ${err.message} \n`
         }
         newListItems.push({ ...iterator.row, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
@@ -146,12 +147,13 @@ async function importFile() {
     idItem.value = uuid
     const base64String: any = await fileToBase64(inputFile.value)
     const base64 = base64String.split('base64,')[1]
-    const objTemp = {
-	    importProcessId: uuid,
-      importType: 'NO_VIRTUAL',
-      file: base64
-    }
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, objTemp)
+
+    const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('importProcessId', uuid)
+    formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.BANK)
+    await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
     successOperation = false
@@ -186,7 +188,7 @@ function onSortField(event: any) {
 }
 
 async function goToList() {
-  await navigateTo('/invoice')
+  await navigateTo('/payment')
 }
 
 watch(payloadOnChangePage, (newValue) => {
@@ -212,10 +214,6 @@ onMounted(async () => {
                 <div>
                   Import Payment of Bank from Excel
                 </div>
-                <!-- <div>
-                  <PaymentLegend :legend="legend" />
-                </div>
--->
               </div>
             </template>
             <div class="flex flex-column lg:flex-row w-full">
