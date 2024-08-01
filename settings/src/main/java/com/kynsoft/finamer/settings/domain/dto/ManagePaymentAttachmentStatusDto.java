@@ -15,7 +15,7 @@ public class ManagePaymentAttachmentStatusDto {
     private String code;
     private String name;
     private Status status;
-    private ManageModuleDto module;
+    private ModuleDto module;
     private Boolean show;
     private Boolean defaults;
     private String permissionCode;

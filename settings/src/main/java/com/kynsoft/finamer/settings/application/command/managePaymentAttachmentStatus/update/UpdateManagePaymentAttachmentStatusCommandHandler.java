@@ -6,8 +6,8 @@ import com.kynsof.share.core.domain.kafka.entity.update.UpdateManagePaymentAttac
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.settings.domain.dto.ManageModuleDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
+import com.kynsoft.finamer.settings.domain.dto.ModuleDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNameMustBeUniqueRule;
@@ -91,14 +91,12 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         }
     }
 
-    private boolean updateModule(Consumer<ManageModuleDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+    private void updateModule(Consumer<ModuleDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
-            ManageModuleDto dto = moduleService.findById(newValue);
+            ModuleDto dto = moduleService.findById(newValue);
             setter.accept(dto);
             update.accept(1);
 
-            return true;
         }
-        return false;
     }
 }

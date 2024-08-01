@@ -17,7 +17,7 @@ public class ManagerMerchantCurrencyDto {
     private UUID id;
     private ManagerMerchantDto managerMerchant;
     private ManagerCurrencyDto managerCurrency;
-    private Double value;
+    private String value;
     private String description;
     private Status status;
 

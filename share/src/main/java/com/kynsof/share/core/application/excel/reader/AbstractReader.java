@@ -45,6 +45,7 @@ public abstract class AbstractReader<T> {
             if (Objects.isNull(rowCursor)){
                 this.rowCursor =readerConfiguration.isIgnoreHeaders()?1:0;
             }
+            this.hasContent();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -53,5 +54,7 @@ public abstract class AbstractReader<T> {
 
 
     public abstract T readSingleLine();
+
+    public abstract void hasContent();
 
 }

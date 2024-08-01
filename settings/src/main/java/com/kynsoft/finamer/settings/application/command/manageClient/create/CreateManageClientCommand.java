@@ -17,13 +17,15 @@ public class CreateManageClientCommand implements ICommand {
     private String name;
     private String description;
     private Status status;
+    private Boolean isNightType;
 
-    public CreateManageClientCommand(String code, String description, String name, Status status) {
+    public CreateManageClientCommand(String code, String description, String name, Status status, Boolean isNightType) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.name = name;
         this.status = status;
+        this.isNightType = isNightType;
     }
 
     public static CreateManageClientCommand fromRequest(CreateManageClientRequest request) {
@@ -31,7 +33,8 @@ public class CreateManageClientCommand implements ICommand {
                 request.getCode(),
                 request.getDescription(),
                 request.getName(),
-                request.getStatus()
+                request.getStatus(),
+                request.getIsNightType()
         );
     }
 

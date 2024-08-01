@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import java.util.List;
 
@@ -19,4 +20,8 @@ public interface IManageHotelService {
     ManageHotelDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    boolean existByCode(String hotelCode);
+
+    ManageHotelDto findByCode(String hotelCode);
 }

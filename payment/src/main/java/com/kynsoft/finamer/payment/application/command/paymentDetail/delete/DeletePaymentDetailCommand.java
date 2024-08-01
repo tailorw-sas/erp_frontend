@@ -14,6 +14,7 @@ import java.util.UUID;
 public class DeletePaymentDetailCommand implements ICommand {
 
     private UUID id;
+    private UUID employee;
 
     @Override
     public ICommandMessage getMessage() {

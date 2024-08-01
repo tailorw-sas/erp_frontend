@@ -3,12 +3,16 @@ package com.kynsoft.finamer.settings.infrastructure.identity;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,7 +56,7 @@ public class ManagePaymentAttachmentStatus {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -63,7 +67,7 @@ public class ManagePaymentAttachmentStatus {
     )
     private List<ManagePaymentAttachmentStatus> relatedStatuses = new ArrayList<>();
 
-    public ManagePaymentAttachmentStatus(ManagePaymentAttachmentStatusDto dto){
+    public ManagePaymentAttachmentStatus(ManagePaymentAttachmentStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
@@ -80,14 +84,14 @@ public class ManagePaymentAttachmentStatus {
         }
     }
 
-    public ManagePaymentAttachmentStatusDto toAggregateSample(){
+    public ManagePaymentAttachmentStatusDto toAggregateSample() {
         return new ManagePaymentAttachmentStatusDto(
                 id, code, name, status, module != null ? module.toAggregate() : null, show, defaults, permissionCode, description,
                 null
         );
     }
 
-    public ManagePaymentAttachmentStatusDto toAggregate(){
+    public ManagePaymentAttachmentStatusDto toAggregate() {
         return new ManagePaymentAttachmentStatusDto(
                 id, code, name, status, module != null ? module.toAggregate() : null, show, defaults, permissionCode, description,
                 relatedStatuses != null ? relatedStatuses.stream().map(ManagePaymentAttachmentStatus::toAggregateSample).toList() : null

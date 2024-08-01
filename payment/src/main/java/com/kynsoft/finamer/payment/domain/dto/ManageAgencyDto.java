@@ -18,4 +18,5 @@ public class ManageAgencyDto {
     private String name;
     private String status;
     private ManageAgencyTypeDto agencyType;
+    private ManageClientDto client;
 }

@@ -1,14 +1,10 @@
 package com.kynsoft.finamer.invoicing.application.command.manageClient.update;
 
-import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageClientDto;
-
 import com.kynsoft.finamer.invoicing.domain.services.IManagerClientService;
-import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,6 +25,7 @@ public class UpdateManageClientCommandHandler implements ICommandHandler<UpdateM
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(),
                 update::setUpdate);
+        UpdateIfNotNull.updateBoolean(test::setIsNightType, command.getIsNightType(), test.getIsNightType(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(test);

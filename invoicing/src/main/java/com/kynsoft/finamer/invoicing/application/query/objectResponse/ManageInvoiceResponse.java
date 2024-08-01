@@ -36,6 +36,7 @@ public class ManageInvoiceResponse implements IResponse {
     private boolean hasAttachments;
     private Boolean reSend;
     private LocalDate reSendDate;
+    private LocalDate dueDate;
     private ManageInvoiceTypeResponse manageInvoiceType;
     private ManageInvoiceStatusResponse manageInvoiceStatus;
     private LocalDateTime createdAt;
@@ -59,5 +60,6 @@ public class ManageInvoiceResponse implements IResponse {
         this.manageInvoiceType = dto.getManageInvoiceType() != null ? new ManageInvoiceTypeResponse(dto.getManageInvoiceType()) : null;
         this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null ? new ManageInvoiceStatusResponse(dto.getManageInvoiceStatus()) : null;
         this.createdAt = dto.getCreatedAt();
+        this.dueDate = dto.getDueDate();
     }
 }

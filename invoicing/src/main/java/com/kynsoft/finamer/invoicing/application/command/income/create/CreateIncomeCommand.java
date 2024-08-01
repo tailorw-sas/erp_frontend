@@ -4,10 +4,10 @@ import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.invoicing.domain.dto.IncomeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Getter
@@ -27,13 +27,15 @@ public class CreateIncomeCommand implements ICommand {
     private LocalDate dueDate;
     private Boolean reSend;
     private LocalDate reSendDate;
+    private Long invoiceId;
 
     private IncomeDto income;
+    private String employee;
 
     public CreateIncomeCommand(Status status, LocalDate invoiceDate, Boolean manual,
                                UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
                                Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate,
-                               UUID invoiceStatus) {
+                               UUID invoiceStatus, String employee) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.invoiceDate = invoiceDate;
@@ -47,6 +49,7 @@ public class CreateIncomeCommand implements ICommand {
         this.dueDate = dueDate;
         this.reSend = reSend;
         this.reSendDate = reSendDate;
+        this.employee = employee;
     }
 
     public static CreateIncomeCommand fromRequest(CreateIncomeRequest request) {
@@ -62,12 +65,13 @@ public class CreateIncomeCommand implements ICommand {
                 request.getDueDate(),
                 request.getReSend(),
                 request.getReSendDate(),
-                request.getInvoiceStatus()
+                request.getInvoiceStatus(),
+                request.getEmployee()
         );
     }
 
     @Override
     public ICommandMessage getMessage() {
-        return new CreateIncomeMessage(id);
+        return new CreateIncomeMessage(id, invoiceId);
     }
 }

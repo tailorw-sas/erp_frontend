@@ -6,11 +6,16 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ImportBookingAmountPaxValidator extends ExcelRuleValidator<BookingRow> {
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+        if(Objects.isNull(obj.getAmountPAX())){
+            errorFieldList.add(new ErrorField("Amount PAX", "Amount PAX can't be empty"));
+            return false;
+        }
         if (obj.getAmountPAX()==0){
             errorFieldList.add(new ErrorField("Amount PAX", "Amount PAX must be not 0"));
             return false;

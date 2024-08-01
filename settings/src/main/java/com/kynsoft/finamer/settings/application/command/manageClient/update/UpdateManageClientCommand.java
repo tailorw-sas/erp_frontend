@@ -16,12 +16,14 @@ public class UpdateManageClientCommand implements ICommand {
     private String name;
     private String description;
     private Status status;
+    private Boolean isNightType;
 
-    public UpdateManageClientCommand(UUID id, String description, String name, Status status) {
+    public UpdateManageClientCommand(UUID id, String description, String name, Status status, Boolean isNightType) {
         this.id = id;
         this.description = description;
         this.name = name;
         this.status = status;
+        this.isNightType = isNightType;
     }
 
     public static UpdateManageClientCommand fromRequest(UpdateManageClientRequest request, UUID id) {
@@ -29,7 +31,8 @@ public class UpdateManageClientCommand implements ICommand {
                 id,
                 request.getDescription(),
                 request.getName(), 
-                request.getStatus()
+                request.getStatus(),
+                request.getIsNightType()
         );
     }
 

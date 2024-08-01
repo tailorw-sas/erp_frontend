@@ -290,7 +290,13 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     CHECK_INVOICE_OF_TYPE_INCOME(1069, Series.DOMAIN_ERROR, "Invoice of type income. It is not possible to create a new booking."),
     VCC_WRONG_CALCULATION_TYPE(1070, Series.DOMAIN_ERROR, "The calculation type is wrong."),
     VCC_TRANSACTION_CANNOT_BE_REFUNDED(1071, Series.DOMAIN_ERROR, "This transaction cannot be refunded."),
-    PAYMENT_ATTACHMENT_STATUS_HISTORY_NOT_FOUND(1072, Series.DOMAIN_ERROR, "Payment Attachment Status History not found.");
+    PAYMENT_ATTACHMENT_STATUS_HISTORY_NOT_FOUND(1072, Series.DOMAIN_ERROR, "Payment Attachment Status History not found."),
+    CHECK_APPLY_DEPOSIT_TO_APPLIED_PAYMENT(1073, Series.DOMAIN_ERROR, "The selected transaction has an applied payment."),
+    INCOME_ATTACHMENT_TYPE_CHECK_DEFAULT(1074, Series.DOMAIN_ERROR, "Only one default attachment type is allowed."),
+    INVOICE_ATTACHMENT_TYPE_CHECK_DEFAULT(1075, Series.DOMAIN_ERROR, "Only a income support by income is allowed."),
+    AMOUNT_MISMATCH(1076, Series.DOMAIN_ERROR, "The total amount isn't equals to the imported total."),
+
+    ;
 
     private static final DomainErrorMessage[] VALUES;
 

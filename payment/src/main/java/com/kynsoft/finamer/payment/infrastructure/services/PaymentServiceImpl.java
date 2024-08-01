@@ -77,6 +77,12 @@ public class PaymentServiceImpl implements IPaymentService {
         return getPaginatedResponse(data);
     }
 
+    @Override
+    public List<PaymentDto> createBulk(List<PaymentDto> dtoList) {
+        return repositoryCommand.saveAllAndFlush(dtoList.stream().map(Payment::new).toList())
+                .stream().map(Payment::toAggregate).toList();
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
             if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {

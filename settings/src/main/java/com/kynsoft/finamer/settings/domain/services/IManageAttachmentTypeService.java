@@ -21,4 +21,8 @@ public interface IManageAttachmentTypeService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);
+
+    List<ManageAttachmentTypeDto> findAllToReplicate();
+
+    Long countByDefaultAndNotId(UUID id);
 }

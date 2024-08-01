@@ -11,10 +11,10 @@ import java.util.Objects;
 public class ImportBookingNameValidator extends ExcelRuleValidator<BookingRow> {
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-            String firstName=Objects.nonNull(obj.getFirstName())?obj.getFirstName():"";
-            String lastName=Objects.nonNull(obj.getLastName())?obj.getLastName():"";
+        String firstName = Objects.nonNull(obj.getFirstName()) ? obj.getFirstName() : "";
+        String lastName = Objects.nonNull(obj.getLastName()) ? obj.getLastName() : "";
         if (firstName.isEmpty() && lastName.isEmpty()) {
-            errorFieldList.add( new ErrorField("FirstName and LastName", "FirstName and LastName must be not empty"));
+            errorFieldList.add(new ErrorField("FirstName and LastName", "FirstName and LastName must be not empty"));
             return false;
         }
 

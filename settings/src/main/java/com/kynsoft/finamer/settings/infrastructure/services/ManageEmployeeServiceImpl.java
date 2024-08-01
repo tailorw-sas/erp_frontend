@@ -8,6 +8,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageEmployeeResponse;
+import com.kynsoft.finamer.settings.application.query.userMe.UserMeResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageEmployeeService;
@@ -29,11 +30,14 @@ import java.util.stream.Collectors;
 @Service
 public class ManageEmployeeServiceImpl implements IManageEmployeeService {
 
-    @Autowired
-    private ManageEmployeeWriteDataJPARepository repositoryCommand;
+    private final ManageEmployeeWriteDataJPARepository repositoryCommand;
 
-    @Autowired
-    private ManageEmployeeReadDataJPARepository repositoryQuery;
+    private final ManageEmployeeReadDataJPARepository repositoryQuery;
+
+    public ManageEmployeeServiceImpl(ManageEmployeeWriteDataJPARepository repositoryCommand, ManageEmployeeReadDataJPARepository repositoryQuery) {
+        this.repositoryCommand = repositoryCommand;
+        this.repositoryQuery = repositoryQuery;
+    }
 
     @Override
     public UUID create(ManageEmployeeDto dto) {
@@ -131,6 +135,20 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         }
 
         return objectDtos;
+    }
+
+    @Override
+    public UserMeResponse me(UUID id) {
+        Optional<ManageEmployee> userSystem = this.repositoryQuery.findById(id);
+        if (userSystem.isPresent()) {
+            ManageEmployee data = userSystem.get();
+            List<String> permissions = new ArrayList<>();
+            data.getManagePermissionList().forEach(permission -> permissions.add(permission.getCode()));
+            return new UserMeResponse(data.getId(),data.getLoginName(),
+                   data.getEmail(), data.getLastName(),
+                   data.getLastName(), null, permissions);
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND, new ErrorField("id", "Manage Employee not found.")));
     }
 
 }

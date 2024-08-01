@@ -3,8 +3,8 @@ package com.kynsoft.finamer.settings.application.command.managePaymentAttachment
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentAttachmentStatusKafka;
-import com.kynsoft.finamer.settings.domain.dto.ManageModuleDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
+import com.kynsoft.finamer.settings.domain.dto.ModuleDto;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeCantBeNullRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeSizeRule;
@@ -44,7 +44,7 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
 
         List<ManagePaymentAttachmentStatusDto> managePaymentAttachmentStatusDtoList = service.findByIds(command.getNavigate());
 
-        ManageModuleDto moduleDto = moduleService.findById(command.getModule());
+        ModuleDto moduleDto = moduleService.findById(command.getModule());
 
         service.create(
                 new ManagePaymentAttachmentStatusDto(command.getId(), command.getCode(), command.getName(),

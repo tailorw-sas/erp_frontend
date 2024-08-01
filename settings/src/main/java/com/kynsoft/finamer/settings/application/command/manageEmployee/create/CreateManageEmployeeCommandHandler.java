@@ -67,7 +67,7 @@ public class CreateManageEmployeeCommandHandler implements ICommandHandler<Creat
 
         ManageDepartmentGroupDto manageDepartmentGroupDto = this.serviceDepartment.findById(command.getDepartmentGroup());
 
-        List<ManagePermissionDto> permissionList = permissionService.findByIds(command.getManagePermissionList());
+        List<PermissionDto> permissionList = permissionService.findByIds(command.getManagePermissionList());
         List<ManageAgencyDto> agencyList = agencyService.findByIds(command.getManageAgencyList());
         List<ManageHotelDto> hotelList = hotelService.findByIds(command.getManageHotelList());
         List<ManageTradingCompaniesDto> tradingCompaniesList = tradingCompaniesService.findByIds(command.getManageTradingCompaniesList());
@@ -90,10 +90,11 @@ public class CreateManageEmployeeCommandHandler implements ICommandHandler<Creat
                 command.getUserType(),
                 reportList
         ));
-        this.producerReplicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(command.getId(), command.getFirstName(), command.getLastName(), command.getEmail()));
+        this.producerReplicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(command.getId(),
+                command.getFirstName(), command.getLastName(), command.getEmail()));
 
         List<UUID> permissions = permissionList.stream()
-                                                        .map(ManagePermissionDto::getId)
+                                                        .map(PermissionDto::getId)
                                                         .collect(Collectors.toList());
         this.producerReplicateEmployeePermissionService.create(new ReplicateEmployeePermissionKafka(command.getId(), permissions));
     }

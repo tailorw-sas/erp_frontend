@@ -12,7 +12,7 @@ public class CheckSplitAmountRule extends BusinessRule {
     public CheckSplitAmountRule(Double amount, Double amountToSplit) {
         super(DomainErrorMessage.CHECK_SPLIT_DEPOSIT_BALANCE_GREATER_THAN_ZERO, new ErrorField("amount", DomainErrorMessage.CHECK_SPLIT_DEPOSIT_BALANCE_GREATER_THAN_ZERO.getReasonPhrase()));
         this.amount = amount;
-        this.amountToSplit = amountToSplit;
+        this.amountToSplit = amountToSplit * -1;
     }
 
     /**
@@ -21,7 +21,7 @@ public class CheckSplitAmountRule extends BusinessRule {
      */
     @Override
     public boolean isBroken() {
-        return amount == 0 || (amount - amountToSplit) < 0;
+        return amount == 0 || (amountToSplit - amount) < 0;
     }
 
 }

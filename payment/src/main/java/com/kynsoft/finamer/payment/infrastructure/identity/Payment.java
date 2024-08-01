@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -11,7 +12,6 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -74,6 +74,7 @@ public class Payment implements Serializable {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "payment")
     private List<PaymentDetail> paymentDetails;
 
+    @Column(precision = 2)
     private Double paymentAmount;
     private Double paymentBalance;
     private Double depositAmount;
@@ -102,13 +103,13 @@ public class Payment implements Serializable {
         this.attachmentStatus = dto.getAttachmentStatus() != null ? new ManagePaymentAttachmentStatus(dto.getAttachmentStatus()) : null;
         this.transactionDate = dto.getTransactionDate();
         this.reference = dto.getReference();
-        this.paymentAmount = dto.getPaymentAmount();
-        this.paymentBalance = dto.getPaymentBalance();
-        this.depositAmount = dto.getDepositAmount();
-        this.depositBalance = dto.getDepositBalance();
-        this.otherDeductions = dto.getOtherDeductions();
-        this.identified = dto.getIdentified();
-        this.notIdentified = dto.getNotIdentified();
+        this.paymentAmount = ScaleAmount.scaleAmount(dto.getPaymentAmount());
+        this.paymentBalance = ScaleAmount.scaleAmount(dto.getPaymentBalance());
+        this.depositAmount = ScaleAmount.scaleAmount(dto.getDepositAmount());
+        this.depositBalance = ScaleAmount.scaleAmount(dto.getDepositBalance());
+        this.otherDeductions = ScaleAmount.scaleAmount(dto.getOtherDeductions());
+        this.identified = ScaleAmount.scaleAmount(dto.getIdentified());
+        this.notIdentified = ScaleAmount.scaleAmount(dto.getNotIdentified());
         this.remark = dto.getRemark();
     }
 
@@ -117,15 +118,15 @@ public class Payment implements Serializable {
                 id, 
                 paymentId,
                 status,
-                paymentSource.toAggregate(), 
+                paymentSource.toAggregate() != null ? paymentSource.toAggregate() : null,
                 reference, 
                 transactionDate, 
-                paymentStatus.toAggregate(), 
-                client.toAggregate(), 
-                agency.toAggregate(), 
-                hotel.toAggregate(), 
-                bankAccount.toAggregate(), 
-                attachmentStatus.toAggregate(), 
+                paymentStatus != null ? paymentStatus.toAggregate() : null,
+                client != null ? client.toAggregate() : null,
+                agency != null ? agency.toAggregate() : null,
+                hotel != null ? hotel.toAggregate() : null,
+                bankAccount!= null ? bankAccount.toAggregate() : null,
+                attachmentStatus != null ? attachmentStatus.toAggregate() : null,
                 paymentAmount, 
                 paymentBalance, 
                 depositAmount, 

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -15,4 +16,8 @@ public interface ManageBankAccountReadDataJPARepository extends JpaRepository<Ma
         JpaSpecificationExecutor<ManageBankAccount> {
 
     Page<ManageBankAccount> findAll(Specification specification, Pageable pageable);
+
+    Optional<ManageBankAccount> findManageBankAccountByAccountNumber(String accountNumber);
+
+    boolean existsByAccountNumber(String accountNumber);
 }

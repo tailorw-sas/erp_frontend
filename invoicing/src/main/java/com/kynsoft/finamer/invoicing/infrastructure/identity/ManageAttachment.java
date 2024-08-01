@@ -27,7 +27,7 @@ public class ManageAttachment {
 
     @Column(columnDefinition = "serial", name = "attachment_gen_id")
     @Generated(event = EventType.INSERT)
-    private Long attachment_id;
+    private Long attachmentId;
 
     private String filename;
 
@@ -46,6 +46,10 @@ public class ManageAttachment {
     @JoinColumn(name = "manage_invoice")
     private ManageInvoice invoice;
 
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "resource_type", nullable = true)
+    private ResourceType paymentResourceType;
+
     @Column(nullable = true)
     private Boolean deleted = false;
 
@@ -62,7 +66,7 @@ public class ManageAttachment {
     public ManageAttachment(ManageAttachmentDto dto) {
 
         this.id = dto.getId();
-        this.attachment_id = dto.getAttachment_id();
+        this.attachmentId = dto.getAttachmentId();
         this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
         this.filename = dto.getFilename();
         this.file = dto.getFile();
@@ -70,17 +74,18 @@ public class ManageAttachment {
         this.type = dto.getType() != null ? new ManageAttachmentType(dto.getType()) : null;
         this.employee = dto.getEmployee();
         this.employeeId = dto.getEmployeeId();
+        this.paymentResourceType = dto.getPaymentResourceType() != null ?  new ResourceType(dto.getPaymentResourceType()) : null;
     }
 
     public ManageAttachmentDto toAggregate() {
-        return new ManageAttachmentDto(id, attachment_id, filename, file, remark,
+        return new ManageAttachmentDto(id, attachmentId, filename, file, remark,
                 type != null ? type.toAggregate() : null,
-                invoice != null ? invoice.toAggregateSample() : null, employee, employeeId, createdAt);
+                invoice != null ? invoice.toAggregateSample() : null, employee, employeeId, createdAt, paymentResourceType != null ? paymentResourceType.toAggregate() : null);
     }
 
     public ManageAttachmentDto toAggregateSample() {
-        return new ManageAttachmentDto(id, attachment_id, filename, file, remark,
+        return new ManageAttachmentDto(id, attachmentId, filename, file, remark,
                 type != null ? type.toAggregate() : null,
-                null, employee, employeeId,createdAt);
+                null, employee, employeeId,createdAt,  paymentResourceType != null ? paymentResourceType.toAggregate() : null);
     }
 }

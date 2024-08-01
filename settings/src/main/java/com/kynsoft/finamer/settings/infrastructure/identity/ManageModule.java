@@ -1,10 +1,9 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
-import com.kynsoft.finamer.settings.domain.dto.ManageModuleDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.kynsoft.finamer.settings.domain.dto.ModuleDto;
+import com.kynsoft.finamer.settings.domain.dto.ModuleStatus;
+import com.kynsoft.finamer.settings.domain.dto.PermissionDto;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,33 +21,42 @@ import java.util.UUID;
 @Entity
 @Table(name = "manage_module")
 public class ManageModule implements Serializable {
-
     @Id
     @Column(name = "id")
-    private UUID id;
+    protected UUID id;
+    private String name;
+    private String image;
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    private ModuleStatus status;
+
     @Column(unique = true)
     private String code;
-
-    private String name;
-
-    private String status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime updateAt;
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<ManagePermission> permissions = new HashSet<>();
 
-    public ManageModule(ManageModuleDto dto) {
-        this.id = dto.getId();
-        this.code = dto.getCode();
-        this.name = dto.getName();
-        this.status = dto.getStatus();
+    public ManageModule(ModuleDto module) {
+        this.id = module.getId();
+        this.name = module.getName();
+        this.image = module.getImage();
+        this.description = module.getDescription();
+        this.status = module.getStatus();
+        this.code = module.getCode();
     }
 
-    public ManageModuleDto toAggregate() {
-        return new ManageModuleDto(id, name, code, status);
+    public ModuleDto toAggregate () {
+        List<PermissionDto> p = new ArrayList<>();
+        for (ManagePermission permission : permissions) {
+            p.add(new PermissionDto(permission.getId(), permission.getCode(), permission.getDescription(), permission.getIsHighRisk(), permission.getStatus()));
+        }
+
+        return new ModuleDto(id, name, image, description, p, createdAt, status, code);
     }
 
 }

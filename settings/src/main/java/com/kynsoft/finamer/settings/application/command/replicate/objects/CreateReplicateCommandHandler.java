@@ -1,44 +1,11 @@
 package com.kynsoft.finamer.settings.application.command.replicate.objects;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageAgencyKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageBankAccountKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageClientKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageEmployeeKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageHotelKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceStatusKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTransactionTypeKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTypeKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentAttachmentStatusKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentSourceKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentStatusKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentTransactionTypeKafka;
-import static com.kynsoft.finamer.settings.application.command.replicate.objects.ObjectEnum.MANAGE_HOTEL;
-import com.kynsoft.finamer.settings.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageBankAccountDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageClientDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageEmployeeDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceStatusDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTransactionTypeDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTypeDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagePaymentSourceDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerPaymentStatusDto;
-import com.kynsoft.finamer.settings.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.settings.domain.services.IManageBankAccountService;
-import com.kynsoft.finamer.settings.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
-import com.kynsoft.finamer.settings.domain.services.IManageInvoiceStatusService;
-import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTransactionTypeService;
-import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTypeService;
-import com.kynsoft.finamer.settings.domain.services.IManagePaymentAttachmentStatusService;
-import com.kynsoft.finamer.settings.domain.services.IManagePaymentSourceService;
-import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.settings.domain.services.IManagerClientService;
-import com.kynsoft.finamer.settings.domain.services.IManagerPaymentStatusService;
+import com.kynsof.share.core.domain.kafka.entity.*;
+import com.kynsoft.finamer.settings.domain.dto.*;
+import com.kynsoft.finamer.settings.domain.services.*;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerReplicateManageAgencyService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAttachmentType.ProducerReplicateManageAttachmentTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageBankAccount.ProducerReplicateManageBankAccount;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageClient.ProducerReplicateManageClientService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageEmployee.ProducerReplicateManageEmployeeService;
@@ -67,6 +34,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final ProducerReplicateManageInvoiceStatusService replicateManageInvoiceStatusService;
     private final ProducerReplicateManageInvoiceTransactionTypeService replicateManageInvoiceTransactionTypeService;
     private final IManageInvoiceStatusService invoiceStatusService;
+    private final IManageAttachmentTypeService attachmentTypeService;
 
     private final IManageAgencyService manageAgencyService;
     private final IManageBankAccountService manageBankAccountService;
@@ -81,6 +49,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final ProducerReplicateManageHotelService replicateManageHotelService;
     private final ProducerReplicateManageClientService replicateManageClientService;
     private final ProducerReplicateManagePaymentAttachmentStatusService replicateManagePaymentAttachmentStatusService;
+    private final ProducerReplicateManageAttachmentTypeService replicateManageAttachmentTypeService;
 
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService, 
                                          IManagerPaymentStatusService paymentStatusService, 
@@ -102,7 +71,10 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManageHotelService replicateManageHotelService, 
                                          ProducerReplicateManageClientService replicateManageClientService, 
                                          ProducerReplicateManagePaymentAttachmentStatusService replicateManagePaymentAttachmentStatusService,
-                                         IManageInvoiceTransactionTypeService invoiceTransactionTypeService) {
+                                         IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
+                                         ProducerReplicateManageAttachmentTypeService replicateManageAttachmentTypeService,
+                                         IManageAttachmentTypeService attachmentTypeService
+                                         ) {
         this.invoiceTypeService = invoiceTypeService;
         this.paymentStatusService = paymentStatusService;
         this.paymentSourceService = paymentSourceService;
@@ -127,6 +99,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.replicateManageClientService = replicateManageClientService;
         this.replicateManagePaymentAttachmentStatusService = replicateManagePaymentAttachmentStatusService;
         this.invoiceTransactionTypeService = invoiceTransactionTypeService;
+        this.attachmentTypeService = attachmentTypeService;
+        this.replicateManageAttachmentTypeService = replicateManageAttachmentTypeService;
     }
 
     @Override
@@ -136,6 +110,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 case MANAGE_INVOICE_TYPE -> {
                     for (ManageInvoiceTypeDto invoiceType : this.invoiceTypeService.findAllToReplicate()) {
                         this.replicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(invoiceType.getId(), invoiceType.getCode(), invoiceType.getName()));
+                    }
+                }
+                case MANAGE_ATTACHMENT_TYPE -> {
+                    for (ManageAttachmentTypeDto attachmentTypeDto : this.attachmentTypeService.findAllToReplicate()) {
+                        this.replicateManageAttachmentTypeService.create(new ReplicateManageAttachmentTypeKafka(attachmentTypeDto.getId(), attachmentTypeDto.getCode(), attachmentTypeDto.getName(), attachmentTypeDto.getStatus().toString(), attachmentTypeDto.getDefaults()));
                     }
                 }
                 case MANAGE_AGENCY -> {//
@@ -169,7 +148,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANEGE_CLIENT -> {//
                     for (ManageClientDto clientDto : this.managerClientService.findAllToReplicate()) {
-                        this.replicateManageClientService.create(new ReplicateManageClientKafka(clientDto.getId(), clientDto.getCode(), clientDto.getName(), clientDto.getStatus().name()));
+                        this.replicateManageClientService.create(new ReplicateManageClientKafka(clientDto.getId(), clientDto.getCode(), clientDto.getName(), clientDto.getStatus().name(), clientDto.getIsNightType()));
                     }
                 }
                 case MANAGE_INVOICE_STATUS -> {

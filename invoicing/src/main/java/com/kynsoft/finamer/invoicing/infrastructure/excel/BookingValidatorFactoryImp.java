@@ -25,6 +25,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
+import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingTypeValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportCacheRedisRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -66,7 +67,7 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
     }
 
     @Override
-    public void createValidators() {
+    public void createValidators(String importType) {
         validators.put(ImportBookingDuplicateValidator.class.getName(), new ImportBookingDuplicateValidator(manageBookingService, cacheRedisRepository));
         validators.put(ImportBookingTransactionDateValidator.class.getName(), new ImportBookingTransactionDateValidator(closeOperationService,manageHotelService));
         validators.put(ImportBookingHotelValidator.class.getName(), new ImportBookingHotelValidator(manageHotelService));
@@ -83,6 +84,7 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
         validators.put(ImportBookingHotelBookingNoValidator.class.getName(), new ImportBookingHotelBookingNoValidator());
         validators.put(ImportBookingHotelInvoiceNumberValidator.class.getName(), new ImportBookingHotelInvoiceNumberValidator(manageHotelService));
         validators.put(ImportBookingAmountPaxValidator.class.getName(), new ImportBookingAmountPaxValidator());
+        validators.put(ImportBookingTypeValidator.class.getName(), new ImportBookingTypeValidator(importType,manageHotelService));
     }
 
     @Override

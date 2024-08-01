@@ -30,7 +30,6 @@ public class ManageAgency {
     @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true)
     private String code;
 
     private String name;
@@ -40,6 +39,11 @@ public class ManageAgency {
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "manage_agency_type_id")
     private ManageAgencyType agencyType;
+
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_client_id")
+    private ManageClient client;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -54,19 +58,22 @@ public class ManageAgency {
         this.name = dto.getName();
         this.status = dto.getStatus();
         this.agencyType = dto.getAgencyType() != null ? new ManageAgencyType(dto.getAgencyType()) : null;
+        this.client = dto.getClient() != null ? new ManageClient(dto.getClient()) : null;
     }
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, name, status, 
-                agencyType != null ? agencyType.toAggregate() : null
+                id, code, name, status,
+                agencyType != null ? agencyType.toAggregate() : null,
+                client != null ? client.toAggregate() : null
         );
     }
 
     public ManageAgencyDto toAggregateSample() {
         return new ManageAgencyDto(
-                id, code, name, status, 
-                agencyType != null ? agencyType.toAggregate() : null
+                id, code, name, status,
+                agencyType != null ? agencyType.toAggregate() : null,
+                client != null ? client.toAggregate() : null
         );
     }
 }

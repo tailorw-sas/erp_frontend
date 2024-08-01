@@ -5,23 +5,16 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTransactionTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
-import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageAdjustmentService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTransactionTypeService;
+import com.kynsoft.finamer.invoicing.domain.services.*;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.stereotype.Component;
 
 @Component
 public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<CreateIncomeAdjustmentCommand> {
@@ -48,11 +41,14 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
     @Override
     public void handle(CreateIncomeAdjustmentCommand command) {
 
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getTransactionType(), "transactionType", "Manage Invoice Transaction Type ID cannot be null."));
+//        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getTransactionType(), "transactionType", "Manage Invoice Transaction Type ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getIncome(), "income", "Income ID cannot be null."));
 
         ManageInvoiceDto incomeDto = this.service.findById(command.getIncome());
-        ManageInvoiceTransactionTypeDto transactionTypeDto = this.transactionTypeService.findById(command.getTransactionType());
+        ManageInvoiceTransactionTypeDto transactionTypeDto =
+                command.getTransactionType() != null
+                        ? this.transactionTypeService.findById(command.getTransactionType())
+                        : null;
         //InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findByHotelIds(incomeDto.getHotel().getId());
 
         //Puede ser + y -, pero no puede ser 0
@@ -68,20 +64,21 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 UUID.randomUUID(), 
                 null, 
                 LocalDateTime.now(), 
-                LocalDateTime.now(), 
+                LocalDateTime.now(),
                 command.getAmount(), 
                 null, 
                 null, 
                 null, 
                 null, 
-                null, 
-                command.getAmount(), 
+                null,
+               0.00,
                 "", 
                 null, 
                 null,
                 null
         );
         roomRates.add(roomRateDto);
+
         ManageBookingDto bookingDto = new ManageBookingDto(
                 UUID.randomUUID(), 
                 0L, 
@@ -93,7 +90,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 null, 
                 null, 
                 null, 
-                null, 
+                null,
                 command.getAmount(), 
                 command.getAmount(), 
                 null, 
@@ -104,7 +101,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 null, 
                 null, 
                 null, 
-                null, 
+                0.00,
                 null, 
                 incomeDto, 
                 null, 
@@ -115,6 +112,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 null
         );
         this.bookingService.create(bookingDto);
+        
 
         this.manageAdjustmentService.create(new ManageAdjustmentDto(
                 command.getId(), 
@@ -128,6 +126,8 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         ));
 
         this.service.update(incomeDto);
+        ManageInvoiceDto updatedIncome = this.service.findById(incomeDto.getId());
+        this.service.calculateInvoiceAmount(updatedIncome);
     }
     
 }

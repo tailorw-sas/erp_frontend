@@ -20,4 +20,7 @@ public interface ManageAttachmentTypeReadDataJPARepository extends JpaRepository
 
     @Query("SELECT COUNT(b) FROM ManageAttachmentType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageAttachmentType b WHERE b.defaults = true AND b.id <> :id")
+    Long countByDefaultAndNotId(@Param("id") UUID id);
 }

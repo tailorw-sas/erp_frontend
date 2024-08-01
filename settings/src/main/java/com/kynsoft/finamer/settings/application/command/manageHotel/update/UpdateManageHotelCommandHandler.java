@@ -83,7 +83,6 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
         UpdateIfNotNull.updateBoolean(dto::setIsVirtual, command.getIsVirtual(), dto.getIsVirtual(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setRequiresFlatRate, command.getRequiresFlatRate(), dto.getRequiresFlatRate(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsApplyByVCC, command.getIsApplyByVCC(), dto.getIsApplyByVCC(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(dto::setIsNightType, command.getIsNightType(), dto.getIsNightType(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);

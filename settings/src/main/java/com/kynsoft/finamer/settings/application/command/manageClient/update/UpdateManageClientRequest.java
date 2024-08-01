@@ -10,4 +10,5 @@ public class UpdateManageClientRequest {
     private String name;
     private String description;
     private Status status;
+    private Boolean isNightType;
 }

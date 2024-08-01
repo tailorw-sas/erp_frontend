@@ -63,14 +63,12 @@ public class BookingServiceImpl implements ImportBookingService {
         readerConfiguration.setReadLastActiveSheet(true);
         ExcelBeanReader<BookingRow> reader = new ExcelBeanReader<>(readerConfiguration, BookingRow.class);
         ExcelBean<BookingRow> excelBean = new ExcelBean<>(reader);
-        validatorFactory.createValidators();
+        validatorFactory.createValidators(request.getImportType().name());
         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(request.getImportProcessId()));
         for (BookingRow bookingRow : excelBean) {
             bookingRow.setImportProcessId(request.getImportProcessId());
-            if (bookingImportHelperService.canImportRow(bookingRow,request.getImportType())) {
-                if (validatorFactory.validate(bookingRow)) {
-                    bookingImportHelperService.groupAndCachingImportBooking(bookingRow, importBookingFromFileRequest.getRequest().getImportType());
-                }
+            if (validatorFactory.validate(bookingRow)) {
+                bookingImportHelperService.groupAndCachingImportBooking(bookingRow, importBookingFromFileRequest.getRequest().getImportType());
             }
         }
         validatorFactory.removeValidators();

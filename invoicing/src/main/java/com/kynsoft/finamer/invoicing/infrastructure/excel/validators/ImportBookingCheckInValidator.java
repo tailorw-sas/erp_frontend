@@ -10,6 +10,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public class ImportBookingCheckInValidator extends ExcelRuleValidator<BookingRow> {
     private final String[] validDateFormat = new String[]{"yyyymmdd", "mm/dd/yyyy"};
@@ -25,6 +27,11 @@ public class ImportBookingCheckInValidator extends ExcelRuleValidator<BookingRow
     }
 
     private boolean validateDate(BookingRow obj,List<ErrorField> errorFieldList) {
+        if (Objects.isNull(obj.getCheckIn()) || obj.getCheckIn().isEmpty()){
+            errorFieldList.add(new ErrorField("CheckIn", "CheckIn can't be empty"));
+            return false;
+        }
+
         String date = obj.getCheckIn();
         boolean valid = false;
         for (String format : validDateFormat) {
@@ -45,11 +52,14 @@ public class ImportBookingCheckInValidator extends ExcelRuleValidator<BookingRow
     }
 
     private boolean validateDateRange(BookingRow obj,List<ErrorField> errorFieldList) {
-        LocalDate checkIn = DateUtil.parseDateToLocalDate(obj.getCheckIn());
-        LocalDate checkOut = DateUtil.parseDateToLocalDate(obj.getCheckOut());
-
-        if (checkIn.isAfter(checkOut)) {
-            errorFieldList.add(new ErrorField("CheckIn", "CheckIn is greater than CheckOut Date"));
+       Optional<LocalDate> checkIn = Optional.ofNullable(DateUtil.parseDateToLocalDate(obj.getCheckIn()));
+        Optional<LocalDate> checkOut = Optional.ofNullable(DateUtil.parseDateToLocalDate(obj.getCheckOut()));
+        if (checkIn.isPresent() && checkOut.isPresent()) {
+            if (checkIn.get().isAfter(checkOut.get())) {
+                errorFieldList.add(new ErrorField("CheckIn", "CheckIn is greater than CheckOut Date"));
+                return false;
+            }
+        }else {
             return false;
         }
         return true;

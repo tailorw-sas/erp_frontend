@@ -1,13 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageAttachmentType;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageAttachmentTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachmentType.update.UpdateManageAttachmentTypeCommand;
-
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +28,7 @@ public class ConsumerUpdateManageAttachmentType {
             // ReplicateAttachmentTypeKafka objKafka = objectMapper.treeToValue(rootNode,
             // ReplicateAttachmentTypeKafka.class);
             UpdateManageAttachmentTypeCommand command = new UpdateManageAttachmentTypeCommand(objKafka.getId(),
-                    objKafka.getName());
+                    objKafka.getName(), objKafka.getStatus(), objKafka.getDefaults());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageAttachmentType.class.getName()).log(Level.SEVERE, null, ex);

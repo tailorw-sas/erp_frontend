@@ -33,7 +33,7 @@ public class ManagerMerchantCurrency implements Serializable {
     @JoinColumn(name = "manager_currency_id")
     private ManagerCurrency managerCurrency;
 
-    private Double value;
+    private String value;
     private String description;
 
     @Enumerated(EnumType.STRING)

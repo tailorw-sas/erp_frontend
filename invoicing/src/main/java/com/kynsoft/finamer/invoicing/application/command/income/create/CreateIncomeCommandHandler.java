@@ -2,21 +2,15 @@ package com.kynsoft.finamer.invoicing.application.command.income.create;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
-import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceStatusService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTypeService;
+import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @Component
 public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeCommand> {
@@ -27,16 +21,19 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     private final IManageInvoiceStatusService invoiceStatusService;
     private final IManageInvoiceService manageInvoiceService;
 
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
+
     public CreateIncomeCommandHandler(IManageAgencyService agencyService,
                                       IManageHotelService hotelService,
                                       IManageInvoiceTypeService invoiceTypeService,
                                       IManageInvoiceStatusService invoiceStatusService,
-                                      IManageInvoiceService manageInvoiceService) {
+                                      IManageInvoiceService manageInvoiceService, IInvoiceStatusHistoryService invoiceStatusHistoryService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
         this.invoiceStatusService = invoiceStatusService;
         this.manageInvoiceService = manageInvoiceService;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
     }
 
     @Override
@@ -59,7 +56,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         } catch (Exception e) {
         }
 
-        this.manageInvoiceService.create(new ManageInvoiceDto(
+        ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(new ManageInvoiceDto(
                 command.getId(), 
                 0L, 
                 0L, 
@@ -82,5 +79,21 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                 invoiceStatusDto,
                 null
         ));
+        command.setInvoiceId(invoiceDto.getInvoiceId());
+
+        this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee());
+
+    }
+
+    private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee){
+
+        InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
+        dto.setId(UUID.randomUUID());
+        dto.setInvoice(invoiceDto);
+        dto.setDescription("The income data was inserted.");
+        dto.setEmployee(employee);
+
+        this.invoiceStatusHistoryService.create(dto);
+
     }
 }

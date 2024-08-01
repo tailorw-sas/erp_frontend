@@ -32,5 +32,4 @@ public class ManageHotelDto {
     private Boolean isVirtual;
     private Boolean requiresFlatRate;
     private Boolean isApplyByVCC;
-    private Boolean isNightType;
 }

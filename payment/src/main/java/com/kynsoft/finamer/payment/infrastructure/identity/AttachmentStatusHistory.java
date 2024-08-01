@@ -27,6 +27,8 @@ public class AttachmentStatusHistory implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+    private String attachmentStatus;
+    private Long attachmentId;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "payment_id")
@@ -50,16 +52,18 @@ public class AttachmentStatusHistory implements Serializable {
         this.payment = dto.getPayment() != null ? new Payment(dto.getPayment()) : null;
         this.employee = dto.getEmployee() != null ? new ManageEmployee(dto.getEmployee()) : null;
         this.description = dto.getDescription();
-        this.status = dto.getStatus();
+        this.attachmentStatus = dto.getStatus();
+        this.attachmentId = dto.getAttachmentId();
     }
 
     public AttachmentStatusHistoryDto toAggregate(){
         return new AttachmentStatusHistoryDto(
                 id, 
-                status, 
+                attachmentStatus, 
                 payment != null ? payment.toAggregate() : null, 
                 employee != null ? employee.toAggregate() : null, 
                 description, 
+                attachmentId,
                 createdAt, 
                 updatedAt
         );

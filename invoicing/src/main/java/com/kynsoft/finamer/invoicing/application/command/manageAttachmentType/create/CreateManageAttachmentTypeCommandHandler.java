@@ -1,8 +1,8 @@
 package com.kynsoft.finamer.invoicing.application.command.manageAttachmentType.create;
 
-import com.kynsof.share.core.domain.RulesChecker;
+
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageAttachmentTypeKafka;
+
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
@@ -26,7 +26,9 @@ public class CreateManageAttachmentTypeCommandHandler implements ICommandHandler
                 command.getId(),
                 command.getCode(),
 
-                command.getName()));
+                command.getName(),
+                command.getStatus(),
+                command.getDefaults()));
 
     }
 }

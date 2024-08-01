@@ -19,4 +19,6 @@ public class UpdateAttachmentRequest {
     private String file;
     private String remark;
     private UUID type;
+    private UUID paymentResourceType;
+    private String employee;
 }

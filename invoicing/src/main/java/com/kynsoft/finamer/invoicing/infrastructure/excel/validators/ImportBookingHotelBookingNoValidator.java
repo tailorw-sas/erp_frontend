@@ -14,7 +14,7 @@ public class ImportBookingHotelBookingNoValidator extends ExcelRuleValidator<Boo
     private final String RESERVATION_NUMBER_REGEX="^(I|G)(\\s)+(\\d)+(\\s)+(\\d)+";
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-      if (Objects.isNull(obj.getHotelBookingNumber()) || obj.getHotelInvoiceNumber().isEmpty()){
+      if (Objects.isNull(obj.getHotelBookingNumber()) || obj.getHotelBookingNumber().isEmpty()){
           errorFieldList.add(new ErrorField("Hotel Booking No"," Hotel Booking No. must be not empty"));
           return false;
         }

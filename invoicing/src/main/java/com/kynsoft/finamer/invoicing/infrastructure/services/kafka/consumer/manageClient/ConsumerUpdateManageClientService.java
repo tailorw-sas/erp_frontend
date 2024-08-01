@@ -21,7 +21,7 @@ public class ConsumerUpdateManageClientService {
     @KafkaListener(topics = "finamer-update-manage-client", groupId = "invoicing-entity-replica")
     public void listen(UpdateManageClientKafka objKafka) {
         try {
-            UpdateManageClientCommand command = new UpdateManageClientCommand(objKafka.getId(), objKafka.getName());
+            UpdateManageClientCommand command = new UpdateManageClientCommand(objKafka.getId(), objKafka.getName(), objKafka.getIsNightType());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageClientService.class.getName()).log(Level.SEVERE, null, ex);

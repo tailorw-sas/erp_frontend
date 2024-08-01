@@ -81,6 +81,7 @@ public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationS
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
     }
 
+
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
@@ -118,6 +119,7 @@ public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationS
     public Long findByHotelId(UUID hotelId) {
         return this.repositoryQuery.findByHotelId(hotelId);
     }
+
 
     @Override
     public List<PaymentCloseOperationDto> findByHotelIds(List<UUID> hotelIds) {

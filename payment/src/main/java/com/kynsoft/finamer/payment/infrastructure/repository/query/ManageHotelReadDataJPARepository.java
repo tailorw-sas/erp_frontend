@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -15,4 +16,8 @@ public interface ManageHotelReadDataJPARepository extends JpaRepository<ManageHo
         JpaSpecificationExecutor<ManageHotel> {
 
     Page<ManageHotel> findAll(Specification specification, Pageable pageable);
+
+    boolean existsByCodeAndStatus(String code, String status);
+
+    Optional<ManageHotel> findByCode(String code);
 }

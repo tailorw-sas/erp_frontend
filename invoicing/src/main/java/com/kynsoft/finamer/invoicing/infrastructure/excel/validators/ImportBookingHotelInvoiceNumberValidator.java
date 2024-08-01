@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator<BookingRow> {
 
@@ -19,6 +20,10 @@ public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+        if (Objects.isNull(obj.getHotelInvoiceNumber())){
+            errorFieldList.add(new ErrorField("Hotel Booking No"," Hotel Booking No. can't be empty"));
+            return false;
+        }
        if(!manageHotelService.existByCode(obj.getManageHotelCode())){
            return false;
        }

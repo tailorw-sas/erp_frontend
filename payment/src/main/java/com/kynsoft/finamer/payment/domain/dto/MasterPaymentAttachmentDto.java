@@ -23,4 +23,5 @@ public class MasterPaymentAttachmentDto {
     private String fileWeight;
     private String path;
     private String remark;
+    private Long attachmentId;
 }

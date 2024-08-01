@@ -48,7 +48,7 @@ public class InvoiceController {
         FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
         ManageInvoiceResponse resp = mediator.send(query);
 
-        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null, null, null,null));
+        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null, null, null,null, null, null, null));
         return ResponseEntity.ok(response);
     }
 

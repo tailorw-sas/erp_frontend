@@ -11,6 +11,7 @@ import java.util.UUID;
 public class UpdatePaymentDetailRequest {
 
     private Status status;
+    private UUID employee;
     private UUID payment;
     private UUID transactionType;
     private Double amount;

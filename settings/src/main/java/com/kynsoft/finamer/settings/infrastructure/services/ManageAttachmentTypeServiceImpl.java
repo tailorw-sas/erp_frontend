@@ -111,4 +111,21 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+     @Override
+    public List<ManageAttachmentTypeDto> findAllToReplicate() {
+        List<ManageAttachmentType> objects = this.repositoryQuery.findAll();
+        List<ManageAttachmentTypeDto> objectDtos = new ArrayList<>();
+
+        for (ManageAttachmentType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
+    @Override
+    public Long countByDefaultAndNotId(UUID id) {
+        return this.repositoryQuery.countByDefaultAndNotId(id);
+    }
 }

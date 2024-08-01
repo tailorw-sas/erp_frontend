@@ -34,6 +34,10 @@ public class PaymentDetailDto {
     private String couponNo;
     private Integer adults;
     private Integer childrens;
+    private LocalDateTime createdAt;
+    private Long paymentDetailId;
+    private Long parentId;
+    private Double applyDepositValue;
 
     public PaymentDetailDto(UUID id, Status status, PaymentDto payment, ManagePaymentTransactionTypeDto transactionType, Double amount, String remark, List<PaymentDetailDto> children, Double bookingId, String invoiceId, LocalDate transactionDate, String firstName, String lastName, String reservation, String couponNo, Integer adults, Integer childrens) {
         this.id = id;
@@ -54,5 +58,4 @@ public class PaymentDetailDto {
         this.childrens = childrens;
     }
 
-    private LocalDateTime createdAt;
 }

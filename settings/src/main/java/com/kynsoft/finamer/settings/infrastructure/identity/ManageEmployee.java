@@ -51,11 +51,6 @@ public class ManageEmployee implements Serializable {
     private String phoneExtension;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "manage_employee_permissions_relations",
-            joinColumns = @JoinColumn(name = "parent_id"),
-            inverseJoinColumns = @JoinColumn(name = "child_id")
-    )
     private List<ManagePermission> managePermissionList;
 
     @ManyToMany(fetch = FetchType.EAGER)

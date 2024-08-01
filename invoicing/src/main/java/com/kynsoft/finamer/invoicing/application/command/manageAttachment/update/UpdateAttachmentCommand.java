@@ -19,6 +19,8 @@ public class UpdateAttachmentCommand implements ICommand {
     private String file;
     private String remark;
     private UUID type;
+    private UUID paymentResourceType;
+    private String employee;
 
     public static UpdateAttachmentCommand fromRequest(UpdateAttachmentRequest request, UUID id) {
         return new UpdateAttachmentCommand(
@@ -26,7 +28,7 @@ public class UpdateAttachmentCommand implements ICommand {
                 request.getFilename(),
                 request.getFile(),
                 request.getRemark(),
-                request.getType());
+                request.getType(), request.getPaymentResourceType(), request.getEmployee());
     }
 
     @Override

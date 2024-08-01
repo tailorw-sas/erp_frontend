@@ -13,7 +13,7 @@ import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentSourceDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentAttachmentStatusHistoryDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
@@ -24,7 +24,6 @@ import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentSourceService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentAttachmentStatusHistoryService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -32,6 +31,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.springframework.stereotype.Component;
+import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 
 @Component
 public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymentCommand> {
@@ -45,7 +45,7 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
     private final IManagePaymentAttachmentStatusService attachmentStatusService;
     private final IPaymentService paymentService;
 
-    private final IPaymentAttachmentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
     private final IManageEmployeeService manageEmployeeService;
 
     public UpdatePaymentCommandHandler(IManagePaymentSourceService sourceService, 
@@ -56,7 +56,7 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
                                        IManageBankAccountService bankAccountService, 
                                        IManagePaymentAttachmentStatusService attachmentStatusService, 
                                        IPaymentService paymentService,
-                                       IPaymentAttachmentStatusHistoryService paymentAttachmentStatusHistoryService,
+                                       IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
                                        IManageEmployeeService manageEmployeeService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
@@ -118,9 +118,9 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
 
         ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(employee);
 
-        PaymentAttachmentStatusHistoryDto attachmentStatusHistoryDto = new PaymentAttachmentStatusHistoryDto();
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
         attachmentStatusHistoryDto.setId(UUID.randomUUID());
-        attachmentStatusHistoryDto.setDescription("An attachment to the payment was updated. The file name");
+        attachmentStatusHistoryDto.setDescription("Updating the Payment.");
         attachmentStatusHistoryDto.setEmployee(employeeDto);
         attachmentStatusHistoryDto.setPayment(payment);
         attachmentStatusHistoryDto.setStatus(payment.getAttachmentStatus().getCode() + "-" + payment.getAttachmentStatus().getName());

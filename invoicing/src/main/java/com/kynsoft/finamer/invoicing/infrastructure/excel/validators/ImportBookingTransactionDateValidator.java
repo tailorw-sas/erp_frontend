@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 
 public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<BookingRow> {
@@ -31,6 +32,10 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
     }
 
     private boolean validateDateFormat(BookingRow obj,List<ErrorField> errorFieldList){
+        if (Objects.isNull(obj.getTransactionDate()) || obj.getTransactionDate().isEmpty()){
+            errorFieldList.add(new ErrorField("Transaction Date","Transaction Date can't be empty"));
+            return false;
+        }
        if(!DateUtil.validateDateFormat(obj.getTransactionDate())){
            errorFieldList.add(new ErrorField("Transaction Date","Transaction Date has invalid date format"));
            return false;

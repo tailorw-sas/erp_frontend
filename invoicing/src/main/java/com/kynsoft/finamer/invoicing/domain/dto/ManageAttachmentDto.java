@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ManageAttachmentDto {
     private UUID id;
-    private Long attachment_id;
+    private Long attachmentId;
     private String filename;
     private String file;
     private String remark;
@@ -23,5 +23,6 @@ public class ManageAttachmentDto {
     private String employee;
     private UUID employeeId;
     private LocalDateTime createdAt;
+    private ResourceTypeDto paymentResourceType;
 
 }

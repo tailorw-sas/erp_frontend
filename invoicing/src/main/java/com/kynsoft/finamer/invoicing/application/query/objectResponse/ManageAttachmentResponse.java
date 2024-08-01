@@ -4,6 +4,8 @@ import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +20,7 @@ import java.util.UUID;
 @Setter
 public class ManageAttachmentResponse implements IResponse {
     private UUID id;
-    private Long attachment_id;
+    private Long attachmentId;
     private Long resource;
     private String filename;
     private String file;
@@ -28,6 +30,7 @@ public class ManageAttachmentResponse implements IResponse {
     private String employee;
     private UUID employeeId;
     private LocalDateTime createdAt;
+    private ResourceTypeDto paymenResourceType;
 
     public ManageAttachmentResponse(ManageAttachmentDto dto) {
         this.id = dto.getId();
@@ -36,9 +39,10 @@ public class ManageAttachmentResponse implements IResponse {
         this.filename = dto.getFilename();
         this.type = dto.getType();
         this.invoice = dto.getInvoice();
-        this.attachment_id = dto.getAttachment_id();
+        this.attachmentId = dto.getAttachmentId();
         this.employee = dto.getEmployee();
         this.employeeId = dto.getEmployeeId();
         this.createdAt = dto.getCreatedAt();
+        this.paymenResourceType = dto.getPaymentResourceType();
     }
 }

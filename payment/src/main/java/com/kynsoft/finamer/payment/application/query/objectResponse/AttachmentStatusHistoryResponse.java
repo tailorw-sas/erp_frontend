@@ -2,7 +2,6 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
-import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,10 +17,11 @@ import java.util.UUID;
 public class AttachmentStatusHistoryResponse implements IResponse {
 
     private UUID id;
-    private Status status;
+    private String status;
     private PaymentHistoryResponse payment;
     private ManageEmployeeResponse employee;
     private String description;
+    private Long attachmentId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -33,6 +33,7 @@ public class AttachmentStatusHistoryResponse implements IResponse {
         this.description = dto.getDescription();
         this.createdAt = dto.getCreatedAt();
         this.updatedAt = dto.getUpdatedAt();
+        this.attachmentId = dto.getAttachmentId();
     }
 
 }

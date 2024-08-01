@@ -73,6 +73,19 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
         return repositoryQuery.findAllById(ids).stream().map(ManageAgency::toAggregate).toList();
     }
 
+    @Override
+    public boolean existByCode(String agencyCode) {
+        return repositoryQuery.existsByCode(agencyCode);
+    }
+
+    @Override
+    public ManageAgencyDto findByCode(String agencyCode) {
+        return repositoryQuery.findByCode(agencyCode).map(ManageAgency::toAggregate)
+                .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
+                        new ErrorField("code", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND.getReasonPhrase()))));
+
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

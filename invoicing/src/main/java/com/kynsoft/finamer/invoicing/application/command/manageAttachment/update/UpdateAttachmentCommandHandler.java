@@ -3,13 +3,8 @@ package com.kynsoft.finamer.invoicing.application.command.manageAttachment.updat
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
-
-import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
-
-import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
+import com.kynsoft.finamer.invoicing.domain.dto.*;
+import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -20,11 +15,18 @@ public class UpdateAttachmentCommandHandler implements ICommandHandler<UpdateAtt
 
     private final IManageAttachmentService attachmentService;
     private final IManageAttachmentTypeService attachmentTypeService;
+    private final IManageResourceTypeService resourceTypeService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
+
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
     public UpdateAttachmentCommandHandler(IManageAttachmentService attachmentService,
-            IManageAttachmentTypeService attachmentTypeService, IManageRoomRateService roomRateService) {
+            IManageAttachmentTypeService attachmentTypeService, IManageRoomRateService roomRateService, IManageResourceTypeService resourceTypeService, IAttachmentStatusHistoryService attachmentStatusHistoryService, IInvoiceStatusHistoryService invoiceStatusHistoryService) {
         this.attachmentService = attachmentService;
         this.attachmentTypeService = attachmentTypeService;
+        this.resourceTypeService = resourceTypeService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
     }
 
     @Override
@@ -45,8 +47,15 @@ public class UpdateAttachmentCommandHandler implements ICommandHandler<UpdateAtt
             this.updateType(dto::setType, command.getType(), dto.getType().getId(), update::setUpdate);
         }
 
+        if(command.getPaymentResourceType() != null){
+            this.updatePaymentResourceType(dto::setPaymentResourceType, command.getPaymentResourceType(), dto.getPaymentResourceType() != null ? dto.getPaymentResourceType().getId(): null, update::setUpdate);
+        }
+
         if (update.getUpdate() > 0) {
             this.attachmentService.update(dto);
+            
+            this.updateAttachmentStatusHistory(dto.getInvoice() , dto.getFilename(), dto.getAttachmentId(), dto.getEmployee(), dto.getEmployeeId());
+            this.updateInvoiceStatusHistory(dto.getInvoice(), command.getEmployee(), dto.getFilename());
         }
     }
 
@@ -57,5 +66,39 @@ public class UpdateAttachmentCommandHandler implements ICommandHandler<UpdateAtt
             setter.accept(attachmentTypeDto);
             update.accept(1);
         }
+    }
+
+    public void updatePaymentResourceType(Consumer<ResourceTypeDto> setter, UUID newValue, UUID oldValue,
+    Consumer<Integer> update){
+        if (newValue != null && !newValue.equals(oldValue)) {
+            ResourceTypeDto resourceTypeDto = this.resourceTypeService.findById(newValue);
+            setter.accept(resourceTypeDto);
+            update.accept(1);
+        }
+    }
+
+     private void updateAttachmentStatusHistory( ManageInvoiceDto invoice, String fileName, Long attachmentId, String employee, UUID employeeId) {
+
+        AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("An attachment to the invoice was updated. The file name: " + fileName);
+        attachmentStatusHistoryDto.setEmployee(employee);
+        attachmentStatusHistoryDto.setInvoice(invoice);
+        attachmentStatusHistoryDto.setEmployeeId(employeeId);
+        attachmentStatusHistoryDto.setAttachmentId(attachmentId);
+
+        this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
+    }
+
+    private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee, String fileName){
+
+        InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
+        dto.setId(UUID.randomUUID());
+        dto.setInvoice(invoiceDto);
+        dto.setDescription("An attachment to the invoice was updated. The file name: " + fileName);
+        dto.setEmployee(employee);
+
+        this.invoiceStatusHistoryService.create(dto);
+
     }
 }

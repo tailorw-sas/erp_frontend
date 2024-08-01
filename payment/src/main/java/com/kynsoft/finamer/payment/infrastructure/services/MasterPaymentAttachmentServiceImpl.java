@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachmentService {
@@ -36,9 +37,9 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
     private MasterPaymentAttachmentReadDataJPARepository repositoryQuery;
 
     @Override
-    public UUID create(MasterPaymentAttachmentDto dto) {
+    public Long create(MasterPaymentAttachmentDto dto) {
         MasterPaymentAttachment data = new MasterPaymentAttachment(dto);
-        return this.repositoryCommand.save(data).getId();
+        return this.repositoryCommand.save(data).getAttachmentId();
     }
 
     @Override
@@ -114,6 +115,14 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
     public Long countByResourceAndAttachmentTypeIsDefault(UUID resource) {
         Long cant = this.repositoryQuery.countByResourceAndAttachmentTypeIsDefault(resource);
         return cant;
+    }
+    
+    @Override
+    public List<MasterPaymentAttachmentDto> findAllByPayment(UUID payment) {
+        return this.repositoryQuery.findAllByPayment(payment)
+                .stream()
+                .map(MasterPaymentAttachment::toAggregate)
+                .collect(Collectors.toList());
     }
 
 }

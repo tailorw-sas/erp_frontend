@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -16,25 +15,32 @@ public class UpdateInvoiceCommand implements ICommand {
 
     private UUID id;
     private LocalDate invoiceDate;
+    private LocalDate reSendDate;
+    private LocalDate dueDate;
     private Boolean isManual;
+    private Boolean reSend;
     private Double invoiceAmount;
     private UUID hotel;
     private UUID agency;
-    private UUID invoiceType;
+    private String employee;
 
-    public UpdateInvoiceCommand(UUID id,  LocalDate invoiceDate, Boolean isManual, Double invoiceAmount, UUID hotel, UUID agency, UUID invoiceType, Status status) {
+    public UpdateInvoiceCommand(UUID id,  LocalDate invoiceDate, Boolean isManual, Double invoiceAmount, UUID hotel, UUID agency, Status status, LocalDate dueDate, LocalDate resendDate, Boolean reSend, String employee) {
         this.id = id;
         this.invoiceDate = invoiceDate;
         this.isManual = isManual;
         this.invoiceAmount = invoiceAmount;
         this.hotel = hotel;
         this.agency = agency;
-        this.invoiceType = invoiceType;
+        this.reSend = reSend;
+        this.dueDate = dueDate;
+        this.reSendDate = resendDate;
+        this.employee = employee;
+        
     }
 
     public static UpdateInvoiceCommand fromRequest(UpdateInvoiceRequest request, UUID id) {
         return new UpdateInvoiceCommand(
-                id, request.getInvoiceDate(), request.getIsManual(), request.getInvoiceAmount(), request.getHotel(), request.getAgency(), request.getInvoiceType(), request.getStatus()
+                id, request.getInvoiceDate(), request.getIsManual(), request.getInvoiceAmount(), request.getHotel(), request.getAgency(),request.getStatus(), request.getDueDate(), request.getReSendDate() ,request.getReSend(),request.getEmployee()
         );
     }
 

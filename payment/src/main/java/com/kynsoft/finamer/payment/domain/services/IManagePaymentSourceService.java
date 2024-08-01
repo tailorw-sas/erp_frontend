@@ -17,6 +17,8 @@ public interface IManagePaymentSourceService {
 
     ManagePaymentSourceDto findById(UUID id);
 
+    ManagePaymentSourceDto findByCodeActive(String code);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
 }
