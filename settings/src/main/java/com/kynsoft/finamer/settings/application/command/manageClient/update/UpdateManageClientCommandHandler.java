@@ -37,10 +37,11 @@ public class UpdateManageClientCommandHandler implements ICommandHandler<UpdateM
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(test::setIsNightType, command.getIsNightType(), test.getIsNightType(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerUpdateManageClientService.update(new UpdateManageClientKafka(test.getId(), test.getName(), command.getStatus().name()));
+            this.producerUpdateManageClientService.update(new UpdateManageClientKafka(test.getId(), test.getName(), command.getStatus().name(), command.getIsNightType()));
         }
 
     }

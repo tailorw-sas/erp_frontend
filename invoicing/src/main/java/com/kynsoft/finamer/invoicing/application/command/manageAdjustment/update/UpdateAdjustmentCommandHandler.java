@@ -64,6 +64,9 @@ public class UpdateAdjustmentCommandHandler implements ICommandHandler<UpdateAdj
             if(command.getAmount() != null){
                 roomRateDto.setInvoiceAmount(roomRateDto.getInvoiceAmount() - dto.getAmount());
                 roomRateDto.setInvoiceAmount(roomRateDto.getInvoiceAmount() + command.getAmount());
+
+                this.roomRateService.update(roomRateDto);
+
                 }
 
         bookingService.calculateInvoiceAmount(this.bookingService.findById(roomRateDto.getBooking().getId()));

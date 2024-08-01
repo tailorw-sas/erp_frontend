@@ -25,7 +25,7 @@ public class ManageEmployeeDto {
     private String phoneExtension;
     private ManageDepartmentGroupDto departmentGroup;
     private Status status;
-    private List<ManagePermissionDto> managePermissionList;
+    private List<PermissionDto> managePermissionList;
     private List<ManageAgencyDto> manageAgencyList;
     private List<ManageHotelDto> manageHotelList;
     private List<ManageTradingCompaniesDto> manageTradingCompaniesList;

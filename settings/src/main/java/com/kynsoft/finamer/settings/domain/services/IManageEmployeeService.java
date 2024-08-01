@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.settings.application.query.userMe.UserMeResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageEmployeeDto;
 import org.springframework.data.domain.Pageable;
 
@@ -28,4 +29,6 @@ public interface IManageEmployeeService {
     void saveAll(List<ManageEmployeeDto> dtos);
 
     List<ManageEmployeeDto> findAllToReplicate();
+
+    UserMeResponse me(UUID id);
 }

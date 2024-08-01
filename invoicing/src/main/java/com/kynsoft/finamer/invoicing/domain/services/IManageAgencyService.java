@@ -22,5 +22,5 @@ public interface IManageAgencyService {
 
     List<ManageAgencyDto> findByIds(List<UUID> ids);
 
-    boolean existByCode(String manageHotelCode);
+    boolean existByCode(String manageAgencyCode);
 }

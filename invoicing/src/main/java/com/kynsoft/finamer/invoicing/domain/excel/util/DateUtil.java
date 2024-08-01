@@ -25,13 +25,17 @@ public class DateUtil {
 
     public static LocalDate parseDateToLocalDate(String date){
         LocalDate localDate;
-        if (date.length() ==8){
-            localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern(validDateFormat[0]));
-            return localDate;
-        }
-        if (date.length() == 10){
-            localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern(validDateFormat[1]));
-            return localDate;
+        try {
+            if (date.length() ==8){
+                localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern(validDateFormat[0]));
+                return localDate;
+            }
+            if (date.length() == 10){
+                localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern(validDateFormat[1]));
+                return localDate;
+            }
+        }catch (Exception e){
+            return null;
         }
         return null;
     }

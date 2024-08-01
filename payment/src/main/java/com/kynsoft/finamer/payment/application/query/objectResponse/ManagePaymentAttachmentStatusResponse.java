@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentAttachmentStatusDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.UUID;
 
@@ -24,4 +25,9 @@ public class ManagePaymentAttachmentStatusResponse implements IResponse {
         this.status = dto.getStatus();
     }
 
+    public ManagePaymentAttachmentStatusResponse() {
+        this.code="";
+        this.name="";
+        this.status="";
+    }
 }

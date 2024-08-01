@@ -8,7 +8,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagePermissionResponse;
-import com.kynsoft.finamer.settings.domain.dto.ManagePermissionDto;
+import com.kynsoft.finamer.settings.domain.dto.PermissionDto;
 import com.kynsoft.finamer.settings.domain.services.IManagePermissionService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagePermission;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagePermissionWriteDataJPARepository;
@@ -39,22 +39,21 @@ public class ManagePermissionServiceImpl implements IManagePermissionService {
     }
 
     @Override
-    public UUID create(ManagePermissionDto dto) {
+    public UUID create(PermissionDto dto) {
         ManagePermission entity = new ManagePermission(dto);
         return repositoryCommand.save(entity).getId();
     }
 
     @Override
-    public void update(ManagePermissionDto dto) {
+    public void update(PermissionDto dto) {
         ManagePermission entity = new ManagePermission(dto);
 
-        entity.setUpdatedAt(LocalDateTime.now());
 
         repositoryCommand.save(entity);
     }
 
     @Override
-    public void delete(ManagePermissionDto dto) {
+    public void delete(PermissionDto dto) {
         try {
             this.repositoryCommand.deleteById(dto.getId());
         } catch (Exception e) {
@@ -63,7 +62,7 @@ public class ManagePermissionServiceImpl implements IManagePermissionService {
     }
 
     @Override
-    public ManagePermissionDto findById(UUID id) {
+    public PermissionDto findById(UUID id) {
         Optional<ManagePermission> optionalEntity = repositoryQuery.findById(id);
 
         if(optionalEntity.isPresent()){
@@ -87,7 +86,7 @@ public class ManagePermissionServiceImpl implements IManagePermissionService {
     }
 
     @Override
-    public List<ManagePermissionDto> findByIds(List<UUID> ids) {
+    public List<PermissionDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(ManagePermission::toAggregate).toList();
     }
 

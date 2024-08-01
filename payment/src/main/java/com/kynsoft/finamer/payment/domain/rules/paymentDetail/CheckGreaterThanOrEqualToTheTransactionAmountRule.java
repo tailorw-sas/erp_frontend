@@ -12,7 +12,8 @@ public class CheckGreaterThanOrEqualToTheTransactionAmountRule extends BusinessR
     public CheckGreaterThanOrEqualToTheTransactionAmountRule(Double amount, Double amountTransactionDeposit) {
         super(DomainErrorMessage.CHECK_AMOUNT_LESS_OR_EQUAL_TRANSACTION_AMOUNT, new ErrorField("amount", DomainErrorMessage.CHECK_AMOUNT_LESS_OR_EQUAL_TRANSACTION_AMOUNT.getReasonPhrase()));
         this.amount = amount;
-        this.amountTransactionDeposit = amountTransactionDeposit * -1;
+        //this.amountTransactionDeposit = amountTransactionDeposit * -1;
+        this.amountTransactionDeposit = amountTransactionDeposit;
     }
 
     /**

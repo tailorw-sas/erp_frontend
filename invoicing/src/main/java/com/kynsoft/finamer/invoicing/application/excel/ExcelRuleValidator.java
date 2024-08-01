@@ -7,6 +7,8 @@ import java.util.List;
 public abstract class ExcelRuleValidator<T> {
     public abstract boolean validate(T obj,List<ErrorField> errorFieldList);
 
-
+    public boolean validate(T obj,List<ErrorField> errorFieldList,String importType){
+        return true;
+    }
 }
 

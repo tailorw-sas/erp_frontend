@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IMasterPaymentAttachmentService {
-    UUID create(MasterPaymentAttachmentDto dto);
+    Long create(MasterPaymentAttachmentDto dto);
 
     void create(List<MasterPaymentAttachmentDto> dtos);
 
@@ -22,4 +22,6 @@ public interface IMasterPaymentAttachmentService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByResourceAndAttachmentTypeIsDefault(UUID resource);
+
+    List<MasterPaymentAttachmentDto> findAllByPayment(UUID payment);
 }

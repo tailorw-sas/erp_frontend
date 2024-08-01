@@ -63,6 +63,14 @@ public class ManagePaymentSourceServiceImpl implements IManagePaymentSourceServi
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_SOURCE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_SOURCE_NOT_FOUND.getReasonPhrase())));
     }
+    @Override
+    public ManagePaymentSourceDto findByCodeActive(String code) {
+        Optional<ManagePaymentSource> optionalEntity = repositoryQuery.findByCodeAndStatus(code,Status.ACTIVE.name());
+        if(optionalEntity.isPresent()){
+            return optionalEntity.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_SOURCE_NOT_FOUND, new ErrorField("code", DomainErrorMessage.MANAGE_PAYMENT_SOURCE_NOT_FOUND.getReasonPhrase())));
+    }
 
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {

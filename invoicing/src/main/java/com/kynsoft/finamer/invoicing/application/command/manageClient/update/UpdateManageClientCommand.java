@@ -14,12 +14,13 @@ public class UpdateManageClientCommand implements ICommand {
 
     private UUID id;
     private String name;
+    private Boolean isNightType;
 
-    public UpdateManageClientCommand(UUID id, String name) {
+    public UpdateManageClientCommand(UUID id, String name, Boolean isNightType) {
         this.id = id;
 
         this.name = name;
-
+        this.isNightType = isNightType;
     }
 
     @Override

@@ -1,10 +1,10 @@
 package com.kynsoft.finamer.invoicing.application.command.income.create;
 
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Getter
@@ -23,4 +23,5 @@ public class CreateIncomeRequest {
     private LocalDate dueDate;
     private Boolean reSend;
     private LocalDate reSendDate;
+    private String employee;
 }

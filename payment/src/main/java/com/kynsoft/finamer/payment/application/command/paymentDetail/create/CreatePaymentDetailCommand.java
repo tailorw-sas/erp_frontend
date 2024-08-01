@@ -14,6 +14,7 @@ import java.util.UUID;
 public class CreatePaymentDetailCommand implements ICommand {
 
     private UUID id;
+    private UUID employee;
     private Status status;
     private UUID payment;
     private UUID transactionType;
@@ -22,13 +23,14 @@ public class CreatePaymentDetailCommand implements ICommand {
 
     private PaymentDto paymentResponse;
 
-    public CreatePaymentDetailCommand(Status status, UUID payment, UUID transactionType, Double amount, String remark) {
+    public CreatePaymentDetailCommand(Status status, UUID payment, UUID transactionType, Double amount, String remark, UUID employee) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.payment = payment;
         this.transactionType = transactionType;
         this.amount = amount;
         this.remark = remark;
+        this.employee = employee;
     }
 
     public static CreatePaymentDetailCommand fromRequest(CreatePaymentDetailRequest request) {
@@ -37,7 +39,8 @@ public class CreatePaymentDetailCommand implements ICommand {
                 request.getPayment(),
                 request.getTransactionType(),
                 request.getAmount(),
-                request.getRemark()
+                request.getRemark(),
+                request.getEmployee()
         );
     }
 

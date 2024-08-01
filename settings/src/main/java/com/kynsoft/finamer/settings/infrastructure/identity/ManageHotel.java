@@ -77,8 +77,6 @@ public class ManageHotel implements Serializable {
 
     private Boolean isApplyByVCC;
 
-    private Boolean isNightType;
-
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -98,7 +96,6 @@ public class ManageHotel implements Serializable {
         this.isVirtual = dto.getIsVirtual();
         this.requiresFlatRate = dto.getRequiresFlatRate();
         this.isApplyByVCC = dto.getIsApplyByVCC();
-        this.isNightType = dto.getIsNightType();
     }
 
     public ManageHotelDto toAggregate(){
@@ -116,7 +113,7 @@ public class ManageHotel implements Serializable {
                 manageCurrency != null ? manageCurrency.toAggregate() : null,
                 manageRegion != null ? manageRegion.toAggregate() : null,
                 manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null,
-                applyByTradingCompany, prefixToInvoice, isVirtual, requiresFlatRate, isApplyByVCC, isNightType
+                applyByTradingCompany, prefixToInvoice, isVirtual, requiresFlatRate, isApplyByVCC
         );
     }
 }

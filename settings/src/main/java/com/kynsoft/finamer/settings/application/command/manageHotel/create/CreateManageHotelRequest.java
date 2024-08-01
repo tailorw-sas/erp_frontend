@@ -27,5 +27,4 @@ public class CreateManageHotelRequest {
     private Boolean isVirtual;
     private Boolean requiresFlatRate;
     private Boolean isApplyByVCC;
-    private Boolean isNightType;
 }

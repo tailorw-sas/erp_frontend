@@ -22,7 +22,6 @@ public class ManagePaymentTransactionType implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true)
     private String code;
     private String name;
     private String status;

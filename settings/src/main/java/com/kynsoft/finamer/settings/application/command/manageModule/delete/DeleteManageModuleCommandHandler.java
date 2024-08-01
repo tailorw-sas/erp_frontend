@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageModule.delete;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.settings.domain.dto.ManageModuleDto;
+import com.kynsoft.finamer.settings.domain.dto.ModuleDto;
 import com.kynsoft.finamer.settings.domain.services.IManageModuleService;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ public class DeleteManageModuleCommandHandler implements ICommandHandler<DeleteM
 
     @Override
     public void handle(DeleteManageModuleCommand command) {
-        ManageModuleDto dto = service.findById(command.getId());
+        ModuleDto dto = service.findById(command.getId());
 
         service.delete(dto);
     }

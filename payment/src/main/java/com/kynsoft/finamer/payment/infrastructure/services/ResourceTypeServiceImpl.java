@@ -8,9 +8,11 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ResourceTypeResponse;
+import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
+import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentTransactionType;
 import com.kynsoft.finamer.payment.infrastructure.identity.ResourceType;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageResourceTypeWriteDataJPARepository;
 import java.time.LocalDateTime;
@@ -110,4 +112,17 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
         return this.repositoryQuery.countByDefaultAndNotId(id);
     }
 
+
+     @Override
+    public List<ResourceTypeDto> findAllToReplicate() {
+        List<ResourceType> objects = this.repositoryQuery.findAll();
+        List<ResourceTypeDto> objectDtos = new ArrayList<>();
+
+        for (ResourceType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+      
 }

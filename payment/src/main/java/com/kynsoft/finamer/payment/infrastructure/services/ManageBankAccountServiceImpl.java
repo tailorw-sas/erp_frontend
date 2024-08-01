@@ -61,4 +61,16 @@ public class ManageBankAccountServiceImpl implements IManageBankAccountService {
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
     }
+
+    @Override
+    public ManageBankAccountDto findByAccountNumber(String accountNumber) {
+        return repositoryQuery.findManageBankAccountByAccountNumber(accountNumber)
+                .map(ManageBankAccount::toAggregate)
+                .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND, new ErrorField("accountNumber", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase()))));
+    }
+
+    @Override
+    public boolean existByAccountNumber(String accountNumber) {
+        return repositoryQuery.existsByAccountNumber(accountNumber);
+    }
 }

@@ -9,7 +9,7 @@ import lombok.Setter;
 
 import java.util.UUID;
 
-@NoArgsConstructor
+
 @AllArgsConstructor
 @Getter
 @Setter
@@ -27,4 +27,9 @@ public class ManageBankAccountResponse implements IResponse {
         this.nameOfBank = dto.getNameOfBank();
     }
 
+    public ManageBankAccountResponse() {
+        this.accountNumber="";
+        this.nameOfBank="";
+        this.status="";
+    }
 }

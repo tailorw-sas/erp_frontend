@@ -19,6 +19,9 @@ import java.util.Objects;
 public class ExcelUtils {
 
     public static Object getValueFromCell(CellInfo cellInfo, Cell cell, DataFormatter dataFormatter) {
+        if (Objects.isNull(cell)){
+            return null;
+        }
         if (cellInfo.getCellType().equals(CustomCellType.BOOLEAN)) {
             return cell.getBooleanCellValue();
         } else if (CustomCellType.STRING.equals(cellInfo.getCellType())) {
@@ -80,10 +83,9 @@ public class ExcelUtils {
 
     public static void readCell(Cell cell, BeanField beanField, CellInfo cellInfo, Object bean) {
         try {
-            if (!ExcelUtils.isCellEmpty(cell)) {
-                DataFormatter dataFormatter = new DataFormatter();
-                beanField.setFieldValue(ExcelUtils.getValueFromCell(cellInfo, cell, dataFormatter), bean);
-            }
+            DataFormatter dataFormatter = new DataFormatter();
+            beanField.setFieldValue(ExcelUtils.getValueFromCell(cellInfo, cell, dataFormatter), bean);
+
         } catch (Exception e) {
             throw new ReadExcelException(DomainErrorMessage.EXCEL_IMPORT_FORMAT_ERROR, new ErrorField(" row " + cell.getRow().getRowNum() + " cell " + cellInfo.getPosition(), e.getMessage()));
         }

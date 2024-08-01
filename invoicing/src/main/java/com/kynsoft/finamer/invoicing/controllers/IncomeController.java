@@ -18,11 +18,11 @@ import com.kynsoft.finamer.invoicing.application.query.income.search.GetSearchIn
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.IncomeResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
-
-import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/income")
@@ -43,7 +43,7 @@ public class IncomeController {
         FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
         ManageInvoiceResponse resp = mediator.send(query);
 
-        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null, null, null,null));
+        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null, null, null,null, null, null, null));
         return ResponseEntity.ok(response);
     }
 

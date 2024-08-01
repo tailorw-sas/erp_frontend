@@ -9,6 +9,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManagePaymentStatusResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentStatus;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentStatus;
@@ -61,6 +62,15 @@ public class ManagePaymentStatusServiceServiceImpl implements IManagePaymentStat
             return result.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public ManagePaymentStatusDto findByCode(String code) {
+        Optional<ManagePaymentStatus> result = this.repositoryQuery.findByCodeAndStatus(code,Status.ACTIVE.name());
+        if (result.isPresent()) {
+            return result.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND, new ErrorField("code", DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override

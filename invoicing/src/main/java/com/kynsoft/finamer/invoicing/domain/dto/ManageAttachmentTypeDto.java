@@ -17,4 +17,6 @@ public class ManageAttachmentTypeDto {
     private String code;
 
     private String name;
+    private String status;
+    private Boolean defaults;
 }

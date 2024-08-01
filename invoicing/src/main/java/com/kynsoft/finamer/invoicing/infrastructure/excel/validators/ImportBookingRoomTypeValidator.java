@@ -19,7 +19,7 @@ public class ImportBookingRoomTypeValidator extends ExcelRuleValidator<BookingRo
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-        if (Objects.isNull(obj.getRoomType()) ||(!obj.getRoomType().isEmpty() && !roomTypeService.existByCode(obj.getRoomType()))) {
+        if (Objects.nonNull(obj.getRoomType()) && !roomTypeService.existByCode(obj.getRoomType())) {
             errorFieldList.add(new ErrorField("Room Type", "Room Type not exist"));
             return false;
         }

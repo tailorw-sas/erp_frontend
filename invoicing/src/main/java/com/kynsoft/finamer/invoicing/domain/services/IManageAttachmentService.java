@@ -11,7 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface IManageAttachmentService {
 
-    UUID create(ManageAttachmentDto dto);
+    Long create(ManageAttachmentDto dto);
 
     void update(ManageAttachmentDto dto);
 

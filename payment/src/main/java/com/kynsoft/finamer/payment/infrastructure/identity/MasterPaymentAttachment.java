@@ -12,6 +12,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,6 +29,10 @@ public class MasterPaymentAttachment implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @Column(columnDefinition="serial", name = "attachment_gen_id")
+    @Generated(event = EventType.INSERT)
+    private Long attachmentId;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "payment_id")
@@ -74,7 +80,8 @@ public class MasterPaymentAttachment implements Serializable {
                 fileName, 
                 fileWeight != null ? fileWeight : null,
                 path, 
-                remark
+                remark,
+                attachmentId
         );
     }
 
@@ -88,7 +95,8 @@ public class MasterPaymentAttachment implements Serializable {
                 fileName, 
                 fileWeight != null ? fileWeight : null,
                 path, 
-                remark
+                remark,
+                attachmentId
         );
     }
 }

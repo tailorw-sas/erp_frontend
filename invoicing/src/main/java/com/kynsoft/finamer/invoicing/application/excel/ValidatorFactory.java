@@ -23,7 +23,7 @@ public abstract class ValidatorFactory<T> {
         this.validators =  new LinkedHashMap<>();
     }
 
-    abstract public void createValidators();
+    abstract public void createValidators(String importType);
 
     abstract public boolean validate(T toValidate);
 

@@ -17,7 +17,7 @@ import java.util.UUID;
 public class PaymentDto {
 
     private UUID id;
-    private Long paymentId;
+    private long paymentId;
     private Status status;
     private ManagePaymentSourceDto paymentSource;
     private String reference;
@@ -29,13 +29,13 @@ public class PaymentDto {
     private ManageBankAccountDto bankAccount;
     private ManagePaymentAttachmentStatusDto attachmentStatus;
 
-    private Double paymentAmount;
-    private Double paymentBalance;
-    private Double depositAmount;
-    private Double depositBalance;
-    private Double otherDeductions;
-    private Double identified;
-    private Double notIdentified;
+    private double paymentAmount;
+    private double paymentBalance;
+    private double depositAmount;
+    private double depositBalance;
+    private double otherDeductions;
+    private double identified;
+    private double notIdentified;
     private String remark;
 
     private List<MasterPaymentAttachmentDto> attachments;

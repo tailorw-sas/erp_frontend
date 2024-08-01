@@ -8,6 +8,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.rules.manageAttachmentType.ManageAttachmentTypeDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAttachmentType.ProducerUpdateManageAttachmentTypeService;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,10 @@ public class UpdateManageAttachmentTypeCommandHandler implements ICommandHandler
     public void handle(UpdateManageAttachmentTypeCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Attachment Type ID cannot be null."));
 
+        if(command.getDefaults()){
+            RulesChecker.checkRule(new ManageAttachmentTypeDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
+
         ManageAttachmentTypeDto dto = service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -38,9 +43,11 @@ public class UpdateManageAttachmentTypeCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 
+        UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
+
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageAttachmentTypeService.update(new UpdateManageAttachmentTypeKafka(dto.getId(), dto.getName()));
+            this.producerUpdateManageAttachmentTypeService.update(new UpdateManageAttachmentTypeKafka(dto.getId(), dto.getName(), command.getStatus().toString(), command.getDefaults()));
         }
     }
 

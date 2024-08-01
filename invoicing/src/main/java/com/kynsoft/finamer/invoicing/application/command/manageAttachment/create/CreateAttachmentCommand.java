@@ -20,6 +20,7 @@ public class CreateAttachmentCommand implements ICommand {
     private UUID invoice;
     private String employee;
     private UUID employeeId;
+    private UUID paymentResourceType;
 
     public CreateAttachmentCommand(
 
@@ -29,7 +30,8 @@ public class CreateAttachmentCommand implements ICommand {
             UUID type,
             UUID invoice ,
          String employee,
-     UUID employeeId
+     UUID employeeId,
+     UUID paymentResourceType
     ) {
         this.id = UUID.randomUUID();
 
@@ -40,11 +42,12 @@ public class CreateAttachmentCommand implements ICommand {
         this.invoice = invoice;
         this.employee = employee;
         this.employeeId =employeeId;
+        this.paymentResourceType = paymentResourceType;
     }
 
     public static CreateAttachmentCommand fromRequest(CreateAttachmentRequest request) {
         return new CreateAttachmentCommand(
-                request.getFilename(), request.getFile(), request.getRemark(), request.getType(), request.getInvoice(), request.getEmployee(), request.getEmployeeId());
+                request.getFilename(), request.getFile(), request.getRemark(), request.getType(), request.getInvoice(), request.getEmployee(), request.getEmployeeId(), request.getPaymentResourceType());
     }
 
     @Override

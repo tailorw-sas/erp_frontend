@@ -7,10 +7,15 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<PaymentDetail, UUID>,
         JpaSpecificationExecutor<PaymentDetail> {
 
     Page<PaymentDetail> findAll(Specification specification, Pageable pageable);
+
+    Optional<PaymentDetail> findByPaymentDetailId(int id);
+
+    boolean existsByPaymentDetailId(int id);
 }

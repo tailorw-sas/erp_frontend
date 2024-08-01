@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -57,22 +58,25 @@ public class ManageAgency {
     @Enumerated(EnumType.STRING)
     private EGenerationType generationType;
 
+    private String status;
+
     public ManageAgency(ManageAgencyDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.client = dto.getClient() != null ? new ManageClient(dto.getClient()) : null;
         this.generationType=dto.getGenerationType();
+        this.status=dto.getStatus();
 
     }
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, name, client != null ? client.toAggregate() : null,generationType);
+                id, code, name, client != null ? client.toAggregate() : null,generationType,status);
     }
 
     public ManageAgencyDto toAggregateSample() {
         return new ManageAgencyDto(
-                id, code, name, client != null ? client.toAggregate() : null,generationType);
+                id, code, name, client != null ? client.toAggregate() : null,generationType,status);
     }
 }

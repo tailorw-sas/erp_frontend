@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Objects;
 
 public class ImportBookingCheckOutValidator extends ExcelRuleValidator<BookingRow> {
 
@@ -15,7 +16,12 @@ public class ImportBookingCheckOutValidator extends ExcelRuleValidator<BookingRo
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-        String date = obj.getTransactionDate();
+
+        if (Objects.isNull(obj.getCheckOut()) || obj.getCheckOut().isEmpty()){
+            errorFieldList.add(new ErrorField("CheckOut", "CheckOut can't be empty"));
+            return false;
+        }
+        String date = obj.getCheckOut();
         boolean valid = false;
         for (String format : validDateFormat) {
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
@@ -24,7 +30,6 @@ public class ImportBookingCheckOutValidator extends ExcelRuleValidator<BookingRo
                 valid = true;
                 break;
             } catch (ParseException e) {
-                valid=false;
             }
         }
         if (!valid) {

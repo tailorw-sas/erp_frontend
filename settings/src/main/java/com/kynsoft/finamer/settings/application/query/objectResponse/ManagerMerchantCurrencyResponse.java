@@ -19,7 +19,7 @@ public class ManagerMerchantCurrencyResponse implements IResponse {
     private UUID id;
     private ManagerMerchantResponse managerMerchant;
     private ManagerCurrencyResponse managerCurrency;
-    private Double value;
+    private String value;
     private String description;
     private Status status;
 

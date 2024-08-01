@@ -22,4 +22,6 @@ public interface IManageResourceTypeService {
     Long countByCodeAndNotId(String code, UUID id);
 
     Long countByDefaultAndNotId(UUID id);
+
+  List<ResourceTypeDto> findAllToReplicate();
 }

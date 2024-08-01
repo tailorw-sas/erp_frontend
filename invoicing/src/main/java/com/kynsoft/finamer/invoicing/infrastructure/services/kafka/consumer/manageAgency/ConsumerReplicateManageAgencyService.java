@@ -31,7 +31,7 @@ public class ConsumerReplicateManageAgencyService {
 //
 //            ReplicateManageAgencyKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageAgencyKafka.class);
             CreateManageAgencyCommand command = new CreateManageAgencyCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName(), objKafka.getClient(), EGenerationType.valueOf(objKafka.getGenerationType()));
+                    objKafka.getName(), objKafka.getClient(), EGenerationType.valueOf(objKafka.getGenerationType()), objKafka.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageAgencyService.class.getName()).log(Level.SEVERE, null, ex);

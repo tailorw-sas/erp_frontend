@@ -10,7 +10,7 @@ import lombok.Setter;
 public class CreateManageMerchantCurrencyRequest {
     private UUID managerMerchant;
     private UUID managerCurrency;
-    private Double value;
+    private String value;
     private String description;
     private Status status;
 

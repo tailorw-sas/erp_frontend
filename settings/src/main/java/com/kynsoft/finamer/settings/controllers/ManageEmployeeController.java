@@ -2,6 +2,8 @@ package com.kynsoft.finamer.settings.controllers;
 
 import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
+import com.kynsof.share.core.domain.response.ApiError;
+import com.kynsof.share.core.domain.response.ApiResponse;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.settings.application.command.manageEmployee.clonePermissions.CloneManageEmployeeCommand;
@@ -22,8 +24,13 @@ import com.kynsoft.finamer.settings.application.query.objectResponse.manageEmplo
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageEmployeeResponse;
 
 import java.util.UUID;
+
+import com.kynsoft.finamer.settings.application.query.userMe.UserMeQuery;
+import com.kynsoft.finamer.settings.application.query.userMe.UserMeResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -95,5 +102,17 @@ public class ManageEmployeeController {
         CloneManageEmployeeCommand command = CloneManageEmployeeCommand.fromRequest(request, id);
         CloneManageEmployeeMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/me")
+    public ResponseEntity<?> me(@AuthenticationPrincipal Jwt jwt) {
+        try {
+            String userId = jwt.getClaim("sub");
+            UserMeQuery query = new UserMeQuery(UUID.fromString(userId));
+            UserMeResponse response = mediator.send(query);
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (Exception e) {
+            return ResponseEntity.ok(ApiResponse.fail(ApiError.withSingleError("error", "token", "Error al procesar el token")));
+        }
     }
 }

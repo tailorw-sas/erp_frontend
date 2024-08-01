@@ -13,18 +13,20 @@ import java.util.UUID;
 public class UpdatePaymentDetailCommand implements ICommand {
     private UUID id;
     private Status status;
+    private UUID employee;
     private UUID payment;
     private UUID transactionType;
     private Double amount;
     private String remark;
 
-    public UpdatePaymentDetailCommand(UUID id, Status status, UUID payment, UUID transactionType, Double amount, String remark) {
+    public UpdatePaymentDetailCommand(UUID id, Status status, UUID payment, UUID transactionType, Double amount, String remark, UUID employee) {
         this.id = id;
         this.status = status;
         this.payment = payment;
         this.transactionType = transactionType;
         this.amount = amount;
         this.remark = remark;
+        this.employee = employee;
     }
 
     public static UpdatePaymentDetailCommand fromRequest(UpdatePaymentDetailRequest request, UUID id) {
@@ -34,7 +36,8 @@ public class UpdatePaymentDetailCommand implements ICommand {
                 request.getPayment(),
                 request.getTransactionType(),
                 request.getAmount(),
-                request.getRemark()
+                request.getRemark(),
+                request.getEmployee()
         );
     }
 

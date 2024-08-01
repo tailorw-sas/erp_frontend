@@ -29,10 +29,6 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
 
     @Override
     public T readSingleLine() {
-
-        if (ExcelUtils.isSheetEmpty(sheetToRead)) {
-            throw new EmptySheetException(DomainErrorMessage.EXCEL_SHEET_EMPTY_FORMAT_ERROR, new ErrorField("Empty excel", "There is no data to import."));
-        }
         T bean;
         if (!ExcelUtils.isEndOfContent(rowCursor, sheetToRead)) {
             try {
@@ -45,7 +41,7 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
             if (!ExcelUtils.isRowEmpty(currentRow)) {
                 annotatedField.forEach((cellInfo, beanField) -> {
                     if (cellInfo.getPosition() != -1) {
-                        Cell cell = currentRow.getCell(cellInfo.getPosition());
+                        Cell cell = currentRow.getCell(cellInfo.getPosition(), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
                         ExcelUtils.readCell(cell, beanField, cellInfo, bean);
                     } else {
                         beanField.setFieldValue(currentRow.getRowNum(), bean);
@@ -58,6 +54,20 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
 
         rowCursor = null;
         return null;
+    }
+
+    @Override
+    public void hasContent() {
+        boolean empty=true;
+        for(int i=readerConfiguration.isIgnoreHeaders()?1:0;i<=sheetToRead.getLastRowNum();i++){
+            if(!ExcelUtils.isRowEmpty(sheetToRead.getRow(i))){
+                empty= false;
+                break;
+            }
+        }
+        if (ExcelUtils.isSheetEmpty(sheetToRead) || empty) {
+            throw new EmptySheetException(DomainErrorMessage.EXCEL_SHEET_EMPTY_FORMAT_ERROR, new ErrorField("Empty excel", "There is no data to import."));
+        }
     }
 
 

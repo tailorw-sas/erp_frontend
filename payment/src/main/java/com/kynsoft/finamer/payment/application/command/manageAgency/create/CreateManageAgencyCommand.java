@@ -16,13 +16,15 @@ public class CreateManageAgencyCommand implements ICommand {
     private String name;
     private String status;
     private UUID agencyType;
+    private UUID client;
 
-    public CreateManageAgencyCommand(UUID id, String code, String name, String status, UUID agencyType) {
+    public CreateManageAgencyCommand(UUID id, String code, String name, String status, UUID agencyType,UUID client) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.status = status;
         this.agencyType = agencyType;
+        this.client = client;
     }
 
     @Override

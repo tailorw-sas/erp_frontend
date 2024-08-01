@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.query;
 
 import com.kynsoft.finamer.payment.infrastructure.identity.MasterPaymentAttachment;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,5 +21,7 @@ public interface MasterPaymentAttachmentReadDataJPARepository extends JpaReposit
 
     @Query("SELECT COUNT(mpa) FROM MasterPaymentAttachment mpa WHERE mpa.resource.id = :resource AND mpa.attachmentType.defaults = true")
     Long countByResourceAndAttachmentTypeIsDefault(@Param("resource") UUID resource);
-
+        
+    @Query("SELECT b FROM MasterPaymentAttachment b WHERE b.resource.id = :resource")
+    List<MasterPaymentAttachment> findAllByPayment(@Param("resource") UUID resource);
 }

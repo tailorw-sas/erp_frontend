@@ -15,6 +15,7 @@ public class CreatePaymentDetailSplitDepositCommand implements ICommand {
 
     private UUID id;
     private Status status;
+    private UUID employee;
     private UUID paymentDetail;
     private UUID transactionType;
     private Double amount;
@@ -22,13 +23,14 @@ public class CreatePaymentDetailSplitDepositCommand implements ICommand {
 
     private PaymentDto paymentResponse;
 
-    public CreatePaymentDetailSplitDepositCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark) {
+    public CreatePaymentDetailSplitDepositCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.paymentDetail = paymentDetail;
         this.transactionType = transactionType;
         this.amount = amount;
         this.remark = remark;
+        this.employee = employee;
     }
 
     public static CreatePaymentDetailSplitDepositCommand fromRequest(CreatePaymentDetailSplitDepositRequest request) {
@@ -37,7 +39,8 @@ public class CreatePaymentDetailSplitDepositCommand implements ICommand {
                 request.getPaymentDetail(),
                 request.getTransactionType(),
                 request.getAmount(),
-                request.getRemark()
+                request.getRemark(),
+                request.getEmployee()
         );
     }
 

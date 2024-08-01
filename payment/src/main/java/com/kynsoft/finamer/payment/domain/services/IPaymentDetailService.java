@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IPaymentDetailService {
-    UUID create(PaymentDetailDto dto);
+    Long create(PaymentDetailDto dto);
 
     void update(PaymentDetailDto dto);
 
@@ -17,6 +17,11 @@ public interface IPaymentDetailService {
 
     PaymentDetailDto findById(UUID id);
 
+    PaymentDetailDto findByGenId(int id);
+
+    boolean existByGenId(int id);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    List<UUID> bulk(List<PaymentDetailDto> toSave);
 }

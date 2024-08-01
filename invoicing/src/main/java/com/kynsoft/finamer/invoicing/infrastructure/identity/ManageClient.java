@@ -1,19 +1,19 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageClientDto;
-
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import org.hibernate.annotations.CreationTimestamp;
+import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,6 +31,8 @@ public class ManageClient implements Serializable {
 
     private String name;
 
+    private Boolean isNightType;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -42,12 +44,12 @@ public class ManageClient implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
-
+        this.isNightType = dto.getIsNightType();
     }
 
     public ManageClientDto toAggregate() {
 
-        return new ManageClientDto(id, code, name);
+        return new ManageClientDto(id, code, name, isNightType);
     }
 
 }

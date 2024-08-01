@@ -20,10 +20,8 @@ public class ManagePaymentAttachmentStatus {
     @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true)
     private String code;
 
-    @Column(unique = true)
     private String name;
     private String status;
 

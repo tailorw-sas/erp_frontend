@@ -70,7 +70,7 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 command.getName(), command.getBabelCode(), countryDto, cityStateDto, command.getCity(),
                 command.getAddress(), currencyDto, regionDto, tradingCompaniesDto, command.getApplyByTradingCompany(),
                 command.getPrefixToInvoice(), command.getIsVirtual(), command.getRequiresFlatRate(),
-                command.getIsApplyByVCC(), command.getIsNightType()));
+                command.getIsApplyByVCC()));
         this.producerReplicateManageHotelService.create(new ReplicateManageHotelKafka(command.getId(),
                 command.getCode(), command.getName(), command.getIsApplyByVCC(), command.getManageTradingCompanies(), command.getStatus().name(), command.getIsVirtual()));
     }

@@ -5,8 +5,8 @@ import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.query.objectResponse.AttachmentStatusHistoryResponse;
-import com.kynsoft.finamer.payment.application.query.paymentAttachmentStatusHistory.getById.FindPaymentAttachmentStatusHistoryByIdQuery;
-import com.kynsoft.finamer.payment.application.query.paymentAttachmentStatusHistory.search.GetSearchPaymentAttachmentStatusHistoryQuery;
+import com.kynsoft.finamer.payment.application.query.paymentStatusHistory.getById.FindPaymentAttachmentStatusHistoryByIdQuery;
+import com.kynsoft.finamer.payment.application.query.paymentStatusHistory.search.GetSearchPaymentAttachmentStatusHistoryQuery;
 
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;

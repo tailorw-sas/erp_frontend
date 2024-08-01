@@ -15,11 +15,11 @@ public class UpdateManagerMerchantCurrencyCommand implements ICommand {
     private UUID id;
     private UUID managerMerchant;
     private UUID managerCurrency;
-    private Double value;
+    private String value;
     private String description;
     private Status status;
 
-    public UpdateManagerMerchantCurrencyCommand(UUID id, UUID managerMerchant, UUID managerCurrency, Double value, String description, Status status) {
+    public UpdateManagerMerchantCurrencyCommand(UUID id, UUID managerMerchant, UUID managerCurrency, String value, String description, Status status) {
         this.id = id;
         this.managerMerchant = managerMerchant;
         this.managerCurrency = managerCurrency;

@@ -88,8 +88,8 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
-    public boolean existByCode(String manageHotelCode) {
-        return repositoryQuery.existsManageAgenciesByCode(manageHotelCode);
+    public boolean existByCode(String manageAgencyCode) {
+        return repositoryQuery.existsManageAgenciesByCode(manageAgencyCode);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

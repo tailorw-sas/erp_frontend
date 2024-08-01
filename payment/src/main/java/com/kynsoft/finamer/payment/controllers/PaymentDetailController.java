@@ -62,10 +62,10 @@ public class PaymentDetailController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping(path = "/{id}")
-    public ResponseEntity<?> deleteById(@PathVariable UUID id) {
+    @DeleteMapping(path = "/{id}/employee/{employeeId}")
+    public ResponseEntity<?> deleteById(@PathVariable UUID id, @PathVariable UUID employeeId) {
 
-        DeletePaymentDetailCommand command = new DeletePaymentDetailCommand(id);
+        DeletePaymentDetailCommand command = new DeletePaymentDetailCommand(id, employeeId);
         DeletePaymentDetailMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);

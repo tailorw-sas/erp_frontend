@@ -25,11 +25,17 @@ import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooki
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.search.GetSearchBookingQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBookingResponse;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
+import org.aspectj.bridge.IMessage;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -111,10 +117,27 @@ public class BookingController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(path = "/import")
-    public ResponseEntity<?> importBooking(@RequestBody ImportBookingRequest request) {
-        ImportBookingFromFileCommand importBookingFromFileCommand = new ImportBookingFromFileCommand(request);
-        return ResponseEntity.ok(mediator.send(importBookingFromFileCommand));
+    @PostMapping(path = "/import",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<ResponseEntity<?>> importBooking(@RequestPart("file") FilePart filePart,
+                                                 @RequestPart("importProcessId") String importProcessId,
+                                                 @RequestPart("importType") String eImportPaymentType) {
+
+        return DataBufferUtils.join(filePart.content())
+                .flatMap(dataBuffer -> {
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.read(bytes);
+                    DataBufferUtils.release(dataBuffer);
+
+                    ImportBookingRequest importRequest = new ImportBookingRequest(importProcessId,bytes, EImportType.valueOf(eImportPaymentType));
+                    ImportBookingFromFileCommand importBookingFromFileCommand = new ImportBookingFromFileCommand(importRequest);
+                    try {
+                        IMessage message = mediator.send(importBookingFromFileCommand);
+                        return Mono.just(ResponseEntity.ok(message));
+                    }catch (Exception e) {
+                        return Mono.error(e);
+                    }
+
+                } );
     }
 
     @PostMapping(path = "/import-search")

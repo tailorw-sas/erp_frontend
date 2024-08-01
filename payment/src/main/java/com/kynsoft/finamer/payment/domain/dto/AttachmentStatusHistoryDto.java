@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.domain.dto;
 
-import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,10 +15,11 @@ import java.util.UUID;
 public class AttachmentStatusHistoryDto {
 
     private UUID id;
-    private Status status;
+    private String status;
     private PaymentDto payment;
     private ManageEmployeeDto employee;
     private String description;
+    private Long attachmentId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

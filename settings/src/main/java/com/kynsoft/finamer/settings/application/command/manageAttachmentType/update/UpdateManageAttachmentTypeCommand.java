@@ -18,13 +18,15 @@ public class UpdateManageAttachmentTypeCommand implements ICommand {
     private String description;
     private Status status;
     private String name;
+    private Boolean defaults;
 
     public static UpdateManageAttachmentTypeCommand fromRequest(UpdateManageAttachmentTypeRequest request, UUID id){
         return new UpdateManageAttachmentTypeCommand(
                 id,
                 request.getDescription(),
                 request.getStatus(),
-                request.getName()
+                request.getName(),
+                request.getDefaults()
         );
     }
 

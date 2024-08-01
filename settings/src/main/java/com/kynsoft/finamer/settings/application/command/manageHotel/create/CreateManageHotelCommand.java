@@ -30,14 +30,13 @@ public class CreateManageHotelCommand implements ICommand {
     private Boolean isVirtual;
     private Boolean requiresFlatRate;
     private Boolean isApplyByVCC;
-    private Boolean isNightType;
 
     public CreateManageHotelCommand(String code, String description, Status status, String name,
                                     String babelCode, UUID manageCountry, UUID manageCityState,
                                     String city, String address, UUID manageCurrency, UUID manageRegion,
                                     UUID manageTradingCompanies, Boolean applyByTradingCompany,
                                     String prefixToInvoice, Boolean isVirtual, Boolean requiresFlatRate,
-                                    Boolean isApplyByVCC, Boolean isNightType) {
+                                    Boolean isApplyByVCC) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
@@ -56,7 +55,6 @@ public class CreateManageHotelCommand implements ICommand {
         this.isVirtual = isVirtual;
         this.requiresFlatRate = requiresFlatRate;
         this.isApplyByVCC = isApplyByVCC;
-        this.isNightType = isNightType;
     }
 
     public static CreateManageHotelCommand fromRequest(CreateManageHotelRequest request){
@@ -66,8 +64,7 @@ public class CreateManageHotelCommand implements ICommand {
                 request.getManageCityState(), request.getCity(), request.getAddress(),
                 request.getManageCurrency(), request.getManageRegion(), request.getManageTradingCompanies(),
                 request.getApplyByTradingCompany(), request.getPrefixToInvoice(),
-                request.getIsVirtual(), request.getRequiresFlatRate(), request.getIsApplyByVCC(),
-                 request.getIsNightType()
+                request.getIsVirtual(), request.getRequiresFlatRate(), request.getIsApplyByVCC()
         );
     }
 

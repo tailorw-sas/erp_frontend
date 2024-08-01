@@ -41,9 +41,9 @@ public class ManageAttachmentServiceImpl implements IManageAttachmentService {
     }
 
     @Override
-    public UUID create(ManageAttachmentDto dto) {
+    public Long create(ManageAttachmentDto dto) {
         ManageAttachment entity = new ManageAttachment(dto);
-        return repositoryCommand.saveAndFlush(entity).getId();
+        return repositoryCommand.saveAndFlush(entity).getAttachmentId();
     }
 
     @Override

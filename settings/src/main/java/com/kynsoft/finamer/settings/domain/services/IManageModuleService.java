@@ -1,16 +1,22 @@
 package com.kynsoft.finamer.settings.domain.services;
 
-import com.kynsoft.finamer.settings.domain.dto.ManageModuleDto;
+import com.kynsof.share.core.domain.request.FilterCriteria;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.settings.domain.dto.ModuleDto;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface IManageModuleService {
 
-    UUID create(ManageModuleDto dto);
+    UUID create(ModuleDto dto);
 
-    void update(ManageModuleDto dto);
+    void update(ModuleDto dto);
 
-    void delete(ManageModuleDto dto);
+    void delete(ModuleDto dto);
 
-    ManageModuleDto findById(UUID id);
+    ModuleDto findById(UUID id);
+
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

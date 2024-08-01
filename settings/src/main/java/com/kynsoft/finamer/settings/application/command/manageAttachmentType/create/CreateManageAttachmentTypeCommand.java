@@ -17,13 +17,15 @@ public class CreateManageAttachmentTypeCommand implements ICommand {
     private String description;
     private Status status;
     private String name;
+    private Boolean defaults;
 
-    public CreateManageAttachmentTypeCommand(String code, String description, Status status, String name) {
+    public CreateManageAttachmentTypeCommand(String code, String description, Status status, String name, Boolean defaults) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.status = status;
         this.name = name;
+        this.defaults = defaults;
     }
 
     public static CreateManageAttachmentTypeCommand fromRequest(CreateManageAttachmentTypeRequest request){
@@ -31,7 +33,8 @@ public class CreateManageAttachmentTypeCommand implements ICommand {
                 request.getCode(),
                 request.getDescription(),
                 request.getStatus(),
-                request.getName()
+                request.getName(),
+                request.getDefaults()
         );
     }
 

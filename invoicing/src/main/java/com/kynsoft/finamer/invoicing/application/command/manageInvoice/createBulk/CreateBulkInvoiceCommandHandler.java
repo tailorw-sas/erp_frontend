@@ -229,7 +229,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                         command.getAttachmentCommands().get(i).getFile(),
                                         command.getAttachmentCommands().get(i).getRemark(),
                                         attachmentType,
-                                        null, command.getAttachmentCommands().get(i).getEmployee(),command.getAttachmentCommands().get(i).getEmployeeId(), null);
+                                        null, command.getAttachmentCommands().get(i).getEmployee(),command.getAttachmentCommands().get(i).getEmployeeId(), null, null);
 
                         attachmentDtos.add(attachmentDto);
                 }

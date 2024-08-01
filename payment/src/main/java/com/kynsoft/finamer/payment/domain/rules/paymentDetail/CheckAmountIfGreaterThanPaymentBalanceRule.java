@@ -25,7 +25,7 @@ public class CheckAmountIfGreaterThanPaymentBalanceRule extends BusinessRule {
      */
     @Override
     public boolean isBroken() {
-        return paymentBalance < amount || paymentBalance < (depositAmount + amount);
+        return paymentBalance < amount;// || paymentBalance < (depositAmount + amount);
     }
 
 }

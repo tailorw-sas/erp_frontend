@@ -1,7 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
-import com.kynsoft.finamer.settings.domain.dto.ManagePermissionDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.dto.PermissionDto;
+import com.kynsoft.finamer.settings.domain.dto.PermissionStatusEnm;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,39 +20,42 @@ import java.util.UUID;
 @Entity
 @Table(name = "manage_permission")
 public class ManagePermission implements Serializable {
-
     @Id
     @Column(name = "id")
     private UUID id;
-
     @Column(unique = true)
     private String code;
+    private String description;
+    private String action;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private PermissionStatusEnm status;
 
-    private String description;
-
-    private String name;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "module_id")
+    private ManageModule module;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime updatedAt;
+    private Boolean isHighRisk;
+    private Boolean isIT;
+    private String name;
 
-    public ManagePermission(ManagePermissionDto dto){
-        this.id = dto.getId();
-        this.code = dto.getCode();
-        this.status = dto.getStatus();
-        this.description = dto.getDescription();
-        this.name = dto.getName();
+    public ManagePermission(PermissionDto permissionDto) {
+        this.id = permissionDto.getId();
+        this.code = permissionDto.getCode();
+        this.description = permissionDto.getDescription();
+        this.action = permissionDto.getAction();
+        this.module = new ManageModule(permissionDto.getModule());
+        this.status = permissionDto.getStatus();
+        this.isHighRisk = permissionDto.getIsHighRisk();
+        this.isIT = permissionDto.getIsIT();
+        this.name = permissionDto.getName();
     }
 
-    public ManagePermissionDto toAggregate(){
-        return new ManagePermissionDto(
-                id, code, description, status, name
-        );
+    public PermissionDto toAggregate() {
+        return new PermissionDto(this.id, this.code, this.description, this.module.toAggregate(), this.status, this.action, createdAt, isHighRisk, isIT, name);
     }
 }

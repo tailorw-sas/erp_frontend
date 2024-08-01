@@ -2,7 +2,6 @@ package com.kynsoft.finamer.settings.application.command.manageEmployee.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateEmployeePermissionKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageEmployeeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
@@ -21,7 +20,6 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -44,8 +42,6 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
 
     private final ProducerUpdateManageEmployeeService producerUpdateManageEmployeeService;
 
-    private final ProducerUpdateEmployeePermissionService producerUpdateEmployeePermissionService;
-
     public UpdateManageEmployeeCommandHandler(IManageEmployeeService service,
             IManageDepartmentGroupService serviceDepartment,
             IManagePermissionService permissionService,
@@ -63,7 +59,6 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
         this.tradingCompaniesService = tradingCompaniesService;
         this.reportService = reportService;
         this.producerUpdateManageEmployeeService = producerUpdateManageEmployeeService;
-        this.producerUpdateEmployeePermissionService = producerUpdateEmployeePermissionService;
     }
 
     @Override
@@ -93,7 +88,7 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setPhoneExtension, command.getPhoneExtension(), test.getPhoneExtension(), update::setUpdate);
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
-        this.updatePermissions(test::setManagePermissionList, command.getManagePermissionList(), test.getManagePermissionList().stream().map(ManagePermissionDto::getId).toList(), update::setUpdate);
+        this.updatePermissions(test::setManagePermissionList, command.getManagePermissionList(), test.getManagePermissionList().stream().map(PermissionDto::getId).toList(), update::setUpdate);
         this.updateAgencies(test::setManageAgencyList, command.getManageAgencyList(), test.getManageAgencyList().stream().map(ManageAgencyDto::getId).toList(), update::setUpdate);
         this.updateHotel(test::setManageHotelList, command.getManageHotelList(), test.getManageHotelList().stream().map(ManageHotelDto::getId).toList(), update::setUpdate);
         this.updateTradingCompanies(test::setManageTradingCompaniesList, command.getManageTradingCompaniesList(), test.getManageTradingCompaniesList().stream().map(ManageTradingCompaniesDto::getId).toList(), update::setUpdate);
@@ -102,25 +97,20 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerUpdateManageEmployeeService.update(new UpdateManageEmployeeKafka(test.getId(), test.getFirstName(), test.getLastName(), test.getEmail()));
-
-            List<UUID> permissions = test.getManagePermissionList().stream()
-                    .map(ManagePermissionDto::getId)
-                    .collect(Collectors.toList());
-            this.producerUpdateEmployeePermissionService.update(new UpdateEmployeePermissionKafka(test.getId(), permissions));
+            this.producerUpdateManageEmployeeService.update(new UpdateManageEmployeeKafka(test.getId(),
+                    test.getFirstName(), test.getLastName(), test.getEmail()));
         }
 
     }
 
-    private boolean updateManageDepartmentGroup(Consumer<ManageDepartmentGroupDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+    private void updateManageDepartmentGroup(Consumer<ManageDepartmentGroupDto> setter, UUID newValue, UUID oldValue,
+                                             Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             ManageDepartmentGroupDto departmentGroupDto = this.serviceDepartment.findById(newValue);
             setter.accept(departmentGroupDto);
             update.accept(1);
 
-            return true;
         }
-        return false;
     }
 
     private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
@@ -133,37 +123,31 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
         return false;
     }
 
-    private boolean updatePermissions(Consumer<List<ManagePermissionDto>> setter, List<UUID> newValue, List<UUID> oldValue, Consumer<Integer> update) {
+    private void updatePermissions(Consumer<List<PermissionDto>> setter, List<UUID> newValue, List<UUID> oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
-            List<ManagePermissionDto> dtoList = permissionService.findByIds(newValue);
+            List<PermissionDto> dtoList = permissionService.findByIds(newValue);
             setter.accept(dtoList);
             update.accept(1);
 
-            return true;
         }
-        return false;
     }
 
-    private boolean updateAgencies(Consumer<List<ManageAgencyDto>> setter, List<UUID> newValue, List<UUID> oldValue, Consumer<Integer> update) {
+    private void updateAgencies(Consumer<List<ManageAgencyDto>> setter, List<UUID> newValue, List<UUID> oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             List<ManageAgencyDto> dtoList = agencyService.findByIds(newValue);
             setter.accept(dtoList);
             update.accept(1);
 
-            return true;
         }
-        return false;
     }
 
-    private boolean updateHotel(Consumer<List<ManageHotelDto>> setter, List<UUID> newValue, List<UUID> oldValue, Consumer<Integer> update) {
+    private void updateHotel(Consumer<List<ManageHotelDto>> setter, List<UUID> newValue, List<UUID> oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             List<ManageHotelDto> dtoList = hotelService.findByIds(newValue);
             setter.accept(dtoList);
             update.accept(1);
 
-            return true;
         }
-        return false;
     }
 
     private boolean updateTradingCompanies(Consumer<List<ManageTradingCompaniesDto>> setter, List<UUID> newValue, List<UUID> oldValue, Consumer<Integer> update) {

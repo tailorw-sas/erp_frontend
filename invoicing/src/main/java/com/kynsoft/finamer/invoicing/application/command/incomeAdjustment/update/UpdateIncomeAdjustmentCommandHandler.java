@@ -34,13 +34,16 @@ public class UpdateIncomeAdjustmentCommandHandler implements ICommandHandler<Upd
     @Override
     public void handle(UpdateIncomeAdjustmentCommand command) {
 
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Adjustment ID cannot be null."));
+//        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Adjustment ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getIncome(), "id", "Income ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getTransactionType(), "transactionType", "Manage Invoice Transaction Type ID cannot be null."));
 
         IncomeAdjustmentDto adjustmentDto = this.incomeAdjustmentService.findById(command.getId());
         IncomeDto incomeDto = this.incomeService.findById(command.getIncome());
-        ManageInvoiceTransactionTypeDto transactionTypeDto = this.transactionTypeService.findById(command.getTransactionType());
+        ManageInvoiceTransactionTypeDto transactionTypeDto =
+                command.getTransactionType() != null
+                        ? this.transactionTypeService.findById(command.getTransactionType())
+                        : null;
 
         ConsumerUpdate update = new ConsumerUpdate();
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(adjustmentDto::setRemark, command.getRemark(), adjustmentDto.getRemark(), update::setUpdate);

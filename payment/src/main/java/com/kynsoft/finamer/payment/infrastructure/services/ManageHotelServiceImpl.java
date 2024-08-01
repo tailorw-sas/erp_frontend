@@ -87,6 +87,18 @@ public class ManageHotelServiceImpl implements IManageHotelService {
         return getPaginatedResponse(data);
     }
 
+    @Override
+    public boolean existByCode(String hotelCode) {
+        return repositoryQuery.existsByCodeAndStatus( hotelCode,Status.ACTIVE.name());
+    }
+
+    @Override
+    public ManageHotelDto findByCode(String hotelCode) {
+        return repositoryQuery.findByCode(hotelCode).map(ManageHotel::toAggregate)
+                .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND,
+                        new ErrorField("code", DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND.getReasonPhrase()))));
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

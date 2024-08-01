@@ -10,9 +10,11 @@ import lombok.Setter;
 public class CreateIncomeMessage implements ICommandMessage {
 
     private UUID id;
+    private Long invoiceId;
 
-    public CreateIncomeMessage(UUID id) {
+    public CreateIncomeMessage(UUID id, Long invoiceId) {
         this.id = id;
+        this.invoiceId = invoiceId;
     }
 
 }

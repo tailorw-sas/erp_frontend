@@ -34,7 +34,8 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
                 command.getCode(),
                 command.getName(),
                 clientDto,
-                command.getGenerationType()
+                command.getGenerationType(),
+                command.getStatus()
                 ));
     }
 }

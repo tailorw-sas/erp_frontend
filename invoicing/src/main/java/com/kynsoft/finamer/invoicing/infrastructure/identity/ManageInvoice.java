@@ -76,10 +76,10 @@ public class ManageInvoice {
     @Enumerated(EnumType.STRING)
     private EInvoiceStatus invoiceStatus;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "invoice")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
     private List<ManageBooking> bookings;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "invoice")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice")
     private List<ManageAttachment> attachments;
 
     @Column(nullable = true)

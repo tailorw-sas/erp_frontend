@@ -11,7 +11,6 @@ import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentDetai
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentDetailWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManagePaymentDetailReadDataJPARepository;
@@ -25,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentDetailServiceImpl implements IPaymentDetailService {
@@ -36,9 +36,9 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     private ManagePaymentDetailReadDataJPARepository repositoryQuery;
 
     @Override
-    public UUID create(PaymentDetailDto dto) {
+    public Long create(PaymentDetailDto dto) {
         PaymentDetail data = new PaymentDetail(dto);
-        return this.repositoryCommand.save(data).getId();
+        return this.repositoryCommand.save(data).getPaymentDetailId();
     }
 
     @Override
@@ -69,6 +69,20 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
+    public PaymentDetailDto findByGenId(int id) {
+        Optional<PaymentDetail> userSystem = this.repositoryQuery.findByPaymentDetailId(id);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND, new ErrorField("paymentDetailId", DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public boolean existByGenId(int id) {
+        return repositoryQuery.existsByPaymentDetailId(id);
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
@@ -76,6 +90,13 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
         Page<PaymentDetail> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public List<UUID> bulk(List<PaymentDetailDto> toSave) {
+
+        return this.repositoryCommand.saveAll( toSave.stream().map(PaymentDetail::new).collect(Collectors.toList()))
+                .stream().map(PaymentDetail::getId).toList();
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

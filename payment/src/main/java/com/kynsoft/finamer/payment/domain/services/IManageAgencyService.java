@@ -16,4 +16,9 @@ public interface IManageAgencyService {
     ManageAgencyDto findById(UUID id);
 
     List<ManageAgencyDto> findByIds(List<UUID> ids);
+
+    boolean existByCode(String agencyCode);
+
+
+    ManageAgencyDto findByCode(String agencyCode);
 }
