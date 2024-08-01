@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 import { z } from 'zod'
 import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
+import { formatNumbersInObject, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -23,8 +24,10 @@ const idItem = ref('')
 const idItemDetail = ref('')
 const isSplitAction = ref(false)
 const enableSplitAction = ref(false)
+const enableDepositSummaryAction = ref(false)
 const formReload = ref(0)
 const formReloadAgency = ref(0)
+const refPaymentDetailForm = ref(0)
 const dialogPaymentDetailFormReload = ref(0)
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
@@ -41,31 +44,49 @@ const onOffDialogPaymentDetail = ref(false)
 const onOffDialogPaymentDetailSummary = ref(false)
 const hasBeenEdited = ref(0)
 const hasBeenCreated = ref(0)
-const actionOfModal = ref<'new-detail' | 'deposit-transfer' | 'split-deposit' | undefined>(undefined)
+const actionOfModal = ref<'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | undefined>(undefined)
+
+interface SubTotals {
+  depositAmount: number
+}
+const subTotals = ref<SubTotals>({ depositAmount: 0 })
 
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 
 const paymentDetailsList = ref<any[]>([])
 
+const contextMenu = ref()
+const objItemSelectedForRightClick = ref({} as GenericObject)
+const allMenuListItems = ref([
+  {
+    id: 'applayDeposit',
+    label: 'Apply Deposit',
+    icon: 'pi pi-dollar',
+    command: ($event: any) => openModalWithContentMenu($event),
+    disabled: false
+  },
+])
+
 // History
 const openDialogHistory = ref(false)
 const historyList = ref<any[]>([])
-const historyColumns: IColumn[] = [
-  { field: 'paymentId', header: 'Payment Id', type: 'text', width: 'auto' },
-  { field: 'createdAt', header: 'Date', type: 'date', width: 'auto' },
-  { field: 'employee', header: 'Employee', type: 'select', width: 'auto', objApi: { moduleApi: 'settings', uriApi: 'manage-employee', keyValue: 'firstName' } },
+const employeeList = ref<any[]>([])
+const historyColumns = ref<IColumn[]>([
+  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'date', width: '120px' },
+  { field: 'employee', header: 'Employee', type: 'select', width: '150px', localItems: [] },
   { field: 'description', header: 'Description', type: 'text', width: '200px' },
-  { field: 'status', header: 'Active', type: 'bool', width: '60px' },
-]
+  { field: 'paymentStatus', header: 'Status', type: 'text', width: '60px', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' } },
+])
 
 const historyOptions = ref({
   tableName: 'Payment Attachment',
   moduleApi: 'payment',
-  uriApi: 'attachment-status-history',
+  uriApi: 'payment-attachment-status-history',
   loading: false,
   showDelete: false,
-  showFilters: false,
+  showFilters: true,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
 })
@@ -130,7 +151,7 @@ const fieldPrint = ref<FieldDefinitionType[]>([
 
 const itemPrint = ref<GenericObject>({
   paymentAndDetails: true,
-  paymentSupport: true,
+  paymentSupport: false,
   allPaymentsSupport: false,
   invoiceRelated: false,
   invoiceRelatedWithSupport: false
@@ -138,7 +159,7 @@ const itemPrint = ref<GenericObject>({
 
 const itemTempPrint = ref<GenericObject>({
   paymentAndDetails: true,
-  paymentSupport: true,
+  paymentSupport: false,
   allPaymentsSupport: false,
   invoiceRelated: false,
   invoiceRelatedWithSupport: false
@@ -163,13 +184,29 @@ const objApis = ref({
   bankAccount: { moduleApi: 'settings', uriApi: 'manage-bank-account' },
   paymentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-status' },
   attachmentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' },
+  employee: { moduleApi: 'settings', uriApi: 'manage-employee' },
 })
 
 const columns: IColumn[] = [
-  { field: 'transactionType', header: 'Payment Transaction Type', width: '200px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
-  { field: 'amount', header: 'Amount', width: '200px', type: 'text' },
-  { field: 'remark', header: 'Description', width: '200px', type: 'text' },
-  // { field: 'transactionType', header: 'Deposit', width: '200px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
+  { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
+  { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
+  { field: 'invoiceNumber', header: 'Invoice No', tooltip: 'Invoice No', width: '100px', type: 'text' },
+  { field: 'transactionDate', header: 'Transaction Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
+  { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
+  // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
+  // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
+  { field: 'reservation', header: 'Reservation', tooltip: 'Reservation', width: 'auto', type: 'text' },
+  { field: 'cuponNo', header: 'Cupon No', tooltip: 'Cupon No', width: 'auto', type: 'text' },
+  // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
+  // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
+  { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
+  { field: 'children', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
+  // { field: 'deposit', header: 'Deposit', tooltip: 'Deposit', width: 'auto', type: 'bool' },
+  { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
+  { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '250px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
+  { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
+  // { field: 'groupId', header: 'Group Id', width: 'auto', type: 'text' },
+  { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
 
 ]
 
@@ -223,17 +260,30 @@ const formTitle = computed(() => {
 
 const decimalRegex = /^\d+(\.\d{1,2})?$/
 
+// const initialSchema = z.object(
+//   {
+//     amount: z
+//       .string()
+//       .min(1, { message: 'The amount field is required' })
+//       .regex(decimalRegex, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
+//       .refine(value => Number.parseFloat(value) <= item.value.paymentBalance, { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
+//     paymentAmmount: z
+//       .string()
+//       .min(1, { message: 'The payment amount field is required' })
+//       .regex(decimalRegex, { message: 'The payment amount does not meet the correct format of n integer digits and 2 decimal digits' })
+//       .refine(value => Number.parseFloat(value) >= 1, { message: 'The payment amount field must be at least 1' })
+//   },
+// )
+
 const decimalSchema = z.object(
   {
     amount: z
       .string()
-      .min(1, { message: 'The amount field is required' })
-      .regex(decimalRegex, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
-      .refine(value => Number.parseFloat(value) <= item.value.paymentBalance, { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
+      .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
     paymentAmmount: z
       .string()
       .min(1, { message: 'The payment amount field is required' })
-      .regex(decimalRegex, { message: 'The payment amount does not meet the correct format of n integer digits and 2 decimal digits' })
+      .regex(decimalRegex, { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
       .refine(value => Number.parseFloat(value) >= 1, { message: 'The payment amount field must be at least 1' })
   },
 )
@@ -384,8 +434,6 @@ const fields: Array<FieldDefinitionType> = [
 
 ]
 
-const maxTransactionType = 100
-
 const fieldPaymentDetails = ref<FieldDefinitionType[]>([
   {
     field: 'transactionType',
@@ -412,19 +460,29 @@ const fieldPaymentDetails = ref<FieldDefinitionType[]>([
 ])
 
 const itemDetails = ref({
+  id: '',
   payment: '',
   transactionType: null,
-  amount: 0,
+  amount: '0',
   remark: '',
-  status: ''
+  status: '',
+  oldAmount: '',
+  applyDepositValue: '0',
+  children: [],
+  childrenTotalValue: 0,
 })
 
 const itemDetailsTemp = ref({
+  id: '',
   payment: '',
   transactionType: null,
-  amount: 0,
+  amount: '0',
   remark: '',
-  status: ''
+  status: '',
+  oldAmount: '',
+  applyDepositValue: '0',
+  children: [],
+  childrenTotalValue: 0,
 })
 
 const options = ref({
@@ -452,14 +510,14 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
-function getNameByActions(action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | undefined) {
+function getNameByActions(action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | undefined) {
   switch (action) {
     case 'new-detail':
-      return 'New Payment Details'
+      return itemDetails.value.id ? 'Edit Payment Details' : 'New Payment Details'
     case 'deposit-transfer':
       return 'New Deposit Detail'
     case 'split-deposit':
-      return 'Split | New Details'
+      return 'Split | New Payment Details'
     default:
       return 'New Payment Details'
   }
@@ -476,6 +534,12 @@ function clearFormDetails() {
   actionOfModal.value = 'new-detail'
 }
 
+function openModalWithContentMenu($event) {
+  if (objItemSelectedForRightClick.value) {
+    openDialogPaymentDetailsByAction(objItemSelectedForRightClick.value.id, 'apply-deposit')
+  }
+}
+
 function openDialogPaymentDetails(event: any) {
   if (event) {
     itemDetails.value = { ...itemDetailsTemp.value }
@@ -487,44 +551,140 @@ function openDialogPaymentDetails(event: any) {
 
     onOffDialogPaymentDetail.value = true
   }
+  actionOfModal.value = 'new-detail'
 
+  const decimalSchema = z.object(
+    {
+      amount: z
+        .string()
+        .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+    },
+  )
+
+  updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+  updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
   onOffDialogPaymentDetail.value = true
 }
 
-function openDialogPaymentDetailsForSplit(idDetail: any, isSplit: boolean = false) {
-  isSplitAction.value = isSplit
-  if (idDetail) {
-    itemDetails.value = { ...itemDetailsTemp.value }
-    const objToEdit = paymentDetailsList.value.find(x => x.id === idDetail)
-
-    if (objToEdit) {
-      itemDetails.value = { ...objToEdit }
-    }
-
-    onOffDialogPaymentDetail.value = true
-  }
-
-  onOffDialogPaymentDetail.value = true
-}
-// idItemDetail
-function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | undefined = undefined) {
+function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | undefined = undefined) {
   if (action !== undefined) {
     actionOfModal.value = action
   }
   if (idDetail && actionOfModal.value !== 'deposit-transfer') {
     itemDetails.value = { ...itemDetailsTemp.value }
-
-    const objToEdit = paymentDetailsList.value.find(x => x.id === (typeof idDetail === 'object' ? idDetail.id : idDetail))
+    const objToEditTemp = paymentDetailsList.value.find(x => x.id === (typeof idDetail === 'object' ? idDetail.id : idDetail))
+    const objToEdit = JSON.parse(JSON.stringify(objToEditTemp))
 
     if (objToEdit) {
+      objToEdit.amount = Math.abs(objToEdit.amount).toString()
+      objToEdit.oldAmount = objToEdit.amount.toString()
+      objToEdit.amount = formatToTwoDecimalPlaces(objToEdit.amount)
       itemDetails.value = { ...objToEdit }
 
+      if (actionOfModal.value === 'new-detail') {
+        if (itemDetails.value?.transactionType?.cash === false && itemDetails.value?.transactionType?.deposit === false) {
+          const decimalSchema = z.object(
+            {
+              amount: z
+                .string()
+                .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0), { message: 'The amount must be greater than zero' })
+            },
+          )
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', 'Max amount: ∞')
+          updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+        }
+        else {
+          const decimalSchema = z.object(
+            {
+              amount: z
+                .string()
+                .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+            },
+          )
+
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
+          updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+          // const decimalSchema = z.object(
+          //   {
+          //     amount: z
+          //       .string()
+          //       .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0) && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and lessor equal than Payment Balance' })
+          //   },
+          // )
+          // updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+          // updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
+        }
+      }
       if (actionOfModal.value === 'split-deposit') {
-        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(itemDetails.value.amount)}`)
+        let amountTemp = JSON.parse(JSON.stringify(itemDetails.value.amount))
+        amountTemp = Math.abs(amountTemp)
+        const minValueToApply = (Number.parseFloat(amountTemp) - 0.01).toFixed(2)
+        const decimalSchema = z.object(
+          {
+            remark: z.string(),
+            amount: z
+              .string()
+              .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((amountTemp - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
+          }
+        )
+        updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
+        updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount to apply: ${Number.parseFloat(minValueToApply)} | Initial amount: ${amountTemp}`)
+      }
+      if (actionOfModal.value === 'apply-deposit') {
+        // Para valdiar el 0.01
+        // console.log(itemDetails.value)
+        // let totalAmountOfChildren = 0
+        // if (itemDetails.value.children && itemDetails.value.children.length > 0) {
+        //   totalAmountOfChildren = itemDetails.value.children.reduce((sum, itemObject: any) => {
+        //     const amount = itemObject.amount
+
+        //     // Sustituir valores no válidos por 0
+        //     const validAmount = (typeof amount === 'number' && !Number.isNaN(amount)) ? amount : 0
+
+        //     return sum + validAmount
+        //   }, 0)
+        // }
+
+        const oldAmount = itemDetails.value.amount ? itemDetails.value.amount : '0'
+        const childrenTotalValue = itemDetails.value.childrenTotalValue
+
+        const minValueToApply = (Number.parseFloat(oldAmount) - childrenTotalValue - 0.01).toFixed(2)
+
+        const decimalSchema = z.object(
+          {
+            remark: z.string(),
+            amount: z
+              .string()
+              .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat(value) <= Number.parseFloat(minValueToApply)), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
+          }
+        )
+        updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
+        updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount to apply: ${Number.parseFloat(minValueToApply)} | Initial amount: ${oldAmount}`)
       }
     }
 
     onOffDialogPaymentDetail.value = true
+  }
+  if (actionOfModal.value === 'deposit-transfer') {
+    itemDetails.value = { ...itemDetailsTemp.value }
+    const decimalSchema = z.object(
+      {
+        remark: z.string(),
+        amount: z
+          .string()
+          .refine(value => !Number.isNaN(Number.parseFloat(value)) && Number.parseFloat(value) >= 0.01 && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+      }
+    )
+    // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
+    // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', true)
+    updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+    updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${item.value.paymentBalance}`)
   }
 
   onOffDialogPaymentDetail.value = true
@@ -605,7 +765,7 @@ async function createItem(item: { [key: string]: any }) {
     if (response && response.payment) {
       // paymentId
       idItem.value = response.payment.id
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `Transaction was successful | The id has been assigned: ${response.payment.paymentId}`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment id ${response.payment.paymentId} was created successfully`, life: 10000 })
       goToForm(idItem.value)
     }
     else {
@@ -658,19 +818,20 @@ async function getItemById(id: string) {
         newDate.setDate(newDate.getDate() + 1)
         item.value.transactionDate = newDate || null
 
-        item.value.paymentAmount = String(response.paymentAmount)
-        item.value.paymentBalance = response.paymentBalance
-        item.value.depositAmount = response.depositAmount
-        item.value.depositBalance = response.depositBalance
-        item.value.otherDeductions = response.otherDeductions
-        item.value.identified = response.identified
-        item.value.notIdentified = response.notIdentified
+        item.value.paymentAmount = formatToTwoDecimalPlaces(response.paymentAmount)
+        item.value.paymentBalance = formatToTwoDecimalPlaces(response.paymentBalance)
+        item.value.depositAmount = formatToTwoDecimalPlaces(response.depositAmount)
+        item.value.depositBalance = formatToTwoDecimalPlaces(response.depositBalance)
+        item.value.otherDeductions = formatToTwoDecimalPlaces(response.otherDeductions)
+        item.value.identified = formatToTwoDecimalPlaces(response.identified)
+        item.value.notIdentified = formatToTwoDecimalPlaces(response.notIdentified)
         item.value.remark = response.remark
 
         const clientTemp = response.client
           ? {
               id: response.client.id,
-              name: `${response.client.code} - ${response.client.name}`
+              name: `${response.client.code} - ${response.client.name}`,
+              status: response.client.status
             }
           : null
         clientList.value = [clientTemp]
@@ -679,7 +840,8 @@ async function getItemById(id: string) {
         const agencyTemp = response.agency
           ? {
               id: response.agency.id,
-              name: `${response.agency.code} - ${response.agency.name}`
+              name: `${response.agency.code} - ${response.agency.name}`,
+              status: response.agency.status
             }
           : null
         agencyList.value = [agencyTemp]
@@ -688,7 +850,8 @@ async function getItemById(id: string) {
         const hotelTemp = response.hotel
           ? {
               id: response.hotel.id,
-              name: `${response.hotel.code} - ${response.hotel.name}`
+              name: `${response.hotel.code} - ${response.hotel.name}`,
+              status: response.hotel.status
             }
           : null
         hotelList.value = [hotelTemp]
@@ -697,7 +860,8 @@ async function getItemById(id: string) {
         const bankAccountTemp = response.bankAccount
           ? {
               id: response.bankAccount.id,
-              name: `${response.bankAccount.name} - ${response.bankAccount.accountNumber}`
+              name: `${response.bankAccount.nameOfBank} - ${response.bankAccount.accountNumber}`,
+              status: response.bankAccount.status
             }
           : null
         bankAccountList.value = [bankAccountTemp]
@@ -708,7 +872,8 @@ async function getItemById(id: string) {
         const attachmentStatusTemp = response.attachmentStatus
           ? {
               id: response.attachmentStatus.id,
-              name: `${response.attachmentStatus.code} - ${response.attachmentStatus.name}`
+              name: `${response.attachmentStatus.code} - ${response.attachmentStatus.name}`,
+              status: response.attachmentStatus.status
             }
           : null
         attachmentStatusList.value = [attachmentStatusTemp]
@@ -717,7 +882,8 @@ async function getItemById(id: string) {
         const paymentStatusTemp = response.paymentStatus
           ? {
               id: response.paymentStatus.id,
-              name: `${response.paymentStatus.code} - ${response.paymentStatus.name}`
+              name: `${response.paymentStatus.code} - ${response.paymentStatus.name}`,
+              status: response.paymentStatus.status
             }
           : null
         paymentStatusList.value = [paymentStatusTemp]
@@ -726,12 +892,16 @@ async function getItemById(id: string) {
         const paymentSourceTemp = response.paymentSource
           ? {
               id: response.paymentSource.id,
-              name: `${response.paymentSource.code} - ${response.paymentSource.name}`
+              name: `${response.paymentSource.code} - ${response.paymentSource.name}`,
+              status: response.paymentSource.status
             }
           : null
         paymentSourceList.value = [paymentSourceTemp]
         item.value.paymentSource = paymentSourceTemp
       }
+      // debugger
+      // item.value = { ...formatNumbersInObject(item.value, ['paymentAmount', 'depositAmount', 'otherDeductions', 'identified', 'notIdentified']) }
+
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
       if (actionOfModal.value !== 'split-deposit') {
@@ -753,6 +923,7 @@ async function getItemById(id: string) {
 }
 
 async function getListPaymentDetail() {
+  const count: SubTotals = { depositAmount: 0 }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -788,14 +959,27 @@ async function getListPaymentDetail() {
     const existingIds = new Set(paymentDetailsList.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      console.log(iterator)
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        count.depositAmount += iterator.amount
         iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
           ? Number.parseFloat(iterator.amount).toString()
           : '0'
+
+        iterator.amount = formatToTwoDecimalPlaces(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'parentId')) {
+        iterator.parentId = iterator.parentId ? iterator.parentId.toString() : ''
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionType')) {
+        iterator.deposit = iterator.transactionType.deposit
+        iterator.transactionType.name = `${iterator.transactionType.code} - ${iterator.transactionType.name}`
+
+        if (iterator.deposit) {
+          iterator.rowClass = 'row-deposit' // Clase CSS para las transacciones de tipo deposit
+        }
       }
 
       // Verificar si el ID ya existe en la lista
@@ -812,13 +996,19 @@ async function getListPaymentDetail() {
   }
   finally {
     options.value.loading = false
+    subTotals.value = { ...count }
   }
+}
+
+function disabledDeleteForPaymentWithChildren(id: string): boolean {
+  const item = paymentDetailsList.value.find(item => item.id === id)
+  return item && item.children && item.children.length > 0
 }
 
 function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolean {
   // Buscar el objeto principal por su id
-  const mainItem = items.find(item => item.id === mainId)
 
+  const mainItem = items.find(item => item.id === mainId)
   if (!mainItem) {
     return false // Si no se encuentra el objeto principal, devolver false
   }
@@ -836,7 +1026,33 @@ function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolea
 
     return false
   }
+  let amount = Number.parseFloat(mainItem.amount)
+  amount = Number.isNaN(amount) ? 0 : amount
+  amount = Math.abs(amount)
+  return hasDeposit(mainItem) && amount > 0.01 && mainItem.children.length === 0
+}
 
+function hasDepositSummaryTransaction(mainId: string, items: TransactionItem[]): boolean {
+  // Buscar el objeto principal por su id
+
+  const mainItem = items.find(item => item.id === mainId)
+  if (!mainItem) {
+    return false // Si no se encuentra el objeto principal, devolver false
+  }
+
+  // Verificar si el objeto principal o alguno de sus hijos tiene una transacción de tipo deposit
+  const hasDeposit = (item: TransactionItem): boolean => {
+    if (item.transactionType.deposit) {
+      return true
+    }
+
+    // Verificar en los hijos del objeto
+    if (item.children && item.children.length > 0) {
+      return item.children.some(child => hasDeposit(child))
+    }
+
+    return false
+  }
   return hasDeposit(mainItem)
 }
 
@@ -846,25 +1062,75 @@ async function createPaymentDetails(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     payload.payment = idItem.value || ''
     payload.amount = Number.parseFloat(payload.amount)
+    payload.employee = userData?.value?.user?.userId || ''
     payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
 
-    if (actionOfModal.value === 'new-detail') {
-      confApiPaymentDetail.uriApi = 'payment-detail'
-      await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
-    }
-    else if (actionOfModal.value === 'split-deposit') {
-      const payloadSplit = {
-        amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
-        paymentDetail: item.id,
-        remark: item.remark,
-        transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
-        status: 'ACTIVE'
+    switch (actionOfModal.value) {
+      case 'apply-deposit':{
+        const payload: { [key: string]: any } = { ...item }
+        payload.payment = idItem.value || ''
+        payload.amount = Number.parseFloat(payload.amount)
+        payload.employee = userData?.value?.user?.userId || ''
+        payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+        confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
+        await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
+        actionOfModal.value = 'new-detail'
       }
-      confApiPaymentDetail.uriApi = 'payment-detail/split'
-      await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadSplit)
-      isSplitAction.value = false
-      actionOfModal.value = 'new-detail'
+        break
+
+      case 'new-detail':
+
+        confApiPaymentDetail.uriApi = 'payment-detail'
+        await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
+        actionOfModal.value = 'new-detail'
+        break
+      case 'deposit-transfer':
+        confApiPaymentDetail.uriApi = 'payment-detail'
+        await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
+        actionOfModal.value = 'new-detail'
+        break
+
+      case 'split-deposit':{
+        const payloadSplit = {
+          amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
+          paymentDetail: item.id,
+          remark: item.remark,
+          employee: userData?.value?.user?.userId || '',
+          transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
+          status: 'ACTIVE'
+        }
+        confApiPaymentDetail.uriApi = 'payment-detail/split'
+        await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadSplit)
+        isSplitAction.value = false
+        actionOfModal.value = 'new-detail'
+        break
+      }
     }
+
+    // if (actionOfModal.value === 'apply-deposit') {
+    //   confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
+    //   delete payload.payment
+    //   await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
+    //   actionOfModal.value = 'new-detail'
+    // }
+    // else if (actionOfModal.value === 'new-detail' || actionOfModal.value === 'deposit-transfer') {
+    //   confApiPaymentDetail.uriApi = 'payment-detail'
+    //   await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
+    //   actionOfModal.value = 'new-detail'
+    // }
+    // else if (actionOfModal.value === 'split-deposit') {
+    //   const payloadSplit = {
+    //     amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
+    //     paymentDetail: item.id,
+    //     remark: item.remark,
+    //     transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
+    //     status: 'ACTIVE'
+    //   }
+    //   confApiPaymentDetail.uriApi = 'payment-detail/split'
+    //   await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadSplit)
+    //   isSplitAction.value = false
+    //   actionOfModal.value = 'new-detail'
+    // }
 
     onOffDialogPaymentDetail.value = false
     clearFormDetails()
@@ -877,6 +1143,7 @@ async function updatePaymentDetails(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     payload.payment = idItem.value || ''
     payload.amount = Number.parseFloat(payload.amount)
+    payload.employee = userData?.value?.user?.userId || ''
     payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
 
     try {
@@ -899,6 +1166,20 @@ async function updatePaymentDetails(item: { [key: string]: any }) {
           }
           confApiPaymentDetail.uriApi = 'payment-detail/split'
           await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payloadSplit)
+          break
+        }
+        case 'apply-deposit':{
+          const payloadApplyDeposit = {
+            amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
+            paymentDetail: item.id,
+            remark: item.remark,
+            employee: userData?.value?.user?.userId || '',
+            transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
+            status: 'ACTIVE'
+          }
+          confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
+          await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadApplyDeposit)
+          actionOfModal.value = 'new-detail'
           break
         }
         default:
@@ -963,7 +1244,11 @@ async function updateItem(item: { [key: string]: any }) {
 
 async function saveAndReload(item: { [key: string]: any }) {
   try {
-    if (item?.id && actionOfModal.value === 'split-deposit') {
+    if (actionOfModal.value === 'apply-deposit') {
+      item.paymentDetail = item.id
+      await createPaymentDetails(item)
+    }
+    else if (item?.id && actionOfModal.value === 'split-deposit') {
       await createPaymentDetails(item)
     }
     else if (item?.id) {
@@ -1015,23 +1300,26 @@ interface DataListItem {
   name: string
   code: string
   status: string
+  defaults?: boolean
 }
 
 interface ListItem {
   id: string
   name: string
   status: boolean | string
+  defaults?: boolean
 }
 function mapFunction(data: DataListItem): ListItem {
   return {
     id: data.id,
     name: `${data.code} - ${data.name}`,
-    status: data.status
+    status: data.status,
+    defaults: data?.defaults || false
   }
 }
 
 async function getPaymentSourceList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  paymentSourceList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
+  paymentSourceList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 
 async function getDefaultPaymentSourceList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
@@ -1065,17 +1353,17 @@ function mapFunctionForClient(data: DataListItem): ListItem {
 }
 
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  clientList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionForClient)
+  clientList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionForClient, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
+  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  hotelList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
+  hotelList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
-async function getPaymentStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
-  paymentStatusList.value = await getDataList(moduleApi, uriApi, [], queryObj)
+async function getPaymentStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  paymentStatusList.value = await getDataList(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 
 async function getDefaultPaymentStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }) {
@@ -1088,7 +1376,7 @@ async function getDefaultPaymentStatusList(moduleApi: string, uriApi: string, qu
       value: true,
     }
   ]
-  defaultPaymentStatusList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...filter], queryObj, mapFunction)
+  defaultPaymentStatusList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...filter], queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   if (defaultPaymentStatusList.value.length > 0) {
     item.value.paymentStatus = defaultPaymentStatusList.value[0]
   }
@@ -1144,7 +1432,36 @@ function mapFunctionForAttachmentStatusList(data: DataListItemForAttachmentStatu
   }
 }
 async function getAttachmentStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  attachmentStatusList.value = await getDataList<DataListItemForAttachmentStatus, ListItemForAttachmentStatus>(moduleApi, uriApi, filter, queryObj, mapFunctionForAttachmentStatusList)
+  attachmentStatusList.value = await getDataList<DataListItemForAttachmentStatus, ListItemForAttachmentStatus>(moduleApi, uriApi, filter, queryObj, mapFunctionForAttachmentStatusList, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
+
+interface DataListItemEmployee {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+}
+
+interface ListItemEmployee {
+  id: string
+  name: string
+  status: boolean | string
+}
+
+function mapFunctionEmployee(data: DataListItemEmployee): ListItemEmployee {
+  return {
+    id: data.id,
+    name: `${data.firstName} ${data.lastName}`,
+    status: 'Active'
+  }
+}
+
+async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  employeeList.value = await getDataList<DataListItemEmployee, ListItemEmployee>(moduleApi, uriApi, filter, queryObj, mapFunctionEmployee)
+  const columnEmployee = historyColumns.value.find(item => item.field === 'employee')
+  if (columnEmployee) {
+    columnEmployee.localItems = [...JSON.parse(JSON.stringify(employeeList.value))]
+  }
 }
 
 // Attachments
@@ -1163,7 +1480,9 @@ function updateAttachment(attachment: any) {
 async function rowSelected(rowData: any) {
   if (rowData !== null && rowData !== undefined && rowData !== '') {
     idItemDetail.value = rowData
-    enableSplitAction.value = await hasDepositTransaction(rowData, paymentDetailsList.value)
+
+    enableSplitAction.value = hasDepositTransaction(rowData, paymentDetailsList.value)
+    enableDepositSummaryAction.value = hasDepositSummaryTransaction(rowData, paymentDetailsList.value)
   }
   else {
     idItemDetail.value = ''
@@ -1177,6 +1496,7 @@ function onCloseDialog($event: any) {
     isSplitAction.value = false
     actionOfModal.value = 'new-detail'
   }
+  dialogPaymentDetailFormReload.value += 1
   onOffDialogPaymentDetail.value = $event
 }
 
@@ -1261,11 +1581,9 @@ async function historyGetList() {
     const existingIds = new Set(historyList.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      iterator.paymentId = route.query.id.toString()
+      iterator.paymentId = iterator.payment?.paymentId.toString()
+      iterator.paymentStatus = iterator.status
 
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
         if (iterator.employee.firstName && iterator.employee.lastName) {
           iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
@@ -1295,8 +1613,18 @@ async function openDialogStatusHistory() {
 }
 
 async function historyParseDataTableFilter(payloadFilter: any) {
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, historyColumns)
-  payload.value.filter = [...parseFilter || []]
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, historyColumns.value)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'paymentStatus') {
+        parseFilter[i].key = 'status'
+      }
+      if (parseFilter[i]?.key === 'employee') {
+        parseFilter[i].key = 'employee.id'
+      }
+    }
+  }
+  payloadHistory.value.filter = [...parseFilter || []]
   historyGetList()
 }
 
@@ -1325,8 +1653,8 @@ function historyOnSortField(event: any) {
     if (event.sortField === 'resourceType') {
       event.sortField = 'resourceType.name'
     }
-    payload.value.sortBy = event.sortField
-    payload.value.sortType = event.sortOrder
+    payloadHistory.value.sortBy = event.sortField
+    payloadHistory.value.sortType = event.sortOrder
     historyParseDataTableFilter(event.filter)
   }
 }
@@ -1338,7 +1666,12 @@ async function deleteItem(id: string) {
   }
   try {
     loadingDelete.value = true
-    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+    let customUrl = ''
+    if (userData?.value?.user?.userId) {
+      customUrl = userData?.value?.user?.userId || ''
+    }
+
+    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id, 'employee', customUrl)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     if (route?.query?.id) {
       const id = route.query.id.toString()
@@ -1362,6 +1695,46 @@ async function paymentPrint(id: string) {
 async function closeDialogPrint() {
   itemPrint.value = JSON.parse(JSON.stringify(itemTempPrint.value))
   openPrint.value = false
+}
+
+function onRowContextMenu(event) {
+  let minValueToApplyDeposit = 0
+  const amount = Number.parseFloat(event.data.amount) || 0
+  const childrenTotalValue = Number.parseFloat(event.data.childrenTotalValue) || 0
+
+  minValueToApplyDeposit = Math.abs(Math.abs(amount) - Math.abs(childrenTotalValue))
+  minValueToApplyDeposit = Number.parseFloat(minValueToApplyDeposit.toFixed(2))
+  const applayDepositValue = Number.parseFloat(event.data.applayDepositValue) || minValueToApplyDeposit
+
+  if (event && event.data && event.data.deposit === false) {
+    objItemSelectedForRightClick.value = {}
+    const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
+    if (menuItemApplayDeposit) {
+      menuItemApplayDeposit.disabled = true
+    }
+  }
+  else if (event && event.data && event.data.deposit === true && minValueToApplyDeposit <= 0.01) {
+    objItemSelectedForRightClick.value = event.data
+    const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
+    if (menuItemApplayDeposit) {
+      menuItemApplayDeposit.disabled = true
+    }
+  }
+  else if (event && event.data && event.data.deposit === true && applayDepositValue > 0.01) {
+    objItemSelectedForRightClick.value = event.data
+    const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
+    if (menuItemApplayDeposit) {
+      menuItemApplayDeposit.disabled = false
+    }
+  }
+  else {
+    objItemSelectedForRightClick.value = {}
+    const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
+    if (menuItemApplayDeposit) {
+      menuItemApplayDeposit.disabled = true
+    }
+  }
+  contextMenu.value.show(event.originalEvent)
 }
 
 watch(() => hasBeenEdited.value, async (newValue) => {
@@ -1390,6 +1763,19 @@ watch(() => route?.query?.id, async (newValue) => {
 })
 
 onMounted(async () => {
+  const filterForEmployee: FilterCriteria[] = [
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+    },
+  ]
+  await getEmployeeList(objApis.value.employee.moduleApi, objApis.value.employee.uriApi, {
+    query: '',
+    keys: ['name', 'code'],
+  }, filterForEmployee)
+
   if (route?.query?.id) {
     const id = route.query.id.toString()
     await getItemById(id)
@@ -1652,7 +2038,7 @@ onMounted(async () => {
             field="name"
             item-value="id"
             :model="data.paymentStatus"
-            :disabled="route?.query?.id ? false : true"
+            :disabled="true"
             :suggestions="[...paymentStatusList]"
             @change="($event) => {
               onUpdate('paymentStatus', $event)
@@ -1662,7 +2048,13 @@ onMounted(async () => {
                 query: $event,
                 keys: ['name', 'code'],
               }
-              await getPaymentStatusList(objApis.paymentStatus.moduleApi, objApis.paymentStatus.uriApi, objQueryToSearch)
+              const filter: FilterCriteria[] = [{
+                key: 'status',
+                logicalOperation: 'AND',
+                operator: 'EQUALS',
+                value: 'ACTIVE',
+              }]
+              await getPaymentStatusList(objApis.paymentStatus.moduleApi, objApis.paymentStatus.uriApi, objQueryToSearch, filter)
             }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
@@ -1683,7 +2075,13 @@ onMounted(async () => {
                 query: $event,
                 keys: ['name', 'code'],
               }
-              await getAttachmentStatusList(objApis.attachmentStatus.moduleApi, objApis.attachmentStatus.uriApi, objQueryToSearch)
+              const filter: FilterCriteria[] = [{
+                key: 'status',
+                logicalOperation: 'AND',
+                operator: 'EQUALS',
+                value: 'ACTIVE',
+              }]
+              await getAttachmentStatusList(objApis.attachmentStatus.moduleApi, objApis.attachmentStatus.uriApi, objQueryToSearch, filter)
             }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
@@ -1700,7 +2098,19 @@ onMounted(async () => {
       @on-row-double-click="openDialogPaymentDetailsByAction($event, 'new-detail')"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
-    />
+      @on-row-right-click="onRowContextMenu"
+    >
+      <template #datatable-footer>
+        <ColumnGroup type="footer" class="flex align-items-center">
+          <Row>
+            <Column footer="Totals:" :colspan="10" footer-style="text-align:right; font-weight: bold;" />
+            <Column :footer="Math.round((subTotals.depositAmount + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
+            <Column :colspan="4" />
+            <!-- <Column :colspan="0" /> -->
+          </Row>
+        </ColumnGroup>
+      </template>
+    </DynamicTable>
     <!-- <pre>{{ paymentDetailsList }}</pre> -->
     <!-- @on-confirm-create="goToCreateForm"
       @on-list-item="resetListItems"
@@ -1708,7 +2118,7 @@ onMounted(async () => {
 
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
-      <Button v-tooltip.top="'Deposit Summary'" :disabled="true" class="w-3rem ml-1" @click="dialogPaymentDetailSummary">
+      <Button v-tooltip.top="'Deposit Summary'" :disabled="!enableDepositSummaryAction" class="w-3rem ml-1" @click="dialogPaymentDetailSummary">
         <template #icon>
           <span class="flex align-items-center justify-content-center p-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24">
@@ -1732,7 +2142,7 @@ onMounted(async () => {
       <Button v-tooltip.top="'Print'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-print" @click="openPrint = true" />
       <!-- <Button v-tooltip.top="'Payment to Print'" class="w-3rem ml-1" disabled icon="pi pi-print" @click="openPrint = true" /> -->
       <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
-      <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" disabled icon="pi pi-upload" />
+      <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-download" />
       <Button v-tooltip.top="'Show History'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openDialogStatusHistory">
         <template #icon>
           <span class="flex align-items-center justify-content-center p-0">
@@ -1742,10 +2152,10 @@ onMounted(async () => {
       </Button>
       <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
       <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
-      <Button v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="idItemDetail === null || idItemDetail === undefined || idItemDetail === ''" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
+      <Button v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="idItemDetail === null || idItemDetail === undefined || idItemDetail === '' || disabledDeleteForPaymentWithChildren(idItemDetail)" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
-    <div v-if="onOffDialogPaymentDetail">
+    <div v-show="onOffDialogPaymentDetail">
       <DialogPaymentDetailForm
         :key="dialogPaymentDetailFormReload"
         :visible="onOffDialogPaymentDetail"
@@ -1935,6 +2345,8 @@ onMounted(async () => {
         </div>
       </template>
     </Dialog>
+
+    <ContextMenu ref="contextMenu" :model="allMenuListItems" />
   </div>
 </template>
 
@@ -1943,3 +2355,10 @@ onMounted(async () => {
   allPaymentsSupport: false,
   invoiceRelated: false,
   invoiceRelatedWithSupport: false -->
+
+  <style lang="scss">
+  .row-deposit {
+    background-color: #e0f2f194;
+    color: #00695C;
+  }
+</style>

@@ -13,6 +13,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
+import BookingDialog from './BookingDialog.vue'
 
 const props = defineProps({
   isDialogOpen: {
@@ -88,7 +89,9 @@ const props = defineProps({
     required: false,
     default: false,
   },
-  sortBooking: Function as any
+  refetchInvoice: { type: Function, default: () => {} },
+  sortBooking: Function as any,
+  nightTypeRequired: Boolean
 })
 
 const toast = useToast()
@@ -466,7 +469,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[3]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must be greater than 0' }) })
+    ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[3]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value >= 0, { message: 'The Invoice Amount field must be greater or equals than 0' }) })
   },
 
   // Room Number
@@ -902,9 +905,11 @@ async function getBookingList(clearFilter: boolean = false) {
     for (const iterator of dataList) {
       ListItems.value = [...ListItems.value, {
         ...iterator,
+        roomType: {...iterator?.roomType, name: `${iterator?.roomType?.code || ""}-${iterator?.roomType?.name || ""}`},
+        ratePlan: {...iterator?.ratePlan, name: `${iterator?.ratePlan?.code || ""}-${iterator?.ratePlan?.name || ""}`},
         loadingEdit: false,
         loadingDelete: false,
-        agency: iterator?.invoice?.agency,
+        agency: {...iterator?.invoice?.agency, name:`${iterator?.invoice?.agency?.code}-${iterator?.invoice?.agency?.name}`},
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`
       }]
@@ -1097,6 +1102,15 @@ async function saveBooking(item: { [key: string]: any }) {
   if (props.selectedInvoice) {
     item.invoice = props.selectedInvoice
   }
+  if(!props.isCreationDialog){
+
+    if(props.nightTypeRequired && !item?.nightType?.id){
+      
+        
+        return toast.add({ severity: 'error', summary: 'Error', detail: 'The Night Type field is required for this hotel', life: 10000 })
+    }
+
+  }
 
   item.fullName = `${item?.firstName ?? ''} ${item?.lastName ?? ''}`
 
@@ -1144,7 +1158,8 @@ async function saveBooking(item: { [key: string]: any }) {
   if (successOperation) {
     ClearForm()
     if (!props.isCreationDialog) {
-      props?.toggleForceUpdate()
+      props.refetchInvoice()
+     // props?.toggleForceUpdate()
     }
   }
 }
@@ -1253,6 +1268,10 @@ watch(() => props.forceUpdate, () => {
 })
 
 function onRowRightClick(event: any) {
+
+  if(route.query.type === ENUM_INVOICE_TYPE[1]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id){
+    return;
+   }
   
   selectedBooking.value = event.data
   bookingContextMenu.value.show(event.originalEvent)
@@ -1296,6 +1315,8 @@ onMounted(() => {
    ]
    }
 
+   
+
   if (!props.isCreationDialog) {
     getBookingList()
   }
@@ -1314,6 +1335,9 @@ onMounted(() => {
       @on-row-double-click="($event) => {
 
       // if (route.query.type === ENUM_INVOICE_TYPE[3]?.id && isCreationDialog){ return }
+      if(route.query.type === ENUM_INVOICE_TYPE[1]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id){
+        return;
+      }
 
       if(!props.isDetailView){
         openEditBooking($event)}

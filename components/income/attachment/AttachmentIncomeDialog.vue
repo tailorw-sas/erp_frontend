@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
+import { ref, watch } from 'vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container } from '~/components/form/EditFormV2WithContainer'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
+import AttachmentIncomeHistoryDialog from '~/components/income/attachment/AttachmentIncomeHistoryDialog.vue'
 
 const props = defineProps({
 
@@ -50,21 +52,25 @@ const props = defineProps({
 
 const { data: userData } = useAuth()
 
-console.log(userData)
-
 const invoice = ref<any>(props.selectedInvoiceObj)
+const attachmentHistoryDialogOpen = ref<boolean>(false)
 
 const filterToSearch = ref({
   criteria: 'invoice.invoiceId',
-  search: invoice.value.incomeId
+  search: ''
 })
 
 const typeError = ref(false)
 
 const attachmentTypeList = ref<any[]>([])
+const resourceTypeList = ref<any[]>([])
 const confattachmentTypeListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-attachment-type',
+})
+const confResourceTypeListApi = reactive({
+  moduleApi: 'payment',
+  uriApi: 'resource-type',
 })
 
 const formReload = ref(0)
@@ -73,10 +79,6 @@ const confirm = useConfirm()
 
 const loadingSearch = ref(false)
 
-console.log(invoice.value)
-
-const loadingDelete = ref(false)
-
 const idItem = ref('')
 const item = ref<GenericObject>({
   type: null,
@@ -84,12 +86,11 @@ const item = ref<GenericObject>({
   file: '',
   remark: '',
   invoice: props.selectedInvoice,
-  attachment_id: '',
+  attachmentId: '',
   resource: invoice.value.incomeId,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId,
-  // @ts-expect-error
-  resourceType: `${invoice.value.invoiceType?.name ? `${invoice.value.invoiceType?.name}-${invoice.value.invoiceType?.name}` : `${OBJ_ENUM_INVOICE_TYPE_CODE[invoice.value.invoiceType]}-${OBJ_ENUM_INVOICE[invoice.value.invoiceType]}`}`
+  resourceType: null
 })
 
 const itemTemp = ref<GenericObject>({
@@ -98,83 +99,70 @@ const itemTemp = ref<GenericObject>({
   file: '',
   remark: '',
   invoice: props.selectedInvoice,
-  attachment_id: '',
+  attachmentId: '',
   resource: invoice.value.incomeId,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId,
-  // @ts-expect-error
-  resourceType: `${invoice.value.invoiceType?.name ? `${invoice.value.invoiceType?.name}-${invoice.value.invoiceType?.name}` : `${OBJ_ENUM_INVOICE_TYPE_CODE[invoice.value.invoiceType]}-${OBJ_ENUM_INVOICE[invoice.value.invoiceType]}`}`
+  resourceType: null
 })
 const toast = useToast()
 
-const Fields: Array<Container> = [
+const Fields: Array<FieldDefinitionType> = [
   {
-    childs: [
-      {
-        field: 'resource',
-        header: 'Resource',
-        dataType: 'number',
-        class: 'field col-12 md: required',
-        headerClass: 'mb-1',
-        disabled: true
-      },
-      {
-        field: 'resourceType',
-        header: 'Transaction Type',
-        dataType: 'text',
-        class: 'field col-12 md: required',
-        headerClass: 'mb-1',
-        disabled: true
-      },
+    field: 'resource',
+    header: 'Resource',
+    dataType: 'number',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
+    field: 'resourceType',
+    header: 'Resource Type',
+    dataType: 'select',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+  },
+  {
+    field: 'type',
+    header: 'Attachment Type',
+    dataType: 'select',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    validation: z.object({
+      id: z.string(),
+      name: z.string(),
 
-      {
-        field: 'type',
-        header: 'Attachment Type',
-        dataType: 'select',
-        class: 'field col-12 md: required',
-        headerClass: 'mb-1',
-        validation: z.object({
-          id: z.string(),
-          name: z.string(),
+    })
+      .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
+  },
+  {
+    field: 'file',
+    header: 'Path',
+    dataType: 'fileupload',
+    class: 'field col-12 required',
+    headerClass: 'mb-1',
 
-        })
-          .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
-
-      },
-
-      {
-        field: 'file',
-        header: 'Path',
-        dataType: 'fileupload',
-        class: 'field col-12 required',
-        headerClass: 'mb-1',
-
-      },
-      {
-        field: 'filename',
-        header: 'Filename',
-        dataType: 'text',
-        class: 'field col-12 required',
-        headerClass: 'mb-1',
-
-      },
-      {
-        field: 'remark',
-        header: 'Remark',
-        dataType: 'textarea',
-        class: 'field col-12 ',
-        headerClass: 'mb-1',
-
-      },
-
-    ],
-    containerClass: 'w-full'
+  },
+  {
+    field: 'filename',
+    header: 'Filename',
+    dataType: 'text',
+    class: 'field col-12 required',
+    headerClass: 'mb-1',
+  },
+  {
+    field: 'remark',
+    header: 'Remark',
+    dataType: 'textarea',
+    class: 'field col-12 ',
+    headerClass: 'mb-1',
   }
-
 ]
 
 const Columns: IColumn[] = [
-  { field: 'attachment_id', header: 'Id', type: 'text', width: '70px' },
+  { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
+  { field: 'invoice.invoiceId', header: 'Income Id', type: 'text', width: '100px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
   { field: 'remark', header: 'Remark', type: 'text', width: '100px', columnClass: 'w-10 overflow-hidden' },
@@ -250,7 +238,14 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'invoice')) {
+        iterator['invoice.invoiceId'] = iterator.invoice.invoiceId
+      }
       ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false }]
+    }
+
+    if (ListItems.value.length > 0) {
+      idItemToLoadFirstTime.value = ListItems.value[0].id
     }
   }
   catch (error) {
@@ -273,15 +268,15 @@ async function getAttachmentTypeList() {
       = {
         filter: [],
         query: '',
-        pageSize: 200,
+        pageSize: 20,
         page: 0,
         sortBy: 'createdAt',
         sortType: ENUM_SHORT_TYPE.DESC
       }
 
-    attachmentTypeList.value = []
     const response = await GenericService.search(confattachmentTypeListApi.moduleApi, confattachmentTypeListApi.uriApi, payload)
     const { data: dataList } = response
+    attachmentTypeList.value = []
     for (const iterator of dataList) {
       attachmentTypeList.value = [...attachmentTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
     }
@@ -291,34 +286,67 @@ async function getAttachmentTypeList() {
   }
 }
 
+async function getResourceTypeList() {
+  try {
+    const payload = {
+      filter: [],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confResourceTypeListApi.moduleApi, confResourceTypeListApi.uriApi, payload)
+    const { data: dataList } = response
+    resourceTypeList.value = []
+    for (const iterator of dataList) {
+      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading Attachment Type list:', error)
+  }
+}
+
 function searchAndFilter() {
-  if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    Payload.value.filter = [{
-      key: filterToSearch.value.criteria,
+  Payload.value.filter = [...Payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  if (filterToSearch.value.search) {
+    Payload.value.filter = [...Payload.value.filter, {
+      key: 'filename',
       operator: 'LIKE',
       value: filterToSearch.value.search,
-      logicalOperation: 'AND',
+      logicalOperation: 'OR',
       type: 'filterSearch',
-    }]
+    }, {
+      key: 'remark',
+      operator: 'LIKE',
+      value: filterToSearch.value.search,
+      logicalOperation: 'OR',
+      type: 'filterSearch',
+    },]
   }
+  getList()
+}
+
+function clearFilterToSearch() {
+  Payload.value.filter = [...Payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  filterToSearch.value.search = ''
   getList()
 }
 
 async function createItem(item: { [key: string]: any }) {
   if (item) {
-    console.log(item)
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-
     const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
-
-    console.log(file)
-
     payload.invoice = props.selectedInvoice
-
     payload.file = file
-
     payload.type = item.type?.id
+    payload.paymentResourceType = item.resourceType?.id
+    payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
+    delete payload.resourceType
     await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
   }
 }
@@ -326,22 +354,29 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
+  const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
+  payload.file = file
   payload.type = item.type?.id
+  payload.paymentResourceType = item.resourceType?.id
+  payload.employee = userData?.value?.user?.name
+  payload.employeeId = userData?.value?.user?.userId
+  delete payload.resourceType
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
   try {
-    loadingDelete.value = true
+    loadingSaveAll.value = true
     await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     clearForm()
   }
   catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
-    loadingDelete.value = false
+    loadingSaveAll.value = false
   }
   finally {
-    loadingDelete.value = false
+    loadingSaveAll.value = false
   }
 }
 
@@ -397,9 +432,9 @@ function requireConfirmationToDelete(event: any) {
     acceptClass: 'p-button-danger',
     rejectLabel: 'Cancel',
     acceptLabel: 'Accept',
-    accept: () => {
-      deleteItem(idItem.value)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
+    accept: async () => {
+      await deleteItem(idItem.value)
+      getList()
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
@@ -416,13 +451,13 @@ async function getItemById(id: string) {
 
       if (response) {
         item.value.id = response.id
-        item.value.type = { ...response.type, fullName: `${response?.type?.code}-${response?.type?.name}` }
+        item.value.type = { ...response.type, fullName: `${response?.type?.code} - ${response?.type?.name}` }
         item.value.filename = response.filename
         item.value.file = response.file
         item.value.remark = response.remark
         item.value.invoice = response.invoice
         item.value.resource = response.invoice.invoiceId
-        item.value.resourceType = `${`${OBJ_ENUM_INVOICE_TYPE_CODE[response.invoice.invoiceType]}-${OBJ_ENUM_INVOICE[response.invoice.invoiceType]}`}`
+        item.value.resourceType = response.paymenResourceType
       }
 
       formReload.value += 1
@@ -455,24 +490,6 @@ function formatSize(bytes: number) {
   return `${formattedSize} ${sizes[i]}`
 }
 
-function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
-}
-
 function downloadFile() {
   if (item.value) {
     const link = document.createElement('a')
@@ -487,19 +504,38 @@ function downloadFile() {
 
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
-  console.log(invoice.value)
-})
 
-onMounted(() => {
-  if (props.selectedInvoice) {
+  if (invoice.value?.id) {
     Payload.value.filter = [{
       key: 'invoice.id',
       operator: 'EQUALS',
-      value: props.selectedInvoice,
+      value: invoice.value?.id,
+      logicalOperation: 'AND'
+    }]
+    getList()
+  }
+})
+
+watch(() => idItemToLoadFirstTime.value, async (newValue) => {
+  if (!newValue) {
+    clearForm()
+  }
+  else {
+    await getItemById(newValue)
+  }
+})
+
+onMounted(() => {
+  const invoice = props.selectedInvoice || props.selectedInvoiceObj?.id
+  if (invoice) {
+    Payload.value.filter = [{
+      key: 'invoice.id',
+      operator: 'EQUALS',
+      value: invoice,
       logicalOperation: 'AND'
     }]
   }
-  if (!props.isCreationDialog) {
+  if (!props.isCreationDialog && invoice) {
     getList()
   }
 })
@@ -507,55 +543,74 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class=" h-fit w-fit"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" style="width: 800px;"
-    @hide="closeDialog"
+    v-model:visible="dialogVisible" modal :header="header" class="h-screen"
+    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
+    @hide="closeDialog(ListItems.length)"
   >
-    <div class=" w-fit h-fit overflow-auto p-2">
-      <div class="flex lg:flex-row flex-column align-items-start">
-        <div class="flex flex-column" style="max-width: 700px;">
-          <div class="card p-0">
-            <Accordion :active-index="0" class="mb-2">
-              <AccordionTab header="Filters">
-                <div class="flex gap-4 flex-column lg:flex-row">
-                  <div class="flex align-items-center gap-2">
-                    <label for="email">Invoice:</label>
-                    <div class="w-full lg:w-auto flex align-items-center">
-                      <IconField v-model="filterToSearch.search" icon-position="left" class="w-full">
-                        <InputText
-                          v-model="filterToSearch.search" type="number" placeholder="Search"
-                          class="w-full"
-                        />
-                        <InputIcon class="pi pi-search" />
-                      </IconField>
-                      <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch" @click="searchAndFilter" />
-                    </div>
-                  </div>
-                </div>
-              </AccordionTab>
-            </Accordion>
-          </div>
-          <div style="max-width: 700px; overflow: auto;">
-            <DynamicTable
-              :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="options"
-              :pagination="Pagination" @update:clicked-item="getItemById($event)"
-              @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
-              @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-              @on-list-item="ResetListItems" @on-sort-field="OnSortField"
-            />
-          </div>
-        </div>
+    <div class="grid p-fluid formgrid">
+      <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
+        <Accordion :active-index="0" class="mb-2 card p-0">
+          <AccordionTab>
+            <template #header>
+              <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full">
+                <div>Filters</div>
+              </div>
+            </template>
 
-        <div class="mx-4 mb-4" style="max-width: 360px;">
+            <div class="flex gap-4 flex-column lg:flex-row">
+              <div class="flex align-items-center gap-2">
+                <label for="email">Income:</label>
+                <div class="w-full lg:w-auto">
+                  <IconField icon-position="left" class="w-full">
+                    <InputText v-model="filterToSearch.search" type="text" placeholder="Search" class="w-full" />
+                    <InputIcon class="pi pi-search" />
+                  </IconField>
+                </div>
+              </div>
+              <div class="flex align-items-center">
+                <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch" @click="searchAndFilter" />
+                <Button v-tooltip.top="'Clear'" class="w-3rem" outlined icon="pi pi-filter-slash" :loading="loadingSearch" @click="clearFilterToSearch" />
+              </div>
+            </div>
+          </AccordionTab>
+        </Accordion>
+        <DynamicTable
+          :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="options"
+          :pagination="Pagination" @update:clicked-item="getItemById($event)"
+          @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
+          @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
+          @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+        />
+      </div>
+      <div class="col-12 order-2 md:order-0 md:col-3 pt-5">
+        <div>
           <div class="font-bold text-lg px-4 bg-primary custom-card-header">
             {{ idItem ? "Edit" : "Add" }}
           </div>
           <div class="card">
-            <EditFormV2WithContainer
-              :key="formReload" :fields-with-containers="Fields" :item="item"
-              :show-actions="true" :loading-save="loadingSaveAll" class=" w-full " @cancel="clearForm"
+            <EditFormV2
+              :key="formReload" :fields="Fields" :item="item"
+              :show-actions="true" :loading-save="loadingSaveAll" @cancel="clearForm"
               @delete="requireConfirmationToDelete($event)" @submit="saveItem(item)"
             >
+              <template #field-resourceType="{ item: data, onUpdate }">
+                <DebouncedAutoCompleteComponent
+                  v-if="!loadingSaveAll"
+                  id="autocomplete"
+                  field="name"
+                  item-value="id"
+                  :model="data.resourceType"
+                  :suggestions="resourceTypeList"
+                  @change="($event) => {
+                    onUpdate('resourceType', $event)
+                  }" @load="($event) => getResourceTypeList()"
+                >
+                  <template #option="props">
+                    <span>{{ props.item.name }}</span>
+                  </template>
+                </DebouncedAutoCompleteComponent>
+                <Skeleton v-else height="2rem" class="mb-2" />
+              </template>
               <template #field-type="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
                   v-if="!loadingSaveAll" id="autocomplete" field="fullName"
@@ -567,21 +622,9 @@ onMounted(() => {
                   <template #option="props">
                     <span>{{ props.item.fullName }}</span>
                   </template>
-                  <template #chip="{ value }">
-                    <div>
-                      {{ value?.fullName }}
-                    </div>
-                  </template>
                 </DebouncedAutoCompleteComponent>
-                <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
-                  required</span>
+                <Skeleton v-else height="2rem" class="mb-2" />
               </template>
-              async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
-              const file = event.files[0]
-              objFile.value = file
-              listFields[fieldKey] = file
-              }
-
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
                   :max-file-size="1000000" :multiple="false" auto custom-upload @uploader="(event: any) => {
@@ -625,32 +668,39 @@ onMounted(() => {
               </template>
               <template #form-footer="props">
                 <Button
-                  v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+                  v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save"
                   :disabled="!props.item?.fieldValues?.file" @click="saveItem(props.item.fieldValues)"
                 />
                 <Button
-                  v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus" @click="() => {
+                  v-tooltip.top="'View File'" class="w-3rem ml-1 sticky" icon="pi pi-eye"
+                  :disabled="!idItem" @click="downloadFile"
+                />
+                <Button
+                  v-if="true"
+                  v-tooltip.top="'Show History'" class="w-3rem ml-1 sticky" icon="pi pi-book"
+                  @click="() => attachmentHistoryDialogOpen = true"
+                />
+                <Button
+                  v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="() => {
                     idItem = ''
                     item = itemTemp
                     clearForm()
                   }"
                 />
+                <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" :disabled="!idItem" @click="requireConfirmationToDelete" />
                 <Button
-                  v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-file"
-                  :disabled="!idItem" @click="downloadFile"
-                />
-                <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash" :disabled="!idItem" @click="requireConfirmationToDelete" />
-                <Button
-                  v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
-
+                  v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="() => {
                     clearForm()
-                    closeDialog()
+                    closeDialog(ListItems.length)
                   }"
                 />
               </template>
-            </EditFormV2WithContainer>
+            </EditFormV2>
           </div>
         </div>
+      </div>
+      <div v-if="attachmentHistoryDialogOpen">
+        <AttachmentIncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="invoice.id" :selected-invoice-obj="invoice" header="Attachment Status History" :attachment-type="item.type" />
       </div>
     </div>
   </Dialog>

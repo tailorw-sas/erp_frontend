@@ -20,6 +20,7 @@ export type UserMeData = Partial<{
 export interface UserData {
   userId: string
   email: string
+  permissions: string[]
   userName?: string
   name?: string
   lastName?: string

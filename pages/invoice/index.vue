@@ -336,6 +336,7 @@ async function getList() {
     const newListItems = []
 
     totalInvoiceAmount.value = 0
+    totalDueAmount.value = 0
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
@@ -357,7 +358,11 @@ async function getList() {
       }else{
         invoiceNumber = iterator?.invoiceNumber
       }
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code, dueAmount: iterator?.dueAmount || '0', invoiceNumber })
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code, dueAmount: iterator?.dueAmount || '0', invoiceNumber,
+      
+        agency: {...iterator?.agency, name: `${iterator?.agency?.code || ""}-${iterator?.agency?.name || ""}`},
+        hotel: {...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}`}
+      })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
 
@@ -375,7 +380,7 @@ async function getList() {
   }
 }
 
-const openEditDialog = async (item: any) => await navigateTo({ path: `invoice/edit/${item}` }, {open: {target: '_blank'}})
+const openEditDialog = async (item: any, type: string) => await navigateTo({ path: `invoice/edit/${item}`, query: {type: type} }, {open: {target: '_blank'}})
 
 async function resetListItems() {
   payload.value.page = 0
@@ -392,7 +397,9 @@ function searchAndFilter() {
     sortType: ENUM_SHORT_TYPE.ASC
   }
 
-  if(filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[0]?.id && filterToSearch.value.search){
+  if(filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[0]?.id && filterToSearch.value.search){
+
+  }else{
 
   if(filterToSearch.value.includeInvoicePaid){
     payload.value.filter = [...payload.value.filter, {
@@ -525,8 +532,8 @@ function clearFilterToSearch() {
   }
   getList()
 }
-async function getItemById(id: string) {
-  openEditDialog(id)
+async function getItemById(data: {id: string, type: string}) {
+  openEditDialog(data?.id, data?.type)
 }
 
 function handleDialogOpen() {
@@ -929,7 +936,21 @@ const legend = ref(
           </template>
         </PopupNavigationMenu>
 
-        <Button v-tooltip.left="'Import'" class="ml-2" label="import" icon="pi pi-upload" severity="primary" aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport" />
+        <Button v-tooltip.left="'Import'" class="ml-2" label="Import"  severity="primary" aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport" >
+          <template #icon>
+            <span class="mr-2 flex align-items-center justify-content-center p-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="20px"
+                viewBox="0 -960 960 960"
+                width="20px"
+                fill="#ffff"
+              >
+                <path :d="'M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z'" />
+              </svg>
+            </span>
+          </template>
+        </Button>
         <Menu id="overlay_menu_import" ref="menu_import" class="ml-2" :model="itemsMenuImport" :popup="true" />
         <PopupNavigationMenu v-if="false" :items="itemsMenuImport" icon="pi pi-plus" label="Import">
           <template #item="props">
@@ -1247,6 +1268,7 @@ const legend = ref(
 
         <template #expanded-item="props">
           <InvoiceTabView
+          :invoice-obj-amount="0"
             :selected-invoice="props.itemId" :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
             :open-dialog="handleDialogOpen" :active="active" :set-active="($event) => { active = $event }" :is-detail-view="true"
           />
@@ -1278,7 +1300,7 @@ const legend = ref(
     <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" />
   </div>
   <div v-if="attachmentHistoryDialogOpen">
-    <AttachmentHistoryDialog  :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History"  :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" :is-creation-dialog="false" />
+    <InvoiceHistoryDialog :selected-attachment="''"  :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History"  :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" :is-creation-dialog="false" />
   </div>
 
   <div v-if="exportDialogOpen">

@@ -7,6 +7,7 @@ import type { PageState } from 'primevue/paginator'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import { ENUM_INVOICE_IMPORT_TYPE } from '~/utils/Enums'
 
 const toast = useToast()
 const listItems = ref<any[]>([])
@@ -27,13 +28,9 @@ const confErrorApi = reactive({
   uriApi: 'manage-booking',
 })
 
-// const computedexpandedInvoice = computed(() => {
-//   return expandedInvoice.value === ''
-// })
 // VARIABLES -----------------------------------------------------------------------------------------
 
 //
-const confirm = useConfirm()
 const idItem = ref('')
 
 // -------------------------------------------------------------------------------------------------------
@@ -158,12 +155,12 @@ async function importFile() {
     idItem.value = uuid
     const base64String: any = await fileToBase64(inputFile.value)
     const base64 = base64String.split('base64,')[1]
-    const objTemp = {
-	    importProcessId: uuid,
-      importType: 'VIRTUAL',
-      file: base64
-    }
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, objTemp)
+    const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('importProcessId', uuid)
+    formData.append('importType', ENUM_INVOICE_IMPORT_TYPE.VIRTUAL)
+    await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
     successOperation = false
@@ -224,10 +221,6 @@ onMounted(async () => {
                 <div>
                   Bookings import from file
                 </div>
-                <!-- <div>
-                  <PaymentLegend :legend="legend" />
-                </div>
--->
               </div>
             </template>
             <div class="flex flex-column lg:flex-row w-full">

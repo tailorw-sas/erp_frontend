@@ -67,7 +67,7 @@ const item = ref<GenericObject>({
   file: '',
   remark: '',
   invoice: props.selectedInvoice,
-  attachment_id: '',
+  attachmentId: '',
   resource: invoice.value.invoiceId,
   // @ts-expect-error
   resourceType: `${invoice.value.invoiceType?.name || OBJ_ENUM_INVOICE[invoice.value.invoiceType]}`
@@ -79,7 +79,7 @@ const itemTemp = ref<GenericObject>({
   file: '',
   remark: '',
   invoice: props.selectedInvoice,
-  attachment_id: '',
+  attachmentId: '',
   resource: '',
   resourceType: '',
 })
@@ -154,7 +154,7 @@ const Fields: Array<Container> = [
 ]
 
 const Columns: IColumn[] = [
-  { field: 'attachment_id', header: 'Id', type: 'text', width: '70px' },
+  { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
   { field: 'invoice_id', header: 'Invoice Id', type: 'text', width: '70px' },
   { field: 'createdAt', header: 'Date', type: 'date', width: '90px' },
   { field: 'employee', header: 'Employee', type: 'text', width: '100px' },

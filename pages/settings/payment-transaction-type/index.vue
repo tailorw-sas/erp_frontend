@@ -112,6 +112,13 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.boolean()
   },
   {
+    field: 'antiToIncome',
+    header: 'Anti To Income',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+    validation: z.boolean()
+  },
+  {
     field: 'minNumberOfCharacter',
     header: 'Min Number Of Character',
     dataType: 'number',
@@ -160,6 +167,7 @@ const item = ref<GenericObject>({
   deposit: false,
   applyDeposit: false,
   defaults: false,
+  antiToIncome: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
 })
@@ -178,6 +186,7 @@ const itemTemp = ref<GenericObject>({
   deposit: false,
   applyDeposit: false,
   defaults: false,
+  antiToIncome: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
 })
@@ -190,10 +199,10 @@ const formTitle = computed(() => {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'code', header: 'Code', type: 'text' },
+  { field: 'code', header: 'Code', type: 'text', width: '120px' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
-  { field: 'status', header: 'Active', type: 'bool' },
+  { field: 'status', header: 'Active', type: 'bool', width: '120px' },
 ]
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
@@ -334,6 +343,7 @@ async function getItemById(id: string) {
         item.value.deposit = response.deposit
         item.value.applyDeposit = response.applyDeposit
         item.value.defaults = response.defaults
+        item.value.antiToIncome = response.antiToIncome
         updateFieldProperty(fields, 'minNumberOfCharacter', 'disabled', !response.remarkRequired)
       }
       fields[0].disabled = true
@@ -578,7 +588,6 @@ onMounted(() => {
         </AccordionTab>
       </Accordion>
       <DynamicTable
-
         :data="listItems" :columns="columns" :options="options" :pagination="pagination"
         @on-confirm-create="clearForm" @open-edit-dialog="getItemById($event)"
         @update:clicked-item="getItemById($event)" @on-change-pagination="payloadOnChangePage = $event"
@@ -619,7 +628,7 @@ onMounted(() => {
                 v-model="data.deposit"
                 :binary="true"
                 @update:model-value="($event) => {
-                  if (data.cash) {
+                  if (data.cash || data.applyDeposit) {
                     onUpdate('deposit', false)
                   }
                   else {
@@ -637,7 +646,7 @@ onMounted(() => {
                 v-model="data.applyDeposit"
                 :binary="true"
                 @update:model-value="($event) => {
-                  if (data.cash) {
+                  if (data.cash || data.deposit) {
                     onUpdate('applyDeposit', false)
                   }
                   else {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import type { IColumn, IPagination } from '../table/interfaces/ITableInterfaces'
-import type { IQueryRequest } from '../fields/interfaces/IFieldInterfaces'
+import type { IFilter, IQueryRequest } from '../fields/interfaces/IFieldInterfaces'
 import { GenericService } from '~/services/generic-services'
 
 const props = defineProps({
@@ -16,302 +16,14 @@ const props = defineProps({
 const emit = defineEmits(['update:visible'])
 const route = useRoute()
 const onOffDialog = ref(props.visible)
-const paymentDetailsList = ref<any[]>([])
+const paymentDetailSummaryList = ref<any[]>([])
 const idItem = ref(props.selectedPayment.id)
 const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
 
-const products = [
-  // {
-  //   id: '1000',
-  //   code: 'f230fh0g3',
-  //   name: 'Bamboo Watch',
-  //   description: 'Product Description',
-  //   price: 65,
-  //   category: 'Accessories',
-  //   quantity: 24,
-  //   inventoryStatus: 'INSTOCK',
-  //   rating: 5,
-  //   orders: [
-  //     {
-  //       id: '1000-0',
-  //       productCode: 'f230fh0g3',
-  //       date: '2020-09-13',
-  //       amount: 65,
-  //       quantity: 1,
-  //       customer: 'David James',
-  //       status: 'PENDING'
-  //     },
-  //     {
-  //       id: '1000-1',
-  //       productCode: 'f230fh0g3',
-  //       date: '2020-09-14',
-  //       amount: 130,
-  //       quantity: 2,
-  //       customer: 'John Doe',
-  //       status: 'DELIVERED'
-  //     },
-  //     {
-  //       id: '1000-2',
-  //       productCode: 'f230fh0g3',
-  //       date: '2020-09-15',
-  //       amount: 195,
-  //       quantity: 3,
-  //       customer: 'Jane Smith',
-  //       status: 'CANCELLED'
-  //     },
-  //     {
-  //       id: '1000-3',
-  //       productCode: 'f230fh0g3',
-  //       date: '2020-09-16',
-  //       amount: 260,
-  //       quantity: 4,
-  //       customer: 'Michael Brown',
-  //       status: 'RETURNED'
-  //     },
-  //     {
-  //       id: '1000-4',
-  //       productCode: 'f230fh0g3',
-  //       date: '2020-09-17',
-  //       amount: 325,
-  //       quantity: 5,
-  //       customer: 'Alice Green',
-  //       status: 'DELIVERED'
-  //     }
-  //   ]
-  // },
-  // {
-  //   id: '1001',
-  //   code: 'nvklal433',
-  //   name: 'Black Watch',
-  //   description: 'Product Description',
-  //   price: 72,
-  //   category: 'Accessories',
-  //   quantity: 61,
-  //   inventoryStatus: 'INSTOCK',
-  //   rating: 4,
-  //   orders: [
-  //     {
-  //       id: '1001-0',
-  //       productCode: 'nvklal433',
-  //       date: '2020-05-14',
-  //       amount: 72,
-  //       quantity: 1,
-  //       customer: 'Jane Doe',
-  //       status: 'DELIVERED'
-  //     },
-  //     {
-  //       id: '1001-1',
-  //       productCode: 'nvklal433',
-  //       date: '2020-05-15',
-  //       amount: 144,
-  //       quantity: 2,
-  //       customer: 'Chris Evans',
-  //       status: 'PENDING'
-  //     },
-  //     {
-  //       id: '1001-2',
-  //       productCode: 'nvklal433',
-  //       date: '2020-05-16',
-  //       amount: 216,
-  //       quantity: 3,
-  //       customer: 'Tom Hardy',
-  //       status: 'DELIVERED'
-  //     },
-  //     {
-  //       id: '1001-3',
-  //       productCode: 'nvklal433',
-  //       date: '2020-05-17',
-  //       amount: 288,
-  //       quantity: 4,
-  //       customer: 'Emma Watson',
-  //       status: 'RETURNED'
-  //     },
-  //     {
-  //       id: '1001-4',
-  //       productCode: 'nvklal433',
-  //       date: '2020-05-18',
-  //       amount: 360,
-  //       quantity: 5,
-  //       customer: 'Robert Downey Jr.',
-  //       status: 'CANCELLED'
-  //     }
-  //   ]
-  // },
-  // {
-  //   id: '1002',
-  //   code: 'zz21cz3c1',
-  //   name: 'Blue Band',
-  //   description: 'Product Description',
-  //   price: 79,
-  //   category: 'Fitness',
-  //   quantity: 2,
-  //   inventoryStatus: 'LOWSTOCK',
-  //   rating: 3,
-  //   orders: [
-  //     {
-  //       id: '1002-0',
-  //       productCode: 'zz21cz3c1',
-  //       date: '2020-06-17',
-  //       amount: 79,
-  //       quantity: 1,
-  //       customer: 'John Smith',
-  //       status: 'CANCELLED'
-  //     },
-  //     {
-  //       id: '1002-1',
-  //       productCode: 'zz21cz3c1',
-  //       date: '2020-06-18',
-  //       amount: 158,
-  //       quantity: 2,
-  //       customer: 'Bruce Wayne',
-  //       status: 'PENDING'
-  //     },
-  //     {
-  //       id: '1002-2',
-  //       productCode: 'zz21cz3c1',
-  //       date: '2020-06-19',
-  //       amount: 237,
-  //       quantity: 3,
-  //       customer: 'Clark Kent',
-  //       status: 'DELIVERED'
-  //     },
-  //     {
-  //       id: '1002-3',
-  //       productCode: 'zz21cz3c1',
-  //       date: '2020-06-20',
-  //       amount: 316,
-  //       quantity: 4,
-  //       customer: 'Diana Prince',
-  //       status: 'RETURNED'
-  //     },
-  //     {
-  //       id: '1002-4',
-  //       productCode: 'zz21cz3c1',
-  //       date: '2020-06-21',
-  //       amount: 395,
-  //       quantity: 5,
-  //       customer: 'Barry Allen',
-  //       status: 'DELIVERED'
-  //     }
-  //   ]
-  // },
-  // {
-  //   id: '1003',
-  //   code: '244wgerg2',
-  //   name: 'Workout Equipment',
-  //   description: 'Product Description',
-  //   price: 35,
-  //   category: 'Fitness',
-  //   quantity: 5,
-  //   inventoryStatus: 'INSTOCK',
-  //   rating: 5,
-  //   orders: [
-  //     {
-  //       id: '1003-0',
-  //       productCode: '244wgerg2',
-  //       date: '2020-08-02',
-  //       amount: 35,
-  //       quantity: 1,
-  //       customer: 'Alice Brown',
-  //       status: 'RETURNED'
-  //     },
-  //     {
-  //       id: '1003-1',
-  //       productCode: '244wgerg2',
-  //       date: '2020-08-03',
-  //       amount: 70,
-  //       quantity: 2,
-  //       customer: 'Steve Rogers',
-  //       status: 'PENDING'
-  //     },
-  //     {
-  //       id: '1003-2',
-  //       productCode: '244wgerg2',
-  //       date: '2020-08-04',
-  //       amount: 105,
-  //       quantity: 3,
-  //       customer: 'Natasha Romanoff',
-  //       status: 'DELIVERED'
-  //     },
-  //     {
-  //       id: '1003-3',
-  //       productCode: '244wgerg2',
-  //       date: '2020-08-05',
-  //       amount: 140,
-  //       quantity: 4,
-  //       customer: 'Sam Wilson',
-  //       status: 'RETURNED'
-  //     },
-  //     {
-  //       id: '1003-4',
-  //       productCode: '244wgerg2',
-  //       date: '2020-08-06',
-  //       amount: 175,
-  //       quantity: 5,
-  //       customer: 'Bucky Barnes',
-  //       status: 'DELIVERED'
-  //     }
-  //   ]
-  // },
-  // {
-  //   id: '1004',
-  //   code: 'h456wer53',
-  //   name: 'Gaming Laptop',
-  //   description: 'Product Description',
-  //   price: 1300,
-  //   category: 'Electronics',
-  //   quantity: 9,
-  //   inventoryStatus: 'INSTOCK',
-  //   rating: 4,
-  //   orders: [
-  //     {
-  //       id: '1004-0',
-  //       productCode: 'h456wer53',
-  //       date: '2020-07-20',
-  //       amount: 1300,
-  //       quantity: 1,
-  //       customer: 'Chris Evans',
-  //       status: 'DELIVERED'
-  //     },
-  //     {
-  //       id: '1004-1',
-  //       productCode: 'h456wer53',
-  //       date: '2020-07-21',
-  //       amount: 2600,
-  //       quantity: 2,
-  //       customer: 'Tom Hardy',
-  //       status: 'PENDING'
-  //     },
-  //     {
-  //       id: '1004-2',
-  //       productCode: 'h456wer53',
-  //       date: '2020-07-22',
-  //       amount: 3900,
-  //       quantity: 3,
-  //       customer: 'Emma Watson',
-  //       status: 'DELIVERED'
-  //     },
-  //     {
-  //       id: '1004-3',
-  //       productCode: 'h456wer53',
-  //       date: '2020-07-23',
-  //       amount: 5200,
-  //       quantity: 4,
-  //       customer: 'Robert Downey Jr.',
-  //       status: 'RETURNED'
-  //     },
-  //     {
-  //       id: '1004-4',
-  //       productCode: 'h456wer53',
-  //       date: '2020-07-24',
-  //       amount: 6500,
-  //       quantity: 5,
-  //       customer: 'Scarlett Johansson',
-  //       status: 'CANCELLED'
-  //     }
-  //   ]
-  // }
-]
+interface SubTotals {
+  amount: number
+}
+const subTotals = ref<SubTotals>({ amount: 0 })
 
 // Table
 const columnsExpandTable: IColumn[] = [
@@ -327,8 +39,6 @@ const columnsExpandTable: IColumn[] = [
   { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
 ]
 
-const expandedRows = ref({})
-
 const columns: IColumn[] = [
   { field: 'transactionDate', header: 'Transaction Date', width: '200px', type: 'date' },
   { field: 'createdAt', header: 'Created At', width: '200px', type: 'date' },
@@ -343,7 +53,7 @@ const options = ref({
   uriApi: 'payment-detail',
   loading: false,
   actionsAsMenu: false,
-  expandableRows: true,
+  expandableRows: false,
   messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
 })
 
@@ -354,14 +64,16 @@ const payload = ref<IQueryRequest>({
       key: 'transactionType.deposit',
       logicalOperation: 'OR',
       operator: 'EQUALS',
-      value: true
+      value: true,
+      type: 'filterTable'
     },
-    {
-      key: 'transactionType.applyDeposit',
-      logicalOperation: 'OR',
-      operator: 'EQUALS',
-      value: true
-    },
+    // {
+    //   key: 'transactionType.applyDeposit',
+    //   logicalOperation: 'OR',
+    //   operator: 'EQUALS',
+    //   value: true,
+    //   type: 'filterTable'
+    // },
 
   ],
   query: '',
@@ -378,14 +90,15 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
-async function getListPaymentDetail() {
+async function getListPaymentDetailSummary() {
+  const count: SubTotals = { amount: 0 }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
   try {
     options.value.loading = true
-    paymentDetailsList.value = []
+    paymentDetailSummaryList.value = []
     const newListItems = []
 
     const objFilter = payload.value.filter.find(item => item.key === 'payment.id')
@@ -395,7 +108,6 @@ async function getListPaymentDetail() {
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -403,10 +115,11 @@ async function getListPaymentDetail() {
     pagination.value.totalElements = totalElements
     pagination.value.totalPages = totalPages
 
-    const existingIds = new Set(paymentDetailsList.value.map(item => item.id))
+    const existingIds = new Set(paymentDetailSummaryList.value.map(item => item.id))
 
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        count.amount += Number.parseFloat(iterator.amount)
         iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
           ? Number.parseFloat(iterator.amount).toString()
           : '0'
@@ -427,18 +140,37 @@ async function getListPaymentDetail() {
       }
     }
 
-    paymentDetailsList.value = [...paymentDetailsList.value, ...newListItems]
+    paymentDetailSummaryList.value = [...paymentDetailSummaryList.value, ...newListItems]
   }
   catch (error) {
     console.error(error)
   }
   finally {
     options.value.loading = false
+    subTotals.value = { ...count }
   }
 }
 function onCloseDialog() {
   onOffDialog.value = false
   emit('update:visible', false)
+}
+
+async function parseDataTableFilter(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterTable')]
+  payload.value.filter = [...payload.value.filter, ...parseFilter || []]
+  getListPaymentDetailSummary()
+}
+
+function onSortField(event: any) {
+  if (event) {
+    if (event.sortField === 'transactionType') {
+      event.sortField = 'transactionType.name'
+    }
+    payload.value.sortBy = event.sortField
+    payload.value.sortType = event.sortOrder
+    parseDataTableFilter(event.filter)
+  }
 }
 
 watch(() => props.visible, (newValue) => {
@@ -456,7 +188,7 @@ onMounted(async () => {
       logicalOperation: 'AND'
     }]
   }
-  await getListPaymentDetail()
+  await getListPaymentDetailSummary()
 })
 </script>
 
@@ -496,13 +228,15 @@ onMounted(async () => {
     <template #default>
       <div class="mt-3">
         <DynamicTable
-          :data="[...paymentDetailsList]"
+          :data="[...paymentDetailSummaryList]"
           :columns="columns"
           :options="options"
           :pagination="pagination"
           @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-sort-field="onSortField"
         >
-          <template #expansion="slotProps">
+          <!-- <template #expansion="slotProps">
             <div class="p-0 m-0">
               <DataTable :value="slotProps.data.children" striped-rows>
                 <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
@@ -523,6 +257,17 @@ onMounted(async () => {
                 </template>
               </DataTable>
             </div>
+          </template> -->
+
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center">
+              <Row>
+                <Column footer="Totals:" :colspan="2" footer-style="text-align:right; font-weight: bold;" />
+                <Column :footer="Math.round((subTotals.amount + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
+                <Column :colspan="1" />
+                <!-- <Column :colspan="0" /> -->
+              </Row>
+            </ColumnGroup>
           </template>
         </DynamicTable>
       </div>

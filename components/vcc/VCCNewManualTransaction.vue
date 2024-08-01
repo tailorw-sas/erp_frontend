@@ -108,7 +108,8 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12 md:col-6 required',
-    validation: z.string().trim().min(1, 'The reservation number field is required').regex(/^([IG]) \d+ \d+$/i, 'Invalid reservation number format')
+    validation: z.string().trim().min(1, 'The reservation number field is required')
+        .regex(/^([IG]) \d+ \d+$/i, 'The reservation number field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
   },
   {
     field: 'referenceNumber',

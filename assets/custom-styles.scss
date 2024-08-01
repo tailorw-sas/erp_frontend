@@ -131,6 +131,14 @@
   }
 }
 
+// BG Footer
+.p-datatable-tfoot {
+  background-color: var(--primary-color);
+  tr td {
+    color: #fff;
+  }
+}
+
 .p-accordion-header {
   background-color: var(--primary-color);
   color: #fff;
@@ -327,3 +335,8 @@
   color: #44486D;
 }
 
+// setting max and min width to calendar container
+.p-datepicker.p-component {
+  max-width: 321px;
+  min-width: 321px !important;
+}

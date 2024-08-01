@@ -9,6 +9,7 @@ import { GenericService } from '~/services/generic-services'
 import { validateEntityStatus } from '~/utils/schemaValidations'
 import { statusToBoolean, statusToString } from '~/utils/helpers'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
+import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
 const props = defineProps({
   employeeId: {
@@ -49,6 +50,14 @@ const treeViewAgencyRef = ref()
 const treeViewHotelRef = ref()
 const treeViewReportRef = ref()
 const treeViewCompanyRef = ref()
+const payload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 500,
+  page: 0,
+  sortBy: 'name',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
 
 const confApi = reactive({
   moduleApi: 'settings',
@@ -203,11 +212,9 @@ async function getObjectValues($event: any) {
   item.value = $event
 }
 
-async function getListPermissionsByBusiness(idBusiness: string) {
-  if (idBusiness) {
-    await getListModulesAndPermissions(idBusiness)
-    setSelectedElements(item.value.managePermissionList, selectedKey, treeViewPermissionRef)
-  }
+async function getListPermissionsByBusiness() {
+  await getListModulesAndPermissions()
+  setSelectedElements(item.value.managePermissionList, selectedKey, treeViewPermissionRef)
 }
 
 function transformData(data: any) {
@@ -220,7 +227,7 @@ function transformData(data: any) {
       children: item.permissions.length > 0
         ? item.permissions.map((permission: any) => ({
           key: permission.id,
-          label: permission.action ? permission.action.trim().toUpperCase() : '',
+          label: permission.code ? permission.code.trim().toUpperCase() : '',
           data: permission.description ? permission.description.trim().toUpperCase() : '',
           icon: '',
           parentName: item.name ? item.name.trim().toUpperCase() : '',
@@ -423,11 +430,11 @@ async function requireConfirmationToSelectItem(items: any[]) {
   }
 }
 
-async function getListModulesAndPermissions(idBusiness: string) {
+async function getListModulesAndPermissions() {
   loadingPermissions.value = true
   treeTableValue.value = []
 
-  const response = await GenericService.getById('identity', 'module', idBusiness, 'build')
+  const response = await GenericService.search('settings', 'module', payload.value)
 
   const transformedData = transformData(response.data)
 
@@ -617,7 +624,7 @@ function saveSubmit(event: Event) {
 
 onMounted(async () => {
   await getItemById()
-  getListPermissionsByBusiness(currentBussiness.value?.businessId || '41833c25-5ca2-41cd-b22f-8488723097da')
+  getListPermissionsByBusiness()
   getListEmployeeAgenciesTree()
   getListEmployeeHotelsTree()
   getListEmployeeReportsTree()

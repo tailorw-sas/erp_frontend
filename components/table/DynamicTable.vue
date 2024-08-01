@@ -181,9 +181,7 @@ function clearFilter1() {
 }
 
 function clearIndividualFilter(param1) {
-  // const filterReset = { ...objFilterToClear[param1] }
-
-  filters1.value[param1] = { ...objFilterToClear.value[param1] }
+  filters1.value[param1] = JSON.parse(JSON.stringify(objFilterToClear.value[param1]))
 
   // Llama a la función callback
   onChangeFilters(filters1.value)
@@ -292,6 +290,8 @@ async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], lo
       }
     }
     else {
+      console.log('localItems', localItems)
+
       listItems = [...localItems]
     }
     return [...listItems]
@@ -389,7 +389,7 @@ async function getDataFromSelectors() {
   try {
     for (const iterator of props.columns) {
       if (iterator.type === 'select' || iterator.type === 'custom-badge' || iterator.type === 'slot-select') {
-        const response = await getList({ moduleApi: iterator.objApi?.moduleApi || '', uriApi: iterator.objApi?.uriApi || '', keyValue: iterator.objApi?.keyValue }, [], [])
+        const response = await getList({ moduleApi: iterator.objApi?.moduleApi || '', uriApi: iterator.objApi?.uriApi || '', keyValue: iterator.objApi?.keyValue }, [], iterator.localItems || [])
         objListData[iterator.field] = response
       }
     }
@@ -485,6 +485,8 @@ getOptionsList()
         v-model:filters="filters1"
         v-model:selection="clickedItem"
         v-model:expandedRows="expandedRows"
+        v-model:contextMenuSelection="clickedItem"
+        context-menu
         :meta-key-selection="metaKey"
         :selection-mode="options?.selectionMode ?? 'single'"
         :filter-display="modeFilterDisplay"
@@ -590,6 +592,9 @@ getOptionsList()
             </span>
             <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
               {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}
+            </span>
+            <span v-else-if="column.type === 'datetime'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
+              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}
             </span>
             <span v-else-if="column.type === 'date-editable'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate w-full">
               <span v-if="column.props?.isRange">{{ formatRangeDate(data[column.field]) }}</span>
@@ -721,6 +726,26 @@ getOptionsList()
               <Calendar
                 v-model="filterModel.value"
                 type="text"
+                date-format="yy-mm-dd"
+                placeholder="yyyy-mm-dd"
+                mask="99/99/9999"
+                class="p-column-filter w-full"
+              />
+            </div>
+            <div v-if="column.type === 'datetime' || column.type === 'datetime-editable'" class="flex flex-column">
+              <Dropdown
+                v-if="true"
+                v-model="filterModel.matchMode"
+                :options="menuItemsDate"
+                option-label="label"
+                placeholder="Select a operator"
+                class="w-full mb-2"
+              />
+              <Calendar
+                v-model="filterModel.value"
+                type="text"
+                showTime 
+                hourFormat="12"
                 date-format="yy-mm-dd"
                 placeholder="yyyy-mm-dd"
                 mask="99/99/9999"

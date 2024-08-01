@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
+import AdjustmentDialog from './AdjustmentDialog.vue'
 import getUrlByImage from '~/composables/files'
 import { ModulesService } from '~/services/modules-services'
 import { GenericService } from '~/services/generic-services'
@@ -43,6 +44,10 @@ const props = defineProps({
     type: String,
     required: false
   },
+  invoiceObj: {
+    type: Object,
+    required: true,
+  },
   isCreationDialog: {
     type: Boolean,
     required: true
@@ -75,6 +80,7 @@ const props = defineProps({
   },
   sortAdjustment: Function as any,
   refetchInvoice: { type: Function, default: () => {} },
+  invoiceObjAmount: { type: Number, required: true }
 })
 
 const { data } = useAuth()
@@ -131,7 +137,7 @@ const Fields: Array<Container> = [
 
       {
         field: 'transactionType',
-        header: 'Transaction Type',
+        header: 'Transaction',
         dataType: 'select',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
@@ -237,6 +243,8 @@ const Options = ref({
 
 })
 
+const route = useRoute()
+
 const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
   filter: [],
@@ -289,7 +297,9 @@ async function getAdjustmentList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date }]
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date,
+        transaction: {...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
+        }]
 
       if (typeof +iterator?.amount === 'number') {
         totalAmount.value += Number(iterator?.amount)
@@ -470,9 +480,10 @@ async function saveAdjustment(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     if (!props.isCreationDialog) {
-      getAdjustmentList()
       props.refetchInvoice()
     }
+    ClearForm()
+    props.closeDialog()
   }
 }
 
@@ -519,6 +530,10 @@ async function getTransactionTypeList() {
 }
 
 function onRowRightClick(event: any) {
+  if (route.query.type === ENUM_INVOICE_TYPE[1]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id) {
+    return
+  }
+
   selectedAdjustment.value = event.data
   adjustmentContextMenu.value.show(event.originalEvent)
 }
@@ -632,10 +647,13 @@ onMounted(() => {
 
   <div v-if="isDialogOpen">
     <AdjustmentDialog
+      :invoice-obj="invoiceObj"
+      :invoice-amount="invoiceObjAmount"
       :fields="Fields" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
       :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
       :require-confirmation-to-save="saveAdjustment"
       :require-confirmation-to-delete="requireConfirmationToDeleteAdjustment" :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'"
+      :id-item="idItem"
       :close-dialog="() => {
         ClearForm()
         idItem = ''

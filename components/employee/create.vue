@@ -9,6 +9,7 @@ import { GenericService } from '~/services/generic-services'
 import { validateEntityStatus } from '~/utils/schemaValidations'
 import { statusToString } from '~/utils/helpers'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
+import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
 const emits = defineEmits<{
   (e: 'onSuccessCreate', value: boolean): void
@@ -40,6 +41,14 @@ const treeViewAgencyRef = ref()
 const treeViewHotelRef = ref()
 const treeViewReportRef = ref()
 const treeViewCompanyRef = ref()
+const payload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 500,
+  page: 0,
+  sortBy: 'name',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
 
 const confApi = reactive({
   moduleApi: 'settings',
@@ -162,7 +171,7 @@ function transformData(data: any) {
       children: item.permissions.length > 0
         ? item.permissions.map((permission: any) => ({
           key: permission.id,
-          label: permission.action ? permission.action.trim().toUpperCase() : '',
+          label: permission.code ? permission.code.trim().toUpperCase() : '',
           data: permission.description ? permission.description.trim().toUpperCase() : '',
           icon: '',
           parentName: item.name ? item.name.trim().toUpperCase() : '',
@@ -265,7 +274,7 @@ async function getListEmployeePermissionsTree(idBusiness: string) {
   loadingPermissions.value = true
   treeTableValue.value = []
 
-  const response = await GenericService.getById('identity', 'module', idBusiness, 'build')
+  const response = await GenericService.search('settings', 'module', payload.value)
 
   const transformedData = transformData(response.data)
 

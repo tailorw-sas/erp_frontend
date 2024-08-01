@@ -112,7 +112,7 @@ export default NuxtAuthHandler({
 
           const { access_token, expires_in, refresh_token, refresh_expires_in } = userResponse
           const authorization = `Bearer ${access_token}`
-          const userMeResponse: any = await $fetch(`${process.env.VITE_APP_BASE_URL}/identity/api/users/me`, {
+          const userMeResponse: any = await $fetch(`${process.env.VITE_APP_BASE_URL}/settings/api/manage-employee/me`, {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': authorization
