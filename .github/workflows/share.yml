@@ -9,8 +9,8 @@ on:
 env:
   BRANCH_NAME : ${{github.ref_name}}
   POM : "pom-"
-  EXTENSION : ${{BRANCH_NAME}}".xml"
-  POM_NAME : ${{POM}}${{EXTENSION}}
+  EXTENSION : ".xml"
+  POM_NAME : ${{POM}}${{BRANCH_NAME}}${{EXTENSION}}
   
 jobs:
   build:
