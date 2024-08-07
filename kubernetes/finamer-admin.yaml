@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: finamer-admin
-        image: tailorw/fin-admin:v1
+        image: tailorw/erp-admin:v1
         env:
         - name: NUXT_PUBLIC_RECAPTCHA_SITE_KEY
           value: 6LfifQAqAAAAAAOHfDjN6BIYoVTXbu_vVtBJr2lY
