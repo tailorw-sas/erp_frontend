@@ -134,7 +134,7 @@
         <repository>
             <id>github</id>
             <name>GitHub OWNER Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/tailorwr/finamer-backend</url>
+            <url>https://maven.pkg.github.com/tailorw-sas/erp_backend</url>
         </repository>
     </distributionManagement>
 </project>
