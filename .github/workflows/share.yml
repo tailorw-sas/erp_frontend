@@ -6,9 +6,9 @@ on:
     branches:
       - 'dev'
       - 'qa'
+
 env:
   BRANCH_NAME: ${{github.ref_name}}
-  POM_NAME: ''
   
 jobs:
   build:
@@ -21,10 +21,7 @@ jobs:
     steps:
       - name: Set POM name
         run: echo "POM_NAME=pom-$BRANCH_NAME.xml" >> $GITHUB_ENV
-        
-      - name: Nombre Rama
-        run: echo "Nombre de la rama $BRANCH_NAME y nombre del POM $POM_NAME"
-        
+              
       - uses: actions/checkout@v4
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -39,13 +36,8 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/${{POM_NAME}}') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-
-      - name: Concat
-        run: POM="${POM_NAME}" >> $GITHUB_ENV
         
       - name: Publish to GitHub Packages Apache Maven
-        run: |
-          echo "El nombre del pom es ${POM_NAME}"
-          cd share && mvn --batch-mode -f ${POM_NAME} deploy
+        run: cd share && mvn --batch-mode -f ${POM_NAME} deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
