@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Nombre POM
-        run: echo "POM_NAME=pom-$BRANCH_NAME >> $GITHUB_ENV
+        run: echo "POM_NAME=pom-$BRANCH_NAME" >> $GITHUB_ENV
         
       - name: Nombre Rama
         run: echo "Nombre de la rama $BRANCH_NAME y nombre del POM $POM_NAME"
