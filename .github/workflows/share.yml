@@ -36,6 +36,6 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Publish to GitHub Packages Apache Maven
-        run: cd share && mvn --batch-mode deploy
+        run: cd share && mvn --batch-mode -f pom-$BRANCH_NAME.xml deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
