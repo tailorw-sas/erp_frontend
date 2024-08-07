@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Nombre Rama
-        run: echo "Nombre de la rama BRANCH_NAME"
+        run: echo "Nombre de la rama $BRANCH_NAME"
         
       - uses: actions/checkout@v4
       - name: Set up JDK 17
