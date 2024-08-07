@@ -10,7 +10,7 @@ env:
   BRANCH_NAME: ${{github.ref_name}}
   POM: "pom-"
   EXTENSION: ".xml"
-  POM_NAME: '${{ POM }}:${{ env.BRANCH_NAME }}:${{ env.EXTENSION }}'
+  POM_NAME: "$POM$BRANCH_NAME"
   
 jobs:
   build:
