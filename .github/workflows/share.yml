@@ -45,7 +45,7 @@ jobs:
         
       - name: Publish to GitHub Packages Apache Maven
         run: |
-          echo "El nombre del pom es ${POM}"
+          echo "El nombre del pom es ${POM_NAME}"
           cd share && mvn --batch-mode -f pom-dev.xml deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
