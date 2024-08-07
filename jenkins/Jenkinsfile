@@ -3,7 +3,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'tailorw/fin-admin:dev'
+        DOCKER_IMAGE = 'tailorw/erp-admin:dev'
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
         NAMESPACE = 'finamer'
         SERVER_K3S_URL = 'https://172.20.41.150:5443'
