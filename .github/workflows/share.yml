@@ -8,6 +8,7 @@ on:
       - 'qa'
 env:
   BRANCH_NAME : ${github.ref_name}
+  POM_NAME : "pom-${{BRANCH_NAME}}.xml"
   
 jobs:
   build:
@@ -20,6 +21,8 @@ jobs:
     steps:
       - name: Nombre Rama
         run: echo "Nombre de la rama $BRANCH_NAME"
+        run: echo "$POM_NAME"
+        
       - uses: actions/checkout@v4
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -31,11 +34,11 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom-$BRANCH_NAME.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom-dev.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
       - name: Publish to GitHub Packages Apache Maven
-        run: cd share && mvn --batch-mode -f pom-${{BRANCH_NAME}}.xml deploy
+        run: cd share && mvn --batch-mode -f pom-dev.xml deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
