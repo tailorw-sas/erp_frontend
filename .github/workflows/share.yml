@@ -18,7 +18,7 @@ jobs:
       packages: write
 
     steps:
-      - name: Nombre POM
+      - name: Set POM name
         run: echo "POM_NAME=pom-$BRANCH_NAME.xml" >> $GITHUB_ENV
         
       - name: Nombre Rama
@@ -35,11 +35,11 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom-dev.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/${{POM_NAME}}') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
       - name: Publish to GitHub Packages Apache Maven
-        run: cd share && mvn --batch-mode -f pom-dev.xml deploy
+        run: cd share && mvn --batch-mode -f ${{POM_NAME}} deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
