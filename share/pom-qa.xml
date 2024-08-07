@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.kynsoft.finamer</groupId>
-    <artifactId>share</artifactId>
+    <artifactId>share-qa</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>share</name>
     <packaging>jar</packaging>
