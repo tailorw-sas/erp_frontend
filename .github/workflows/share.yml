@@ -40,6 +40,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: Concat
+        run: POM_NAME="${POM_NAME}" >> $GITHUB_ENV
+        
       - name: Publish to GitHub Packages Apache Maven
         run: cd share && mvn --batch-mode -f ${{POM_NAME}} deploy
         env:
