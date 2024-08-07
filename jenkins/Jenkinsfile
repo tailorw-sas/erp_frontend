@@ -1,0 +1,39 @@
+pipeline {
+    
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'tailorw/fin-admin:dev'
+        DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
+        NAMESPACE = 'finamer'
+        SERVER_K3S_URL = 'https://172.20.41.150:5443'
+        YAML = 'finamer-admin.yaml'
+        DEPLOYMENT_NAME = 'finamer-admin'
+        SERVER_K3S_CREDENTIALS = 'KubernetesCredential-Dev'
+    }
+    
+    triggers {
+        githubPush()
+    }
+    
+    stages {
+    
+        stage ('Create docker image'){
+            steps {
+                sh 'docker build -t $DOCKER_IMAGE .'
+                withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
+                    sh 'docker push $DOCKER_IMAGE'
+                }
+            }
+        }
+
+        stage ('Publish to Kubernetes') {
+            steps {
+                withKubeConfig(credentialsId: "${SERVER_K3S_CREDENTIALS}", namespace: "${NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: "${SERVER_K3S_URL}") {
+                    sh 'kubectl apply -f kubernetes/$YAML'
+                    sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
+                }
+            }
+        }
+    }
+}
