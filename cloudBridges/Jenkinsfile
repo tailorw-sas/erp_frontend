@@ -36,10 +36,11 @@ pipeline {
                     env.SERVER_K3S_CREDENTIALS = k3sCredentials
 
                     def k3s = "${URL_K3S}${BRANCH_NAME}"
-                    echo "${URL_K3S}${BRANCH_NAME}"
                     env K3S_URL_TOKEN = k3s
                 }
 
+                echo '"${K3S_URL_TOKEN}"'
+                
                 //withCredentials([string(credentialsId: "${K3S_URL_TOKEN}", variable: 'SERVER_K3S_URL')]){
                     //echo "${SERVER_K3S_URL}"
                 //}
