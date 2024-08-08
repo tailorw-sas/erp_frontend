@@ -47,7 +47,7 @@ pipeline {
         stage ('Create docker image'){
             steps {
                 dir("${SRC}"){
-                    sh 'docker build -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom-$BRANCH_NAME.xml .'
+                    sh 'docker build -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom.xml .'
                     withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
                         sh 'docker push $DOCKER_IMAGE'
                     }
