@@ -11,7 +11,7 @@ pipeline {
         NAMESPACE = 'finamer'
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'creditCard.yaml'
-        DEPLOYMENT_NAME = '	credit-card'
+        DEPLOYMENT_NAME = 'credit-card'
         URL_DEV = credentials("URL-K3S-dev")
         URL_QA = credentials("URL-K3S-qa")
     }
