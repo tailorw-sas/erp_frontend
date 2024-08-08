@@ -35,11 +35,17 @@ pipeline {
                     def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
                     env.SERVER_K3S_CREDENTIALS = k3sCredentials
 
-                    //def k3s = "${URL_K3S}${BRANCH_NAME}"
-                    def k3sUrl = credentials("${URL_K3S}${BRANCH_NAME}")
-                    //echo "NOMBRE CREDENCIAL ${k3s} URL: ${k3sUrl}"
-                    env.SERVER_K3S_URL = k3sUrl
+                    def k3s = "${URL_K3S}${BRANCH_NAME}"
+                    env K3S_URL_TOKEN = k3s
                 }
+
+                withCredentials([string(credentialsId: "${K3S_URL_TOKEN}", variable: 'SERVER_K3S_URL')]){
+                    echo "${SERVER_K3S_URL}"
+                }
+
+                //def k3sUrl = credentials("${URL_K3S}${BRANCH_NAME}")
+                    //echo "NOMBRE CREDENCIAL ${k3s} URL: ${k3sUrl}"
+                  //  env.SERVER_K3S_URL = k3sUrl
             }
         }
 
