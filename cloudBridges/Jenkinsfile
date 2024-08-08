@@ -12,9 +12,8 @@ pipeline {
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'cloudbridges.yaml'
         DEPLOYMENT_NAME = 'cloudbridges'
-        URL_K3S = 'URL-K3S-'
-        URL_DEV = 'https://172.20.41.150:5443'
-        URL_QA = 'https://172.20.1.150:5443'
+        URL_DEV = credentials("URL-K3S-dev")
+        URL_QA = credentials("URL-K3S-qa")
     }
     
     triggers {
@@ -25,7 +24,7 @@ pipeline {
         stage ('Init') {
             steps {
                 echo 'Initializing......'
-                script {
+                script {   
                     def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
                     env.BRANCH_NAME = branch
 
@@ -35,10 +34,12 @@ pipeline {
                     def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
                     env.SERVER_K3S_CREDENTIALS = k3sCredentials
 
-                    //def k3s = "${URL_K3S}${BRANCH_NAME}"
-                    def k3sUrl = credentials("${URL_K3S}${BRANCH_NAME}")
-                    //echo "NOMBRE CREDENCIAL ${k3s} URL: ${k3sUrl}"
-                    env.SERVER_K3S_URL = k3sUrl
+                    if(env.BRANCH_NAME == 'dev'){
+                        env.SERVER_K3S_URL = env.URL_DEV
+                    }
+                    if(env.BRANCH_NAME == 'qa'){
+                        env.SERVER_K3S_URL = env.URL_QA
+                    }
                 }
             }
         }
@@ -57,7 +58,7 @@ pipeline {
         stage ('Publish to Kubernetes') {
             steps {
                 withKubeConfig(credentialsId: "${SERVER_K3S_CREDENTIALS}", namespace: "${NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: "${SERVER_K3S_URL}") {
-                    sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
+                    //sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
                 }
             }
