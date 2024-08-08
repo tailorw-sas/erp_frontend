@@ -3,13 +3,16 @@ pipeline {
     agent any
 
 	environment {
+		ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
+		DOCKER_IMAGE_NAME = 'tailorw/erp-identity:version'
+		SRC = 'cloudBridges'
 		GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
                 DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
                 NAMESPACE = 'finamer'
-		ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
+		
                 YAML = 'identity.yaml'
                 DEPLOYMENT_NAME = 'identity'
-		DOCKER_IMAGE_NAME = 'tailorw/erp-identity:version'
+		
 	}
 	
 	triggers {
@@ -23,9 +26,10 @@ pipeline {
 		    script {
 			def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
 			env.BRANCH_NAME = branch
-			    
+
 			def dockerImage = env.DOCKER_IMAGE_NAME.replace('version', env.BRANCH_NAME)
 			env.DOCKER_IMAGE = dockerImage
+			
 			//if(env.BRANCH_NAME == 'dev'){
                             
 			//}
@@ -35,7 +39,7 @@ pipeline {
 
 	stage ('Create docker image'){
 		steps {
-			dir('cloudBridges'){
+			dir("${SRC}"){
 				
 				sh 'docker build -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build=arg POM_NAME=pom-$BRANCH_NAME.xml.'
 				withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
