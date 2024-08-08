@@ -4,7 +4,7 @@ pipeline {
 
     environment {
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
-        DOCKER_IMAGE_NAME = 'tailorw/fin-report:version'
+        DOCKER_IMAGE_NAME = 'tailorw/erp-report:version'
         SRC = 'report'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
