@@ -12,6 +12,7 @@ pipeline {
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'cloudbridges.yaml'
         DEPLOYMENT_NAME = 'cloudbridges'
+        URL_K3S = 'URL-K3S-'
         URL_DEV = 'https://172.20.41.150:5443'
         URL_QA = 'https://172.20.1.150:5443'
     }
@@ -33,7 +34,11 @@ pipeline {
 
                     def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
                     env.SERVER_K3S_CREDENTIALS = k3sCredentials
-            
+
+                    def k3s = "${URL_K3S}${BRANCH_NAM}"
+                    def k3sUrl = credentials(k3s)
+
+                    echo "NOMBRE CREDENCIAL ${k3s} URL: ${k3sUrl}"
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
                     }
