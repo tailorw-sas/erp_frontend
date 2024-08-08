@@ -4,7 +4,7 @@ pipeline {
 
     environment {
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
-        DOCKER_IMAGE_NAME = 'tailorw/fin-credit-card:version'
+        DOCKER_IMAGE_NAME = 'tailorw/erp-credit-card:version'
         SRC = 'creditCard'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
