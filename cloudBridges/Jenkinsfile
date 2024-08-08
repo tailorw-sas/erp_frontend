@@ -9,7 +9,7 @@ pipeline {
 		ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
                 YAML = 'identity.yaml'
                 DEPLOYMENT_NAME = 'identity'
-		DOCKER_IMAGE = 'tailorw/erp-identity:version'
+		DOCKER_IMAGE_NAME = 'tailorw/erp-identity:version'
 	}
 	
 	triggers {
@@ -22,10 +22,10 @@ pipeline {
                 echo 'Initializing......'
 		    script {
 			def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
-			def dockerImage = env.DOCKER_IMAGE.replace('version', env.BRANCH_NAME)
-			
-			    env.BRANCH_NAME = branch
-			    env.DOCKER_IMAGE = dockerImage
+			env.BRANCH_NAME = branch
+			    
+			def dockerImage = env.DOCKER_IMAGE_NAME.replace('version', env.BRANCH_NAME)
+			env.DOCKER_IMAGE = dockerImage
 			//if(env.BRANCH_NAME == 'dev'){
                             
 			//}
