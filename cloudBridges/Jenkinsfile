@@ -21,7 +21,7 @@ pipeline {
 	stage ('Create docker image'){
 		steps {
 			dir('cloudBridges'){
-				sh 'docker build -t tailorw/fin-cloud-bridges:dev --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build=arg POM_NAME=pom-${env.GIT_BRANCH}.xml.'
+				sh 'docker build -t tailorw/fin-cloud-bridges:dev --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build=arg POM_NAME=pom-$BRANCH_NAME.xml.'
 				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
                 			sh 'docker push tailorw/fin-cloud-bridges:dev'
                 		}
