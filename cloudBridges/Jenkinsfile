@@ -25,7 +25,6 @@ pipeline {
         stage ('Init') {
             steps {
                 echo 'Initializing......'
-                echo '$SERVER_K3S_URL'
                 script {
                     def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
                     env.BRANCH_NAME = branch
