@@ -48,7 +48,7 @@ ENV POM_NAME ${POM_NAME}
 RUN mvn dependency:go-offline -f ${POM_NAME} -s settings.xml
 # RUN mvn -B clean package -Pnative  --no-transfer-progress
 # RUN mvn package -Pnative -f pom.xml
-RUN mvn --no-transfer-progress clean package -DskipTests
+RUN mvn --no-transfer-progress clean package -DskipTests -f ${POM_NAME}
 
 # The deployment Image
 # FROM docker.io/oraclelinux:9-slim
