@@ -4,7 +4,12 @@ pipeline {
 
 	environment {
 		GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
+                DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
+                NAMESPACE = 'finamer'
 		ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
+                YAML = 'identity.yaml'
+                DEPLOYMENT_NAME = 'identity'
+		DOCKER_IMAGE = 'tailorw/erp-identity:version'
 	}
 	
 	triggers {
@@ -17,7 +22,13 @@ pipeline {
                 echo 'Initializing......'
 		    script {
 			def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
-			env.BRANCH_NAME = branch
+			def dockerImage = env.DOCKER_IMAGE.replace('version', env.BRANCH_NAME)
+			
+			    env.BRANCH_NAME = branch
+			    env.DOCKER_IMAGE = dockerImage
+			//if(env.BRANCH_NAME == 'dev'){
+                            
+			//}
 		    }
             }
         }
@@ -26,9 +37,9 @@ pipeline {
 		steps {
 			dir('cloudBridges'){
 				
-				sh 'docker build -t tailorw/fin-cloud-bridges:dev --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build=arg POM_NAME=pom-$BRANCH_NAME.xml.'
-				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
-                			sh 'docker push tailorw/fin-cloud-bridges:dev'
+				sh 'docker build -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build=arg POM_NAME=pom-$BRANCH_NAME.xml.'
+				withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
+                			sh 'docker push $DOCKER_IMAGE'
                 		}
 			}
 		}
@@ -36,8 +47,8 @@ pipeline {
 
 	stage ('Publish to Kubernetes') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'KubernetesCredential', namespace: 'finamer', restrictKubeConfigAccess: false, serverUrl: 'https://172.20.41.150:5443') {
-                    sh 'kubectl apply -f kubernetes-config/deployments/cloudbridges.yaml'
+                withKubeConfig(credentialsId: 'KubernetesCredential', namespace: "${NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: 'https://172.20.41.150:5443') {
+                    sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
                 }
             }
         }
