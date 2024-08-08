@@ -4,7 +4,7 @@ pipeline {
 
 	environment {
 		GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
-		BRANCH_NAME = "${env.GIT_BRANCH}"
+		ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
 	}
 	
 	triggers {
@@ -15,12 +15,17 @@ pipeline {
         stage ('Init') {
             steps {
                 echo 'Initializing......'
+		    script {
+			def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
+			env.BRANCH_NAME = branch
+		    }
             }
         }
 
 	stage ('Create docker image'){
 		steps {
 			dir('cloudBridges'){
+				
 				sh 'docker build -t tailorw/fin-cloud-bridges:dev --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build=arg POM_NAME=pom-$BRANCH_NAME.xml.'
 				withDockerRegistry(credentialsId: 'Tailorw-DockerCredentials', url: "") {
                 			sh 'docker push tailorw/fin-cloud-bridges:dev'
