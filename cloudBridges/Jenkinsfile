@@ -19,7 +19,7 @@ pipeline {
     triggers {
         githubPush()
         triggers {
-            genericTrigger {
+            genericTrigger (
                 genericVariables: [
                     [key: 'changed_files', value: '$.commits[*].["modified","added","removed"][*]', expressionType: 'JSONPath']    
                 ],
@@ -30,7 +30,7 @@ pipeline {
                 regexpFilterText: '$changed_files',
                 //regexpFilterExpression: '\\s((.*"("${SRC}"/)[^"]+?".))'
                 regexpFilterExpression('^"${SRC}"/.*')
-            }
+            )
         }
     }
     
