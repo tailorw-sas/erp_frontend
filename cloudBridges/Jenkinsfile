@@ -59,21 +59,25 @@ pipeline {
         }
 
         stage ('Checkout specific project...') {
-            // Define la ruta a la carpeta específica que deseas observar
-            def folderPath = env.SRC
+            steps {
+                script {
+                    // Define la ruta a la carpeta específica que deseas observar
+                    def folderPath = env.SRC
                     
-            // Obtén la lista de archivos modificados en la construcción
-            def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                    // Obtén la lista de archivos modificados en la construcción
+                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
 
-            // Filtra los cambios para la carpeta específica
-            def changesInFolder = changes.findAll { it.startsWith(folderPath) }
+                    // Filtra los cambios para la carpeta específica
+                    def changesInFolder = changes.findAll { it.startsWith(folderPath) }
 
-            if (changesInFolder) {
-                echo "Changes detected in folder: ${folderPath}"
-                // Realiza las acciones necesarias si hay cambios
-            } else {
-                echo "No changes detected in folder: ${folderPath}"
-                currentBuild.result = 'ABORTED'
+                    if (changesInFolder) {
+                        echo "Changes detected in folder: ${folderPath}"
+                        // Realiza las acciones necesarias si hay cambios
+                    } else {
+                        echo "No changes detected in folder: ${folderPath}"
+                        currentBuild.result = 'ABORTED'
+                    }
+                }
             }
         }
         
