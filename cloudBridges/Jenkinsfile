@@ -18,19 +18,19 @@ pipeline {
     
     triggers {
         //githubPush()
-        triggers {
-            genericTrigger {
-                genericVariables([
-                    [key: 'changed_files', value: '$.commits[*].["modified","added","removed"][*]', expressionType: 'JSONPath'],    
-                ])
-                //causeString: 'Triggered on $changed_files',
-                //token: 'abc123',
-                printContributedVariables: true,
-                printPostContent: true,
-                regexpFilterText: '$changed_files',
-                //regexpFilterExpression: '\\s((.*"("${SRC}"/)[^"]+?".))'
-                regexpFilterExpression('^"${SRC}"/.*')
-            }
+        //triggers {
+        //    genericTrigger {
+        //        genericVariables([
+        //            [key: 'changed_files', value: '$.commits[*].["modified","added","removed"][*]', expressionType: 'JSONPath'],    
+        //        ])
+        //        //causeString: 'Triggered on $changed_files',
+        //        //token: 'abc123',
+        //        printContributedVariables: true,
+        //        printPostContent: true,
+        //        regexpFilterText: '$changed_files',
+        //        //regexpFilterExpression: '\\s((.*"("${SRC}"/)[^"]+?".))'
+        //        regexpFilterExpression('^"${SRC}"/.*')
+        //    }
         }
     }
     
@@ -58,6 +58,25 @@ pipeline {
             }
         }
 
+        stage ('Checkout specific project') {
+            // Define la ruta a la carpeta específica que deseas observar
+            def folderPath = env.SRC
+                    
+            // Obtén la lista de archivos modificados en la construcción
+            def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+
+            // Filtra los cambios para la carpeta específica
+            def changesInFolder = changes.findAll { it.startsWith(folderPath) }
+
+            if (changesInFolder) {
+                echo "Changes detected in folder: ${folderPath}"
+                // Realiza las acciones necesarias si hay cambios
+            } else {
+                echo "No changes detected in folder: ${folderPath}"
+                currentBuild.result = 'ABORTED'
+            }
+        }
+        
         stage ('Create docker image'){
             steps {
                 dir("${SRC}"){
