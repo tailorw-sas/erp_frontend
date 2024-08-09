@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,4 +40,5 @@ public class PaymentDto {
     private String remark;
 
     private List<MasterPaymentAttachmentDto> attachments;
+    private OffsetDateTime createdAt;
 }

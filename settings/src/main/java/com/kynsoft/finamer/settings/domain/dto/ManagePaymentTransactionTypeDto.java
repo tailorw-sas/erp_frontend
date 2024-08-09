@@ -28,5 +28,6 @@ public class ManagePaymentTransactionTypeDto {
     private Boolean deposit;
     private Boolean applyDeposit;
     private Boolean defaults;
+    private Boolean antiToIncome;
 
 }

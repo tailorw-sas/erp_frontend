@@ -11,11 +11,11 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
@@ -84,12 +84,17 @@ public class Payment implements Serializable {
     private Double notIdentified;
     private String remark;
 
-    @CreationTimestamp
+    //@CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(nullable = true, updatable = true)
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
+
+    @PrePersist
+    protected void prePersist() {
+        this.createdAt = OffsetDateTime.now(ZoneId.of("UTC"));
+    }
 
     public Payment(PaymentDto dto) {
         this.id = dto.getId();
@@ -137,7 +142,8 @@ public class Payment implements Serializable {
                 remark,
                 attachments != null ? attachments.stream().map(b -> {
                     return b.toAggregateSimple();
-                }).collect(Collectors.toList()) : null
+                }).collect(Collectors.toList()) : null,
+                createdAt
         );
     }
 

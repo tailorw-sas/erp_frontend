@@ -4,21 +4,11 @@ public class InvoiceType {
 
     public static String getInvoiceTypeCode(EInvoiceType type) {
 
-        switch (type) {
-            case INVOICE:
-                return "INV";
-
-            case CREDIT:
-                return "CRE";
-            case INCOME:
-                return "INC";
-
-            case OLD_CREDIT:
-                return "OLD";
-
-            default:
-                return "INV";
-        }
+        return switch (type) {
+            case CREDIT, OLD_CREDIT -> "CRE";
+            case INCOME -> "INC";
+            default -> "INV";
+        };
     }
 
 }

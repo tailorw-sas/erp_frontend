@@ -5,10 +5,14 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
 import com.kynsoft.report.domain.dto.status.Status;
+import com.kynsoft.report.domain.services.IDBConectionService;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
+
+import java.util.UUID;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
@@ -17,8 +21,11 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
 
     private final IJasperReportTemplateService service;
 
-    public UpdateJasperReportTemplateCommandHandler(IJasperReportTemplateService service) {
+    private final IDBConectionService conectionService;
+
+    public UpdateJasperReportTemplateCommandHandler(IJasperReportTemplateService service, IDBConectionService conectionService) {
         this.service = service;
+        this.conectionService = conectionService;
     }
 
     @Override
@@ -48,6 +55,8 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setRootIndex, command.getRootIndex(), updateDto.getRootIndex(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setLanguage, command.getLanguage(), updateDto.getLanguage(), update::setUpdate);
 
+        this.updateConection(updateDto::setDbConection, command.getDbConection(), updateDto.getDbConection() != null ? updateDto.getDbConection().getId() : null);
+
         if (update.getUpdate() > 0) {
             this.service.update(updateDto);
         }
@@ -64,6 +73,13 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         if (newValue != null && !newValue.equals(oldValue)) {
             setter.accept(newValue);
             update.accept(1);
+        }
+    }
+
+    private void updateConection(Consumer<DBConectionDto> setter, UUID newValue, UUID oldValue) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            DBConectionDto conectionDto = this.conectionService.findById(newValue);
+            setter.accept(conectionDto);
         }
     }
 

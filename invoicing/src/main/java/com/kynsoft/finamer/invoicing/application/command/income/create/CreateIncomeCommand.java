@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -15,7 +16,7 @@ import java.util.UUID;
 public class CreateIncomeCommand implements ICommand {
 
     private UUID id;
-    private LocalDate invoiceDate;
+    private LocalDateTime invoiceDate;
     private Boolean manual;
     private UUID agency;
     private UUID hotel;
@@ -32,7 +33,7 @@ public class CreateIncomeCommand implements ICommand {
     private IncomeDto income;
     private String employee;
 
-    public CreateIncomeCommand(Status status, LocalDate invoiceDate, Boolean manual,
+    public CreateIncomeCommand(Status status, LocalDateTime invoiceDate, Boolean manual,
                                UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
                                Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate,
                                UUID invoiceStatus, String employee) {

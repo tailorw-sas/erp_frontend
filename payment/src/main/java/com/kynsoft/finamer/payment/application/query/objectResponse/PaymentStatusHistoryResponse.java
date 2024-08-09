@@ -17,6 +17,7 @@ import java.util.UUID;
 public class PaymentStatusHistoryResponse implements IResponse {
 
     private UUID id;
+    private Long paymentHistoryId;
     private String status;
     private PaymentResponse payment;
     private ManageEmployeeResponse employee;
@@ -26,6 +27,7 @@ public class PaymentStatusHistoryResponse implements IResponse {
 
     public PaymentStatusHistoryResponse(PaymentStatusHistoryDto dto) {
         this.id = dto.getId();
+        this.paymentHistoryId = dto.getPaymentHistoryId();
         this.status = dto.getStatus();
         this.payment = dto.getPayment() != null ? new PaymentResponse(dto.getPayment()) : null;
         this.employee = dto.getEmployee() != null ? new ManageEmployeeResponse(dto.getEmployee()) : null;

@@ -4,6 +4,9 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.payment.domain.services.IPaymentImportDetailService;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.UUID;
+
 @Component
 public class PaymentImportDetailCommandHandler implements ICommandHandler<PaymentImportDetailCommand> {
 
@@ -16,6 +19,7 @@ public class PaymentImportDetailCommandHandler implements ICommandHandler<Paymen
 
     @Override
     public void handle(PaymentImportDetailCommand command) {
-       paymentImportDetail.importPaymentFromFile(command.getPaymentImportDetailRequest());
+     List<UUID> paymentIds = paymentImportDetail.importPaymentFromFile(command.getPaymentImportDetailRequest());
+     command.setPaymentIds(paymentIds);
     }
 }

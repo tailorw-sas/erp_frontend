@@ -13,6 +13,8 @@ public interface IManageAdjustmentService {
 
     UUID create(ManageAdjustmentDto dto);
 
+    void create(List<ManageAdjustmentDto> dtos);
+
     void update(ManageAdjustmentDto dto);
 
     void delete(ManageAdjustmentDto dto);

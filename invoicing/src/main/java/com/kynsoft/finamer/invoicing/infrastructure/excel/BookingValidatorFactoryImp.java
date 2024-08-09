@@ -11,8 +11,10 @@ import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBooki
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingCheckInValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingCheckOutValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingCouponValidator;
+import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingDateValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingDuplicateValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingHotelBookingNoValidator;
+import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingHotelInvoiceAmountValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingHotelInvoiceNumberValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingHotelValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingInvoiceAmountValidator;
@@ -84,6 +86,8 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
         validators.put(ImportBookingHotelBookingNoValidator.class.getName(), new ImportBookingHotelBookingNoValidator());
         validators.put(ImportBookingHotelInvoiceNumberValidator.class.getName(), new ImportBookingHotelInvoiceNumberValidator(manageHotelService));
         validators.put(ImportBookingAmountPaxValidator.class.getName(), new ImportBookingAmountPaxValidator());
+        validators.put(ImportBookingHotelInvoiceAmountValidator.class.getName(), new ImportBookingHotelInvoiceAmountValidator(manageHotelService));
+        validators.put(ImportBookingDateValidator.class.getName(), new ImportBookingDateValidator(cacheRedisRepository,manageBookingService));
         validators.put(ImportBookingTypeValidator.class.getName(), new ImportBookingTypeValidator(importType,manageHotelService));
     }
 

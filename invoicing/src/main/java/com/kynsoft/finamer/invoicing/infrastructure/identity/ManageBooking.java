@@ -128,6 +128,7 @@ public class ManageBooking {
         }).collect(Collectors.toList()) : null;
 
         this.nights = dto.getCheckIn() != null && dto.getCheckOut() !=null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
+        this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
     }
 
     public ManageBookingDto toAggregate() {
@@ -156,5 +157,12 @@ public class ManageBooking {
                 roomRates != null ? roomRates.stream().map(b -> {
                     return b.toAggregateSample();
                 }).collect(Collectors.toList()) : null, nights);
+    }
+
+    @PostLoad
+    public void initDefaultValue() {
+        if (dueAmount == null) {
+            dueAmount = 0.0;
+        }
     }
 }

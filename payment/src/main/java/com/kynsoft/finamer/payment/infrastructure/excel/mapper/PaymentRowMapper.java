@@ -2,7 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.excel.mapper;
 
 import com.kynsof.share.core.application.excel.mapper.IMapper;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
-import com.kynsoft.finamer.payment.domain.excel.bean.PaymentRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentRow;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,12 +12,13 @@ public class PaymentRowMapper implements IMapper<PaymentImportCache, PaymentRow>
     public PaymentRow toObject(PaymentImportCache obj) {
         PaymentRow paymentRow = new PaymentRow();
         paymentRow.setImportProcessId(obj.getImportProcessId());
-        paymentRow.setPaymentExp(Double.parseDouble(obj.getPaymentAmount()));
+        paymentRow.setAmount(Double.parseDouble(obj.getPaymentAmount()));
         paymentRow.setTransactionDate(obj.getTransactionDate());
         paymentRow.setRemarks(obj.getRemarks());
         paymentRow.setImportType(obj.getImportType());
-        paymentRow.setAgencyCode(obj.getAgency());
-        paymentRow.setHotelCode(obj.getHotel());
+        paymentRow.setManageAgencyCode(obj.getAgency());
+        paymentRow.setManageHotelCode(obj.getHotel());
+        paymentRow.setRowNumber(obj.getRowNumber());
         return paymentRow;
     }
 

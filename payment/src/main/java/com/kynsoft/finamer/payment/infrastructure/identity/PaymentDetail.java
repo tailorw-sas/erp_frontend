@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -57,7 +57,7 @@ public class PaymentDetail implements Serializable {
 
     private Double bookingId;
     private String invoiceId;
-    private LocalDate transactionDate;
+    private OffsetDateTime transactionDate;
     private String firstName;
     private String lastName;
     private String reservation;
@@ -68,12 +68,17 @@ public class PaymentDetail implements Serializable {
     @OneToMany(fetch = FetchType.EAGER)
     private List<PaymentDetail> children = new ArrayList<>();
 
-    @CreationTimestamp
+    //@CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(nullable = true, updatable = true)
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
+
+    @PrePersist
+    protected void prePersist() {
+        this.createdAt = OffsetDateTime.now(ZoneId.of("UTC"));
+    }
 
     public PaymentDetail(PaymentDetailDto dto) {
         this.id = dto.getId();

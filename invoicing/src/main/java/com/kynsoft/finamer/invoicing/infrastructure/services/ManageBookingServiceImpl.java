@@ -62,6 +62,27 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
+    public void calculateHotelAmount(ManageBookingDto dto){
+        Double HotelAmount = 0.00;
+
+
+
+
+        if (dto.getRoomRates() != null) {
+
+            for (int i = 0; i < dto.getRoomRates().size(); i++) {
+
+                HotelAmount += dto.getRoomRates().get(i).getHotelAmount();
+
+            }
+
+            dto.setHotelAmount(HotelAmount);
+
+            this.update(dto);
+        }
+    }
+
+    @Override
     public UUID create(ManageBookingDto dto) {
         ManageBooking entity = new ManageBooking(dto);
         return repositoryCommand.saveAndFlush(entity).getId();

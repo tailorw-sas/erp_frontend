@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import java.util.UUID;
 import lombok.Getter;
 
 import lombok.Setter;
@@ -10,10 +9,9 @@ import lombok.Setter;
 @Setter
 public class CreateIncomeAdjustmentMessage implements ICommandMessage {
 
-    private final UUID id;
+    private final String command = "CREATE_INCOME";
 
-    public CreateIncomeAdjustmentMessage(UUID id) {
-        this.id = id;
+    public CreateIncomeAdjustmentMessage() {
     }
 
 }

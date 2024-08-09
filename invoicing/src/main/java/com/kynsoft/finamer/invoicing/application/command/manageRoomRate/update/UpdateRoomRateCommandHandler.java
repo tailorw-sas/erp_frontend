@@ -48,6 +48,7 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
 
 
             bookingService.calculateInvoiceAmount(this.bookingService.findById(dto.getBooking().getId()));
+            bookingService.calculateHotelAmount(this.bookingService.findById(dto.getBooking().getId()));
             invoiceService.calculateInvoiceAmount(this.invoiceService.findById(dto.getBooking().getInvoice().getId()));
         }
 

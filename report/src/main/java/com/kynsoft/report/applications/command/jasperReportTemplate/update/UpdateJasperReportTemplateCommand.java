@@ -33,13 +33,14 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
     private String rootIndex;
     private String language;
     private Status status;
+    private UUID dbConection;
 
     public UpdateJasperReportTemplateCommand(UUID id, String name, String description,
                                              JasperReportTemplateType type, String file, String parameters,
                                              Double parentIndex, Double menuPosition, 
                                              String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
                                              Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
-                                             String rootIndex, String language, Status status) {
+                                             String rootIndex, String language, Status status, UUID dbConection) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -59,7 +60,7 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
         this.rootIndex = rootIndex;
         this.language = language;
         this.status = status;
-
+        this.dbConection = dbConection;
     }
 
     public static UpdateJasperReportTemplateCommand fromRequest(UpdateJasperReportTemplateRequest request, UUID id) {
@@ -82,7 +83,8 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
                 request.getCancel(),
                 request.getRootIndex(),
                 request.getLanguage(),
-                request.getStatus()
+                request.getStatus(),
+                request.getDbConection()
         );
     }
 

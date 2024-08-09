@@ -54,7 +54,8 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
                 command.getDefaultRemark(),
                 command.getDeposit(),
                 command.getApplyDeposit(),
-                command.getDefaults()
+                command.getDefaults(),
+                command.getAntiToIncome()
         ));
         this.producerReplicateManagePaymentTransactionTypeService
                 .create(new ReplicateManagePaymentTransactionTypeKafka(
@@ -67,7 +68,8 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
                         command.getCash(),
                         command.getRemarkRequired(),
                         command.getMinNumberOfCharacter(),
-                        command.getDefaultRemark()
+                        command.getDefaultRemark(),
+                        command.getDefaults()
                 ));
     }
 }

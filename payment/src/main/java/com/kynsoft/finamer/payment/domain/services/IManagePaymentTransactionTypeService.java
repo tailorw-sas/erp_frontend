@@ -17,5 +17,7 @@ public interface IManagePaymentTransactionTypeService {
 
     ManagePaymentTransactionTypeDto findById(UUID id);
 
+    ManagePaymentTransactionTypeDto findByCode(String code);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

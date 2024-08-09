@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ManagePaymentTransactionTypeReadDataJPARepository extends JpaRepository<ManagePaymentTransactionType, UUID>,
@@ -14,4 +15,5 @@ public interface ManagePaymentTransactionTypeReadDataJPARepository extends JpaRe
 
     Page<ManagePaymentTransactionType> findAll(Specification specification, Pageable pageable);
 
+    Optional<ManagePaymentTransactionType> findByCode(String code);
 }

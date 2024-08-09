@@ -22,7 +22,7 @@ public class ManageInvoiceDto {
     private Long invoiceId;
     private Long invoiceNo;
     private String invoiceNumber;
-    private LocalDate invoiceDate;
+    private LocalDateTime invoiceDate;
     private LocalDate dueDate;
     private Boolean isManual;
     private Double invoiceAmount;

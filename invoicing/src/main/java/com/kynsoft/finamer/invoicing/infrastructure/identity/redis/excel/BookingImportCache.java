@@ -56,7 +56,7 @@ public class BookingImportCache {
     private double roomNumber;
 
     private double hotelInvoiceAmount;
-
+    @Indexed
     private String bookingDate;
 
     private String hotelType;

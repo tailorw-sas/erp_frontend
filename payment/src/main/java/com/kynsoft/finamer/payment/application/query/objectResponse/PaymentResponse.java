@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class PaymentResponse implements IResponse {
 
     private UUID id;
+    private OffsetDateTime createdAt;
     private Long paymentId;
     private ManagePaymentSourceResponse paymentSource;
     private String reference;
@@ -45,6 +47,7 @@ public class PaymentResponse implements IResponse {
 
     public PaymentResponse(PaymentDto dto) {
         this.id = dto.getId();
+        this.createdAt = dto.getCreatedAt();
         this.paymentId = dto.getPaymentId();
         this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSourceResponse(dto.getPaymentSource()) : null;
         this.reference = dto.getReference();

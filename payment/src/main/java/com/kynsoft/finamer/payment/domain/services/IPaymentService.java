@@ -17,6 +17,10 @@ public interface IPaymentService {
 
     PaymentDto findById(UUID id);
 
+    boolean existPayment(long genId);
+
+    PaymentDto findByPaymentId(long paymentId);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<PaymentDto> createBulk(List<PaymentDto> dtoList);

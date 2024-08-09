@@ -20,4 +20,5 @@ public class ManageHotelDto {
     private Long autogen_code;
     private boolean virtual;
     private String status;
+    private boolean requiresFlatRate;
 }

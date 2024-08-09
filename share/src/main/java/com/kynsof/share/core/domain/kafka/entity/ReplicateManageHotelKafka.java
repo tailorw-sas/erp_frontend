@@ -17,6 +17,6 @@ public class ReplicateManageHotelKafka implements Serializable {
     private Boolean isApplyByVCC;
     private UUID manageTradingCompany;
     private String status;
-
+    private boolean requiresFlatRate;
     private Boolean isVirtual;
 }

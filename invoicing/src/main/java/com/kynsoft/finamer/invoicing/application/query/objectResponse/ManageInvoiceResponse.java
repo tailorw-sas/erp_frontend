@@ -24,7 +24,7 @@ public class ManageInvoiceResponse implements IResponse {
     private Long invoiceId;
     private Long invoiceNo;
     private String invoiceNumber;
-    private LocalDate invoiceDate;
+    private LocalDateTime invoiceDate;
     private Boolean isManual;
     private Double invoiceAmount;
     private Double dueAmount;

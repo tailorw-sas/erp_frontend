@@ -41,10 +41,11 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
             if (!ExcelUtils.isRowEmpty(currentRow)) {
                 annotatedField.forEach((cellInfo, beanField) -> {
                     if (cellInfo.getPosition() != -1) {
+
                         Cell cell = currentRow.getCell(cellInfo.getPosition(), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
-                        ExcelUtils.readCell(cell, beanField, cellInfo, bean);
+                        ExcelUtils.readCell(cell, beanField, cellInfo, bean, workbook.createDataFormat());
                     } else {
-                        beanField.setFieldValue(currentRow.getRowNum(), bean);
+                        beanField.setFieldValue(currentRow.getRowNum()+1, bean);
                     }
                 });
                 rowCursor++;

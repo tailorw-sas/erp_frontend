@@ -55,7 +55,7 @@ public class UpdateAttachmentCommandHandler implements ICommandHandler<UpdateAtt
             this.attachmentService.update(dto);
             
             this.updateAttachmentStatusHistory(dto.getInvoice() , dto.getFilename(), dto.getAttachmentId(), dto.getEmployee(), dto.getEmployeeId());
-            this.updateInvoiceStatusHistory(dto.getInvoice(), command.getEmployee(), dto.getFilename());
+
         }
     }
 

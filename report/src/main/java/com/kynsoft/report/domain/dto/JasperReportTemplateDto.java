@@ -37,13 +37,15 @@ public class JasperReportTemplateDto {
     private String rootIndex;
     private String language;
 
+    private DBConectionDto dbConection;
+
     public JasperReportTemplateDto(UUID id, String templateCode, String templateName, 
                                    String templateDescription, String templateContentUrl, 
                                    JasperReportTemplateType type, String parameters, 
                                    Double parentIndex, Double menuPosition, 
                                    String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
                                    Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
-                                   String rootIndex, String language, Status status) {
+                                   String rootIndex, String language, Status status, DBConectionDto dbConection) {
         this.id = id;
         this.code = templateCode;
         this.name = templateName;
@@ -64,6 +66,7 @@ public class JasperReportTemplateDto {
         this.rootIndex = rootIndex;
         this.language = language;
         this.status = status;
+        this.dbConection = dbConection;
     }
 
 }

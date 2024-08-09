@@ -67,6 +67,11 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
+    public ManagePaymentTransactionTypeDto findByCode(String code) {
+            return repositoryQuery.findByCode(code).map(ManagePaymentTransactionType::toAggregate).orElse(null);
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 

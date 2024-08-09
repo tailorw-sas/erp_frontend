@@ -34,13 +34,14 @@ public class CreateJasperReportTemplateCommand implements ICommand {
     private Boolean cancel;
     private String rootIndex;
     private String language;
+    private UUID dbConection;
 
     public CreateJasperReportTemplateCommand(String code, String name, String description, JasperReportTemplateType type,
                                              String file, String parameters, 
                                              Double parentIndex, Double menuPosition, 
                                              String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
                                              Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
-                                             String rootIndex, String language, Status status) {
+                                             String rootIndex, String language, Status status, UUID dbConection) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -62,7 +63,7 @@ public class CreateJasperReportTemplateCommand implements ICommand {
         this.rootIndex = rootIndex;
         this.language = language;
         this.status = status;
-        
+        this.dbConection = dbConection;
     }
 
     public static CreateJasperReportTemplateCommand fromRequest(CreateJasperReportTemplateRequest request) {
@@ -86,7 +87,8 @@ public class CreateJasperReportTemplateCommand implements ICommand {
                 request.getCancel(),
                 request.getRootIndex(),
                 request.getLanguage(),
-                request.getStatus()
+                request.getStatus(),
+                request.getDbConection()
         );
     }
 

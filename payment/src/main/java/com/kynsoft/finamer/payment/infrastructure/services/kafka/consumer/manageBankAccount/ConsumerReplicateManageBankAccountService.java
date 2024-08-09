@@ -22,7 +22,7 @@ public class ConsumerReplicateManageBankAccountService {
     @KafkaListener(topics = "finamer-replicate-manage-bank-account", groupId = "payment-entity-replica")
     public void listen(ReplicateManageBankAccountKafka objKafka) {
         try {
-            CreateManageBankAccountCommand command = new CreateManageBankAccountCommand(objKafka.getId(), objKafka.getAccountNumber(), objKafka.getStatus(), objKafka.getNameOfBank());
+            CreateManageBankAccountCommand command = new CreateManageBankAccountCommand(objKafka.getId(), objKafka.getAccountNumber(), objKafka.getStatus(), objKafka.getNameOfBank(),objKafka.getManageHotel());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageBankAccountService.class.getName()).log(Level.SEVERE, null, ex);

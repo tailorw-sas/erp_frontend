@@ -42,7 +42,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         UpdateIfNotNull.updateBoolean(dto::setReSend, command.getReSend(), dto.getReSend(), update::setUpdate);
         UpdateIfNotNull.updateDouble(dto::setInvoiceAmount, command.getInvoiceAmount(), dto.getInvoiceAmount(),
                 update::setUpdate);
-        this.updateDate(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(),
+        this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(),
                 update::setUpdate);
         this.updateAgency(dto::setAgency, command.getAgency(), dto.getAgency().getId(), update::setUpdate);
         this.updateHotel(dto::setHotel, command.getHotel(), dto.getHotel().getId(), update::setUpdate);
@@ -57,7 +57,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         if (update.getUpdate() > 0) {
             this.service.update(dto);
 
-            this.updateInvoiceStatusHistory(dto, command.getEmployee());
+
 
         }
 

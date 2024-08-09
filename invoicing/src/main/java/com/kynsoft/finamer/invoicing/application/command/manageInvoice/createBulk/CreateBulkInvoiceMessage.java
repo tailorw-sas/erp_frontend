@@ -21,15 +21,17 @@ public class CreateBulkInvoiceMessage implements ICommandMessage {
     private List<CreateRoomRateMessage> roomRateMessages;
     private List<CreateAdjustmentMessage> adjustmentMessages;
     private Long invoiceId;
+    private String invoiceNo;
 
     public CreateBulkInvoiceMessage(UUID id, List<CreateBookingMessage> bookingResponse,
             List<CreateRoomRateMessage> roomRateMessages, List<CreateAdjustmentMessage> adjustmentMessages,
-            Long invoiceId) {
+            Long invoiceId, String invoiceNo) {
         this.id = id;
         this.bookingResponse = bookingResponse;
         this.roomRateMessages = roomRateMessages;
         this.adjustmentMessages = adjustmentMessages;
         this.invoiceId = invoiceId;
+        this.invoiceNo = invoiceNo;
     }
 
 }

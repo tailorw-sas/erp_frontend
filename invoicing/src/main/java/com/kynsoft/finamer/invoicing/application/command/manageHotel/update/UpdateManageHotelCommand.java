@@ -16,12 +16,16 @@ public class UpdateManageHotelCommand implements ICommand {
     private String name;
     private UUID tradingCompany;
     private String status;
+    private Boolean isVirtual;
+    private boolean requiresFlatRate;
 
-    public UpdateManageHotelCommand(UUID id, String name, UUID tradingCompany, String status) {
+    public UpdateManageHotelCommand(UUID id, String name, UUID tradingCompany, String status, Boolean isVirtual,boolean requiresFlatRate) {
         this.id = id;
         this.name = name;
         this.tradingCompany = tradingCompany;
         this.status = status;
+        this.isVirtual = isVirtual;
+        this.requiresFlatRate=requiresFlatRate;
     }
 
     @Override

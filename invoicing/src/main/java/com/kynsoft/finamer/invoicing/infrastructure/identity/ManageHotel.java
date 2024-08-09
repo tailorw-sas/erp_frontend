@@ -62,6 +62,8 @@ public class ManageHotel implements Serializable {
     private Boolean isVirtual;
 
     private String status;
+    @Column(columnDefinition = "boolean default false")
+    private boolean requiresFlatRate;
 
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
@@ -73,11 +75,12 @@ public class ManageHotel implements Serializable {
                 : null;
         this.isVirtual=dto.isVirtual();
         this.status = dto.getStatus();
+        this.requiresFlatRate=dto.isRequiresFlatRate();
     }
 
     public ManageHotelDto toAggregate() {
         return new ManageHotelDto(
                 id, code, name, manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null, null,
-                isVirtual != null ? isVirtual : false, status);
+                isVirtual != null ? isVirtual : false, status,requiresFlatRate);
     }
 }

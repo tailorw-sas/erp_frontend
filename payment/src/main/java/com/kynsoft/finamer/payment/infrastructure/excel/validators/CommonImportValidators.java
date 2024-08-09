@@ -31,20 +31,23 @@ public class CommonImportValidators {
         this.closeOperationService = closeOperationService;
     }
 
-    public void validateAgency(String agencyCode, List<ErrorField> errorFieldList) {
+    public boolean validateAgency(String agencyCode, List<ErrorField> errorFieldList) {
         if (Objects.isNull(agencyCode)){
             errorFieldList.add(new ErrorField("Agency", "Agency can't be empty"));
-            return;
+            return false;
         }
         boolean existAgency = agencyService.existByCode(agencyCode);
         if (existAgency) {
-            ManageAgencyDto manageHotelDto = agencyService.findByCode(agencyCode);
-            if (Status.INACTIVE.name().equals(manageHotelDto.getStatus())) {
+            ManageAgencyDto manageAgencyDto = agencyService.findByCode(agencyCode);
+            if (Status.INACTIVE.name().equals(manageAgencyDto.getStatus())) {
                 errorFieldList.add(new ErrorField("Agency", "The agency is inactive"));
+                return false;
             }
         } else {
             errorFieldList.add(new ErrorField("Agency", "The agency not exist"));
+            return false;
         }
+        return true;
     }
 
     public void validateHotel(String hotelCode, List<ErrorField> errorFieldList) {
@@ -63,15 +66,17 @@ public class CommonImportValidators {
         }
     }
 
-    public void validateTransactionDate(String transactionDate, String dateFormat, List<ErrorField> errorFieldList) {
+    public boolean validateTransactionDate(String transactionDate, String dateFormat, List<ErrorField> errorFieldList) {
         if (Objects.isNull(transactionDate)){
             errorFieldList.add(new ErrorField("Transaction Date", "Transaction Date can't be empty"));
-            return;
+            return false;
         }
         boolean valid = DateUtil.validateDateFormat(transactionDate, dateFormat);
         if (!valid) {
             errorFieldList.add(new ErrorField("Transaction Date", "Invalid date format"));
+            return false;
         }
+        return true;
     }
 
     public void validateRemarks(String remarks, List<ErrorField> errorFieldList) {
@@ -85,8 +90,9 @@ public class CommonImportValidators {
         }
     }
 
-    public void validateCloseOperation(String transactionDateArg, String hotelCode, String dateFormat, List<ErrorField> errorFieldList) {
-        if (hotelService.existByCode(hotelCode) && errorFieldList.stream().noneMatch(errorField ->"Transaction Date".equals( errorField.getField()))) {
+    public void validateCloseOperation(String transactionDateArg, String hotelCode, String dateFormat, List<ErrorField> errorFieldList,boolean isValidTransactionDate) {
+        if (hotelService.existByCode(hotelCode) &&
+              isValidTransactionDate ) {
             ManageHotelDto manageHotelDto = hotelService.findByCode(hotelCode);
             if (Status.ACTIVE.name().equals(manageHotelDto.getStatus())) {
                 PaymentCloseOperationDto paymentCloseOperationDto = closeOperationService.findByHotelIds(manageHotelDto.getId());

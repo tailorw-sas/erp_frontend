@@ -31,7 +31,8 @@ public class ConsumerReplicateManageTransactionTypeService {
                     objKafka.getApplyDeposit(),
                     objKafka.getRemarkRequired(),
                     objKafka.getMinNumberOfCharacter(),
-                    objKafka.getDefaultRemark()
+                    objKafka.getDefaultRemark(),
+                    objKafka.getDefaults()
             );
             mediator.send(command);
         } catch (Exception ex) {

@@ -46,11 +46,11 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         this.repositoryQuery = repositoryQuery;
     }
 
-    public String getInvoiceNumberSequence(String invoiceNumber){
+    public Long getInvoiceNumberSequence(String invoiceNumber){
         Long lastInvoiceNo = this.repositoryQuery.findByInvoiceNumber(invoiceNumber);
 
         lastInvoiceNo += 1;
-        return invoiceNumber + "-" + lastInvoiceNo;
+        return  lastInvoiceNo;
     }
 
 
@@ -77,8 +77,11 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
         ManageInvoice entity = new ManageInvoice(dto);
-        String invoiceNumber = getInvoiceNumberSequence(dto.getInvoiceNumber());
+        Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
+        String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
         entity.setInvoiceNumber(invoiceNumber);
+        entity.setInvoiceNo(lastInvoiceNo);
+        dto.setInvoiceNo(lastInvoiceNo);
         ManageInvoice saved = repositoryCommand.saveAndFlush(entity);
 
 
@@ -108,7 +111,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         for (int i = 0; i < data.size(); i++) {
             ManageInvoiceResponse invoice = data.get(i);
-            rows.add(new ExportInvoiceRow(0, invoice.getInvoiceId().toString(), invoice.getInvoiceNumber(), Date.from(invoice.getInvoiceDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString(), invoice.getIsManual().toString(), invoice.getInvoiceAmount().toString(), invoice.getHotel().getCode() + "-" + invoice.getHotel().getName(), invoice.getAgency().getCode() + "-" + invoice.getAgency().getName(), InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType(), InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus(), null));
+            rows.add(new ExportInvoiceRow(0, invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", invoice.getInvoiceNumber(), invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "", invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "",  invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "",  invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "",invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus(): "", null));
 
 
         }

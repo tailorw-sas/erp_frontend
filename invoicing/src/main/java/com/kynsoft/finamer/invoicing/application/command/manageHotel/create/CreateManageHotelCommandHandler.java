@@ -30,6 +30,6 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 : null;
 
         service.create(new ManageHotelDto(
-                command.getId(), command.getCode(), command.getName(), manageTradingCompaniesDto, null,command.isVirtual(), command.getStatus()));
+                command.getId(), command.getCode(), command.getName(), manageTradingCompaniesDto, null,command.isVirtual(), command.getStatus(),command.isRequiresFlatRate()));
     }
 }

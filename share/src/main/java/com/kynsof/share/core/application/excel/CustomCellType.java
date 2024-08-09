@@ -8,5 +8,6 @@ public enum CustomCellType {
     NUMERIC,
     FORMULA,
     RICHFIELD,
-    DATAFORMAT
+    DATAFORMAT,
+    ALFANUMERIC
 }

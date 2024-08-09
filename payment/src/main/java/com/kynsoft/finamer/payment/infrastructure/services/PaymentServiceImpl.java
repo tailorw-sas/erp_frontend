@@ -14,7 +14,9 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.PaymentWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.PaymentReadDataJPARepository;
-import java.time.LocalDateTime;
+
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,7 +46,7 @@ public class PaymentServiceImpl implements IPaymentService {
     public void update(PaymentDto dto) {
         Payment update = new Payment(dto);
 
-        update.setUpdatedAt(LocalDateTime.now());
+        update.setUpdatedAt(OffsetDateTime.now(ZoneId.of("UTC")));
 
         this.repositoryCommand.save(update);
     }
@@ -65,6 +67,19 @@ public class PaymentServiceImpl implements IPaymentService {
             return userSystem.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public boolean existPayment(long genId) {
+        return repositoryQuery.existsPaymentByPaymentId(genId);
+    }
+
+    @Override
+    public PaymentDto findByPaymentId(long paymentId) {
+        return repositoryQuery.findPaymentByPaymentId(paymentId).map(Payment::toAggregate)
+                .orElseThrow(()->new  BusinessNotFoundException(
+                        new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND,
+                                new ErrorField("payment id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase()))));
     }
 
     @Override
