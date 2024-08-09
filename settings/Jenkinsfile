@@ -41,7 +41,7 @@ pipeline {
         
         stage ('Initialize variables') {
             steps {
-                echo '* * * * STAGE: Initializing variables * * * *'
+                echo '* * * * STAGE: Initializing variables * * * * '
                 script {   
                     def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
                     env.BRANCH_NAME = branch
