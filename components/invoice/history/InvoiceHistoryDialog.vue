@@ -112,7 +112,7 @@ const dialogVisible = ref(props.openDialog)
 const options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
-  uriApi: props.selectedInvoiceObj?.invoiceType === ENUM_INVOICE_TYPE[1]?.id || props.selectedInvoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id ? 'invoice-status-history' : 'attachment-status-history',
+  uriApi: props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'invoice-status-history' : 'attachment-status-history',
   loading: false,
   showDelete: false,
   showFilters: false,
@@ -301,7 +301,7 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="props.selectedInvoiceObj?.invoiceType === ENUM_INVOICE_TYPE[1]?.id || props.selectedInvoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id ? 'Income Status history' : header" class="p-4 h-fit w-fit"
+    v-model:visible="dialogVisible" modal :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status history' : header" class="p-4 h-fit w-fit"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
     style="width: 800px;" @hide="closeDialog"
   >
@@ -309,7 +309,7 @@ onMounted(() => {
       <div class="flex flex-row align-items-center">
         <div class="flex flex-column" style="width: 700px;overflow: auto;">
           <DynamicTable
-            :data="isCreationDialog ? listItems as any : ListItems" :columns="props.selectedInvoiceObj?.invoiceType === ENUM_INVOICE_TYPE[1]?.id || props.selectedInvoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id ? incomeColumns : Columns"
+            :data="isCreationDialog ? listItems as any : ListItems" :columns="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? incomeColumns : Columns"
             :options="options" :pagination="Pagination"
 
             @on-confirm-create="clearForm"

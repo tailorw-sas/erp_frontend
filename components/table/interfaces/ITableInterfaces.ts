@@ -10,6 +10,7 @@ export interface IColumn {
   frozen?: boolean
   width?: string
   icon?: string
+  editable?: boolean
   badge?: {
     color: string
   }

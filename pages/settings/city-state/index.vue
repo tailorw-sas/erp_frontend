@@ -258,11 +258,22 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.name = response.name
         item.value.description = response.description
-        countriesList.value = [response.country]
-        item.value.country = response.country
-        timeZoneList.value = [response.timeZone]
-        item.value.timeZone = response.timeZone
         item.value.status = statusToBoolean(response.status)
+        if (response.timeZone) {
+          item.value.timeZone = {
+            id: response.timeZone.id,
+            name: `${response.timeZone.code} - ${response.timeZone.name}`,
+            status: response.timeZone.status,
+          }
+        }
+
+        if (response.country) {
+          item.value.country = {
+            id: response.country.id,
+            name: `${response.country.code} - ${response.country.name}`,
+            status: response.country.status,
+          }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -351,29 +362,38 @@ async function saveItem(item: { [key: string]: any }) {
 async function getCountriesList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
-      sortBy: 'code',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search(confCountryApi.moduleApi, confCountryApi.uriApi, payload)
     const { data: dataList } = response
     countriesList.value = []
     for (const iterator of dataList) {
-      countriesList.value = [...countriesList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      countriesList.value = [...countriesList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -385,29 +405,38 @@ async function getCountriesList(query: string) {
 async function getTimeZoneList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
-      sortBy: 'code',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search(confTimeZoneApi.moduleApi, confTimeZoneApi.uriApi, payload)
     const { data: dataList } = response
     timeZoneList.value = []
     for (const iterator of dataList) {
-      timeZoneList.value = [...timeZoneList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      timeZoneList.value = [...timeZoneList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -521,7 +550,6 @@ onMounted(() => {
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
     </IfCan>
-
   </div>
   <div class="grid">
     <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9">

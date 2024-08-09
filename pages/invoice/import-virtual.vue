@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { v4 as uuidv4 } from 'uuid'
@@ -35,6 +35,7 @@ const idItem = ref('')
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
+  { field: 'trendingCompany', header: 'Trading Company', type: 'text' },
   { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
   { field: 'manageAgencyCode', header: 'Agency', type: 'text' },
   { field: 'bookingDate', header: 'Booking Date', type: 'date' },
@@ -49,6 +50,20 @@ const columns: IColumn[] = [
   { field: 'invoiceAmount', header: 'Amount', type: 'text' },
   { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', showFilter: false },
 ]
+
+const columnsExpandable: IColumn[] = [
+  { field: 'firstName', header: 'First Name', type: 'text' },
+  { field: 'lastName', header: 'Last Name', type: 'text' },
+  { field: 'checkIn', header: 'Check In', type: 'date' },
+  { field: 'checkOut', header: 'Check Out', type: 'date' },
+  { field: 'nights', header: 'Nights', type: 'text' },
+  { field: 'adults', header: 'Adults', type: 'text' },
+  { field: 'children', header: 'Children', type: 'text' },
+  { field: 'roomType', header: 'Room Type', type: 'text' },
+  { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
+  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+]
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -60,6 +75,7 @@ const options = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  expandableRows: true,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -75,7 +91,7 @@ const payload = ref<IQueryRequest>({
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 10,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -86,17 +102,12 @@ const pagination = ref<IPagination>({
 
 async function getErrorList() {
   try {
-    const param: IQueryRequest = {
-      query: idItem.value,
-      pageSize: 20,
-      page: 0,
-      filter: []
-    }
-
+    payload.value = { ...payload.value, query: idItem.value }
     let rowError = ''
     listItems.value = []
     const newListItems = []
-    const response = await GenericService.importSearch(confErrorApi.moduleApi, confErrorApi.uriApi, param)
+
+    const response = await GenericService.importSearch(confErrorApi.moduleApi, confErrorApi.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
 
@@ -109,21 +120,19 @@ async function getErrorList() {
 
     for (const iterator of dataList) {
       rowError = ''
+      const rowExpandable = []
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         for (const err of iterator.errorFields) {
           rowError += `- ${err.message} \n`
         }
-        newListItems.push({ ...iterator.row, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        rowExpandable.push({ ...iterator.row })
+        newListItems.push({ ...iterator.row, id: iterator.id, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, rowExpandable, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
 
     listItems.value = [...listItems.value, ...newListItems]
-    if (listItems.value.length === 0) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
-      await clearForm()
-    }
   }
   catch (error) {
     console.error('Error loading file:', error)
@@ -144,6 +153,7 @@ async function onChangeFile(event: any) {
 
 async function importFile() {
   loadingSaveAll.value = true
+  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
   try {
@@ -165,14 +175,21 @@ async function importFile() {
   catch (error: any) {
     successOperation = false
     uploadComplete.value = false
+    options.value.loading = false
     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
 
-  loadingSaveAll.value = false
   if (successOperation) {
     await getErrorList()
+    if (listItems.value.length === 0) {
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
+      options.value.loading = false
+      await clearForm()
+    }
     // clearForm()
   }
+  loadingSaveAll.value = false
+  options.value.loading = false
 }
 
 async function resetListItems() {
@@ -193,7 +210,6 @@ function onSortField(event: any) {
     getErrorList()
   }
 }
-
 async function goToList() {
   await navigateTo('/invoice')
 }
@@ -202,7 +218,7 @@ watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 
-  // getErrorList()
+  getErrorList()
 })
 
 onMounted(async () => {
@@ -219,30 +235,32 @@ onMounted(async () => {
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
-                  Bookings import from file
+                  Bookings Import From File (Virtual Hotels)
                 </div>
               </div>
             </template>
-            <div class="flex flex-column lg:flex-row w-full">
-              <div class="flex flex-row w-full align-items-center">
-                <label class="w-7rem">Import Data: </label>
+            <div class="grid p-0 m-0" style="margin: 0 auto;">
+              <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
+                <div class="flex align-items-center mb-2">
+                  <label class="w-7rem">Import Data: </label>
 
-                <div class="w-full ">
-                  <div class="p-inputgroup">
-                    <InputText
-                      ref="fileUpload"
-                      v-model="invoiceFile"
-                      placeholder="Choose file"
-                      class="w-full"
-                      show-clear
-                      aria-describedby="inputtext-help"
-                    />
-                    <span class="p-inputgroup-addon">
-                      <Button icon="pi pi-upload" severity="secondary" class="w-3rem" @click="fileUpload.click()" />
-                    </span>
+                  <div class="w-full ">
+                    <div class="p-inputgroup w-full">
+                      <InputText
+                        ref="fileUpload"
+                        v-model="invoiceFile"
+                        placeholder="Choose file"
+                        class="w-full"
+                        show-clear
+                        aria-describedby="inputtext-help"
+                      />
+                      <span class="p-inputgroup-addon p-0 m-0">
+                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                      </span>
+                    </div>
+                    <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
+                    <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile">
                   </div>
-                  <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                  <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile">
                 </div>
               </div>
             </div>
@@ -250,14 +268,38 @@ onMounted(async () => {
         </Accordion>
       </div>
       <DynamicTable
-        :data="listItems" :columns="columns" :options="options" :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @on-change-pagination="payloadOnChangePage = $event" @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems" @on-sort-field="onSortField"
+        :data="listItems"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter"
+        @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError">
-            <span v-tooltip.bottom="data.impSta" style="color: red;">{{ data.impSta }}</span>
+          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
+            <span style="color: red;">{{ data.impSta }}</span>
+          </div>
+        </template>
+
+        <template #expansion="slotProps">
+          <div class="p-0 m-0">
+            <DataTable :value="slotProps.data.rowExpandable" striped-rows>
+              <Column v-for="column of columnsExpandable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+              <template #empty>
+                <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                  <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                    <div class="row">
+                      <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                    </div>
+
+                  </span>
+                  <span v-else class="flex flex-column align-items-center justify-content-center">
+                    <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                  </span>
+                </div>
+              </template>
+            </DataTable>
           </div>
         </template>
       </DynamicTable>

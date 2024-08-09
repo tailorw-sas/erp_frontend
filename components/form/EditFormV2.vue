@@ -154,6 +154,7 @@ watch(() => props.forceSave, () => {
 
         <!-- Field slot -->
         <div :class="field.containerFieldClass">
+          <slot :name="`field-${field.field}-custom`" :field="field" :item="fieldValues" :fields="fields" :on-update="updateField" />
           <slot :name="`field-${field.field}`" :item="fieldValues" :field="field.field" :fields="fields" :on-update="updateField">
             <div v-if="field.dataType === 'image'" class="flex flex-wrap justify-content-center">
               <FileUpload hidden auto custom-upload accept="image/*" :max-file-size="1000000" @uploader="customBase64Uploader($event, fieldValues, field.field)">
@@ -219,6 +220,9 @@ watch(() => props.forceSave, () => {
                 v-if="!loadingSave"
                 v-model="fieldValues[field.field]"
                 :disabled="field?.disabled"
+                mode="decimal"
+                :min-fraction-digits="field?.minFractionDigits ? field.minFractionDigits : 0"
+                :max-fraction-digits="field?.maxFractionDigits ? field.maxFractionDigits : 0"
                 @update:model-value="updateField(field.field, $event)"
               />
               <Skeleton v-else height="2rem" />

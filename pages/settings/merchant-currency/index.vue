@@ -366,7 +366,7 @@ async function getCurrencyList(query: string = '') {
     const { data: dataList } = response
     CurrencyList.value = []
     for (const iterator of dataList) {
-      CurrencyList.value = [...CurrencyList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      CurrencyList.value = [...CurrencyList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

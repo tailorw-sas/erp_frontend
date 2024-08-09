@@ -140,12 +140,12 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
   },
-  {
-    field: 'isNightType',
-    header: 'Night Type',
-    dataType: 'check',
-    class: 'field col-12 mt-3',
-  },
+  // {
+  //   field: 'isNightType',
+  //   header: 'Night Type',
+  //   dataType: 'check',
+  //   class: 'field col-12 mt-3',
+  // },
   {
     field: 'isVirtual',
     header: 'Is Virtual',
@@ -193,7 +193,7 @@ const item = ref<GenericObject>({
   manageTradingCompanies: null,
   applyByTradingCompany: false,
   prefixToInvoice: '',
-  isNightType: false,
+  // isNightType: false,
   isVirtual: false,
   requiresFlatRate: false,
   isApplyByVCC: false,
@@ -214,7 +214,7 @@ const itemTemp = ref<GenericObject>({
   manageTradingCompanies: null,
   applyByTradingCompany: false,
   prefixToInvoice: '',
-  isNightType: false,
+  // isNightType: false,
   isVirtual: false,
   requiresFlatRate: false,
   isApplyByVCC: false,
@@ -375,23 +375,23 @@ async function getItemById(id: string) {
         item.value.address = response.address
         item.value.applyByTradingCompany = response.applyByTradingCompany
         item.value.prefixToInvoice = response.prefixToInvoice
-        item.value.isNightType = response.isNightType
+        // item.value.isNightType = response.isNightType
         item.value.isVirtual = response.isVirtual
         item.value.requiresFlatRate = response.requiresFlatRate
         item.value.isApplyByVCC = response.isApplyByVCC
         item.value.description = response.description
         listCountryItems.value = [response.manageCountry]
-        item.value.manageCountry = { id: response.manageCountry.id, name: response.manageCountry.name, status: response.manageCountry.status }
+        item.value.manageCountry = { id: response.manageCountry.id, name: `${response.manageCountry.code} - ${response.manageCountry.name}`, status: response.manageCountry.status }
         if (response.manageCountry) {
           listCityStateItems.value = [response.manageCityState]
-          item.value.manageCityState = { id: response.manageCityState.id, name: response.manageCityState.name, status: response.manageCityState.status }
+          item.value.manageCityState = { id: response.manageCityState.id, name: `${response.manageCityState.code} - ${response.manageCityState.name}`, status: response.manageCityState.status }
         }
         listCurrencyItems.value = [response.manageCurrency]
-        item.value.manageCurrency = { id: response.manageCurrency.id, name: response.manageCurrency.name, status: response.manageCurrency.status }
+        item.value.manageCurrency = { id: response.manageCurrency.id, name: `${response.manageCurrency.code} - ${response.manageCurrency.name}`, status: response.manageCurrency.status }
         listRegionItems.value = [response.manageRegion]
-        item.value.manageRegion = { id: response.manageRegion.id, name: response.manageRegion.name, status: response.manageRegion.status }
+        item.value.manageRegion = { id: response.manageRegion.id, name: `${response.manageRegion.code} - ${response.manageRegion.name}`, status: response.manageRegion.status }
         if (response.manageTradingCompanies) {
-          const objTradingCompany = { id: response.manageTradingCompanies.id, company: response.manageTradingCompanies.company, status: response.manageTradingCompanies.status }
+          const objTradingCompany = { id: response.manageTradingCompanies.id, company: `${response.manageTradingCompanies.code} - ${response.manageTradingCompanies.company}`, status: response.manageTradingCompanies.status }
           listTradingCompanyItems.value = [objTradingCompany]
           item.value.manageTradingCompanies = objTradingCompany
         }
@@ -552,7 +552,12 @@ async function getCountriesList(query: string) {
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -563,14 +568,14 @@ async function getCountriesList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-country', payload)
     const { data: dataList } = response
     listCountryItems.value = []
     for (const iterator of dataList) {
-      listCountryItems.value = [...listCountryItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listCountryItems.value = [...listCountryItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -590,7 +595,12 @@ async function getCityStatesList(countryId: string, query: string) {
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -601,14 +611,14 @@ async function getCityStatesList(countryId: string, query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-city-state', payload)
     const { data: dataList } = response
     listCityStateItems.value = []
     for (const iterator of dataList) {
-      listCityStateItems.value = [...listCityStateItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listCityStateItems.value = [...listCityStateItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -643,14 +653,14 @@ async function getCurrencyList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-currency', payload)
     const { data: dataList } = response
     listCurrencyItems.value = []
     for (const iterator of dataList) {
-      listCurrencyItems.value = [...listCurrencyItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listCurrencyItems.value = [...listCurrencyItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -661,29 +671,38 @@ async function getCurrencyList(query: string) {
 async function getRegionList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-region', payload)
     const { data: dataList } = response
     listRegionItems.value = []
     for (const iterator of dataList) {
-      listRegionItems.value = [...listRegionItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listRegionItems.value = [...listRegionItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -697,7 +716,12 @@ async function getTradingCompanyList(query: string) {
         key: 'company',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -712,10 +736,11 @@ async function getTradingCompanyList(query: string) {
     }
 
     const response = await GenericService.search('settings', 'manage-trading-companies', payload)
+
     const { data: dataList } = response
     listTradingCompanyItems.value = []
     for (const iterator of dataList) {
-      listTradingCompanyItems.value = [...listTradingCompanyItems.value, { id: iterator.id, company: iterator.company, status: iterator.status }]
+      listTradingCompanyItems.value = [...listTradingCompanyItems.value, { id: iterator.id, company: `${iterator.code} - ${iterator.company}`, status: iterator.status }]
     }
   }
   catch (error) {

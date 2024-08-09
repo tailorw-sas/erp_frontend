@@ -239,12 +239,26 @@ async function getForSelectNavigateList(id: string = '') {
   try {
     navigateListItems.value = []
     const payload = {
-      filter: [{
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: id,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: id,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 200,
       page: 0,
@@ -258,7 +272,7 @@ async function getForSelectNavigateList(id: string = '') {
       .filter((item: any) => item.id !== id)
       .map((item: any) => ({
         id: item.id,
-        name: item.name,
+        name: `${item.code} - ${item.name}`,
         status: item.status
       }))
   }

@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import dayjs from 'dayjs'
+import { formatNumber } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { GenericObject } from '~/types'
@@ -9,6 +10,7 @@ import { GenericService } from '~/services/generic-services'
 import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { itemMenuList } from '~/components/payment/indexBtns'
+import IfCan from '~/components/auth/IfCan.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
@@ -258,7 +260,7 @@ async function getList() {
     pagination.value.totalPages = totalPages
 
     const existingIds = new Set(listItems.value.map(item => item.id))
-
+    const arrayNumero = []
     for (const iterator of dataList) {
       // if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
       //   iterator.status = statusToBoolean(iterator.status)
@@ -277,12 +279,12 @@ async function getList() {
         iterator.paymentId = String(iterator.paymentId)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'paymentAmount')) {
-        count.paymentAmount += iterator.paymentAmount
-        iterator.paymentAmount = String(iterator.paymentAmount)
+        count.paymentAmount = count.paymentAmount + iterator.paymentAmount
+        iterator.paymentAmount = formatNumber(iterator.paymentAmount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'depositBalance')) {
         count.depositBalance += iterator.depositBalance
-        iterator.depositBalance = String(iterator.depositBalance)
+        iterator.depositBalance = formatNumber(iterator.depositBalance)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'applied')) {
         count.applied += iterator.applied
@@ -635,38 +637,46 @@ function toggle(event: Event, index: number) {
     </h3>
     <div class="flex justify-content-end px-0">
       <span v-for="(objBtnAndMenu, index) in itemMenuList" :key="index">
-        <div v-if="objBtnAndMenu.showBtn()" class="my-2 flex justify-content-end pl-2 pr-0">
-          <Button
-            v-tooltip.left="objBtnAndMenu.btnToolTip"
-            :label="objBtnAndMenu.btnLabel"
-            severity="primary"
-            :disabled="objBtnAndMenu.btnDisabled"
-            aria-haspopup="true"
-            :aria-controls="objBtnAndMenu.menuId"
-            @click="toggle($event, index)"
-          >
-            <template #icon>
-              <span class="mr-2 flex align-items-center justify-content-center p-0">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  :height="objBtnAndMenu.btnIcon.svgHeight"
-                  viewBox="0 -960 960 960"
-                  :width="objBtnAndMenu.btnIcon.svgWidth"
-                  :fill="objBtnAndMenu.btnIcon.svgFill"
-                >
-                  <path :d="objBtnAndMenu.btnIcon.svgPath" />
-                </svg>
-              </span>
-            </template>
-          </Button>
-          <Menu
-            v-if="objBtnAndMenu.menuItems.length > 0"
-            :id="objBtnAndMenu.menuId"
-            :ref="el => objBtnAndMenu.menuRef = el"
-            :model="objBtnAndMenu.menuItems"
-            :popup="true"
-          />
-        </div>
+        <IfCan :perms="objBtnAndMenu?.permission?.length > 0 ? objBtnAndMenu.permission : []">
+          <div v-if="objBtnAndMenu.showBtn()" class="my-2 flex justify-content-end pl-2 pr-0">
+            <Button
+              v-tooltip.left="objBtnAndMenu.btnToolTip"
+              :label="objBtnAndMenu.btnLabel"
+              severity="primary"
+              :disabled="objBtnAndMenu.btnDisabled"
+              aria-haspopup="true"
+              :aria-controls="objBtnAndMenu.menuId"
+              @click="toggle($event, index)"
+            >
+              <template #icon>
+                <i
+                  v-if="objBtnAndMenu?.pBtnIcon !== undefined && objBtnAndMenu.pBtnIcon !== null && objBtnAndMenu.pBtnIcon !== ''"
+                  :class="objBtnAndMenu.pBtnIcon"
+                  class="mr-2"
+                  style="width: 20px; height: 20px; margin: 0 auto; display: flex; justify-content: center; align-items: center;"
+                />
+                <span v-else class="mr-2 flex align-items-center justify-content-center p-0">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    :height="objBtnAndMenu.btnIcon.svgHeight"
+                    viewBox="0 -960 960 960"
+                    :width="objBtnAndMenu.btnIcon.svgWidth"
+                    :fill="objBtnAndMenu.btnIcon.svgFill"
+                  >
+                    <path :d="objBtnAndMenu.btnIcon.svgPath" />
+                  </svg>
+                </span>
+              </template>
+            </Button>
+            <Menu
+              v-if="objBtnAndMenu.menuItems.length > 0"
+              :id="objBtnAndMenu.menuId"
+              :ref="el => objBtnAndMenu.menuRef = el"
+              :model="objBtnAndMenu.menuItems"
+              :popup="true"
+            />
+          </div>
+        </IfCan>
       </span>
     </div>
   </div>
@@ -1044,10 +1054,10 @@ function toggle(event: Event, index: number) {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold;" />
-            <Column :footer="Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
-            <Column :footer="Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
-            <Column :footer="Math.round((subTotals.applied + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
-            <Column :footer="Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
+            <Column :footer="formatNumber(Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+            <Column :footer="formatNumber(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+            <Column :footer="formatNumber(Math.round((subTotals.applied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+            <Column :footer="formatNumber(Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
             <Column :colspan="0" />
             <Column :colspan="0" />
           </Row>

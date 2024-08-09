@@ -160,11 +160,11 @@ onMounted(() => {
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.invoiceAmount"
-            show-clear :disabled="!!item?.id && route.query.type !== ENUM_INVOICE_TYPE[2]?.id"
+            show-clear :disabled="!!item?.id && route.query.type !== InvoiceType.CREDIT"
             @update:model-value="($event) => {
               console.log(invoiceObj)
               let value: any = $event
-              if (route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[3]?.id || invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
+              if (route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.CREDIT){
                 value = toNegative(value)
               }
               else {
@@ -177,7 +177,7 @@ onMounted(() => {
         <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
-            show-clear :disabled="!!item?.id"
+            show-clear 
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
         </template>
@@ -227,6 +227,18 @@ onMounted(() => {
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
             </template>
           </DebouncedAutoCompleteComponent>
+        </template>
+
+        <template #field-bookingDate="{ item: data, onUpdate }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.bookingDate"
+            date-format="yy-mm-dd"
+            :max-date="new Date()"
+            @update:model-value="($event) => {
+              onUpdate('bookingDate', $event)
+            }"
+          />
         </template>
 
         <template #field-roomType="{ item: data, onUpdate }">
@@ -340,6 +352,17 @@ onMounted(() => {
             @update:model-value="($event) => {
 
               onUpdate('checkOut', dayjs($event).startOf('day').toDate())
+            }"
+          />
+        </template>
+        <template #field-bookingDate="{ item: data, onUpdate }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.bookingDate"
+            date-format="yy-mm-dd"
+            :max-date="new Date()"
+            @update:model-value="($event) => {
+              onUpdate('bookingDate', $event)
             }"
           />
         </template>

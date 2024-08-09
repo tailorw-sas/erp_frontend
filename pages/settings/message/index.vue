@@ -232,7 +232,7 @@ async function resetListItems() {
   getList()
 }
 
-async function getLanguagesList(query: string) {
+async function getLanguagesList(query: string = '') {
   try {
     const payload
         = {
@@ -241,7 +241,13 @@ async function getLanguagesList(query: string) {
               key: 'name',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
             },
             {
               key: 'status',
@@ -261,7 +267,7 @@ async function getLanguagesList(query: string) {
     const { data: dataList } = response
     listLanguagesItems.value = []
     for (const iterator of dataList) {
-      listLanguagesItems.value = [...listLanguagesItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listLanguagesItems.value = [...listLanguagesItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -283,7 +289,7 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.type = response.type
         listLanguagesItems.value = [response.language]
-        item.value.language = { id: response.language.id, name: response.language.name, status: response.language.status }
+        item.value.language = { id: response.language.id, name: `${response.language.code} - ${response.language.name}`, status: response.language.status }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)

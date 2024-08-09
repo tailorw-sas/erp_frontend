@@ -548,10 +548,22 @@ async function getItemById(id: string) {
         item.value.validateCheckout = response.validateCheckout
         item.value.bookingCouponFormat = response.bookingCouponFormat
         item.value.sentFileFormat = ENUM_FILE_FORMAT.find(i => i.id === response.sentFileFormat)
-        agencyTypeList.value = [response.agencyType]
-        item.value.agencyType = response.agencyType
-        clientList.value = [response.client]
-        item.value.client = response.client
+
+        if (response.agencyType) {
+          item.value.agencyType = {
+            id: response.agencyType.id,
+            name: `${response.agencyType.code} - ${response.agencyType.name}`,
+            status: response.agencyType.status,
+          }
+        }
+
+        if (response.client) {
+          item.value.client = {
+            id: response.client.id,
+            name: `${response.client.code} - ${response.client.name}`,
+            status: response.client.status,
+          }
+        }
         if (response.agencyAlias && response.agencyAlias !== '000-MySelf') {
           await GetAgenciesList(item.value.client.id)
           item.value.agencyAlias = agencyAliasList.value.find(i => i.name === response.agencyAlias)
@@ -561,13 +573,25 @@ async function getItemById(id: string) {
           agencyAliasList.value = [defaultAgencyAlias.value]
           item.value.agencyAlias = defaultAgencyAlias.value
         }
-        b2BPartnerList.value = [response.sentB2BPartner]
-        item.value.sentB2BPartner = response.sentB2BPartner
+        if (response.sentB2BPartner) {
+          item.value.sentB2BPartner = {
+            id: response.sentB2BPartner.id,
+            name: `${response.sentB2BPartner.code} - ${response.sentB2BPartner.name}`,
+            status: response.sentB2BPartner.status,
+          }
+        }
         countryList.value = [response.country]
         item.value.country = response.country
-        cityStateList.value = [response.cityState]
-        item.value.cityState = response.cityState
+
+        if (response.cityState) {
+          item.value.cityState = {
+            id: response.cityState.id,
+            name: `${response.cityState.code} - ${response.cityState.name}`,
+            status: response.cityState.status,
+          }
+        }
         item.value.isDefault = response.isDefault ?? false
+
         item.value.generationType = ENUM_GENERATION_TYPE.find(i => i.id === response.generationType)
       }
       fields[0].disabled = true
@@ -692,15 +716,15 @@ async function getAgencyTypeList(query: string) {
           query: '',
           pageSize: 20,
           page: 0,
-          sortBy: 'code',
-          sortType: ENUM_SHORT_TYPE.DESC
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search(confAgencyTypeApi.moduleApi, confAgencyTypeApi.uriApi, payload)
     const { data: dataList } = response
     agencyTypeList.value = []
     for (const iterator of dataList) {
-      agencyTypeList.value = [...agencyTypeList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      agencyTypeList.value = [...agencyTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -813,14 +837,14 @@ async function getB2BPartnerList(param: any) {
           pageSize: 20,
           page: 0,
           sortBy: 'code',
-          sortType: ENUM_SHORT_TYPE.DESC
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search(confB2BPartnerApi.moduleApi, confB2BPartnerApi.uriApi, payload)
     const { data: dataList } = response
     b2BPartnerList.value = []
     for (const iterator of dataList) {
-      b2BPartnerList.value = [...b2BPartnerList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      b2BPartnerList.value = [...b2BPartnerList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -855,7 +879,7 @@ async function getCountryList(param: any) {
           query: '',
           pageSize: 20,
           page: 0,
-          sortBy: 'code',
+          sortBy: 'name',
           sortType: ENUM_SHORT_TYPE.DESC
         }
 
@@ -863,7 +887,7 @@ async function getCountryList(param: any) {
     const { data: dataList } = response
     countryList.value = []
     for (const iterator of dataList) {
-      countryList.value = [...countryList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      countryList.value = [...countryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -883,7 +907,12 @@ async function getCityStateList(countryId: string, query: string) {
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -901,7 +930,7 @@ async function getCityStateList(countryId: string, query: string) {
     const { data: dataList } = response
     cityStateList.value = []
     for (const iterator of dataList) {
-      cityStateList.value = [...cityStateList.value, { id: iterator.id, code: iterator.code, name: iterator.name, status: iterator.status }]
+      cityStateList.value = [...cityStateList.value, { id: iterator.id, code: iterator.code, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

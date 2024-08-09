@@ -246,7 +246,12 @@ async function getItemById(id: string) {
         MerchantList.value = [objMerchant]
         item.value.managerMerchant = objMerchant
         BankList.value = [response.manageBank]
-        item.value.manageBank = response.manageBank
+        const objBank = {
+          id: response.manageBank.id,
+          name: `${response.manageBank.code} ${response.manageBank.name ? `- ${response.manageBank.name}` : ''}`,
+          status: response.manageBank.status
+        }
+        item.value.manageBank = objBank
         item.value.status = statusToBoolean(response.status)
         if (CreditCardTypeList.value.length === 0) {
           await getCreditCardTypeList()
@@ -370,17 +375,26 @@ async function saveItem(item: { [key: string]: any }) {
 async function getBankList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
@@ -390,7 +404,7 @@ async function getBankList(query: string) {
     const { data: dataList } = response
     BankList.value = []
     for (const iterator of dataList) {
-      BankList.value = [...BankList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      BankList.value = [...BankList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -428,10 +442,10 @@ async function getCreditCardTypeList(query: string = '') {
 
     const response = await GenericService.search('settings', 'manage-credit-card-type', payload)
     const { data: dataList } = response
-    CreditCardTypeList.value = dataList
-    // for (const iterator of dataList) {
-    //   CreditCardTypeList.value = [...CreditCardTypeList.value, { id: iterator.id, name: iterator.name }]
-    // }
+    CreditCardTypeList.value = []
+    for (const iterator of dataList) {
+      CreditCardTypeList.value = [...CreditCardTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+    }
   }
   catch (error) {
     console.error('Error loading manage credit card type list:', error)

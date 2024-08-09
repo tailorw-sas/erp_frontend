@@ -21,6 +21,11 @@ const props = defineProps({
   },
 
 
+  total: {
+    type: Number,
+    required: true
+  },
+
 
 
   payload: Object as any
@@ -58,7 +63,7 @@ async function handleDownload() {
   try {
     
   
-  const response = await GenericService.export(options.value.moduleApi, options.value.uriApi, props.payload)
+  const response = await GenericService.export(options.value.moduleApi, options.value.uriApi, {...props.payload, pageSize: props.total || 50})
 
   const url =  window.URL.createObjectURL(response)
   

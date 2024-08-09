@@ -13,6 +13,7 @@ interface SvgIcon {
 interface MenuItem {
   btnLabel: string
   btnToolTip: string
+  pBtnIcon?: string
   btnIcon: SvgIcon
   btnShowIcon: boolean
   btnAriaControls: string
@@ -21,6 +22,7 @@ interface MenuItem {
   menuId: string
   menuRef: MenuRefType | null
   menuItems: any[] // Puedes reemplazar `any` con el tipo específico si tienes una interfaz definida para los elementos del menú
+  permission?: string[]
   showBtn: () => boolean
 }
 
@@ -45,11 +47,11 @@ const items = ref([
 const itemsImport = ref([
   {
     items: [
-      { label: 'Payment Of Bank', command: () => navigateTo('/payment/import-of-bank') },
-      { label: 'Payment Of Expense', command: () => navigateTo('/payment/import-of-expense') },
-      { label: 'Anti To Income', command: () => navigateTo('#') },
+      { label: 'Payment of bank', command: () => navigateTo('/payment/import-of-bank') },
+      { label: 'Payment of expense', command: () => navigateTo('/payment/import-of-expense') },
+      { label: 'Anti to Income', command: () => navigateTo('/payment/import-anti-income') },
       // { label: 'Expense To Booking', command: () => navigateTo('#') },
-      // { label: 'Payment Details', command: () => navigateTo('#') },
+      { label: 'Payment Detail', command: () => navigateTo('/payment/import-detail') },
     ]
   }
 ])
@@ -74,25 +76,28 @@ export const itemMenuList = ref<MenuItem[]>([
     menuId: 'overlay_menu1',
     menuRef: null as MenuRefType,
     menuItems: items.value,
+    permission: ['PAYMENT-MANAGEMENT:CREATE'],
     showBtn: () => true
     // Object.prototype.hasOwnProperty.call(options.value, 'showCreate') ? options.value?.showCreate : true,
   },
   {
     btnLabel: 'Import',
     btnToolTip: 'Import',
+    pBtnIcon: 'pi pi-file-import',
     btnShowIcon: false,
     btnIcon: {
       svgHeight: '20px',
       svgWidth: '20px',
       svgViewBox: '0 -960 960 960',
       svgFill: '#ffff',
-      svgPath: 'M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z',
+      svgPath: 'M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z',
     },
     btnAriaControls: 'overlay_menu2',
     btnDisabled: false,
     menuId: 'overlay_menu2',
     menuRef: null as MenuRefType,
     menuItems: itemsImport.value,
+    permission: ['PAYMENT-MANAGEMENT:IMPORT'],
     showBtn: () => true,
   },
   {
@@ -111,6 +116,7 @@ export const itemMenuList = ref<MenuItem[]>([
     menuId: 'overlay_menu3',
     menuRef: null as MenuRefType,
     menuItems: [],
+    permission: ['PAYMENT-MANAGEMENT:CREDIT-PROCESS'],
     showBtn: () => true,
   },
   {
@@ -129,6 +135,7 @@ export const itemMenuList = ref<MenuItem[]>([
     menuId: 'overlay_menu4',
     menuRef: null as MenuRefType,
     menuItems: [],
+    permission: ['PAYMENT-MANAGEMENT:DOCUMENT'],
     showBtn: () => true,
   },
   {
@@ -147,6 +154,7 @@ export const itemMenuList = ref<MenuItem[]>([
     menuId: 'overlay_menu5',
     menuRef: null as MenuRefType,
     menuItems: [],
+    permission: ['PAYMENT-MANAGEMENT:PRINT'],
     showBtn: () => true,
   },
   {
@@ -165,6 +173,7 @@ export const itemMenuList = ref<MenuItem[]>([
     menuId: 'overlay_menu6',
     menuRef: null as MenuRefType,
     menuItems: [],
+    permission: ['PAYMENT-MANAGEMENT:EXPORT'],
     showBtn: () => true,
   },
 ])

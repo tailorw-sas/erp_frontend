@@ -98,6 +98,8 @@ const props = defineProps({
     default: false,
   },
   refetchInvoice: { type: Function, default: () => {} },
+  getInvoiceAgency: { type: Function, default: () => {} },
+  getInvoiceHotel: { type: Function, default: () => {} },
   setActive: { type: Function, required: true },
   active: { type: Number, required: true },
   bookingList: Array<any>,
@@ -107,7 +109,9 @@ const props = defineProps({
   sortAdjustment: Function as any,
   sortBooking: Function as any,
   invoiceObjAmount: { type: Number, required: true },
-  nightTypeRequired: Boolean
+  nightTypeRequired: Boolean,
+  requiresFlatRate: Boolean,
+
 })
 
 const activeTab = ref(props.active)
@@ -119,6 +123,10 @@ const showTabs = ref<boolean>(true)
 const toast = useToast()
 
 const selectedBooking = ref<string>('')
+const bookingObj = ref<any>(null)
+
+
+
 const selectedRoomRate = ref<string>('')
 
 const loadingSaveAll = ref(false)
@@ -255,6 +263,9 @@ function openRoomRateDialog(booking?: any) {
 
   if (booking?.id) {
     selectedBooking.value = booking?.id
+    bookingObj.value = booking
+
+   
   }
 
   roomRateDialogOpen.value = true
@@ -287,7 +298,7 @@ onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
   if (props.isCreationDialog) {
-    showTabs.value = route.query.type !== ENUM_INVOICE_TYPE[2]?.id
+    showTabs.value = route.query.type !== InvoiceType.CREDIT
   }
 })
 </script>
@@ -311,6 +322,7 @@ onMounted(async () => {
           </template>
           <BookingTab
           :refetch-invoice="refetchInvoice"
+          :get-invoice-agency="getInvoiceAgency"
             :is-dialog-open="isDialogOpen" :close-dialog="() => closeDialog()"
             :open-dialog="openDialog" :open-room-rate-dialog="openRoomRateDialog" :force-update="forceUpdate"
             :toggle-force-update="toggleForceUpdate" :sort-booking="sortBooking" :selected-invoice="selectedInvoice as any"
@@ -333,7 +345,8 @@ onMounted(async () => {
             </div>
           </template>
           <RoomRateTab
-          :refetch-invoice="refetchInvoice"
+          :booking-obj="bookingObj"
+          :refetch-invoice="refetchInvoice" :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
             :is-dialog-open="roomRateDialogOpen" :close-dialog="() => { roomRateDialogOpen = false }"
             :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
             :open-adjustment-dialog="openAdjustmentDialog" :sort-room-rate="sortRoomRate" :force-update="forceUpdate"

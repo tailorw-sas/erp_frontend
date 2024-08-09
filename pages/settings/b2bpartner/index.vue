@@ -294,9 +294,12 @@ async function getItemById(id: string) {
         item.value.token = response.token
         item.value.userName = response.userName
         item.value.password = response.password
-        item.value.b2BPartnerType = b2bPartnerTypeList.value.find(i => i.id === response.b2BPartnerType.id)
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
+        if (response.b2BPartnerType) {
+          item.value.b2BPartnerType = { id: response.b2BPartnerType.id, name: `${response.b2BPartnerType.code} - ${response.b2BPartnerType.name}`, status: response.b2BPartnerType.status }
+        }
+        // item.value.b2BPartnerType = b2bPartnerTypeList.value.find(i => i.id === response.b2BPartnerType.id)
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -388,13 +391,13 @@ async function getB2bPartnerList(query: string = '') {
               key: 'name',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             },
             {
               key: 'code',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             },
             {
               key: 'status',
@@ -406,15 +409,15 @@ async function getB2bPartnerList(query: string = '') {
           query: '',
           pageSize: 20,
           page: 0,
-          sortBy: 'code',
-          sortType: ENUM_SHORT_TYPE.DESC
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search(confB2bPartnerTypeApi.moduleApi, confB2bPartnerTypeApi.uriApi, payload)
     const { data: dataList } = response
     b2bPartnerTypeList.value = []
     for (const iterator of dataList) {
-      b2bPartnerTypeList.value = [...b2bPartnerTypeList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      b2bPartnerTypeList.value = [...b2bPartnerTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

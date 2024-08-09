@@ -72,6 +72,7 @@ const emits = defineEmits<{
   (e: 'onRowDoubleClick', value: any): void
   (e: 'onRowRightClick', value: any): void
   (e: 'onCellEditComplete', value: any): void
+  (e: 'onTableCellEditComplete', value: any): void
 }>()
 
 const menu = ref()
@@ -234,7 +235,11 @@ function onRowRightClick(event: any) {
 }
 
 function onCellEditComplete(event: any, data: any) {
-  emits('onCellEditComplete', { newDate: event, data })
+  emits('onCellEditComplete', { newDate: event, data, event })
+}
+
+function onTableCellEditComplete(event: any) {
+  emits('onTableCellEditComplete', { data: event?.data, event, field: event?.field, newValue: event?.newValue, newData: event?.newData })
 }
 
 function showConfirmDelete(item: any) {
@@ -507,6 +512,7 @@ getOptionsList()
         @update:filters="onChangeFilters"
         @row-dblclick="onRowDoubleClick"
         @row-contextmenu="onRowRightClick"
+        @cell-edit-complete="onTableCellEditComplete"
       >
         <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
           <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
@@ -591,7 +597,7 @@ getOptionsList()
               </span>
             </span>
             <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
-              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}
+              {{ data[column.field] !== null ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}
             </span>
             <span v-else-if="column.type === 'datetime'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
               {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}
@@ -619,7 +625,7 @@ getOptionsList()
               <span v-if="column.type === 'local-select'" v-tooltip.top="data[column.field].name" class="truncate">
                 {{ (column.hasOwnProperty('localItems') && column.localItems) ? getNameById(data[column.field], column.localItems) : '' }}
               </span>
-              <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field]" class="truncate">
+              <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field] ? data[column.field].toString() : ''" class="truncate">
                 <span v-if="column.badge && data[column.field]">
                   <Badge v-tooltip.top="data[column.field]" :value="data[column.field] ? 'True' : 'False'" :severity="data[column.field] ? 'success' : 'danger'" class="}" />
                 </span>
@@ -744,8 +750,8 @@ getOptionsList()
               <Calendar
                 v-model="filterModel.value"
                 type="text"
-                showTime 
-                hourFormat="12"
+                show-time
+                hour-format="12"
                 date-format="yy-mm-dd"
                 placeholder="yyyy-mm-dd"
                 mask="99/99/9999"
@@ -770,6 +776,9 @@ getOptionsList()
               date-format="yy-mm-dd"
               @update:model-value="onCellEditComplete($event, data)"
             />
+          </template>
+          <template v-if="column.editable && column.type === 'text'" #editor="{ data, field }">
+            <InputText v-model="data[field]" style="width: 100%" autofocus fluid />
           </template>
         </Column>
         <Column v-if="options?.hasOwnProperty('showAcctions') ? options?.showAcctions : false" field="action" header="" :style="{ 'width': `${props.actionsWidth}px`, 'text-align': 'center' }">

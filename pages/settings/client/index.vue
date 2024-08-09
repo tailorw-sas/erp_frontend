@@ -58,6 +58,12 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1'
   },
   {
+    field: 'isNightType',
+    header: 'Night Type',
+    dataType: 'check',
+    class: 'field col-12 mt-3',
+  },
+  {
     field: 'status',
     header: 'Active',
     dataType: 'check',
@@ -70,6 +76,7 @@ const item = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  isNightType: false,
   status: true
 })
 
@@ -77,6 +84,7 @@ const itemTemp = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  isNightType: false,
   status: true
 })
 
@@ -220,6 +228,7 @@ async function getItemById(id: string) {
         item.value.description = response.description
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
+        item.value.isNightType = response.isNightType
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)

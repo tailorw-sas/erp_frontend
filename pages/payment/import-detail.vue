@@ -1,42 +1,44 @@
 <script setup lang="ts">
-import type { PageState } from 'primevue/paginator'
+import { onMounted, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { v4 as uuidv4 } from 'uuid'
-import { onMounted, ref, watch } from 'vue'
-import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { PageState } from 'primevue/paginator'
 import { GenericService } from '~/services/generic-services'
-import { base64ToFile, convertirAFechav2 } from '~/utils/helpers'
+import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
+const { data: userData } = useAuth()
 const toast = useToast()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
-const invoiceFile = ref('')
+const importModel = ref({
+  importFile: '',
+  employee: '',
+})
 const uploadComplete = ref(false)
-
 const loadingSaveAll = ref(false)
 
 const confApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment/import',
+  uriApi: 'payment-detail/import',
 })
 
 const confErrorApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment',
+  uriApi: 'payment-detail',
 })
 // VARIABLES -----------------------------------------------------------------------------------------
 const idItem = ref('')
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
-  { field: 'manageClientCode', header: 'Client', type: 'text' },
-  { field: 'manageAgencyCode', header: 'Agency', type: 'text' },
-  { field: 'bankAccount', header: 'Bank Acc.', type: 'text' },
-  { field: 'amount', header: 'Total Amount', type: 'text' },
-  { field: 'transactionDate', header: 'Trans. Date', type: 'date' },
+  { field: 'paymentId', header: 'Payment Id', type: 'text' },
+  { field: 'coupon', header: 'Coupon No', type: 'text' },
+  { field: 'invoiceNo', header: 'Invoice No', type: 'text' },
+  { field: 'balance', header: 'Amount', type: 'text' },
+  { field: 'transactionType', header: 'Trans. T', type: 'text' },
+  { field: 'anti', header: 'ANTI', type: 'text' },
   { field: 'remarks', header: 'Remark', type: 'text' },
   { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false },
 ]
@@ -44,9 +46,9 @@ const columns: IColumn[] = [
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Payment Import of Bank',
+  tableName: 'Payment Import of Anti Income',
   moduleApi: 'payment',
-  uriApi: 'payment/import',
+  uriApi: 'payment-detail/import',
   loading: false,
   showDelete: false,
   showFilters: true,
@@ -58,7 +60,7 @@ const payload = ref<IQueryRequest>({
   filter: [{
     key: 'importType',
     operator: 'EQUALS',
-    value: ENUM_PAYMENT_IMPORT_TYPE.BANK,
+    value: ENUM_PAYMENT_IMPORT_TYPE.DETAIL,
     logicalOperation: 'AND'
   }],
   query: '',
@@ -82,14 +84,8 @@ const pagination = ref<IPagination>({
 
 async function getErrorList() {
   try {
-    const param: IQueryRequest = {
-      query: idItem.value,
-      pageSize: 20,
-      page: 0,
-      filter: []
-    }
-
     payload.value = { ...payload.value, query: idItem.value }
+
     let rowError = ''
     listItems.value = []
     const newListItems = []
@@ -112,9 +108,8 @@ async function getErrorList() {
           rowError += `- ${err.message} \n`
         }
 
-        // const dateTemp = isValidFormatDate(iterator.row.transactionDate) ? convertirFecha(iterator.row.transactionDate) : iterator.row.transactionDate
-        const dateTemp = !iterator.row ? null : convertirAFechav2(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, transactionDate: dateTemp, impSta: `Warning row ${iterator.row.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        // const datTemp = new Date(iterator.row.transactionDate)
+        newListItems.push({ ...iterator.row, id: iterator.id, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -133,12 +128,12 @@ async function clearForm() {
 async function onChangeFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     inputFile.value = event.target.files[0]
-    invoiceFile.value = inputFile.value.name
+    importModel.value.importFile = inputFile.value.name
     uploadComplete.value = false
   }
 }
 
-async function importFile() {
+async function importFileDetail() {
   loadingSaveAll.value = true
   options.value.loading = true
   let successOperation = true
@@ -152,12 +147,14 @@ async function importFile() {
     idItem.value = uuid
     const base64String: any = await fileToBase64(inputFile.value)
     const base64 = base64String.split('base64,')[1]
-
     const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
+
     const formData = new FormData()
     formData.append('file', file)
     formData.append('importProcessId', uuid)
-    formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.BANK)
+    formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.DETAIL)
+    formData.append('employee', userData?.value?.user?.userId || '')
+
     await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
@@ -221,9 +218,11 @@ onMounted(async () => {
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>
-              <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
+              <div
+                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
+              >
                 <div>
-                  Import Payment Of Bank From Excel
+                  Import Payment Detail
                 </div>
               </div>
             </template>
@@ -231,46 +230,51 @@ onMounted(async () => {
               <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
                   <label class="w-7rem">Import Data: </label>
-
-                  <div class="w-full ">
+                  <div class="w-full">
                     <div class="p-inputgroup w-full">
                       <InputText
-                        ref="fileUpload"
-                        v-model="invoiceFile"
-                        placeholder="Choose file"
-                        class="w-full"
-                        show-clear
-                        aria-describedby="inputtext-help"
+                        ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
+                        class="w-full" show-clear aria-describedby="inputtext-help"
                       />
                       <span class="p-inputgroup-addon p-0 m-0">
                         <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
                       </span>
                     </div>
                     <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                    <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile">
+                    <input
+                      ref="fileUpload" type="file" style="display: none;"
+                      accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                      @change="onChangeFile"
+                    >
                   </div>
                 </div>
               </div>
             </div>
-          </AccordionTab>
-        </Accordion>
+          </accordionTab>
+        </accordion>
       </div>
+
       <DynamicTable
         :data="listItems" :columns="columns" :options="options" :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @on-change-pagination="payloadOnChangePage = $event" @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems" @on-sort-field="onSortField"
+        @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
-            <span style="color: red;">{{ data.impSta }}</span>
+          <div id="fieldError">
+            <span v-tooltip.bottom="data.impSta" style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete" @click="importFile" />
-        <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+        <Button
+          v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete"
+          @click="importFileDetail"
+        />
+        <Button
+          v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
+          @click="clearForm"
+        />
       </div>
     </div>
   </div>

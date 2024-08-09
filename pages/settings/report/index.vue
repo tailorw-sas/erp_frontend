@@ -230,6 +230,12 @@ async function getModuleList(query: string) {
           logicalOperation: 'AND'
         },
         {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
           key: 'status',
           operator: 'EQUALS',
           value: 'ACTIVE',
@@ -240,14 +246,14 @@ async function getModuleList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('identity', 'module', payload)
     const { data: dataList } = response
     listModuleItems.value = []
     for (const iterator of dataList) {
-      listModuleItems.value = [...listModuleItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listModuleItems.value = [...listModuleItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

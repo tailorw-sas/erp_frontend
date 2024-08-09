@@ -246,9 +246,14 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.description = response.description
         item.value.status = statusToBoolean(response.status)
-        b2bPartnerList.value = [response.b2bPartner]
-        item.value.b2bPartner = response.b2bPartner
         item.value.defaultm = response.defaultm
+        if (response.b2bPartner) {
+          item.value.b2bPartner = {
+            id: response.b2bPartner.id,
+            name: `${response.b2bPartner.code} - ${response.b2bPartner.name}`,
+            status: statusToBoolean(response.b2bPartner.status)
+          }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)

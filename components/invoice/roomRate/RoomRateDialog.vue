@@ -4,7 +4,7 @@ import dayjs from 'dayjs'
 
 const props = defineProps({
   fields: {
-    type: Array<Container>,
+    type: Array<FieldDefinitionType>,
     required: true,
 
   },
@@ -58,24 +58,20 @@ const props = defineProps({
   }
 })
 const dialogVisible = ref(props.openDialog)
-const formFields = ref<FieldDefinitionType[]>([])
 
-onMounted(() => {
-  props?.fields.forEach((container) => {
-    formFields.value.push(...container.childs)
-  })
-})
+
+
 </script>
 
 <template>
   <Dialog
     v-model:visible="dialogVisible" modal :header="header" :class="props.class || 'p-4 h-fit'"
     :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
-    @hide="closeDialog"
-  >
+    @hide="closeDialog" style="width: 600px;"
+  > 
     <div class="w-full h-full overflow-hidden p-2">
-      <EditFormV2WithContainer
-        :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
+      <EditFormV2
+        :key="formReload" :fields="fields" :item="item" :show-actions="true"
         :loading-save="loadingSaveAll" :container-class="containerClass" class="w-full h-fit m-4"
         @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
       >
@@ -114,7 +110,7 @@ onMounted(() => {
         <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
-            show-clear :disabled="!!item?.id"
+            show-clear 
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
         </template>
@@ -125,7 +121,7 @@ onMounted(() => {
           />
           <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
         </template>
-      </EditFormV2WithContainer>
+      </EditFormV2>
     </div>
   </Dialog>
 </template>

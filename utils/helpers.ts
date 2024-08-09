@@ -280,3 +280,117 @@ export async function base64ToFile(base64String: string, filename: string, mimeT
 
   return new File([blob], filename, { type: mimeType })
 }
+
+export function convertirAFechav2(fecha: string | null): string | null {
+  if (!fecha) {
+    return null
+  }
+
+  if (/^\d{8}$/.test(fecha)) {
+    // Formato YYYYMMDD
+    return fecha
+  }
+  else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(fecha) || /^\d{1,2}\/\d{1,2}\/\d{2}$/.test(fecha)) {
+    // Formato DD/MM/YYYY
+    const [dia, mes, anio] = fecha.split('/').map(Number)
+    return `${anio}${mes.toString().padStart(2, '0')}${dia.toString().padStart(2, '0')}`
+  }
+
+  return 'Invalid date format'
+}
+
+export function convertirFecha(value: string) {
+  // Verifica si la fecha tiene el formato esperado
+
+  if (!value || typeof value === 'boolean') {
+    return value
+  }
+
+  let subStringValue = ''
+  const fechaRegex = /^\d{2}\/\d{2}\/\d{4}$/
+  if (!fechaRegex.test(value)) {
+    subStringValue = dayjs(value).format('YYYY-MM-DD')
+    const dateTypeOne = /^\d{4}-\d{2}-\d{2}$/
+    if (!dateTypeOne.test(subStringValue)) {
+      return value
+    }
+    subStringValue = dayjs(subStringValue).format('YYYY-MM-DD').substring(0, 10)
+  }
+  else {
+    const [dia, mes, anio] = value.split('/')
+    const aux = `${anio}-${mes}-${dia}`
+    subStringValue = dayjs(aux).format('YYYY-MM-DD').substring(0, 10)
+  }
+  return subStringValue
+
+  // formatDate(value)
+}
+
+export function isValidFormatDate(value: any) {
+  try {
+    if (!value || typeof value === 'boolean') {
+      return false
+    }
+    // const subStringValue = dayjs(value).format('YYYY-MM-DD').substring(0, 10)
+
+    const fechaRegex1 = /^\d{2}\/\d{2}\/\d{4}$/
+    const fechaRegex2 = /^\d{8}$/
+
+    if (!fechaRegex1.test(value) && !fechaRegex2.test(value)) {
+      return false
+    }
+    // const date = dayjs(subStringValue, 'YYYY-MM-DD')
+
+    return true
+  }
+  catch (error) {
+    return false
+  }
+}
+
+function formatDate(value) {
+  // Helper function to check if a date is valid
+  function isValidDate(date) {
+    return date instanceof Date && !Number.isNaN(date.getTime())
+  }
+
+  // Helper function to parse and format date
+  function parseAndFormatDate(input) {
+    let date
+
+    // Handle formats like DD/MM/YYYY
+    const ddmmyyyy = /^(\d{2})\/(\d{2})\/(\d{4})$/
+    // Handle formats like YYYYMMDD or YYYYMMDDHHmmss
+    const yyyymmdd = /^(\d{4})(\d{2})(\d{2})$/
+
+    if (ddmmyyyy.test(input)) {
+      const [, day, month, year] = input.match(ddmmyyyy)
+      date = new Date(`${year}-${month}-${day}`)
+      // date = dayjs(input).format('YYYY-MM-DD')
+    }
+    else if (yyyymmdd.test(input)) {
+      const [, year, month, day] = input.match(yyyymmdd)
+      date = new Date(`${year}-${month}-${day}`)
+      // date = dayjs(input).format('YYYY-MM-DD')
+    }
+    else {
+      // For other formats or invalid formats, just return the input
+      return input
+    }
+
+    if (isValidDate(date)) {
+      // Format date to YYYY-MM-DD
+      // const yearStr = date.getFullYear()
+      // const monthStr = (date.getMonth() + 1).toString().padStart(2, '0')
+      // const dayStr = date.getDate().toString().padStart(2, '0')
+      const temp = dayjs(date).format('YYYY-MM-DD')
+      return temp
+      // return `${yearStr}-${monthStr}-${dayStr}`
+    }
+    else {
+      return input
+    }
+  }
+
+  return parseAndFormatDate(value)
+}

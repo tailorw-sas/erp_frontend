@@ -184,6 +184,18 @@ async function loadDefaultsValues() {
     case 'split-deposit':
       filter.push(
         {
+          key: 'deposit',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: true
+        },
+        {
+          key: 'defaults',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: true,
+        },
+        {
           key: 'status',
           logicalOperation: 'AND',
           operator: 'EQUALS',
@@ -283,11 +295,21 @@ async function loadDefaultsValues() {
         })
         updateFieldProperty(props.fields, 'amount', 'validation', decimalSchema.shape.amount)
       }
+      // Asi estaba antes
+      // if (item.value.transactionType && item.value.transactionType.remarkRequired === false) {
+      //   updateFieldProperty(props.fields, 'remark', 'disabled', true)
+      // }
       if (item.value.transactionType && item.value.transactionType.remarkRequired === false) {
-        updateFieldProperty(props.fields, 'remark', 'disabled', true)
+        const decimalSchema = z.object(
+          {
+            remark: z
+              .string()
+          }
+        )
+        updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
       }
       if (item.value.transactionType && item.value.transactionType.remarkRequired === true) {
-        updateFieldProperty(props.fields, 'remark', 'disabled', false)
+        // updateFieldProperty(props.fields, 'remark', 'disabled', false)111
         const decimalSchema = z.object(
           {
             remark: z
@@ -313,33 +335,84 @@ async function loadDefaultsValues() {
             .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0 && Number.parseFloat(value) <= props.selectedPayment.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
         },
       )
-      updateFieldProperty(props.fields, 'remark', 'disabled', false)
+      // updateFieldProperty(props.fields, 'remark', 'disabled', false)
       updateFieldProperty(props.fields, 'amount', 'validation', decimalSchema.shape.amount)
+
+      if (item.value.transactionType && item.value.transactionType.remarkRequired === false) {
+        const decimalSchema = z.object(
+          {
+            remark: z
+              .string()
+          }
+        )
+        updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
+      }
+      if (item.value.transactionType && item.value.transactionType.remarkRequired === true) {
+        // updateFieldProperty(props.fields, 'remark', 'disabled', false)111
+        const decimalSchema = z.object(
+          {
+            remark: z
+              .string()
+              .max(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+          }
+        )
+        updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
+      }
     }
       break
     case 'split-deposit':
       item.value.transactionType = transactionTypeList.value.length > 0 ? transactionTypeList.value[0] : null
+
+      if (item.value.transactionType && item.value.transactionType.remarkRequired === false) {
+        const decimalSchema = z.object(
+          {
+            remark: z
+              .string()
+          }
+        )
+        updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
+      }
+      if (item.value.transactionType && item.value.transactionType.remarkRequired === true) {
+        // updateFieldProperty(props.fields, 'remark', 'disabled', false)111
+        const decimalSchema = z.object(
+          {
+            remark: z
+              .string()
+              .max(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+          }
+        )
+        updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
+      }
       break
     case 'apply-deposit':
       item.value.transactionType = transactionTypeList.value.length > 0 ? transactionTypeList.value[0] : null
 
-      // const decimalSchema = z.object(
-      //   {
-      //     amount: z
-      //       .string()
-      //       .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0 && Number.parseFloat(value) <= item.value.applyDepositValue), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction max amount' })
-      //   },
-      // )
-      // updateFieldProperty(props.fields, 'amount', 'validation', decimalSchema.shape.amount)
-
+      if (item.value.transactionType && item.value.transactionType.remarkRequired === false) {
+        const decimalSchema = z.object(
+          {
+            remark: z
+              .string()
+          }
+        )
+        updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
+      }
+      if (item.value.transactionType && item.value.transactionType.remarkRequired === true) {
+        // updateFieldProperty(props.fields, 'remark', 'disabled', false)111
+        const decimalSchema = z.object(
+          {
+            remark: z
+              .string()
+              .max(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+          }
+        )
+        updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
+      }
       break
   }
 
-  // item.value.transactionType = transactionTypeList.value.length > 0 ? transactionTypeList.value[0] : null
-  // item.value.amount = props.selectedPayment.paymentBalance || 0
-  if (item.value.transactionType && item.value.transactionType.remarkRequired === false && props.action !== 'deposit-transfer') {
-    item.value.remark = item.value.transactionType.defaultRemark
-  }
+  // if (item.value.transactionType && item.value.transactionType.remarkRequired === false && props.action !== 'deposit-transfer') {
+  //   item.value.remark = item.value.transactionType.defaultRemark
+  // }
   formReload.value++
 }
 
@@ -363,6 +436,9 @@ onMounted(async () => {
     loadDefaultsValues()
   }
   else if (props.action === 'deposit-transfer') {
+    loadDefaultsValues()
+  }
+  else if (props.action === 'split-deposit') {
     loadDefaultsValues()
   }
 })
@@ -394,13 +470,26 @@ function processValidation($event: any, data: any) {
       updateFieldProperty(props.fields, 'amount', 'validation', decimalSchema.shape.amount)
       updateFieldProperty(props.fields, 'amount', 'helpText', `Max amount: ${Math.abs(props.selectedPayment.paymentBalance).toFixed(2)}`)
     }
-    // const decimalSchema = z.object(
-    //   {
-    //     amount: z
-    //       .string()
-    //       .regex(decimalRegex, { message: 'The amount must be greater than zero and lessor equal than Payment Balance' }),
-    //   },
-    // )
+    if ($event.remarkRequired === false) {
+      const decimalSchema = z.object(
+        {
+          remark: z
+            .string()
+        }
+      )
+      updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
+    }
+    if ($event.remarkRequired === true) {
+      // updateFieldProperty(props.fields, 'remark', 'disabled', false)111
+      const decimalSchema = z.object(
+        {
+          remark: z
+            .string()
+            .max($event.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${$event.minNumberOfCharacter} characters.` })
+        }
+      )
+      updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
+    }
   }
   else if (props.action === 'apply-deposit') {
     const decimalSchema = z.object(
@@ -427,7 +516,6 @@ function processValidation($event: any, data: any) {
   // Validacion del campo Remark
   if (props.action === 'deposit-transfer') {
     data.remark = ''
-    updateFieldProperty(props.fields, 'remark', 'disabled', false)
     const decimalSchema = z.object(
       {
         remark: z
@@ -437,8 +525,7 @@ function processValidation($event: any, data: any) {
     updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
   }
   else if ($event.remarkRequired === true) {
-    data.remark = $event.remarkRequired ? '' : $event.defaultRemark
-    updateFieldProperty(props.fields, 'remark', 'disabled', false)
+    // data.remark = $event.remarkRequired ? '' : $event.defaultRemark
     const decimalSchema = z.object(
       {
         remark: z
@@ -449,7 +536,7 @@ function processValidation($event: any, data: any) {
     updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
   }
   else {
-    data.remark = $event.defaultRemark
+    // data.remark = $event.defaultRemark
     const decimalSchema = z.object(
       {
         remark: z
@@ -457,7 +544,6 @@ function processValidation($event: any, data: any) {
       }
     )
     updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
-    updateFieldProperty(props.fields, 'remark', 'disabled', true)
   }
 }
 </script>
@@ -473,7 +559,7 @@ function processValidation($event: any, data: any) {
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     :pt="{
       root: {
-        class: 'custom-dialog',
+        class: 'custom-dialog-detail',
       },
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
@@ -501,6 +587,7 @@ function processValidation($event: any, data: any) {
         @force-save="forceSave = $event"
         @submit="handleSaveForm($event)"
       >
+        <!-- || props.action === 'split-deposit' -->
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!props.loadingSaveAll"
@@ -611,12 +698,16 @@ function processValidation($event: any, data: any) {
     </template>
 
     <template #footer>
-      <Button v-if="action === 'new-detail' || action === 'apply-deposit'" v-tooltip.top="'Apply Payment'" link class="w-auto ml-1 sticky">
-        <Button class="ml-1 w-3rem p-button-primary" icon="pi pi-cog" />
-        <span class="ml-2 font-bold">
-          Apply Payment
-        </span>
-      </Button>
+      <IfCan :perms="['PAYMENT-MANAGEMENT:APPLY-PAYMENT']">
+        <Button v-if="action === 'new-detail' || action === 'apply-deposit'" v-tooltip.top="'Apply Payment'" link class="w-auto ml-1 sticky">
+          <Button class="ml-1 w-3rem p-button-primary" icon="pi pi-cog" />
+          <span class="ml-2 font-bold">
+            Apply Payment
+          </span>
+        </Button>
+      </IfCan>
+      <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
+      </IfCan> -->
       <Button v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
       <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" />
       <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
@@ -625,10 +716,10 @@ function processValidation($event: any, data: any) {
 </template>
 
 <style lang="scss">
-.custom-dialog .p-dialog-content {
+.custom-dialog-detail .p-dialog-content {
   background-color: #ffffff;
 }
-.custom-dialog .p-dialog-footer {
+.custom-dialog-detail .p-dialog-footer {
   background-color: #ffffff;
 }
 </style>

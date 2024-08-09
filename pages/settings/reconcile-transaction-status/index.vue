@@ -220,20 +220,20 @@ async function getForSelectNavigateList(query: string = '') {
           key: 'name',
           operator: 'LIKE',
           value: query,
-          logicalOperation: 'AND'
+          logicalOperation: 'OR'
         },
         {
           key: 'code',
           operator: 'LIKE',
           value: query,
-          logicalOperation: 'AND'
+          logicalOperation: 'OR'
         }
       ],
       query: '',
       pageSize: 200,
       page: 0,
-      sortBy: 'code',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload)
@@ -243,7 +243,7 @@ async function getForSelectNavigateList(query: string = '') {
     navigateListItems.value = dataList
       .map((item: any) => ({
         id: item.id,
-        name: item.name,
+        name: `${item.code} - ${item.name}`,
         status: item.status
       }))
   }

@@ -236,12 +236,15 @@ async function getItemById(id: string) {
         item.value.id = response.id
         item.value.description = response.description
         item.value.accountNumber = response.accountNumber
-        HotelList.value = [response.manageHotel]
-        item.value.manageHotel = response.manageHotel
-        BankList.value = [response.manageBank]
-        item.value.manageBank = response.manageBank
-        AccountTypeList.value = [response.manageAccountType]
-        item.value.manageAccountType = response.manageAccountType
+        if (response.manageHotel) {
+          item.value.manageHotel = { id: response.manageHotel.id, name: `${response.manageHotel.code} - ${response.manageHotel.name}`, status: response.manageHotel.status }
+        }
+        if (response.manageBank) {
+          item.value.manageBank = { id: response.manageBank.id, name: `${response.manageBank.code} - ${response.manageBank.name}`, status: response.manageBank.status }
+        }
+        if (response.manageAccountType) {
+          item.value.manageAccountType = { id: response.manageAccountType.id, name: `${response.manageAccountType.code} - ${response.manageAccountType.name}`, status: response.manageAccountType.status }
+        }
         item.value.status = statusToBoolean(response.status)
       }
       fields[0].disabled = true
@@ -362,27 +365,39 @@ async function getBankList(query: string) {
   try {
     const payload
         = {
-          filter: [{
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'AND'
-          }, {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }],
+          filter: [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
           query: '',
           pageSize: 20,
           page: 0,
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search('settings', 'manage-bank', payload)
+
     const { data: dataList } = response
     BankList.value = []
     for (const iterator of dataList) {
-      BankList.value = [...BankList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      BankList.value = [...BankList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -398,7 +413,13 @@ async function getAccountTypeList(query: string = '') {
           key: 'name',
           operator: 'LIKE',
           value: query,
-          logicalOperation: 'AND'
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
         },
         {
           key: 'status',
@@ -410,13 +431,15 @@ async function getAccountTypeList(query: string = '') {
       query: '',
       pageSize: 200,
       page: 0,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
     }
     const response = await GenericService.search('settings', 'manage-account-type', payload)
     const { data: dataList } = response
     AccountTypeList.value = []
 
     for (const iterator of dataList) {
-      AccountTypeList.value = [...AccountTypeList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      AccountTypeList.value = [...AccountTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -427,27 +450,38 @@ async function getAccountTypeList(query: string = '') {
 async function getHotelList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
     }
     const response = await GenericService.search('settings', 'manage-hotel', payload)
     const { data: dataList } = response
     HotelList.value = []
 
     for (const iterator of dataList) {
-      HotelList.value = [...HotelList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      HotelList.value = [...HotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
