@@ -58,7 +58,7 @@ pipeline {
             }
         }
 
-        stage ('Checkout specific project...') {
+        stage ('Checkout specific project....') {
             steps {
                 echo 'Identifying project...'
                 script {
