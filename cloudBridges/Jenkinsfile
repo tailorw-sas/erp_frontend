@@ -58,7 +58,7 @@ pipeline {
             }
         }
 
-        stage ('Checkout specific project') {
+        stage ('Checkout specific project...') {
             // Define la ruta a la carpeta específica que deseas observar
             def folderPath = env.SRC
                     
