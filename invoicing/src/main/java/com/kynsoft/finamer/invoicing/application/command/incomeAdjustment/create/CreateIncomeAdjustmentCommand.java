@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,40 +14,29 @@ import java.util.UUID;
 @Setter
 public class CreateIncomeAdjustmentCommand implements ICommand {
 
-    private UUID id;
     private Status status;
     private UUID income;
-    private UUID transactionType;
-    private Double amount;
-    private LocalDate date;
-    private String remark;
     private String employee;
+    private List<NewIncomeAdjustmentRequest> adjustments;
 
-    public CreateIncomeAdjustmentCommand(Status status, UUID income, UUID transactionType, Double amount, LocalDate date, String remark, String employee) {
-        this.id = UUID.randomUUID();
+    public CreateIncomeAdjustmentCommand(Status status, UUID income, String employee, List<NewIncomeAdjustmentRequest> adjustments) {
         this.status = status;
         this.income = income;
-        this.transactionType = transactionType;
-        this.amount = amount;
-        this.date = date;
-        this.remark = remark;
         this.employee = employee;
+        this.adjustments = adjustments;
     }
 
     public static CreateIncomeAdjustmentCommand fromRequest(CreateIncomeAdjustmentRequest request) {
         return new CreateIncomeAdjustmentCommand(
                 request.getStatus(),
                 request.getIncome(),
-                request.getTransactionType(),
-                request.getAmount(),
-                request.getDate(),
-                request.getRemark(),
-                request.getEmployee()
+                request.getEmployee(),
+                request.getAdjustments()
         );
     }
 
     @Override
     public ICommandMessage getMessage() {
-        return new CreateIncomeAdjustmentMessage(id);
+        return new CreateIncomeAdjustmentMessage();
     }
 }

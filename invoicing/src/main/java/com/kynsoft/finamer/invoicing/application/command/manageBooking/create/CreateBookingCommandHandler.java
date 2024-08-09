@@ -7,6 +7,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRatePlanDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageNightTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomCategoryDto;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckInvoiceTypeIncomeNotMoreBookingRule;
@@ -54,7 +55,7 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
         if (command.getHotelBookingNumber().length() > 2) {
             int endIndex = command.getHotelBookingNumber().length() - 2;
 
-            if (invoiceDto != null && invoiceDto.getHotel().getId() != null) {
+            if (invoiceDto != null && invoiceDto.getHotel().getId() != null && invoiceDto.getInvoiceType() != null && !invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 RulesChecker.checkRule(new ManageBookingHotelBookingNumberValidationRule(bookingService,
                         command.getHotelBookingNumber().substring(endIndex,
                                 command.getHotelBookingNumber().length()),

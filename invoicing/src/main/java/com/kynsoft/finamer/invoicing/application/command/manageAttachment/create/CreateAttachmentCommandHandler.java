@@ -36,7 +36,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
     @Override
     public void handle(CreateAttachmentCommand command) {
 
-        ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(command.getType());
+        ManageAttachmentTypeDto attachmentType = command.getType() != null ? this.attachmentTypeService.findById(command.getType()) : null;
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.findById(command.getInvoice());
 
         ResourceTypeDto resourceTypeDto = command.getPaymentResourceType() != null ? this.resourceTypeService.findById(command.getPaymentResourceType()) : null;
@@ -61,7 +61,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                 invoiceDto, command.getEmployee(), command.getEmployeeId(), null, resourceTypeDto));
 
                 this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(), command.getEmployeeId());
-                this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
+
     }
 
      private void updateAttachmentStatusHistory( ManageInvoiceDto invoice, String fileName, Long attachmentId, String employee, UUID employeeId) {

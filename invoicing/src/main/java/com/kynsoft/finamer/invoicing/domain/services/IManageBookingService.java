@@ -3,8 +3,6 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -24,6 +22,8 @@ public interface IManageBookingService {
     ManageBookingDto findById(UUID id);
 
     boolean existsByExactLastTwoChars(String lastTwoChars, UUID hotelId);
+
+    void calculateHotelAmount(ManageBookingDto dto);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 

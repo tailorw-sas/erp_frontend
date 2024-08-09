@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.infrastructure.excel.event;
+package com.kynsoft.finamer.invoicing.infrastructure.excel.event.error;
 
 import org.springframework.context.ApplicationEvent;
 

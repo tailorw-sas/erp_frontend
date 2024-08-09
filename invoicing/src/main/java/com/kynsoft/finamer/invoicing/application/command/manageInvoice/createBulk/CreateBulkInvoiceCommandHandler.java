@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
@@ -67,7 +68,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
                 RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
                         this.closeOperationService,
-                        command.getInvoiceCommand().getInvoiceDate(),
+                        command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
                         hotelDto.getId()
                 ));
 
@@ -78,7 +79,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
                 for (int i = 0; i < command.getBookingCommands().size(); i++) {
 
-                        if (command.getBookingCommands().get(i).getHotelBookingNumber().length() > 2) {
+                        if (command.getBookingCommands().get(i).getHotelBookingNumber().length() > 2  && command.getInvoiceCommand().getInvoiceType() != null && !command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)) {
 
                                 int endIndex = command.getBookingCommands().get(i).getHotelBookingNumber().length() - 2;
 
@@ -109,6 +110,21 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                                         .findById(command.getBookingCommands().get(i).getRatePlan())
                                         : null;
 
+                        Double invoiceAmount =  0.00;
+                        if(command.getInvoiceCommand().getInvoiceType() != null && command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)){
+
+                                if(command.getBookingCommands().get(i).getInvoiceAmount() > 0){
+                                        invoiceAmount -= command.getBookingCommands().get(i).getInvoiceAmount();
+
+
+                                }else{
+                                        invoiceAmount = command.getBookingCommands().get(i).getInvoiceAmount();
+                                }
+
+                        }else{
+                                invoiceAmount = command.getBookingCommands().get(i).getInvoiceAmount();
+                        }
+
                         bookings.add(new ManageBookingDto(command.getBookingCommands().get(i).getId(),
                                         null,
                                         null,
@@ -120,8 +136,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                         command.getBookingCommands().get(i).getFullName(),
                                         command.getBookingCommands().get(i).getFirstName(),
                                         command.getBookingCommands().get(i).getLastName(),
-                                        command.getBookingCommands().get(i).getInvoiceAmount(),
-                                        command.getBookingCommands().get(i).getInvoiceAmount(),
+                                invoiceAmount,
+                                invoiceAmount,
                                         command.getBookingCommands().get(i).getRoomNumber(),
                                         command.getBookingCommands().get(i).getCouponNumber(),
                                         command.getBookingCommands().get(i).getAdults(),
@@ -141,12 +157,16 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 }
 
                 for (int i = 0; i < command.getRoomRateCommands().size(); i++) {
+                        Double invoiceAmount = command.getRoomRateCommands().get(i).getInvoiceAmount();
+                        if(command.getInvoiceCommand().getInvoiceType().compareTo(EInvoiceType.CREDIT) == 0 && invoiceAmount > 0){
+                                invoiceAmount = -invoiceAmount;
+                        }
                         ManageRoomRateDto roomRateDto = new ManageRoomRateDto(
                                         command.getRoomRateCommands().get(i).getId(),
                                         null,
                                         command.getRoomRateCommands().get(i).getCheckIn(),
                                         command.getRoomRateCommands().get(i).getCheckOut(),
-                                        command.getRoomRateCommands().get(i).getInvoiceAmount(),
+                                        invoiceAmount,
                                         command.getRoomRateCommands().get(i).getRoomNumber(),
                                         command.getRoomRateCommands().get(i).getAdults(),
                                         command.getRoomRateCommands().get(i).getChildren(),
@@ -208,6 +228,11 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                                 List<ManageAdjustmentDto> adjustmentDtos = rateDto.getAdjustments();
                                                 adjustmentDtos.add(adjustmentDto);
 
+                                                if(adjustmentDto.getAmount() != null){
+
+                                                rateDto.setInvoiceAmount(rateDto.getInvoiceAmount() != null ? rateDto.getInvoiceAmount() : 0.00  + adjustmentDto.getAmount());
+                                                }
+
                                                 rateDto.setAdjustments(adjustmentDtos);
 
                                         }
@@ -234,6 +259,12 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                         attachmentDtos.add(attachmentDto);
                 }
 
+
+            for (ManageBookingDto booking : bookings) {
+                this.calculateBookingHotelAmount(booking);
+
+            }
+
                 ManageAgencyDto agencyDto = this.agencyService.findById(command.getInvoiceCommand().getAgency());
 
 
@@ -245,12 +276,18 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                         invoiceNumber+= "-" + hotelDto.getCode();
                 }
 
+                EInvoiceStatus status = EInvoiceStatus.PROCECSED;
+
+                if(command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)){
+                        status = EInvoiceStatus.SENT;
+                }
+
                 ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
                                 invoiceNumber,
                                 command.getInvoiceCommand().getInvoiceDate(), command.getInvoiceCommand().getDueDate(),
                                 command.getInvoiceCommand().getIsManual(),
                                 command.getInvoiceCommand().getInvoiceAmount(), command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
-                                command.getInvoiceCommand().getInvoiceType(), EInvoiceStatus.PROCECSED,
+                                command.getInvoiceCommand().getInvoiceType(), status,
                                 false, bookings, attachmentDtos, null, null, null, null, null);
 
                 ManageInvoiceDto created = service.create(invoiceDto);
@@ -260,8 +297,29 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
 
                 command.setInvoiceId(created.getInvoiceId());
+                command.setInvoiceNo(created.getInvoiceNumber());
 
 
 
+        }
+
+        public void calculateBookingHotelAmount(ManageBookingDto dto){
+                Double HotelAmount = 0.00;
+
+
+
+
+                if (dto.getRoomRates() != null) {
+
+                        for (int i = 0; i < dto.getRoomRates().size(); i++) {
+
+                                HotelAmount += dto.getRoomRates().get(i).getHotelAmount();
+
+                        }
+
+                        dto.setHotelAmount(HotelAmount);
+
+
+                }
         }
 }

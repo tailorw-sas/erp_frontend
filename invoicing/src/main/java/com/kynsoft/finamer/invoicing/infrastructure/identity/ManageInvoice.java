@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
@@ -35,13 +36,12 @@ public class ManageInvoice {
     @Generated(event = EventType.INSERT)
     private Long invoiceId;
 
-    @Column(columnDefinition = "serial", name = "inovice_no")
-    @Generated(event = EventType.INSERT)
     private Long invoiceNo;
 
     private String invoiceNumber;
+    private String invoiceNumberPrefix;
 
-    private LocalDate invoiceDate;
+    private LocalDateTime invoiceDate;
 
     private LocalDate dueDate;
 
@@ -60,6 +60,9 @@ public class ManageInvoice {
     private ManageInvoiceStatus manageInvoiceStatus;
 
     private Double invoiceAmount;
+
+    @Column(name = "due_amount", nullable = false)
+    @ColumnDefault("0")
     private Double dueAmount;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -122,9 +125,28 @@ public class ManageInvoice {
         }).collect(Collectors.toList()) : null;
         this.reSend = dto.getReSend();
         this.reSendDate = dto.getReSendDate();
-        this.manageInvoiceType = dto.getManageInvoiceType() != null ? new ManageInvoiceType(dto.getManageInvoiceType()) : null;
-        this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null ? new ManageInvoiceStatus(dto.getManageInvoiceStatus()) : null;
-        this.dueAmount = dto.getDueAmount();
+        this.manageInvoiceType = dto.getManageInvoiceType() != null ? new ManageInvoiceType(dto.getManageInvoiceType())
+                : null;
+        this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null
+                ? new ManageInvoiceStatus(dto.getManageInvoiceStatus())
+                : null;
+        this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
+        this.invoiceNo = dto.getInvoiceNo();
+
+        if (dto.getInvoiceNumber() != null) {
+            int firstIndex = dto.getInvoiceNumber().indexOf("-");
+            int lastIndex = dto.getInvoiceNumber().lastIndexOf("-");
+
+            if (firstIndex != -1 && lastIndex != -1 && firstIndex != lastIndex) {
+                String beginInvoiceNumber = dto.getInvoiceNumber().substring(0, firstIndex);
+                String lastInvoiceNumber = dto.getInvoiceNumber().substring(lastIndex + 1, dto.getInvoiceNumber().length());
+
+                invoiceNumberPrefix = beginInvoiceNumber + "-" + lastInvoiceNumber;
+
+            }else{
+                invoiceNumberPrefix = dto.getInvoiceNumber();
+            }
+        }
 
     }
 
@@ -133,10 +155,9 @@ public class ManageInvoice {
         return new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
                 invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
-                autoRec, null, null, reSend, reSendDate, 
-                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null, 
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt
-        );
+                autoRec, null, null, reSend, reSendDate,
+                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt);
 
     }
 
@@ -151,9 +172,45 @@ public class ManageInvoice {
                 }).collect(Collectors.toList()) : null,
                 reSend,
                 reSendDate,
-                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null, 
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null,  createdAt
-        );
+                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt);
+    }
+
+    @PostLoad
+    public void initDefaultValue() {
+        if (dueAmount == null) {
+            dueAmount = 0.0;
+        }
+        if (invoiceNo == null && invoiceNumber != null) {
+            int lastHyphenIndex = invoiceNumber.lastIndexOf('-');
+
+            if (lastHyphenIndex == -1) {
+                invoiceNo = invoiceId;
+            } else {
+                String numberPart = invoiceNumber.substring(lastHyphenIndex + 1);
+                try {
+
+                    invoiceNo = Long.parseLong(numberPart);
+
+                } catch (NumberFormatException e) {
+                    invoiceNo = invoiceId;
+                }
+            }
+
+        }
+
+        if (invoiceNumber != null) {
+            int firstIndex = invoiceNumber.indexOf("-");
+            int lastIndex = invoiceNumber.lastIndexOf("-");
+
+            if (firstIndex != -1 && lastIndex != -1 && firstIndex != lastIndex) {
+                String beginInvoiceNumber = invoiceNumber.substring(0, firstIndex);
+                String lastInvoiceNumber = invoiceNumber.substring(lastIndex + 1, invoiceNumber.length());
+
+                invoiceNumber = beginInvoiceNumber + "-" + lastInvoiceNumber;
+
+            }
+        }
     }
 
 }

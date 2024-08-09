@@ -5,6 +5,7 @@ import com.kynsof.share.core.application.excel.annotation.Cell;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
+import io.micrometer.core.instrument.util.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.redis.core.index.Indexed;
@@ -60,6 +61,13 @@ public class BookingRow {
     private String bookingDate;
     @Cell(position = 21)
     private String hotelType;
+
+
+    private String trendingCompany;
+    public BookingRow() {
+        this.firstName="";
+        this.lastName="";
+    }
 
     public ManageBookingDto toAggregate() {
         ManageBookingDto manageBookingDto = new ManageBookingDto();

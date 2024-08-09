@@ -7,6 +7,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -23,23 +24,27 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
+    private final IInvoiceCloseOperationService closeOperationService;
+
     public CreateIncomeCommandHandler(IManageAgencyService agencyService,
                                       IManageHotelService hotelService,
                                       IManageInvoiceTypeService invoiceTypeService,
                                       IManageInvoiceStatusService invoiceStatusService,
-                                      IManageInvoiceService manageInvoiceService, IInvoiceStatusHistoryService invoiceStatusHistoryService) {
+                                      IManageInvoiceService manageInvoiceService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IInvoiceCloseOperationService closeOperationService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
         this.invoiceStatusService = invoiceStatusService;
         this.manageInvoiceService = manageInvoiceService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     public void handle(CreateIncomeCommand command) {
 
-        RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate()));
+        RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
+        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());

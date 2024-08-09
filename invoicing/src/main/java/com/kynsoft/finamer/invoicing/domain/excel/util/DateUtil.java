@@ -50,7 +50,7 @@ public class DateUtil {
                 LocalDate.parse(date, DateTimeFormatter.ofPattern(validDateFormat[1]));
                 return true;
             }
-        }catch (DateTimeParseException exception){
+        }catch (Exception exception){
             return false;
         }
         return false;

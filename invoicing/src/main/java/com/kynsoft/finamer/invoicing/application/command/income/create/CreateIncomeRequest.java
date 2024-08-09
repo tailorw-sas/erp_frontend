@@ -5,13 +5,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
 @Setter
 public class CreateIncomeRequest {
 
-    private LocalDate invoiceDate;
+    private LocalDateTime invoiceDate;
     private Boolean manual;
     private UUID agency;
     private UUID hotel;

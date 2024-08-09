@@ -1,35 +1,22 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRatePlanDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dto.*;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupBy;
-import com.kynsoft.finamer.invoicing.domain.services.IBookingImportHelperService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
+import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
+import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportRowErrorRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -69,7 +56,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         this.createCache(bookingRow,manageAgencyDto.getGenerationType().name());
     }
 
-    @Transactional
     @Override
     public void createInvoiceFromGroupedBooking(String importProcessId) {
         if(!errorRedisRepository.existsByImportProcessId(importProcessId)) {
@@ -120,7 +106,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private void createInvoiceGroupingByBooking(String importProcessId) {
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByBooking.name(), importProcessId);
-        bookingImportCacheStream.stream().parallel().forEach(bookingImportCache -> {
+        bookingImportCacheStream.forEach(bookingImportCache -> {
             ManageAgencyDto agency = agencyService.findByCode(bookingImportCache.toAggregate().getManageAgencyCode());
             ManageHotelDto hotel = manageHotelService.findByCode(bookingImportCache.toAggregate().getManageHotelCode());
             this.createInvoiceWithBooking(agency, hotel, List.of(bookingImportCache.toAggregate()));
@@ -133,8 +119,15 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageInvoiceDto.setHotel(hotel);
         manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);
         manageInvoiceDto.setIsManual(false);
-        manageInvoiceDto.setInvoiceDate(LocalDate.now());
+
+        LocalDateTime[] transactionDate=new LocalDateTime[]{LocalDateTime.now()};
         List<ManageBookingDto> bookingDtos = bookingRowList.stream().map(bookingRow -> {
+            LocalDateTime excelDate=DateUtil.parseDateToDateTime(bookingRow.getTransactionDate());
+            if(Objects.nonNull(bookingRow.getTransactionDate()) &&
+                    Objects.nonNull(excelDate) &&
+                    !LocalDate.now().isEqual(excelDate.toLocalDate())){
+                transactionDate[0]=excelDate;
+            }
             ManageRatePlanDto ratePlanDto = ratePlanService.findByCode(bookingRow.getRatePlan());
             ManageRoomTypeDto roomTypeDto = roomTypeService.findByCode(bookingRow.getRoomType());
             ManageBookingDto bookingDto = bookingRow.toAggregate();
@@ -153,6 +146,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             bookingDto.setRoomRates(List.of(manageRoomRateDto));
             return bookingDto;
         }).toList();
+        manageInvoiceDto.setInvoiceDate(transactionDate[0]);
         manageInvoiceDto.setBookings(bookingDtos);
         manageInvoiceDto.setId(UUID.randomUUID());
         manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);

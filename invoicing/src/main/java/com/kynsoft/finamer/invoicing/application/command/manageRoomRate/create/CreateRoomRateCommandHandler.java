@@ -42,7 +42,8 @@ public class CreateRoomRateCommandHandler implements ICommandHandler<CreateRoomR
                 null, null));
 
 
-                bookingService.calculateInvoiceAmount(this.bookingService.findById(bookingDto.getId()));
-                invoiceService.calculateInvoiceAmount(this.invoiceService.findById(bookingDto.getInvoice().getId()));
+        bookingService.calculateInvoiceAmount(this.bookingService.findById(bookingDto.getId()));
+        bookingService.calculateHotelAmount(this.bookingService.findById(bookingDto.getId()));
+        invoiceService.calculateInvoiceAmount(this.invoiceService.findById(bookingDto.getInvoice().getId()));
     }
 }

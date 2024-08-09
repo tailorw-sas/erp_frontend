@@ -28,7 +28,7 @@ public class ConsumerReplicateManageHotelService {
         try {
 
             CreateManageHotelCommand command = new CreateManageHotelCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName(), objKafka.getManageTradingCompany(), objKafka.getIsVirtual(), objKafka.getStatus());
+                    objKafka.getName(), objKafka.getManageTradingCompany(), objKafka.getIsVirtual(), objKafka.getStatus(),objKafka.isRequiresFlatRate());
             mediator.send(command);
 
             try{

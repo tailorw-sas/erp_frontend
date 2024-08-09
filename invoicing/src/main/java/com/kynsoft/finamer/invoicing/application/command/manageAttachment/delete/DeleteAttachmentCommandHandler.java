@@ -32,7 +32,7 @@ public class DeleteAttachmentCommandHandler implements ICommandHandler<DeleteAtt
 
         service.delete(delete);
         this.updateAttachmentStatusHistory(delete.getInvoice(), delete.getFilename(), delete.getAttachmentId(), delete.getEmployee(), delete.getEmployeeId());
-        this.updateInvoiceStatusHistory(delete.getInvoice(), delete.getEmployee(), delete.getFilename());
+
     }
 
      private void updateAttachmentStatusHistory( ManageInvoiceDto invoice, String fileName, Long attachmentId, String employee, UUID employeeId) {
