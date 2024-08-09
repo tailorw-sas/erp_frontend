@@ -20,7 +20,9 @@ pipeline {
         githubPush()
     }
 
-    stage ('Check for changes') {
+    stages {
+        
+        stage ('Check for changes') {
             steps {
                 echo '* * * * STAGE: Checking for changes in a specific project * * * *'
                 script {
@@ -37,8 +39,7 @@ pipeline {
                 }
             }
         }
-    
-    stages {
+        
         stage ('Initialize variables') {
             steps {
                 echo '* * * * STAGE: Initializing variables * * * *'
