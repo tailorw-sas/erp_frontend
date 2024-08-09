@@ -63,7 +63,6 @@ pipeline {
                     } else {
                         echo "No changes detected in folder: ${folderPath}"
                         //currentBuild.result = 'ABORTED'
-                        //return
                         currentBuild.result = 'NOT_BUILT'
                         error('No se detectaron cambios en la carpeta especificada.')
                     }
