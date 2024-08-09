@@ -17,7 +17,7 @@ pipeline {
     }
     
     triggers {
-        githubPush()
+        //githubPush()
         triggers {
             genericTrigger (
                 genericVariables: [
