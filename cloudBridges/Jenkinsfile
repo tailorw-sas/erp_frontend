@@ -17,7 +17,7 @@ pipeline {
     }
     
     triggers {
-        //githubPush()
+        githubPush()
         //triggers {
         //    genericTrigger {
         //        genericVariables([
@@ -31,7 +31,7 @@ pipeline {
         //        //regexpFilterExpression: '\\s((.*"("${SRC}"/)[^"]+?".))'
         //        regexpFilterExpression('^"${SRC}"/.*')
         //    }
-        }
+        //}
     }
     
     stages {
