@@ -89,7 +89,8 @@ const props = defineProps({
     required: false,
     default: false,
   },
-  refetchInvoice: { type: Function, default: () => {} },
+  refetchInvoice: { type: Function, default: () => { } },
+  getInvoiceAgency: { type: Function, default: () => { } },
   sortBooking: Function as any,
   nightTypeRequired: Boolean
 })
@@ -125,6 +126,7 @@ const selectedBooking = ref<any>()
 
 const totalInvoiceAmount = ref<number>(0)
 const totalHotelAmount = ref<number>(0)
+const totalOriginalAmount = ref<number>(0)
 
 const confroomCategoryApi = reactive({
   moduleApi: 'settings',
@@ -407,6 +409,33 @@ const fieldsV2: Array<FieldDefinitionType> = [
     }).max(dayjs().endOf('day').toDate(), 'The Hotel Creation Date field cannot be greater than current date')
 
   },
+  {
+    field: 'firstName',
+    header: 'First Name',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The First Name field is required')
+  },
+  {
+    field: 'lastName',
+    header: 'Last Name',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The Last Name field is required')
+  },
+    // Coupon No.
+    {
+    field: 'couponNumber',
+    header: 'Coupon No.',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+
+  },
+
+
   // Check In
   {
     field: 'checkIn',
@@ -433,97 +462,10 @@ const fieldsV2: Array<FieldDefinitionType> = [
     })
   },
 
-  // Hotel Booking No.
-  {
-    field: 'hotelBookingNumber',
-    header: 'Hotel Booking No.',
-    dataType: 'text',
-    class: 'field col-12 md:col-3 required',
-    headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] \d+ \d{2,}$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
-  },
-
-  // First Name
-
-  {
-    field: 'firstName',
-    header: 'First Name',
-    dataType: 'text',
-    class: 'field col-12 md:col-3 required',
-    headerClass: 'mb-1',
-    validation: z.string().min(1, 'The First Name field is required')
-  },
-  {
-    field: 'lastName',
-    header: 'Last Name',
-    dataType: 'text',
-    class: 'field col-12 md:col-3 required',
-    headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Last Name field is required')
-  },
-
-  // Invoice Amount
-  {
-    field: 'invoiceAmount',
-    header: 'Invoice Amount',
-    dataType: 'number',
-    class: 'field col-12 md:col-3 required',
-    headerClass: 'mb-1',
-    ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[3]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value >= 0, { message: 'The Invoice Amount field must be greater or equals than 0' }) })
-  },
-
-  // Room Number
-  {
-    field: 'roomNumber',
-    header: 'Room Number',
-    dataType: 'text',
-    class: 'field col-12 md:col-3 required',
-    headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Room Number field is required')
-  },
-
-  // Night Type
-  {
-    field: 'nightType',
-    header: 'Night Type',
-    dataType: 'select',
-    class: `field col-12 md:col-3 ${nightTypeRequired.value ? 'required' : ''}`,
-    headerClass: 'mb-1',
-  },
-
-  // Coupon No.
-  {
-    field: 'couponNumber',
-    header: 'Coupon No.',
-    dataType: 'text',
-    class: 'field col-12 md:col-3 required',
-    headerClass: 'mb-1',
-    
-  },
-
-  // Room Category
-  {
-    field: 'roomCategory',
-    header: 'Room Category',
-    dataType: 'select',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-
-  },
-
-  // Folio Number
-  {
-    field: 'folioNumber',
-    header: 'Folio Number',
-    dataType: 'text',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-  },
-
   // Adults
   {
     field: 'adults',
-    header: 'Adults',
+    header: 'Adult',
     dataType: 'number',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
@@ -533,13 +475,14 @@ const fieldsV2: Array<FieldDefinitionType> = [
   // Children
   {
     field: 'children',
-    header: 'Children',
+    header: 'Child',
     dataType: 'number',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
     validation: z.number().nonnegative('The Children field must not be negative').nullable()
 
   },
+  
 
   // Rate Adult
   {
@@ -560,6 +503,47 @@ const fieldsV2: Array<FieldDefinitionType> = [
     validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
   },
 
+  
+  // Invoice Amount
+  {
+    field: 'invoiceAmount',
+    header: 'Invoice Amount',
+    dataType: 'number',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    ...(route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value >= 0, { message: 'The Invoice Amount field must be greater or equals than 0' }) })
+  },
+  
+  // Hotel Amount
+  {
+    field: 'hotelAmount',
+    header: 'Hotel Amount',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    validation: z.string().trim().regex(/^\d+$/, 'The Hotel Amount field must be greater than or equal to 0')
+    // validation: z.string().trim().regex(/^\d+$/, 'Only numeric characters allowed')
+  },
+
+ 
+  // Hotel Booking No.
+  {
+    field: 'hotelBookingNumber',
+    header: 'Hotel Booking No.',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] \d+ \d{2,}$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
+  },
+
+  {
+    field: 'bookingDate',
+    header: 'Booking Date',
+    dataType: 'date',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+
+  },
   // Hotel Invoice Number
   {
     field: 'hotelInvoiceNumber',
@@ -575,6 +559,38 @@ const fieldsV2: Array<FieldDefinitionType> = [
     }, { message: 'The Hotel Invoice No. field must not be negative' }).nullable()
   },
 
+  // Night Type
+  {
+    field: 'nightType',
+    header: 'Night Type',
+    dataType: 'select',
+    class: `field col-12 md:col-3 ${nightTypeRequired.value ? 'required' : ''}`,
+    headerClass: 'mb-1',
+  },
+
+
+ 
+  // Folio Number
+  {
+    field: 'folioNumber',
+    header: 'Folio Number',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+
+
+  // Room Number
+  {
+    field: 'roomNumber',
+    header: 'Room Number',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The Room Number field is required')
+  },
+
+
   // Room Type
   {
     field: 'roomType',
@@ -584,6 +600,23 @@ const fieldsV2: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
 
   },
+
+
+  // Room Category
+  {
+    field: 'roomCategory',
+    header: 'Room Category',
+    dataType: 'select',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+
+  },
+
+
+  
+
+
+
 
   // Rate Plan
   {
@@ -595,21 +628,12 @@ const fieldsV2: Array<FieldDefinitionType> = [
 
   },
 
-  // Hotel Amount
-  {
-    field: 'hotelAmount',
-    header: 'Hotel Amount',
-    dataType: 'text',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.string().trim().regex(/^\d+$/, 'Only numeric characters allowed')
-  },
   // Description
   {
     field: 'description',
     header: 'Remark',
-    dataType: 'textarea',
-    class: 'field col-12',
+    dataType: 'text',
+    class: 'field col-12 md:col-9',
     headerClass: 'mb-1',
   },
 ]
@@ -693,21 +717,21 @@ const confApi = reactive({
 })
 
 const Columns: IColumn[] = [
-  
-  { field: 'bookingId', header: 'Id', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable:!props.isDetailView  && !props.isCreationDialog  },
 
-  { field: 'fullName', header: 'Full Name', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confroomTypeApi , sortable:!props.isDetailView  && !props.isCreationDialog },
-  { field: 'checkIn', header: 'Check In', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'checkOut', header: 'Check Out', type: 'date' , sortable:!props.isDetailView  && !props.isCreationDialog },
-  { field: 'nights', header: 'Nights', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-  { field: 'invoiceAmount', header: 'Due Amount', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
+  { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+
+  { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confroomTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
+  { field: 'invoiceAmount', header: 'Due Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
 ]
 
@@ -746,7 +770,7 @@ const Options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
-  
+
   messageToDelete: 'Do you want to save the change?',
   loading: false,
   showFilters: false,
@@ -901,22 +925,27 @@ async function getBookingList(clearFilter: boolean = false) {
 
     totalInvoiceAmount.value = 0
     totalHotelAmount.value = 0
+    totalOriginalAmount.value = 0
 
     for (const iterator of dataList) {
       ListItems.value = [...ListItems.value, {
         ...iterator,
-        roomType: {...iterator?.roomType, name: `${iterator?.roomType?.code || ""}-${iterator?.roomType?.name || ""}`},
-        ratePlan: {...iterator?.ratePlan, name: `${iterator?.ratePlan?.code || ""}-${iterator?.ratePlan?.name || ""}`},
+        roomType: { ...iterator?.roomType, name: iterator?.roomType?.code ? `${iterator?.roomType?.code || ""}-${iterator?.roomType?.name || ""}` : "" },
+        ratePlan: { ...iterator?.ratePlan, name: iterator?.ratePlan?.code ? `${iterator?.ratePlan?.code || ""}-${iterator?.ratePlan?.name || ""}` : "" },
         loadingEdit: false,
         loadingDelete: false,
-        agency: {...iterator?.invoice?.agency, name:`${iterator?.invoice?.agency?.code}-${iterator?.invoice?.agency?.name}`},
+        agency: { ...iterator?.invoice?.agency, name: `${iterator?.invoice?.agency?.code}-${iterator?.invoice?.agency?.name}` },
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
-        fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`
+        fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`,
+        originalAmount: iterator?.invoiceAmount
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
       }
 
+      if (typeof +iterator.originalAmount === 'number') {
+        totalOriginalAmount.value += Number(iterator.originalAmount)
+      }
       if (typeof +iterator.hotelAmount === 'number') {
         totalHotelAmount.value += Number(iterator.hotelAmount)
       }
@@ -985,7 +1014,7 @@ async function GetItemById(id: string) {
       item.value.bookingId = element.bookingId
       idItem.value = element?.id
       item.value.hotelCreationDate = dayjs(element.hotelCreationDate).startOf('day').toDate()
-      item.value.bookingDate = new Date(element.bookingDate)
+      item.value.bookingDate = element.bookingDate ? new Date(element.bookingDate) : new Date()
       item.value.checkIn = new Date(element.checkIn)
       item.value.checkOut = new Date(element.checkOut)
       item.value.hotelBookingNumber = element.hotelBookingNumber
@@ -1020,7 +1049,7 @@ async function GetItemById(id: string) {
         item.value.bookingId = response.bookingId
         idItem.value = response?.id
         item.value.hotelCreationDate = new Date(response.hotelCreationDate)
-        item.value.bookingDate = new Date(response.bookingDate)
+        item.value.bookingDate = response.bookingDate ? new Date(response.bookingDate) : ''
         item.value.checkIn = new Date(response.checkIn)
         item.value.checkOut = new Date(response.checkOut)
         item.value.hotelBookingNumber = response.hotelBookingNumber
@@ -1067,6 +1096,7 @@ async function createBooking(item: { [key: string]: any }) {
     payload.nightType = item.nightType?.id || null
     payload.ratePlan = item.ratePlan?.id || null
 
+
     await GenericService.create(confApi.booking.moduleApi, confApi.booking.uriApi, payload)
   }
 }
@@ -1098,16 +1128,28 @@ async function deleteBooking(id: string) {
   }
 }
 
+
+
 async function saveBooking(item: { [key: string]: any }) {
-  if (props.selectedInvoice) {
+
+  item.checkIn = dayjs(item.checkIn).startOf('day').toDate()
+  item.checkOut = dayjs(item.checkOut).startOf('day').toDate()
+  item.hotelCreationDate = dayjs(item.hotelCreationDate).startOf('day').toDate()
+  item.bookingDate = dayjs(item.bookingDate).startOf('day').toDate()
+
+  if (props.selectedInvoice && typeof props.selectedInvoice === 'string') {
     item.invoice = props.selectedInvoice
   }
-  if(!props.isCreationDialog){
 
-    if(props.nightTypeRequired && !item?.nightType?.id){
-      
-        
-        return toast.add({ severity: 'error', summary: 'Error', detail: 'The Night Type field is required for this hotel', life: 10000 })
+  console.log(props.nightTypeRequired);
+  if (!props.isCreationDialog) {
+
+    await props.getInvoiceAgency(props?.invoiceObj?.agency?.id)
+
+    if (props.nightTypeRequired && !item?.nightType?.id) {
+
+
+      return toast.add({ severity: 'error', summary: 'Error', detail: 'The Night Type field is required for this client', life: 10000 })
     }
 
   }
@@ -1159,7 +1201,7 @@ async function saveBooking(item: { [key: string]: any }) {
     ClearForm()
     if (!props.isCreationDialog) {
       props.refetchInvoice()
-     // props?.toggleForceUpdate()
+      // props?.toggleForceUpdate()
     }
   }
 }
@@ -1228,7 +1270,7 @@ function OnSortField(event: any) {
 }
 
 function getSortField(field: any) {
-  
+
   switch (field) {
     case 'agency':
       return 'invoice.agency'
@@ -1238,7 +1280,7 @@ function getSortField(field: any) {
 
 
     default: return field
-      
+
   }
 }
 
@@ -1254,9 +1296,11 @@ watch(() => props.listItems, () => {
   if (props.isCreationDialog) {
     totalHotelAmount.value = 0
     totalInvoiceAmount.value = 0
+    totalOriginalAmount.value = 0
     props?.listItems?.forEach((listItem: any) => {
       totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
       totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
+      totalOriginalAmount.value += listItem?.originalAmount ? Number(listItem?.originalAmount) : 0
     })
   }
 }, { deep: true })
@@ -1269,12 +1313,32 @@ watch(() => props.forceUpdate, () => {
 
 function onRowRightClick(event: any) {
 
-  if(route.query.type === ENUM_INVOICE_TYPE[1]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id){
+  if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
     return;
-   }
-  
+  }
+
   selectedBooking.value = event.data
   bookingContextMenu.value.show(event.originalEvent)
+}
+
+function onCellEditComplete(val: any) {
+
+  if (props.isCreationDialog) {
+    if (route.query.type === InvoiceType.CREDIT) {
+      val.newData.invoiceAmount = toNegative(val.newData.invoiceAmount)
+
+      console.log(val.newData);
+
+      if(toPositive(val.newData.invoiceAmount) > toPositive(val.newData.originalAmount)){
+        toast.add({ severity: 'error', summary: 'Error', detail: "Booking invoice amount cannot be greater than original amount", life: 10000 })
+        return null;
+      }
+
+    }
+    return props.updateItem(val?.newData)
+  }
+
+  console.log(val);
 }
 
 onMounted(() => {
@@ -1289,19 +1353,39 @@ onMounted(() => {
 
   if (props.isDetailView) {
     finalColumns.value = [
-      
-      { field: 'bookingId', header: 'Id', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog  },
 
-      { field: 'fullName', header: 'Full Name', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'checkIn', header: 'Check In', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'checkOut', header: 'Check Out', type: 'date', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'adults', header: 'Adult', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'children', header: 'Children', type: 'text', sortable:!props.isDetailView  && !props.isCreationDialog  },
-      { field: 'couponNumber', header: 'Coupon No.', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Due Amount', type: 'text' , sortable:!props.isDetailView  && !props.isCreationDialog },
+      { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+
+      { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'adults', header: 'Adult', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Due Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+
+    ]
+  }
+
+  if (props?.isCreationDialog && route.query.type === InvoiceType.CREDIT) {
+
+    finalColumns.value = [
+
+
+      { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+
+      { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+
+      { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+
+      { field: 'originalAmount', header: 'Original Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
 
     ]
   }
@@ -1310,12 +1394,12 @@ onMounted(() => {
   { label: 'Edit booking', command: () => openEditBooking(selectedBooking.value) }
   ]
 
-   if(route.query.type === ENUM_INVOICE_TYPE[2]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
-     menuModel.value =  [{ label: 'Edit booking', command: () => openEditBooking(selectedBooking.value) },
-   ]
-   }
+  if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
+    menuModel.value = [{ label: 'Edit booking', command: () => openEditBooking(selectedBooking.value) },
+    ]
+  }
 
-   
+
 
   if (!props.isCreationDialog) {
     getBookingList()
@@ -1327,35 +1411,41 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns"
-      :options="Options" :pagination="Pagination" @on-confirm-create="ClearForm"
-      @open-edit-dialog="OpenEditDialog($event)" @on-change-pagination="PayloadOnChangePage = $event"
-      @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField" 
-      @on-row-right-click="onRowRightClick"
-      @on-row-double-click="($event) => {
+    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns" :options="Options"
+      :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
+      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems" @on-sort-field="OnSortField" @on-row-right-click="onRowRightClick"
+      @on-table-cell-edit-complete="onCellEditComplete" @on-row-double-click="($event) => {
 
-      // if (route.query.type === ENUM_INVOICE_TYPE[3]?.id && isCreationDialog){ return }
-      if(route.query.type === ENUM_INVOICE_TYPE[1]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id){
+      // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
+      if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
         return;
       }
 
-      if(!props.isDetailView){
-        openEditBooking($event)}
+      if (!props.isDetailView) {
+        openEditBooking($event)
+      }
 
-      
+
 
     }">
-     
+
 
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="!isDetailView ? 10: 8" footer-style="text-align:right" />
-            <Column :footer="totalHotelAmount" />
-            <Column :footer="totalInvoiceAmount" />
-            <Column :footer="totalInvoiceAmount" />
-            
-            
+            <Column footer="Totals:"
+              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 10"
+              footer-style="text-align:right; font-weight: 700" />
+            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="totalHotelAmount" footer-style="font-weight: 700" />
+            <Column v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="totalOriginalAmount" footer-style="font-weight: 700" />
+            <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+
+
           </Row>
         </ColumnGroup>
       </template>
@@ -1366,7 +1456,7 @@ onMounted(() => {
         </span>
       </template>
 
-     
+
     </DynamicTable>
   </div>
   <ContextMenu v-if="!isDetailView" ref="bookingContextMenu" :model="menuModel" />
@@ -1388,10 +1478,12 @@ onMounted(() => {
   </div>
 </template>
 
-<style >
+<style>
 .p-datatable-tfoot {
   background-color: #42A5F5;
+
   tr td {
     color: #fff;
   }
-}</style>
+}
+</style>

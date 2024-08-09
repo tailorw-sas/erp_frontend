@@ -302,10 +302,9 @@ async function getItemById(id: string) {
         item.value.isApplyInvoice = response.isApplyInvoice
         item.value.description = response.description
         listCountryItems.value = [response.country]
-        item.value.country = { id: response.country.id, name: response.country.name, status: response.country.status }
+        item.value.country = { id: response.country.id, name: `${response.country.code} - ${response.country.name}`, status: response.country.status }
         if (response.country) {
-          listCityStateItems.value = [response.cityState]
-          item.value.cityState = { id: response.cityState.id, name: response.cityState.name, status: response.cityState.status }
+          item.value.cityState = { id: response.cityState.id, name: `${response.cityState.code} - ${response.cityState.name}`, status: response.cityState.status }
         }
       }
       fields[0].disabled = true
@@ -457,7 +456,12 @@ async function getCountriesList(query: string) {
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -468,14 +472,14 @@ async function getCountriesList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-country', payload)
     const { data: dataList } = response
     listCountryItems.value = []
     for (const iterator of dataList) {
-      listCountryItems.value = [...listCountryItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listCountryItems.value = [...listCountryItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -497,6 +501,11 @@ async function getCityStatesList(countryId: string, query: string) {
         value: query,
         logicalOperation: 'AND'
       }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'AND'
+      }, {
         key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
@@ -506,14 +515,14 @@ async function getCityStatesList(countryId: string, query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-city-state', payload)
     const { data: dataList } = response
     listCityStateItems.value = []
     for (const iterator of dataList) {
-      listCityStateItems.value = [...listCityStateItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listCityStateItems.value = [...listCityStateItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

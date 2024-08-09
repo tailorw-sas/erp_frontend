@@ -45,7 +45,7 @@ const active = ref(0)
 
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
-  criteria: ENUM_INVOICE_CRITERIA[0],
+  criteria: ENUM_INVOICE_CRITERIA[3],
   search: '',
   client: [],
   agency: [],
@@ -98,14 +98,14 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Change Agency',
     icon: 'pi pi-pencil',
-    command: () => {},
+    command: () => { },
     default: false
   },
   {
     label: 'New Credit',
     icon: 'pi pi-credit-card',
     command: () => {
-      navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[2].id}&selected=${attachmentInvoice.value.id}`, {open: {target: '_blank'}})
+      navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
     },
     default: true,
   },
@@ -127,8 +127,9 @@ const invoiceAllContextMenuItems = ref([
     label: 'Print',
     icon: 'pi pi-print',
     command: () => {
-      if(attachmentInvoice.value?.hasAttachments){
-      exportAttachments()}
+      if (attachmentInvoice.value?.hasAttachments) {
+        exportAttachments()
+      }
     },
     default: true,
   },
@@ -149,16 +150,16 @@ const computedexpandedInvoice = computed(() => {
 const createItems = ref([
   {
     label: 'Invoice',
-    command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[0].id}`, {open: {target: '_blank'}}),
+    command: () => navigateTo(`invoice/create?type=${InvoiceType.INVOICE}`, { open: { target: '_blank' } }),
   },
   // {
   //   label: 'Credit',
-  //   command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[2].id}&selected=${expandedInvoice.value}`),
+  //   command: () => navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${expandedInvoice.value}`),
   //   disabled: computedexpandedInvoice
   // },
   {
     label: 'Old Credit',
-    command: () => navigateTo(`invoice/create?type=${ENUM_INVOICE_TYPE[3].id}`, {open: {target: '_blank'}})
+    command: () => navigateTo(`invoice/create?type=${InvoiceType.OLD_CREDIT}`, { open: { target: '_blank' } })
   },
 ])
 
@@ -215,7 +216,7 @@ const itemTemp = ref<GenericObject>({
 const itemsMenuImport = [
   {
     label: 'Booking From File',
-    command: () => navigateTo('invoice/import', {open: {target: '_blank'}})
+    command: () => navigateTo('invoice/import', { open: { target: '_blank' } })
   },
   {
     label: 'Booking From File (Virtual Hotels)',
@@ -232,7 +233,7 @@ const columns: IColumn[] = [
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
   { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
-  { field: 'createdAt', header: 'Gen. Date', type: 'date' },
+  { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
   { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
   { field: 'invoiceAmount', header: 'Amount', type: 'text' },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
@@ -298,29 +299,29 @@ async function exportAttachments() {
   exportAttachmentsDialogOpen.value = true
 }
 
-async function exportList(){
+async function exportList() {
   try {
-  //   const response = await GenericService.export(options.value.moduleApi, options.value.uriApi, payload.value)
-  // exportBlob.value = response
+    //   const response = await GenericService.export(options.value.moduleApi, options.value.uriApi, payload.value)
+    // exportBlob.value = response
 
-  exportDialogOpen.value = true
+    exportDialogOpen.value = true
 
 
-  
 
-  // const url = window.URL.createObjectURL(response);
-  //       const link = document.createElement('a');
-  //       link.href = url;
-  //       link.setAttribute('download', 'invoice-list.xlsx'); 
-  //       document.body.appendChild(link);
-  //       link.click();
-  //       document.body.removeChild(link);
-  //       window.URL.revokeObjectURL(url);
+
+    // const url = window.URL.createObjectURL(response);
+    //       const link = document.createElement('a');
+    //       link.href = url;
+    //       link.setAttribute('download', 'invoice-list.xlsx'); 
+    //       document.body.appendChild(link);
+    //       link.click();
+    //       document.body.removeChild(link);
+    //       window.URL.revokeObjectURL(url);
 
   } catch (error) {
     console.log(error);
   }
-  
+
 }
 
 
@@ -352,17 +353,18 @@ async function getList() {
     for (const iterator of dataList) {
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        let  invoiceNumber
-        if(iterator?.invoiceNumber?.split('-')?.length === 3){
-        invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
-      }else{
-        invoiceNumber = iterator?.invoiceNumber
-      }
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code, dueAmount: iterator?.dueAmount || '0', invoiceNumber,
-      
-        agency: {...iterator?.agency, name: `${iterator?.agency?.code || ""}-${iterator?.agency?.name || ""}`},
-        hotel: {...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}`}
-      })
+        let invoiceNumber
+        if (iterator?.invoiceNumber?.split('-')?.length === 3) {
+          invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
+        } else {
+          invoiceNumber = iterator?.invoiceNumber
+        }
+        newListItems.push({
+          ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code, dueAmount: iterator?.dueAmount || '0', invoiceNumber: invoiceNumber.replace("OLD", "CRE"),
+
+
+          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
+        })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
 
@@ -380,7 +382,7 @@ async function getList() {
   }
 }
 
-const openEditDialog = async (item: any, type: string) => await navigateTo({ path: `invoice/edit/${item}`, query: {type: type} }, {open: {target: '_blank'}})
+const openEditDialog = async (item: any, type: string) => await navigateTo({ path: `invoice/edit/${item}`, query: { type: type } }, { open: { target: '_blank' } })
 
 async function resetListItems() {
   payload.value.page = 0
@@ -397,56 +399,104 @@ function searchAndFilter() {
     sortType: ENUM_SHORT_TYPE.ASC
   }
 
-  if(filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[0]?.id && filterToSearch.value.search){
 
-  }else{
 
-  if(filterToSearch.value.includeInvoicePaid){
-    payload.value.filter = [...payload.value.filter, {
-      key: 'dueAmount',
-      operator: 'LESS_THAN_OR_EQUAL_TO',
-      value: 0,
-      logicalOperation: 'AND'
-    }]
-  }else{
-    payload.value.filter = [...payload.value.filter, {
-      key: 'dueAmount',
-      operator: 'GREATER_THAN_OR_EQUAL_TO',
-      value: 1,
-      logicalOperation: 'AND'
-    }]
-  }}
+
+  if (!filterToSearch.value.search) {
+    if (filterToSearch.value.includeInvoicePaid) {
+      payload.value.filter = [...payload.value.filter, {
+        key: 'dueAmount',
+        operator: 'EQUALS',
+        value: 0,
+        logicalOperation: 'AND'
+      }]
+    } else {
+      payload.value.filter = [...payload.value.filter, {
+        key: 'dueAmount',
+        operator: 'GREATER_THAN_OR_EQUAL_TO',
+        value: 1,
+        logicalOperation: 'AND'
+      }]
+    }
+
+   
+
+    if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
+      const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
+      const itemIds = filteredItems?.map((item: any) => item?.id)
+
+      payload.value.filter = [...payload.value.filter, {
+        key: 'agency.client.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND'
+      }]
+    }
+    if (filterToSearch.value.agency?.length > 0 && !filterToSearch.value.agency.find(item => item.id === 'All')) {
+      const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
+      const itemIds = filteredItems?.map((item: any) => item?.id)
+      payload.value.filter = [...payload.value.filter, {
+        key: 'agency.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND'
+      }]
+    }
+
+
+
+    if (filterToSearch.value.status?.length > 0) {
+      const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
+      if (filteredItems.length > 0) {
+        const itemIds = filteredItems?.map((item: any) => item?.id)
+        payload.value.filter = [...payload.value.filter, {
+          key: 'invoiceStatus',
+          operator: 'IN',
+          value: itemIds,
+          logicalOperation: 'AND'
+        }]
+      }
+    }
+    if (filterToSearch.value.invoiceType?.length > 0) {
+      const filteredItems = filterToSearch.value.invoiceType.filter((item: any) => item?.id !== 'All')
+      if (filteredItems.length > 0) {
+        const itemIds = filteredItems?.map((item: any) => item?.id)
+        payload.value.filter = [...payload.value.filter, {
+          key: 'invoiceType',
+          operator: 'IN',
+          value: itemIds,
+          logicalOperation: 'AND'
+        }]
+      }
+    }
+    if (filterToSearch.value.from && !disableDates.value) {
+      payload.value.filter = [...payload.value.filter, {
+        key: 'invoiceDate',
+        operator: 'GREATER_THAN_OR_EQUAL_TO',
+        value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
+        logicalOperation: 'AND'
+      }]
+    }
+    if (filterToSearch.value.to && !disableDates.value) {
+      payload.value.filter = [...payload.value.filter, {
+        key: 'invoiceDate',
+        operator: 'LESS_THAN_OR_EQUAL_TO',
+        value: dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
+        logicalOperation: 'AND'
+      }]
+    }
+  }
 
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    payload.value.filter = [...payload.value.filter, {
-      key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-      operator: 'EQUALS',
-      value: filterToSearch.value.search,
-      logicalOperation: 'AND'
-    }]
-  }
+      payload.value.filter = [...payload.value.filter, {
+        key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
+        operator: 'EQUALS',
+        value: filterToSearch.value.search,
+        logicalOperation: 'AND'
+      }]
+    }
 
-  if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
-    const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
-    const itemIds = filteredItems?.map((item: any) => item?.id)
 
-    payload.value.filter = [...payload.value.filter, {
-      key: 'agency.client.id',
-      operator: 'IN',
-      value: itemIds,
-      logicalOperation: 'AND'
-    }]
-  }
-  if (filterToSearch.value.agency?.length > 0 && !filterToSearch.value.agency.find(item => item.id === 'All')) {
-    const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
-    const itemIds = filteredItems?.map((item: any) => item?.id)
-    payload.value.filter = [...payload.value.filter, {
-      key: 'agency.id',
-      operator: 'IN',
-      value: itemIds,
-      logicalOperation: 'AND'
-    }]
-  }
   if (filterToSearch.value.hotel?.length > 0) {
     const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
     if (filteredItems.length > 0) {
@@ -460,50 +510,12 @@ function searchAndFilter() {
     }
   }
   else {
-    if (filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[0]?.id && filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[1]?.id) {
+    if (filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[3]?.id && filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[4]?.id) {
       return hotelError.value = true
     }
   }
-  if (filterToSearch.value.status?.length > 0) {
-    const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
-    if (filteredItems.length > 0) {
-      const itemIds = filteredItems?.map((item: any) => item?.id)
-      payload.value.filter = [...payload.value.filter, {
-        key: 'invoiceStatus',
-        operator: 'IN',
-        value: itemIds,
-        logicalOperation: 'AND'
-      }]
-    }
-  }
-  if (filterToSearch.value.invoiceType?.length > 0) {
-    const filteredItems = filterToSearch.value.invoiceType.filter((item: any) => item?.id !== 'All')
-    if (filteredItems.length > 0) {
-      const itemIds = filteredItems?.map((item: any) => item?.id)
-      payload.value.filter = [...payload.value.filter, {
-        key: 'invoiceType',
-        operator: 'IN',
-        value: itemIds,
-        logicalOperation: 'AND'
-      }]
-    }
-  }
-  if (filterToSearch.value.from && !disableDates.value) {
-    payload.value.filter = [...payload.value.filter, {
-      key: 'invoiceDate',
-      operator: 'GREATER_THAN_OR_EQUAL_TO',
-      value: dayjs(filterToSearch.value.from).startOf('day').toISOString(),
-      logicalOperation: 'AND'
-    }]
-  }
-  if (filterToSearch.value.to && !disableDates.value) {
-    payload.value.filter = [...payload.value.filter, {
-      key: 'invoiceDate',
-      operator: 'LESS_THAN_OR_EQUAL_TO',
-      value: dayjs(filterToSearch.value.to).endOf('day').toISOString(),
-      logicalOperation: 'AND'
-    }]
-  }
+
+
 
   getList()
 }
@@ -518,7 +530,7 @@ function clearFilterToSearch() {
     sortType: ENUM_SHORT_TYPE.ASC
   }
   filterToSearch.value = {
-    criteria: ENUM_INVOICE_CRITERIA[0],
+    criteria: ENUM_INVOICE_CRITERIA[3],
     search: '',
     client: [],
     agency: [],
@@ -532,8 +544,10 @@ function clearFilterToSearch() {
   }
   getList()
 }
-async function getItemById(data: {id: string, type: string}) {
-  openEditDialog(data?.id, data?.type)
+async function getItemById(data: { id: string, type: string, status: any }) {
+  if (data?.status === InvoiceStatus.PROCECSED) {
+    openEditDialog(data?.id, data?.type)
+  }
 }
 
 function handleDialogOpen() {
@@ -628,20 +642,20 @@ async function getHotelList() {
   try {
     const payload
       = {
-        filter: [
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+      filter: [
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
 
     hotelList.value = [{ id: 'All', name: 'All', code: 'All' }]
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
@@ -659,20 +673,20 @@ async function getClientList() {
   try {
     const payload
       = {
-        filter: [
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+      filter: [
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
 
     clientList.value = [{ id: 'All', name: 'All', code: 'All' }]
     const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
@@ -708,20 +722,20 @@ async function getAgencyList() {
   try {
     const payload
       = {
-        filter: [
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ] as any,
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+      filter: [
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ] as any,
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
 
     agencyList.value = [{ id: 'All', name: 'All', code: 'All' }]
 
@@ -759,20 +773,20 @@ async function parseDataTableFilter(payloadFilter: any) {
   // }
 
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
-  
-  if(parseFilter && parseFilter?.length > 0){
-  for (let i = 0; i < parseFilter?.length; i++) {
-    
-    if(parseFilter[i]?.key === 'agencyCd'){
-      parseFilter[i].key = 'agency.code'
-    }
 
-    if(parseFilter[i]?.key === 'status'){
-      parseFilter[i].key = 'invoiceStatus'
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+
+      if (parseFilter[i]?.key === 'agencyCd') {
+        parseFilter[i].key = 'agency.code'
+      }
+
+      if (parseFilter[i]?.key === 'status') {
+        parseFilter[i].key = 'invoiceStatus'
+      }
+
     }
-    
   }
-}
 
   payload.value.filter = [...parseFilter || []]
   getList()
@@ -786,6 +800,12 @@ function onSortField(event: any) {
     if (event.sortField === 'agencyCd') {
       event.sortField = 'agency.code'
     }
+    if (event.sortField === 'agency') {
+      event.sortField = 'agency.name'
+    }
+    // if (event.sortField === 'invoiceNumber') {
+    //   event.sortField = 'invoiceNumber'
+    // }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     getList()
@@ -841,8 +861,16 @@ function setMenuOptions(statusId: string) {
 }
 
 function onRowRightClick(event: any) {
-  // Mostrar solo si es para estos estados
+
   setMenuOptions(event.data.status)
+  console.log(event?.data);
+
+  if (event.data?.invoiceType !== InvoiceType.INVOICE) {
+    console.log('event');
+    invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.label !== 'New Credit')]
+  }
+
+  // Mostrar solo si es para estos estados
   attachmentInvoice.value = event.data
   invoiceContextMenu.value.show(event.originalEvent)
 }
@@ -871,7 +899,7 @@ watch(disableClient, () => {
   }
 })
 watch(filterToSearch, () => {
-  if (filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[0]?.id || filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[1]?.id) {
+  if (filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[3]?.id || filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[1]?.id) {
     hotelError.value = false
   }
 }, { deep: true })
@@ -925,31 +953,22 @@ const legend = ref(
         Invoice Management
       </h3>
       <div class="flex flex-row w-full place-content-center justify-center justify-content-end">
-        <Button v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true" aria-controls="overlay_menu" @click="toggle" />
+        <Button v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true"
+          aria-controls="overlay_menu" @click="toggle" />
         <Menu id="overlay_menu" ref="menu" :model="createItems" :popup="true" />
 
         <PopupNavigationMenu v-if="false" :items="createItems" icon="pi pi-plus" label="New">
           <template #item="props">
-            <button :disabled="props.props.label === 'Credit' && expandedInvoice === ''" style="border: none; width: 100%;">
+            <button :disabled="props.props.label === 'Credit' && expandedInvoice === ''"
+              style="border: none; width: 100%;">
               {{ props.props.label }}
             </button>
           </template>
         </PopupNavigationMenu>
 
-        <Button v-tooltip.left="'Import'" class="ml-2" label="Import"  severity="primary" aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport" >
-          <template #icon>
-            <span class="mr-2 flex align-items-center justify-content-center p-0">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="20px"
-                viewBox="0 -960 960 960"
-                width="20px"
-                fill="#ffff"
-              >
-                <path :d="'M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z'" />
-              </svg>
-            </span>
-          </template>
+        <Button v-tooltip.left="'Import'" class="ml-2" label="Import" icon="pi pi-file-import" severity="primary"
+          aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport">
+
         </Button>
         <Menu id="overlay_menu_import" ref="menu_import" class="ml-2" :model="itemsMenuImport" :popup="true" />
         <PopupNavigationMenu v-if="false" :items="itemsMenuImport" icon="pi pi-plus" label="Import">
@@ -969,8 +988,9 @@ const legend = ref(
         /> -->
         <!-- <Button class="ml-2" icon="pi pi-file-plus" label="Process" /> -->
         <!--  <Button class="ml-2" icon="pi pi-cog" label="Adjustment" disabled /> -->
-        <Button class="ml-2" icon="pi pi-print" label="Print" :disabled="listItems.length === 0" @click="exportToPdf"/>
-        <Button class="ml-2" icon="pi pi-upload" label="Export" :disabled="listItems.length === 0" @click="()=>exportList()" />
+        <Button class="ml-2" icon="pi pi-print" label="Print" :disabled="listItems.length === 0" @click="exportToPdf" />
+        <Button class="ml-2" icon="pi pi-download" label="Export" :disabled="listItems.length === 0"
+          @click="() => exportList()" />
         <!-- <Button class="ml-2" icon="pi pi-times" label="Exit" @click="() => { navigateTo('/') }" /> -->
       </div>
     </div>
@@ -981,7 +1001,8 @@ const legend = ref(
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>
-              <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
+              <div
+                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
                   Search Fields
                 </div>
@@ -1000,24 +1021,20 @@ const legend = ref(
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll"
-                        id="autocomplete" multiple field="name"
+                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" multiple field="name"
                         item-value="id" :model="filterToSearch.client" :suggestions="clientList" placeholder=""
-                        :disabled="disableClient" style="max-width: 400px;" @load="($event) => getClientList()"
-                        @change="($event) => {
+                        :disabled="disableClient" style="max-width: 400px;" @load="($event) => getClientList()" @change="($event) => {
 
-                          if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-                            filterToSearch.client = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
+          if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+            filterToSearch.client = $event.filter((element: any) => element?.id === 'All')
+          }
+          else {
 
-                            filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
-                          }
+            filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
+          }
 
-                          filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : []
-                        }"
-                      >
+          filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : []
+        }">
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
@@ -1031,23 +1048,19 @@ const legend = ref(
                   </div>
                   <div class="flex align-items-center gap-2">
                     <div class="w-full lg:w-auto">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        placeholder="" multiple field="name"
-                        item-value="id" :model="filterToSearch.agency" :suggestions="agencyList" :disabled="disableClient" style="max-width: 400px;"
-                        @change="($event) => {
+                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" placeholder="" multiple
+                        field="name" item-value="id" :model="filterToSearch.agency" :suggestions="agencyList"
+                        :disabled="disableClient" style="max-width: 400px;" @change="($event) => {
 
-                          if (!filterToSearch.agency.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-                            filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
+          if (!filterToSearch.agency.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+            filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
+          }
+          else {
 
-                            filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
-                          }
+            filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
+          }
 
-                        }"
-                        @load="($event) => getAgencyList($event)"
-                      >
+        }" @load="($event) => getAgencyList($event)">
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
@@ -1070,25 +1083,22 @@ const legend = ref(
 
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <div class="flex gap-2">
-                        <DebouncedAutoCompleteComponent
-                          v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
+                    <div class="w-full" style=" z-index:5">
+                      <div class="flex gap-2 w-full">
+                        <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
                           item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList" placeholder=""
-                          style="max-width: 218px;" @load="($event) => getHotelList()"
-                          @change="($event) => {
+                          class="w-full" @load="($event) => getHotelList()" @change="($event) => {
 
-                            if (!filterToSearch.hotel.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                            }
-                            else {
+          if (!filterToSearch.hotel.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+          }
+          else {
 
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                            }
-                            hotelError = false
+            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+          }
+          hotelError = false
 
-                          }"
-                        >
+        }">
                           <template #option="props">
                             <span>{{ props.item.code }} - {{ props.item.name }}</span>
                           </template>
@@ -1099,30 +1109,30 @@ const legend = ref(
                           </template>
                         </DebouncedAutoCompleteComponent>
                         <div v-if="hotelError" class="flex align-items-center text-sm">
-                          <span style="color: red; margin-right: 3px; margin-left: 3px;">You must select the "Hotel" field as required</span>
+                          <span style="color: red; margin-right: 3px; margin-left: 3px;">You must select the "Hotel"
+                            field
+                            as required</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <div class="w-full lg:w-auto">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
+                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
                         item-value="id" :model="filterToSearch.status" :suggestions="statusList" placeholder=""
                         @load="($event) => getStatusList($event)" @change="($event) => {
-                          if (!filterToSearch.status.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-                            filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
+          if (!filterToSearch.status.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+            filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
+          }
+          else {
 
-                            filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
+            filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
+          }
+        }">
                         <template #option="props">
                           <span>{{ props.item.name }}</span>
                         </template>
-                        
+
                       </DebouncedAutoCompleteComponent>
                     </div>
                   </div>
@@ -1137,22 +1147,19 @@ const legend = ref(
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <Calendar
-                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                      <Calendar v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
                         show-icon icon-display="input" style="max-width: 130px; max-height: 32px"
-                        :disabled="disableDates" :max-date="dayjs(new Date()).endOf('month').toDate()"
-                      />
+                        :disabled="disableDates" :max-date="dayjs(new Date()).endOf('month').toDate()" />
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <div class="w-full lg:w-auto">
-                      <Calendar
-                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                      <Calendar v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
                         icon-display="input" style="max-width: 130px; max-height: 32px; overflow: auto;"
-                        :invalid="filterToSearch.to < filterToSearch.from"
-                        :disabled="disableDates" :max-date="dayjs(new Date()).endOf('month').toDate()" :min-date="filterToSearch.from"
-                      />
-                      <span v-if="filterToSearch.to < filterToSearch.from" style="color: red; margin-left: 2px;">Check date range</span>
+                        :invalid="filterToSearch.to < filterToSearch.from" :disabled="disableDates"
+                        :max-date="dayjs(new Date()).endOf('month').toDate()" :min-date="filterToSearch.from" />
+                      <span v-if="filterToSearch.to < filterToSearch.from" style="color: red; margin-left: 2px;">Check
+                        date range</span>
                     </div>
                   </div>
                 </div>
@@ -1170,7 +1177,8 @@ const legend = ref(
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <Dropdown v-model="filterToSearch.criteria" show-clear option-label="name" style="min-width: 140px;" :options="[...ENUM_INVOICE_CRITERIA]">
+                      <Dropdown v-model="filterToSearch.criteria" show-clear option-label="name"
+                        style="min-width: 140px;" :options="[...ENUM_INVOICE_CRITERIA]">
                         <template #option="slotProps">
                           <div class="flex align-items-center gap-2">
                             <span>{{ slotProps.option.name }}</span>
@@ -1181,10 +1189,10 @@ const legend = ref(
                   </div>
                   <div class="flex align-items-center gap-2">
                     <div class="w-full lg:w-auto mr-3">
-                      <IconField icon-position="left" style="min-width: 140px;">
-                        <InputText v-model="filterToSearch.search" type="text" style="width: 140px;" />
-                        <InputIcon class="pi pi-search" />
-                      </IconField>
+
+                      <InputText v-model="filterToSearch.search" type="text" style="width: 140px;" />
+
+
                     </div>
                   </div>
                 </div>
@@ -1198,27 +1206,26 @@ const legend = ref(
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete" field="name" multiple placeholder=""
-                        item-value="id" :model="filterToSearch.invoiceType" :suggestions="invoiceTypeList"
-                        style="max-width: 400px;" @load="($event) => getInvoiceTypeList()" @change="($event) => {
-                          if (!filterToSearch.invoiceType.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-                            filterToSearch.invoiceType = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
+                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
+                        placeholder="" item-value="id" :model="filterToSearch.invoiceType"
+                        :suggestions="invoiceTypeList" style="max-width: 400px;"
+                        @load="($event) => getInvoiceTypeList()" @change="($event) => {
+          if (!filterToSearch.invoiceType.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+            filterToSearch.invoiceType = $event.filter((element: any) => element?.id === 'All')
+          }
+          else {
 
-                            filterToSearch.invoiceType = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                      <template #option="props">
-                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                      </template>
-                      <template #chip="{ value }">
-                        <div>
-                          {{ value?.code }}-{{ value?.name }}
-                        </div>
-                      </template>
+            filterToSearch.invoiceType = $event.filter((element: any) => element?.id !== 'All')
+          }
+        }">
+                        <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                        <template #chip="{ value }">
+                          <div>
+                            {{ value?.code }}-{{ value?.name }}
+                          </div>
+                        </template>
                       </DebouncedAutoCompleteComponent>
                     </div>
                   </div>
@@ -1230,11 +1237,10 @@ const legend = ref(
                 </div>
               </div>
               <div class="flex align-items-center gap-2">
-                <Button
-                  v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch"
-                  :loading="loadingSearch" @click="searchAndFilter"
-                />
-                <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :loading="loadingSearch" @click="clearFilterToSearch" />
+                <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch"
+                  :loading="loadingSearch" @click="searchAndFilter" />
+                <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                  :loading="loadingSearch" @click="clearFilterToSearch" />
               </div>
               <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
             </div> -->
@@ -1244,72 +1250,75 @@ const legend = ref(
           </AccordionTab>
         </Accordion>
       </div>
-      <ExpandableTable
-        :data="listItems" :columns="columns" :options="options" :pagination="pagination"
+      <ExpandableTable :data="listItems" :columns="columns" :options="options" :pagination="pagination"
         @on-confirm-create="clearForm" @open-edit-dialog="openEditDialog($event)"
         @on-change-pagination="payloadOnChangePage = $event" @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems" @on-sort-field="onSortField" @update:double-clicked="getItemById" @on-expand-field="($event) => { expandedInvoice = $event }"
-        @on-select-field="($event) => { attachmentInvoice = $event }" @on-row-right-click="onRowRightClick"
-      >
+        @on-list-item="resetListItems" @on-sort-field="onSortField" @update:double-clicked="getItemById"
+        @on-expand-field="($event) => { expandedInvoice = $event }"
+        @on-select-field="($event) => { attachmentInvoice = $event }" @on-row-right-click="onRowRightClick">
         <template #column-invoiceDate="{ item: data }">
           {{ dayjs(data).format('DD-MM-YYYY') }}
         </template>
         <template #row-selector-body="props">
-          <button
-            v-if="props.item?.hasAttachments"
-            class="pi pi-paperclip" style="background-color: white; border: 0; padding: 5px; border-radius: 100%;"
-            @click="() => {
-              attachmentInvoice = props.item
-              attachmentDialogOpen = true
+          <button v-if="props.item?.hasAttachments" class="pi pi-paperclip"
+            style="background-color: white; border: 0; padding: 5px; border-radius: 100%;" @click="() => {
+          attachmentInvoice = props.item
+          attachmentDialogOpen = true
 
-            }"
-          />
+        }" />
         </template>
 
         <template #expanded-item="props">
-          <InvoiceTabView
-          :invoice-obj-amount="0"
-            :selected-invoice="props.itemId" :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
-            :open-dialog="handleDialogOpen" :active="active" :set-active="($event) => { active = $event }" :is-detail-view="true"
-          />
+          <InvoiceTabView :invoice-obj-amount="0" :selected-invoice="props.itemId" :is-dialog-open="bookingDialogOpen"
+            :close-dialog="() => { bookingDialogOpen = false }" :open-dialog="handleDialogOpen" :active="active"
+            :set-active="($event) => { active = $event }" :is-detail-view="true" />
         </template>
 
         <template #column-status="props">
-          <Badge :value="getStatusName(props.item)" :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item)}`" />
+          <Badge :value="getStatusName(props.item)"
+            :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item)}`" />
         </template>
 
         <template #datatable-footer>
-          <ColumnGroup type="footer" class="flex align-items-center">
+          <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
             <Row>
-              <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
-              <Column :footer="totalInvoiceAmount" />
-              <Column :footer="totalDueAmount" />
+              <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: 700" />
+              <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+              <Column :footer="totalDueAmount" footer-style="font-weight: 700" />
               <Column :colspan="9" />
-              
-              
+
+
             </Row>
           </ColumnGroup>
         </template>
 
-       
+
       </ExpandableTable>
     </div>
     <ContextMenu ref="invoiceContextMenu" :model="invoiceContextMenuItems" />
   </div>
   <div v-if="attachmentDialogOpen">
-    <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false }" :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" />
+    <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false, getList() }" :is-creation-dialog="false"
+      header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="attachmentInvoice?.id"
+      :selected-invoice-obj="attachmentInvoice" />
   </div>
   <div v-if="attachmentHistoryDialogOpen">
-    <InvoiceHistoryDialog :selected-attachment="''"  :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History"  :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" :is-creation-dialog="false" />
+    <InvoiceHistoryDialog :selected-attachment="''" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+      header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen"
+      :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" :is-creation-dialog="false" />
   </div>
 
   <div v-if="exportDialogOpen">
-    <ExportDialog :close-dialog="() => { exportDialogOpen = false }" :open-dialog="exportDialogOpen" :payload="payload" />
+    <ExportDialog :total="pagination.totalElements" :close-dialog="() => { exportDialogOpen = false }"
+      :open-dialog="exportDialogOpen" :payload="payload" />
   </div>
   <div v-if="exportPdfDialogOpen">
-    <ExportToPdfDialog :close-dialog="() => { exportPdfDialogOpen = false }" :open-dialog="exportPdfDialogOpen" :payload="payload" :invoices="listItems" :total-amount="totalInvoiceAmount" :total-due-amount="totalInvoiceAmount" />
+    <ExportToPdfDialog :close-dialog="() => { exportPdfDialogOpen = false }" :open-dialog="exportPdfDialogOpen"
+      :payload="payload" :invoices="listItems" :total-amount="totalInvoiceAmount"
+      :total-due-amount="totalInvoiceAmount" />
   </div>
   <div v-if="exportAttachmentsDialogOpen">
-    <ExportAttachmentsDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen" :payload="payload" :invoice="attachmentInvoice"  />
+    <ExportAttachmentsDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }"
+      :open-dialog="exportAttachmentsDialogOpen" :payload="payload" :invoice="attachmentInvoice" />
   </div>
 </template>

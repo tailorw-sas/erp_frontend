@@ -18,6 +18,8 @@ interface FieldDefinition {
   containerFieldClass?: any | null
   showClearButton?: boolean | null
   maxConstraints?: number | null
+  minFractionDigits?: number | null
+  maxFractionDigits?: number | null
   hidden?: boolean
   disabled?: boolean
   toUppercase?: boolean

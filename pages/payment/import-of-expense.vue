@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { v4 as uuidv4 } from 'uuid'
 import type { PageState } from 'primevue/paginator'
@@ -34,11 +34,9 @@ const columns: IColumn[] = [
   { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
   { field: 'manageClientCode', header: 'Client', type: 'text' },
   { field: 'manageAgencyCode', header: 'Agency', type: 'text' },
-  { field: 'bankAccount', header: 'Bank Acc.', type: 'text' },
-  { field: 'transfNo', header: 'Transf. No', type: 'text' },
-  { field: 'totalAmount', header: 'Total Amount', type: 'text' },
-  { field: 'TransfDate', header: 'Trans. Date', type: 'date' },
-  { field: 'remark', header: 'Remark', type: 'text' },
+  { field: 'amount', header: 'Total Amount', type: 'text' },
+  { field: 'transactionDate', header: 'Trans. Date', type: 'date' },
+  { field: 'remarks', header: 'Remark', type: 'text' },
   { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -56,7 +54,13 @@ const options = ref({
 })
 
 const payload = ref<IQueryRequest>({
-  filter: [],
+  filter: [{
+    key: 'importType',
+    operator: 'EQUALS',
+    value: ENUM_PAYMENT_IMPORT_TYPE.EXPENSE,
+    logicalOperation: 'AND'
+  }
+  ],
   query: '',
   pageSize: 10,
   page: 0,
@@ -78,18 +82,11 @@ const pagination = ref<IPagination>({
 
 async function getErrorList() {
   try {
-    const param: IQueryRequest = {
-      query: idItem.value,
-      pageSize: 20,
-      page: 0,
-      filter: []
-    }
-
+    payload.value = { ...payload.value, query: idItem.value }
     let rowError = ''
     listItems.value = []
     const newListItems = []
-    const response = await GenericService.importSearch(confErrorApi.moduleApi, confErrorApi.uriApi, param)
-
+    const response = await GenericService.importSearch(confErrorApi.moduleApi, confErrorApi.uriApi, payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
 
     pagination.value.page = page
@@ -106,16 +103,13 @@ async function getErrorList() {
         for (const err of iterator.errorFields) {
           rowError += `- ${err.message} \n`
         }
-        newListItems.push({ ...iterator.row, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        const dateTemp = !iterator.row ? null : convertirAFechav2(iterator.row.transactionDate)
+        newListItems.push({ ...iterator.row, id: iterator.id, transactionDate: dateTemp, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
 
     listItems.value = [...listItems.value, ...newListItems]
-    if (listItems.value.length === 0) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
-      await clearForm()
-    }
   }
   catch (error) {
     console.error('Error loading file:', error)
@@ -136,6 +130,7 @@ async function onChangeFile(event: any) {
 
 async function importFile() {
   loadingSaveAll.value = true
+  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
   try {
@@ -158,14 +153,20 @@ async function importFile() {
   catch (error: any) {
     successOperation = false
     uploadComplete.value = false
+    options.value.loading = false
     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
 
   loadingSaveAll.value = false
   if (successOperation) {
     await getErrorList()
-    // clearForm()
+    if (listItems.value.length === 0) {
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
+      options.value.loading = false
+      await clearForm()
+    }
   }
+  options.value.loading = false
 }
 
 async function resetListItems() {
@@ -195,7 +196,7 @@ watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 
-  // getErrorList()
+  getErrorList()
 })
 
 onMounted(async () => {
@@ -212,30 +213,32 @@ onMounted(async () => {
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
-                  Import Payment of Expense from Excel
+                  Import Payment Of Expense From Excel
                 </div>
               </div>
             </template>
-            <div class="flex flex-column lg:flex-row w-full">
-              <div class="flex flex-row w-full align-items-center">
-                <label class="w-7rem">Import Data: </label>
+            <div class="grid p-0 m-0" style="margin: 0 auto;">
+              <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
+                <div class="flex align-items-center mb-2">
+                  <label class="w-8rem">Import Data: </label>
 
-                <div class="w-full ">
-                  <div class="p-inputgroup">
-                    <InputText
-                      ref="fileUpload"
-                      v-model="invoiceFile"
-                      placeholder="Choose file"
-                      class="w-full"
-                      show-clear
-                      aria-describedby="inputtext-help"
-                    />
-                    <span class="p-inputgroup-addon">
-                      <Button icon="pi pi-upload" severity="secondary" class="w-3rem" @click="fileUpload.click()" />
-                    </span>
+                  <div class="w-full">
+                    <div class="p-inputgroup w-full">
+                      <InputText
+                        ref="fileUpload"
+                        v-model="invoiceFile"
+                        placeholder="Choose file"
+                        class="w-full"
+                        show-clear
+                        aria-describedby="inputtext-help"
+                      />
+                      <span class="p-inputgroup-addon p-0 m-0">
+                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                      </span>
+                    </div>
+                    <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
+                    <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile">
                   </div>
-                  <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                  <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile">
                 </div>
               </div>
             </div>
@@ -268,5 +271,13 @@ onMounted(async () => {
   background-color: transparent !important;
   border: none !important;
   text-align: left !important;
+}
+
+.ellipsis-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>

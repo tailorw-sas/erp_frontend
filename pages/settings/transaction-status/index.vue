@@ -241,7 +241,7 @@ async function getForSelectNavigateList() {
       if (!uniqueItems.has(iterator.id)) {
         uniqueItems.set(iterator.id, {
           id: iterator.id,
-          name: iterator.name,
+          name: `${iterator.code} - ${iterator.name}`,
           status: iterator.status
         })
       }

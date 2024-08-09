@@ -215,9 +215,14 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.name = response.name
         item.value.description = response.description
-        HotelList.value = [response.manageHotel]
-        item.value.manageHotel = response.manageHotel
         item.value.status = statusToBoolean(response.status)
+        if (response.manageHotel) {
+          item.value.manageHotel = {
+            id: response.manageHotel.id,
+            name: `${response.manageHotel.code} - ${response.manageHotel.name}`,
+            status: statusToBoolean(response.manageHotel.status)
+          }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -334,29 +339,38 @@ async function saveItem(item: { [key: string]: any }) {
 async function getHotelList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
-      sortBy: 'createdAt',
-      sortType: 'ASC',
       pageSize: 20,
       page: 0,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
     }
     const response = await GenericService.search('settings', 'manage-hotel', payload)
     const { data: dataList } = response
     HotelList.value = []
 
     for (const iterator of dataList) {
-      HotelList.value = [...HotelList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      HotelList.value = [...HotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

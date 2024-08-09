@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
+import type { AutoCompleteChangeEvent, AutoCompleteItemSelectEvent } from 'primevue/autocomplete'
 
 const props = defineProps({
   suggestions: {
@@ -44,20 +45,50 @@ const props = defineProps({
 const emit = defineEmits(['load', 'update:modelValue', 'change'])
 
 const localModelValue = ref(props.model)
+const instance = ref()
+const shouldReopen = ref(true)
 
 // Watch for changes in props.model and update localModelValue accordingly
 watch(() => props.model, (newValue) => {
   localModelValue.value = newValue
-})
+}, { immediate: true })
 
 const debouncedComplete = useDebounceFn((event: any) => {
   emit('load', event.query)
 }, props.debounceTimeMs, { maxWait: 5000 })
+
+const openDropdown = () => instance.value?.show()
+
+function toggleSelection(item: any) {
+  const index = localModelValue.value.findIndex((selectedItem: any) => selectedItem[props.itemValue] === item[props.itemValue])
+  if (index !== -1) {
+    localModelValue.value.splice(index, 1) // Remover el elemento si ya está seleccionado
+  }
+}
+
+function onItemSelect(event: AutoCompleteItemSelectEvent) {
+  if (props.multiple) {
+    toggleSelection(event.value)
+    shouldReopen.value = true
+  }
+}
+
+function onHide() {
+  if (shouldReopen.value && props.multiple) {
+    openDropdown()
+    shouldReopen.value = false
+  }
+}
+
+function wait(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 </script>
 
 <template>
   <AutoComplete
     :id="props.id"
+    ref="instance"
     v-model="localModelValue"
     :suggestions="props.suggestions"
     :field="props.field"
@@ -68,11 +99,15 @@ const debouncedComplete = useDebounceFn((event: any) => {
     dropdown
     :multiple="props.multiple"
     @complete="debouncedComplete"
-    @change="($event) => {
-      if (typeof $event.value === 'object') {
-        emit('change', $event.value)
+    @item-select="onItemSelect"
+    @change="async ($event: AutoCompleteChangeEvent) => {
+      const ev = JSON.parse(JSON.stringify($event.value));
+      await wait(50) // Espera 50ms
+      if (typeof ev === 'object') {
+        emit('change', ev)
       }
     }"
+    @hide="onHide"
   >
     <template #option="props">
       <slot name="option" :item="props.option" />

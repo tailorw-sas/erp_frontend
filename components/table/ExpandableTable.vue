@@ -194,7 +194,7 @@ function onSelectItem(item: any) {
 
 function onDoubleClickItem(item: any) {
   if (item?.data) {
-    emits('update:doubleClicked', { id: item?.data?.id, type: item?.data?.invoiceType })
+    emits('update:doubleClicked', { id: item?.data?.id, type: item?.data?.invoiceType, status: item?.data?.status })
   }
 }
 
@@ -600,7 +600,7 @@ getOptionsList()
                 <span v-if="column.type === 'local-select'" v-tooltip.top="data[column.field].name" class="truncate">
                   {{ (column.hasOwnProperty('localItems') && column.localItems) ? getNameById(data[column.field], column.localItems) : '' }}
                 </span>
-                <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field]" class="truncate">
+                <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field] ? data[column.field].toString() : ''" class="truncate">
                   <span v-if="column.badge && data[column.field]">
                     <Badge v-tooltip.top="data[column.field]" :value="data[column.field] ? 'True' : 'False'" :severity="data[column.field] ? 'success' : 'danger'" class="}" />
                   </span>

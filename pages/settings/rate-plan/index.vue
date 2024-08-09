@@ -233,8 +233,10 @@ async function getItemById(id: string) {
         item.value.description = response.description
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
-        listHotelItems.value = [response.hotel]
-        item.value.hotel = response.hotel
+        // listHotelItems.value = [response.hotel]
+        if (response.hotel) {
+          item.value.hotel = { id: response.hotel.id, name: `${response.hotel.code} - ${response.hotel.name}`, status: statusToBoolean(response.hotel.status) }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -375,14 +377,19 @@ function onSortField(event: any) {
   }
 }
 
-async function getHotelList(query: string) {
+async function getHotelList(query: string = '') {
   try {
     const payload = {
       filter: [{
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -393,14 +400,14 @@ async function getHotelList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-hotel', payload)
     const { data: dataList } = response
     listHotelItems.value = []
     for (const iterator of dataList) {
-      listHotelItems.value = [...listHotelItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listHotelItems.value = [...listHotelItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

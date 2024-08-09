@@ -301,10 +301,20 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         MerchantList.value = [objMerchant]
         item.value.managerMerchant = objMerchant
-        CurrencyList.value = [response.managerCurrency]
-        item.value.managerCurrency = response.managerCurrency
-        HotelList.value = [response.managerHotel]
-        item.value.managerHotel = response.managerHotel
+        if (response.managerCurrency) {
+          item.value.managerCurrency = {
+            id: response.managerCurrency.id,
+            name: `${response.managerCurrency.code} ${response.managerCurrency.name ? `- ${response.managerCurrency.name}` : ''}`,
+            status: response.managerCurrency.status
+          }
+        }
+        if (response.managerHotel) {
+          item.value.managerHotel = {
+            id: response.managerHotel.id,
+            name: `${response.managerHotel.code} ${response.managerHotel.name ? `- ${response.managerHotel.name}` : ''}`,
+            status: response.managerHotel.status
+          }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -438,6 +448,11 @@ async function getCurrencyList(query: string) {
         value: query,
         logicalOperation: 'AND'
       }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
         key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
@@ -452,7 +467,7 @@ async function getCurrencyList(query: string) {
     const { data: dataList } = response
     CurrencyList.value = []
     for (const iterator of dataList) {
-      CurrencyList.value = [...CurrencyList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      CurrencyList.value = [...CurrencyList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -469,6 +484,11 @@ async function getHotelList(query: string) {
         value: query,
         logicalOperation: 'AND'
       }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
         key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
@@ -483,7 +503,7 @@ async function getHotelList(query: string) {
     const { data: dataList } = response
     HotelList.value = []
     for (const iterator of dataList) {
-      HotelList.value = [...HotelList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      HotelList.value = [...HotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

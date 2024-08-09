@@ -401,27 +401,27 @@ async function getIdentityModuleList(query: string = '') {
               key: 'name',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             },
             {
               key: 'code',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             }
           ],
           query: '',
           pageSize: 100,
           page: 0,
           sortBy: 'name',
-          sortType: ENUM_SHORT_TYPE.DESC
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search(confModuleApi.moduleApi, confModuleApi.uriApi, payload)
     const { data: dataList } = response
     moduleList.value = []
     for (const iterator of dataList) {
-      moduleList.value = [...moduleList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      moduleList.value = [...moduleList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -444,27 +444,27 @@ async function getForSelectNavigateList(query: string = '') {
               key: 'name',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             },
             {
               key: 'code',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             }
           ],
           query: '',
           pageSize: 200,
           page: 0,
-          sortBy: 'code',
-          sortType: ENUM_SHORT_TYPE.DESC
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     navigateListItems.value = []
     const response = await GenericService.search(confPaymentAttachmentStatusApi.moduleApi, confPaymentAttachmentStatusApi.uriApi, payload)
     const { data: dataList } = response
     for (const iterator of dataList) {
-      navigateListItems.value = [...navigateListItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      navigateListItems.value = [...navigateListItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

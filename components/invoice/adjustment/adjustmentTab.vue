@@ -79,7 +79,7 @@ const props = defineProps({
     default: false,
   },
   sortAdjustment: Function as any,
-  refetchInvoice: { type: Function, default: () => {} },
+  refetchInvoice: { type: Function, default: () => { } },
   invoiceObjAmount: { type: Number, required: true }
 })
 
@@ -121,7 +121,7 @@ const Fields: Array<Container> = [
         dataType: 'number',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.number().refine((value: number) => {
+        validation: z.number({ invalid_type_error: "The Amount field is required" }).refine((value: number) => {
           if (!value) { return false }
           return true
         }, { message: 'The Amount field cannot be 0' })
@@ -153,9 +153,56 @@ const Fields: Array<Container> = [
         field: 'description',
         header: 'Remark',
         dataType: 'text',
+        class: 'field col-12',
+        headerClass: 'mb-1',
+
+
+      },
+
+    ],
+    containerClass: 'w-full'
+  }
+
+]
+
+const IncomeAttachmentFields: Array<Container> = [
+  {
+    childs: [
+      {
+        field: 'amount',
+        header: 'Amount',
+        dataType: 'number',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.string().min(1, 'The remark field is required')
+        validation: z.number().refine((value: number) => {
+          if (!value) { return false }
+          return true
+        }, { message: 'The Amount field cannot be 0' })
+      },
+      {
+        field: 'date',
+        header: 'Date',
+        dataType: 'date',
+        class: 'field col-12 md: required ',
+        headerClass: 'mb-1',
+
+      },
+
+      {
+        field: 'transactionType',
+        header: 'Transaction',
+        dataType: 'select',
+        class: 'field col-12',
+        headerClass: 'mb-1',
+
+      },
+      {
+        field: 'description',
+        header: 'Remark',
+        dataType: 'text',
+        class: 'field col-12',
+        headerClass: 'mb-1',
+
 
       },
 
@@ -297,9 +344,10 @@ async function getAdjustmentList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date,
-        transaction: {...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
-        }]
+      ListItems.value = [...ListItems.value, {
+        ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date,
+        transaction: { ...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
+      }]
 
       if (typeof +iterator?.amount === 'number') {
         totalAmount.value += Number(iterator?.amount)
@@ -509,13 +557,13 @@ async function getTransactionTypeList() {
   try {
     const payload
       = {
-        filter: [],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+      filter: [],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
     transactionTypeList.value = []
     const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
@@ -530,7 +578,10 @@ async function getTransactionTypeList() {
 }
 
 function onRowRightClick(event: any) {
-  if (route.query.type === ENUM_INVOICE_TYPE[1]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id) {
+
+  return;
+
+  if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
     return
   }
 
@@ -612,19 +663,15 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTable
-      :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns"
-      :options="Options" :pagination="Pagination" @on-confirm-create="ClearForm"
-      @open-edit-dialog="OpenEditDialog($event)"
+    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="Options"
+      :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-row-right-click="onRowRightClick" @on-sort-field="OnSortField" @on-row-double-click="($event) => {
+      @on-list-item="ResetListItems" @on-row-right-click="onRowRightClick" @on-sort-field="OnSortField"
+      @on-row-double-click="($event) => {
 
-        if (!props.isDetailView){
-          openEditDialog($event)
-        }
+     
 
-      }"
-    >
+    }">
       <template v-if="isCreationDialog" #pagination-total="props">
         <span class="font-bold font">
           {{ listItems?.length }}
@@ -634,8 +681,8 @@ onMounted(() => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="1" footer-style="text-align:right" />
-            <Column :footer="totalAmount" />
+            <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
+            <Column :footer="totalAmount" footer-style="font-weight: 700" />
 
             <Column :colspan="6" />
           </Row>
@@ -646,22 +693,19 @@ onMounted(() => {
   <ContextMenu v-if="!isDetailView" ref="adjustmentContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen">
-    <AdjustmentDialog
-      :invoice-obj="invoiceObj"
-      :invoice-amount="invoiceObjAmount"
-      :fields="Fields" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
-      :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
+    <AdjustmentDialog :invoice-obj="invoiceObj" :invoice-amount="invoiceObjAmount"
+      :fields="route.query.type === InvoiceType.INCOME ? IncomeAttachmentFields : Fields" :item="item"
+      :open-dialog="isDialogOpen" :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
       :require-confirmation-to-save="saveAdjustment"
-      :require-confirmation-to-delete="requireConfirmationToDeleteAdjustment" :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'"
-      :id-item="idItem"
-      :close-dialog="() => {
-        ClearForm()
-        idItem = ''
+      :require-confirmation-to-delete="requireConfirmationToDeleteAdjustment"
+      :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'" :id-item="idItem" :close-dialog="() => {
+      ClearForm()
+      idItem = ''
 
-        closeDialog()
+      closeDialog()
 
-      }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full"
-      class="h-fit p-2 overflow-y-hidden" content-class="w-full h-fit" :transaction-type-list="transactionTypeList" :get-transaction-type-list="getTransactionTypeList"
-    />
+    }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
+      content-class="w-full h-fit" :transaction-type-list="transactionTypeList"
+      :get-transaction-type-list="getTransactionTypeList" />
   </div>
 </template>

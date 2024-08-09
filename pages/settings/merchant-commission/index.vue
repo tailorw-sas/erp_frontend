@@ -319,8 +319,6 @@ async function getItemById(id: string) {
         merchantList.value = [objMerchant]
         item.value.id = response.id
         item.value.managerMerchant = merchantList.value.find(i => i.id === response.managerMerchant.id)
-        creditCardTypeList.value = [response.manageCreditCartType]
-        item.value.manageCreditCartType = response.manageCreditCartType
         item.value.commission = response.commission
         item.value.calculationType = ENUM_CALCULATION_TYPE.find(i => i.id === response.calculationType)
         item.value.description = response.description
@@ -329,6 +327,14 @@ async function getItemById(id: string) {
         newDate.setDate(newDate.getDate() + 1)
         item.value.fromDate = newDate || null
         item.value.toDate = response.toDate ? dayjs(response.toDate).format('YYYY-MM-DD') : null
+
+        if (response.manageCreditCartType) {
+          item.value.manageCreditCartType = {
+            id: response.manageCreditCartType.id,
+            name: `${response.manageCreditCartType.code} - ${response.manageCreditCartType.name}`,
+            status: response.manageCreditCartType.status
+          }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)

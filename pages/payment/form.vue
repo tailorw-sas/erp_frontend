@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 import { z } from 'zod'
 import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
-import { formatNumbersInObject, formatToTwoDecimalPlaces } from './utils/helperFilters'
+import { formatNumber, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -22,6 +22,7 @@ const { data: userData } = useAuth()
 const refForm: Ref = ref(null)
 const idItem = ref('')
 const idItemDetail = ref('')
+const idPaymentDetail = ref('')
 const isSplitAction = ref(false)
 const enableSplitAction = ref(false)
 const enableDepositSummaryAction = ref(false)
@@ -73,6 +74,7 @@ const openDialogHistory = ref(false)
 const historyList = ref<any[]>([])
 const employeeList = ref<any[]>([])
 const historyColumns = ref<IColumn[]>([
+  { field: 'paymentHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'createdAt', header: 'Date', type: 'date', width: '120px' },
   { field: 'employee', header: 'Employee', type: 'select', width: '150px', localItems: [] },
@@ -203,7 +205,7 @@ const columns: IColumn[] = [
   { field: 'children', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
   // { field: 'deposit', header: 'Deposit', tooltip: 'Deposit', width: 'auto', type: 'bool' },
   { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
-  { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '250px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
+  { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
   // { field: 'groupId', header: 'Group Id', width: 'auto', type: 'text' },
   { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
@@ -221,7 +223,7 @@ const item = ref({
   hotel: null,
   bankAccount: null,
   attachmentStatus: null,
-  paymentAmount: '2000',
+  paymentAmount: 0,
   paymentBalance: '0',
   depositAmount: '0',
   depositBalance: '0',
@@ -243,7 +245,7 @@ const itemTemp = ref({
   hotel: null,
   bankAccount: null,
   attachmentStatus: null,
-  paymentAmount: '0',
+  paymentAmount: 0,
   paymentBalance: '0',
   depositAmount: '0',
   depositBalance: '0',
@@ -281,10 +283,11 @@ const decimalSchema = z.object(
       .string()
       .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
     paymentAmmount: z
-      .string()
-      .min(1, { message: 'The payment amount field is required' })
-      .regex(decimalRegex, { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
-      .refine(value => Number.parseFloat(value) >= 1, { message: 'The payment amount field must be at least 1' })
+      .number({
+        invalid_type_error: 'The payment amount field must be a number',
+        required_error: 'The payment amount field is required',
+      })
+      .refine(value => value >= 1, { message: 'The payment amount field must be at least 1' })
   },
 )
 
@@ -306,30 +309,38 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'paymentAmount',
     header: 'Payment Amount',
-    dataType: 'text',
+    dataType: 'number',
     disabled: false,
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     class: 'field col-12 md:col-1 required',
     validation: decimalSchema.shape.paymentAmmount
   },
   {
     field: 'depositAmount',
     header: 'Deposit Amount',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     class: 'field col-12 md:col-1',
   },
   {
     field: 'identified',
     header: 'Identified',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     class: 'field col-12 md:col-1',
   },
   {
     field: 'otherDeductions',
     header: 'Other Deductions',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     class: 'field col-12 md:col-3',
   },
   {
@@ -371,22 +382,28 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'paymentBalance',
     header: 'Payment Balance',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     class: 'field col-12 md:col-1',
   },
   {
     field: 'depositBalance',
     header: 'Deposit Balance',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     class: 'field col-12 md:col-1',
   },
   {
     field: 'notIdentified',
     header: 'Not Identified',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     class: 'field col-12 md:col-1',
   },
   {
@@ -467,6 +484,7 @@ const itemDetails = ref({
   remark: '',
   status: '',
   oldAmount: '',
+  paymentDetail: '',
   applyDepositValue: '0',
   children: [],
   childrenTotalValue: 0,
@@ -480,6 +498,7 @@ const itemDetailsTemp = ref({
   remark: '',
   status: '',
   oldAmount: '',
+  paymentDetail: '',
   applyDepositValue: '0',
   children: [],
   childrenTotalValue: 0,
@@ -542,7 +561,7 @@ function openModalWithContentMenu($event) {
 
 function openDialogPaymentDetails(event: any) {
   if (event) {
-    itemDetails.value = { ...itemDetailsTemp.value }
+    itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
     const objToEdit = paymentDetailsList.value.find(x => x.id === event.id)
 
     if (objToEdit) {
@@ -567,12 +586,15 @@ function openDialogPaymentDetails(event: any) {
 }
 
 function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | undefined = undefined) {
+  const idDetailTemp = JSON.parse(JSON.stringify(idDetail))
+
   if (action !== undefined) {
     actionOfModal.value = action
   }
-  if (idDetail && actionOfModal.value !== 'deposit-transfer') {
-    itemDetails.value = { ...itemDetailsTemp.value }
-    const objToEditTemp = paymentDetailsList.value.find(x => x.id === (typeof idDetail === 'object' ? idDetail.id : idDetail))
+  if (idDetailTemp && actionOfModal.value !== 'deposit-transfer') {
+    itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
+    const objToEditTemp = paymentDetailsList.value.find(x => x.id === (typeof idDetailTemp === 'object' ? idDetailTemp.id : idDetailTemp))
+
     const objToEdit = JSON.parse(JSON.stringify(objToEditTemp))
 
     if (objToEdit) {
@@ -580,6 +602,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
       objToEdit.oldAmount = objToEdit.amount.toString()
       objToEdit.amount = formatToTwoDecimalPlaces(objToEdit.amount)
       itemDetails.value = { ...objToEdit }
+      itemDetails.value.paymentDetail = idDetailTemp
 
       if (actionOfModal.value === 'new-detail') {
         if (itemDetails.value?.transactionType?.cash === false && itemDetails.value?.transactionType?.deposit === false) {
@@ -592,7 +615,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
           )
           updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
           updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', 'Max amount: ∞')
-          updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+          // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
         }
         else {
           const decimalSchema = z.object(
@@ -605,7 +628,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
 
           updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
           updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
-          updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+          // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
           // const decimalSchema = z.object(
           //   {
           //     amount: z
@@ -618,9 +641,11 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
         }
       }
       if (actionOfModal.value === 'split-deposit') {
-        let amountTemp = JSON.parse(JSON.stringify(itemDetails.value.amount))
-        amountTemp = Math.abs(amountTemp)
-        const minValueToApply = (Number.parseFloat(amountTemp) - 0.01).toFixed(2)
+        const amountString = objToEditTemp.amount
+        const sanitizedAmount = amountString.replace(/,/g, '') // Elimina las comas
+        const amountTemp = sanitizedAmount ? Math.abs(Number(sanitizedAmount)) : 0
+
+        const minValueToApply = (amountTemp - 0.01).toFixed(2)
         const decimalSchema = z.object(
           {
             remark: z.string(),
@@ -630,29 +655,16 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
           }
         )
         updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
-        updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+        // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
         updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount to apply: ${Number.parseFloat(minValueToApply)} | Initial amount: ${amountTemp}`)
+        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${minValueToApply}`)
       }
       if (actionOfModal.value === 'apply-deposit') {
-        // Para valdiar el 0.01
-        // console.log(itemDetails.value)
-        // let totalAmountOfChildren = 0
-        // if (itemDetails.value.children && itemDetails.value.children.length > 0) {
-        //   totalAmountOfChildren = itemDetails.value.children.reduce((sum, itemObject: any) => {
-        //     const amount = itemObject.amount
+        const oldAmount = objToEditTemp.amount ? Math.abs(Number.parseFloat(objToEditTemp.amount.replace(/,/g, ''))) : 0
 
-        //     // Sustituir valores no válidos por 0
-        //     const validAmount = (typeof amount === 'number' && !Number.isNaN(amount)) ? amount : 0
-
-        //     return sum + validAmount
-        //   }, 0)
-        // }
-
-        const oldAmount = itemDetails.value.amount ? itemDetails.value.amount : '0'
         const childrenTotalValue = itemDetails.value.childrenTotalValue
 
-        const minValueToApply = (Number.parseFloat(oldAmount) - childrenTotalValue - 0.01).toFixed(2)
+        const minValueToApply = (oldAmount - childrenTotalValue - 0.01).toFixed(2)
 
         const decimalSchema = z.object(
           {
@@ -663,7 +675,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
           }
         )
         updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
-        updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+        // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
         updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
         updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount to apply: ${Number.parseFloat(minValueToApply)} | Initial amount: ${oldAmount}`)
       }
@@ -672,7 +684,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
     onOffDialogPaymentDetail.value = true
   }
   if (actionOfModal.value === 'deposit-transfer') {
-    itemDetails.value = { ...itemDetailsTemp.value }
+    itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
     const decimalSchema = z.object(
       {
         remark: z.string(),
@@ -818,7 +830,8 @@ async function getItemById(id: string) {
         newDate.setDate(newDate.getDate() + 1)
         item.value.transactionDate = newDate || null
 
-        item.value.paymentAmount = formatToTwoDecimalPlaces(response.paymentAmount)
+        // item.value.paymentAmount = formatToTwoDecimalPlaces(response.paymentAmount)
+        item.value.paymentAmount = response.paymentAmount
         item.value.paymentBalance = formatToTwoDecimalPlaces(response.paymentBalance)
         item.value.depositAmount = formatToTwoDecimalPlaces(response.depositAmount)
         item.value.depositBalance = formatToTwoDecimalPlaces(response.depositBalance)
@@ -965,10 +978,13 @@ async function getListPaymentDetail() {
           ? Number.parseFloat(iterator.amount).toString()
           : '0'
 
-        iterator.amount = formatToTwoDecimalPlaces(iterator.amount)
+        iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionDate')) {
+        iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'parentId')) {
         iterator.parentId = iterator.parentId ? iterator.parentId.toString() : ''
@@ -1032,57 +1048,66 @@ function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolea
   return hasDeposit(mainItem) && amount > 0.01 && mainItem.children.length === 0
 }
 
-function hasDepositSummaryTransaction(mainId: string, items: TransactionItem[]): boolean {
-  // Buscar el objeto principal por su id
-
-  const mainItem = items.find(item => item.id === mainId)
-  if (!mainItem) {
-    return false // Si no se encuentra el objeto principal, devolver false
-  }
-
-  // Verificar si el objeto principal o alguno de sus hijos tiene una transacción de tipo deposit
-  const hasDeposit = (item: TransactionItem): boolean => {
+function hasDepositSummaryTransaction(items: TransactionItem[]): boolean {
+  let count = 0
+  for (const item of items) {
     if (item.transactionType.deposit) {
-      return true
+      count++
     }
-
-    // Verificar en los hijos del objeto
-    if (item.children && item.children.length > 0) {
-      return item.children.some(child => hasDeposit(child))
-    }
-
-    return false
   }
-  return hasDeposit(mainItem)
+
+  return count > 0
 }
 
 async function createPaymentDetails(item: { [key: string]: any }) {
   if (item) {
     // loadingSaveAll.value = true
-    const payload: { [key: string]: any } = { ...item }
+    const payload: { [key: string]: any } = JSON.parse(JSON.stringify(item))
+
+    const payloadTemp: { [key: string]: any } = JSON.parse(JSON.stringify(item))
+
     payload.payment = idItem.value || ''
     payload.amount = Number.parseFloat(payload.amount)
     payload.employee = userData?.value?.user?.userId || ''
     payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+    if (payload.remark === '') {
+      payload.remark = payloadTemp?.transactionType?.defaultRemark
+    }
 
     switch (actionOfModal.value) {
       case 'apply-deposit':{
-        const payload: { [key: string]: any } = { ...item }
+        const payload: { [key: string]: any } = JSON.parse(JSON.stringify(item))
+
+        payload.paymentDetail = JSON.parse(JSON.stringify(idPaymentDetail.value))
+        payload.status = 'ACTIVE'
         payload.payment = idItem.value || ''
         payload.amount = Number.parseFloat(payload.amount)
         payload.employee = userData?.value?.user?.userId || ''
         payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+        if (payload.remark === '') {
+          payload.remark = payloadTemp?.transactionType?.defaultRemark
+        }
         confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
         await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
         actionOfModal.value = 'new-detail'
       }
         break
 
-      case 'new-detail':
-
+      case 'new-detail': {
+        const payloadNewDetail: { [key: string]: any } = JSON.parse(JSON.stringify(item))
+        payloadNewDetail.paymentDetail = JSON.parse(JSON.stringify(idPaymentDetail.value))
+        payloadNewDetail.status = 'ACTIVE'
+        payloadNewDetail.payment = idItem.value || ''
+        payloadNewDetail.amount = Number.parseFloat(payloadNewDetail.amount)
+        payloadNewDetail.employee = userData?.value?.user?.userId || ''
+        payloadNewDetail.transactionType = Object.prototype.hasOwnProperty.call(payloadNewDetail.transactionType, 'id') ? payloadNewDetail.transactionType.id : payloadNewDetail.transactionType
+        if (payloadNewDetail.remark === '') {
+          payloadNewDetail.remark = payloadTemp?.transactionType?.defaultRemark
+        }
         confApiPaymentDetail.uriApi = 'payment-detail'
         await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
         actionOfModal.value = 'new-detail'
+      }
         break
       case 'deposit-transfer':
         confApiPaymentDetail.uriApi = 'payment-detail'
@@ -1093,8 +1118,8 @@ async function createPaymentDetails(item: { [key: string]: any }) {
       case 'split-deposit':{
         const payloadSplit = {
           amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
-          paymentDetail: item.id,
-          remark: item.remark,
+          paymentDetail: JSON.parse(JSON.stringify(idPaymentDetail.value)),
+          remark: item.remark === '' ? item.transactionType.defaultRemark : item.remark,
           employee: userData?.value?.user?.userId || '',
           transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
           status: 'ACTIVE'
@@ -1245,7 +1270,8 @@ async function updateItem(item: { [key: string]: any }) {
 async function saveAndReload(item: { [key: string]: any }) {
   try {
     if (actionOfModal.value === 'apply-deposit') {
-      item.paymentDetail = item.id
+      // item.paymentDetail = item.id
+
       await createPaymentDetails(item)
     }
     else if (item?.id && actionOfModal.value === 'split-deposit') {
@@ -1257,7 +1283,7 @@ async function saveAndReload(item: { [key: string]: any }) {
     else {
       await createPaymentDetails(item)
     }
-    itemDetails.value = { ...itemDetailsTemp.value }
+    itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
     await getItemById(idItem.value)
   }
   catch (error: any) {
@@ -1480,9 +1506,9 @@ function updateAttachment(attachment: any) {
 async function rowSelected(rowData: any) {
   if (rowData !== null && rowData !== undefined && rowData !== '') {
     idItemDetail.value = rowData
+    idPaymentDetail.value = rowData
 
     enableSplitAction.value = hasDepositTransaction(rowData, paymentDetailsList.value)
-    enableDepositSummaryAction.value = hasDepositSummaryTransaction(rowData, paymentDetailsList.value)
   }
   else {
     idItemDetail.value = ''
@@ -1496,6 +1522,7 @@ function onCloseDialog($event: any) {
     isSplitAction.value = false
     actionOfModal.value = 'new-detail'
   }
+  itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
   dialogPaymentDetailFormReload.value += 1
   onOffDialogPaymentDetail.value = $event
 }
@@ -1698,6 +1725,7 @@ async function closeDialogPrint() {
 }
 
 function onRowContextMenu(event) {
+  idPaymentDetail.value = event?.data?.id
   let minValueToApplyDeposit = 0
   const amount = Number.parseFloat(event.data.amount) || 0
   const childrenTotalValue = Number.parseFloat(event.data.childrenTotalValue) || 0
@@ -1755,6 +1783,15 @@ watch(() => hasBeenCreated.value, async (newValue) => {
   }
 })
 
+// const updateDepositSummaryAction = debounce((newValue) => {
+//   enableDepositSummaryAction.value = hasDepositSummaryTransaction(newValue)
+// }, 300) // Ajusta el tiempo de debounce según sea necesario
+
+// Watcher
+watch(() => paymentDetailsList.value, (newValue) => {
+  enableDepositSummaryAction.value = hasDepositSummaryTransaction(newValue)
+})
+
 watch(() => route?.query?.id, async (newValue) => {
   if (newValue) {
     const id = newValue.toString()
@@ -1809,10 +1846,14 @@ onMounted(async () => {
         @delete="requireConfirmationToDelete($event)"
       >
         <template #field-paymentAmount="{ item: data, onUpdate }">
-          <InputText
+          <InputNumber
             v-if="!loadingSaveAll"
             v-model="data.paymentAmount"
             show-clear
+            mode="decimal"
+            :readonly="idItem !== ''"
+            :min-fraction-digits="2"
+            :max-fraction-digits="4"
             @update:model-value="($event) => {
               onUpdate('paymentAmount', $event)
               if (idItem === '' && paymentDetailsList.length === 0) {
@@ -1822,6 +1863,7 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
+
         <template #field-client="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
@@ -2103,56 +2145,71 @@ onMounted(async () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="10" footer-style="text-align:right; font-weight: bold;" />
-            <Column :footer="Math.round((subTotals.depositAmount + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
+            <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold;" />
+            <Column :footer="formatNumber(Math.round((subTotals.depositAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
             <Column :colspan="4" />
-            <!-- <Column :colspan="0" /> -->
           </Row>
         </ColumnGroup>
       </template>
     </DynamicTable>
-    <!-- <pre>{{ paymentDetailsList }}</pre> -->
-    <!-- @on-confirm-create="goToCreateForm"
-      @on-list-item="resetListItems"
-      -->
 
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
-      <Button v-tooltip.top="'Deposit Summary'" :disabled="!enableDepositSummaryAction" class="w-3rem ml-1" @click="dialogPaymentDetailSummary">
-        <template #icon>
-          <span class="flex align-items-center justify-content-center p-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M10 4v4h4V4zm6 0v4h4V4zm0 6v4h4v-4zm0 6v4h4v-4zm-2 4v-4h-4v4zm-6 0v-4H4v4zm0-6v-4H4v4zm0-6V4H4v4zm2 6h4v-4h-4zM4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4c-1.08 0-2-.9-2-2V4a2 2 0 0 1 2-2" />
-            </svg>
-          </span>
-        </template>
-      </Button>
-      <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
-      <Button v-tooltip.top="'Split ANTI'" class="w-3rem ml-1" :disabled="!enableSplitAction" @click="openDialogPaymentDetailsByAction(idItemDetail, 'split-deposit')">
-        <template #icon>
-          <span class="flex align-items-center justify-content-center p-0">
-            <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4.08337 12.75C5.04987 12.75 5.83337 11.9665 5.83337 11C5.83337 10.0335 5.04987 9.25 4.08337 9.25C3.11688 9.25 2.33337 10.0335 2.33337 11C2.33337 11.9665 3.11688 12.75 4.08337 12.75Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M8.75004 9.25L4.08337 2.25M5.25004 9.25L7.00004 6.625M9.91671 2.25L8.16671 4.875" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M9.91675 12.75C10.8832 12.75 11.6667 11.9665 11.6667 11C11.6667 10.0335 10.8832 9.25 9.91675 9.25C8.95025 9.25 8.16675 10.0335 8.16675 11C8.16675 11.9665 8.95025 12.75 9.91675 12.75Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-        </template>
-      </Button>
-      <Button v-tooltip.top="'Print'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-print" @click="openPrint = true" />
+      <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT'] : ['PAYMENT-MANAGEMENT:CREATE']">
+        <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
+      </IfCan>
+      <IfCan :perms="['PAYMENT-MANAGEMENT:SUMMARY']">
+        <Button v-tooltip.top="'Deposit Summary'" :disabled="!enableDepositSummaryAction" class="w-3rem ml-1" @click="dialogPaymentDetailSummary">
+          <template #icon>
+            <span class="flex align-items-center justify-content-center p-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M10 4v4h4V4zm6 0v4h4V4zm0 6v4h4v-4zm0 6v4h4v-4zm-2 4v-4h-4v4zm-6 0v-4H4v4zm0-6v-4H4v4zm0-6V4H4v4zm2 6h4v-4h-4zM4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4c-1.08 0-2-.9-2-2V4a2 2 0 0 1 2-2" />
+              </svg>
+            </span>
+          </template>
+        </Button>
+      </IfCan>
+      <IfCan :perms="['PAYMENT-MANAGEMENT:DEPOSIT-TRANSFER']">
+        <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
+      </IfCan>
+      <IfCan :perms="['PAYMENT-MANAGEMENT:SPLIT-ANTI']">
+        <Button v-tooltip.top="'Split ANTI'" class="w-3rem ml-1" :disabled="!enableSplitAction" @click="openDialogPaymentDetailsByAction(idItemDetail, 'split-deposit')">
+          <template #icon>
+            <span class="flex align-items-center justify-content-center p-0">
+              <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.08337 12.75C5.04987 12.75 5.83337 11.9665 5.83337 11C5.83337 10.0335 5.04987 9.25 4.08337 9.25C3.11688 9.25 2.33337 10.0335 2.33337 11C2.33337 11.9665 3.11688 12.75 4.08337 12.75Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M8.75004 9.25L4.08337 2.25M5.25004 9.25L7.00004 6.625M9.91671 2.25L8.16671 4.875" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M9.91675 12.75C10.8832 12.75 11.6667 11.9665 11.6667 11C11.6667 10.0335 10.8832 9.25 9.91675 9.25C8.95025 9.25 8.16675 10.0335 8.16675 11C8.16675 11.9665 8.95025 12.75 9.91675 12.75Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </template>
+        </Button>
+      </IfCan>
+      <IfCan :perms="['PAYMENT-MANAGEMENT:PRINT-DETAIL']">
+        <Button v-tooltip.top="'Print'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-print" @click="openPrint = true" />
+      </IfCan>
       <!-- <Button v-tooltip.top="'Payment to Print'" class="w-3rem ml-1" disabled icon="pi pi-print" @click="openPrint = true" /> -->
-      <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
-      <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-download" />
-      <Button v-tooltip.top="'Show History'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openDialogStatusHistory">
-        <template #icon>
-          <span class="flex align-items-center justify-content-center p-0">
-            <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#e8eaed"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" /></svg>
-          </span>
-        </template>
-      </Button>
+      <IfCan :perms="['PAYMENT-MANAGEMENT:ATTACHMENT']">
+        <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
+      </IfCan>
+      <IfCan :perms="['PAYMENT-MANAGEMENT:IMPORT-EXCEL']">
+        <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-file-import" />
+      </IfCan>
+      <IfCan :perms="['PAYMENT-MANAGEMENT:SHOW-HISTORY']">
+        <Button v-tooltip.top="'Show History'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openDialogStatusHistory">
+          <template #icon>
+            <span class="flex align-items-center justify-content-center p-0">
+              <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#e8eaed"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" /></svg>
+            </span>
+          </template>
+        </Button>
+      </IfCan>
       <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
-      <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
-      <Button v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="idItemDetail === null || idItemDetail === undefined || idItemDetail === '' || disabledDeleteForPaymentWithChildren(idItemDetail)" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
+      <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
+        <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
+      </IfCan>
+      <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
+        <Button v-if="false" v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="idItemDetail === null || idItemDetail === undefined || idItemDetail === '' || disabledDeleteForPaymentWithChildren(idItemDetail)" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
+      </IfCan>
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
     <div v-show="onOffDialogPaymentDetail">
@@ -2184,7 +2241,7 @@ onMounted(async () => {
       />
     </div>
     <DialogPaymentDetailSummary
-      title="Payment Details Summary"
+      title="Transactions ANTI Summary"
       :visible="onOffDialogPaymentDetailSummary"
       :selected-payment="item"
       @update:visible="onCloseDialogSummary($event)"
@@ -2198,7 +2255,7 @@ onMounted(async () => {
       :style="{ width: '60%' }"
       :pt="{
         root: {
-          class: 'custom-dialog',
+          class: 'custom-dialog-history',
         },
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
@@ -2361,4 +2418,10 @@ onMounted(async () => {
     background-color: #e0f2f194;
     color: #00695C;
   }
+  .custom-dialog-history .p-dialog-content {
+  background-color: #ffffff;
+}
+.custom-dialog-history .p-dialog-footer {
+  background-color: #ffffff;
+}
 </style>

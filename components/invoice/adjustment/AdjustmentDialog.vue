@@ -84,12 +84,12 @@ function validateInvoiceAmount(newAmount: number) {
   }
 
   amountError.value = false
-  if (invoiceType.value === ENUM_INVOICE_TYPE[0]?.id) {
+  if (invoiceType.value === InvoiceType.INVOICE) {
     if (Number(amount) + newAmount < 0) {
       amountError.value = true
     }
   }
-  if (invoiceType.value === ENUM_INVOICE_TYPE[2]?.id || invoiceType.value === ENUM_INVOICE_TYPE[3]?.id) {
+  if (invoiceType.value === InvoiceType.CREDIT || invoiceType.value === InvoiceType.OLD_CREDIT) {
     if (Number(amount) + newAmount > 0) {
       amountError.value = true
     }
@@ -136,7 +136,8 @@ onMounted(() => {
             v-if="!loadingSaveAll" v-model="data.date" date-format="yy-mm-dd"
             :max-date="dayjs().endOf('day').toDate()" @update:model-value="($event) => {
 
-              onUpdate('date', dayjs($event).startOf('day').toDate())
+              if(dayjs($event).isValid()){
+              onUpdate('date', dayjs($event).startOf('day').toDate())}
             }"
           />
         </template>
@@ -154,12 +155,12 @@ onMounted(() => {
               amountError = false
               onUpdate('amount', $event)
 
-              if (invoiceType === ENUM_INVOICE_TYPE[0]?.id) {
+              if (invoiceType === InvoiceType.INVOICE) {
                 if (Number(amount) + Number($event) < 0) {
                   amountError = true
                 }
               }
-              if (invoiceType === ENUM_INVOICE_TYPE[2]?.id || invoiceType === ENUM_INVOICE_TYPE[3]?.id) {
+              if (invoiceType === InvoiceType.CREDIT || invoiceType === InvoiceType.OLD_CREDIT) {
                 if (Number(amount) + Number($event) > 0) {
                   amountError = true
                 }
@@ -167,7 +168,7 @@ onMounted(() => {
 
             }"
           />
-          <span v-if="amountError" class="error-message p-error text-xs">The sum of the amount field and invoice amount field is {{ invoiceType === ENUM_INVOICE_TYPE[0]?.id ? 'under' : 'over' }} 0</span>
+          <span v-if="amountError" class="error-message p-error text-xs">The sum of the amount field and invoice amount field is {{ invoiceType === InvoiceType.INVOICE ? 'under' : 'over' }} 0</span>
         </template>
 
         <template #field-transactionType="{ item: data, onUpdate }">

@@ -19,11 +19,18 @@ export enum ENUM_SHORT_TYPE {
 }
 
 export const ENUM_INVOICE_TYPE = [
-  { id: 'INVOICE', name: 'Invoice', code: 'INV' },
-  { id: 'INCOME', name: 'Income', code: 'INC' },
   { id: 'CREDIT', name: 'Credit', code: 'CRE' },
+  { id: 'INCOME', name: 'Income', code: 'INC' },
+  { id: 'INVOICE', name: 'Invoice', code: 'INV' },
   { id: 'OLD_CREDIT', name: 'Old Credit', code: 'OLD' }
 ]
+
+export enum InvoiceType {
+  INVOICE = 'INVOICE',
+  INCOME = 'INCOME',
+  CREDIT = 'CREDIT',
+  OLD_CREDIT = 'OLD_CREDIT'
+}
 
 export const OBJ_ENUM_INVOICE = {
   INVOICE: 'Invoice',
@@ -47,21 +54,29 @@ export const OBJ_ENUM_INVOICE_TYPE_CODE = {
 }
 
 export const ENUM_INVOICE_CRITERIA = [
-  { id: 'invoiceId', name: 'Invoice Id' },
-  { id: 'invoiceNumber', name: 'Invoice No' },
   { id: 'bookings.bookingId', name: 'Booking Id' },
-  { id: 'bookings.fullName', name: 'Full Name' },
-  { id: 'bookings.hotelBookingNumber', name: 'Reservation No' },
   { id: 'bookings.couponNumber', name: 'Coupon No' },
+  { id: 'bookings.fullName', name: 'Full Name' },
+  { id: 'invoiceId', name: 'Invoice Id' },
+  { id: 'invoiceNumberPrefix', name: 'Invoice No' },
+  { id: 'bookings.hotelBookingNumber', name: 'Reservation No' },
 ]
 
 export const ENUM_INVOICE_STATUS = [
-  { id: 'PROCECSED', name: 'Processed' },
-  { id: 'RECONCILED', name: 'Reconciled' },
-  { id: 'SENT', name: 'Sent' },
-  { id: 'CANCELED', name: 'Canceled' },
-  { id: 'PENDING', name: 'Pending' }
+  { id: 'CANCELED', name: 'Canceled', code: 'CANC' },
+  { id: 'PENDING', name: 'Pending', code: 'PEND' },
+  { id: 'PROCECSED', name: 'Processed', code: 'PRO' },
+  { id: 'RECONCILED', name: 'Reconciled', code: 'REC' },
+  { id: 'SENT', name: 'Sent', code: 'SENT' },
 ]
+
+export enum InvoiceStatus {
+  PROCECSED = 'PROCECSED',
+  RECONCILED = 'RECONCILED',
+  SENT = 'SENT',
+  CANCELED = 'CANCELED',
+  PENDING = 'PENDING'
+}
 
 export const OBJ_INVOICE_TITLE: any = {
   INVOICE: 'New Invoice',
@@ -319,5 +334,6 @@ export enum ENUM_INVOICE_IMPORT_TYPE {
 export enum ENUM_PAYMENT_IMPORT_TYPE {
   BANK = 'BANK',
   EXPENSE = 'EXPENSE',
-  ANTI = 'ANTI'
+  ANTI = 'ANTI',
+  DETAIL = 'DETAIL'
 }

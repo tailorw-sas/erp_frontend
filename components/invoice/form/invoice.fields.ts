@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import { z } from 'zod'
 import type { Container } from '~/components/form/EditFormV2WithContainer'
+import { InvoiceType } from '~/utils/Enums'
 
 const route = useRoute()
 
@@ -11,7 +12,7 @@ export const fields: Array<Container> = [
         field: 'invoiceId',
         header: 'Id',
         dataType: 'text',
-        class: `w-full px-3  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3]?.id ? 'required' : ''}`,
+        class: `w-full px-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
         disabled: true,
         containerFieldClass: 'ml-10'
 
@@ -37,7 +38,7 @@ export const fields: Array<Container> = [
         header: 'Hotel',
         dataType: 'select',
         class: 'w-full px-3 required',
-        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id 
+        disabled: String(route.query.type) as any === InvoiceType.CREDIT
 
       },
       {
@@ -45,7 +46,7 @@ export const fields: Array<Container> = [
         header: 'Agency',
         dataType: 'select',
         class: 'w-full px-3 required',
-        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id 
+        disabled: String(route.query.type) as any === InvoiceType.CREDIT
       },
 
     ],
@@ -67,7 +68,7 @@ export const fields: Array<Container> = [
         dataType: 'text',
         class: 'w-full px-3  required',
         disabled: true,
-        ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
+        ...(route.query.type === InvoiceType.OLD_CREDIT && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
       },
 
     ],
@@ -88,7 +89,7 @@ export const fields: Array<Container> = [
         field: 'isManual',
         header: 'Manual',
         dataType: 'check',
-        class: `w-full px-3  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3] ? 'required' : ''}`,
+        class: `w-full px-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
         disabled: true
       },
 

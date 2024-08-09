@@ -54,6 +54,7 @@ const { data: userData } = useAuth()
 
 const invoice = ref<any>(props.selectedInvoiceObj)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
+const selectedAttachment = ref<string>('')
 
 const filterToSearch = ref({
   criteria: 'invoice.invoiceId',
@@ -149,6 +150,7 @@ const Fields: Array<FieldDefinitionType> = [
     header: 'Filename',
     dataType: 'text',
     class: 'field col-12 required',
+    disabled: true,
     headerClass: 'mb-1',
   },
   {
@@ -458,6 +460,7 @@ async function getItemById(id: string) {
         item.value.invoice = response.invoice
         item.value.resource = response.invoice.invoiceId
         item.value.resourceType = response.paymenResourceType
+        selectedAttachment.value = response.attachmentId
       }
 
       formReload.value += 1
@@ -549,7 +552,12 @@ onMounted(() => {
   >
     <div class="grid p-fluid formgrid">
       <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
-        <Accordion :active-index="0" class="mb-2 card p-0">
+        <div class="flex justify-content-end mb-1">
+          <div class="pr-4 pl-4 pt-2 pb-2 font-bold bg-container text-white">
+            Income: {{ props.selectedInvoiceObj.incomeId }}
+          </div>
+        </div>
+        <Accordion v-if="false" :active-index="0" class="mb-2 card p-0">
           <AccordionTab>
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full">
@@ -627,6 +635,7 @@ onMounted(() => {
               </template>
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
+                  accept="application/pdf"
                   :max-file-size="1000000" :multiple="false" auto custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
                     onUpdate('file', file)
@@ -669,7 +678,7 @@ onMounted(() => {
               <template #form-footer="props">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save"
-                  :disabled="!props.item?.fieldValues?.file" @click="saveItem(props.item.fieldValues)"
+                  :disabled="idItem !== '' && idItem !== null" @click="saveItem(props.item.fieldValues)"
                 />
                 <Button
                   v-tooltip.top="'View File'" class="w-3rem ml-1 sticky" icon="pi pi-eye"
@@ -700,8 +709,18 @@ onMounted(() => {
         </div>
       </div>
       <div v-if="attachmentHistoryDialogOpen">
-        <AttachmentIncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="invoice.id" :selected-invoice-obj="invoice" header="Attachment Status History" :attachment-type="item.type" />
+        <AttachmentIncomeHistoryDialog
+          :selected-attachment="selectedAttachment"
+          :close-dialog="() => { attachmentHistoryDialogOpen = false; selectedAttachment = '' }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="invoice.id" :selected-invoice-obj="invoice" header="Attachment Status History" :attachment-type="item.type"
+        />
       </div>
     </div>
   </Dialog>
 </template>
+
+<style scoped lang="scss">
+.bg-container {
+  background-color: var(--primary-color);
+  border-radius: 4px;
+}
+</style>

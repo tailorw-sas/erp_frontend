@@ -271,10 +271,11 @@ async function getItemById(id: string) {
         item.value.description = response.description
         item.value.dialCode = response.dialCode
         item.value.iso3 = response.iso3
-        languageList.value = [response.managerLanguage]
-        item.value.managerLanguage = response.managerLanguage
         item.value.status = statusToBoolean(response.status)
         item.value.isDefault = response.isDefault
+        if (response.managerLanguage) {
+          item.value.managerLanguage = { id: response.managerLanguage.id, name: `${response.managerLanguage.code} - ${response.managerLanguage.name}`, status: response.managerLanguage.status }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)

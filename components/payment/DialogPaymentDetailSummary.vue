@@ -27,7 +27,6 @@ const subTotals = ref<SubTotals>({ amount: 0 })
 
 // Table
 const columnsExpandTable: IColumn[] = [
-  // { field: 'id', header: 'ID', width: '80px', type: 'text' },
   { field: 'bookingId', header: 'Booking Id', width: '120px', type: 'text' },
   { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text' },
   { field: 'firstName', header: 'First Name', width: '200px', type: 'text' },
@@ -40,11 +39,13 @@ const columnsExpandTable: IColumn[] = [
 ]
 
 const columns: IColumn[] = [
+  { field: 'paymentDetailId', header: 'ID', width: '80px', type: 'text' },
   { field: 'transactionDate', header: 'Transaction Date', width: '200px', type: 'date' },
-  { field: 'createdAt', header: 'Created At', width: '200px', type: 'date' },
+  { field: 'createdAt', header: 'Create Date', width: '200px', type: 'date' },
   // { field: 'paymentId', header: 'Payment Id', width: '200px', type: 'text' },
 
-  { field: 'amount', header: 'Amount', width: '200px', type: 'text' },
+  { field: 'amount', header: 'D. Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
+  { field: 'depositBalance', header: 'Deposit Balance', width: '200px', type: 'text' },
   { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
 ]
 const options = ref({
@@ -106,8 +107,20 @@ async function getListPaymentDetailSummary() {
     if (objFilter) {
       objFilter.value = idItem.value
     }
+    else {
+      payload.value.filter.push(
+        {
+          key: 'payment.id',
+          operator: 'EQUALS',
+          value: idItem.value,
+          type: 'filterTable',
+          logicalOperation: 'AND'
+        }
+      )
+    }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -131,6 +144,10 @@ async function getListPaymentDetailSummary() {
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'applyDepositValue')) {
+        iterator.depositBalance = iterator.applyDepositValue ? Number.parseFloat(iterator.applyDepositValue).toString() : '0'
       }
 
       // Verificar si el ID ya existe en la lista
@@ -173,14 +190,45 @@ function onSortField(event: any) {
   }
 }
 
-watch(() => props.visible, (newValue) => {
+watch(() => props.visible, async (newValue) => {
   onOffDialog.value = newValue
   emit('update:visible', newValue)
+
+  if (newValue) {
+    if (route?.query?.id) {
+      idItem.value = route.query.id.toString()
+      payload.value.filter = [...payload.value.filter, {
+        key: 'payment.id',
+        operator: 'EQUALS',
+        value: idItem.value,
+        logicalOperation: 'AND'
+      }]
+    }
+    else {
+      idItem.value = '0'
+      payload.value.filter = [...payload.value.filter, {
+        key: 'payment.id',
+        operator: 'EQUALS',
+        value: idItem.value,
+        logicalOperation: 'AND'
+      }]
+    }
+    await getListPaymentDetailSummary()
+  }
 })
 
 onMounted(async () => {
   if (route?.query?.id) {
     idItem.value = route.query.id.toString()
+    payload.value.filter = [...payload.value.filter, {
+      key: 'payment.id',
+      operator: 'EQUALS',
+      value: idItem.value,
+      logicalOperation: 'AND'
+    }]
+  }
+  else {
+    idItem.value = '0'
     payload.value.filter = [...payload.value.filter, {
       key: 'payment.id',
       operator: 'EQUALS',
@@ -203,7 +251,7 @@ onMounted(async () => {
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     :pt="{
       root: {
-        class: 'custom-dialog',
+        class: 'custom-dialog-summary',
       },
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
@@ -262,8 +310,8 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center">
               <Row>
-                <Column footer="Totals:" :colspan="2" footer-style="text-align:right; font-weight: bold;" />
-                <Column :footer="Math.round((subTotals.amount + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
+                <Column footer="Totals:" :colspan="4" footer-style="text-align:right; font-weight: bold;" />
+                <Column :footer="Math.abs(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
                 <Column :colspan="1" />
                 <!-- <Column :colspan="0" /> -->
               </Row>
@@ -282,10 +330,10 @@ onMounted(async () => {
 </template>
 
 <style lang="scss">
-.custom-dialog .p-dialog-content {
+.custom-dialog-summary .p-dialog-content {
   background-color: #ffffff;
 }
-.custom-dialog .p-dialog-footer {
+.custom-dialog-summary .p-dialog-footer {
   background-color: #ffffff;
 }
 </style>

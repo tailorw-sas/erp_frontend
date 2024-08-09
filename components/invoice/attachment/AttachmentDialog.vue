@@ -579,26 +579,12 @@ onMounted(() => {
     <div class=" w-fit h-fit overflow-auto p-2">
       <div class="flex lg:flex-row flex-column align-items-start">
         <div class="flex flex-column" style="max-width: 900px;">
-          <div class="card p-0">
-            <Accordion :active-index="0" class="mb-2">
-              <AccordionTab header="Filters">
-                <div class="flex gap-4 flex-column lg:flex-row">
-                  <div class="flex align-items-center gap-2">
-                    <label for="email">Invoice:</label>
-                    <div class="w-full lg:w-auto flex align-items-center">
-                      <IconField v-model="filterToSearch.search" icon-position="left" class="w-full">
-                        <InputText v-model="filterToSearch.search" type="number" placeholder="Search" class="w-full" />
-                        <InputIcon class="pi pi-search" />
-                      </IconField>
-                      <Button
-                        v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch"
-                        @click="searchAndFilter"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </AccordionTab>
-            </Accordion>
+          <div class="  mb-2 flex justify-content-end">
+            <div class="bg-primary w-fit flex gap-2 justify-center align-content-center align-items-center" style="border-radius: 5px; padding: 11px;"> 
+              
+              <span class="font-bold">Invoice: </span>
+              <span>{{filterToSearch.search}} </span>
+            </div>
           </div>
           <div style="max-width: 700px; overflow: auto;">
             <DynamicTable
@@ -649,6 +635,7 @@ onMounted(() => {
 
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
+                accept="application/pdf"
                   :max-file-size="1000000" :multiple="false" auto custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
                     onUpdate('file', file)
@@ -691,7 +678,7 @@ onMounted(() => {
               <template #form-footer="props">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-                  :disabled="!props.item?.fieldValues?.file" @click="saveItem(props.item.fieldValues)"
+                  :disabled="!props.item?.fieldValues?.file || idItem !== ''" @click="saveItem(props.item.fieldValues)"
                 />
                 <Button
                   v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus" @click="() => {
@@ -706,7 +693,7 @@ onMounted(() => {
                 />
 
                 <Button
-                  v-if="selectedInvoiceObj.invoiceType === ENUM_INVOICE_TYPE[1]?.id" v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book"
+                  v-if="selectedInvoiceObj.invoiceType === InvoiceType.INVOICE || route.query.type === InvoiceType.INVOICE" v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book"
                   :disabled="!idItem" @click="showHistory"
                 />
                 <Button

@@ -212,8 +212,10 @@ const columns: IColumn[] = [
 const adjustmentColumns: IColumn[] = [
   { field: 'adjustmentId', header: 'ID', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'date', header: 'Date', type: 'text' },
-  { field: 'transaction', header: 'Transaction', type: 'text' },
+  { field: 'roomRateId', header: 'Room Rate', type: 'text' },
+  { field: 'transaction', header: 'Category', type: 'text' },
+  { field: 'date', header: 'Transaction Date', type: 'text' },
+  { field: 'employee', header: 'Employee', type: 'text' },
   { field: 'remark', header: 'Description', type: 'text' },
 ]
 
@@ -235,146 +237,33 @@ const formTitle = computed(() => {
   return 'New Income'
 })
 
-/*
-const fields: Array<FieldDefinitionType> = [
-  {
-    field: 'incomeId',
-    header: 'Id',
-    disabled: true,
-    dataType: 'text',
-    class: 'field col-12 md:col-1',
-  },
-  {
-    field: 'invoiceNumber',
-    header: 'Invoice Number',
-    dataType: 'text',
-    class: 'field col-12 md:col-2',
-  },
-  {
-    field: 'manual',
-    header: 'Manual',
-    dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-  },
-  {
-    field: 'invoiceAmount',
-    header: 'Invoice Amount',
-    dataType: 'text',
-    disabled: false,
-    class: 'field col-12 md:col-2 required',
-    validation: decimalSchema.shape.paymentAmmount
-  },
-  {
-    field: 'invoiceType',
-    header: 'Invoice Type',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('Invoice Type'),
-  },
-  {
-    field: 'invoiceStatus',
-    header: 'Status',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('Invoice Status'),
-  },
-  {
-    field: 'dueDate',
-    header: 'Due Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-1 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Due Date field is required',
-      invalid_type_error: 'The Due Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
-  },
-  {
-    field: 'invoiceDate',
-    header: 'Invoice Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Invoice Date field is required',
-      invalid_type_error: 'The Invoice Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
-  },
-  {
-    field: 'reSend',
-    header: 'Re-Send',
-    dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-  },
-  {
-    field: 'reSendDate',
-    header: 'Re-Send Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Re-Send Date field is required',
-      invalid_type_error: 'The Re-Send Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Re-Send Date field cannot be greater than current date')
-  },
-  {
-    field: 'hotel',
-    header: 'Hotel',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('hotel'),
-  },
-  {
-    field: 'agency',
-    header: 'Agency',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    disabled: false,
-    validation: validateEntityStatus('agency'),
-  },
-] */
-
 const fields: Array<FieldDefinitionType> = [
   {
     field: 'incomeId',
     header: 'ID',
     disabled: true,
     dataType: 'text',
-    class: 'field col-12 md:col-1',
+    class: 'field col-12 md:col-3',
   },
+  // {
+  //   field: 'dueDate',
+  //   header: 'Due Date',
+  //   dataType: 'date',
+  //   class: 'field col-12 md:col-2 required ',
+  //   validation: z.date({
+  //     required_error: 'The Due Date field is required',
+  //     invalid_type_error: 'The Due Date field is required',
+  //   }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
+  // },
   {
-    field: 'dueDate',
-    header: 'Due Date',
+    field: 'invoiceDate',
+    header: 'Invoice Date',
     dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
+    class: 'field col-12 md:col-3 required ',
     validation: z.date({
-      required_error: 'The Due Date field is required',
-      invalid_type_error: 'The Due Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
-  },
-
-  {
-    field: 'manual',
-    header: 'Manual',
-    dataType: 'check',
-    disabled: true,
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-  },
-  {
-    field: 'incomeAmount',
-    header: 'Income Amount',
-    dataType: 'text',
-    disabled: true,
-    class: 'field col-12 md:col-2 required',
-
+      required_error: 'The Invoice Date field is required',
+      invalid_type_error: 'The Invoice Date field is required',
+    }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
   },
   {
     field: 'hotel',
@@ -382,6 +271,28 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     validation: validateEntityStatus('hotel'),
+  },
+  {
+    field: 'invoiceType',
+    header: 'Invoice Type',
+    dataType: 'select',
+    class: 'field col-12 md:col-3',
+    validation: validateEntityStatus('Invoice Type'),
+    disabled: true,
+  },
+  {
+    field: 'invoiceNumber',
+    header: 'Invoice Number',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-3',
+  },
+  {
+    field: 'incomeAmount',
+    header: 'Invoice Amount',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-3 required',
   },
   {
     field: 'agency',
@@ -392,65 +303,36 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('agency'),
   },
   {
-    field: 'invoiceNumber',
-    header: 'Invoice Number',
-    dataType: 'text',
-    disabled: true,
-    class: 'field col-12 md:col-1',
-  },
-  {
-    field: 'invoiceDate',
-    header: 'Invoice Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Invoice Date field is required',
-      invalid_type_error: 'The Invoice Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
-  },
-  {
-    field: 'reSend',
-    header: 'Re-Send',
-    dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-  },
-  {
-    field: 'reSendDate',
-    header: 'Re-Send Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2',
-    headerClass: 'mb-1',
-    validation: z
-      .union([z.date(), z.null()])
-      .refine(date => !date || date <= dayjs().endOf('day').toDate(), {
-        message: 'The Re-Send Date field cannot be greater than current date',
-      })
-  },
-
-  {
-    field: 'invoiceType',
-    header: 'Invoice Type',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('Invoice Type'),
-  },
-  {
     field: 'invoiceStatus',
     header: 'Status',
     dataType: 'select',
-    class: 'field col-12 md:col-3 required',
+    class: 'field col-12 md:col-2',
     validation: validateEntityStatus('Status'),
-  },
-  {
-    field: 'status',
-    header: 'Active',
-    dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
     disabled: true,
+  },
+  // {
+  //   field: 'reSend',
+  //   header: 'Re-Send',
+  //   dataType: 'check',
+  //   class: 'field col-12 md:col-1 mt-3 mb-3',
+  // },
+  // {
+  //   field: 'reSendDate',
+  //   header: 'Re-Send Date',
+  //   dataType: 'date',
+  //   class: 'field col-12 md:col-2',
+  //   validation: z
+  //     .union([z.date(), z.null()])
+  //     .refine(date => !date || date <= dayjs().endOf('day').toDate(), {
+  //       message: 'The Re-Send Date field cannot be greater than current date',
+  //     })
+  // },
+  {
+    field: 'manual',
+    header: 'Manual',
+    dataType: 'check',
+    disabled: true,
+    class: 'field col-12 md:col-1 flex align-items-end pb-2',
   },
 ]
 
@@ -527,7 +409,6 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     header: 'Date',
     dataType: 'date',
     class: 'field col-12 required ',
-    headerClass: 'mb-1',
     validation: z.date({
       required_error: 'The Date field is required',
       invalid_type_error: 'The Date field is required',
@@ -695,7 +576,8 @@ async function getAdjustmentList() {
         loadingEdit: false,
         loadingDelete: false,
         date: iterator.date.substring(0, 10),
-        transaction: `${iterator.transaction.code} - ${iterator.transaction.name}`,
+        transaction: iterator.transaction ? `${iterator.transaction.code} - ${iterator.transaction.name}` : '',
+        roomRateId: iterator.roomRate?.roomRateId,
         remark: iterator.description,
       }]
     }
@@ -731,12 +613,28 @@ watch(idItem, () => {
   }
 })
 
+async function closeOperationValidation(item: { [key: string]: any }) {
+  if (item) {
+    const hotelId = Object.prototype.hasOwnProperty.call(item.hotel, 'id') ? item.hotel.id : item.hotel
+    const dateList: string[] = AdjustmentList.value.map((e: any) => e.date)
+    if (item.invoiceDate) {
+      dateList.push(dayjs(item.invoiceDate).format('YYYY-MM-DD'))
+    }
+    // necesito unir las listas dateList y newList
+    const payload = {
+      hotelId,
+      dates: dateList
+    }
+    await GenericService.create(confApi.moduleApi, 'check-dates', payload)
+  }
+}
+
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     const payload: { [key: string]: any } = { ...item }
-    payload.dueDate = payload.dueDate ? dayjs(payload.dueDate).format('YYYY-MM-DD') : ''
-    payload.reSendDate = payload.reSendDate ? dayjs(payload.reSendDate).format('YYYY-MM-DD') : ''
-    payload.invoiceDate = payload.invoiceDate ? dayjs(payload.invoiceDate).format('YYYY-MM-DD') : ''
+    payload.dueDate = payload.dueDate ? dayjs(payload.dueDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.reSendDate = payload.reSendDate ? dayjs(payload.reSendDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.invoiceDate = payload.invoiceDate ? dayjs(payload.invoiceDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.invoiceType = Object.prototype.hasOwnProperty.call(payload.invoiceType, 'id') ? payload.invoiceType.id : payload.invoiceType
     payload.invoiceStatus = Object.prototype.hasOwnProperty.call(payload.invoiceStatus, 'id') ? payload.invoiceStatus.id : payload.invoiceStatus
     payload.agency = Object.prototype.hasOwnProperty.call(payload.agency, 'id') ? payload.agency.id : payload.agency
@@ -759,7 +657,7 @@ async function createItem(item: { [key: string]: any }) {
     if (response && response.id) {
       // Guarda el id del elemento creado
       idItem.value = response.id
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment ${response.invoiceId ?? ''} was created successful`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The INC-id ${response.invoiceId ?? ''} was created successful`, life: 10000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -783,12 +681,13 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
+      await closeOperationValidation(item)
       await createItem(item)
       // Deshabilitar campos restantes del formulario
       updateFieldProperty(fields, 'reSend', 'disabled', true)
       updateFieldProperty(fields, 'reSendDate', 'disabled', true)
       if (AdjustmentList.value.length > 0) {
-        await createAdjustment(AdjustmentList.value[0])
+        await createAdjustment(AdjustmentList.value)
       }
       await getItemById(idItem.value)
     }
@@ -848,22 +747,24 @@ async function getItemById(id: string) {
   }
 }
 
-async function createAdjustment(item: { [key: string]: any }) {
+async function createAdjustment(items: any[]) {
   try {
-    if (item) {
+    // console.log(item)
+    if (items.length > 0) {
       loadingSaveAdjustment.value = true
-      const payload: { [key: string]: any } = { ...item }
-      payload.amount = Number.parseFloat(payload.amount)
-      payload.employee = userData?.value?.user?.name
-      payload.transactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
-      payload.income = idItem.value // Usar el ID del registro de "income" creado anteriormente
-      payload.remark = item.remark
-      payload.status = 'ACTIVE'
-      payload.date = payload.date ? dayjs(payload.date).format('YYYY-MM-DD') : ''
-      if (selectedRoomRate.value) {
-        payload.roomRate = selectedRoomRate.value.id
+
+      const transformed = {
+        status: 'ACTIVE',
+        income: idItem.value,
+        employee: userData?.value?.user?.name,
+        adjustments: items.map(item => ({
+          transactionType: item.transactionType ? item.transactionType.id : null,
+          amount: Number.parseFloat(item.amount),
+          date: item.date ? dayjs(item.date).format('YYYY-MM-DD') : '',
+          remark: item.remark
+        }))
       }
-      await GenericService.create(confApiPaymentDetail.moduleApi, 'income-adjustment', payload)
+      await GenericService.create(confApiPaymentDetail.moduleApi, 'income-adjustment', transformed)
 
       onOffDialogPaymentDetail.value = false
       loadingSaveAdjustment.value = false
@@ -887,6 +788,7 @@ async function createInvoiceAdjustment(item: { [key: string]: any }) {
       payload.employee = userData?.value?.user?.name
       payload.transactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
       payload.description = item.remark
+      payload.income = idItem.value // Usar el ID del registro de "income" creado anteriormente
       // payload.date = payload.date
       if (selectedRoomRate.value) {
         payload.roomRate = selectedRoomRate.value.id
@@ -919,21 +821,62 @@ async function updateItem(item: { [key: string]: any }) {
   clearFormDetails()
 }
 
+function saveLocal(itemP: { [key: string]: any }) {
+  const localAdjustment: { [key: string]: any } = { ...itemP }
+  const adjustmentDate = itemP.date ? dayjs(itemP.date).format('YYYY-MM-DD') : ''
+  const itemAmount = Number(itemP.amount) + Number(item.value.incomeAmount)
+  localAdjustment.date = adjustmentDate
+  localAdjustment.employee = userData?.value?.user?.name
+  localAdjustment.id = AdjustmentList.value.length
+  if (AdjustmentList.value.length > 0) {
+    AdjustmentList.value.push(localAdjustment)
+  }
+  else {
+    AdjustmentList.value = [localAdjustment]
+  }
+  AdjustmentTableList.value = [...AdjustmentList.value].map(({ transactionType, ...rest }) => ({
+    transaction: transactionType?.name ?? '',
+    ...rest
+  }))
+  pagination.value.totalElements = AdjustmentTableList.value.length
+  totalAmount.value = itemAmount
+  // BOOKING
+  if (AdjustmentList.value.length === 1) {
+    const localBooking: { [key: string]: any } = {}
+    localBooking.checkIn = adjustmentDate
+    localBooking.checkOut = adjustmentDate
+    localBooking.nights = '0'
+    localBooking.hotelAmount = '0'
+    localBooking.invoiceAmount = itemAmount
+    bookingList.value = [localBooking]
+    bookingPagination.value.totalElements = bookingList.value.length
+    // ROOM RATE
+    const localRoomRate: { [key: string]: any } = {}
+    localRoomRate.checkIn = adjustmentDate
+    localRoomRate.checkOut = adjustmentDate
+    localRoomRate.nights = '0'
+    localRoomRate.hotelAmount = '0'
+    localRoomRate.invoiceAmount = itemAmount
+    roomRateList.value = [localRoomRate]
+    roomRatePagination.value.totalElements = roomRateList.value.length
+  }
+  else {
+    bookingList.value[0].invoiceAmount = itemAmount
+    roomRateList.value[0].invoiceAmount = itemAmount
+  }
+  totalamountbooking.value = itemAmount
+  totalInvoice.value = itemAmount
+  item.value.incomeAmount = itemAmount
+  formReload.value++
+}
+
 async function saveAndReload(itemP: { [key: string]: any }) {
   try {
     if (idItem.value) {
       await createInvoiceAdjustment(itemP)
     }
     else {
-      const data: { [key: string]: any } = { ...itemP }
-      data.date = itemP.date ? dayjs(itemP.date).format('YYYY-MM-DD') : ''
-      AdjustmentList.value = [data]
-      AdjustmentTableList.value = [...AdjustmentList.value].map(({ transactionType, ...rest }) => ({
-        transaction: transactionType?.name ?? '',
-        ...rest
-      }))
-      pagination.value.totalElements = AdjustmentTableList.value.length
-      totalAmount.value = itemP.amount
+      saveLocal(itemP)
     }
     // await getItemById(idItem.value)
   }
@@ -943,18 +886,6 @@ async function saveAndReload(itemP: { [key: string]: any }) {
   finally {
     onOffDialogPaymentDetail.value = false
   }
-  /* try {
-    if (item?.id && !isSplitAction.value) {
-      await updateItem(item)
-    }
-    else {
-      await createPaymentDetails(item)
-    }
-    await getItemById(idItem.value)
-  }
-  catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-  } */
 }
 
 function requireConfirmationToDelete(event: any) {
@@ -1134,6 +1065,12 @@ function onCloseDialog($event: any) {
   onOffDialogPaymentDetail.value = $event
 }
 
+function onCloseAdjustmentDialog() {
+  if (AdjustmentList.value.length === 0) {
+    navigateTo('/payment')
+  }
+}
+
 async function loadDefaultsValues() {
   const objQueryToSearch = {
     query: '',
@@ -1230,7 +1167,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.invoiceStatus"
             :suggestions="[...invoiceStatusList]"
-            :disabled="idItem !== ''"
+            :disabled="true"
             @change="async ($event) => {
               onUpdate('invoiceStatus', $event)
             }"
@@ -1258,7 +1195,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.invoiceType"
             :suggestions="[...invoiceTypeList]"
-            :disabled="idItem !== ''"
+            :disabled="true"
             @change="($event) => {
               onUpdate('invoiceType', $event)
             }"
@@ -1292,6 +1229,7 @@ onMounted(async () => {
             :disabled="idItem !== ''"
             @change="($event) => {
               onUpdate('agency', $event)
+              item.agency = $event
             }"
             @load="async($event) => {
               const objQueryToSearch = {
@@ -1322,6 +1260,7 @@ onMounted(async () => {
             :disabled="idItem !== ''"
             @change="async ($event) => {
               onUpdate('hotel', $event)
+              item.hotel = $event
             }"
             @load="async($event) => {
               const objQueryToSearch = {
@@ -1410,7 +1349,7 @@ onMounted(async () => {
               <Row>
                 <Column footer="Total:" :colspan="1" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
                 <Column :footer="totalAmount" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :colspan="4" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :colspan="5" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
@@ -1458,7 +1397,7 @@ onMounted(async () => {
       :is-split-action="isSplitAction"
       @update:visible="onCloseDialog($event)"
       @save="saveAndReload($event)"
-      @on-close="() => navigateTo('/payment')"
+      @on-close="onCloseAdjustmentDialog"
     />
     <div v-if="attachmentDialogOpen">
       <AttachmentIncomeDialog

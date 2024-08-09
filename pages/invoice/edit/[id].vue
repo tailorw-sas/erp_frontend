@@ -36,6 +36,7 @@ const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 
 const invoiceAmount = ref(0)
+const requiresFlatRate = ref(false)
 
 const bookingDialogOpen = ref<boolean>(false)
 const roomRateDialogOpen = ref<boolean>(false)
@@ -82,7 +83,7 @@ const fields: Array<Container> = [
         field: 'invoiceId',
         header: 'Id',
         dataType: 'text',
-        class: `w-full px-3  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3]?.id ? 'required' : ''}`,
+        class: `w-full px-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
         disabled: true,
         containerFieldClass: 'ml-10'
 
@@ -96,6 +97,7 @@ const fields: Array<Container> = [
 
       },
 
+
     ],
     containerClass: 'flex flex-column justify-content-evenly w-full'
   },
@@ -108,7 +110,7 @@ const fields: Array<Container> = [
         header: 'Hotel',
         dataType: 'select',
         class: 'w-full px-3 required',
-        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id 
+        disabled: String(route.query.type) as any === InvoiceType.CREDIT
 
       },
       {
@@ -116,7 +118,7 @@ const fields: Array<Container> = [
         header: 'Agency',
         dataType: 'select',
         class: 'w-full px-3 required',
-        disabled: String(route.query.type) as any === ENUM_INVOICE_TYPE[2]?.id 
+        disabled: String(route.query.type) as any === InvoiceType.CREDIT
       },
 
     ],
@@ -133,13 +135,14 @@ const fields: Array<Container> = [
         validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
       },
       {
-        field: 'invoiceAmount',
-        header: 'Invoice Amount',
-        dataType: 'text',
-        class: 'w-full px-3  required',
-        disabled: true,
-        ...(route.query.type === ENUM_INVOICE_TYPE[3]?.id && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
+        field: 'status',
+        header: 'Status',
+        dataType: 'select',
+        class: 'w-full px-3 mb-5',
+        containerFieldClass: '',
+        disabled: true
       },
+
 
     ],
     containerClass: 'flex flex-column justify-content-evenly w-full'
@@ -156,10 +159,18 @@ const fields: Array<Container> = [
         disabled: true
       },
       {
+        field: 'invoiceAmount',
+        header: 'Invoice Amount',
+        dataType: 'text',
+        class: 'w-full px-3  required',
+        disabled: true,
+        ...(route.query.type === InvoiceType.OLD_CREDIT && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
+      },
+      {
         field: 'isManual',
         header: 'Manual',
         dataType: 'check',
-        class: `w-full px-3  ${String(route.query.type) as any === ENUM_INVOICE_TYPE[3] ? 'required' : ''}`,
+        class: `w-full px-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
         disabled: true
       },
 
@@ -169,125 +180,95 @@ const fields: Array<Container> = [
 
 ]
 
-const incomefields: Array<Container> = [
-  {childs: [{
+const Fields = ref<FieldDefinitionType[]>([
+  {
     field: 'invoiceId',
     header: 'ID',
-    disabled: true,
     dataType: 'text',
-    class: 'field col-12 md:col-1',
+    class: `field col-12 md:col-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`,
+    disabled: true,
+
+
   },
   {
-    field: 'dueDate',
-    header: 'Due Date',
+    field: 'invoiceDate',
+    header: 'Invoice Date',
     dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Due Date field is required',
-      invalid_type_error: 'The Due Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
-  },
-
-  {
-    field: 'isManual',
-    header: 'Manual',
-    dataType: 'check',
-    disabled: true,
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-  },
-  {
-    field: 'invoiceAmount',
-    header: 'Income Amount',
-    dataType: 'text',
-    disabled: true,
-    class: 'field col-12 md:col-2 required',
-
+    class: 'field col-12 md:col-3  required',
+    validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
   },
   {
     field: 'hotel',
     header: 'Hotel',
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('hotel'),
+    disabled: String(route.query.type) as any === InvoiceType.CREDIT,
+    validation: z.object({
+      id: z.string(),
+      name: z.string(),
+
+    })
+      .required()
+      .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` })
   },
+  {
+    field: 'invoiceType',
+    header: 'Invoice Type',
+    dataType: 'select',
+    class: 'field col-12 md:col-3 mb-5',
+    containerFieldClass: '',
+    disabled: true
+  },
+  {
+    field: 'invoiceNumber',
+    header: 'Invoice Number',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 ',
+    disabled: true,
+
+  },
+  {
+    field: 'invoiceAmount',
+    header: 'Invoice Amount',
+    dataType: 'text',
+    class: 'field col-12 md:col-3  required',
+    disabled: true,
+    ...(route.query.type === InvoiceType.OLD_CREDIT && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
+  },
+  
   {
     field: 'agency',
     header: 'Agency',
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
-    disabled: false,
-    validation: validateEntityStatus('agency'),
-  }], containerClass: "flex flex-row"
+    disabled: String(route.query.type) as any === InvoiceType.CREDIT,
+    validation: z.object({
+      id: z.string(),
+      name: z.string(),
 
-},
-  {childs: [{
-    field: 'invoiceNumber',
-    header: 'Invoice Number',
-    dataType: 'text',
-    disabled: true,
-    class: 'field col-12 md:col-1',
+    }).required()
+      .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
   },
+  
   {
-    field: 'invoiceDate',
-    header: 'Invoice Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Invoice Date field is required',
-      invalid_type_error: 'The Invoice Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
-  },
-  {
-    field: 'reSend',
-    header: 'Re-Send',
-    dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-    
-  },
-  {
-    field: 'reSendDate',
-    header: 'Re-Send Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2',
-    headerClass: 'mb-1',
-    
-    validation: z
-      .union([z.date(), z.null()])
-      .refine(date => !date || date <= dayjs().endOf('day').toDate(), {
-        message: 'The Re-Send Date field cannot be greater than current date',
-      })
-  },
-
-  {
-    field: 'invoiceType',
-    header: 'Invoice Type',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('Invoice Type'),
-  },
-  {
-    field: 'invoiceStatus',
+    field: 'status',
     header: 'Status',
     dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('Status'),
+    class: 'field col-12 md:col-2 mb-5',
+    containerFieldClass: '',
+    disabled: true
   },
-  ], containerClass: "flex flex-row"},
-  {childs: [{
-    field: 'status',
-    header: 'Active',
+
+  
+
+  {
+    field: 'isManual',
+    header: 'Manual',
     dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-    disabled: true,
-  }], containerClass: "flex flex-row"}
-]
+    class: `field col-12 md:col-1  flex align-items-center pb-2 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
+    disabled: true
+  },
+])
 
 
 
@@ -393,18 +374,18 @@ async function getHotelList() {
   try {
     const payload
       = {
-        filter: [{
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+      filter: [{
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
@@ -418,6 +399,8 @@ async function getHotelList() {
   }
 }
 
+
+
 function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
@@ -426,18 +409,18 @@ async function getAgencyList() {
   try {
     const payload
       = {
-        filter: [{
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+      filter: [{
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
@@ -455,13 +438,13 @@ async function getInvoiceTypeList() {
   try {
     const payload
       = {
-        filter: [],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+      filter: [],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
     const response = await GenericService.search(confinvoiceTypeListtApi.moduleApi, confinvoiceTypeListtApi.uriApi, payload)
     const { data: dataList } = response
@@ -475,7 +458,7 @@ async function getInvoiceTypeList() {
   }
 }
 
-function refetchInvoice(){
+function refetchInvoice() {
   console.log("REFETCH");
   getInvoiceAmountById(route.params.id as string)
   update()
@@ -540,36 +523,36 @@ async function loadDefaultsValues() {
     operator: 'EQUALS',
     value: 'ACTIVE',
   }]
-  
+
   getInvoiceStatusListDefault(objApis.value.invoiceStatus.moduleApi, objApis.value.invoiceStatus.uriApi, objQueryToSearch, filter)
 }
 
 async function getInvoiceAmountById(id: string) {
 
-if (id) {
-  idItem.value = id
-  
-  try {
-    const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+  if (id) {
+    idItem.value = id
 
-    if (response) {
-     
-      item.value.invoiceAmount = response.invoiceAmount
-      invoiceAmount.value = response.invoiceAmount
-      
-    }
+    try {
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
 
-    
-  }
-  catch (error) {
-    if (error) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+      if (response) {
+
+        item.value.invoiceAmount = response.invoiceAmount
+        invoiceAmount.value = response.invoiceAmount
+
+      }
+
+
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+      }
+    }
+    finally {
+
     }
   }
-  finally {
-    
-  }
-}
 }
 
 async function getItemById(id: string) {
@@ -587,8 +570,11 @@ async function getItemById(id: string) {
 
         const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
-        item.value.invoiceNumber =response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
-        item.value.invoiceDate = new Date(response.invoiceDate)
+        item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
+        item.value.invoiceNumber = item.value.invoiceNumber.replace("OLD", "CRE")
+
+
+        item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
         invoiceAmount.value = response.invoiceAmount
@@ -599,11 +585,12 @@ async function getItemById(id: string) {
         item.value.agency = response.agency
         item.value.hasAttachments = response.hasAttachments
         item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
-        item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
+        item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
+        item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
 
-        nightTypeRequired.value = response?.agency?.client?.isNightType
+
 
       }
 
@@ -628,7 +615,7 @@ async function createItem(item: { [key: string]: any }) {
 
     payload.invoiceId = item.invoiceId
     payload.invoiceNumber = item.invoiceNumber
-    payload.invoiceDate = item.invoiceDate
+    payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
     payload.isManual = item.isManual
     payload.invoiceAmount = 0.00
     payload.hotel = item.hotel.id
@@ -643,13 +630,13 @@ const nightTypeRequired = ref(false)
 
 async function updateItem(item: { [key: string]: any }) {
 
-  
+
 
 
   loadingSaveAll.value = true
-  const payload: { [key: string]: any } = {   }
-  payload.employee =  userData?.value?.user?.name
-  payload.invoiceDate = item.invoiceDate
+  const payload: { [key: string]: any } = {}
+  payload.employee = userData?.value?.user?.name
+  payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
   payload.isManual = item.isManual
   payload.hotel = item.hotel.id
   payload.agency = item.agency.id
@@ -781,6 +768,13 @@ async function getInvoiceHotel(id) {
 
     if (hotel) {
       invoiceHotel.value = { ...hotel }
+
+
+
+      requiresFlatRate.value = hotel?.requiresFlatRate
+
+
+
     }
   }
   catch (err) {
@@ -789,10 +783,16 @@ async function getInvoiceHotel(id) {
 }
 async function getInvoiceAgency(id) {
   try {
+
+    console.log(id);
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
 
     if (agency) {
       invoiceAgency.value = { ...agency }
+
+      nightTypeRequired.value = agency?.client?.isNightType
+
+      console.log(agency);
     }
   }
   catch (err) {
@@ -817,7 +817,7 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
     }
   ]
 
-  const filteredList = await getDataList<any,any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+  const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
 
   if (filteredList.length > 0) {
     invoiceStatusList.value = [filteredList[0]]
@@ -856,73 +856,61 @@ onMounted(async () => {
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
       {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
     </div>
-    <div class="p-3 pt-0">
-      <EditFormV2WithContainer 
-      :key="formReload" :fields-with-containers="route.query.type === ENUM_INVOICE_TYPE[1]?.id ? incomefields : fields" :item="item" :show-actions="true"
-                               :loading-save="loadingSaveAll" :loading-delete="loadingDelete" @cancel="clearForm"
-                               @delete="requireConfirmationToDelete($event)" :container-class="route.query.type === ENUM_INVOICE_TYPE[1]?.id ? 'flex flex-column justify-content-evenly card w-full mb-2': 'flex flex-row justify-content-evenly card w-full mb-2'">
+    <div class="p-4">
+      <EditFormV2 :key="formReload" :fields="Fields" :item="item" :show-actions="true" :loading-save="loadingSaveAll"
+        :loading-delete="loadingDelete" @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
+        :force-save="forceSave" @force-save="forceSave = $event" container-class="grid pt-3">
         <template #field-invoiceDate="{ item: data, onUpdate }">
-          <Calendar
-              v-if="!loadingSaveAll"
-              v-model="data.invoiceDate"
-              date-format="yy-mm-dd"
-              :max-date="new Date()"
-              @update:model-value="($event) => {
-            onUpdate('invoiceDate', $event)
-          }"
-          />
+          <Calendar v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
+            @update:model-value="($event) => {
+        onUpdate('invoiceDate', $event)
+      }" />
         </template>
 
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
-            v-model="invoiceAmount"  :disabled="true"
-            
-          />
-          
+          <InputText v-model="invoiceAmount" :disabled="true" />
+
         </template>
 
         <template #field-invoiceStatus="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll "
-            id="autocomplete"
-            field="name"
-            item-value="id"
-            :model="data.invoiceStatus"
-            :suggestions="[...invoiceStatusList]"
-            :disabled="idItem !== ''"
-            @change="async ($event) => {
-              onUpdate('invoiceStatus', $event)
-            }"
-            @load="async($event) => {
-              const objQueryToSearch = {
-                query: $event,
-                keys: ['name', 'code'],
-              }
-              const filter: FilterCriteria[] = [{
-                key: 'status',
-                logicalOperation: 'AND',
-                operator: 'EQUALS',
-                value: 'ACTIVE',
-              }]
-              await getInvoiceStatusList(objApis.invoiceStatus.moduleApi, objApis.invoiceStatus.uriApi, objQueryToSearch, filter)
-            }"
-          />
+          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+            :model="data.invoiceStatus" :suggestions="[...invoiceStatusList]" :disabled="idItem !== ''" @change="async ($event) => {
+        onUpdate('invoiceStatus', $event)
+      }" @load="async ($event) => {
+        const objQueryToSearch = {
+          query: $event,
+          keys: ['name', 'code'],
+        }
+        const filter: FilterCriteria[] = [{
+          key: 'status',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+        }]
+        await getInvoiceStatusList(objApis.invoiceStatus.moduleApi, objApis.invoiceStatus.uriApi, objQueryToSearch, filter)
+      }" />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
+        <template #field-status="{ item: data, onUpdate }">
+          <Dropdown v-if="!loadingSaveAll" v-model="data.status" :options="[ENUM_INVOICE_STATUS[0], ENUM_INVOICE_STATUS[2]]" option-label="name"
+            return-object="false" show-clear :disabled="data?.status?.id !== InvoiceStatus.PROCECSED" @update:model-value="($event) => {
+        onUpdate('status', $event)
+      }">
+            <template #option="props">
+              {{ props.option?.code }}-{{ props.option?.name }}
+            </template>
+            <template #value="props">
+              {{ props.value?.code }}-{{ props.value?.name }}
+            </template>
+          </Dropdown>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
         <template #field-invoiceType="{ item: data, onUpdate }">
-          <Dropdown
-              v-if="!loadingSaveAll"
-              v-model="data.invoiceType"
-              :options="[...ENUM_INVOICE_TYPE]"
-              option-label="name"
-              return-object="false"
-              show-clear
-              disabled
-              @update:model-value="($event) => {
-            onUpdate('invoiceType', $event)
-          }"
-          >
+          <Dropdown v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
+            option-label="name" return-object="false" show-clear disabled @update:model-value="($event) => {
+        onUpdate('invoiceType', $event)
+      }">
             <template #option="props">
               {{ props.option?.code }}-{{ props.option?.name }}
             </template>
@@ -933,12 +921,10 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-hotel="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-              v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-              :model="data.hotel" :suggestions="hotelList" @change="($event) => {
-            onUpdate('hotel', $event)
-          }" @load="($event) => getHotelList($event)"
-          >
+          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
+            :model="data.hotel" :suggestions="hotelList" @change="($event) => {
+        onUpdate('hotel', $event)
+      }" @load="($event) => getHotelList($event)">
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
             </template>
@@ -950,12 +936,10 @@ onMounted(async () => {
           </DebouncedAutoCompleteComponent>
         </template>
         <template #field-agency="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-              v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-              :model="data.agency" :suggestions="agencyList"  @change="($event) => {
-            onUpdate('agency', $event)
-          }" @load="($event) => getAgencyList($event)"
-          >
+          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
+            :model="data.agency" :suggestions="agencyList" @change="($event) => {
+        onUpdate('agency', $event)
+      }" @load="($event) => getAgencyList($event)">
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
             </template>
@@ -969,71 +953,68 @@ onMounted(async () => {
 
         <template #form-footer="props">
           <div style="width: 100%; height: 100%;">
-            <InvoiceTabView
-              :invoice-obj-amount="invoiceAmount"
-                :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
-                :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
-                :force-update="forceUpdate"
-                :toggle-force-update="update"
-                :invoice-obj="item"
-                :refetch-invoice="refetchInvoice"
-                :is-creation-dialog="false" :selected-invoice="selectedInvoice as any"  :active="active" :set-active="($event) => { active = $event }" :showTotals="true"
-                :night-type-required="nightTypeRequired"
-
-            />
-            <div >
+            <InvoiceTabView :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"  :get-invoice-agency="getInvoiceAgency" :invoice-obj-amount="invoiceAmount"
+              :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
+              :open-dialog="handleDialogOpen" :selected-booking="selectedBooking" :force-update="forceUpdate"
+              :toggle-force-update="update" :invoice-obj="item" :refetch-invoice="refetchInvoice"
+              :is-creation-dialog="false" :selected-invoice="selectedInvoice as any" :active="active"
+              :set-active="($event) => { active = $event }" :showTotals="true"
+              :night-type-required="nightTypeRequired" />
+            <div>
               <div class="flex justify-content-end">
-                <Button
-                    v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"  @click="() => {
-                  saveItem(props.item.fieldValues)
-                }"
-                />
-                <Button
-                    v-tooltip.top="'Print'" class="w-3rem mx-1" icon="pi pi-print"
-                    :loading="loadingSaveAll" :disabled="!item.hasAttachments" @click="()=>{
-                      exportAttachmentsDialogOpen = true
-                    }"
-                />
+                <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll" @click="() => {
+        saveItem(props.item.fieldValues)
+      }" />
+                <Button v-tooltip.top="'Print'" class="w-3rem mx-1" icon="pi pi-print" :loading="loadingSaveAll"
+                  :disabled="!item.hasAttachments" @click="() => {
+        exportAttachmentsDialogOpen = true
+      }" />
 
-                <Button
-                    v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
-                />
-                 <Button
-                v-tooltip.top="'Show History'" class="w-3rem mx-1"
-                :loading="loadingSaveAll" @click="handleAttachmentHistoryDialogOpen()" :disabled="!item?.hasAttachments"
-                >
-                <template #icon>
-                  <span class="flex align-items-center justify-content-center p-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#e8eaed"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" /></svg>
-                  </span>
-                </template>
-              </Button>
-               
-                <Button
-                    v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                    :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id
-                    "
-                />
-                <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id" class="w-3rem ml-1" disabled icon="pi pi-download" />
-               
-                <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" @click="update" />
-                <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="goToList" />
+                <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
+                  :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" />
+                <Button v-tooltip.top="'Show History'" class="w-3rem mx-1" :loading="loadingSaveAll"
+                  @click="handleAttachmentHistoryDialogOpen()" :disabled="!item?.hasAttachments">
+                  <template #icon>
+                    <span class="flex align-items-center justify-content-center p-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px"
+                        fill="#e8eaed">
+                        <path
+                          d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" />
+                      </svg>
+                    </span>
+                  </template>
+                </Button>
+
+                <Button v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
+                  :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME
+        " />
+                <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === InvoiceType.INCOME" class="w-3rem ml-1"
+                  disabled icon="pi pi-download" />
+
+                <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll"
+                  @click="update" />
+                <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times"
+                  @click="goToList" />
               </div>
             </div>
           </div>
         </template>
-      </EditFormV2WithContainer>
+      </EditFormV2>
     </div>
 
-     <div v-if="attachmentDialogOpen">
-              <AttachmentDialog  :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }" :is-creation-dialog="false" header="Manage Invoice Attachment"  :open-dialog="attachmentDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
-            </div>
-      </div>
-      <div v-if="attachmentHistoryDialogOpen">
-          <InvoiceHistoryDialog selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }" header="Attachment Status History"  :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice" :selected-invoice-obj="item" :is-creation-dialog="false" />
-        </div>
-        <div v-if="exportAttachmentsDialogOpen">
-          <PrintInvoiceDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen"  :invoice="item"  />
-        </div>
+    <div v-if="attachmentDialogOpen">
+      <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
+        :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
+        :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
+    </div>
+  </div>
+  <div v-if="attachmentHistoryDialogOpen">
+    <InvoiceHistoryDialog selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+      header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
+      :selected-invoice-obj="item" :is-creation-dialog="false" />
+  </div>
+  <div v-if="exportAttachmentsDialogOpen">
+    <PrintInvoiceDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }"
+      :open-dialog="exportAttachmentsDialogOpen" :invoice="item" />
+  </div>
 </template>

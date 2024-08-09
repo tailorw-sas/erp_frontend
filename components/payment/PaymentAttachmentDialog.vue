@@ -1127,11 +1127,13 @@ onMounted(async () => {
     <template #default>
       <div class="grid p-fluid formgrid">
         <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
-          <div v-if="false" class="bg-primary text-white font-bold mb-3" style="border-radius: 5px; padding: 0.8rem">
-            <strong class="mx-2">Payment:</strong>
-            <span>{{ externalProps.selectedPayment.paymentId }}</span>
+          <div v-if="true" class="font-bold mb-3 flex justify-content-end">
+            <div class="bg-primary px-3" style="border-radius: 5px; padding-top: 10px; padding-bottom: 10px">
+              <strong class="mr-2">Payment:</strong>
+              <span>{{ externalProps.selectedPayment.paymentId }}</span>
+            </div>
           </div>
-          <Accordion v-if="true" :active-index="0" class="mb-2 card p-0">
+          <Accordion v-if="false" :active-index="0" class="mb-2 card p-0">
             <AccordionTab>
               <template #header>
                 <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full">
@@ -1280,7 +1282,7 @@ onMounted(async () => {
 
                 <template #field-path="{ item: data, onUpdate }">
                   <FileUpload
-                    v-if="!loadingSaveAll" :max-file-size="1000000" :multiple="false" auto custom-upload
+                    v-if="!loadingSaveAll" :max-file-size="1000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
                     @uploader="($event: any) => {
                       customBase64Uploader($event, fieldsV2, 'path');
                       onUpdate('path', $event)
@@ -1297,8 +1299,9 @@ onMounted(async () => {
                     <template #header="{ chooseCallback }">
                       <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
                         <div class="flex gap-2">
-                          <Button id="btn-choose" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
+                          <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
                           <Button
+                            :disabled="idItem !== '' || idItem === null"
                             icon="pi pi-times" class="ml-2" severity="danger" text @click="() => {
                               onUpdate('path', null);
                               onUpdate('fileName', '');
@@ -1326,18 +1329,29 @@ onMounted(async () => {
                 </template>
 
                 <template #form-footer="props">
-                  <Button
-                    v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save"
-                    @click="props.item.submitForm($event)"
-                  />
-                  <Button v-tooltip.top="'View File'" :disabled="!idItem" class="w-3rem ml-1 sticky" icon="pi pi-eye" @click="openOrDownloadFile(pathFileLocal)" />
-                  <Button
-                    v-if="true"
-                    v-tooltip.top="'Show History'" :disabled="disabledOrEnabledShowHistory()" class="w-3rem ml-1 sticky" icon="pi pi-book"
-                    @click="loadHistoryList"
-                  />
-                  <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearFormAndReload" />
-                  <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                  <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT-ATTACHMENT'] : ['PAYMENT-MANAGEMENT:CREATE-ATTACHMENT']">
+                    <Button
+                      v-tooltip.top="'Save'"
+                      :disabled="idItem !== '' && idItem !== null" class="w-3rem sticky" icon="pi pi-save"
+                      @click="props.item.submitForm($event)"
+                    />
+                  </IfCan>
+                  <IfCan :perms="['PAYMENT-MANAGEMENT:VIEW-FILE-ATTACHMENT']">
+                    <Button v-tooltip.top="'View File'" :disabled="!idItem" class="w-3rem ml-1 sticky" icon="pi pi-eye" @click="openOrDownloadFile(pathFileLocal)" />
+                  </IfCan>
+                  <IfCan :perms="['PAYMENT-MANAGEMENT:SHOW-HISTORY-ATTACHMENT']">
+                    <Button
+                      v-if="true"
+                      v-tooltip.top="'Show History'" :disabled="disabledOrEnabledShowHistory()" class="w-3rem ml-1 sticky" icon="pi pi-book"
+                      @click="loadHistoryList"
+                    />
+                  </IfCan>
+                  <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-ATTACHMENT']">
+                    <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearFormAndReload" />
+                  </IfCan>
+                  <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-ATTACHMENT']">
+                    <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                  </IfCan>
                   <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialog" />
                 </template>
                 <!-- Save, View File, Show History, Add, Delete y Cancel -->

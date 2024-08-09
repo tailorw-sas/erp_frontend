@@ -194,9 +194,9 @@ async function getPrintObj() {
         from: dayjs(booking?.checkIn).format('DD/MM/YYYY') || '',
         to: dayjs(booking?.checkOut).format('DD/MM/YYYY') || '',
         quantity: booking?.nights || '',
-        plan: '',
+        plan: booking?.ratePlan?.name || "",
         price: '',
-        total: ''
+        total: booking?.invoiceAmount
       }
     })
   }
