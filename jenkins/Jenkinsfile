@@ -3,13 +3,15 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'tailorw/erp-admin:v1'
+        ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
+        DOCKER_IMAGE_NAME = 'tailorw/erp-admin:version'
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
         NAMESPACE = 'finamer'
-        SERVER_K3S_URL = 'https://172.20.1.150:5443'
-        YAML = 'finamer-admin.yaml'
+        K3S_CREDENTIALS = 'KubernetesCredential-env'
+        YAML = 'finamer-admin'
         DEPLOYMENT_NAME = 'finamer-admin'
-        SERVER_K3S_CREDENTIALS = 'KubernetesCredential-Qa'
+        URL_DEV = credentials("URL-K3S-dev")
+        URL_QA = credentials("URL-K3S-qa")
     }
     
     triggers {
@@ -17,7 +19,30 @@ pipeline {
     }
     
     stages {
-    
+
+        stage ('Init') {
+            steps {
+                echo 'Initializing......'
+                script {   
+                    def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
+                    env.BRANCH_NAME = branch
+
+                    def dockerImage = env.DOCKER_IMAGE_NAME.replace('version', env.BRANCH_NAME)
+                    env.DOCKER_IMAGE = dockerImage
+
+                    def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
+                    env.SERVER_K3S_CREDENTIALS = k3sCredentials
+
+                    if(env.BRANCH_NAME == 'dev'){
+                        env.SERVER_K3S_URL = env.URL_DEV
+                    }
+                    if(env.BRANCH_NAME == 'qa'){
+                        env.SERVER_K3S_URL = env.URL_QA
+                    }
+                }
+            }
+        }
+
         stage ('Create docker image'){
             steps {
                 sh 'docker build -t $DOCKER_IMAGE .'
@@ -30,7 +55,7 @@ pipeline {
         stage ('Publish to Kubernetes') {
             steps {
                 withKubeConfig(credentialsId: "${SERVER_K3S_CREDENTIALS}", namespace: "${NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: "${SERVER_K3S_URL}") {
-                    sh 'kubectl apply -f kubernetes/$YAML'
+                    //sh 'kubectl apply -f $YAML'
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
                 }
             }
