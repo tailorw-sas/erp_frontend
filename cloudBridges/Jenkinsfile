@@ -38,23 +38,23 @@ pipeline {
         stage ('Init') {
             steps {
                 echo 'Initializing generic...'
-                script {   
-                    def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
-                    env.BRANCH_NAME = branch
+                //script {   
+                //    def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
+                //    env.BRANCH_NAME = branch
 
-                    def dockerImage = env.DOCKER_IMAGE_NAME.replace('version', env.BRANCH_NAME)
-                    env.DOCKER_IMAGE = dockerImage
+                //    def dockerImage = env.DOCKER_IMAGE_NAME.replace('version', env.BRANCH_NAME)
+                //    env.DOCKER_IMAGE = dockerImage
 
-                    def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
-                    env.SERVER_K3S_CREDENTIALS = k3sCredentials
+                //    def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
+                //    env.SERVER_K3S_CREDENTIALS = k3sCredentials
 
-                    if(env.BRANCH_NAME == 'dev'){
-                        env.SERVER_K3S_URL = env.URL_DEV
-                    }
-                    if(env.BRANCH_NAME == 'qa'){
-                        env.SERVER_K3S_URL = env.URL_QA
-                    }
-                }
+                //    if(env.BRANCH_NAME == 'dev'){
+                //        env.SERVER_K3S_URL = env.URL_DEV
+                //    }
+                //    if(env.BRANCH_NAME == 'qa'){
+                //        env.SERVER_K3S_URL = env.URL_QA
+                //    }
+                //}
             }
         }
 
