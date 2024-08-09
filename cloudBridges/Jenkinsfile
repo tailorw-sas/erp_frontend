@@ -61,7 +61,7 @@ pipeline {
         stage ('Checkout specific project....') {
             steps {
                 echo 'Identifying project...'
-                script {
+                //script {
                     // Define la ruta a la carpeta específica que deseas observar
                     //def folderPath = env.SRC
                     
@@ -78,7 +78,7 @@ pipeline {
                         //echo "No changes detected in folder: ${folderPath}"
                         //currentBuild.result = 'ABORTED'
                     //}
-                }
+                //}
             }
         }
         
