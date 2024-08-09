@@ -17,19 +17,7 @@ pipeline {
     }
     
     triggers {
-        //githubPush()
-        GenericTrigger (
-                genericVariables: [
-                    [key: 'changed_files', value: '$.commits[*].["modified","added","removed"][*]', expressionType: 'JSONPath']    
-                ],
-                causeString: 'Triggered on $changed_files',
-                token: '123abc456def789ghi',
-                printContributedVariables: true,
-                printPostContent: true,
-                regexpFilterText: '$changed_files',
-                //regexpFilterExpression: '\\s((.*"("${SRC}"/)[^"]+?".))'
-                regexpFilterExpression('^"${SRC}"/.*')
-            )
+        githubPush()
     }
     
     stages {
