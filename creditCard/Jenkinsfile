@@ -24,7 +24,7 @@ pipeline {
         
         stage ('Check for changes') {
             steps {
-                echo '* * * * STAGE: Checking for changes in a specific project * * * *'
+                echo '* * * * STAGE: Checking for changes in a specific project * * * * '
                 script {
                     def folderPath = env.SRC
                     def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
