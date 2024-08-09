@@ -9,7 +9,6 @@ import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfGreaterThanPaymentBalanceRule;
@@ -20,8 +19,8 @@ import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionType
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
-import java.time.LocalDate;
-import java.util.UUID;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -72,7 +71,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             //Aplicando regla para el campo Remark
             if (!paymentTransactionTypeDto.getRemarkRequired()) {
                 //RulesChecker.checkRule(new CheckMinNumberOfCharacterInRemarkRule(paymentTransactionTypeDto.getMinNumberOfCharacter(), command.getRemark()));
-                command.setRemark(paymentTransactionTypeDto.getDefaultRemark());
+//                command.setRemark(paymentTransactionTypeDto.getDefaultRemark());
             }
             msg = "Creating new Payment Detail with ID: ";
         }
@@ -84,7 +83,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             //Aplicando regla para el campo Remark
             if (!paymentTransactionTypeDto.getRemarkRequired()) {
                 //RulesChecker.checkRule(new CheckMinNumberOfCharacterInRemarkRule(paymentTransactionTypeDto.getMinNumberOfCharacter(), command.getRemark()));
-                command.setRemark(paymentTransactionTypeDto.getDefaultRemark());
+//                command.setRemark(paymentTransactionTypeDto.getDefaultRemark());
             }
 
             msg = "Creating new Payment Detail with ID: ";
@@ -119,7 +118,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             newDetailDto.setAmount(command.getAmount() * -1);
             newDetailDto.setApplyDepositValue(command.getAmount());
             //Validar el Close Operation
-            newDetailDto.setTransactionDate(LocalDate.now());
+            newDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
             msg = "Creating New Deposit Detail with ID: ";
         }
 

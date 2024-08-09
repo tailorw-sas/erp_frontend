@@ -11,6 +11,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,6 +25,10 @@ public class PaymentStatusHistory implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
+
+    @Column(columnDefinition="serial", name = "payment_history_gen_id")
+    @Generated(event = EventType.INSERT)
+    private Long paymentHistoryId;
 
     private String status;
 
@@ -54,6 +60,7 @@ public class PaymentStatusHistory implements Serializable {
     public PaymentStatusHistoryDto toAggregate(){
         return new PaymentStatusHistoryDto(
                 id, 
+                paymentHistoryId,
                 status, 
                 payment != null ? payment.toAggregate() : null, 
                 employee != null ? employee.toAggregate() : null, 

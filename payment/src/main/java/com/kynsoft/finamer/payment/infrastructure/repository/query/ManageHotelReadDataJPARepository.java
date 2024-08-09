@@ -17,7 +17,7 @@ public interface ManageHotelReadDataJPARepository extends JpaRepository<ManageHo
 
     Page<ManageHotel> findAll(Specification specification, Pageable pageable);
 
-    boolean existsByCodeAndStatus(String code, String status);
+    boolean existsByCode(String code);
 
     Optional<ManageHotel> findByCode(String code);
 }

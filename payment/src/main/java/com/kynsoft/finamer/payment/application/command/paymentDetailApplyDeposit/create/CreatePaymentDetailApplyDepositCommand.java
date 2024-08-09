@@ -18,12 +18,13 @@ public class CreatePaymentDetailApplyDepositCommand implements ICommand {
     private UUID employee;
     private UUID paymentDetail;
     private UUID transactionType;
+    private UUID transactionTypeForAdjustment;
     private Double amount;
     private String remark;
 
     private PaymentDto paymentResponse;
 
-    public CreatePaymentDetailApplyDepositCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee) {
+    public CreatePaymentDetailApplyDepositCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee,UUID transactionTypeForAdjustment) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.paymentDetail = paymentDetail;
@@ -31,6 +32,7 @@ public class CreatePaymentDetailApplyDepositCommand implements ICommand {
         this.amount = amount;
         this.remark = remark;
         this.employee = employee;
+        this.transactionTypeForAdjustment =transactionTypeForAdjustment;
     }
 
     public static CreatePaymentDetailApplyDepositCommand fromRequest(CreatePaymentDetailApplyDepositRequest request) {
@@ -40,7 +42,8 @@ public class CreatePaymentDetailApplyDepositCommand implements ICommand {
                 request.getTransactionType(),
                 request.getAmount(),
                 request.getRemark(),
-                request.getEmployee()
+                request.getEmployee(),
+                request.getTransactionTypeForAdjustment()
         );
     }
 

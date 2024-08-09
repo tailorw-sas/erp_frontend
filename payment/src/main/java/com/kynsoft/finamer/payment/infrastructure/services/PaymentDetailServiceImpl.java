@@ -15,6 +15,8 @@ import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentDetailWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManagePaymentDetailReadDataJPARepository;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +47,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     public void update(PaymentDetailDto dto) {
         PaymentDetail update = new PaymentDetail(dto);
 
-        update.setUpdatedAt(LocalDateTime.now());
+        update.setUpdatedAt(OffsetDateTime.now(ZoneId.of("UTC")));
 
         this.repositoryCommand.save(update);
     }

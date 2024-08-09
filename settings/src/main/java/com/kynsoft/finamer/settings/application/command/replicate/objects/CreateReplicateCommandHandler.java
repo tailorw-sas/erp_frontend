@@ -19,6 +19,8 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerReplicateManagePaymentTransactionTypeService;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class CreateReplicateCommandHandler implements ICommandHandler<CreateReplicateCommand> {
 
@@ -133,7 +135,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_BANK_ACCOUNT -> {//
                     for (ManageBankAccountDto bankAccountDto : this.manageBankAccountService.findAllToReplicate()) {
-                        this.replicateManageBankAccount.create(new ReplicateManageBankAccountKafka(bankAccountDto.getId(), bankAccountDto.getAccountNumber(), bankAccountDto.getStatus().name(), bankAccountDto.getManageBank().getName()));
+                        this.replicateManageBankAccount.create(new ReplicateManageBankAccountKafka(bankAccountDto.getId(), bankAccountDto.getAccountNumber(), bankAccountDto.getStatus().name(), bankAccountDto.getManageBank().getName(),bankAccountDto.getManageHotel().getId()));
                     }
                 }
                 case MANAGE_EMPLOYEE -> {//
@@ -183,10 +185,12 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 paymentTransactionTypeDto.getCash(), 
                                 paymentTransactionTypeDto.getRemarkRequired(), 
                                 paymentTransactionTypeDto.getMinNumberOfCharacter(),
-                                paymentTransactionTypeDto.getDefaultRemark()
+                                paymentTransactionTypeDto.getDefaultRemark(),
+                                paymentTransactionTypeDto.getDefaults()
                         ));
                     }
                 }
+
                 case MANAGE_HOTEL -> {//
                     for (ManageHotelDto hotelDto : this.manageHotelService.findAllToReplicate()) {
                         this.replicateManageHotelService.create(new ReplicateManageHotelKafka(
@@ -195,7 +199,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 hotelDto.getName(), 
                                 hotelDto.getIsApplyByVCC(), 
                                 hotelDto.getManageTradingCompanies() != null ? hotelDto.getManageTradingCompanies().getId() : null, 
-                                hotelDto.getStatus().name(), 
+                                hotelDto.getStatus().name(),
+                                hotelDto.getRequiresFlatRate(),
                                 hotelDto.getIsVirtual()
                         ));
                     }

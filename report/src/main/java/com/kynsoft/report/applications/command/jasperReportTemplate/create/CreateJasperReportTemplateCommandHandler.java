@@ -2,11 +2,13 @@ package com.kynsoft.report.applications.command.jasperReportTemplate.create;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.rules.jasperReport.ManageJasperReportCodeMustBeUniqueRule;
 import com.kynsoft.report.domain.rules.jasperReport.ManageReportCodeMustBeNullRule;
 import com.kynsoft.report.domain.rules.jasperReport.ManageReportNameMustBeNullRule;
 import com.kynsoft.report.domain.rules.jasperReport.ManageReportParentIndexMustBeNullRule;
+import com.kynsoft.report.domain.services.IDBConectionService;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 import org.springframework.stereotype.Component;
 
@@ -15,8 +17,11 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
 
     private final IJasperReportTemplateService service;
 
-    public CreateJasperReportTemplateCommandHandler(IJasperReportTemplateService service) {
+    private final IDBConectionService conectionService;
+
+    public CreateJasperReportTemplateCommandHandler(IJasperReportTemplateService service, IDBConectionService conectionService) {
         this.service = service;
+        this.conectionService = conectionService;
     }
 
     @Override
@@ -27,6 +32,7 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
         RulesChecker.checkRule(new ManageReportParentIndexMustBeNullRule(command.getParentIndex()));
         RulesChecker.checkRule(new ManageJasperReportCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
+        DBConectionDto conectionDto = this.conectionService.findById(command.getDbConection());
         this.service.create(new JasperReportTemplateDto(
                 command.getId(), 
                 command.getCode(), 
@@ -47,7 +53,8 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
                 command.getCancel(),
                 command.getRootIndex(),
                 command.getLanguage(),
-                command.getStatus()
+                command.getStatus(),
+                conectionDto
         ));
     }
 }

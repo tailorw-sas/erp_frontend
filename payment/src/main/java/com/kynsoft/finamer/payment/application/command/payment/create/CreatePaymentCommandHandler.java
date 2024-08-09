@@ -145,6 +145,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 0.0,
                 command.getPaymentAmount(),
                 command.getRemark(),
+                null,
                 null
         );
 
@@ -152,10 +153,10 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         if (command.getAttachments() != null) {
             paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto));
             this.createAttachmentStatusHistory(employeeDto, paymentDto);
-            this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
+            //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
 
-        //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
+        this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
     }
 
     //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status

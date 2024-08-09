@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.application.command.manageBankAccount.create;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import lombok.Getter;
@@ -15,12 +16,15 @@ public class CreateManageBankAccountCommand implements ICommand {
     private String accountNumber;
     private String status;
     private String nameOfBank;
+    private UUID manageBank;
+    private UUID manageHotel;
 
-    public CreateManageBankAccountCommand(UUID id, String accountNumber, String status, String nameOfBank) {
+    public CreateManageBankAccountCommand(UUID id, String accountNumber, String status, String nameOfBank,UUID manageHotel) {
         this.id = id;
         this.accountNumber = accountNumber;
         this.status = status;
         this.nameOfBank = nameOfBank;
+        this.manageHotel=manageHotel;
     }
 
     @Override

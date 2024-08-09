@@ -1,6 +1,7 @@
 package com.kynsoft.report.applications.query.jasperreporttemplate.getbyid;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsoft.report.applications.query.dbconection.getById.DBConectionResponse;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
 import com.kynsoft.report.domain.dto.status.Status;
@@ -39,6 +40,7 @@ public class JasperReportTemplateResponse implements IResponse {
     private Boolean cancel;
     private String rootIndex;
     private String language;
+    private DBConectionResponse dbConection;
 
     public JasperReportTemplateResponse(JasperReportTemplateDto jasperReportTemplateDto) {
         this.id = jasperReportTemplateDto.getId();
@@ -63,6 +65,7 @@ public class JasperReportTemplateResponse implements IResponse {
         this.rootIndex = jasperReportTemplateDto.getRootIndex();
         this.language = jasperReportTemplateDto.getLanguage();
         this.status = jasperReportTemplateDto.getStatus();
+        this.dbConection = jasperReportTemplateDto.getDbConection() != null ? new DBConectionResponse(jasperReportTemplateDto.getDbConection()) : null;
     }
 
 }

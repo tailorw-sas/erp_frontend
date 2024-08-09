@@ -15,6 +15,7 @@ import java.util.UUID;
 public class PaymentStatusHistoryDto {
 
     private UUID id;
+    private Long paymentHistoryId;
     private String status;
     private PaymentDto payment;
     private ManageEmployeeDto employee;

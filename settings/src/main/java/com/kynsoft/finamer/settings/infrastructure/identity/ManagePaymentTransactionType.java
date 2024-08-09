@@ -41,6 +41,7 @@ public class ManagePaymentTransactionType implements Serializable {
     @Column(nullable = true)
     private Boolean applyDeposit;
     private Boolean defaults;
+    private Boolean antiToIncome;
 
     private Integer minNumberOfCharacter;
     private String defaultRemark;
@@ -72,6 +73,7 @@ public class ManagePaymentTransactionType implements Serializable {
         this.deposit = dto.getDeposit();
         this.applyDeposit = dto.getApplyDeposit();
         this.defaults = dto.getDefaults();
+        this.antiToIncome = dto.getAntiToIncome();
     }
 
     public ManagePaymentTransactionTypeDto toAggregate(){
@@ -84,7 +86,8 @@ public class ManagePaymentTransactionType implements Serializable {
                 defaultRemark,
                 deposit,
                 applyDeposit,
-                defaults
+                defaults,
+                antiToIncome
         );
     }
 

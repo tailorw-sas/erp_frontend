@@ -4,8 +4,7 @@ import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -33,7 +32,7 @@ public class PaymentDetailResponse implements IResponse {
 
     private Double bookingId;
     private String invoiceId;
-    private LocalDate transactionDate;
+    private OffsetDateTime transactionDate;
     private String firstName;
     private String lastName;
     private String reservation;
@@ -41,7 +40,7 @@ public class PaymentDetailResponse implements IResponse {
     private Integer adults;
     private Integer childrens;
     private Double childrenTotalValue = 0.0;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
     private Double applyDepositValue;
     private Boolean hasApplyDeposit;
 

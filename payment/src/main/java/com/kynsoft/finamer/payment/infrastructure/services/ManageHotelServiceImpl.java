@@ -89,7 +89,7 @@ public class ManageHotelServiceImpl implements IManageHotelService {
 
     @Override
     public boolean existByCode(String hotelCode) {
-        return repositoryQuery.existsByCodeAndStatus( hotelCode,Status.ACTIVE.name());
+        return repositoryQuery.existsByCode( hotelCode);
     }
 
     @Override

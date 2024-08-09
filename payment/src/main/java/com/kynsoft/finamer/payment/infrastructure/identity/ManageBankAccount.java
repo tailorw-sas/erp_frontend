@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -24,15 +25,19 @@ public class ManageBankAccount implements Serializable {
     private String accountNumber;
     private String status;
     private String nameOfBank;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hotel_id")
+    private ManageHotel manageHotel;
 
     public ManageBankAccount(ManageBankAccountDto dto) {
         this.id = dto.getId();
         this.accountNumber = dto.getAccountNumber();
         this.status = dto.getStatus();
         this.nameOfBank = dto.getNameOfBank();
+        this.manageHotel = Objects.nonNull(dto.getManageHotelDto())? new ManageHotel(dto.getManageHotelDto()):null;
     }
 
     public ManageBankAccountDto toAggregate(){
-        return new ManageBankAccountDto(id, accountNumber, status, nameOfBank);
+        return new ManageBankAccountDto(id, accountNumber, status, nameOfBank, Objects.nonNull(manageHotel)?manageHotel.toAggregate():null);
     }
 }

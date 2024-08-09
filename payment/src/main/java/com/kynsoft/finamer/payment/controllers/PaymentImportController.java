@@ -4,9 +4,7 @@ import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
-import com.kynsoft.finamer.payment.application.query.paymentImport.payment.PaymentImportStatusQuery;
 import com.kynsoft.finamer.payment.application.query.paymentImport.payment.PaymentImportSearchErrorQuery;
-import com.kynsoft.finamer.payment.application.query.paymentImport.payment.PaymentImportStatusResponse;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EImportPaymentType;
 import org.aspectj.bridge.IMessage;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -54,11 +52,11 @@ public class PaymentImportController {
 
                 } );
     }
-    @GetMapping("/import-status/{importProcessId}")
-    public ResponseEntity<PaymentImportStatusResponse> importPaymentStatus(@PathVariable("importProcessId") String importProcessId){
-        PaymentImportStatusQuery paymentImportStatusQuery = new PaymentImportStatusQuery(importProcessId);
-        return ResponseEntity.ok(mediator.send(paymentImportStatusQuery));
-    }
+//    @GetMapping("/import-status/{importProcessId}")
+//    public ResponseEntity<PaymentImportStatusResponse> importPaymentStatus(@PathVariable("importProcessId") String importProcessId){
+//        PaymentImportStatusQuery paymentImportStatusQuery = new PaymentImportStatusQuery(importProcessId);
+//        return ResponseEntity.ok(mediator.send(paymentImportStatusQuery));
+//    }
 
     @PostMapping("/import-search")
     public ResponseEntity<?> importPayment(@RequestBody SearchRequest request){

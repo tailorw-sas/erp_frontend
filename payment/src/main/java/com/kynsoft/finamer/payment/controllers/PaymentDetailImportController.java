@@ -2,15 +2,12 @@ package com.kynsoft.finamer.payment.controllers;
 
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailAttachmentCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailMessage;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
-import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportCommand;
-import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
-import com.kynsoft.finamer.payment.application.query.paymentImport.payment.PaymentImportSearchErrorQuery;
-import com.kynsoft.finamer.payment.application.query.paymentImport.payment.PaymentImportStatusQuery;
-import com.kynsoft.finamer.payment.application.query.paymentImport.payment.PaymentImportStatusResponse;
+import com.kynsoft.finamer.payment.application.query.paymentImport.details.PaymentImportDetailSearchErrorQuery;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EImportPaymentType;
-import org.aspectj.bridge.IMessage;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/payment-detail")
 public class PaymentDetailImportController {
@@ -34,46 +33,86 @@ public class PaymentDetailImportController {
         this.mediator = mediator;
     }
 
-    @PostMapping(value = "/import",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<ResponseEntity<?>> importPayment(@RequestPart("file") FilePart filePart,
-                                                 @RequestPart("totalAmount") String totalAmount,
-                                                 @RequestPart("transactionType") String invoiceTransactionType,
-                                                 @RequestPart("employee") String employee,
-                                                 @RequestPart("importProcessId") String importProcessId,
-                                                 @RequestPart("importType") String eImportPaymentType){
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<ResponseEntity<?>> importPaymentAnti(@RequestPart("file") FilePart filePart,
+                                                     @RequestPart(value = "attachment", required = false) FilePart attachment,
+                                                     @RequestPart(value = "totalAmount", required = false) String totalAmount,
+                                                     @RequestPart(value = "transactionType",required = false) String invoiceTransactionType,
+                                                     @RequestPart("employee") String employee,
+                                                     @RequestPart("importProcessId") String importProcessId,
+                                                     @RequestPart("importType") String eImportPaymentType) {
 
-        return DataBufferUtils.join(filePart.content())
-                .flatMap(dataBuffer -> {
-                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                    dataBuffer.read(bytes);
-                    DataBufferUtils.release(dataBuffer);
-                    PaymentImportDetailRequest paymentImportDetailRequest = new PaymentImportDetailRequest();
-                    paymentImportDetailRequest.setFile(bytes);
-                    paymentImportDetailRequest.setImportProcessId(importProcessId);
-                    paymentImportDetailRequest.setImportPaymentType(EImportPaymentType.valueOf(eImportPaymentType));
-                    paymentImportDetailRequest.setTotalAmount(Integer.parseInt(totalAmount));
-                    paymentImportDetailRequest.setEmployeeId(employee);
-                    paymentImportDetailRequest.setInvoiceTransactionTypeId(invoiceTransactionType);
-                    PaymentImportDetailCommand paymentImportCommand = new PaymentImportDetailCommand(paymentImportDetailRequest);
-                    try {
-                        IMessage message = mediator.send(paymentImportCommand);
-                        return Mono.just(ResponseEntity.ok(message));
-                    }catch (Exception e) {
-                        return Mono.error(e);
-                    }
-                } );
-
-
+        if (EImportPaymentType.ANTI.name().equals(eImportPaymentType)) {
+            return DataBufferUtils.join(filePart.content())
+                    .flatMap(dataBuffer -> {
+                        byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                        dataBuffer.read(bytes);
+                        DataBufferUtils.release(dataBuffer);
+                        PaymentImportDetailRequest paymentImportDetailRequest = new PaymentImportDetailRequest();
+                        paymentImportDetailRequest.setFile(bytes);
+                        paymentImportDetailRequest.setImportProcessId(importProcessId);
+                        paymentImportDetailRequest.setImportPaymentType(EImportPaymentType.valueOf(eImportPaymentType));
+                        paymentImportDetailRequest.setTotalAmount(Double.parseDouble(totalAmount));
+                        paymentImportDetailRequest.setEmployeeId(employee);
+                        paymentImportDetailRequest.setInvoiceTransactionTypeId(invoiceTransactionType);
+                        paymentImportDetailRequest.setAttachment(attachment);
+                        PaymentImportDetailCommand paymentImportCommand = new PaymentImportDetailCommand(paymentImportDetailRequest);
+                        try {
+                            PaymentImportDetailMessage message = mediator.send(paymentImportCommand);
+                            return Mono.just(message);
+                        } catch (Exception e) {
+                            return Mono.error(e);
+                        }
+                    })
+                    .flatMap(message -> DataBufferUtils.join(attachment.content())
+                            .flatMap(dataBuffer -> {
+                                byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                                dataBuffer.read(bytes);
+                                DataBufferUtils.release(dataBuffer);
+                                PaymentImportDetailAttachmentCommand attachmentCommand =
+                                        new PaymentImportDetailAttachmentCommand(bytes, attachment.filename(),
+                                                message.getPaymentId(),
+                                                UUID.fromString(employee),
+                                                String.valueOf(bytes.length));
+                                try {
+                                    mediator.send(attachmentCommand);
+                                    return Mono.just(ResponseEntity.ok(message));
+                                } catch (Exception e) {
+                                    return Mono.error(e);
+                                }
+                            }));
+        } else {
+            return DataBufferUtils.join(filePart.content())
+                    .flatMap(dataBuffer -> {
+                        byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                        dataBuffer.read(bytes);
+                        DataBufferUtils.release(dataBuffer);
+                        PaymentImportDetailRequest paymentImportDetailRequest = new PaymentImportDetailRequest();
+                        paymentImportDetailRequest.setFile(bytes);
+                        paymentImportDetailRequest.setImportProcessId(importProcessId);
+                        paymentImportDetailRequest.setImportPaymentType(EImportPaymentType.valueOf(eImportPaymentType));
+                        paymentImportDetailRequest.setEmployeeId(employee);
+                        paymentImportDetailRequest.setInvoiceTransactionTypeId(invoiceTransactionType);
+                        PaymentImportDetailCommand paymentImportCommand = new PaymentImportDetailCommand(paymentImportDetailRequest);
+                        try {
+                            PaymentImportDetailMessage message = mediator.send(paymentImportCommand);
+                            return Mono.just(ResponseEntity.ok(message));
+                        } catch (Exception e) {
+                            return Mono.error(e);
+                        }
+                    });
+        }
     }
-    @GetMapping("/import-status/{importProcessId}")
-    public ResponseEntity<PaymentImportStatusResponse> importPaymentStatus(@PathVariable("importProcessId") String importProcessId){
-        PaymentImportStatusQuery paymentImportStatusQuery = new PaymentImportStatusQuery(importProcessId);
-        return ResponseEntity.ok(mediator.send(paymentImportStatusQuery));
-    }
+
+//    @GetMapping("/import-status/{importProcessId}")
+//    public ResponseEntity<PaymentImportStatusResponse> importPaymentStatus(@PathVariable("importProcessId") String importProcessId) {
+//        PaymentImportStatusQuery paymentImportStatusQuery = new PaymentImportStatusQuery(importProcessId);
+//        return ResponseEntity.ok(mediator.send(paymentImportStatusQuery));
+//    }
 
     @PostMapping("/import-search")
-    public ResponseEntity<?> importPayment(@RequestBody SearchRequest request){
-        PaymentImportSearchErrorQuery command = new PaymentImportSearchErrorQuery(request);
+    public ResponseEntity<?> importPayment(@RequestBody SearchRequest request) {
+        PaymentImportDetailSearchErrorQuery command = new PaymentImportDetailSearchErrorQuery(request);
         return ResponseEntity.ok(mediator.send(command));
     }
 }

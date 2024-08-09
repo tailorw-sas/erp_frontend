@@ -3,7 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.anti;
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.payment.domain.excel.bean.AntiToIncomeRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import org.springframework.context.ApplicationEventPublisher;
 

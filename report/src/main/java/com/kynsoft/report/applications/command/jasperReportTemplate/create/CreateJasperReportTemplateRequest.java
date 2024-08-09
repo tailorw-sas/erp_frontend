@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -32,4 +34,5 @@ public class CreateJasperReportTemplateRequest {
     private Boolean cancel;
     private String rootIndex;
     private String language;
+    private UUID dbConection;
 }
