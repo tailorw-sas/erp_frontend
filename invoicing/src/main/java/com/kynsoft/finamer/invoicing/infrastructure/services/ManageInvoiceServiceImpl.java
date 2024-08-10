@@ -46,11 +46,11 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         this.repositoryQuery = repositoryQuery;
     }
 
-    public Long getInvoiceNumberSequence(String invoiceNumber){
+    public Long getInvoiceNumberSequence(String invoiceNumber) {
         Long lastInvoiceNo = this.repositoryQuery.findByInvoiceNumber(invoiceNumber);
 
         lastInvoiceNo += 1;
-        return  lastInvoiceNo;
+        return lastInvoiceNo;
     }
 
 
@@ -82,11 +82,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         entity.setInvoiceNumber(invoiceNumber);
         entity.setInvoiceNo(lastInvoiceNo);
         dto.setInvoiceNo(lastInvoiceNo);
-        ManageInvoice saved = repositoryCommand.saveAndFlush(entity);
 
 
-
-        return this.repositoryCommand.save(saved).toAggregate();
+        return this.repositoryCommand.saveAndFlush(entity).toAggregate();
     }
 
     @Override
@@ -111,7 +109,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         for (int i = 0; i < data.size(); i++) {
             ManageInvoiceResponse invoice = data.get(i);
-            rows.add(new ExportInvoiceRow(0, invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", invoice.getInvoiceNumber(), invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "", invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "",  invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "",  invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "",invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus(): "", null));
+            rows.add(new ExportInvoiceRow(0, invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", invoice.getInvoiceNumber(), invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "", invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "", invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "", invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", null));
 
 
         }
@@ -168,7 +166,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
-                new ErrorField("id", "The source not found.")));
+                new ErrorField("id", "The invoice not found.")));
 
     }
 

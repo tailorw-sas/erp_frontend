@@ -24,7 +24,7 @@ public class ManagerCountryCodeSizeRule extends BusinessRule {
     }
 
     private boolean validateCode(String code) {
-        Pattern pattern = Pattern.compile("^[a-zA-Z]{2,5}$");
+        Pattern pattern = Pattern.compile("^[a-zA-Z]{2,20}$");
         Matcher matcher = pattern.matcher(code);
 
         return matcher.matches();

@@ -282,6 +282,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                         status = EInvoiceStatus.SENT;
                 }
 
+
+
                 ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
                                 invoiceNumber,
                                 command.getInvoiceCommand().getInvoiceDate(), command.getInvoiceCommand().getDueDate(),

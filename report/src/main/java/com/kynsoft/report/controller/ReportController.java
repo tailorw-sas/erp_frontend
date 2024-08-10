@@ -6,6 +6,7 @@ import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplate
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeQuery;
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,9 +28,12 @@ public class ReportController {
                 request.getJasperReportCode());
         GenerateTemplateMessage response = mediator.send(command);
 
+        // Return the PDF as a ResponseEntity with headers
         return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(response.getResult());
+
     }
 
 
