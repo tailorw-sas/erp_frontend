@@ -39,6 +39,8 @@ public class JasperReportTemplateDto {
 
     private DBConectionDto dbConection;
 
+    private String query;
+
     public JasperReportTemplateDto(UUID id, String templateCode, String templateName, 
                                    String templateDescription, String templateContentUrl, 
                                    JasperReportTemplateType type, String parameters, 

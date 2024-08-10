@@ -143,8 +143,19 @@ public class ManageInvoice {
 
                 invoiceNumberPrefix = beginInvoiceNumber + "-" + lastInvoiceNumber;
 
-            }else{
+            } else {
                 invoiceNumberPrefix = dto.getInvoiceNumber();
+            }
+
+            if (lastIndex != -1) {
+                try {
+
+                    this.invoiceNo = Long.parseLong(dto.getInvoiceNumber().substring(lastIndex + 1));
+
+
+                } catch (NumberFormatException e) {
+                    invoiceNo = invoiceId;
+                }
             }
         }
 
@@ -166,10 +177,10 @@ public class ManageInvoice {
                 invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, bookings != null ? bookings.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, attachments != null ? attachments.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null,
+            return b.toAggregateSample();
+        }).collect(Collectors.toList()) : null, attachments != null ? attachments.stream().map(b -> {
+            return b.toAggregateSample();
+        }).collect(Collectors.toList()) : null,
                 reSend,
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
@@ -181,36 +192,8 @@ public class ManageInvoice {
         if (dueAmount == null) {
             dueAmount = 0.0;
         }
-        if (invoiceNo == null && invoiceNumber != null) {
-            int lastHyphenIndex = invoiceNumber.lastIndexOf('-');
 
-            if (lastHyphenIndex == -1) {
-                invoiceNo = invoiceId;
-            } else {
-                String numberPart = invoiceNumber.substring(lastHyphenIndex + 1);
-                try {
 
-                    invoiceNo = Long.parseLong(numberPart);
-
-                } catch (NumberFormatException e) {
-                    invoiceNo = invoiceId;
-                }
-            }
-
-        }
-
-        if (invoiceNumber != null) {
-            int firstIndex = invoiceNumber.indexOf("-");
-            int lastIndex = invoiceNumber.lastIndexOf("-");
-
-            if (firstIndex != -1 && lastIndex != -1 && firstIndex != lastIndex) {
-                String beginInvoiceNumber = invoiceNumber.substring(0, firstIndex);
-                String lastInvoiceNumber = invoiceNumber.substring(lastIndex + 1, invoiceNumber.length());
-
-                invoiceNumber = beginInvoiceNumber + "-" + lastInvoiceNumber;
-
-            }
-        }
     }
 
 }

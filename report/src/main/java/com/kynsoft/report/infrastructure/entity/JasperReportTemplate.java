@@ -47,6 +47,8 @@ public class JasperReportTemplate extends BaseEntity {
     private String rootIndex;
     private String language;
 
+    private String query;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "db_conection_id", nullable = true)
     private DBConection dbConection;
@@ -108,7 +110,8 @@ public class JasperReportTemplate extends BaseEntity {
                 cancel,
                 rootIndex,
                 language,
-                conectionDto
+                conectionDto,
+                query
         );
     }
 

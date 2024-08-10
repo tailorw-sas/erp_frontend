@@ -13,9 +13,9 @@ public class CalculateInvoiceAmountCommandHandler implements ICommandHandler<Cal
     private final IManageBookingService bookingService;
     private final IManageRoomRateService rateService;
 
-    
+
     public CalculateInvoiceAmountCommandHandler(IManageInvoiceService service, IManageBookingService bookingService,
-            IManageRoomRateService rateService) {
+                                                IManageRoomRateService rateService) {
         this.service = service;
         this.bookingService = bookingService;
         this.rateService = rateService;
@@ -26,12 +26,16 @@ public class CalculateInvoiceAmountCommandHandler implements ICommandHandler<Cal
     public void handle(CalculateInvoiceAmountCommand command) {
 
 
+        try {
+            for (int i = 0; i < command.getBookings().size(); i++) {
+                this.bookingService.calculateInvoiceAmount(this.bookingService.findById(command.getBookings().get(i)));
+            }
 
-    for (int i = 0; i < command.getBookings().size(); i++) {
-            this.bookingService.calculateInvoiceAmount(this.bookingService.findById( command.getBookings().get(i)));
-    }
+            this.service.calculateInvoiceAmount(this.service.findById(command.getId()));
+        } catch (Exception ignored) {
 
-    this.service.calculateInvoiceAmount(this.service.findById(command.getId()));
+        }
+
 
     }
 
