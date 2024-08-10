@@ -6,13 +6,14 @@ on:
     branches:
       - 'dev'
       - 'qa'
-
+    paths:
+      - .github/workflows/share.yml
+      - 'share/**'
 env:
   BRANCH_NAME: ${{github.ref_name}}
-  
+ 
 jobs:
-  build:
-
+  publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -23,6 +24,7 @@ jobs:
         run: echo "POM_NAME=pom-$BRANCH_NAME.xml" >> $GITHUB_ENV
               
       - uses: actions/checkout@v4
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
@@ -36,8 +38,8 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/${{POM_NAME}}') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-        
-      - name: Publish to GitHub Packages Apache Maven
+
+      - name: Publish package
         run: cd share && mvn --batch-mode -f ${POM_NAME} deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

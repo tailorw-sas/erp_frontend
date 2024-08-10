@@ -6,6 +6,7 @@ pipeline {
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-credit-card:version'
         SRC = 'creditCard'
+        SRC_SHARE = 'share'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
         NAMESPACE = 'finamer'
@@ -26,15 +27,27 @@ pipeline {
             steps {
                 echo '* * * * STAGE: Checking for changes in a specific project * * * * '
                 script {
+                    /*
+                    def folderPaths = [env.SRC, env.SRC_SHARE]
+                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                    def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
+                    if (changesInFolder) {
+                        echo "Changes detected in folders: ${SRC} y ${SRC_SHARE}"
+                    } else {
+                        echo "* * * * * * * * No changes detected in folders: ${SRC} y ${SRC_SHARE} * * * * * * * *"
+                        currentBuild.result = 'NOT_BUILT'
+                        error('No changes detected in folders: $SRC y $SRC_SHARE' )
+                    }
+                    */
                     def folderPath = env.SRC
                     def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
                     def changesInFolder = changes.findAll { it.startsWith(folderPath) }
                     if (changesInFolder) {
-                        echo "Changes detected in folder: ${folderPath}"
+                        echo "Changes detected in folder: $SRC"
                     } else {
                         echo "* * * * * * * * No changes detected in folder: ${folderPath} * * * * * * * *"
                         currentBuild.result = 'NOT_BUILT'
-                        error('No changes detected in folder: ${folderPath}')
+                        error('No changes detected in folder: $SRC')
                     }
                 }
             }
@@ -67,7 +80,7 @@ pipeline {
             steps {
                 echo '* * * * STAGE: Creating docker image * * * *'
                 dir("${SRC}"){
-                    sh 'docker build -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom-$BRANCH_NAME.xml .'
+                    sh 'docker build --no-cache -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom-$BRANCH_NAME.xml .'
                     withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
                         sh 'docker push $DOCKER_IMAGE'
                     }

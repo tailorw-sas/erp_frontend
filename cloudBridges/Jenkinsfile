@@ -6,6 +6,7 @@ pipeline {
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-cloud-bridges:version'
         SRC = 'cloudBridges'
+        SRC_SHARE = 'share'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
         NAMESPACE = 'finamer'
@@ -21,9 +22,52 @@ pipeline {
     }
     
     stages {
-        stage ('Init') {
+
+        stage ('Check for a specific project...') {
             steps {
-                echo 'Initializing...'
+                echo 'Identifying project...'
+                script {
+                    /*
+                    def folderPaths = [env.SRC, env.SRC_SHARE]
+                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                    def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
+                    if (changesInFolder) {
+                        echo "Changes detected in folders: ${SRC} y ${SRC_SHARE}"
+                    } else {
+                        echo "* * * * * * * * No changes detected in folders: ${SRC} y ${SRC_SHARE} * * * * * * * *"
+                        currentBuild.result = 'NOT_BUILT'
+                        error('No changes detected in folders: $SRC y $SRC_SHARE' )
+                    }*/
+
+                    def jsonPayload = params.JSON_PAYLOAD ?: ''
+                    
+                    if (jsonPayload) {
+                        // Parsear el JSON
+                        def json = readJSON text: jsonPayload
+                    
+                        echo "JSON: ${json}"
+                    } else {
+                        echo "No JSON payload received"
+                    }
+                    
+                    def folderPath = env.SRC
+                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                    def changesInFolder = changes.findAll { it.startsWith(folderPath) }
+                    if (changesInFolder) {
+                        echo "Changes detected in folder: ${folderPath}"
+                    } else {
+                        echo "* * * * * * * * No changes detected in folder: ${folderPath} * * * * * * * *"
+                        currentBuild.result = 'NOT_BUILT'
+                        error('No changes detected in folder: ${folderPath}')
+                    }
+
+                }
+            }
+        }
+        
+        stage ('Initialize variables') {
+            steps {
+                echo '* * * * STAGE: Initializing variables * * * *'
                 script {   
                     def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
                     env.BRANCH_NAME = branch
@@ -44,28 +88,11 @@ pipeline {
             }
         }
 
-        stage ('Check for a specific project...') {
-            steps {
-                echo 'Identifying project...'
-                script {
-                    def folderPath = env.SRC
-                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
-                    def changesInFolder = changes.findAll { it.startsWith(folderPath) }
-                    if (changesInFolder) {
-                        echo "Changes detected in folder: ${folderPath}"
-                    } else {
-                        echo "* * * * * * * * No changes detected in folder: ${folderPath} * * * * * * * *"
-                        currentBuild.result = 'NOT_BUILT'
-                        error('No changes detected in folder: ${folderPath}')
-                    }
-                }
-            }
-        }
-        
         stage ('Create docker image'){
             steps {
+                echo '* * * * STAGE: Creating docker image * * * *'
                 dir("${SRC}"){
-                    sh 'docker build -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom-$BRANCH_NAME.xml .'
+                    sh 'docker build --no-cache -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom-$BRANCH_NAME.xml .'
                     withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
                         sh 'docker push $DOCKER_IMAGE'
                     }
@@ -75,6 +102,7 @@ pipeline {
 
         stage ('Publish to Kubernetes') {
             steps {
+                echo '* * * * STAGE: Publishing to kubernetes * * * *'
                 withKubeConfig(credentialsId: "${SERVER_K3S_CREDENTIALS}", namespace: "${NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: "${SERVER_K3S_URL}") {
                     //sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
