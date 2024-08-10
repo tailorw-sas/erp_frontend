@@ -20,5 +20,4 @@ public interface ModuleReadDataJPARepository extends JpaRepository<ModuleSystem,
     @Query("SELECT COUNT(b) FROM ModuleSystem b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
-    ModuleSystem findByCode(String code);
 }
