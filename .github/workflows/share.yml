@@ -49,5 +49,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Trigger-jenkins
-        run: curl -X POST "${JENKINS_URL}/job/${JENKINS_JOB_NAME}/build" --user "${JENKINS_USER}:${JENKINS_API_TOKEN}"
+        run: curl -X POST "${JENKINS_URL}/job/${JENKINS_JOB_NAME}/job/${BRANCH_NAME}/build" --user "${JENKINS_USER}:${JENKINS_API_TOKEN}"
     
