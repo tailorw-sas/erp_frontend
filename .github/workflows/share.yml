@@ -47,7 +47,11 @@ jobs:
         run: cd share && mvn --batch-mode -f ${POM_NAME} deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
+      - name: Get Jenkins Crumb
+        id: get_crumb
+        run: CRUMB=$(curl -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" -s '${JENKINS_URL}/crumbIssuer/api/json' | jq -r '.crumb')
+        
       - name: Trigger-jenkins
-        run: curl -X POST "${JENKINS_URL}/job/ERP%20System/job/Backend/job/${JENKINS_JOB_NAME}/build?token=${JENKINS_API_TOKEN}"
+        run: curl -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" -H "Jenkins-Crumb:$CRUMB" -X POST "${JENKINS_URL}/job/ERP%20System/job/Backend/job/${JENKINS_JOB_NAME}/build?token=${JENKINS_API_TOKEN}"
         
