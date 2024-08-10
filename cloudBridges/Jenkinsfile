@@ -22,9 +22,31 @@ pipeline {
     }
     
     stages {
-        stage ('Init') {
+
+        stage ('Check for a specific project...') {
             steps {
-                echo 'Initializing...'
+                echo 'Identifying project...'
+                script {
+                    //def folderPath = env.SRC
+                    def folderPaths = [env.SRC, env.SRC_SHARE]
+                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                    //def changesInFolder = changes.findAll { it.startsWith(folderPath) }
+                    def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
+                    
+                    if (changesInFolder) {
+                        echo "Changes detected in folders: ${SRC} y ${SRC_SHARE}"
+                    } else {
+                        echo "* * * * * * * * No changes detected in folders: ${SRC} y ${SRC_SHARE} * * * * * * * *"
+                        currentBuild.result = 'NOT_BUILT'
+                        error('No changes detected in folders: $SRC y $SRC_SHARE' )
+                    }
+                }
+            }
+        }
+        
+        stage ('Initialize variables') {
+            steps {
+                echo '* * * * STAGE: Initializing variables * * * *'
                 script {   
                     def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
                     env.BRANCH_NAME = branch
@@ -45,29 +67,9 @@ pipeline {
             }
         }
 
-        stage ('Check for a specific project...') {
-            steps {
-                echo 'Identifying project...'
-                script {
-                    //def folderPath = env.SRC
-                    def folderPaths = [env.SRC, env.SRC_SHARE]
-                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
-                    //def changesInFolder = changes.findAll { it.startsWith(folderPath) }
-                    def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
-                    
-                    if (changesInFolder) {
-                        echo "Changes detected in folders: ${SRC} y ${SRC_SHARE}"
-                    } else {
-                        echo "* * * * * * * * No changes detected in folders: ${SRC} y ${SRC_SHARE} * * * * * * * *"
-                        currentBuild.result = 'NOT_BUILT'
-                        error('No changes detected in folders: $SRC' y $SRC_SHARE)
-                    }
-                }
-            }
-        }
-        
         stage ('Create docker image'){
             steps {
+                echo '* * * * STAGE: Creating docker image * * * *'
                 dir("${SRC}"){
                     sh 'docker build -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom-$BRANCH_NAME.xml .'
                     withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
@@ -79,6 +81,7 @@ pipeline {
 
         stage ('Publish to Kubernetes') {
             steps {
+                echo '* * * * STAGE: Publishing to kubernetes * * * *'
                 withKubeConfig(credentialsId: "${SERVER_K3S_CREDENTIALS}", namespace: "${NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: "${SERVER_K3S_URL}") {
                     //sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
