@@ -962,32 +962,43 @@ onMounted(async () => {
               :night-type-required="nightTypeRequired" />
             <div>
               <div class="flex justify-content-end">
-                <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll" @click="() => {
-        saveItem(props.item.fieldValues)
-      }" />
+                <IfCan :perms="['INVOICE-MANAGEMENT:EDIT']">
+                  <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll" @click="() => {
+                      saveItem(props.item.fieldValues)
+                    }" />
+                </IfCan>
+
+                <IfCan :perms="['INVOICE-MANAGEMENT:PRINT']">
                 <Button v-tooltip.top="'Print'" class="w-3rem mx-1" icon="pi pi-print" :loading="loadingSaveAll"
                   :disabled="!item.hasAttachments" @click="() => {
-        exportAttachmentsDialogOpen = true
-      }" />
+                    exportAttachmentsDialogOpen = true
+                  }" />
+                </IfCan>  
 
-                <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                  :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" />
-                <Button v-tooltip.top="'Show History'" class="w-3rem mx-1" :loading="loadingSaveAll"
-                  @click="handleAttachmentHistoryDialogOpen()" :disabled="!item?.hasAttachments">
-                  <template #icon>
-                    <span class="flex align-items-center justify-content-center p-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px"
-                        fill="#e8eaed">
-                        <path
-                          d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" />
-                      </svg>
-                    </span>
-                  </template>
-                </Button>
+                <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
+                  <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
+                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" />
+                  </IfCan>
+                  <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-SHOW-HISTORY']"> 
+                    <Button v-tooltip.top="'Show History'" class="w-3rem mx-1" :loading="loadingSaveAll"
+                      @click="handleAttachmentHistoryDialogOpen()" :disabled="!item?.hasAttachments">
+                      <template #icon>
+                        <span class="flex align-items-center justify-content-center p-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px"
+                            fill="#e8eaed">
+                            <path
+                              d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" />
+                          </svg>
+                        </span>
+                      </template>
+                    </Button>
+                  </IfCan>
 
-                <Button v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                  :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME
-        " />
+                <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-CREATE']">
+                  <Button v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
+                    :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME" />
+                </IfCan>
+                
                 <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === InvoiceType.INCOME" class="w-3rem ml-1"
                   disabled icon="pi pi-download" />
 

@@ -657,7 +657,7 @@ async function createItem(item: { [key: string]: any }) {
     if (response && response.id) {
       // Guarda el id del elemento creado
       idItem.value = response.id
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The INC-id ${response.invoiceId ?? ''} was created successful`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice INC-${response.invoiceId ?? ''} was created successful`, life: 10000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })

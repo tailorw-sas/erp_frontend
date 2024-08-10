@@ -9,6 +9,11 @@ import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import type { MenuItem } from '~/components/menu/MenuItems'
 // VARIABLES -----------------------------------------------------------------------------------------
+
+const authStore = useAuthStore()
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
+
 const listItems = ref<any[]>([])
 const newManualTransactionDialogVisible = ref(false)
 const newAdjustmentTransactionDialogVisible = ref(false)
@@ -123,14 +128,22 @@ const sClassMap: IStatusClass[] = [
 ]
 ////
 
+const computedShowMenuItemManualTransaction = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
+})
+
+const computedShowMenuItemAdjustmentTransaction = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:ADJUSTMENT-TRANSACTION'])))
+})
+
 const createItems: Array<MenuItem> = ref([{
   label: 'Manual Transaction',
   command: () => openNewManualTransactionDialog(),
-  disabled: false
+  disabled: computedShowMenuItemManualTransaction.value
 }, {
   label: 'Adjustment Transaction',
   command: () => openNewAdjustmentTransactionDialog(),
-  disabled: false
+  disabled: computedShowMenuItemAdjustmentTransaction.value
 }])
 
 // -------------------------------------------------------------------------------------------------------
@@ -673,6 +686,7 @@ async function onRowRightClick(event: any) {
   await findMenuItems(contextMenuTransaction.value.status)
   if (menuListItems.value.length > 0) {
     setRefundAvailable(contextMenuTransaction.value.permitRefund)
+
     contextMenu.value.show(event.originalEvent)
   }
 }
@@ -734,7 +748,7 @@ onMounted(() => {
               <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
-                    <label class="filter-label" for="">Merchant:</label>
+                    <label class="filter-label font-bold" for="">Merchant:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
@@ -756,7 +770,7 @@ onMounted(() => {
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <label class="filter-label" for="">Hotel:</label>
+                    <label class="filter-label font-bold" for="">Hotel:</label>
                     <div class="w-full">
                       <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
@@ -782,7 +796,7 @@ onMounted(() => {
               <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label" for="">CC Type:</label>
+                    <label class="filter-label font-bold" for="">CC Type:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
@@ -803,7 +817,7 @@ onMounted(() => {
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <label class="filter-label" for="">Status:</label>
+                    <label class="filter-label font-bold" for="">Status:</label>
                     <div class="w-full">
                       <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
@@ -829,7 +843,7 @@ onMounted(() => {
               <div class="col-12 md:col-6 lg:col-2 flex pb-0">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label" for="">From:</label>
+                    <label class="filter-label font-bold" for="">From:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <Calendar
                         v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
@@ -838,7 +852,7 @@ onMounted(() => {
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <label class="filter-label" for="">To:</label>
+                    <label class="filter-label font-bold" for="">To:</label>
                     <div class="w-full">
                       <Calendar
                         v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
@@ -853,7 +867,7 @@ onMounted(() => {
                   <div class="flex flex-row w-full">
                     <div class="flex flex-column gap-2 w-full">
                       <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                        <label class="filter-label" for="">Criteria:</label>
+                        <label class="filter-label font-bold" for="">Criteria:</label>
                         <div class="w-full">
                           <Dropdown
                             v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
@@ -862,7 +876,7 @@ onMounted(() => {
                         </div>
                       </div>
                       <div class="flex align-items-center gap-2">
-                        <label class="filter-label" for="">Search:</label>
+                        <label class="filter-label font-bold" for="">Search:</label>
                         <div class="w-full">
                           <IconField icon-position="left">
                             <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />

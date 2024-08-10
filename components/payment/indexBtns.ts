@@ -30,15 +30,24 @@ const items = ref([
   {
     items: [
       {
+        id: 'payment',
         label: 'Payment',
         command: () => window.open('/payment/form', '_blank'),
+        disabled: true,
+        permission: ['PAYMENT-MANAGEMENT:CREATE'],
       },
       {
+        id: 'income',
         label: 'Income',
         command: () => window.open('/payment/income?type=INCOME', '_blank'),
+        disabled: false,
+        permission: [],
       },
       {
+        id: 'group',
         label: 'Group',
+        disabled: false,
+        permission: [],
       }
     ]
   }
@@ -76,7 +85,7 @@ export const itemMenuList = ref<MenuItem[]>([
     menuId: 'overlay_menu1',
     menuRef: null as MenuRefType,
     menuItems: items.value,
-    permission: ['PAYMENT-MANAGEMENT:CREATE'],
+    permission: ['PAYMENT-MANAGEMENT:SHOW-BTN-NEW'],
     showBtn: () => true
     // Object.prototype.hasOwnProperty.call(options.value, 'showCreate') ? options.value?.showCreate : true,
   },
