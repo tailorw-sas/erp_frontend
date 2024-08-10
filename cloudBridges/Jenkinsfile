@@ -6,6 +6,7 @@ pipeline {
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-cloud-bridges:version'
         SRC = 'cloudBridges'
+        SRC_SHARE = 'share'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
         NAMESPACE = 'finamer'
@@ -48,9 +49,12 @@ pipeline {
             steps {
                 echo 'Identifying project...'
                 script {
-                    def folderPath = env.SRC
+                    //def folderPath = env.SRC
+                    def folderPaths = [env.SRC, env.SRC_SHARE]
                     def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
-                    def changesInFolder = changes.findAll { it.startsWith(folderPath) }
+                    //def changesInFolder = changes.findAll { it.startsWith(folderPath) }
+                    def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
+                    
                     if (changesInFolder) {
                         echo "Changes detected in folder: ${folderPath}"
                     } else {
