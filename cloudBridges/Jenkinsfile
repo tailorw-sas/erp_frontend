@@ -56,11 +56,11 @@ pipeline {
                     def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
                     
                     if (changesInFolder) {
-                        echo "Changes detected in folder: ${folderPath}"
+                        echo "Changes detected in folders: ${SRC} y ${SRC_SHARE}"
                     } else {
-                        echo "* * * * * * * * No changes detected in folder: ${folderPath} * * * * * * * *"
+                        echo "* * * * * * * * No changes detected in folders: ${SRC} y ${SRC_SHARE} * * * * * * * *"
                         currentBuild.result = 'NOT_BUILT'
-                        error('No changes detected in folder: ${folderPath}')
+                        error('No changes detected in folders: $SRC' y $SRC_SHARE)
                     }
                 }
             }
