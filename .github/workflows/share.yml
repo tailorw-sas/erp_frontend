@@ -11,6 +11,10 @@ on:
       - 'share/**'
 env:
   BRANCH_NAME: ${{github.ref_name}}
+  JENKINS_URL: ${{ vars.JENKINS_URL }}
+  JENKINS_USER: ${{ secrets.JENKINS_USER }}
+  JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
+  JENKINS_JOB_NAME: ${{ vars.JENKINS_JOB_NAME }}
   
 jobs:
   publish:
@@ -43,3 +47,7 @@ jobs:
         run: cd share && mvn --batch-mode -f ${POM_NAME} deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Trigger-jenkins
+        run: curl -X POST "${JENKINS_URL}/job/${JENKINS_JOB_NAME}/build" --user "${JENKINS_USER}:${JENKINS_API_TOKEN}"
+    
