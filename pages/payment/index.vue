@@ -13,6 +13,10 @@ import { itemMenuList } from '~/components/payment/indexBtns'
 import IfCan from '~/components/auth/IfCan.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
+const authStore = useAuthStore()
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
+
 const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
 const listItems = ref<any[]>([])
 const clientItemsList = ref<any[]>([])
@@ -576,6 +580,28 @@ const disabledDates = computed(() => {
   return filterAllDateRange.value
 })
 
+function toggle(event: Event, index: number) {
+  const menu: any = itemMenuList.value[index].menuRef
+  if (menu) {
+    menu.toggle(event)
+  }
+  else {
+    console.error('Menu reference is not defined or initialized.')
+  }
+}
+
+function havePermissionMenu() {
+  for (const rootMenu of itemMenuList.value) {
+    if (rootMenu.menuItems.length > 0) {
+      for (const childMenu of rootMenu.menuItems[0].items) {
+        if (childMenu?.permission && childMenu?.permission?.length > 0) {
+          (status.value === 'authenticated' && (isAdmin || authStore.can(childMenu.permission))) ? childMenu.disabled = false : childMenu.disabled = true
+        }
+      }
+    }
+  }
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -602,6 +628,8 @@ watch(filterToSearch, (newValue) => {
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(async () => {
+  havePermissionMenu()
+
   startOfMonth.value = getMonthStartAndEnd(new Date()).startOfMonth
   endOfMonth.value = getMonthStartAndEnd(new Date()).endOfMonth
   filterToSearch.value.from = dayjs(startOfMonth.value).format('YYYY-MM-DD')
@@ -618,16 +646,6 @@ onMounted(async () => {
   filterToSearch.value.status = statusItemsList.value.filter((item: { id: string, name: string, status?: string }) => item.name === 'Applied' || item.name === 'Confirmed')
 })
 // -------------------------------------------------------------------------------------------------------
-
-function toggle(event: Event, index: number) {
-  const menu: any = itemMenuList.value[index].menuRef
-  if (menu) {
-    menu.toggle(event)
-  }
-  else {
-    console.error('Menu reference is not defined or initialized.')
-  }
-}
 </script>
 
 <template>
@@ -637,7 +655,7 @@ function toggle(event: Event, index: number) {
     </h3>
     <div class="flex justify-content-end px-0">
       <span v-for="(objBtnAndMenu, index) in itemMenuList" :key="index">
-        <IfCan :perms="objBtnAndMenu?.permission?.length > 0 ? objBtnAndMenu.permission : []">
+        <IfCan :perms="objBtnAndMenu.permission && objBtnAndMenu?.permission?.length > 0 ? objBtnAndMenu.permission : []">
           <div v-if="objBtnAndMenu.showBtn()" class="my-2 flex justify-content-end pl-2 pr-0">
             <Button
               v-tooltip.left="objBtnAndMenu.btnToolTip"

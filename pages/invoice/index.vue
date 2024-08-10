@@ -19,6 +19,9 @@ import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.v
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
+const authStore = useAuthStore()
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
 const menu = ref()
 const menu_import = ref()
 const toast = useToast()
@@ -93,6 +96,22 @@ const confinvoiceTypeListtApi = reactive({
   uriApi: 'manage-invoice-type',
 })
 
+const computedShowMenuItemNewCedit = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CREDIT-CREATE'])))
+})
+const computedShowMenuItemShowHistory = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-SHOW-HISTORY'])))
+})
+
+const computedShowMenuItemAttachment = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']) || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'])) )
+})
+
+const computedShowMenuItemPrint = computed(() => {
+  return !( status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:PRINT'])))
+})
+
+
 const invoiceContextMenu = ref()
 const invoiceAllContextMenuItems = ref([
   {
@@ -108,12 +127,14 @@ const invoiceAllContextMenuItems = ref([
       navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
     },
     default: true,
+    disabled: computedShowMenuItemNewCedit
   },
   {
     label: 'Status History',
     icon: 'pi pi-file',
     command: handleAttachmentHistoryDialogOpen,
     default: true,
+    disabled: computedShowMenuItemShowHistory
   },
   {
     label: 'Document',
@@ -122,6 +143,7 @@ const invoiceAllContextMenuItems = ref([
       attachmentDialogOpen.value = true
     },
     default: true,
+    disabled: computedShowMenuItemAttachment
   },
   {
     label: 'Print',
@@ -132,6 +154,7 @@ const invoiceAllContextMenuItems = ref([
       }
     },
     default: true,
+    disabled: computedShowMenuItemPrint
   },
 ])
 
@@ -147,19 +170,38 @@ const computedexpandedInvoice = computed(() => {
   return expandedInvoice.value === ''
 })
 
+
+const computedShowMenuItemInvoice = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CREATE'])))
+})
+
+const computedShowMenuItemCredit = computed(() => {
+  if (!authStore.can(['INVOICE-MANAGEMENT:CREATE'])) {
+    return true
+  } else {
+    return expandedInvoice.value === ''
+  }
+})
+
+const computedShowMenuItemOldCredit = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:OLD-CREDIT-CREATE'])))
+})
+
 const createItems = ref([
   {
     label: 'Invoice',
     command: () => navigateTo(`invoice/create?type=${InvoiceType.INVOICE}`, { open: { target: '_blank' } }),
+    disabled: computedShowMenuItemInvoice
   },
   // {
   //   label: 'Credit',
   //   command: () => navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${expandedInvoice.value}`),
-  //   disabled: computedexpandedInvoice
+  //   disabled: computedShowMenuItemCredit
   // },
   {
     label: 'Old Credit',
-    command: () => navigateTo(`invoice/create?type=${InvoiceType.OLD_CREDIT}`, { open: { target: '_blank' } })
+    command: () => navigateTo(`invoice/create?type=${InvoiceType.OLD_CREDIT}`, { open: { target: '_blank' } }),
+    disabled: computedShowMenuItemOldCredit
   },
 ])
 
@@ -213,16 +255,26 @@ const itemTemp = ref<GenericObject>({
 })
 
 // IMPORTS ---------------------------------------------------------------------------------------------
-const itemsMenuImport = [
+const computedShowMenuItemImportBookingFromFile = computed(() => {  
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:IMPORT-BOOKING-FROM-FILE'])))
+})
+
+const computedShowMenuItemImportBookingFromVirtual = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:IMPORT-BOOKING-FROM-VIRTUAL'])))
+})
+
+const itemsMenuImport = ref([
   {
     label: 'Booking From File',
-    command: () => navigateTo('invoice/import', { open: { target: '_blank' } })
+    command: () => navigateTo('invoice/import', { open: { target: '_blank' } }),
+    disabled: computedShowMenuItemImportBookingFromFile
   },
   {
     label: 'Booking From File (Virtual Hotels)',
-    command: () => navigateTo('invoice/import-virtual')
+    command: () => navigateTo('invoice/import-virtual'),
+    disabled: computedShowMenuItemImportBookingFromVirtual
   }
-]
+])
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
@@ -953,7 +1005,7 @@ const legend = ref(
         Invoice Management
       </h3>
       <div class="flex flex-row w-full place-content-center justify-center justify-content-end">
-        <Button v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true"
+        <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-NEW']))" v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true"
           aria-controls="overlay_menu" @click="toggle" />
         <Menu id="overlay_menu" ref="menu" :model="createItems" :popup="true" />
 
@@ -966,7 +1018,7 @@ const legend = ref(
           </template>
         </PopupNavigationMenu>
 
-        <Button v-tooltip.left="'Import'" class="ml-2" label="Import" icon="pi pi-file-import" severity="primary"
+        <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-IMPORT']))" v-tooltip.left="'Import'" class="ml-2" label="Import" icon="pi pi-file-import" severity="primary"
           aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport">
 
         </Button>
@@ -1014,8 +1066,8 @@ const legend = ref(
             <div class="flex gap-4 flex-column lg:flex-row">
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label for="">Client</label>
-                  <label for="">Agency</label>
+                  <label for="" class="font-bold">Client</label>
+                  <label for="" class="font-bold">Agency</label>
                 </div>
 
                 <div class="flex flex-column gap-2 ">
@@ -1077,8 +1129,8 @@ const legend = ref(
 
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label for="">Hotel</label>
-                  <label for="">Status</label>
+                  <label for="" class="font-bold">Hotel</label>
+                  <label for="" class="font-bold">Status</label>
                 </div>
 
                 <div class="flex flex-column gap-2 ">
@@ -1140,8 +1192,8 @@ const legend = ref(
               </div>
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label for="">From</label>
-                  <label for="">To</label>
+                  <label for="" class="font-bold">From</label>
+                  <label for="" class="font-bold">To</label>
                 </div>
 
                 <div class="flex flex-column gap-2 ">
@@ -1166,12 +1218,12 @@ const legend = ref(
               </div>
               <div class="flex align-items-center gap-2 ">
                 <Checkbox id="all-check-1" v-model="disableDates" :binary="true" style="z-index: 999;" />
-                <label for="all-check-1">All</label>
+                <label for="all-check-1" class="font-bold">All</label>
               </div>
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label for="">Criteria:</label>
-                  <label for="">Search:</label>
+                  <label for="" class="font-bold">Criteria:</label>
+                  <label for="" class="font-bold">Search:</label>
                 </div>
 
                 <div class="flex flex-column gap-2 ">
@@ -1199,7 +1251,7 @@ const legend = ref(
               </div>
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-start align-items-end mr-1">
-                  <label for="">Type: </label>
+                  <label for="" class="font-bold">Type: </label>
                   <div class="w-full lg:w-auto" />
                 </div>
 
@@ -1231,7 +1283,7 @@ const legend = ref(
                   </div>
                   <div class="flex align-items-center gap-2 w-full">
                     <Checkbox id="all-check-2" v-model="filterToSearch.includeInvoicePaid" :binary="true" />
-                    <label for="all-check-2">Include Invoice Paid</label>
+                    <label for="all-check-2" class="font-bold">Include Invoice Paid</label>
                   </div>
                   <div class="flex align-items-center gap-2" />
                 </div>

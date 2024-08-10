@@ -17,7 +17,9 @@ import { generateStyledPDF } from '~/components/payment/utils'
 const route = useRoute()
 const toast = useToast()
 const confirm = useConfirm()
-const { data: userData } = useAuth()
+const authStore = useAuthStore()
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
 
 const refForm: Ref = ref(null)
 const idItem = ref('')
@@ -65,7 +67,7 @@ const allMenuListItems = ref([
     label: 'Apply Deposit',
     icon: 'pi pi-dollar',
     command: ($event: any) => openModalWithContentMenu($event),
-    disabled: false
+    disabled: true
   },
 ])
 
@@ -1734,32 +1736,35 @@ function onRowContextMenu(event) {
   minValueToApplyDeposit = Number.parseFloat(minValueToApplyDeposit.toFixed(2))
   const applayDepositValue = Number.parseFloat(event.data.applayDepositValue) || minValueToApplyDeposit
 
-  if (event && event.data && event.data.deposit === false) {
-    objItemSelectedForRightClick.value = {}
-    const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
-    if (menuItemApplayDeposit) {
-      menuItemApplayDeposit.disabled = true
+  // Validaciones para el applay deposit
+  if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:APPLY-DEPOSIT']))) {
+    if (event && event.data && event.data.deposit === false) {
+      objItemSelectedForRightClick.value = {}
+      const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
+      if (menuItemApplayDeposit) {
+        menuItemApplayDeposit.disabled = true
+      }
     }
-  }
-  else if (event && event.data && event.data.deposit === true && minValueToApplyDeposit <= 0.01) {
-    objItemSelectedForRightClick.value = event.data
-    const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
-    if (menuItemApplayDeposit) {
-      menuItemApplayDeposit.disabled = true
+    else if (event && event.data && event.data.deposit === true && minValueToApplyDeposit <= 0.01) {
+      objItemSelectedForRightClick.value = event.data
+      const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
+      if (menuItemApplayDeposit) {
+        menuItemApplayDeposit.disabled = true
+      }
     }
-  }
-  else if (event && event.data && event.data.deposit === true && applayDepositValue > 0.01) {
-    objItemSelectedForRightClick.value = event.data
-    const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
-    if (menuItemApplayDeposit) {
-      menuItemApplayDeposit.disabled = false
+    else if (event && event.data && event.data.deposit === true && applayDepositValue > 0.01) {
+      objItemSelectedForRightClick.value = event.data
+      const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
+      if (menuItemApplayDeposit) {
+        menuItemApplayDeposit.disabled = false
+      }
     }
-  }
-  else {
-    objItemSelectedForRightClick.value = {}
-    const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
-    if (menuItemApplayDeposit) {
-      menuItemApplayDeposit.disabled = true
+    else {
+      objItemSelectedForRightClick.value = {}
+      const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
+      if (menuItemApplayDeposit) {
+        menuItemApplayDeposit.disabled = true
+      }
     }
   }
   contextMenu.value.show(event.originalEvent)

@@ -526,7 +526,6 @@ function requireConfirmationToSave(item: any) {
 }
 
 function showHistory() {
-  
   attachmentHistoryDialogOpen.value = true
 }
 
@@ -573,17 +572,16 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class=" h-fit w-fit"
+    v-model:visible="dialogVisible" modal :header="header" class="h-fit w-fit"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" @hide="closeDialog"
   >
     <div class=" w-fit h-fit overflow-auto p-2">
       <div class="flex lg:flex-row flex-column align-items-start">
         <div class="flex flex-column" style="max-width: 900px;">
           <div class="  mb-2 flex justify-content-end">
-            <div class="bg-primary w-fit flex gap-2 justify-center align-content-center align-items-center" style="border-radius: 5px; padding: 11px;"> 
-              
+            <div class="bg-primary w-fit flex gap-2 justify-center align-content-center align-items-center" style="border-radius: 5px; padding: 11px;">
               <span class="font-bold">Invoice: </span>
-              <span>{{filterToSearch.search}} </span>
+              <span>{{ filterToSearch.search }} </span>
             </div>
           </div>
           <div style="max-width: 700px; overflow: auto;">
@@ -635,7 +633,7 @@ onMounted(() => {
 
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
-                accept="application/pdf"
+                  accept="application/pdf"
                   :max-file-size="1000000" :multiple="false" auto custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
                     onUpdate('file', file)
@@ -676,30 +674,43 @@ onMounted(() => {
                 </FileUpload>
               </template>
               <template #form-footer="props">
-                <Button
-                  v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-                  :disabled="!props.item?.fieldValues?.file || idItem !== ''" @click="saveItem(props.item.fieldValues)"
-                />
-                <Button
-                  v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus" @click="() => {
-                    idItem = ''
-                    item = itemTemp
-                    clearForm()
-                  }"
-                />
-                <Button
-                  v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-file" :disabled="!idItem"
-                  @click="downloadFile"
-                />
+                <IfCan :perms="idItem ? ['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'] : ['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
+                  <Button
+                    v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+                    :disabled="!props.item?.fieldValues?.file || idItem !== ''" @click="saveItem(props.item.fieldValues)"
+                  />
+                </IfCan>
 
-                <Button
-                  v-if="selectedInvoiceObj.invoiceType === InvoiceType.INVOICE || route.query.type === InvoiceType.INVOICE" v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book"
-                  :disabled="!idItem" @click="showHistory"
-                />
-                <Button
-                  v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
-                  :disabled="!idItem" @click="requireConfirmationToDelete"
-                />
+                <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
+                  <Button
+                    v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus" @click="() => {
+                      idItem = ''
+                      item = itemTemp
+                      clearForm()
+                    }"
+                  />
+                </IfCan>
+
+                <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
+                  <Button
+                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-file" :disabled="!idItem"
+                    @click="downloadFile"
+                  />
+                </IfCan>
+
+                <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-SHOW-HISTORY']">
+                  <Button
+                    v-if="selectedInvoiceObj.invoiceType === InvoiceType.INVOICE || route.query.type === InvoiceType.INVOICE" v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book"
+                    :disabled="!idItem" @click="showHistory"
+                  />
+                </IfCan>
+
+                <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
+                  <Button
+                    v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
+                    :disabled="!idItem" @click="requireConfirmationToDelete"
+                  />
+                </IfCan>
                 <Button
                   v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 

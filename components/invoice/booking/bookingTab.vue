@@ -102,6 +102,9 @@ const ListItems = ref<any[]>([])
 const formReload = ref(0)
 
 const route = useRoute()
+const authStore = useAuthStore()
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
 
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
@@ -1390,12 +1393,32 @@ onMounted(() => {
     ]
   }
 
-  menuModel.value = [{ label: 'Add Room Rate', command: () => props.openRoomRateDialog(selectedBooking.value) },
-  { label: 'Edit booking', command: () => openEditBooking(selectedBooking.value) }
+  const computedShowMenuItemAddRoomRate = computed(() => {
+    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ROOM-RATE-CREATE'])))
+  })
+  const computedShowMenuItemEditBooking = computed(() => {
+    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:BOOKING-EDIT'])))
+  })
+  menuModel.value = [
+    { 
+      label: 'Add Room Rate', 
+      command: () => props.openRoomRateDialog(selectedBooking.value),
+      disabled: computedShowMenuItemAddRoomRate
+    },
+    { 
+      label: 'Edit booking', 
+      command: () => openEditBooking(selectedBooking.value),
+      disabled: computedShowMenuItemEditBooking
+    }
   ]
 
   if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
-    menuModel.value = [{ label: 'Edit booking', command: () => openEditBooking(selectedBooking.value) },
+    menuModel.value = [
+      { 
+        label: 'Edit booking', 
+        command: () => openEditBooking(selectedBooking.value),
+        disabled: computedShowMenuItemEditBooking
+      },
     ]
   }
 

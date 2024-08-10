@@ -99,6 +99,10 @@ const route = useRoute()
 const totalInvoiceAmount = ref<number>(0)
 const totalHotelAmount = ref<number>(0)
 
+const authStore = useAuthStore()
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
+
 const roomRateContextMenu = ref()
 const selectedRoomRate = ref<any>()
 
@@ -153,119 +157,123 @@ async function deleteRoomRateOption(item: any) {
   }
 }
 
+const computedShowMenuItemAddAdjustment = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ADJUSTMENT-CREATE'])))
+})
+const computedShowMenuItemEditRoomRate = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ROOM-RATE-EDIT'])))
+})
+
 const menuModel = ref([
-  { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value) },
-  { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value) },
+  { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
+  { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
 
 ])
 
 const fields: Array<FieldDefinitionType> = [
   {
-        field: 'roomRateId',
-        header: 'Id',
-        dataType: 'text',
-        class: 'field col-12 md:col-6 required',
-        headerClass: 'mb-1',
-        disabled: true
+    field: 'roomRateId',
+    header: 'Id',
+    dataType: 'text',
+    class: 'field col-12 md:col-6 required',
+    headerClass: 'mb-1',
+    disabled: true
 
-      },
-      {
-        field: 'roomNumber',
-        header: 'Room Number',
-        dataType: 'number',
-        class: 'field col-12 md:col-6 required',
-        headerClass: 'mb-1',
-        validation: z.number({ invalid_type_error: "The Room Number field must be greater than 0 " }).min(1, 'The Room Number field must be greater than 0')
+  },
+  {
+    field: 'roomNumber',
+    header: 'Room Number',
+    dataType: 'number',
+    class: 'field col-12 md:col-6 required',
+    headerClass: 'mb-1',
+    validation: z.number({ invalid_type_error: 'The Room Number field must be greater than 0 ' }).min(1, 'The Room Number field must be greater than 0')
 
-      },
+  },
 
-      {
-        field: 'checkIn',
-        header: 'Check In',
-        dataType: 'date',
-        class: 'field col-12 md:col-6 required',
-        headerClass: 'mb-1',
-        validation: z.date({
-          required_error: 'The Check In field is required',
-          invalid_type_error: 'The Check In field is required',
-        })
+  {
+    field: 'checkIn',
+    header: 'Check In',
+    dataType: 'date',
+    class: 'field col-12 md:col-6 required',
+    headerClass: 'mb-1',
+    validation: z.date({
+      required_error: 'The Check In field is required',
+      invalid_type_error: 'The Check In field is required',
+    })
 
-      },
-      {
-        field: 'checkOut',
-        header: 'Check Out',
-        dataType: 'date',
-        class: 'field col-12 md:col-6 required',
-        headerClass: 'mb-1',
-        validation: z.date({
-          required_error: 'The Check Out field is required',
-          invalid_type_error: 'The Check Out field is required',
-        })
+  },
+  {
+    field: 'checkOut',
+    header: 'Check Out',
+    dataType: 'date',
+    class: 'field col-12 md:col-6 required',
+    headerClass: 'mb-1',
+    validation: z.date({
+      required_error: 'The Check Out field is required',
+      invalid_type_error: 'The Check Out field is required',
+    })
 
-      },
+  },
 
-      
-      
+  {
+    field: 'adults',
+    header: 'Adults',
+    dataType: 'number',
+    class: 'field col-12 md:col-6',
+    headerClass: 'mb-1',
+    validation: z.number({ invalid_type_error: 'The Adults field must be greater than 0 ' }).min(1, 'The Adults field must be greater than 0')
+  },
+  {
+    field: 'children',
+    header: 'Children',
+    dataType: 'number',
+    class: 'field col-12 md:col-6',
+    headerClass: 'mb-1',
 
-      {
-        field: 'adults',
-        header: 'Adults',
-        dataType: 'number',
-        class: 'field col-12 md:col-6',
-        headerClass: 'mb-1',
-        validation: z.number({ invalid_type_error: "The Adults field must be greater than 0 " }).min(1, 'The Adults field must be greater than 0')
-      },
-      {
-        field: 'children',
-        header: 'Children',
-        dataType: 'number',
-        class: 'field col-12 md:col-6',
-        headerClass: 'mb-1',
+  },
+  {
+    field: 'rateAdult',
+    header: 'Rate Adult',
+    dataType: 'number',
+    class: 'field col-12 md:col-6',
+    headerClass: 'mb-1',
 
-      },
-      {
-        field: 'rateAdult',
-        header: 'Rate Adult',
-        dataType: 'number',
-        class: 'field col-12 md:col-6',
-        headerClass: 'mb-1',
+  },
+  {
+    field: 'rateChild',
+    header: 'Rate Child',
+    dataType: 'number',
+    class: 'field col-12 md:col-6',
+    headerClass: 'mb-1',
 
-      },
-      {
-        field: 'rateChild',
-        header: 'Rate Child',
-        dataType: 'number',
-        class: 'field col-12 md:col-6',
-        headerClass: 'mb-1',
+  },
 
-      },
+  {
+    field: 'invoiceAmount',
+    header: 'Rate Amount',
+    dataType: 'number',
+    class: 'field col-12 md:col-6 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The Rate amount field is required').refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
 
-      {
-        field: 'invoiceAmount',
-        header: 'Rate Amount',
-        dataType: 'number',
-        class: 'field col-12 md:col-6 required',
-        headerClass: 'mb-1',
-        validation: z.string().min(1, "The Rate amount field is required").refine(val => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, "The Rate amount field must be greater than 0")
+  },
+  {
+    field: 'hotelAmount',
+    header: 'Hotel Amount',
+    dataType: 'number',
+    class: 'field col-12 md:col-6',
+    headerClass: 'mb-1',
+    validation: z.string().refine(val => +val >= 0, 'The Hotel Amount field cannot be negative').nullable()
 
-      },
-      {
-        field: 'hotelAmount',
-        header: 'Hotel Amount',
-        dataType: 'number',
-        class: 'field col-12 md:col-6',
-        headerClass: 'mb-1',
-        validation: z.string().refine(val => +val >= 0, 'The Hotel Amount field cannot be negative').nullable()
+  },
+  {
+    field: 'remark',
+    header: 'Description',
+    dataType: 'textarea',
+    class: 'field col-12 ',
+    headerClass: 'mb-1',
 
-      },
-      {
-        field: 'remark',
-        header: 'Description',
-        dataType: 'textarea',
-        class: 'field col-12 ',
-        headerClass: 'mb-1',
-
-      }
+  }
 ]
 
 const Fields: Array<Container> = [
@@ -312,7 +320,7 @@ const Fields: Array<Container> = [
         dataType: 'number',
         class: 'field col-12 md:col-6 required',
         headerClass: 'mb-1',
-        validation: z.string().min(1, "The Rate amount field is required").refine(val => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, "The Rate amount field must be greater than 0")
+        validation: z.string().min(1, 'The Rate amount field is required').refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
 
       },
       {
@@ -321,7 +329,7 @@ const Fields: Array<Container> = [
         dataType: 'number',
         class: 'field col-12 md:col-6 required',
         headerClass: 'mb-1',
-        validation: z.number({ invalid_type_error: "The Room Number field must be greater than 0 " }).min(1, 'The Room Number field must be greater than 0')
+        validation: z.number({ invalid_type_error: 'The Room Number field must be greater than 0 ' }).min(1, 'The Room Number field must be greater than 0')
 
       },
 
@@ -331,7 +339,7 @@ const Fields: Array<Container> = [
         dataType: 'number',
         class: 'field col-12 md:col-6',
         headerClass: 'mb-1',
-        validation: z.number({ invalid_type_error: "The Adults field must be greater than 0 " }).min(1, 'The Adults field must be greater than 0')
+        validation: z.number({ invalid_type_error: 'The Adults field must be greater than 0 ' }).min(1, 'The Adults field must be greater than 0')
       },
       {
         field: 'children',
@@ -382,9 +390,6 @@ const Fields: Array<Container> = [
 
 ]
 
-
-
-
 const item = ref<GenericObject>({
   roomRateId: '',
   checkIn: dayjs(props.bookingObj?.checkIn).toDate(),
@@ -426,7 +431,6 @@ const confApi = reactive({
     uriApi: 'manage-invoice',
   },
 })
-
 
 const confAgencyApi = reactive({
   moduleApi: 'settings',
@@ -505,8 +509,6 @@ function ClearForm() {
   formReload.value++
 }
 
-
-
 function onRowRightClick(event: any) {
   selectedRoomRate.value = event.data
   roomRateContextMenu.value.show(event.originalEvent)
@@ -544,10 +546,10 @@ async function getRoomRateList() {
         loadingDelete: false,
         fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
         bookingId: iterator.booking.bookingId,
-        roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ""}-${iterator?.booking?.roomType?.name || ""}` },
-        nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ""}-${iterator?.booking?.nightType?.name || ""}` },
-        ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ""}-${iterator?.booking?.ratePlan?.name || ""}` },
-        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ""}-${iterator?.booking?.invoice?.agency?.name || ""}` }
+        roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
+        nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
+        ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
+        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
@@ -621,7 +623,7 @@ async function GetItemById(id: string) {
     if (props.isCreationDialog) {
       // @ts-expect-error
       const element: any = props.listItems.find((item: any) => item.id === id)
-      console.log(element);
+      console.log(element)
       item.value.id = element.id
       item.value.roomRateId = element.roomRateId
       item.value.checkIn = new Date(element.checkIn)
@@ -704,19 +706,15 @@ async function deleteRoomRate(id: string) {
 }
 
 async function saveRoomRate(item: { [key: string]: any }) {
-
   if (!props.isCreationDialog) {
-
     await props.getInvoiceHotel(props.invoiceObj?.hotel?.id)
 
     if (props.requiresFlatRate && item.hotelAmount <= 0) {
-
       return toast.add({ severity: 'error', summary: 'Error', detail: 'The Hotel amount field must be greater than 0 for this hotel', life: 10000 })
     }
-
   }
 
-  console.log(item);
+  console.log(item)
   loadingSaveAll.value = true
   let successOperation = true
   item.nights = dayjs(item.checkOut).endOf('day').diff(dayjs(item.checkIn).startOf('day'), 'day', false)
@@ -738,7 +736,7 @@ async function saveRoomRate(item: { [key: string]: any }) {
       props.closeDialog()
     }
     catch (error: any) {
-      console.log(error);
+      console.log(error)
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
     }
@@ -758,7 +756,7 @@ async function saveRoomRate(item: { [key: string]: any }) {
       props.closeDialog()
     }
     catch (error: any) {
-      console.log(error);
+      console.log(error)
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error, life: 10000 })
     }
@@ -772,8 +770,6 @@ async function saveRoomRate(item: { [key: string]: any }) {
     }
   }
 }
-
-
 
 function requireConfirmationToDeleteRoomRate(event: any) {
   confirm.require({
@@ -876,28 +872,31 @@ onMounted(() => {
 
 watch(() => props.bookingObj, () => {
   item.value = {
-    ...item.value, checkIn: dayjs(props.bookingObj?.checkIn).toDate(),
+    ...item.value,
+    checkIn: dayjs(props.bookingObj?.checkIn).toDate(),
     checkOut: dayjs(props.bookingObj?.checkOut).toDate(),
   }
-  console.log(item.value);
-  console.log(props.bookingObj);
+  console.log(item.value)
+  console.log(props.bookingObj)
 })
 </script>
 
 <template>
   <div>
-    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns" :options="Options"
+    <DynamicTable
+      :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns" :options="Options"
       :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event" @on-row-right-click="onRowRightClick"
       @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
-      if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
-        return;
-      }
-      openEditDialog($event)
+        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
+          return;
+        }
+        openEditDialog($event)
 
-    }">
+      }"
+    >
       <template v-if="isCreationDialog" #pagination-total="props">
         <span class="font-bold font">
           {{ listItems?.length }}
@@ -906,8 +905,10 @@ watch(() => props.bookingObj, () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="!isDetailView ? 9 : 10"
-              footer-style="text-align:right; font-weight: 700" />
+            <Column
+              footer="Totals:" :colspan="!isDetailView ? 9 : 10"
+              footer-style="text-align:right; font-weight: 700"
+            />
             <Column :footer="totalHotelAmount" footer-style="font-weight: 700" />
             <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
           </Row>
@@ -918,13 +919,15 @@ watch(() => props.bookingObj, () => {
   <ContextMenu v-if="!isDetailView" ref="roomRateContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen">
-    <RoomRateDialog :fields="fields" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
+    <RoomRateDialog
+      :fields="fields" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
       :loading-save-all="loadingSaveAll" :clear-form="ClearForm" :require-confirmation-to-save="saveRoomRate"
       :require-confirmation-to-delete="requireConfirmationToDeleteRoomRate"
       :header="!idItem ? 'New Room Rate' : 'Update Room Rate'" :close-dialog="() => {
-      ClearForm()
-      closeDialog()
-    }" container-class="grid pt-3 w-full" class="h-fit p-2 overflow-y-hidden"
-      content-class="w-full h-full" :booking-list="bookingList" />
+        ClearForm()
+        closeDialog()
+      }" container-class="grid pt-3 w-full" class="h-fit p-2 overflow-y-hidden"
+      content-class="w-full h-full" :booking-list="bookingList"
+    />
   </div>
 </template>
