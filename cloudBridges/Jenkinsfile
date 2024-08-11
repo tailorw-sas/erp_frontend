@@ -23,7 +23,7 @@ pipeline {
     
     stages {
 
-        stage ('Check for a specific project...') {
+        stage ('Check for a specific project.....') {
             steps {
                 echo 'Identifying project...'
                 script {
