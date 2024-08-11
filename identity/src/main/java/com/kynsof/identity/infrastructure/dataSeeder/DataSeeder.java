@@ -32,6 +32,39 @@ public class DataSeeder implements ApplicationRunner {
     private final BusinessModuleReadDataJPARepository businessModuleReadDataJPARepository;
     private final DataSource dataSource;
 
+    @Value("${identity.usersystem.id}")
+    private String defaultUserid;
+    
+    @Value("${identity.usersystem.email}")
+    private String defaultEmail;
+    
+    @Value("${identity.usersystem.username}")
+    private String defaultUserName;
+    
+    @Value("${identity.usersystem.name}")
+    private String defaultName;
+    
+    @Value("${identity.usersystem.lastName}")
+    private String defaultLastName;
+
+    @Value("${identity.business.id}")
+    private String defaultBusinessId;
+    
+    @Value("${identity.business.name}")
+    private String defaultBusinessName;
+    
+    @Value("${identity.business.description}")
+    private String defaultBusinessDescription;
+    
+    @Value("${identity.business.logoUrl}")
+    private String defaultBusinessLogo;
+    
+    @Value("${identity.business.ruc}")
+    private String defaultBusinessRuc;
+    
+    @Value("${identity.business.address}")
+    private String defaultBusinessAddress;
+
     @Autowired
     public DataSeeder(UserSystemReadDataJPARepository readRepository, UserSystemsWriteDataJPARepository writeRepository, BusinessReadDataJPARepository businessReadDataJPARepository, BusinessWriteDataJPARepository businessWriteDataJPARepository, ModuleReadDataJPARepository moduleQuery, PermissionReadDataJPARepository permissionReadDataJPARepository, BusinessModuleReadDataJPARepository businessModuleReadDataJPARepository, DataSource dataSource) {
         this.readRepository = readRepository;
@@ -47,16 +80,16 @@ public class DataSeeder implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         // ID del usuario que deseas verificar y crear si no existe
-        UUID userId = UUID.fromString("1a570163-5761-434c-9072-fb3f76bfe501");
-
+    	UUID userId = UUID.fromString(defaultUserid);
+    	
         if (!readRepository.existsById(userId)) {
             // Si no existe, crear el usuario
             UserSystemDto userDto = new UserSystemDto();
             userDto.setId(userId);
-            userDto.setUserName("admin-user@gmail.com");
-            userDto.setEmail("admin-user@gmail.com");
-            userDto.setName("ADMIN");
-            userDto.setLastName("ADMIN");
+            userDto.setUserName(defaultUserName);
+            userDto.setEmail(defaultEmail);
+            userDto.setName(defaultName);
+            userDto.setLastName(defaultLastName);
             userDto.setStatus(UserStatus.ACTIVE);
             userDto.setUserType(EUserType.SYSTEM);
             writeRepository.save(new UserSystem(userDto));
@@ -65,20 +98,21 @@ public class DataSeeder implements ApplicationRunner {
         } else {
             System.out.println("Seeder: El usuario con ID " + userId + " ya existe.");
         }
-       UUID businessId = UUID.fromString("41833c25-5ca2-41cd-b22f-8488723097da");
+        
+        UUID businessId = UUID.fromString(defaultBusinessId);
         if (!businessReadDataJPARepository.existsById(businessId)) {
             // Si no existe, crear el usuario
             BusinessDto create = new BusinessDto(
                     businessId,
-                    "FINAMER",
+                    defaultBusinessName,
                     "",
                     "",
-                    "FINAMER",
-                    "https://static.kynsoft.net/bizum_2024-05-13_12-35-00.png",
-                    "111111111",
+                    defaultBusinessDescription,
+                    defaultBusinessLogo,
+                    defaultBusinessRuc,
                     EBusinessStatus.ACTIVE,
                     null,
-                    "ADDRESS"
+                    defaultBusinessAddress
             );
             businessWriteDataJPARepository.save(new Business(create));
 
