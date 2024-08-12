@@ -174,6 +174,13 @@ function onCloseDialog() {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'depositBalance') {
+        parseFilter[i].key = 'applyDepositValue'
+      }
+    }
+  }
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterTable')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getListPaymentDetailSummary()
@@ -183,6 +190,9 @@ function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'transactionType') {
       event.sortField = 'transactionType.name'
+    }
+    if (event.sortField === 'depositBalance') {
+      event.sortField = 'applyDepositValue'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder

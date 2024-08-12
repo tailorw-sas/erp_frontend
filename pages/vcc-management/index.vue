@@ -685,8 +685,8 @@ async function onRowRightClick(event: any) {
   contextMenuTransaction.value = event.data
   await findMenuItems(contextMenuTransaction.value.status)
   if (menuListItems.value.length > 0) {
-    setRefundAvailable(contextMenuTransaction.value.permitRefund)
-
+    const enableManualTransaction = (status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
+    setRefundAvailable(enableManualTransaction ? contextMenuTransaction.value.permitRefund : false)
     contextMenu.value.show(event.originalEvent)
   }
 }

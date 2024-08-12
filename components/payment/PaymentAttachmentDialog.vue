@@ -962,7 +962,8 @@ async function clearFormAndReload() {
 
 function requireConfirmationToDelete(event: any) {
   if (externalProps.isCreateOrEditPayment === 'create') {
-    listItemsLocal.value = listItemsLocal.value.filter((item: any) => item.id !== idItem.value)
+    listItemsLocal.value = JSON.parse(JSON.stringify(listItemsLocal.value.filter((item: any) => item.id !== idItem.value)))
+    listItemsLocalTemp.value = JSON.parse(JSON.stringify(listItemsLocalTemp.value.filter((item: any) => item.id !== idItem.value)))
     clearFormAndReload()
   }
   else if (!useRuntimeConfig().public.showDeleteConfirm) {

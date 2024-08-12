@@ -18,7 +18,6 @@ import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
-const dbConnectionList = ref<any[]>([])
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
 const idItem = ref('')
@@ -31,34 +30,29 @@ const filterToSearch = ref<IData>({
 })
 const confApi = reactive({
   moduleApi: 'report',
-  uriApi: 'jasper-report-template',
+  uriApi: 'db-connection',
 })
 
 const ENUM_FILTER = [
-  { id: 'templateCode', name: 'Code' },
-  { id: 'templateName', name: 'Name' },
-
+  { id: 'url', name: 'Url' },
+  { id: 'username', name: 'User Name' },
 ]
 
 const item = ref<GenericObject>({
-  file: '',
   code: '',
   name: '',
+  url: '',
+  username: '',
+  password: '',
   status: true,
-  type: '',
-  query: '',
-  description: '',
-  parameters: '',
 })
 
 const itemTemp = ref<GenericObject>({
-  file: '',
   code: '',
   name: '',
-  type: '',
-  query: '',
-  description: '',
-  parameters: '',
+  url: '',
+  username: '',
+  password: '',
   status: true,
 })
 
@@ -78,41 +72,25 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
   {
-    field: 'type',
-    header: 'Type',
-    dataType: 'select',
+    field: 'url',
+    header: 'Url',
+    dataType: 'text',
     class: 'field col-12 required',
-    validation: z.object({
-      id: z.string().min(1, 'The generation type field is required'),
-      name: z.string().min(1, 'The generation type field is required'),
-    }).nullable().refine(value => value && value.id && value.name, { message: 'The type field is required' }),
+    validation: z.string().trim().min(1, 'The url field is required').max(255, 'Maximum 255 characters')
   },
   {
-    field: 'dbConection',
-    header: 'DB Connection',
-    dataType: 'select',
+    field: 'username',
+    header: 'User Name',
+    dataType: 'text',
     class: 'field col-12 required',
-    validation: validateEntityStatus('DB Connection'),
+    validation: z.string().trim().min(1, 'The username field is required').max(50, 'Maximum 50 characters')
   },
   {
-    field: 'query',
-    header: 'Query',
-    dataType: 'textarea',
+    field: 'password',
+    header: 'Password',
+    dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The query field is required').max(250, 'Maximum 250 characters')
-  },
-  {
-    field: 'description',
-    header: 'Description',
-    dataType: 'textarea',
-    class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The description field is required').max(50, 'Maximum 50 characters')
-  },
-  {
-    field: 'file',
-    header: 'File',
-    dataType: 'file',
-    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The username field is required').max(250, 'Maximum 250 characters')
   },
   {
     field: 'status',
@@ -130,20 +108,17 @@ const fields: Array<FieldDefinitionType> = [
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns = ref<IColumn[]>([
-  { field: 'code', header: 'Code', type: 'text' },
-  { field: 'name', header: 'Name', type: 'text' },
-  { field: 'description', header: 'Description', type: 'text' },
-  { field: 'type', header: 'Tipo', type: 'local-select', localItems: [...ENUM_REPORT_TYPE] },
-
+  { field: 'url', header: 'Code', type: 'text' },
+  { field: 'username', header: 'User Name', type: 'text' },
   { field: 'createdAt', header: 'Created At', type: 'date' },
 ])
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Manage Report',
+  tableName: 'Manage Db Connection',
   moduleApi: 'report',
-  uriApi: 'jasper-report-template',
+  uriApi: 'db-connection',
   loading: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
@@ -256,22 +231,13 @@ async function getItemById(id: string) {
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
       if (response) {
-        item.value.id = response.id
-        item.value.file = response.file
         item.value.code = response.code
         item.value.name = response.name
-        item.value.type = ENUM_REPORT_TYPE.find(x => x.id === response.type)
-        item.value.description = response.description
+        item.value.id = response.id
+        item.value.url = response.url
+        item.value.username = response.username
+        item.value.password = response.password
         item.value.status = statusToBoolean(response.status)
-        if (response.dbConection) {
-          item.value.dbConection = {
-            id: response.dbConection.id,
-            name: response.dbConection.name,
-            code: response.dbConection.code,
-            status: response.dbConection.status
-          }
-        }
-        item.value.query = response.query
       }
       updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
@@ -290,31 +256,17 @@ async function getItemById(id: string) {
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
-    let payload: { [key: string]: any } = { ...item }
+    const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
-    payload.file = typeof payload.file === 'object' ? await getUrlByImage(payload.file) : payload.file
-    payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
-    payload.dbConection = typeof payload.dbConection === 'object' ? payload.dbConection.id : payload.dbConection
-    payload = { ...payload, parentIndex: 0.0, menuPosition: 0.0, lanPath: 'lanPath', web: false, subMenu: false, sendEmail: false, internal: false, highRisk: false, visible: false, cancel: false, rootIndex: 'rootIndex', language: 'language', }
-
     return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
-  let payload: { [key: string]: any } = { ...item }
+  const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
-  payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
-  payload.dbConection = typeof payload.dbConection === 'object' ? payload.dbConection.id : payload.dbConection
-  if (!payload.file) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'File is required', life: 3000 })
-  }
-  else {
-    payload.file = typeof payload.file === 'object' ? await getUrlByImage(payload.file) : payload.file
-    payload = { ...payload, parentIndex: 0.0, menuPosition: 0.0, lanPath: 'lanPath', web: false, subMenu: false, sendEmail: false, internal: false, highRisk: false, visible: false, cancel: false, rootIndex: 'rootIndex', language: 'language', }
-    return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
-  }
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -405,20 +357,20 @@ function requireConfirmationToDelete(event: any) {
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
-  const templateCode = parseFilter?.find((item: IFilter) => item?.key === 'code')
-  const templateName = parseFilter?.find((item: IFilter) => item?.key === 'name')
-  const templateDescription = parseFilter?.find((item: IFilter) => item?.key === 'description')
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns.value)
+  // const templateCode = parseFilter?.find((item: IFilter) => item?.key === 'url')
+  // const templateName = parseFilter?.find((item: IFilter) => item?.key === 'name')
+  // const templateDescription = parseFilter?.find((item: IFilter) => item?.key === 'description')
 
-  if (templateCode) {
-    templateCode.key = 'templateCode'
-  }
-  if (templateName) {
-    templateName.key = 'templateName'
-  }
-  if (templateDescription) {
-    templateDescription.key = 'templateDescription'
-  }
+  // if (templateCode) {
+  //   templateCode.key = 'templateCode'
+  // }
+  // if (templateName) {
+  //   templateName.key = 'templateName'
+  // }
+  // if (templateDescription) {
+  //   templateDescription.key = 'templateDescription'
+  // }
 
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
@@ -427,25 +379,25 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
-    switch (event.sortField) {
-      case 'code':
-        event.sortField = 'templateCode'
-        break
-      case 'name':
-        event.sortField = 'templateName'
-        break
-      case 'description':
-        event.sortField = 'templateDescription'
-        break
-      case 'type':
-        if (event.sortOrder === 'ASC') {
-          event.sortOrder = 'ASC'
-        }
-        else {
-          event.sortOrder = ENUM_SHORT_TYPE.DESC
-        }
-        break
-    }
+    // switch (event.sortField) {
+    //   case 'code':
+    //     event.sortField = 'templateCode'
+    //     break
+    //   case 'name':
+    //     event.sortField = 'templateName'
+    //     break
+    //   case 'description':
+    //     event.sortField = 'templateDescription'
+    //     break
+    //   case 'type':
+    //     if (event.sortOrder === 'ASC') {
+    //       event.sortOrder = 'ASC'
+    //     }
+    //     else {
+    //       event.sortOrder = ENUM_SHORT_TYPE.DESC
+    //     }
+    //     break
+    // }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
@@ -460,30 +412,6 @@ const disabledSearch = computed(() => {
 const disabledClearSearch = computed(() => {
   return !(filterToSearch.value.criterial && filterToSearch.value.search)
 })
-
-interface DataList {
-  id: string
-  name: string
-  code: string
-  status: string
-}
-
-interface ListItem {
-  id: string
-  name: string
-  status: boolean | string
-}
-
-function mapFunction(data: DataList): ListItem {
-  return {
-    id: data.id,
-    name: `${data.code} - ${data.name}`,
-    status: data.status
-  }
-}
-async function getdbConnectionList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  dbConnectionList.value = await getDataList<DataList, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'createdAt', sortType: ENUM_SHORT_TYPE.ASC })
-}
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -516,7 +444,7 @@ onMounted(() => {
 <template>
   <div class="flex justify-content-between align-items-center">
     <h3 class="mb-0">
-      Manage Report
+      Manage DB Connection
     </h3>
     <div
       v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
@@ -596,82 +524,6 @@ onMounted(() => {
               />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
-            <template #field-dbConection="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="data.dbConection"
-                :suggestions="[...dbConnectionList]"
-                @change="($event) => {
-                  onUpdate('dbConection', $event)
-                }"
-                @load="async($event) => {
-                  const objQueryToSearch = {
-                    query: $event,
-                    keys: ['name', 'username', 'url'],
-                  }
-                  const filter: FilterCriteria[] = [
-                    // {
-                    //   key: 'status',
-                    //   logicalOperation: 'AND',
-                    //   operator: 'EQUALS',
-                    //   value: 'ACTIVE',
-                    // },
-                  ]
-                  await getdbConnectionList('report', 'db-connection', objQueryToSearch, filter)
-                }"
-              />
-              <Skeleton v-else height="2rem" class="mb-2" />
-            </template>
-            <!-- <template #field-file="{ item: data, onUpdate }">
-              <FileUpload
-                v-if="!loadingSaveAll" :max-file-size="1000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept=".jrxml"
-                @uploader="($event: any) => {
-                  // customBase64Uploader($event, fieldsV2, 'path');
-                  onUpdate('path', $event)
-                  if ($event && $event.files.length > 0) {
-                    onUpdate('fileName', $event?.files[0]?.name)
-                    onUpdate('fileSize', formatSize($event?.files[0]?.size))
-                  }
-                  else {
-                    onUpdate('fileName', '')
-                  }
-
-                }"
-              >
-                <template #header="{ chooseCallback }">
-                  <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
-                    <div class="flex gap-2">
-                      <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
-                      <Button
-                        :disabled="idItem !== '' || idItem === null"
-                        icon="pi pi-times" class="ml-2" severity="danger" text @click="() => {
-                          onUpdate('path', null);
-                          onUpdate('fileName', '');
-
-                        }"
-                      />
-                    </div>
-                  </div>
-                </template>
-                <template #content="{ files }">
-                  <ul v-if="files[0] || (data.path && data.path?.files.length > 0)" class="list-none p-0 m-0">
-                    <li class="p-3 surface-border flex align-items-start sm:align-items-center">
-                      <div class="flex flex-column">
-                        <span class="text-900 font-semibold text-xl mb-2">{{ data.path?.files[0].name }}</span>
-                        <span class="text-900 font-medium">
-                          <Badge severity="warning">
-                            {{ formatSize(data.path?.files[0].size) }}
-                          </Badge>
-                        </span>
-                      </div>
-                    </li>
-                  </ul>
-                </template>
-              </FileUpload>
-            </template> -->
           </EditFormV2>
         </div>
       </div>

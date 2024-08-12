@@ -117,7 +117,7 @@ async function changePass() {
           </div>
 
           <div class="form-container flex flex-column align-items-center justify-content-center">
-            <div class="flex flex-column align-items-center mb-4" style="width: 400px;">
+            <div v-if="false" class="flex flex-column align-items-center mb-4" style="width: 400px;">
               <p>
                 For security reasons, it is necessary to change your password the first time you log in. A code has been sent to your email. Please enter it below.
               </p>

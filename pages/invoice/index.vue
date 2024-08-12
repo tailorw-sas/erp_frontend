@@ -1356,7 +1356,7 @@ const legend = ref(
   </div>
   <div v-if="attachmentHistoryDialogOpen">
     <InvoiceHistoryDialog :selected-attachment="''" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
-      header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen"
+      header="Invoice Status History" :open-dialog="attachmentHistoryDialogOpen"
       :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" :is-creation-dialog="false" />
   </div>
 

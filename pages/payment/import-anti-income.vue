@@ -16,7 +16,7 @@ const inputFile = ref()
 const attachFile = ref()
 const importModel = ref({
   importFile: '',
-  totalAmount: 0,
+  // totalAmount: 0,
   transactionType: '',
   attachFile: null,
   employee: '',
@@ -29,7 +29,7 @@ const confApi = reactive({
   uriApi: 'payment-detail/import',
 })
 
-const confErrorApi = reactive({
+const confPaymentApi = reactive({
   moduleApi: 'payment',
   uriApi: 'payment-detail',
 })
@@ -100,7 +100,7 @@ async function getErrorList() {
     let rowError = ''
     listItems.value = []
     const newListItems = []
-    const response = await GenericService.importSearch(confErrorApi.moduleApi, confErrorApi.uriApi, payload.value)
+    const response = await GenericService.importSearch(confPaymentApi.moduleApi, confPaymentApi.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
 
@@ -176,7 +176,7 @@ async function importAntiIncome() {
     formData.append('file', file)
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.ANTI)
-    formData.append('totalAmount', importModel.value.totalAmount.toFixed(0).toString())
+    // formData.append('totalAmount', importModel.value.totalAmount.toFixed(0).toString())
     formData.append('transactionType', importModel.value.transactionType)
     formData.append('employee', userData?.value?.user?.userId || '')
     formData.append('attachment', file1)
@@ -191,7 +191,9 @@ async function importAntiIncome() {
   }
 
   if (successOperation) {
+    await validateStatusImport()
     await getErrorList()
+
     if (listItems.value.length === 0) {
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
       options.value.loading = false
@@ -200,6 +202,23 @@ async function importAntiIncome() {
   }
   loadingSaveAll.value = false
   options.value.loading = false
+}
+
+async function validateStatusImport() {
+  options.value.loading = true
+  return new Promise<void>((resolve) => {
+    let status = 'RUNNING'
+    const intervalID = setInterval(async () => {
+      const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
+      status = response.status
+
+      if (status === 'FINISHED') {
+        clearInterval(intervalID)
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
+    }, 10000)
+  })
 }
 
 async function resetListItems() {
@@ -245,7 +264,7 @@ async function getTransactionStatusList() {
     const { data: dataList } = response
     transactionStatusList.value = []
     for (const iterator of dataList) {
-      transactionStatusList.value = [...transactionStatusList.value, { id: iterator.id, code: iterator.code, name: iterator.name, status: iterator.status }]
+      transactionStatusList.value = [...transactionStatusList.value, { id: iterator.id, code: iterator.code, name: `${iterator.code}- ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -282,7 +301,7 @@ onMounted(async () => {
               </div>
             </template>
             <div class="grid p-0 m-0" style="margin: 0 auto;">
-              <div class="col-12 md:col-3 xs:col-6 align-items-center my-0 py-0">
+              <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
                   <label class="w-7rem">Document: </label>
                   <div class="w-full">
@@ -295,16 +314,16 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <div class="col-12 md:col-3 align-items-center my-0 py-0">
+              <!-- <div class="col-12 md:col-3 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
                   <label class="w-7rem">Total Amount: </label>
                   <div class="w-full">
                     <InputNumber v-model="importModel.totalAmount" mode="currency" currency="USD" locale="en-US" class="w-full" />
                   </div>
                 </div>
-              </div>
+              </div> -->
 
-              <div class="col-12 md:col-3 align-items-center my-0 py-0">
+              <div class="col-12 md:col-4 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
                   <label class="w-7rem">Import Data: </label>
                   <div class="w-full">
@@ -327,7 +346,7 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <div class="col-12 md:col-3 xs:col-6 align-items-center my-0 py-0">
+              <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
                   <label class="w-7rem">Attach File: </label>
                   <div class="w-full">

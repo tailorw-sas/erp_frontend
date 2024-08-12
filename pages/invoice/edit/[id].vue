@@ -1020,7 +1020,7 @@ onMounted(async () => {
     </div>
   </div>
   <div v-if="attachmentHistoryDialogOpen">
-    <InvoiceHistoryDialog selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+    <AttachmentHistoryDialog selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
       header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
       :selected-invoice-obj="item" :is-creation-dialog="false" />
   </div>

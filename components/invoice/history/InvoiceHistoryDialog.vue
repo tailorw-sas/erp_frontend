@@ -112,7 +112,7 @@ const dialogVisible = ref(props.openDialog)
 const options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
-  uriApi: props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'invoice-status-history' : 'attachment-status-history',
+  uriApi: 'invoice-status-history',
   loading: false,
   showDelete: false,
   showFilters: false,
@@ -192,7 +192,7 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId, status: iterator?.invoice?.status || 'ACTIVE' }]
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId, status: iterator?.invoice?.invoiceStatus || iterator?.invoice?.status }]
     }
   }
   catch (error) {
@@ -309,7 +309,7 @@ onMounted(() => {
       <div class="flex flex-row align-items-center">
         <div class="flex flex-column" style="width: 700px;overflow: auto;">
           <DynamicTable
-            :data="isCreationDialog ? listItems as any : ListItems" :columns="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? incomeColumns : Columns"
+            :data="isCreationDialog ? listItems as any : ListItems" :columns="incomeColumns"
             :options="options" :pagination="Pagination"
 
             @on-confirm-create="clearForm"

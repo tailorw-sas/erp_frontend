@@ -18,8 +18,8 @@ const route = useRoute()
 const toast = useToast()
 const confirm = useConfirm()
 const authStore = useAuthStore()
-const { status, data } = useAuth()
-const isAdmin = (data.value?.user as any)?.isAdmin === true
+const { status, data: userData } = useAuth()
+const isAdmin = (userData.value?.user as any)?.isAdmin === true
 
 const refForm: Ref = ref(null)
 const idItem = ref('')
@@ -32,8 +32,11 @@ const formReload = ref(0)
 const formReloadAgency = ref(0)
 const refPaymentDetailForm = ref(0)
 const dialogPaymentDetailFormReload = ref(0)
+
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
+const loadingPrintDetail = ref(false)
+
 const forceSave = ref(false)
 const submitEvent = new Event('')
 const paymentSourceList = ref<any[]>([])
@@ -178,6 +181,11 @@ const confApi = reactive({
 const confApiPaymentDetail = reactive({
   moduleApi: 'payment',
   uriApi: 'payment-detail',
+})
+
+const confApiPaymentDetailPrint = reactive({
+  moduleApi: 'payment',
+  uriApi: 'payment/report',
 })
 
 const objApis = ref({
@@ -1717,8 +1725,82 @@ async function deleteItem(id: string) {
   }
 }
 
-async function paymentPrint(id: string) {
-  generateStyledPDF()
+async function paymentPrint(event: any) {
+  try {
+    // PAYMENT_DETAILS,
+    //   PAYMENT_SUPPORT,
+    //   INVOICE_RELATED,
+    //   INVOICE_RELATED_SUPPORT,
+    //   ALL_SUPPORT
+    loadingPrintDetail.value = true
+    let nameOfPdf = ''
+    const payloadTemp = {
+      paymentId: route?.query?.id ? route?.query?.id.toString() : '',
+      paymentType: '',
+    }
+    // En caso de que solo este marcado el paymentAndDetails
+    if (
+      event && event.paymentAndDetails
+      && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
+    ) {
+      payloadTemp.paymentType = 'PAYMENT_DETAILS'
+      nameOfPdf = `payment-details-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    if (
+      event && event.paymentAndDetails && event.paymentSupport === true
+      && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.allPaymentsSupport === false)
+    ) {
+      payloadTemp.paymentType = 'PAYMENT_SUPPORT'
+      nameOfPdf = `payment-support-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    if (
+      event && event.paymentAndDetails && event.allPaymentsSupport === true
+      && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
+    ) {
+      payloadTemp.paymentType = 'ALL_SUPPORT'
+      nameOfPdf = `payment-all-support-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    if (
+      event && event.paymentAndDetails && event.invoiceRelated === true
+      && (event.allPaymentsSupport === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
+    ) {
+      payloadTemp.paymentType = 'INVOICE_RELATED'
+      nameOfPdf = `payment-invoice-related-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    if (
+      event && event.paymentAndDetails && event.invoiceRelatedWithSupport === true
+      && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.paymentSupport === false)
+    ) {
+      payloadTemp.paymentType = 'INVOICE_RELATED_SUPPORT'
+      nameOfPdf = `payment-invoice-related-support-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    const response: any = await GenericService.create(confApiPaymentDetailPrint.moduleApi, confApiPaymentDetailPrint.uriApi, payloadTemp)
+
+    const url = window.URL.createObjectURL(new Blob([response]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = nameOfPdf // Nombre del archivo que se descargará
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    loadingPrintDetail.value = false
+  }
+  catch (error) {
+    loadingPrintDetail.value = false
+    console.log(error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was failed', life: 3000 })
+  }
+  finally {
+    loadingPrintDetail.value = false
+  }
+
+  // generateStyledPDF()
 }
 
 async function closeDialogPrint() {
@@ -2400,7 +2482,7 @@ onMounted(async () => {
               </label>
             </template>
             <template #form-footer="props">
-              <Button v-tooltip.top="'Print'" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
+              <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
               <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" />
             </template>
           </EditFormV2>
