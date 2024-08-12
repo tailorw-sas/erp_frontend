@@ -24,7 +24,7 @@ const confApi = reactive({
   uriApi: 'payment-detail/import',
 })
 
-const confErrorApi = reactive({
+const confPaymentApi = reactive({
   moduleApi: 'payment',
   uriApi: 'payment-detail',
 })
@@ -89,7 +89,7 @@ async function getErrorList() {
     let rowError = ''
     listItems.value = []
     const newListItems = []
-    const response = await GenericService.importSearch(confErrorApi.moduleApi, confErrorApi.uriApi, payload.value)
+    const response = await GenericService.importSearch(confPaymentApi.moduleApi, confPaymentApi.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
 
@@ -165,6 +165,7 @@ async function importFileDetail() {
   }
 
   if (successOperation) {
+    await validateStatusImport()
     await getErrorList()
     if (listItems.value.length === 0) {
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
@@ -174,6 +175,23 @@ async function importFileDetail() {
   }
   loadingSaveAll.value = false
   options.value.loading = false
+}
+
+async function validateStatusImport() {
+  options.value.loading = true
+  return new Promise<void>((resolve) => {
+    let status = 'RUNNING'
+    const intervalID = setInterval(async () => {
+      const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
+      status = response.status
+
+      if (status === 'FINISHED') {
+        clearInterval(intervalID)
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
+    }, 10000)
+  })
 }
 
 async function resetListItems() {

@@ -22,7 +22,7 @@ const confApi = reactive({
   uriApi: 'payment/import',
 })
 
-const confErrorApi = reactive({
+const confPaymentApi = reactive({
   moduleApi: 'payment',
   uriApi: 'payment',
 })
@@ -82,18 +82,11 @@ const pagination = ref<IPagination>({
 
 async function getErrorList() {
   try {
-    const param: IQueryRequest = {
-      query: idItem.value,
-      pageSize: 20,
-      page: 0,
-      filter: []
-    }
-
     payload.value = { ...payload.value, query: idItem.value }
     let rowError = ''
     listItems.value = []
     const newListItems = []
-    const response = await GenericService.importSearch(confErrorApi.moduleApi, confErrorApi.uriApi, payload.value)
+    const response = await GenericService.importSearch(confPaymentApi.moduleApi, confPaymentApi.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
 
@@ -112,7 +105,6 @@ async function getErrorList() {
           rowError += `- ${err.message} \n`
         }
 
-        // const dateTemp = isValidFormatDate(iterator.row.transactionDate) ? convertirFecha(iterator.row.transactionDate) : iterator.row.transactionDate
         const dateTemp = !iterator.row ? null : convertirAFechav2(iterator.row.transactionDate)
         newListItems.push({ ...iterator.row, id: iterator.id, transactionDate: dateTemp, impSta: `Warning row ${iterator.row.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
@@ -168,6 +160,7 @@ async function importFile() {
   }
 
   if (successOperation) {
+    await validateStatusImport()
     await getErrorList()
     if (listItems.value.length === 0) {
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
@@ -179,9 +172,26 @@ async function importFile() {
   options.value.loading = false
 }
 
+async function validateStatusImport() {
+  options.value.loading = true
+  return new Promise<void>((resolve) => {
+    let status = 'RUNNING'
+    const intervalID = setInterval(async () => {
+      const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
+      status = response.status
+
+      if (status === 'FINISHED') {
+        clearInterval(intervalID)
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
+    }, 10000)
+  })
+}
+
 async function resetListItems() {
   payload.value.page = 0
-  getErrorList()
+  await getErrorList()
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -221,7 +231,9 @@ onMounted(async () => {
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>
-              <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
+              <div
+                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
+              >
                 <div>
                   Import Payment Of Bank From Excel
                 </div>
@@ -235,19 +247,22 @@ onMounted(async () => {
                   <div class="w-full ">
                     <div class="p-inputgroup w-full">
                       <InputText
-                        ref="fileUpload"
-                        v-model="invoiceFile"
-                        placeholder="Choose file"
-                        class="w-full"
-                        show-clear
-                        aria-describedby="inputtext-help"
+                        ref="fileUpload" v-model="invoiceFile" placeholder="Choose file" class="w-full"
+                        show-clear aria-describedby="inputtext-help"
                       />
                       <span class="p-inputgroup-addon p-0 m-0">
-                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                        <Button
+                          icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0"
+                          @click="fileUpload.click()"
+                        />
                       </span>
                     </div>
                     <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                    <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile">
+                    <input
+                      ref="fileUpload" type="file" style="display: none;"
+                      accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                      @change="onChangeFile"
+                    >
                   </div>
                 </div>
               </div>
@@ -257,9 +272,8 @@ onMounted(async () => {
       </div>
       <DynamicTable
         :data="listItems" :columns="columns" :options="options" :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @on-change-pagination="payloadOnChangePage = $event" @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems" @on-sort-field="onSortField"
+        @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
           <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
@@ -269,8 +283,14 @@ onMounted(async () => {
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete" @click="importFile" />
-        <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+        <Button
+          v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete"
+          @click="importFile"
+        />
+        <Button
+          v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
+          @click="clearForm"
+        />
       </div>
     </div>
   </div>
@@ -288,6 +308,7 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
-  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
+  max-width: 150px;
+  /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>

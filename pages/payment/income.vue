@@ -613,20 +613,23 @@ watch(idItem, () => {
   }
 })
 
-async function closeOperationValidation(item: { [key: string]: any }) {
+async function validateIncomeCloseOperation(item: { [key: string]: any }) {
   if (item) {
     const hotelId = Object.prototype.hasOwnProperty.call(item.hotel, 'id') ? item.hotel.id : item.hotel
     const dateList: string[] = AdjustmentList.value.map((e: any) => e.date)
     if (item.invoiceDate) {
       dateList.push(dayjs(item.invoiceDate).format('YYYY-MM-DD'))
     }
-    // necesito unir las listas dateList y newList
-    const payload = {
-      hotelId,
-      dates: dateList
-    }
-    await GenericService.create(confApi.moduleApi, 'check-dates', payload)
+    await validateCloseOperation(hotelId, dateList)
   }
+}
+
+async function validateCloseOperation(hotelId: string, dateList: string[]) {
+  const payload = {
+    hotelId,
+    dates: dateList
+  }
+  await GenericService.create(confApi.moduleApi, 'check-dates', payload)
 }
 
 async function createItem(item: { [key: string]: any }) {
@@ -681,7 +684,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await closeOperationValidation(item)
+      await validateIncomeCloseOperation(item)
       await createItem(item)
       // Deshabilitar campos restantes del formulario
       updateFieldProperty(fields, 'reSend', 'disabled', true)
@@ -798,10 +801,10 @@ async function createInvoiceAdjustment(item: { [key: string]: any }) {
 
       onOffDialogPaymentDetail.value = false
       loadingSaveAdjustment.value = false
-      await getBookingList()
-      await getRoomRateList()
-      await getAdjustmentList()
-      await getItemById(idItem.value)
+      getBookingList()
+      getRoomRateList()
+      getAdjustmentList()
+      getItemById(idItem.value)
     }
   }
   finally {
@@ -872,11 +875,20 @@ function saveLocal(itemP: { [key: string]: any }) {
 
 async function saveAndReload(itemP: { [key: string]: any }) {
   try {
+    loadingSaveAdjustment.value = true
     if (idItem.value) {
+      const hotelId = Object.prototype.hasOwnProperty.call(item.value.hotel, 'id') ? item.value.hotel.id : item.value.hotel
+      const dateList: string[] = []
+      if (itemP.date) {
+        dateList.push(dayjs(itemP.date).format('YYYY-MM-DD'))
+      }
+      await validateCloseOperation(hotelId, dateList)
       await createInvoiceAdjustment(itemP)
+      onOffDialogPaymentDetail.value = false
     }
     else {
       saveLocal(itemP)
+      onOffDialogPaymentDetail.value = false
     }
     // await getItemById(idItem.value)
   }
@@ -884,7 +896,7 @@ async function saveAndReload(itemP: { [key: string]: any }) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
   finally {
-    onOffDialogPaymentDetail.value = false
+    loadingSaveAdjustment.value = false
   }
 }
 

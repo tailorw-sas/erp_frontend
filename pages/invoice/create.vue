@@ -20,6 +20,8 @@ const forceUpdate = ref(false)
 const active = ref(0)
 const route = useRoute()
 
+const { data: userData } = useAuth()
+
 const selectedInvoice = ref({})
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
@@ -41,12 +43,6 @@ const loadedRoomRates = ref<any[]>([])
 const adjustmentList = ref<any[]>([])
 const attachmentList = ref<any[]>([])
 
-const errorInTab = ref({
-  tabGeneralData: false,
-  tabMedicalInfo: false,
-  tabServices: false,
-  tabPermissions: false
-})
 
 const nightTypeRequired = ref(false)
 const requiresFlatRate = ref(false)
@@ -408,6 +404,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.hotel = item.hotel?.id
     payload.agency = item.agency?.id
     payload.invoiceType = route.query.type
+    
 
     if (invoiceAmount.value === 0) {
       throw new Error('The Invoice amount field cannot be 0')
@@ -497,7 +494,7 @@ async function createItem(item: { [key: string]: any }) {
       })
     }
 
-    const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments })
+    const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.name })
     return response
   }
 }
