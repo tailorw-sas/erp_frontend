@@ -2160,7 +2160,7 @@ onMounted(async () => {
 
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT'] : ['PAYMENT-MANAGEMENT:CREATE']">
-        <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="dialogPaymentDetailSummary" />
+        <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SUMMARY']">
         <Button v-tooltip.top="'Deposit Summary'" :disabled="!enableDepositSummaryAction" class="w-3rem ml-1" @click="dialogPaymentDetailSummary">
