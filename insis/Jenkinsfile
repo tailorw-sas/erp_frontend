@@ -2,6 +2,10 @@ pipeline {
     
     agent any
 
+    parameters {
+        booleanParam(name: 'FORCE_BUILD', defaultValue: false, description: 'Forzar la ejecución del pipeline sin verificar cambios')
+    }
+
     environment {
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-insis:version'
