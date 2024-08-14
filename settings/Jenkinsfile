@@ -24,7 +24,7 @@ pipeline {
     stages {
         stage ('Check for changes') {
             steps {
-                echo '* * * * STAGE: Checking for changes in a specific project * * * * '
+                echo '* * * * STAGE: Checking for changes in a specific project * * * * *'
                 script {
                     /*
                     def folderPaths = [env.SRC, env.SRC_SHARE]
