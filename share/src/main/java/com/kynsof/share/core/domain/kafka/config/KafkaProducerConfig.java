@@ -26,7 +26,7 @@ public class KafkaProducerConfig {
     @Profile("dev")
     public ProducerFactory<String, Object> devProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
-        addSaslConfig(configProps, "user1", "Y9Gqxg2UZq");
+        addSaslConfig(configProps, "user1", "AkC7B1ooWO");
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
