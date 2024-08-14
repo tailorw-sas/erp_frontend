@@ -45,7 +45,7 @@ pipeline {
             }
         }
         
-        stage ('Init') {
+        stage (''Initialize variables'') {
             steps {
                 echo 'Initializing..*'
                 script {   
