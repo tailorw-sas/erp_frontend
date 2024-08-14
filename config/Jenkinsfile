@@ -25,9 +25,9 @@ pipeline {
     }
     
     stages {
-        stage ('Check for a specific project...') {
+        stage ('Check for changes') {
             steps {
-                echo 'Identifying project.....'
+                echo '* * * * STAGE: Checking for changes in a specific project * * * *'
                 script {
                     if (!params.FORCE_BUILD){
                         def folderPath = env.SRC
@@ -47,7 +47,7 @@ pipeline {
         
         stage (''Initialize variables'') {
             steps {
-                echo 'Initializing..*'
+                echo '* * * * STAGE: Initializing variables * * * *'
                 script {   
                     def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
                     env.BRANCH_NAME = branch
@@ -70,6 +70,7 @@ pipeline {
  
         stage ('Create docker image'){
             steps {
+                echo '* * * * STAGE: Creating docker image * * * *'
                 dir("${SRC}"){
                     sh 'docker build -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom.xml .'
                     withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
@@ -81,6 +82,7 @@ pipeline {
 
         stage ('Publish to Kubernetes') {
             steps {
+                echo '* * * * STAGE: Publishing to kubernetes * * * *'
                 withKubeConfig(credentialsId: "${SERVER_K3S_CREDENTIALS}", namespace: "${NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: "${SERVER_K3S_URL}") {
                     //sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
