@@ -103,4 +103,25 @@ pipeline {
             }
         }
     }
+
+    post {
+        success {
+            emailext(
+                subject: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME})",
+                body: """<p>Build Successful!</p>
+                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
+                         <p>Branch: ${env.BRANCH_NAME}</p>""",
+                to: 'dan.n.n.y@hotmail.com'
+            )
+        }
+        failure {
+            emailext(
+                subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME})",
+                body: """<p>Build Failed!</p>
+                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
+                         <p>Branch: ${env.BRANCH_NAME}</p>""",
+                to: 'dan.n.n.y@hotmail.com'
+            )
+        }
+    }
 }
