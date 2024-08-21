@@ -83,6 +83,7 @@ public class JasperReportTemplate extends BaseEntity {
         this.language = jasperReportTemplateDto.getLanguage();
         this.status = jasperReportTemplateDto.getStatus();
         this.dbConection = jasperReportTemplateDto.getDbConection() != null ? new DBConection(jasperReportTemplateDto.getDbConection()) : null;
+        this.query = jasperReportTemplateDto.getQuery();
     }
 
     public JasperReportTemplateDto toAggregate() {

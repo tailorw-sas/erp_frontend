@@ -30,6 +30,8 @@ public class AttachmentType implements Serializable {
     private String name;
     private String description;
     private Boolean defaults;
+    @Column(name = "anti_import",columnDefinition = "boolean default false")
+    private boolean antiToIncomeImport;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -48,10 +50,11 @@ public class AttachmentType implements Serializable {
         this.description = dto.getDescription();
         this.defaults = dto.getDefaults();
         this.status = dto.getStatus();
+        this.antiToIncomeImport=dto.isAntiToIncomeImport();
     }
 
     public AttachmentTypeDto toAggregate() {
-        return new AttachmentTypeDto(id, code, name, description, defaults, status);
+        return new AttachmentTypeDto(id, code, name, description, defaults, status,antiToIncomeImport);
     }
 
 }

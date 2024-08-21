@@ -92,8 +92,10 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
                     dto.getIsApplyByVCC(),
                     dto.getManageTradingCompanies() != null ? dto.getManageTradingCompanies().getId() : null,
                     command.getStatus().name(),
+                    command.getIsVirtual(),
                     command.getRequiresFlatRate(),
-                    command.getIsVirtual()));
+                    command.getApplyByTradingCompany()
+            ));
         }
     }
 

@@ -4,6 +4,9 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.report.applications.command.dbconection.changePassword.ChangePasswordDBConectionCommand;
+import com.kynsoft.report.applications.command.dbconection.changePassword.ChangePasswordDBConectionMessage;
+import com.kynsoft.report.applications.command.dbconection.changePassword.ChangePasswordDBConectionRequest;
 import com.kynsoft.report.applications.command.dbconection.create.CreateDBConectionCommand;
 import com.kynsoft.report.applications.command.dbconection.create.CreateDBConectionMessage;
 import com.kynsoft.report.applications.command.dbconection.create.CreateDBConectionRequest;
@@ -70,6 +73,15 @@ public class DBConectionController {
     public ResponseEntity<?> delete(@PathVariable UUID id) {
         DeleteDBConectionCommand query = new DeleteDBConectionCommand(id);
         DeleteDBConectionMessage response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/password/{id}")
+    public ResponseEntity<?> updatePassword(@PathVariable("id") UUID id, @RequestBody ChangePasswordDBConectionRequest request) {
+
+        ChangePasswordDBConectionCommand command = ChangePasswordDBConectionCommand.fromRequest(id, request);
+        ChangePasswordDBConectionMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);
     }

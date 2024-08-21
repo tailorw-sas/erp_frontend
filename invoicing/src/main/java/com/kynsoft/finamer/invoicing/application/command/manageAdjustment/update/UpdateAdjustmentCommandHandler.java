@@ -26,10 +26,10 @@ public class UpdateAdjustmentCommandHandler implements ICommandHandler<UpdateAdj
 
     private final IInvoiceCloseOperationService closeOperationService;
 
-
     public UpdateAdjustmentCommandHandler(IManageAdjustmentService adjustmentService,
-                                          IManageInvoiceTransactionTypeService transactionTypeService, IManageRoomRateService roomRateService,
-                                          IManageBookingService bookingService, IManageInvoiceService invoiceService, IInvoiceCloseOperationService closeOperationService) {
+            IManageInvoiceTransactionTypeService transactionTypeService, IManageRoomRateService roomRateService,
+            IManageBookingService bookingService, IManageInvoiceService invoiceService,
+            IInvoiceCloseOperationService closeOperationService) {
         this.adjustmentService = adjustmentService;
         this.transactionTypeService = transactionTypeService;
         this.roomRateService = roomRateService;
@@ -46,18 +46,21 @@ public class UpdateAdjustmentCommandHandler implements ICommandHandler<UpdateAdj
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-
+       
         UpdateIfNotNull.updateLocalDateTime(dto::setDate, command.getDate(), dto.getDate(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(),
+                dto.getDescription(), update::setUpdate);
 
         if (command.getTransactionType() != null && !command.getTransactionType().equals("")) {
 
-            this.updateTransactionType(dto::setTransaction, command.getTransactionType(), dto.getTransaction().getId(), update::setUpdate);
+            this.updateTransactionType(dto::setTransaction, command.getTransactionType(), dto.getTransaction().getId(),
+                    update::setUpdate);
         }
-        UpdateIfNotNull.updateEntity(dto::setRoomRate, command.getRoomRate(), dto.getRoomRate().getId(), update::setUpdate, this.roomRateService::findById);
+        UpdateIfNotNull.updateEntity(dto::setRoomRate, command.getRoomRate(), dto.getRoomRate().getId(),
+                update::setUpdate, this.roomRateService::findById);
 
         ManageRoomRateDto roomRateDto = this.roomRateService.findById(dto.getRoomRate().getId());
-
 
         if (command.getAmount() != null) {
 
@@ -70,23 +73,25 @@ public class UpdateAdjustmentCommandHandler implements ICommandHandler<UpdateAdj
             }
 
             bookingService.calculateInvoiceAmount(this.bookingService.findById(roomRateDto.getBooking().getId()));
-            invoiceService.calculateInvoiceAmount(this.invoiceService.findById(roomRateDto.getBooking().getInvoice().getId()));
+            invoiceService.calculateInvoiceAmount(
+                    this.invoiceService.findById(roomRateDto.getBooking().getInvoice().getId()));
         }
 
         UpdateIfNotNull.updateDouble(dto::setAmount, command.getAmount(), dto.getAmount(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
-            if(!dto.getRoomRate().getBooking().getInvoice().getInvoiceType().equals(EInvoiceType.INCOME)){
-            RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-                    this.closeOperationService,
-                    dto.getDate().toLocalDate(),
-                    dto.getRoomRate().getBooking().getInvoice().getId()
-            ));}
+            if (!dto.getRoomRate().getBooking().getInvoice().getInvoiceType().equals(EInvoiceType.INCOME)) {
+                RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+                        this.closeOperationService,
+                        dto.getDate().toLocalDate(),
+                        dto.getRoomRate().getBooking().getInvoice().getId()));
+            }
             this.adjustmentService.update(dto);
         }
     }
 
-    public void updateTransactionType(Consumer<ManageInvoiceTransactionTypeDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+    public void updateTransactionType(Consumer<ManageInvoiceTransactionTypeDto> setter, UUID newValue, UUID oldValue,
+            Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             ManageInvoiceTransactionTypeDto transactionTypeDto = this.transactionTypeService.findById(newValue);
             setter.accept(transactionTypeDto);

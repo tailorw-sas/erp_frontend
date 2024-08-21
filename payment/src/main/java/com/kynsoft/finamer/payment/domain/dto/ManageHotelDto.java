@@ -17,5 +17,5 @@ public class ManageHotelDto {
     private String code;
     private String name;
     private String status;
-
+    private Boolean applyByTradingCompany;
 }

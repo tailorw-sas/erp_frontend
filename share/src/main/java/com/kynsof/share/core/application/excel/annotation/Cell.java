@@ -12,4 +12,6 @@ public @interface Cell {
     public int position();
 
     public CustomCellType cellType() default CustomCellType.STRING;
+
+    public String headerName() default "";
 }

@@ -76,6 +76,11 @@ public class CommonImportValidators {
             errorFieldList.add(new ErrorField("Transaction Date", "Invalid date format"));
             return false;
         }
+        LocalDate dateToValidate= DateUtil.parseDateToLocalDate(transactionDate,dateFormat);
+        if (dateToValidate.isAfter(LocalDate.now())) {
+            errorFieldList.add(new ErrorField("Transaction Date", "Transaction Date can't be future date"));
+            return false;
+        }
         return true;
     }
 
@@ -88,6 +93,7 @@ public class CommonImportValidators {
         if (!valid) {
             errorFieldList.add(new ErrorField("Remarks", "Field length is to long"));
         }
+
     }
 
     public void validateCloseOperation(String transactionDateArg, String hotelCode, String dateFormat, List<ErrorField> errorFieldList,boolean isValidTransactionDate) {

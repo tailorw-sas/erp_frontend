@@ -21,7 +21,7 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
     private final IPaymentDetailService paymentDetailService;
     private final PaymentImportCacheRepository paymentImportCacheRepository;
 
-    protected PaymentImportAmountValidator(ApplicationEventPublisher applicationEventPublisher,
+    public PaymentImportAmountValidator(ApplicationEventPublisher applicationEventPublisher,
                                            IPaymentDetailService paymentDetailService,
                                            PaymentImportCacheRepository paymentImportCacheRepository) {
         super(applicationEventPublisher);
@@ -41,29 +41,33 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
             return false;
         }
         if (Objects.nonNull(obj.getTransactionId()) &&
-                paymentDetailService.existByGenId(Integer.parseInt(obj.getTransactionId()))){
+                paymentDetailService.existByGenId(obj.getTransactionId().intValue())){
             Pageable pageable = PageRequest.of(0, 100, Sort.by(Sort.Direction.ASC, "id"));
 
             Page<PaymentImportCache> pageCache;
             double amountTotal = 0;
             do {
-                pageCache = paymentImportCacheRepository.findAllByImportProcessId(obj.getImportProcessId(), pageable);
-                amountTotal += pageCache.stream().filter(Objects::nonNull).map(paymentCache -> Double.parseDouble(paymentCache.getPaymentAmount())).reduce(0.0, Double::sum);
-                pageable.next();
+                 pageCache = paymentImportCacheRepository.findAllByImportProcessId(obj.getImportProcessId(), pageable);
+                amountTotal += pageCache.stream().filter(Objects::nonNull)
+                        .filter(paymentImportCache -> Objects.nonNull(paymentImportCache.getAnti()) &&
+                                !paymentImportCache.getAnti().isEmpty())
+                        .map(paymentCache -> Double.parseDouble(paymentCache.getPaymentAmount()))
+                        .reduce(0.0, Double::sum);
+               pageable= pageable.next();
             } while (pageCache.hasNext());
-            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(obj.getTransactionId()));
-            if (Objects.isNull(paymentDetailDto.getApplyDepositValue()) || obj.getAmount() > paymentDetailDto.getApplyDepositValue()){
+            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(obj.getTransactionId().intValue());
+            if (Objects.isNull(paymentDetailDto.getApplyDepositValue()) || obj.getAmount()+amountTotal > paymentDetailDto.getApplyDepositValue()){
                 errorFieldList.add(new ErrorField("Payment Amount","Deposit Amount must be greather than zero and less or equal than the selected transaction amount."));
             }
-            if (obj.getAmount() > paymentDetailDto.getPayment().getPaymentBalance()) {
-                errorFieldList.add(new ErrorField("Payment Amount", "Payment Amount is greater than payment balance."));
-                return false;
-            }
-            amountTotal = amountTotal + obj.getAmount();
-            if (amountTotal > paymentDetailDto.getPayment().getDepositBalance()) {
-                errorFieldList.add(new ErrorField("Payment Amount", "Payment Amount is greater than deposit balance."));
-                return false;
-            }
+//            if (obj.getAmount() > paymentDetailDto.getPayment().getPaymentBalance()) {
+//                errorFieldList.add(new ErrorField("Payment Amount", "Payment Amount is greater than payment balance."));
+//                return false;
+//            }
+//            amountTotal = amountTotal + obj.getAmount();
+//            if (amountTotal > paymentDetailDto.getPayment().getDepositBalance()) {
+//                errorFieldList.add(new ErrorField("Payment Amount", "Payment Amount is greater than deposit balance."));
+//                return false;
+//            }
         }
         return true;
 

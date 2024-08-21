@@ -5,6 +5,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -22,13 +23,20 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
 
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
-    public UpdateInvoiceCommandHandler(IManageInvoiceService service, IManageAgencyService agencyService,
-            IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService) {
+    private final ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService;
+
+    public UpdateInvoiceCommandHandler(IManageInvoiceService service,
+            IManageAgencyService agencyService,
+            IManageHotelService hotelService,
+            IManageInvoiceTypeService iManageInvoiceTypeService,
+            IInvoiceStatusHistoryService invoiceStatusHistoryService,
+            ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService) {
         this.service = service;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.iManageInvoiceTypeService = iManageInvoiceTypeService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
     }
 
     @Override
@@ -51,14 +59,14 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
 
         // dto.setInvoiceNumber(InvoiceType.getInvoiceTypeCode(dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE) + "-" + dto.getInvoiceNo().toString());
         // update.setUpdate(1);
-
         this.service.calculateInvoiceAmount(dto);
-
+        try {
+            //TODO: aqui se envia para actualizar el invoice en payment
+            this.producerUpdateManageInvoiceService.update(dto);
+        } catch (Exception e) {
+        }
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-
-
-
         }
 
     }
@@ -80,7 +88,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         }
     }
 
-     private void updateDate(Consumer<LocalDate> setter, LocalDate newValue, LocalDate oldValue, Consumer<Integer> update) {
+    private void updateDate(Consumer<LocalDate> setter, LocalDate newValue, LocalDate oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             setter.accept(newValue);
             update.accept(1);
@@ -107,7 +115,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         }
     }
 
-    private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee){
+    private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
 
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
         dto.setId(UUID.randomUUID());

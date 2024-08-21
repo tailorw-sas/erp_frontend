@@ -1,10 +1,13 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel;
 
-import com.kynsoft.finamer.invoicing.application.excel.ExcelRuleValidator;
 import com.kynsoft.finamer.invoicing.application.excel.ValidatorFactory;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingAdultsValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingAgencyValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingAmountPaxValidator;
@@ -23,17 +26,10 @@ import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBooki
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingRatePlanValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingRoomTypeValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingTransactionDateValidator;
-import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingTypeValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportCacheRedisRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Component
 public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
@@ -87,7 +83,7 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
         validators.put(ImportBookingHotelInvoiceNumberValidator.class.getName(), new ImportBookingHotelInvoiceNumberValidator(manageHotelService));
         validators.put(ImportBookingAmountPaxValidator.class.getName(), new ImportBookingAmountPaxValidator());
         validators.put(ImportBookingHotelInvoiceAmountValidator.class.getName(), new ImportBookingHotelInvoiceAmountValidator(manageHotelService));
-        validators.put(ImportBookingDateValidator.class.getName(), new ImportBookingDateValidator(cacheRedisRepository,manageBookingService));
+        validators.put(ImportBookingDateValidator.class.getName(), new ImportBookingDateValidator());
         validators.put(ImportBookingTypeValidator.class.getName(), new ImportBookingTypeValidator(importType,manageHotelService));
     }
 

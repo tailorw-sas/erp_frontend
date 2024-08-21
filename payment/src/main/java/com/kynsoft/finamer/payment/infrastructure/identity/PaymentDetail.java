@@ -10,15 +10,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
@@ -50,6 +47,10 @@ public class PaymentDetail implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "transaction_type_id")
     private ManagePaymentTransactionType transactionType;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_booking_id")
+    private ManageBooking manageBooking;
 
     private Double amount;
     private Double applyDepositValue;
@@ -103,6 +104,7 @@ public class PaymentDetail implements Serializable {
         this.childrens = dto.getChildrens() != null ? dto.getChildrens() : null;
         this.parentId = dto.getParentId() != null ? dto.getParentId() : null;
         this.applyDepositValue = dto.getApplyDepositValue() != null ? ScaleAmount.scaleAmount(dto.getApplyDepositValue()) : null;
+        this.manageBooking = dto.getManageBooking() != null ? new ManageBooking(dto.getManageBooking()) : null;
     }
 
     public PaymentDetailDto toAggregate() {
@@ -115,6 +117,7 @@ public class PaymentDetail implements Serializable {
                 amount,
                 remark,
                 children != null ? children.stream().map(PaymentDetail::toAggregateSimple).toList() : null,
+                manageBooking != null ? manageBooking.toAggregate() : null,
                 bookingId,
                 invoiceId,
                 transactionDate,
@@ -141,6 +144,7 @@ public class PaymentDetail implements Serializable {
                 amount,
                 remark,
                 null,
+                manageBooking != null ? manageBooking.toAggregate() : null,
                 bookingId != null ? bookingId : null,
                 invoiceId != null ? invoiceId : null,
                 transactionDate != null ? transactionDate : null,

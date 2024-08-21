@@ -7,6 +7,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.rules.attachmentType.AttachmentTypeAntiToIncomeImportMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.attachmentType.AttachmentTypeDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.IManageAttachmentTypeService;
 
@@ -32,12 +33,18 @@ public class UpdateAttachmentTypeCommandHandler implements ICommandHandler<Updat
         if (command.getDefaults()) {
             RulesChecker.checkRule(new AttachmentTypeDefaultMustBeUniqueRule(this.service, command.getId()));
         }
+        if (command.isAntiToIncomeImport()) {
+            RulesChecker.checkRule(new AttachmentTypeAntiToIncomeImportMustBeUniqueRule(this.service, command.getId()));
+        }
+
 
         ConsumerUpdate update = new ConsumerUpdate();
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(attachmentTypeDto::setDescription, command.getDescription(), attachmentTypeDto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(attachmentTypeDto::setName, command.getName(), attachmentTypeDto.getName(), update::setUpdate);
         this.updateStatus(attachmentTypeDto::setStatus, command.getStatus(), attachmentTypeDto.getStatus(), update::setUpdate);
         this.updateDefault(attachmentTypeDto::setDefaults, command.getDefaults(), attachmentTypeDto.getDefaults(), update::setUpdate);
+        this.updateDefault(attachmentTypeDto::setAntiToIncomeImport, command.isAntiToIncomeImport(),
+                attachmentTypeDto.isAntiToIncomeImport(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(attachmentTypeDto);

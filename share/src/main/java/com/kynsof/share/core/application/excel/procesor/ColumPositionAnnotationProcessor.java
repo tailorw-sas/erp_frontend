@@ -19,7 +19,7 @@ public class ColumPositionAnnotationProcessor<T> extends AnnotationProcessor<T>{
         for (Field field : fields) {
            if(field.isAnnotationPresent(Cell.class)){
               Cell cell = field.getAnnotation(Cell.class);
-               CellInfo cellInfo = new CellInfo(cell.position(),cell.cellType());
+               CellInfo cellInfo = new CellInfo(cell.position(),cell.cellType(), cell.headerName());
               BeanField beanField = new BeanField(field);
               annotatedFields.put(cellInfo,beanField);
            }

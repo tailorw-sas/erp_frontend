@@ -40,6 +40,11 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
            errorFieldList.add(new ErrorField("Transaction Date","Transaction Date has invalid date format"));
            return false;
        }
+        LocalDate dateToValidate= DateUtil.parseDateToLocalDate(obj.getTransactionDate());
+        if (dateToValidate.isAfter(LocalDate.now())) {
+            errorFieldList.add(new ErrorField("Transaction Date", "Transaction Date can't be future date"));
+            return false;
+        }
        return true;
     }
     private boolean validateCloseOperation(BookingRow bookingRow,List<ErrorField> errorFieldList){

@@ -147,7 +147,7 @@ public class BookingController {
         return ResponseEntity.ok(mediator.send(importBookingFromFileErrorQuery));
     }
 
-    @GetMapping(path = "/import-status/{importProcessId}")
+    @GetMapping(path = "/{importProcessId}/import-status")
     public ResponseEntity<?> getImportBookingProcessStatus(@PathVariable("importProcessId") String importProcessId) {
         ImportBookingProcessStatusRequest request = new ImportBookingProcessStatusRequest(importProcessId);
         ImportBookingProcessStatusQuery importBookingProcessStatusQuery = new ImportBookingProcessStatusQuery(request);

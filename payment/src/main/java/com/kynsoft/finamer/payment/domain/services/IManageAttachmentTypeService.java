@@ -22,4 +22,6 @@ public interface IManageAttachmentTypeService {
     Long countByCodeAndNotId(String code, UUID id);
 
     Long countByDefaultAndNotId(UUID id);
+
+    Long countByAntiToIncomeImportAndNotId(UUID id);
 }

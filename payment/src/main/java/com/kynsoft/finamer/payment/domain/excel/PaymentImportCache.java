@@ -3,7 +3,7 @@ package com.kynsoft.finamer.payment.domain.excel;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseRow;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,15 +41,15 @@ public class PaymentImportCache implements Serializable {
     private String anti;
 
 
-    public PaymentImportCache(PaymentRow paymentRow) {
-        this.importProcessId=paymentRow.getImportProcessId();
-        this.importType=paymentRow.getImportType();
-        this.agency=paymentRow.getManageAgencyCode();
-        this.hotel=paymentRow.getManageHotelCode();
-        this.paymentAmount= String.valueOf(paymentRow.getAmount());
-        this.remarks=paymentRow.getRemarks();
-        this.transactionDate = paymentRow.getTransactionDate();
-        this.rowNumber=paymentRow.getRowNumber();
+    public PaymentImportCache(PaymentExpenseRow paymentExpenseRow) {
+        this.importProcessId= paymentExpenseRow.getImportProcessId();
+        this.importType= paymentExpenseRow.getImportType();
+        this.agency= paymentExpenseRow.getManageAgencyCode();
+        this.hotel= paymentExpenseRow.getManageHotelCode();
+        this.paymentAmount= String.valueOf(paymentExpenseRow.getAmount());
+        this.remarks= paymentExpenseRow.getRemarks();
+        this.transactionDate = paymentExpenseRow.getTransactionDate();
+        this.rowNumber= paymentExpenseRow.getRowNumber();
     }
     public PaymentImportCache(PaymentBankRow paymentRow) {
         this.importProcessId=paymentRow.getImportProcessId();
@@ -66,7 +66,7 @@ public class PaymentImportCache implements Serializable {
         this.importProcessId=paymentRow.getImportProcessId();
         this.importType=paymentRow.getImportType();
         this.remarks=paymentRow.getRemarks();
-        this.transactionId=paymentRow.getTransactionId();
+        this.transactionId=Objects.nonNull(paymentRow.getTransactionId())?String.valueOf(paymentRow.getTransactionId().intValue()):null;
         this.paymentAmount= String.valueOf(paymentRow.getAmount());
         this.rowNumber=paymentRow.getRowNumber();
     }
@@ -78,7 +78,7 @@ public class PaymentImportCache implements Serializable {
         this.paymentId= Objects.nonNull(paymentRow.getPaymentId())? paymentRow.getPaymentId() :"";
         this.paymentAmount= String.valueOf(paymentRow.getBalance());
         this.rowNumber=paymentRow.getRowNumber();
-        this.anti=paymentRow.getAnti();
+        this.anti=Objects.nonNull(paymentRow.getAnti())?String.valueOf(paymentRow.getAnti().intValue()):null;
         this.coupon=paymentRow.getCoupon();
         this.invoiceNo= String.valueOf(paymentRow.getInvoiceNo());
         this.transactionId=paymentRow.getTransactionType();

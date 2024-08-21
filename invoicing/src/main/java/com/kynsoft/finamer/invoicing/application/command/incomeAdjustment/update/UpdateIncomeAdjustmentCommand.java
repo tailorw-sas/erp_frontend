@@ -18,13 +18,14 @@ public class UpdateIncomeAdjustmentCommand implements ICommand {
     private Status status;
     private UUID income;
     private UUID transactionType;
+    private UUID paymentTransactionType;
     private Double amount;
     private LocalDate date;
     private String remark;
 
     private IncomeDto incomeResponse;
 
-    public UpdateIncomeAdjustmentCommand(UUID id, Status status, UUID income, UUID transactionType, Double amount, LocalDate date, String remark) {
+    public UpdateIncomeAdjustmentCommand(UUID id, Status status, UUID income, UUID transactionType,UUID paymentTransactionType, Double amount, LocalDate date, String remark) {
         this.id = id;
         this.status = status;
         this.income = income;
@@ -32,6 +33,7 @@ public class UpdateIncomeAdjustmentCommand implements ICommand {
         this.amount = amount;
         this.date = date;
         this.remark = remark;
+        this.paymentTransactionType = paymentTransactionType;
     }
 
     public static UpdateIncomeAdjustmentCommand fromRequest(UpdateIncomeAdjustmentRequest request, UUID id) {
@@ -40,6 +42,7 @@ public class UpdateIncomeAdjustmentCommand implements ICommand {
                 request.getStatus(),
                 request.getIncome(),
                 request.getTransactionType(),
+                request.getPaymentTransactionType(),
                 request.getAmount(),
                 request.getDate(),
                 request.getRemark()

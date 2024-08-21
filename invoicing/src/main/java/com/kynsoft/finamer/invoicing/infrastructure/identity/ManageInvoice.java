@@ -82,7 +82,7 @@ public class ManageInvoice {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
     private List<ManageBooking> bookings;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.MERGE)
     private List<ManageAttachment> attachments;
 
     @Column(nullable = true)

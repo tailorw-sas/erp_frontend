@@ -43,6 +43,7 @@ public class PaymentDetailResponse implements IResponse {
     private OffsetDateTime createdAt;
     private Double applyDepositValue;
     private Boolean hasApplyDeposit;
+    private ManageBookingResponse manageBooking;
 
     public PaymentDetailResponse(PaymentDetailDto dto) {
         this.id = dto.getId();
@@ -73,6 +74,7 @@ public class PaymentDetailResponse implements IResponse {
         this.parentId = dto.getParentId() != null ? dto.getParentId() : null;
         this.applyDepositValue = dto.getApplyDepositValue() != null ? dto.getApplyDepositValue() : null;
         this.hasApplyDeposit = !this.children.isEmpty();
+        this.manageBooking = dto.getManageBooking() != null ? new ManageBookingResponse(dto.getManageBooking()) : null;
     }
 
 }

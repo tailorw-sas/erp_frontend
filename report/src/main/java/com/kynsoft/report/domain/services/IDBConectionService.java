@@ -19,4 +19,6 @@ public interface IDBConectionService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     DBConectionDto findById(UUID id);
+
+    Long countByCodeAndNotId(String code, UUID id);
 }

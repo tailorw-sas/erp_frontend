@@ -167,6 +167,14 @@ public class ManageBookingServiceImpl implements IManageBookingService {
                     System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
                 }
             }
+
+            if ("dueAmount".equals(filter.getKey()) && filter.getValue() instanceof String) {
+                try {
+                    filter.setValue(Double.valueOf(filter.getValue().toString()));
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
+                }
+            }
         }
     }
 

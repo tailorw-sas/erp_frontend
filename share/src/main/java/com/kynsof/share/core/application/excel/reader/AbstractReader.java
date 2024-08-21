@@ -1,5 +1,7 @@
 package com.kynsof.share.core.application.excel.reader;
 
+import com.kynsof.share.core.application.excel.BeanField;
+import com.kynsof.share.core.application.excel.CellInfo;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.application.excel.procesor.ColumPositionAnnotationProcessor;
 import lombok.Getter;
@@ -8,6 +10,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Objects;
 
 @Getter
@@ -25,6 +28,8 @@ public abstract class AbstractReader<T> {
 
     protected ColumPositionAnnotationProcessor<T> columPositionAnnotationProcessor;
 
+    protected Map<CellInfo, BeanField> annotatedField;
+
     public AbstractReader(ReaderConfiguration readerConfiguration, Class<T> type) {
         this.readerConfiguration = readerConfiguration;
         this.type = type;
@@ -32,9 +37,10 @@ public abstract class AbstractReader<T> {
     }
 
     private void init() {
-        columPositionAnnotationProcessor = new ColumPositionAnnotationProcessor<T>();
-        columPositionAnnotationProcessor.process(type);
         try {
+            columPositionAnnotationProcessor = new ColumPositionAnnotationProcessor<T>();
+            columPositionAnnotationProcessor.process(type);
+            annotatedField = columPositionAnnotationProcessor.getAnnotatedFields();
             this.workbook = WorkbookFactory.create(readerConfiguration.getInputStream());
             if (readerConfiguration.isReadLastActiveSheet()) {
                 sheetToRead = workbook.getSheetAt(workbook.getActiveSheetIndex());
@@ -42,8 +48,8 @@ public abstract class AbstractReader<T> {
                     !readerConfiguration.getSheetNameToRead().isEmpty()) {
                 sheetToRead = workbook.getSheet(readerConfiguration.getSheetNameToRead());
             }
-            if (Objects.isNull(rowCursor)){
-                this.rowCursor =readerConfiguration.isIgnoreHeaders()?1:0;
+            if (Objects.isNull(rowCursor)) {
+                this.rowCursor = readerConfiguration.isIgnoreHeaders() ? 1 : 0;
             }
             this.hasContent();
         } catch (IOException e) {
@@ -51,6 +57,8 @@ public abstract class AbstractReader<T> {
         }
 
     }
+
+    public abstract void close();
 
 
     public abstract T readSingleLine();

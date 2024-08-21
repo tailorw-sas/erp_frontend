@@ -32,7 +32,7 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
         RulesChecker.checkRule(new ManageReportParentIndexMustBeNullRule(command.getParentIndex()));
         RulesChecker.checkRule(new ManageJasperReportCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
-        DBConectionDto conectionDto = this.conectionService.findById(command.getDbConection());
+        DBConectionDto conectionDto = command.getDbConection() != null ? this.conectionService.findById(command.getDbConection()) : null;
         this.service.create(new JasperReportTemplateDto(
                 command.getId(), 
                 command.getCode(), 
@@ -54,7 +54,8 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
                 command.getRootIndex(),
                 command.getLanguage(),
                 command.getStatus(),
-                conectionDto
+                conectionDto,
+                command.getQuery()
         ));
     }
 }

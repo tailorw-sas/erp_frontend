@@ -34,11 +34,6 @@ public class PaymentReportPaymentDetailsService implements IPaymentReport {
     public PaymentReportResponse generateReport(EPaymentReportType reportType, UUID paymentId)  {
 
         Map<String, Object> parameters = new HashMap<>();
-        Date currentDate = new Date(System.currentTimeMillis());
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String formattedDate = dateFormat.format(currentDate);
-        parameters.put("fechayHora", formattedDate);
         parameters.put("paymentId", paymentId);
 
         byte[] pdfContent = reportGenerator.generateReport(parameters, "aaa");

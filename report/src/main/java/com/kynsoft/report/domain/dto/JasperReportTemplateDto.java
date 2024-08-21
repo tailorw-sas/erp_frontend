@@ -47,7 +47,8 @@ public class JasperReportTemplateDto {
                                    Double parentIndex, Double menuPosition, 
                                    String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
                                    Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
-                                   String rootIndex, String language, Status status, DBConectionDto dbConection) {
+                                   String rootIndex, String language, Status status, DBConectionDto dbConection,
+                                   String query) {
         this.id = id;
         this.code = templateCode;
         this.name = templateName;
@@ -69,6 +70,7 @@ public class JasperReportTemplateDto {
         this.language = language;
         this.status = status;
         this.dbConection = dbConection;
+        this.query = query;
     }
 
 }

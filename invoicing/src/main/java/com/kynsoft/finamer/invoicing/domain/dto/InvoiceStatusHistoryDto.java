@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.domain.dto;
 
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,5 +21,6 @@ public class InvoiceStatusHistoryDto {
     private String description;
     private LocalDateTime createdAt;
     private String employee;
+    private EInvoiceStatus invoiceStatus;
 
 }

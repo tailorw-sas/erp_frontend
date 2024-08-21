@@ -22,6 +22,7 @@ public class ManagerLanguageResponse implements IResponse {
     private Status status;
     private String name;
     private Boolean isEnabled;
+    private Boolean defaults;
 
     public ManagerLanguageResponse(ManagerLanguageDto dto){
         this.id = dto.getId();
@@ -30,5 +31,6 @@ public class ManagerLanguageResponse implements IResponse {
         this.status = dto.getStatus();
         this.name = dto.getName();
         this.isEnabled = dto.getIsEnabled();
+        this.defaults = dto.getDefaults();
     }
 }

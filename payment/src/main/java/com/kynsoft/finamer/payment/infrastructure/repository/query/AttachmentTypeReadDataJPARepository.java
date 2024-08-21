@@ -23,4 +23,7 @@ public interface AttachmentTypeReadDataJPARepository extends JpaRepository<Attac
 
     @Query("SELECT COUNT(b) FROM AttachmentType b WHERE b.defaults = true AND b.id <> :id")
     Long countByDefaultAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM AttachmentType b WHERE b.antiToIncomeImport = true AND b.id <> :id")
+    Long countByAntiToIncomeImportAndNotId(@Param("id") UUID id);
 }
