@@ -290,9 +290,6 @@ watch(() => props.openDialog, (newValue) => {
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem;',
       },
-      mask: {
-        style: 'backdrop-filter: blur(5px)',
-      },
     }"
     @hide="onClose(true)"
   >
@@ -384,12 +381,12 @@ watch(() => props.openDialog, (newValue) => {
 
 <style lang="scss">
 .custom-dialog .p-dialog-content {
-  background-color: #ffffff;
+  //background-color: #ffffff;
   padding-right: 0px;
   padding-left: 0px;
 }
 .custom-dialog .p-dialog-footer {
-  background-color: #ffffff;
+  //background-color: #ffffff;
   padding-right: 0px;
   padding-left: 0px;
 }

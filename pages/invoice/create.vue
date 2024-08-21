@@ -326,16 +326,30 @@ function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
 
-async function getHotelList() {
+async function getHotelList(query = '') {
   try {
     const payload
       = {
-        filter: [{
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }],
+        filter: [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -355,16 +369,30 @@ async function getHotelList() {
   }
 }
 
-async function getAgencyList() {
+async function getAgencyList(query = '') {
   try {
     const payload
       = {
-        filter: [{
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }],
+        filter: [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -884,7 +912,8 @@ function updateBooking(booking: any) {
         fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
         firstName: booking?.firstName,
         lastName: booking?.lastName,
-        hotelAmount: booking?.hotelAmount
+        hotelAmount: booking?.hotelAmount,
+        
       }
     }
   }
@@ -913,6 +942,12 @@ function addRoomRate(rate: any) {
     fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
     checkIn: dayjs(rate?.checkIn).startOf('day').toISOString(),
     checkOut: dayjs(rate?.checkOut).startOf('day').toISOString(),
+    adults: booking?.adults,
+    children: booking?.children,
+    rateChild: booking?.rateChild,
+    rateAdult: booking?.rateAdult
+
+
   }]
   calcBookingInvoiceAmount(rate)
   calcBookingHotelAmount(rate)
@@ -1114,7 +1149,7 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-                  :disabled="bookingList.length === 0" @click="() => {
+                  :disabled="bookingList.length === 0 || attachmentList.length === 0" @click="() => {
                     saveItem(props.item.fieldValues)
                   }"
                 />
@@ -1130,7 +1165,7 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
                 <Button
                   v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                  :loading="loadingSaveAll" disabled @click="handleAttachmentDialogOpen()"
+                  :loading="loadingSaveAll"  @click="handleAttachmentDialogOpen()"
                 />
               </IfCan>
               <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-SHOW-HISTORY']">

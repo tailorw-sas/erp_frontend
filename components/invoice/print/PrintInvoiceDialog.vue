@@ -143,9 +143,11 @@ async function getPrintObj() {
   const obj: InvoiceParams = {
     bookings: [],
     companyName: '',
+    invoiceId: '',
     companyAddress: '',
     companyCif: '',
     hotelName: '',
+    hotelCode: '',
     invoiceNumber: props?.invoice?.invoiceNumber,
     agencyCode: '',
     agencyName: '',
@@ -162,6 +164,8 @@ async function getPrintObj() {
   else {
     obj.invoiceNumber = props?.invoice?.invoiceNumber
   }
+
+  obj.invoiceId = props?.invoice?.invoiceId
 
   const agency = await getAgencyById(props?.invoice?.agency?.id)
   const hotel = await getHotelById(props?.invoice?.hotel?.id)
@@ -181,6 +185,7 @@ async function getPrintObj() {
     obj.companyAddress = hotel?.manageTradingCompanies?.address || ''
     obj.companyCif = hotel?.manageTradingCompanies?.cif || ''
     obj.hotelName = hotel?.name || ''
+    obj.hotelCode = hotel?.code
   }
 
   if (bookingList && bookingList?.length > 0) {
@@ -222,7 +227,7 @@ async function handleDownload() {
     doc.html(elementHTML, {
       callback(doc) {
         // Guardamos el PDF
-        doc.save(`${obj?.agencyCode}-${obj?.agencyName}-${dayjs().format("MMMM")}.pdf`)
+        doc.save(`${obj?.hotelCode}-${obj?.invoiceId}.pdf`)
       },
       x: 10,
       y: 10,

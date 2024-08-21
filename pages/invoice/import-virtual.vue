@@ -14,16 +14,17 @@ const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
 const invoiceFile = ref('')
-const uploadComplete = ref(false)
 
+const uploadComplete = ref(false)
 const loadingSaveAll = ref(false)
+const haveErrorImportStatus = ref(false)
 
 const confApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-booking/import',
 })
 
-const confErrorApi = reactive({
+const confInvoiceApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
 })
@@ -107,7 +108,7 @@ async function getErrorList() {
     listItems.value = []
     const newListItems = []
 
-    const response = await GenericService.importSearch(confErrorApi.moduleApi, confErrorApi.uriApi, payload.value)
+    const response = await GenericService.importSearch(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
 
@@ -180,16 +181,46 @@ async function importFile() {
   }
 
   if (successOperation) {
-    await getErrorList()
-    if (listItems.value.length === 0) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
-      options.value.loading = false
-      await clearForm()
+    await validateStatusImport()
+    if (!haveErrorImportStatus.value) {
+      await getErrorList()
+      if (listItems.value.length === 0) {
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
+        options.value.loading = false
+        await clearForm()
+      }
     }
     // clearForm()
   }
   loadingSaveAll.value = false
   options.value.loading = false
+}
+
+async function validateStatusImport() {
+  options.value.loading = true
+  return new Promise<void>((resolve) => {
+    let status = 'RUNNING'
+    const intervalID = setInterval(async () => {
+      try {
+        const response = await GenericService.getById(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, idItem.value, 'import-status')
+        status = response.status
+      }
+      catch (error: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+        haveErrorImportStatus.value = true
+        clearInterval(intervalID)
+        uploadComplete.value = false
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
+
+      if (status === 'FINISHED') {
+        clearInterval(intervalID)
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
+    }, 10000)
+  })
 }
 
 async function resetListItems() {
@@ -274,6 +305,7 @@ onMounted(async () => {
         :pagination="pagination"
         @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter"
+        @on-list-item="resetListItems"
         @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">

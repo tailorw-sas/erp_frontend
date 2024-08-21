@@ -143,8 +143,15 @@ onMounted(() => {
         </template>
 
         <template #field-amount="{ item: data, onUpdate }">
-          <InputNumber
+          <InputText
+          
             v-model="data.amount" @update:model-value="($event: any) => {
+
+              console.log($event);
+
+              if(isNaN(+$event)){
+                $event = 0
+              }
 
               let amount = invoiceAmount
 
@@ -153,7 +160,7 @@ onMounted(() => {
               }
 
               amountError = false
-              onUpdate('amount', $event)
+              onUpdate('amount', Number($event))
 
               if (invoiceType === InvoiceType.INVOICE) {
                 if (Number(amount) + Number($event) < 0) {

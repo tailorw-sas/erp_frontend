@@ -54,11 +54,18 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12',
   },
   {
+    field: 'defaults',
+    header: 'Default',
+    dataType: 'check',
+    class: 'field col-12 mt-3',
+    headerClass: 'mb-1',
+  },
+  {
     field: 'status',
     header: 'Active',
     dataType: 'check',
     disabled: true,
-    class: 'field col-12 required mt-3 mb-3',
+    class: 'field col-12 required mb-3',
   },
 ]
 
@@ -221,6 +228,7 @@ async function getItemById(id: string) {
         item.value.description = response.description
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
+        item.value.defaults = response.defaults
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)

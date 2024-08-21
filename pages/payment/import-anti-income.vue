@@ -23,6 +23,7 @@ const importModel = ref({
 })
 const uploadComplete = ref(false)
 const loadingSaveAll = ref(false)
+const haveErrorImportStatus = ref(false)
 
 const confApi = reactive({
   moduleApi: 'payment',
@@ -140,7 +141,7 @@ async function onChangeFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     inputFile.value = event.target.files[0]
     importModel.value.importFile = inputFile.value.name
-    uploadComplete.value = false
+    await activeImport()
   }
 }
 
@@ -148,7 +149,7 @@ async function onChangeAttachFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     attachFile.value = event.target.files[0]
     importModel.value.attachFile = attachFile.value.name
-    uploadComplete.value = false
+    await activeImport()
   }
 }
 
@@ -192,12 +193,13 @@ async function importAntiIncome() {
 
   if (successOperation) {
     await validateStatusImport()
-    await getErrorList()
-
-    if (listItems.value.length === 0) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
-      options.value.loading = false
-      await clearForm()
+    if (!haveErrorImportStatus.value) {
+      await getErrorList()
+      if (listItems.value.length === 0) {
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
+        options.value.loading = false
+        await clearForm()
+      }
     }
   }
   loadingSaveAll.value = false
@@ -209,8 +211,18 @@ async function validateStatusImport() {
   return new Promise<void>((resolve) => {
     let status = 'RUNNING'
     const intervalID = setInterval(async () => {
-      const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
-      status = response.status
+      try {
+        const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
+        status = response.status
+      }
+      catch (error: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+        haveErrorImportStatus.value = true
+        clearInterval(intervalID)
+        uploadComplete.value = false
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
 
       if (status === 'FINISHED') {
         clearInterval(intervalID)
@@ -272,6 +284,15 @@ async function getTransactionStatusList() {
   }
 }
 
+async function activeImport() {
+  if (importModel.value.transactionType !== '' && importModel.value.importFile !== '' && importModel.value.attachFile !== null) {
+    uploadComplete.value = false
+  }
+  else {
+    uploadComplete.value = true
+  }
+}
+
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
@@ -281,6 +302,7 @@ watch(payloadOnChangePage, (newValue) => {
 
 onMounted(async () => {
   // getErrorList()
+  uploadComplete.value = true
   await getTransactionStatusList()
 })
 </script>
@@ -303,12 +325,12 @@ onMounted(async () => {
             <div class="grid p-0 m-0" style="margin: 0 auto;">
               <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Document: </label>
+                  <label class="w-7rem">Document: <span class="p-error">*</span></label>
                   <div class="w-full">
                     <Dropdown
                       v-model="importModel.transactionType"
                       class="w-full" :options="transactionStatusList" option-label="name"
-                      option-value="id" placeholder="Select Document"
+                      option-value="id" placeholder="Select Document" @change="activeImport()"
                     />
                   </div>
                 </div>
@@ -325,7 +347,7 @@ onMounted(async () => {
 
               <div class="col-12 md:col-4 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Import Data: </label>
+                  <label class="w-8rem">Import Data: <span class="p-error">*</span> </label>
                   <div class="w-full">
                     <div class="p-inputgroup w-full">
                       <InputText
@@ -348,7 +370,7 @@ onMounted(async () => {
 
               <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Attach File: </label>
+                  <label class="w-7rem">Attach File: <span class="p-error">*</span> </label>
                   <div class="w-full">
                     <div class="p-inputgroup w-full">
                       <InputText
