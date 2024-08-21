@@ -32,6 +32,7 @@ const confirm = useConfirm()
 const dialogVisible = ref(props.openDialog)
 const loadingSaveAll = ref(false)
 const loadingDefaultMerchant = ref(false)
+const loadingDefaultLanguage = ref(false)
 const confApi = reactive({
   moduleApi: 'creditcard',
   uriApi: 'transactions/manual',
@@ -108,15 +109,22 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12 md:col-6 required',
-    validation: z.string().trim().min(1, 'The reservation number field is required')
-        .regex(/^([IG]) \d+ \d+$/i, 'The reservation number field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
+    validation: z.string().trim().min(1, 'The reservation number field is required'),
+    // .regex(/^([IG]) \d+ \d+$/i, 'The reservation number field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
   },
   {
     field: 'referenceNumber',
     header: 'Reference Number',
     dataType: 'text',
-    class: 'field col-12 md:col-6 required',
-    validation: z.string().trim().min(1, 'The reference number field is required').regex(/^\d+$/, 'Only numeric characters allowed')
+    class: 'field col-12 md:col-6',
+    validation: z.string().trim().refine((value) => {
+      if (value === '') {
+        return true
+      }
+      return /^\d+$/.test(value)
+    }, {
+      message: 'Only numeric characters allowed'
+    })
   },
   {
     field: 'hotelContactEmail',
@@ -299,13 +307,41 @@ async function getMerchantList(query: string, isDefault: boolean = false) {
   }
 }
 
-async function getHotelList(merchant: any) {
-  if (!merchant) {
+async function getHotelList(query: string) {
+  if (!item.value.merchant) {
     return
   }
   try {
-    const response = await GenericService.getById('creditcard', 'nomenclators/hotels-by-merchant', merchant.id)
-    const { hotels: dataList } = response
+    const payload = {
+      filter: [{
+        key: 'manageHotel.name',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'manageHotel.code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'manageHotel.status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }, {
+        key: 'manageMerchant.id',
+        operator: 'EQUALS',
+        value: item.value.merchant.id,
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      sortBy: 'createdAt',
+      sortType: 'ASC',
+      pageSize: 20,
+      page: 0,
+    }
+    const response: any = await GenericService.create('creditcard', 'nomenclators/hotels-by-merchant', payload)
+    const { data: dataList } = response
     HotelList.value = []
 
     for (const iterator of dataList) {
@@ -350,20 +386,43 @@ async function getAgencyList(query: string) {
   }
 }
 
-async function getLanguageList(query: string) {
+async function getLanguageList(query: string, isDefault: boolean = false) {
   try {
+    if (isDefault) {
+      loadingDefaultLanguage.value = true
+    }
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: isDefault
+        ? [{
+            key: 'defaults',
+            operator: 'EQUALS',
+            value: true,
+            logicalOperation: 'AND'
+          }, {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'AND'
+          }, {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }]
+        : [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'AND'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
       query: '',
       sortBy: 'createdAt',
       sortType: 'ASC',
@@ -377,9 +436,19 @@ async function getLanguageList(query: string) {
     for (const iterator of dataList) {
       LanguageList.value = [...LanguageList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
+
+    if (isDefault && LanguageList.value.length > 0) {
+      item.value.language = LanguageList.value[0]
+      formReload.value += 1
+    }
   }
   catch (error) {
     console.error('Error loading language list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultLanguage.value = false
+    }
   }
 }
 
@@ -418,8 +487,9 @@ watch(() => props.openDialog, async (newValue) => {
   if (newValue) {
     clearForm()
     handleMethodTypeChange('')
+    getLanguageList('', true)
     await getMerchantList('', true)
-    getHotelList(item.value.merchant)
+    // getHotelList('')
   }
 })
 </script>
@@ -455,7 +525,7 @@ watch(() => props.openDialog, async (newValue) => {
             :suggestions="MerchantList"
             @change="($event) => {
               onUpdate('merchant', $event)
-              getHotelList($event)
+              item.merchant = $event
             }"
             @load="($event) => getMerchantList($event)"
           />
@@ -478,20 +548,19 @@ watch(() => props.openDialog, async (newValue) => {
           <Skeleton v-else height="2rem" class="" />
         </template>
         <template #field-hotel="{ item: data, onUpdate }">
-          <Dropdown
+          <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
-            v-model="data.hotel"
-            :options="HotelList"
-            option-label="name"
-            return-object="false"
-            class="align-items-center"
-            show-clear
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :model="data.hotel"
+            :suggestions="HotelList"
             :disabled="!data.merchant"
-            @update:model-value="($event) => {
+            @change="($event) => {
               onUpdate('hotel', $event)
             }"
-          >
-          </Dropdown>
+            @load="($event) => getHotelList($event)"
+          />
           <Skeleton v-else height="2rem" class="" />
         </template>
         <template #field-agency="{ item: data, onUpdate }">
@@ -511,7 +580,7 @@ watch(() => props.openDialog, async (newValue) => {
         </template>
         <template #field-language="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
+            v-if="!loadingDefaultLanguage && !loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"

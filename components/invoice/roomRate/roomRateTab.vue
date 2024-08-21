@@ -491,7 +491,7 @@ const Payload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'createdAt',
+  sortBy: 'roomRateId',
   sortType: ENUM_SHORT_TYPE.DESC
 })
 const Pagination = ref<IPagination>({
@@ -510,6 +510,9 @@ function ClearForm() {
 }
 
 function onRowRightClick(event: any) {
+  if( !props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
+        return;
+      }
   selectedRoomRate.value = event.data
   roomRateContextMenu.value.show(event.originalEvent)
 }
@@ -541,6 +544,7 @@ async function getRoomRateList() {
 
       ListItems.value = [...ListItems.value, {
         ...iterator,
+        invoiceAmount: iterator?.invoiceAmount || 0,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         loadingEdit: false,
         loadingDelete: false,
@@ -814,6 +818,13 @@ function OnSortField(event: any) {
   }
 }
 
+watch(PayloadOnChangePage, (newValue) => {
+  Payload.value.page = newValue?.page ? newValue?.page : 0
+  Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getRoomRateList()
+})
+
+
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
     getRoomRateList()
@@ -890,7 +901,11 @@ watch(() => props.bookingObj, () => {
       @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
+        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME ) {
+          return;
+        }
+
+        if( !props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
           return;
         }
         openEditDialog($event)

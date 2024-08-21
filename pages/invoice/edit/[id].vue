@@ -58,6 +58,8 @@ const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 const invoiceTypeList = ref<any[]>([])
 
+const invoiceStatus = ref<any>(null)
+
 const confhotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
@@ -370,16 +372,30 @@ function handleDialogOpen() {
   console.log(bookingDialogOpen);
 }
 
-async function getHotelList() {
+async function getHotelList(query = '') {
   try {
     const payload
       = {
-      filter: [{
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
       query: '',
       pageSize: 200,
       page: 0,
@@ -405,16 +421,30 @@ function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
 
-async function getAgencyList() {
+async function getAgencyList(query = '') {
   try {
     const payload
       = {
-      filter: [{
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
       query: '',
       pageSize: 200,
       page: 0,
@@ -586,6 +616,7 @@ async function getItemById(id: string) {
         item.value.hasAttachments = response.hasAttachments
         item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
         item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
+        invoiceStatus.value = response.status
         item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
@@ -861,7 +892,7 @@ onMounted(async () => {
         :loading-delete="loadingDelete" @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
         :force-save="forceSave" @force-save="forceSave = $event" container-class="grid pt-3">
         <template #field-invoiceDate="{ item: data, onUpdate }">
-          <Calendar v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
+          <Calendar v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
             @update:model-value="($event) => {
         onUpdate('invoiceDate', $event)
       }" />
@@ -921,7 +952,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-hotel="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
+          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
             :model="data.hotel" :suggestions="hotelList" @change="($event) => {
         onUpdate('hotel', $event)
       }" @load="($event) => getHotelList($event)">
@@ -936,7 +967,7 @@ onMounted(async () => {
           </DebouncedAutoCompleteComponent>
         </template>
         <template #field-agency="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
+          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
             :model="data.agency" :suggestions="agencyList" @change="($event) => {
         onUpdate('agency', $event)
       }" @load="($event) => getAgencyList($event)">
@@ -963,7 +994,7 @@ onMounted(async () => {
             <div>
               <div class="flex justify-content-end">
                 <IfCan :perms="['INVOICE-MANAGEMENT:EDIT']">
-                  <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll" @click="() => {
+                  <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED" :loading="loadingSaveAll" @click="() => {
                       saveItem(props.item.fieldValues)
                     }" />
                 </IfCan>
@@ -977,7 +1008,7 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
                   <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" />
+                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED" />
                   </IfCan>
                   <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-SHOW-HISTORY']"> 
                     <Button v-tooltip.top="'Show History'" class="w-3rem mx-1" :loading="loadingSaveAll"
@@ -996,11 +1027,11 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-CREATE']">
                   <Button v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                    :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME" />
+                    :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME || invoiceStatus !== InvoiceStatus.PROCECSED" />
                 </IfCan>
                 
                 <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === InvoiceType.INCOME" class="w-3rem ml-1"
-                  disabled icon="pi pi-download" />
+                  disabled icon="pi pi-file-import"  />
 
                 <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll"
                   @click="update" />

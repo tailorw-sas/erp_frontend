@@ -298,7 +298,7 @@ const Payload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'createdAt',
+  sortBy: 'adjustmentId',
   sortType: ENUM_SHORT_TYPE.DESC
 })
 const Pagination = ref<IPagination>({
@@ -344,9 +344,17 @@ async function getAdjustmentList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
+
+
+      let  transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
+
+      if(iterator?.invoice?.invoiceType === InvoiceType.INCOME){
+        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ""}-${iterator?.paymentTransactionType?.name || ""}` }
+      }
+
       ListItems.value = [...ListItems.value, {
         ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date,
-        transaction: { ...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
+       
       }]
 
       if (typeof +iterator?.amount === 'number') {
@@ -553,11 +561,30 @@ function requireConfirmationToSaveAdjustment(item: any) {
   })
 }
 
-async function getTransactionTypeList() {
+async function getTransactionTypeList(query = '') {
   try {
     const payload
       = {
-      filter: [],
+      filter: [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
       query: '',
       pageSize: 200,
       page: 0,
@@ -645,6 +672,14 @@ watch(() => props.listItems, () => {
     })
   }
 }, { deep: true })
+
+
+watch(PayloadOnChangePage, (newValue) => {
+  Payload.value.page = newValue?.page ? newValue?.page : 0
+  Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getAdjustmentList()
+})
+
 
 onMounted(() => {
   if (props.selectedInvoice) {

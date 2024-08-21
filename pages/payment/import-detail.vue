@@ -3,9 +3,13 @@ import { onMounted, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { v4 as uuidv4 } from 'uuid'
 import type { PageState } from 'primevue/paginator'
+import { useRoute } from 'vue-router'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+
+const route = useRoute()
+const paymentId = route.query.paymentId
 
 const { data: userData } = useAuth()
 const toast = useToast()
@@ -18,6 +22,7 @@ const importModel = ref({
 })
 const uploadComplete = ref(false)
 const loadingSaveAll = ref(false)
+const haveErrorImportStatus = ref(false)
 
 const confApi = reactive({
   moduleApi: 'payment',
@@ -116,8 +121,8 @@ async function getErrorList() {
 
     listItems.value = [...listItems.value, ...newListItems]
   }
-  catch (error) {
-    console.error('Error loading file:', error)
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 5000 })
   }
 }
 
@@ -154,7 +159,9 @@ async function importFileDetail() {
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.DETAIL)
     formData.append('employee', userData?.value?.user?.userId || '')
-
+    if (paymentId && paymentId !== '') {
+      formData.append('paymentId', paymentId.toString())
+    }
     await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
@@ -166,11 +173,13 @@ async function importFileDetail() {
 
   if (successOperation) {
     await validateStatusImport()
-    await getErrorList()
-    if (listItems.value.length === 0) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
-      options.value.loading = false
-      await clearForm()
+    if (!haveErrorImportStatus.value) {
+      await getErrorList()
+      if (listItems.value.length === 0) {
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
+        options.value.loading = false
+        await clearForm()
+      }
     }
   }
   loadingSaveAll.value = false
@@ -182,8 +191,18 @@ async function validateStatusImport() {
   return new Promise<void>((resolve) => {
     let status = 'RUNNING'
     const intervalID = setInterval(async () => {
-      const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
-      status = response.status
+      try {
+        const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
+        status = response.status
+      }
+      catch (error: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+        haveErrorImportStatus.value = true
+        clearInterval(intervalID)
+        uploadComplete.value = false
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
 
       if (status === 'FINISHED') {
         clearInterval(intervalID)
@@ -255,7 +274,10 @@ onMounted(async () => {
                         class="w-full" show-clear aria-describedby="inputtext-help"
                       />
                       <span class="p-inputgroup-addon p-0 m-0">
-                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                        <Button
+                          icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0"
+                          @click="fileUpload.click()"
+                        />
                       </span>
                     </div>
                     <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
@@ -310,6 +332,7 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
-  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
+  max-width: 150px;
+  /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>

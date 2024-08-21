@@ -13,9 +13,10 @@ const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
 const invoiceFile = ref('')
-const uploadComplete = ref(false)
 
+const uploadComplete = ref(false)
 const loadingSaveAll = ref(false)
+const haveErrorImportStatus = ref(false)
 
 const confApi = reactive({
   moduleApi: 'payment',
@@ -161,11 +162,13 @@ async function importFile() {
 
   if (successOperation) {
     await validateStatusImport()
-    await getErrorList()
-    if (listItems.value.length === 0) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
-      options.value.loading = false
-      await clearForm()
+    if (!haveErrorImportStatus.value) {
+      await getErrorList()
+      if (listItems.value.length === 0) {
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
+        options.value.loading = false
+        await clearForm()
+      }
     }
   }
   loadingSaveAll.value = false
@@ -177,8 +180,18 @@ async function validateStatusImport() {
   return new Promise<void>((resolve) => {
     let status = 'RUNNING'
     const intervalID = setInterval(async () => {
-      const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
-      status = response.status
+      try {
+        const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
+        status = response.status
+      }
+      catch (error: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+        haveErrorImportStatus.value = true
+        clearInterval(intervalID)
+        uploadComplete.value = false
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
 
       if (status === 'FINISHED') {
         clearInterval(intervalID)
