@@ -2,10 +2,13 @@ package com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageBooking.ProducerReplicateManageBookingService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,10 +18,19 @@ public class CreateRoomRateCommandHandler implements ICommandHandler<CreateRoomR
     private final IManageBookingService bookingService;
     private final IManageInvoiceService invoiceService;
 
-    public CreateRoomRateCommandHandler(IManageRoomRateService roomRateService, IManageBookingService bookingService, IManageInvoiceService invoiceService) {
+    private final ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService;
+    private final ProducerReplicateManageBookingService producerReplicateManageBookingService;
+
+    public CreateRoomRateCommandHandler(IManageRoomRateService roomRateService,
+            IManageBookingService bookingService,
+            IManageInvoiceService invoiceService,
+            ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService,
+            ProducerReplicateManageBookingService producerReplicateManageBookingService) {
         this.roomRateService = roomRateService;
         this.bookingService = bookingService;
         this.invoiceService = invoiceService;
+        this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
+        this.producerReplicateManageBookingService = producerReplicateManageBookingService;
     }
 
     @Override
@@ -41,9 +53,17 @@ public class CreateRoomRateCommandHandler implements ICommandHandler<CreateRoomR
                 bookingDto,
                 null, null));
 
-
-        bookingService.calculateInvoiceAmount(this.bookingService.findById(bookingDto.getId()));
+        ManageBookingDto updateBookingDto = this.bookingService.findById(bookingDto.getId());
+        bookingService.calculateInvoiceAmount(updateBookingDto);
         bookingService.calculateHotelAmount(this.bookingService.findById(bookingDto.getId()));
-        invoiceService.calculateInvoiceAmount(this.invoiceService.findById(bookingDto.getInvoice().getId()));
+        ManageInvoiceDto updInvoiceDto = this.invoiceService.findById(bookingDto.getInvoice().getId());
+        invoiceService.calculateInvoiceAmount(updInvoiceDto);
+
+        try {
+            //TODO: aqui se envia para actualizar booking y invoice para payment
+            this.producerReplicateManageBookingService.create(updateBookingDto);
+            this.producerUpdateManageInvoiceService.update(updInvoiceDto);
+        } catch (Exception e) {
+        }
     }
 }

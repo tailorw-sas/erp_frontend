@@ -68,8 +68,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageLanguageDto languageDto = this.languageService.findById(command.getLanguage());
 
-        RulesChecker.checkRule(new ManualTransactionAgencyBookingFormatRule(agencyDto.getBookingCouponFormat()));
-        RulesChecker.checkRule(new ManualTransactionReservationNumberRule(command.getReservationNumber(), agencyDto.getBookingCouponFormat()));
+//        RulesChecker.checkRule(new ManualTransactionAgencyBookingFormatRule(agencyDto.getBookingCouponFormat()));
+//        RulesChecker.checkRule(new ManualTransactionReservationNumberRule(command.getReservationNumber(), agencyDto.getBookingCouponFormat()));
 
         ManageCreditCardTypeDto creditCardTypeDto = null;
 

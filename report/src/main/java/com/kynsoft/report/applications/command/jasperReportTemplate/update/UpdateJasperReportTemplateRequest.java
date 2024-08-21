@@ -34,4 +34,5 @@ public class UpdateJasperReportTemplateRequest {
     private String language;
     private Status status;
     private UUID dbConection;
+    private String query;
 }

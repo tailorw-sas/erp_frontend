@@ -41,6 +41,7 @@ public class JasperReportTemplateResponse implements IResponse {
     private String rootIndex;
     private String language;
     private DBConectionResponse dbConection;
+    private String query;
 
     public JasperReportTemplateResponse(JasperReportTemplateDto jasperReportTemplateDto) {
         this.id = jasperReportTemplateDto.getId();
@@ -66,6 +67,7 @@ public class JasperReportTemplateResponse implements IResponse {
         this.language = jasperReportTemplateDto.getLanguage();
         this.status = jasperReportTemplateDto.getStatus();
         this.dbConection = jasperReportTemplateDto.getDbConection() != null ? new DBConectionResponse(jasperReportTemplateDto.getDbConection()) : null;
+        this.query = jasperReportTemplateDto.getQuery();
     }
 
 }

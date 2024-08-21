@@ -2,6 +2,7 @@ package com.kynsof.share.core.application.excel;
 
 import com.kynsof.share.core.application.excel.procesor.SheetIndexAnnotationProcessor;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.exception.ReadExcelException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import io.jsonwebtoken.lang.Assert;
@@ -11,7 +12,6 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.ExcelNumberFormat;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
@@ -21,8 +21,8 @@ import java.util.Objects;
 
 public class ExcelUtils {
 
-    public static Object getValueFromCell(CellInfo cellInfo, Cell cell, DataFormat dataFormatter) {
-        DataFormatter formatter = new DataFormatter();
+    public static Object getValueFromCell(CellInfo cellInfo, Cell cell, DataFormat dataFormatter,DataFormatter formatter) {
+
         if (Objects.isNull(cell)) {
             return null;
         }
@@ -108,12 +108,12 @@ public class ExcelUtils {
         return Objects.isNull(cell) || cell.getCellType() == CellType.BLANK;
     }
 
-    public static void readCell(Cell cell, BeanField beanField, CellInfo cellInfo, Object bean, DataFormat dataFormatter) {
+    public static void readCell(Cell cell, BeanField beanField, CellInfo cellInfo, Object bean, DataFormat dataFormatter,DataFormatter formatter) {
         try {
-            beanField.setFieldValue(ExcelUtils.getValueFromCell(cellInfo, cell, dataFormatter), bean);
+            beanField.setFieldValue(ExcelUtils.getValueFromCell(cellInfo, cell, dataFormatter,formatter ), bean);
 
         } catch (Exception e) {
-            throw new ReadExcelException(DomainErrorMessage.EXCEL_IMPORT_FORMAT_ERROR, new ErrorField(" row " + cell.getRow().getRowNum() + " cell " + cellInfo.getPosition(), e.getMessage()));
+            throw new ExcelException("Invalid excel content");
         }
     }
 

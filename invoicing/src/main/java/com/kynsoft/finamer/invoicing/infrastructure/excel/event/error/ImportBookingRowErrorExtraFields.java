@@ -2,10 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.excel.event.error;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageTradingCompaniesDto;
-import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageHotel;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageTradingCompanies;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
 import org.springframework.stereotype.Component;
 

@@ -18,14 +18,16 @@ public class CreateManagerLanguageCommand implements ICommand {
     private Status status;
     private String name;
     private Boolean isEnabled;
+    private Boolean defaults;
 
-    public CreateManagerLanguageCommand(String code, String description, Status status, String name, Boolean isEnabled) {
+    public CreateManagerLanguageCommand(String code, String description, Status status, String name, Boolean isEnabled, Boolean defaults) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.status = status;
         this.name = name;
         this.isEnabled = isEnabled;
+        this.defaults = defaults;
     }
 
     public static CreateManagerLanguageCommand fromRequest(CreateManagerLanguageRequest request){
@@ -34,7 +36,8 @@ public class CreateManagerLanguageCommand implements ICommand {
                 request.getDescription(),
                 request.getStatus(),
                 request.getName(),
-                request.getIsEnabled()
+                request.getIsEnabled(),
+                request.getDefaults()
         );
     }
 

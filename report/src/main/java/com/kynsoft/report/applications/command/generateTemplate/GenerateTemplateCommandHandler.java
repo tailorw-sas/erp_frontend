@@ -2,13 +2,9 @@ package com.kynsoft.report.applications.command.generateTemplate;
 
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
-import com.kynsoft.report.domain.services.IReportService;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -19,55 +15,33 @@ import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateTemplateCommand> {
-
-    private final ResourceLoader resourceLoader;
-    private final IReportService reportService;
+    private static final Logger logger = LoggerFactory.getLogger(GenerateTemplateCommandHandler.class);
     private final RestTemplate restTemplate;
     private final IJasperReportTemplateService jasperReportTemplateService;
 
-    public GenerateTemplateCommandHandler(IReportService reportService, RestTemplate restTemplate, IJasperReportTemplateService jasperReportTemplateService, ResourceLoader resourceLoader) {
-        this.reportService = reportService;
+    public GenerateTemplateCommandHandler(RestTemplate restTemplate,
+                                          IJasperReportTemplateService jasperReportTemplateService) {
         this.restTemplate = restTemplate;
         this.jasperReportTemplateService = jasperReportTemplateService;
-        this.resourceLoader = resourceLoader;
     }
 
     @Override
     public void handle(GenerateTemplateCommand command) {
         JasperReportTemplateDto reportTemplateDto = jasperReportTemplateService.findByTemplateCode(command.getJasperReportCode());
-//        String jrxmlUrl = "http://d2cebw6tssfqem.cloudfront.net/cita_2024-04-17_11-38-05.jrxml";
-//       Map<String, Object> parameters = new HashMap<>();
-//        parameters.put("logo", "http://d3ksvzqyx4up5m.cloudfront.net/Ttt_2024-03-14_19-03-33.png");
-//        parameters.put("cita", "111111");
-//        parameters.put("nombres", "Keimer Montes Oliver");
-//        parameters.put("identidad", "0961881992");
-//        parameters.put("fecha", "2024-04-23");
-//        parameters.put("hora", "10:40");
-//        parameters.put("servicio", "GINECOLOGIA");
-//        parameters.put("tipo", "CONSULTA EXTERNA");
-//        parameters.put("direccion", "Calle 48");
-//        parameters.put("lugar", "HOSPITAL MILITAR");
-//        parameters.put("fecha_registro", "2024-04-23 10:40");
-//        parameters.put("URL_QR", "http://d3ksvzqyx4up5m.cloudfront.net/Ttt_2024-03-14_19-03-33.png");
-   //  byte [] response = reportService.generatePdfReport(command.getParameters(),reportTemplateDto.getFile(), new JREmptyDataSource());
-       // command.setResult(response);
+//
 
         try {
-            // Set the path to your JRXML template
-           // String reportPath = "classpath:templates/Payment.jrxml"; // Ensure the path is correct
-
-            // Create parameters for the report
-//            Map<String, Object> parameters = new HashMap<>();
-//            parameters.put("fechayHora", Date.valueOf("2024-08-03")); // Use java.sql.Date
-//            parameters.put("idPayment", Long.valueOf("1"));
 
             // Generate the PDF report
             byte[] response = generatePdfReport(command.getParameters(), reportTemplateDto.getFile(), reportTemplateDto);
@@ -86,6 +60,7 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
         JasperReport jasperReport = getJasperReport(reportPath);
 
         // Create and configure the data source
+        logger.error("Antes de crear  la base de datos: {}",    reportTemplateDto.getDbConection().getName());
         JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
 
 //        // Obtain the parameters
@@ -104,8 +79,9 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
 //        Map<String, Object> namedParameters = new HashMap<>();
 //        namedParameters.put("idPayment", idPayment);
 //        namedParameters.put("fechayHora", fechayHora);
-
+        query = replaceQueryParameters(query, parameters);
         // Execute query with named parameters
+        logger.error("Base de datos: {}", query);
         List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
 
         // Convert data to JRDataSource
@@ -126,13 +102,16 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
     }
 
     private JasperReport getJasperReport(String reportPath) throws JRException, IOException {
-        Resource resource = resourceLoader.getResource(reportPath);
-        InputStream jrxmlInput = resource.getInputStream();
-        //InputStream jrxmlInput = new ByteArrayInputStream(Objects.requireNonNull(restTemplate.getForObject(reportPath, byte[].class)));
-        return JasperCompileManager.compileReport(jrxmlInput);
+      //  Resource resource = resourceLoader.getResource(reportPath);
+       // InputStream jrxmlInput = resource.getInputStream();
+        logger.error("Fetching JRXML template from URL: {}", reportPath);
+       InputStream jrxmlInput = new ByteArrayInputStream(Objects.requireNonNull(restTemplate.getForObject(reportPath, byte[].class)));
+        logger.error("Jrxml content loaded: {}", jrxmlInput.available());
+       return JasperCompileManager.compileReport(jrxmlInput);
     }
 
     private DataSource createDataSource(String url, String username, String password) {
+        logger.error("Base de datos: {}", url);
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.postgresql.Driver");
         dataSource.setUrl(url);
@@ -140,4 +119,30 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
         dataSource.setPassword(password);
         return dataSource;
     }
+
+    private   String replaceQueryParameters(String query, Map<String, Object> parameters) {
+        // Regex pattern to match ::parameterName
+        Pattern pattern = Pattern.compile("::([a-zA-Z]\\w*)");
+        Matcher matcher = pattern.matcher(query);
+
+        // StringBuffer to hold the modified query
+        StringBuffer resultQuery = new StringBuffer();
+
+        while (matcher.find()) {
+            String paramName = matcher.group(1); // Extract the parameter name without the colons
+            Object value = parameters.get(paramName); // Get the value from the map
+
+            if (value == null) {
+                throw new IllegalArgumentException("Parameter " + paramName + " not found in the parameters map.");
+            }
+
+            // Replace the parameter with its value in the query
+            matcher.appendReplacement(resultQuery, value.toString());
+        }
+        matcher.appendTail(resultQuery);
+
+        return resultQuery.toString();
+    }
+
+
 }

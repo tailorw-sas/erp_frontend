@@ -20,7 +20,7 @@ public class PaymentAntiValidatorFactory extends IValidatorFactory<AntiToIncomeR
     private final IPaymentDetailService paymentDetailService;
     private final PaymentImportCacheRepository paymentImportCacheRepository;
 
-    private PaymentTotalAmountValidator totalAmountValidator;
+   // private PaymentTotalAmountValidator totalAmountValidator;
 
     public PaymentAntiValidatorFactory(ApplicationEventPublisher paymentEventPublisher,
                                        IPaymentDetailService paymentDetailService,
@@ -35,12 +35,12 @@ public class PaymentAntiValidatorFactory extends IValidatorFactory<AntiToIncomeR
     public void createValidators() {
         paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher, paymentDetailService, paymentImportCacheRepository);
         paymentTransactionIdValidator = new PaymentTransactionIdValidator(paymentDetailService, applicationEventPublisher);
-        totalAmountValidator = new PaymentTotalAmountValidator(paymentImportCacheRepository);
+      //  totalAmountValidator = new PaymentTotalAmountValidator(paymentImportCacheRepository);
     }
 
     @Override
     public boolean validate(AntiToIncomeRow toValidate) {
-        totalAmountValidator.validate(toValidate.getAmount(), toValidate.getAmount(), toValidate.getImportProcessId());
+       // totalAmountValidator.validate(toValidate.getAmount(), toValidate.getAmount(), toValidate.getImportProcessId());
         paymentTransactionIdValidator.validate(toValidate, errorFieldList);
         paymentImportAmountValidator.validate(toValidate, errorFieldList);
         if (this.hasErrors()) {

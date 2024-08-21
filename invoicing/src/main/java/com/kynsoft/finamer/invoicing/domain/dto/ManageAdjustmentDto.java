@@ -20,6 +20,7 @@ public class ManageAdjustmentDto {
     private LocalDateTime date;
     private String description;
     private ManageInvoiceTransactionTypeDto transaction;
+    private ManagePaymentTransactionTypeDto paymentTransactionType;
     private ManageRoomRateDto roomRate;
     private String employee;
 

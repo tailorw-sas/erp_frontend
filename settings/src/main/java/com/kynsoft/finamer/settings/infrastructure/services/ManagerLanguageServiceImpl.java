@@ -86,6 +86,11 @@ public class ManagerLanguageServiceImpl implements IManagerLanguageService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public Long countByDefaultAndNotId(UUID id) {
+        return this.repositoryQuery.countByDefaultAndNotId(id);
+    }
+
     private PaginatedResponse getPaginatedResponse(Page<ManagerLanguage> data) {
         List<ManagerLanguageResponse> responseList = new ArrayList<>();
         for (ManagerLanguage entity : data.getContent()) {

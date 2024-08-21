@@ -97,6 +97,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         dto.setInvoice(invoiceDto);
         dto.setDescription("The income data was inserted.");
         dto.setEmployee(employee);
+        dto.setInvoiceStatus(invoiceDto.getStatus());
 
         this.invoiceStatusHistoryService.create(dto);
 

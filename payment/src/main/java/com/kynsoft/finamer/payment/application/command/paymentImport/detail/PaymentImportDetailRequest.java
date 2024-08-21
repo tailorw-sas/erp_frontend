@@ -9,10 +9,12 @@ import org.springframework.http.codec.multipart.FilePart;
 @Data
 public class PaymentImportDetailRequest {
     private String importProcessId;
-    private double totalAmount;
+   // private double totalAmount;
     private String employeeId;
     private String invoiceTransactionTypeId;
     private byte [] file;
-    private FilePart attachment;
+    private byte [] attachment;
+    private String attachmentFileName;
+    private String paymentId;
     private EImportPaymentType importPaymentType;
 }

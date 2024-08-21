@@ -35,13 +35,15 @@ public class CreateJasperReportTemplateCommand implements ICommand {
     private String rootIndex;
     private String language;
     private UUID dbConection;
+    private String query;
 
     public CreateJasperReportTemplateCommand(String code, String name, String description, JasperReportTemplateType type,
                                              String file, String parameters, 
                                              Double parentIndex, Double menuPosition, 
                                              String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
                                              Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
-                                             String rootIndex, String language, Status status, UUID dbConection) {
+                                             String rootIndex, String language, Status status, UUID dbConection,
+                                             String query) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -64,6 +66,7 @@ public class CreateJasperReportTemplateCommand implements ICommand {
         this.language = language;
         this.status = status;
         this.dbConection = dbConection;
+        this.query = query;
     }
 
     public static CreateJasperReportTemplateCommand fromRequest(CreateJasperReportTemplateRequest request) {
@@ -88,7 +91,8 @@ public class CreateJasperReportTemplateCommand implements ICommand {
                 request.getRootIndex(),
                 request.getLanguage(),
                 request.getStatus(),
-                request.getDbConection()
+                request.getDbConection(),
+                request.getQuery()
         );
     }
 

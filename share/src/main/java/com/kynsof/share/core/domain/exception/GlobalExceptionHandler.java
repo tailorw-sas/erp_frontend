@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.WebRequest;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,11 +54,11 @@ public class GlobalExceptionHandler {
                 List.of(ex.getErrorField()));
         return ResponseEntity.internalServerError().body(ApiResponse.fail(apiError));
     }
-    @ExceptionHandler(EmptySheetException.class)
+    @ExceptionHandler(ExcelException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<ApiResponse<?>> handleReadExcelException(EmptySheetException ex) {
-        ApiError apiError = new ApiError(ex.getDomainErrorMessage().getReasonPhrase(),
-                List.of(ex.getErrorField()));
+    public ResponseEntity<ApiResponse<?>> handleReadExcelException(ExcelException ex) {
+        ApiError apiError = new ApiError(ex.getMessage(),
+                Collections.EMPTY_LIST);
         return ResponseEntity.internalServerError().body(ApiResponse.fail(apiError));
     }
 

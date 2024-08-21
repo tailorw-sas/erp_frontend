@@ -12,4 +12,5 @@ public class UpdateAttachmentTypeRequest {
     private String description;
     private Status status;
     private Boolean defaults;
+    private boolean antiToIncomeImport;
 }

@@ -39,6 +39,10 @@ public class ManageAdjustment {
     private ManageInvoiceTransactionType transaction;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_payment_type", nullable = true)
+    private ManagePaymentTransactionType paymentTransactionType;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_room_rate", nullable = true)
     private ManageRoomRate roomRate;
 
@@ -63,17 +67,18 @@ public class ManageAdjustment {
         this.employee = dto.getEmployee();
         this.transaction = dto.getTransaction() != null ? new ManageInvoiceTransactionType(dto.getTransaction()) : null;
         this.roomRate = dto.getRoomRate() != null ? new ManageRoomRate(dto.getRoomRate()) : null;
+        this.paymentTransactionType = dto.getPaymentTransactionType() != null ? new ManagePaymentTransactionType(dto.getPaymentTransactionType()) : null;
     }
 
     public ManageAdjustmentDto toAggregate() {
         return new ManageAdjustmentDto(id, adjustmentId, amount, date, description,
-                transaction != null ? transaction.toAggregate() : null,
+                transaction != null ? transaction.toAggregate() : null, paymentTransactionType != null ? paymentTransactionType.toAggregate() : null,
                 roomRate != null ? roomRate.toAggregate() : null, employee);
     }
 
     public ManageAdjustmentDto toAggregateSample() {
         return new ManageAdjustmentDto(id, adjustmentId, amount, date, description,
-                transaction != null ? transaction.toAggregate() : null,
+                transaction != null ? transaction.toAggregate() : null, paymentTransactionType != null ? paymentTransactionType.toAggregate() : null,
                 null, employee);
     }
 }

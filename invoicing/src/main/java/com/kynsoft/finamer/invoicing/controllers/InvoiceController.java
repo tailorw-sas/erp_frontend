@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.invoicing.application.command.invoiceStatusHistory.create.CreateInvoiceStatusHistoryCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.calculateInvoiceAmount.CalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceMessage;
@@ -66,7 +67,7 @@ public class InvoiceController {
                     return rr.getId();
                 }).collect(Collectors.toList())));
 
-        
+        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
 
         return ResponseEntity.ok(message);
 

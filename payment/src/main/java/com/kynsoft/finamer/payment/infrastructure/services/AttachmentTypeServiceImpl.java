@@ -107,4 +107,9 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
         return this.repositoryQuery.countByDefaultAndNotId(id);
     }
 
+    @Override
+    public Long countByAntiToIncomeImportAndNotId(UUID id) {
+        return this.repositoryQuery.countByAntiToIncomeImportAndNotId(id);
+    }
+
 }

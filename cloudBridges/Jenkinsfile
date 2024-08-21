@@ -2,6 +2,10 @@ pipeline {
     
     agent any
 
+    parameters {
+        booleanParam(name: 'FORCE_BUILD', defaultValue: false, description: 'Forzar la ejecución del pipeline sin verificar cambios')
+    }
+    
     environment {
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-cloud-bridges:version'
@@ -27,40 +31,18 @@ pipeline {
             steps {
                 echo 'Identifying project...'
                 script {
-                    /*
-                    def folderPaths = [env.SRC, env.SRC_SHARE]
-                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
-                    def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
-                    if (changesInFolder) {
-                        echo "Changes detected in folders: ${SRC} y ${SRC_SHARE}"
-                    } else {
-                        echo "* * * * * * * * No changes detected in folders: ${SRC} y ${SRC_SHARE} * * * * * * * *"
-                        currentBuild.result = 'NOT_BUILT'
-                        error('No changes detected in folders: $SRC y $SRC_SHARE' )
-                    }*/
-
-                    def jsonPayload = params.JSON_PAYLOAD ?: ''
-                    
-                    if (jsonPayload) {
-                        // Parsear el JSON
-                        def json = readJSON text: jsonPayload
-                    
-                        echo "JSON: ${json}"
-                    } else {
-                        echo "No JSON payload received"
+                    if (!params.FORCE_BUILD){
+                        def folderPaths = [env.SRC, env.SRC_SHARE]
+                        def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                        def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
+                        if (changesInFolder) {
+                            echo "Changes detected in folders: ${SRC} y/o ${SRC_SHARE}"
+                        } else {
+                            echo "* * * * * * * * No changes detected in folders: ${SRC} y/o ${SRC_SHARE} * * * * * * * *"
+                            currentBuild.result = 'NOT_BUILT'
+                            error('No changes detected in folders: $SRC y $SRC_SHARE' )
+                        }
                     }
-                    
-                    def folderPath = env.SRC
-                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
-                    def changesInFolder = changes.findAll { it.startsWith(folderPath) }
-                    if (changesInFolder) {
-                        echo "Changes detected in folder: ${folderPath}"
-                    } else {
-                        echo "* * * * * * * * No changes detected in folder: ${folderPath} * * * * * * * *"
-                        currentBuild.result = 'NOT_BUILT'
-                        error('No changes detected in folder: ${folderPath}')
-                    }
-
                 }
             }
         }

@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.redis.CacheConfig;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
@@ -18,6 +19,7 @@ import com.kynsoft.finamer.payment.infrastructure.repository.query.PaymentReadDa
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -70,6 +72,7 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
+    @Cacheable(cacheNames =  CacheConfig.USER_CACHE, unless = "#result == null")
     public boolean existPayment(long genId) {
         return repositoryQuery.existsPaymentByPaymentId(genId);
     }

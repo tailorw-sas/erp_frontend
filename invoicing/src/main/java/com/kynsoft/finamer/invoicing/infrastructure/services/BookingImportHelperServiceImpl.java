@@ -9,6 +9,7 @@ import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportRowErrorRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.stereotype.Service;
 
@@ -37,10 +38,16 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private final BookingImportRowErrorRedisRepository errorRedisRepository;
 
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
-    public BookingImportHelperServiceImpl(IManageAgencyService agencyService, IManageHotelService manageHotelService,
-                                          IManageInvoiceService invoiceService, IManageRatePlanService ratePlanService,
-                                          IManageRoomTypeService roomTypeService, BookingImportCacheRedisRepository repository, BookingImportRowErrorRedisRepository errorRedisRepository) {
+    public BookingImportHelperServiceImpl(IManageAgencyService agencyService, 
+                                          IManageHotelService manageHotelService,
+                                          IManageInvoiceService invoiceService, 
+                                          IManageRatePlanService ratePlanService,
+                                          IManageRoomTypeService roomTypeService, 
+                                          BookingImportCacheRedisRepository repository, 
+                                          BookingImportRowErrorRedisRepository errorRedisRepository,
+                                          ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.invoiceService = invoiceService;
@@ -48,6 +55,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         this.roomTypeService = roomTypeService;
         this.repository = repository;
         this.errorRedisRepository = errorRedisRepository;
+        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
     }
 
     @Override
@@ -159,6 +167,12 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         }
         manageInvoiceDto.setInvoiceNumber(invoiceNumber);
         invoiceService.create(manageInvoiceDto);
+
+        //TODO: aqui se envia a crear el invoice con sun booking en payment
+        try {
+            this.producerReplicateManageInvoiceService.create(manageInvoiceDto);
+        } catch (Exception e) {
+        }
     }
     private void createCache(BookingRow bookingRow,String generationType){
         BookingImportCache bookingImportCache = new BookingImportCache(bookingRow);

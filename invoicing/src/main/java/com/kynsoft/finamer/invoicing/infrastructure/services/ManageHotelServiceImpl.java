@@ -5,6 +5,9 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageHotelResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
@@ -15,9 +18,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class ManageHotelServiceImpl implements IManageHotelService {
@@ -93,6 +99,25 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     @Override
     public List<ManageHotelDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(ManageHotel::toAggregate).toList();
+    }
+
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+
+        GenericSpecificationsBuilder<ManageHotel> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageHotel> data = this.repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageHotel> data) {
+        List<ManageHotelResponse> responses = new ArrayList<>();
+        for (ManageHotel p : data.getContent()) {
+            responses.add(new ManageHotelResponse(p.toAggregate()));
+        }
+        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

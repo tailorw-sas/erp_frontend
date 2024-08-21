@@ -43,8 +43,9 @@ public class AntiPaymentImportExtrasFieldProcessorImpl implements IPaymentImport
     }
 
     private void addPaymentExtraField(PaymentAntiRowError rowError) {
-        if (paymentDetailService.existByGenId(Integer.parseInt(rowError.getRow().getTransactionId()))) {
-            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(rowError.getRow().getTransactionId()));
+        if (Objects.nonNull(rowError.getRow().getTransactionId()) &&
+                paymentDetailService.existByGenId(rowError.getRow().getTransactionId().intValue())) {
+            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(rowError.getRow().getTransactionId().intValue());
             PaymentDto paymentDto = paymentDetailDto.getPayment();
             rowError.getRow().setPaymentId(String.valueOf(paymentDto.getPaymentId()));
             if (Objects.nonNull(paymentDetailDto.getAmount())) {

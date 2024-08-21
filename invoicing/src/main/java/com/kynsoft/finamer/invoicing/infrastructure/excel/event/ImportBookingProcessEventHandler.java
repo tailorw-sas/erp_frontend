@@ -1,7 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.event;
 
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.ProcessStatus;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.ImportProcess;
+import com.kynsoft.finamer.invoicing.domain.dto.BookingImportProcessDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportProcessRedisEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportProcessRedisRepository;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -19,14 +20,16 @@ public class ImportBookingProcessEventHandler implements ApplicationListener<Imp
 
     @Override
     public void onApplicationEvent(ImportBookingProcessEvent event) {
-        String importProcessId = (String) event.getSource();
-        Optional<ImportProcess> importProcessOptional = bookingImportProcessRedisRepository.findByImportProcessId(importProcessId);
+        BookingImportProcessDto bookingImportProcessDto = event.getBookingImportProcessDto();
+        Optional<BookingImportProcessRedisEntity> importProcessOptional = bookingImportProcessRedisRepository.findByImportProcessId(bookingImportProcessDto.getImportProcessId());
         if (importProcessOptional.isPresent()){
-            ImportProcess importProcess = importProcessOptional.get();
-            importProcess.setStatus(ProcessStatus.RUNNING.name().equals(importProcess.getStatus().name())?ProcessStatus.FINISHED:ProcessStatus.RUNNING);
-            bookingImportProcessRedisRepository.save(importProcess);
+            BookingImportProcessRedisEntity bookingImportProcessRedisEntity = importProcessOptional.get();
+            bookingImportProcessRedisEntity.setStatus(bookingImportProcessDto.getStatus());
+            bookingImportProcessRedisEntity.setHasError(bookingImportProcessDto.isHasError());
+            bookingImportProcessRedisEntity.setExceptionMessage(bookingImportProcessDto.getExceptionMessage());
+            bookingImportProcessRedisRepository.save(bookingImportProcessRedisEntity);
         }else{
-            bookingImportProcessRedisRepository.save(new ImportProcess(null,importProcessId,ProcessStatus.RUNNING));
+            bookingImportProcessRedisRepository.save(bookingImportProcessDto.toAggregate());
         }
     }
 }

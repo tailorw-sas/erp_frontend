@@ -2,6 +2,10 @@ pipeline {
     
     agent any
 
+    parameters {
+        booleanParam(name: 'FORCE_BUILD', defaultValue: false, description: 'Forzar la ejecución del pipeline sin verificar cambios')
+    }
+
     environment {
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-insis:version'
@@ -27,27 +31,28 @@ pipeline {
             steps {
                 echo '* * * * STAGE: Checking for changes in a specific project * * * *'
                 script {
-                    /*
-                    def folderPaths = [env.SRC, env.SRC_SHARE]
-                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
-                    def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
-                    if (changesInFolder) {
-                        echo "Changes detected in folders: ${SRC} y ${SRC_SHARE}"
-                    } else {
-                        echo "* * * * * * * * No changes detected in folders: ${SRC} y ${SRC_SHARE} * * * * * * * *"
-                        currentBuild.result = 'NOT_BUILT'
-                        error('No changes detected in folders: $SRC y $SRC_SHARE' )
-                    }
-                    */
-                    def folderPath = env.SRC
-                    def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
-                    def changesInFolder = changes.findAll { it.startsWith(folderPath) }
-                    if (changesInFolder) {
-                        echo "Changes detected in folder: $SRC"
-                    } else {
-                        echo "* * * * * * * * No changes detected in folder: ${folderPath} * * * * * * * *"
-                        currentBuild.result = 'NOT_BUILT'
-                        error('No changes detected in folder: $SRC')
+                    if (!params.FORCE_BUILD){
+                        def folderPaths = [env.SRC, env.SRC_SHARE]
+                        def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                        def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
+                        if (changesInFolder) {
+                            echo "Changes detected in folders: ${SRC} y/o ${SRC_SHARE}"
+                        } else {
+                            echo "* * * * * * * * No changes detected in folders: ${SRC} y/o ${SRC_SHARE} * * * * * * * *"
+                            currentBuild.result = 'NOT_BUILT'
+                            error('No changes detected in folders: $SRC y/o $SRC_SHARE' )
+                        }
+                        /*
+                        def folderPath = env.SRC
+                        def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                        def changesInFolder = changes.findAll { it.startsWith(folderPath) }
+                        if (changesInFolder) {
+                            echo "Changes detected in folder: $SRC"
+                        } else {
+                            echo "* * * * * * * * No changes detected in folder: ${folderPath} * * * * * * * *"
+                            currentBuild.result = 'NOT_BUILT'
+                            error('No changes detected in folder: $SRC')
+                        }*/
                     }
                 }
             }
@@ -96,6 +101,27 @@ pipeline {
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            emailext(
+                subject: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME})",
+                body: """<p>Build Successful!</p>
+                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
+                         <p>Branch: ${env.BRANCH_NAME}</p>""",
+                to: 'dan.n.n.y@hotmail.com'
+            )
+        }
+        failure {
+            emailext(
+                subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME})",
+                body: """<p>Build Failed!</p>
+                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
+                         <p>Branch: ${env.BRANCH_NAME}</p>""",
+                to: 'dan.n.n.y@hotmail.com'
+            )
         }
     }
 }

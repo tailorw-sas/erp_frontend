@@ -1,0 +1,84 @@
+DROP FUNCTION IF EXISTS generate_payment_report(UUID);
+CREATE OR REPLACE FUNCTION generate_payment_report(p_payment_id UUID)
+RETURNS TABLE (
+    "Id Payment" integer,
+    "Transaction Date" DATE,
+    "Hotel" VARCHAR,
+    "Cliente" VARCHAR,
+    "Agency" VARCHAR,
+    "Total Amount" DOUBLE PRECISION,
+    "Deposit Amount" DOUBLE PRECISION,
+    "Deposit Balance" DOUBLE PRECISION,
+    "Not Identified" DOUBLE PRECISION,
+    "Applied" DOUBLE PRECISION,
+    "Not Applied" DOUBLE PRECISION,
+    "Remark" VARCHAR,
+    "Id Details" integer,
+    "Booking Id" DOUBLE PRECISION,
+    "Invoice No" VARCHAR,
+    "Transaction Date Detail" DATE,
+    "Full Name" VARCHAR,
+    "Reservation" VARCHAR,
+    "Coupon No" VARCHAR,
+    "Adults" INTEGER,
+    "Children" INTEGER,
+    "Deposit Amount Detail" DOUBLE PRECISION,
+    "Payment Transaction Type" VARCHAR,
+    "Parent Id" INTEGER,
+    "Remark Detail" VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.payment_gen_id AS "Id Payment",
+        p.transactiondate::DATE AS "Transaction Date",
+        h.name AS "Hotel",
+        c.name AS "Cliente",
+        a.name AS "Agency",
+        p.paymentamount AS "Total Amount",
+        p.depositamount AS "Deposit Amount",
+        p.depositbalance AS "Deposit Balance",
+        p.notidentified AS "Not Identified",
+        p.identified AS "Applied",
+        p.otherdeductions AS "Not Applied",
+        p.remark AS "Remark",
+        pd.payment_detail_gen_id AS "Id Details",
+        pd.bookingid AS "Booking Id",
+        pd.invoiceid AS "Invoice No",
+        pd.transactiondate::DATE AS "Transaction Date Detail",
+        CONCAT(pd.firstname, ' ', pd.lastname)::VARCHAR AS "Full Name",
+        pd.reservation AS "Reservation",
+        pd.couponno AS "Coupon No",
+        pd.adults AS "Adults",
+        pd.childrens AS "Children",
+        pd.amount AS "Deposit Amount Detail",
+        ptt.name AS "Payment Transaction Type",
+        p.payment_gen_id AS "Parent Id",
+        pd.remark AS "Remark Detail"
+    FROM
+        payment p
+    JOIN
+        payment_detail pd ON p.id = pd.payment_id
+    LEFT JOIN
+        manage_hotel h ON p.hotel_id = h.id
+    LEFT JOIN
+        manage_client c ON p.client_id = c.id
+    LEFT JOIN
+        manage_agency a ON p.agency_id = a.id
+   LEFT JOIN
+        manage_payment_transaction_type ptt ON pd.transaction_type_id = ptt.id
+    WHERE
+        p.id = p_payment_id
+    GROUP BY
+        p.payment_gen_id, p.transactiondate, h.name, c.name, a.name,
+        p.paymentamount, p.depositamount, p.depositbalance, p.notidentified,
+        p.identified, p.otherdeductions, p.remark, pd.payment_detail_gen_id,
+        pd.bookingid, pd.invoiceid, pd.transactiondate, pd.firstname, pd.lastname,
+        pd.reservation, pd.couponno, pd.adults, pd.childrens, pd.amount,
+        pd.transaction_type_id, pd.payment_id, pd.remark, ptt.name;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+SELECT * FROM generate_payment_report('5da74855-245a-4e07-ba06-2717f6c2f302');

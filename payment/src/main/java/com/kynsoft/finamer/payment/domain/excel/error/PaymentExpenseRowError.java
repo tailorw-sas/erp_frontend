@@ -1,8 +1,7 @@
 package com.kynsoft.finamer.payment.domain.excel.error;
 
 import com.kynsof.share.core.domain.response.ErrorField;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseRow;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,5 +24,5 @@ public class PaymentExpenseRowError implements Serializable {
     @Indexed
     private String importProcessId;
     private List<ErrorField> errorFields;
-    private PaymentRow row;
+    private PaymentExpenseRow row;
 }

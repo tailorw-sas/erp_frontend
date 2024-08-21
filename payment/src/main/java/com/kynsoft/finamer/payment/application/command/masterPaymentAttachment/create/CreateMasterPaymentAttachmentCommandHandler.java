@@ -60,9 +60,9 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
         AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(command.getAttachmentType());
         ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(command.getResourceType());
 
-//        if (manageAttachmentTypeDto.getDefaults()) {
-//            RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, resource.getId(), command.getFileName()));
-//        }
+        if (manageAttachmentTypeDto.getDefaults()) {
+            RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, resource.getId(), command.getFileName()));
+        }
 
         Long attachmentId = this.masterPaymentAttachmentService.create(new MasterPaymentAttachmentDto(
                 command.getId(),

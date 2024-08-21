@@ -11,6 +11,8 @@ import com.kynsoft.finamer.payment.infrastructure.excel.event.error.detail.Payme
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDetailRow> {
 
@@ -18,6 +20,8 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
     private PaymentDetailsNoApplyDepositValidator paymentDetailsNoApplyDepositValidator;
 
     private PaymentDetailExistPaymentValidator paymentDetailExistPaymentValidator;
+
+    private PaymentDetailBelongToSamePayment paymentDetailBelongToSamePayment;
 
     private final IPaymentService paymentService;
 
@@ -37,6 +41,8 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher);
         paymentDetailExistPaymentValidator=new PaymentDetailExistPaymentValidator(applicationEventPublisher,paymentService);
         paymentDetailsNoApplyDepositValidator= new PaymentDetailsNoApplyDepositValidator(applicationEventPublisher,managePaymentTransactionTypeService);
+        paymentDetailBelongToSamePayment = new PaymentDetailBelongToSamePayment(applicationEventPublisher,paymentService);
+
     }
 
     @Override
@@ -44,6 +50,9 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         paymentDetailExistPaymentValidator.validate(toValidate,errorFieldList);
         paymentImportAmountValidator.validate(toValidate,errorFieldList);
         paymentDetailsNoApplyDepositValidator.validate(toValidate,errorFieldList);
+        if (Objects.nonNull(toValidate.getExternalPaymentId())){
+            paymentDetailBelongToSamePayment.validate(toValidate,errorFieldList);
+        }
         if (this.hasErrors()) {
             PaymentImportDetailErrorEvent paymentImportErrorEvent =
                     new PaymentImportDetailErrorEvent(new PaymentDetailRowError(null,toValidate.getRowNumber(),
