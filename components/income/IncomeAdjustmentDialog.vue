@@ -25,7 +25,7 @@ let submitEvent: Event = new Event('')
 const item = ref({ ...props.item })
 
 const objApis = ref({
-  transactionType: { moduleApi: 'settings', uriApi: 'manage-invoice-transaction-type' },
+  transactionType: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' },
 })
 function closeDialog() {
   onOffDialog.value = false
@@ -87,6 +87,7 @@ function mapFunction(data: DataListItem): ListItem {
 async function getTransactionTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[], short?: IQueryToSort) {
   transactionTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, short)
 }
+
 
 function requireConfirmationToSave(item: any) {
   confirm.require({

@@ -576,7 +576,7 @@ async function getAdjustmentList() {
         loadingEdit: false,
         loadingDelete: false,
         date: iterator.date.substring(0, 10),
-        transaction: iterator.transaction ? `${iterator.transaction.code} - ${iterator.transaction.name}` : '',
+        transaction: iterator.paymentTransactionType ? `${iterator.paymentTransactionType.code} - ${iterator.paymentTransactionType.name}` : '',
         roomRateId: iterator.roomRate?.roomRateId,
         remark: iterator.description,
       }]
@@ -789,7 +789,7 @@ async function createInvoiceAdjustment(item: { [key: string]: any }) {
       const payload: { [key: string]: any } = { ...item }
       payload.amount = Number.parseFloat(payload.amount)
       payload.employee = userData?.value?.user?.name
-      payload.transactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+      payload.paymentTransactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
       payload.description = item.remark
       payload.income = idItem.value // Usar el ID del registro de "income" creado anteriormente
       // payload.date = payload.date
@@ -797,6 +797,7 @@ async function createInvoiceAdjustment(item: { [key: string]: any }) {
         payload.roomRate = selectedRoomRate.value.id
       }
       delete payload.remark
+      delete payload.transactionType
       await GenericService.create(confApiInvoiceAdjustment.moduleApi, confApiInvoiceAdjustment.uriApi, payload)
 
       onOffDialogPaymentDetail.value = false
@@ -877,12 +878,12 @@ async function saveAndReload(itemP: { [key: string]: any }) {
   try {
     loadingSaveAdjustment.value = true
     if (idItem.value) {
-      const hotelId = Object.prototype.hasOwnProperty.call(item.value.hotel, 'id') ? item.value.hotel.id : item.value.hotel
+      /* const hotelId = Object.prototype.hasOwnProperty.call(item.value.hotel, 'id') ? item.value.hotel.id : item.value.hotel
       const dateList: string[] = []
       if (itemP.date) {
         dateList.push(dayjs(itemP.date).format('YYYY-MM-DD'))
       }
-      await validateCloseOperation(hotelId, dateList)
+      await validateCloseOperation(hotelId, dateList) */
       await createInvoiceAdjustment(itemP)
       onOffDialogPaymentDetail.value = false
     }

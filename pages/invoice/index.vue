@@ -24,6 +24,7 @@ const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
 const menu = ref()
 const menu_import = ref()
+const menu_reconcile=ref()
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
@@ -104,11 +105,11 @@ const computedShowMenuItemShowHistory = computed(() => {
 })
 
 const computedShowMenuItemAttachment = computed(() => {
-  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']) || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'])) )
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']) || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'])))
 })
 
 const computedShowMenuItemPrint = computed(() => {
-  return !( status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:PRINT'])))
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:PRINT'])))
 })
 
 
@@ -175,6 +176,10 @@ const computedShowMenuItemInvoice = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CREATE'])))
 })
 
+const computedShowMenuItemReconcile = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CREATE'])))
+})
+
 const computedShowMenuItemCredit = computed(() => {
   if (!authStore.can(['INVOICE-MANAGEMENT:CREATE'])) {
     return true
@@ -204,6 +209,25 @@ const createItems = ref([
     disabled: computedShowMenuItemOldCredit
   },
 ])
+
+const createReconcile = ref([
+  {
+    label: 'Reconcile Automatic',
+    command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
+    disabled: computedShowMenuItemReconcile
+  },
+  // {
+  //   label: 'Credit',
+  //   command: () => navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${expandedInvoice.value}`),
+  //   disabled: computedShowMenuItemCredit
+  // },
+  {
+    label: 'Reconcile from Files',
+    command: () => navigateTo('reconcile-automatic', { open: { target: '_blank' } }),
+    disabled: computedShowMenuItemOldCredit
+  },
+])
+
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -255,7 +279,7 @@ const itemTemp = ref<GenericObject>({
 })
 
 // IMPORTS ---------------------------------------------------------------------------------------------
-const computedShowMenuItemImportBookingFromFile = computed(() => {  
+const computedShowMenuItemImportBookingFromFile = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:IMPORT-BOOKING-FROM-FILE'])))
 })
 
@@ -287,7 +311,7 @@ const columns: IColumn[] = [
   { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
   { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
   { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
-  { field: 'invoiceAmount', header: 'Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
   // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
   { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
@@ -471,7 +495,7 @@ function searchAndFilter() {
       }]
     }
 
-   
+
 
     if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
       const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
@@ -540,13 +564,13 @@ function searchAndFilter() {
   }
 
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-      payload.value.filter = [...payload.value.filter, {
-        key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-        operator: 'EQUALS',
-        value: filterToSearch.value.search,
-        logicalOperation: 'AND'
-      }]
-    }
+    payload.value.filter = [...payload.value.filter, {
+      key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
+      operator: 'EQUALS',
+      value: filterToSearch.value.search,
+      logicalOperation: 'AND'
+    }]
+  }
 
 
   if (filterToSearch.value.hotel?.length > 0) {
@@ -586,7 +610,7 @@ function clearFilterToSearch() {
     search: '',
     client: [],
     agency: [],
-    hotel: [],
+    hotel: [{ id: 'All', name: 'All', code: 'All' }],
     status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
     invoiceType: [{ id: 'All', name: 'All', code: 'All' }],
     from: dayjs(new Date()).startOf('month').toDate(),
@@ -597,9 +621,9 @@ function clearFilterToSearch() {
   getList()
 }
 async function getItemById(data: { id: string, type: string, status: any }) {
-  if (data?.status === InvoiceStatus.PROCECSED) {
-    openEditDialog(data?.id, data?.type)
-  }
+
+  openEditDialog(data?.id, data?.type)
+
 }
 
 function handleDialogOpen() {
@@ -690,11 +714,23 @@ function requireConfirmationToDelete(event: any) {
   })
 }
 
-async function getHotelList() {
+async function getHotelList(query = '') {
   try {
     const payload
       = {
       filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
         {
           key: 'status',
           operator: 'EQUALS',
@@ -721,11 +757,23 @@ async function getHotelList() {
   }
 }
 
-async function getClientList() {
+async function getClientList(query = '') {
   try {
     const payload
       = {
       filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
         {
           key: 'status',
           operator: 'EQUALS',
@@ -752,29 +800,51 @@ async function getClientList() {
   }
 }
 
-async function getStatusList() {
+async function getStatusList(query = '') {
   try {
     statusList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_STATUS]
+    
+    if (query) {
+      statusList.value = statusList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
+    }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
 }
 
-async function getInvoiceTypeList() {
+async function getInvoiceTypeList(query = '') {
   try {
     invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_TYPE]
+
+    if (query) {
+      invoiceTypeList.value = invoiceTypeList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
+    }
+
+
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
 }
 
-async function getAgencyList() {
+async function getAgencyList(query = '') {
   try {
     const payload
       = {
       filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
         {
           key: 'status',
           operator: 'EQUALS',
@@ -904,6 +974,9 @@ function toggle(event) {
   menu.value.toggle(event)
 }
 
+function toggleReconcile(event) {
+  menu_reconcile.value.toggle(event)
+}
 function toggleImport(event) {
   menu_import.value.toggle(event)
 }
@@ -1005,7 +1078,8 @@ const legend = ref(
         Invoice Management
       </h3>
       <div class="flex flex-row w-full place-content-center justify-center justify-content-end">
-        <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-NEW']))" v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true"
+        <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-NEW']))"
+          v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true"
           aria-controls="overlay_menu" @click="toggle" />
         <Menu id="overlay_menu" ref="menu" :model="createItems" :popup="true" />
 
@@ -1018,7 +1092,8 @@ const legend = ref(
           </template>
         </PopupNavigationMenu>
 
-        <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-IMPORT']))" v-tooltip.left="'Import'" class="ml-2" label="Import" icon="pi pi-file-import" severity="primary"
+        <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-IMPORT']))"
+          v-tooltip.left="'Import'" class="ml-2" label="Import" icon="pi pi-file-import" severity="primary"
           aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport">
 
         </Button>
@@ -1031,7 +1106,22 @@ const legend = ref(
           </template>
         </PopupNavigationMenu>
         <!-- <SplitButton class="ml-2" icon="pi pi-download" label="Import" :model="itemsMenuImport" /> -->
-        <Button class="ml-2" icon="pi pi-copy" label="Rec Inv" />
+        <!---<Button class="ml-2" icon="pi pi-copy" label="Rec Inv" />.-->
+        <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-RECONCILE']))" v-tooltip.left="'Reconcile Invoice'" class="ml-2" label="Rec Inv" icon="pi pi-copy" severity="primary"
+          aria-haspopup="true" aria-controls="overlay_menu_reconcile" @click="toggleReconcile"/>
+
+        <Menu id="overlay_menu_reconcile" ref="menu_reconcile" :model="createReconcile" :popup="true" />
+
+<PopupNavigationMenu v-if="false" :items="createReconcile" icon="pi pi-copy" label="Rec Inv">
+  <template #item="props">
+    <button 
+      style="border: none; width: 100%;">
+      {{ props.props.label }}
+    </button>
+  </template>
+</PopupNavigationMenu>
+
+
         <Button class="ml-2" icon="pi pi-envelope" label="Send" />
         <!-- <Button
           class="ml-2" icon="pi pi-paperclip" :disabled="!attachmentInvoice" label="Document" @click="() => {
@@ -1075,18 +1165,19 @@ const legend = ref(
                     <div class="w-full lg:w-auto" style=" z-index:5 ">
                       <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" multiple field="name"
                         item-value="id" :model="filterToSearch.client" :suggestions="clientList" placeholder=""
-                        :disabled="disableClient" style="max-width: 400px;" @load="($event) => getClientList()" @change="($event) => {
+                        :disabled="disableClient" style="max-width: 400px;" @load="($event) => getClientList($event)"
+                        @change="($event) => {
 
-          if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-            filterToSearch.client = $event.filter((element: any) => element?.id === 'All')
-          }
-          else {
+                          if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                            filterToSearch.client = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
 
-            filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
-          }
+                            filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
+                          }
 
-          filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : []
-        }">
+                          filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : []
+                        }">
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
@@ -1104,15 +1195,15 @@ const legend = ref(
                         field="name" item-value="id" :model="filterToSearch.agency" :suggestions="agencyList"
                         :disabled="disableClient" style="max-width: 400px;" @change="($event) => {
 
-          if (!filterToSearch.agency.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-            filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
-          }
-          else {
+                          if (!filterToSearch.agency.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                            filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
 
-            filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
-          }
+                            filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
+                          }
 
-        }" @load="($event) => getAgencyList($event)">
+                        }" @load="($event) => getAgencyList($event)">
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
@@ -1139,18 +1230,18 @@ const legend = ref(
                       <div class="flex gap-2 w-full">
                         <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
                           item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList" placeholder=""
-                          class="w-full" @load="($event) => getHotelList()" @change="($event) => {
+                          class="w-full" @load="($event) => getHotelList($event)" @change="($event) => {
 
-          if (!filterToSearch.hotel.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-          }
-          else {
+                            if (!filterToSearch.hotel.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                              filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                            }
+                            else {
 
-            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-          }
-          hotelError = false
+                              filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                            }
+                            hotelError = false
 
-        }">
+                          }">
                           <template #option="props">
                             <span>{{ props.item.code }} - {{ props.item.name }}</span>
                           </template>
@@ -1173,14 +1264,14 @@ const legend = ref(
                       <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
                         item-value="id" :model="filterToSearch.status" :suggestions="statusList" placeholder=""
                         @load="($event) => getStatusList($event)" @change="($event) => {
-          if (!filterToSearch.status.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-            filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
-          }
-          else {
+                          if (!filterToSearch.status.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                            filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
 
-            filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
-          }
-        }">
+                            filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }">
                         <template #option="props">
                           <span>{{ props.item.name }}</span>
                         </template>
@@ -1261,15 +1352,15 @@ const legend = ref(
                       <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
                         placeholder="" item-value="id" :model="filterToSearch.invoiceType"
                         :suggestions="invoiceTypeList" style="max-width: 400px;"
-                        @load="($event) => getInvoiceTypeList()" @change="($event) => {
-          if (!filterToSearch.invoiceType.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-            filterToSearch.invoiceType = $event.filter((element: any) => element?.id === 'All')
-          }
-          else {
+                        @load="($event) => getInvoiceTypeList($event)" @change="($event) => {
+                          if (!filterToSearch.invoiceType.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                            filterToSearch.invoiceType = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
 
-            filterToSearch.invoiceType = $event.filter((element: any) => element?.id !== 'All')
-          }
-        }">
+                            filterToSearch.invoiceType = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }">
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
@@ -1314,10 +1405,10 @@ const legend = ref(
         <template #row-selector-body="props">
           <button v-if="props.item?.hasAttachments" class="pi pi-paperclip"
             style="background-color: white; border: 0; padding: 5px; border-radius: 100%;" @click="() => {
-          attachmentInvoice = props.item
-          attachmentDialogOpen = true
+              attachmentInvoice = props.item
+              attachmentDialogOpen = true
 
-        }" />
+            }" />
         </template>
 
         <template #expanded-item="props">

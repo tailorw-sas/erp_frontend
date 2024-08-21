@@ -3,7 +3,9 @@ export interface InvoiceParams {
   companyAddress: string
   companyCif: string
   hotelName: string
+  hotelCode: string
   invoiceNumber: string
+  invoiceId: string
   agencyCode: string
   agencyName: string
   agencyAddress: string

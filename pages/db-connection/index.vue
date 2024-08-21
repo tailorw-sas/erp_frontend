@@ -34,7 +34,7 @@ const confApi = reactive({
 })
 
 const ENUM_FILTER = [
-  { id: 'url', name: 'Url' },
+  { id: 'code', name: 'Code' },
   { id: 'username', name: 'User Name' },
 ]
 
@@ -108,9 +108,12 @@ const fields: Array<FieldDefinitionType> = [
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns = ref<IColumn[]>([
-  { field: 'url', header: 'Code', type: 'text' },
+  { field: 'code', header: 'Code', type: 'text' },
+  { field: 'name', header: 'Name', type: 'text' },
+  { field: 'url', header: 'Url', type: 'text' },
   { field: 'username', header: 'User Name', type: 'text' },
   { field: 'createdAt', header: 'Created At', type: 'date' },
+  { field: 'status', header: 'Active', type: 'bool' },
 ])
 // -------------------------------------------------------------------------------------------------------
 
@@ -194,7 +197,7 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      iterator.type = ENUM_REPORT_TYPE.find(x => x.id === iterator.type)
+   
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
@@ -241,6 +244,7 @@ async function getItemById(id: string) {
       }
       updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
+      fields[0].disabled = true
     }
     catch (error) {
       if (error) {

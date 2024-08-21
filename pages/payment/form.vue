@@ -25,6 +25,7 @@ const refForm: Ref = ref(null)
 const idItem = ref('')
 const idItemDetail = ref('')
 const idPaymentDetail = ref('')
+const detailItemForApplyPayment = ref<any>(null)
 const isSplitAction = ref(false)
 const enableSplitAction = ref(false)
 const enableDepositSummaryAction = ref(false)
@@ -50,7 +51,7 @@ const onOffDialogPaymentDetail = ref(false)
 const onOffDialogPaymentDetailSummary = ref(false)
 const hasBeenEdited = ref(0)
 const hasBeenCreated = ref(0)
-const actionOfModal = ref<'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | undefined>(undefined)
+const actionOfModal = ref<'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined>(undefined)
 
 interface SubTotals {
   depositAmount: number
@@ -64,15 +65,66 @@ const paymentDetailsList = ref<any[]>([])
 
 const contextMenu = ref()
 const objItemSelectedForRightClick = ref({} as GenericObject)
+const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const allMenuListItems = ref([
   {
     id: 'applayDeposit',
     label: 'Apply Deposit',
     icon: 'pi pi-dollar',
     command: ($event: any) => openModalWithContentMenu($event),
-    disabled: true
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'applyPayment',
+    label: 'Apply Payment',
+    icon: 'pi pi-cog',
+    command: ($event: any) => openModalApplyPayment($event),
+    disabled: true,
+    visible: true,
   },
 ])
+// Apply Payment
+const openDialogApplyPayment = ref(false)
+const applyPaymentList = ref<any[]>([])
+const applyPaymentColumns = ref<IColumn[]>([
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'reservationNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
+])
+const applyPaymentOptions = ref({
+  tableName: 'Apply Payment',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-booking',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+const applyPaymentPayload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
+const applyPaymentPagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+const applyPaymentOnChangePage = ref<PageState>()
+// ------------------------------------------------------------------------------------------------
 
 // History
 const openDialogHistory = ref(false)
@@ -207,8 +259,8 @@ const columns: IColumn[] = [
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
-  { field: 'reservation', header: 'Reservation', tooltip: 'Reservation', width: 'auto', type: 'text' },
-  { field: 'cuponNo', header: 'Cupon No', tooltip: 'Cupon No', width: 'auto', type: 'text' },
+  { field: 'reservationNumber', header: 'Reservation', tooltip: 'Reservation', width: 'auto', type: 'text' },
+  { field: 'couponNumber', header: 'Cupon No', tooltip: 'Cupon No', width: 'auto', type: 'text' },
   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
@@ -539,7 +591,11 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
-function getNameByActions(action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | undefined) {
+function isObjectEmpty(obj) {
+  return Object.keys(obj).length === 0
+}
+
+function getNameByActions(action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined) {
   switch (action) {
     case 'new-detail':
       return itemDetails.value.id ? 'Edit Payment Details' : 'New Payment Details'
@@ -564,8 +620,11 @@ function clearFormDetails() {
 }
 
 function openModalWithContentMenu($event) {
-  if (objItemSelectedForRightClick.value) {
+  if (!isObjectEmpty(objItemSelectedForRightClick.value)) {
     openDialogPaymentDetailsByAction(objItemSelectedForRightClick.value.id, 'apply-deposit')
+  }
+  if (!isObjectEmpty(objItemSelectedForRightClickApplyPayment.value)) {
+    openDialogPaymentDetailsByAction(objItemSelectedForRightClickApplyPayment.value.id, 'apply-payment')
   }
 }
 
@@ -595,9 +654,8 @@ function openDialogPaymentDetails(event: any) {
   onOffDialogPaymentDetail.value = true
 }
 
-function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | undefined = undefined) {
+function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined = undefined) {
   const idDetailTemp = JSON.parse(JSON.stringify(idDetail))
-
   if (action !== undefined) {
     actionOfModal.value = action
   }
@@ -831,6 +889,8 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+      console.log('response', response)
+
       if (response) {
         item.value.id = id
         item.value.paymentId = response.paymentId
@@ -869,12 +929,14 @@ async function getItemById(id: string) {
           : null
         agencyList.value = [agencyTemp]
         item.value.agency = agencyTemp
+        console.log(response.hotel)
 
         const hotelTemp = response.hotel
           ? {
               id: response.hotel.id,
               name: `${response.hotel.code} - ${response.hotel.name}`,
-              status: response.hotel.status
+              status: response.hotel.status,
+              applyByTradingCompany: response.hotel.applyByTradingCompany
             }
           : null
         hotelList.value = [hotelTemp]
@@ -1008,6 +1070,16 @@ async function getListPaymentDetail() {
         }
       }
 
+      if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
+        iterator.adults = iterator.manageBooking?.adults?.toString()
+        iterator.children = iterator.manageBooking?.children?.toString()
+        iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
+        iterator.fullName = iterator.manageBooking?.fullName
+        iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
+        iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
+        iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNo?.toString()
+      }
+
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         newListItems.push({ ...iterator })
@@ -1046,8 +1118,8 @@ function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolea
     }
 
     // Verificar en los hijos del objeto
-    if (item.children && item.children.length > 0) {
-      return item.children.some(child => hasDeposit(child))
+    if (item.childrens && item.childrens.length > 0) {
+      return item.childrens.some(child => hasDeposit(child))
     }
 
     return false
@@ -1055,7 +1127,7 @@ function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolea
   let amount = Number.parseFloat(mainItem.amount)
   amount = Number.isNaN(amount) ? 0 : amount
   amount = Math.abs(amount)
-  return hasDeposit(mainItem) && amount > 0.01 && mainItem.children.length === 0
+  return hasDeposit(mainItem) && Math.abs(amount) > 0.01 && (mainItem?.childrens?.length === 0 || mainItem?.childrens === undefined || mainItem?.childrens === null)
 }
 
 function hasDepositSummaryTransaction(items: TransactionItem[]): boolean {
@@ -1395,9 +1467,44 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
   agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 
-async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  hotelList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
+
+interface DataListItemHotel {
+  id: string
+  name: string
+  code: string
+  status: string
+  defaults?: boolean
+  applyByTradingCompany?: boolean
+}
+
+interface ListItemHotel {
+  id: string
+  name: string
+  status: boolean | string
+  defaults?: boolean
+  applyByTradingCompany?: boolean
+}
+function mapFunctionHotel(data: DataListItemHotel): ListItemHotel {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    defaults: data?.defaults || false,
+    applyByTradingCompany: data.applyByTradingCompany
+  }
+}
+
+async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  hotelList.value = await getDataList<DataListItemHotel, ListItemHotel>(moduleApi, uriApi, filter, queryObj, mapFunctionHotel, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
+
+async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
+
 async function getPaymentStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   paymentStatusList.value = await getDataList(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
@@ -1524,6 +1631,7 @@ async function rowSelected(rowData: any) {
     idItemDetail.value = ''
     isSplitAction.value = false
     actionOfModal.value = 'new-detail'
+    enableSplitAction.value = false
   }
 }
 
@@ -1644,9 +1752,149 @@ async function historyGetList() {
   }
 }
 
+async function applyPaymentGetList() {
+  // console.log(ite.value)
+
+  if (applyPaymentOptions.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    applyPaymentOptions.value.loading = true
+    applyPaymentList.value = []
+    const newListItems = []
+    const validNumber = detailItemForApplyPayment.value?.amount
+      ? detailItemForApplyPayment.value.amount.replace(/,/g, '')
+      : 0
+
+    // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
+    const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
+
+    if (objFilter) {
+      objFilter.value = validNumber.toString()
+    }
+    else {
+      applyPaymentPayload.value.filter.push({
+        key: 'dueAmount',
+        operator: 'GREATER_THAN_OR_EQUAL_TO',
+        value: validNumber.toString(),
+        logicalOperation: 'AND'
+      })
+    }
+    // Validacion para busar por por las agencias
+    const filter: FilterCriteria[] = [
+      {
+        key: 'client.id',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: item.value.client.id,
+      },
+      {
+        key: 'status',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+      },
+    ]
+    const objQueryToSearch = {
+      query: '',
+      keys: ['name', 'code'],
+    }
+
+    let listAgenciesForApplyPayment: any[] = []
+    listAgenciesForApplyPayment = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
+
+    if (listAgenciesForApplyPayment.length > 0) {
+      const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.agency.id')
+
+      if (objFilter) {
+        objFilter.value = listAgenciesForApplyPayment.map(item => item.id)
+      }
+      else {
+        applyPaymentPayload.value.filter.push({
+          key: 'invoice.agency.id',
+          operator: 'IN',
+          value: listAgenciesForApplyPayment.map(item => item.id),
+          logicalOperation: 'AND'
+        })
+      }
+    }
+
+    // Validacion para busar por por los hoteles
+    console.log(item.value)
+
+    const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    applyPaymentPagination.value.page = page
+    applyPaymentPagination.value.limit = size
+    applyPaymentPagination.value.totalElements = totalElements
+    applyPaymentPagination.value.totalPages = totalPages
+
+    const existingIds = new Set(applyPaymentList.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+      iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
+      iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
+      iterator.bookingAmount = iterator.invoiceAmount?.toString()
+      iterator.bookingBalance = iterator.dueAmount?.toString()
+      // iterator.paymentStatus = iterator.status
+
+      // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
+      //   if (iterator.employee.firstName && iterator.employee.lastName) {
+      //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
+      //   }
+      // }
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    applyPaymentOptions.value.loading = false
+  }
+}
+
 async function openDialogStatusHistory() {
   openDialogHistory.value = true
   await historyGetList()
+}
+
+async function openModalApplyPayment($event: any) {
+  openDialogApplyPayment.value = true
+  await applyPaymentGetList()
+}
+
+async function openDialogImportExcel(idItem: string) {
+  if (idItem) {
+    navigateTo({ path: '/payment/import-detail', query: { paymentId: idItem } })
+  }
+}
+
+async function applyPaymentParseDataTableFilter(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, applyPaymentColumns.value)
+  // if (parseFilter && parseFilter?.length > 0) {
+  //   for (let i = 0; i < parseFilter?.length; i++) {
+  //     if (parseFilter[i]?.key === 'paymentStatus') {
+  //       parseFilter[i].key = 'status'
+  //     }
+  //     if (parseFilter[i]?.key === 'employee') {
+  //       parseFilter[i].key = 'employee.id'
+  //     }
+  //   }
+  // }
+  applyPaymentPayload.value.filter = [...parseFilter || []]
+  applyPaymentGetList()
 }
 
 async function historyParseDataTableFilter(payloadFilter: any) {
@@ -1793,11 +2041,11 @@ async function paymentPrint(event: any) {
   }
   catch (error) {
     loadingPrintDetail.value = false
-    console.log(error)
     toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was failed', life: 3000 })
   }
   finally {
     loadingPrintDetail.value = false
+    openPrint.value = false
   }
 
   // generateStyledPDF()
@@ -1808,7 +2056,9 @@ async function closeDialogPrint() {
   openPrint.value = false
 }
 
-function onRowContextMenu(event) {
+function onRowContextMenu(event: any) {
+  detailItemForApplyPayment.value = event?.data
+
   idPaymentDetail.value = event?.data?.id
   let minValueToApplyDeposit = 0
   const amount = Number.parseFloat(event.data.amount) || 0
@@ -1817,7 +2067,6 @@ function onRowContextMenu(event) {
   minValueToApplyDeposit = Math.abs(Math.abs(amount) - Math.abs(childrenTotalValue))
   minValueToApplyDeposit = Number.parseFloat(minValueToApplyDeposit.toFixed(2))
   const applayDepositValue = Number.parseFloat(event.data.applayDepositValue) || minValueToApplyDeposit
-
   // Validaciones para el applay deposit
   if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:APPLY-DEPOSIT']))) {
     if (event && event.data && event.data.deposit === false) {
@@ -1825,6 +2074,7 @@ function onRowContextMenu(event) {
       const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
       if (menuItemApplayDeposit) {
         menuItemApplayDeposit.disabled = true
+        menuItemApplayDeposit.visible = false
       }
     }
     else if (event && event.data && event.data.deposit === true && minValueToApplyDeposit <= 0.01) {
@@ -1832,6 +2082,7 @@ function onRowContextMenu(event) {
       const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
       if (menuItemApplayDeposit) {
         menuItemApplayDeposit.disabled = true
+        menuItemApplayDeposit.visible = false
       }
     }
     else if (event && event.data && event.data.deposit === true && applayDepositValue > 0.01) {
@@ -1839,6 +2090,7 @@ function onRowContextMenu(event) {
       const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
       if (menuItemApplayDeposit) {
         menuItemApplayDeposit.disabled = false
+        menuItemApplayDeposit.visible = true
       }
     }
     else {
@@ -1846,10 +2098,58 @@ function onRowContextMenu(event) {
       const menuItemApplayDeposit = allMenuListItems.value.find(item => item.id === 'applayDeposit')
       if (menuItemApplayDeposit) {
         menuItemApplayDeposit.disabled = true
+        menuItemApplayDeposit.visible = false
       }
     }
   }
-  contextMenu.value.show(event.originalEvent)
+
+  // Validaciones para el applay payment
+  if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']))) {
+    if (event && event.data && event.data.transactionType && (event.data.transactionType.cash === true || event.data.transactionType.applyDeposit === true)) {
+      objItemSelectedForRightClickApplyPayment.value = event.data
+      const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
+      if (menuItemApplayPayment) {
+        menuItemApplayPayment.disabled = false
+        menuItemApplayPayment.visible = true
+      }
+    }
+    else {
+      objItemSelectedForRightClickApplyPayment.value = {}
+      const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
+      if (menuItemApplayPayment) {
+        menuItemApplayPayment.disabled = true
+        menuItemApplayPayment.visible = false
+      }
+    }
+  }
+
+  // Mostrar menu contextual si hay items visibles
+  const allHidden = allMenuListItems.value.every(item => !item.visible)
+  if (!allHidden) {
+    contextMenu.value.show(event.originalEvent)
+  }
+  else {
+    contextMenu.value.hide()
+  }
+}
+
+async function onRowDoubleClickInDataTableApplyPayment(event: any) {
+  try {
+    const payloadToApplyPayment: GenericObject = {
+      paymentDetail: idPaymentDetail.value || '',
+      booking: event.id
+    }
+
+    const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
+
+    if (response) {
+      openDialogApplyPayment.value = false
+      toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
+    }
+  }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
+  }
 }
 
 watch(() => hasBeenEdited.value, async (newValue) => {
@@ -1884,6 +2184,12 @@ watch(() => route?.query?.id, async (newValue) => {
     const id = newValue.toString()
     await getItemById(id)
   }
+})
+
+watch(applyPaymentOnChangePage, (newValue) => {
+  applyPaymentPayload.value.page = newValue?.page ? newValue?.page : 0
+  applyPaymentPayload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  applyPaymentGetList()
 })
 
 onMounted(async () => {
@@ -2227,7 +2533,7 @@ onMounted(async () => {
       @on-row-double-click="openDialogPaymentDetailsByAction($event, 'new-detail')"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
-      @on-row-right-click="onRowContextMenu"
+      @on-row-right-click="onRowContextMenu($event)"
     >
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
@@ -2272,14 +2578,14 @@ onMounted(async () => {
         </Button>
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:PRINT-DETAIL']">
-        <Button v-tooltip.top="'Print'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-print" @click="openPrint = true" />
+        <Button v-tooltip.top="'Print'" class="w-3rem ml-1" :disabled="!paymentDetailsList || paymentDetailsList.length === 0" icon="pi pi-print" @click="openPrint = true" />
       </IfCan>
       <!-- <Button v-tooltip.top="'Payment to Print'" class="w-3rem ml-1" disabled icon="pi pi-print" @click="openPrint = true" /> -->
       <IfCan :perms="['PAYMENT-MANAGEMENT:ATTACHMENT']">
         <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:IMPORT-EXCEL']">
-        <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-file-import" />
+        <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-file-import" @click="openDialogImportExcel(idItem)" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SHOW-HISTORY']">
         <Button v-tooltip.top="'Show History'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openDialogStatusHistory">
@@ -2371,6 +2677,50 @@ onMounted(async () => {
             @on-change-pagination="histotyPayloadOnChangePage = $event"
             @on-change-filter="historyParseDataTableFilter"
             @on-sort-field="historyOnSortField"
+          />
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- Dialog Apply Payment -->
+    <Dialog
+      v-model:visible="openDialogApplyPayment"
+      modal
+      class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border"
+      :style="{ width: '60%' }"
+      :pt="{
+        root: {
+          class: 'custom-dialog-history',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+        // mask: {
+        //   style: 'backdrop-filter: blur(5px)',
+        // },
+      }"
+      @hide="openDialogApplyPayment = false"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Apply Payment Details
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-3">
+          <DynamicTable
+            class="card p-0"
+            :data="applyPaymentList"
+            :columns="applyPaymentColumns"
+            :options="applyPaymentOptions"
+            :pagination="applyPaymentPagination"
+            @on-change-pagination="applyPaymentOnChangePage = $event"
+            @on-change-filter="applyPaymentParseDataTableFilter"
+            @on-sort-field="historyOnSortField"
+            @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
           />
         </div>
       </template>

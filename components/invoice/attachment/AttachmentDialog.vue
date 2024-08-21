@@ -310,11 +310,30 @@ async function getInvoiceSupportAttachment() {
   }
 }
 
-async function getAttachmentTypeList() {
+async function getAttachmentTypeList(query = '') {
   try {
     const payload
       = {
-        filter: [],
+        filter: [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -554,6 +573,13 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 
+watch(PayloadOnChangePage, (newValue) => {
+  Payload.value.page = newValue?.page ? newValue?.page : 0
+  Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getList()
+})
+
+
 onMounted(() => {
   getInvoiceSupportAttachment()
   if (props.selectedInvoice) {
@@ -634,7 +660,7 @@ onMounted(() => {
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
                   accept="application/pdf"
-                  :max-file-size="1000000" :multiple="false" auto custom-upload @uploader="(event: any) => {
+                  :max-file-size="300 * 1024 * 1024" :multiple="false" auto custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
                     onUpdate('file', file)
                     onUpdate('filename', data.file.name || data.file.split('/')[data.file.split('/')?.length - 1])
@@ -693,14 +719,14 @@ onMounted(() => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
                   <Button
-                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-file" :disabled="!idItem"
+                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="!idItem"
                     @click="downloadFile"
                   />
                 </IfCan>
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-SHOW-HISTORY']">
                   <Button
-                    v-if="selectedInvoiceObj.invoiceType === InvoiceType.INVOICE || route.query.type === InvoiceType.INVOICE" v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book"
+                    v-if="selectedInvoiceObj.invoiceType === InvoiceType.INCOME || route.query.type === InvoiceType.INCOME" v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book"
                     :disabled="!idItem" @click="showHistory"
                   />
                 </IfCan>

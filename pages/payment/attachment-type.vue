@@ -58,6 +58,13 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1'
   },
   {
+    field: 'antiToIncomeImport',
+    header: 'Anti To Income Import',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 required mb-2',
+  },
+  {
     field: 'defaults',
     header: 'Default',
     dataType: 'check',
@@ -77,6 +84,7 @@ const item = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  antiToIncomeImport: false,
   defaults: false,
   status: true
 })
@@ -85,6 +93,7 @@ const itemTemp = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  antiToIncomeImport: false,
   defaults: false,
   status: true
 })
@@ -233,6 +242,7 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         item.value.defaults = response.defaults
         item.value.code = response.code
+        item.value.antiToIncomeImport = response.antiToIncomeImport
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)

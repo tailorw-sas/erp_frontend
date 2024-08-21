@@ -11,7 +11,7 @@ const props = defineProps({
   selectedPayment: { type: Object, required: true },
   isSplitAction: { type: Boolean, default: false },
   action: {
-    type: String as PropType<'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit'>,
+    type: String as PropType<'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment'>,
     default: 'new-detail'
   }
 })
@@ -43,6 +43,10 @@ function saveSubmit(event: Event) {
   forceSave.value = true
   submitEvent = event
 }
+// function openDialogApplyPayment(event: Event) {
+
+//   submitEvent = event
+// }
 
 function handleSaveForm($event: any) {
   const idItems = item.value?.id
