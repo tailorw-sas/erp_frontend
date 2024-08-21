@@ -15,19 +15,19 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentBankRow extends Row implements Serializable {
-    @Cell(position = -1)
+    @Cell(position = -1,headerName = "")
     protected int rowNumber;
-    @Cell(position = 1)
-    private String manageHotelCode;
-    @Cell(position = 0)
+    @Cell(position = 0,headerName = "Agency")
     private String manageAgencyCode;
-    @Cell(position = 2,cellType = CustomCellType.ALFANUMERIC)
+    @Cell(position = 1,headerName = "Hotel")
+    private String manageHotelCode;
+    @Cell(position = 2,cellType = CustomCellType.ALFANUMERIC,headerName = "Bank Account")
     private String bankAccount;
-    @Cell(position = 3,cellType = CustomCellType.NUMERIC)
+    @Cell(position = 3,cellType = CustomCellType.NUMERIC,headerName = "Payment Amount")
     private Double amount;
-    @Cell(position = 4)
+    @Cell(position = 4,headerName = "Remarks")
     private String remarks;
-    @Cell(position = 5,cellType = CustomCellType.DATAFORMAT)
+    @Cell(position = 5,cellType = CustomCellType.DATAFORMAT,headerName = "Transaction Date")
     private String transactionDate;
 
     private String manageClientCode;

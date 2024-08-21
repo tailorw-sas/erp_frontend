@@ -12,4 +12,5 @@ public class UpdateManagerLanguageRequest {
     private Status status;
     private String name;
     private Boolean isEnabled;
+    private Boolean defaults;
 }

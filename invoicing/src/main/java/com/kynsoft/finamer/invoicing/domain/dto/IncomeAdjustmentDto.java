@@ -20,6 +20,7 @@ public class IncomeAdjustmentDto implements Serializable {
     private Status status;
     private IncomeDto income;
     private ManageInvoiceTransactionTypeDto transactionType;
+    private ManagePaymentTransactionTypeDto paymentTransactionType;
     private Double amount;
     private LocalDate date;
     private String remark;

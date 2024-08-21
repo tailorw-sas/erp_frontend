@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class GenericSpecification<T> implements Specification<T> {
+
     private final SearchCriteria criteria;
 
     public GenericSpecification(SearchCriteria criteria) {
@@ -52,7 +53,8 @@ public class GenericSpecification<T> implements Specification<T> {
         }
 
         return switch (criteria.getOperation()) {
-            case LIKE -> builder.like(builder.lower(path.as(String.class)), "%" + value.toString().toLowerCase() + "%");
+            case LIKE ->
+                builder.like(builder.lower(path.as(String.class)), "%" + value.toString().toLowerCase() + "%");
             case EQUALS -> {
                 if (value instanceof LocalDate) {
                     yield builder.equal(path.as(LocalDate.class), (LocalDate) value);
@@ -87,20 +89,52 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.greaterThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.greaterThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else if (value instanceof Double) {
+                    System.err.println("########################################");
+                    System.err.println("########################################");
+                    System.err.println("########################################");
+                    System.err.println("Value: " + value);
+                    System.err.println("########################################");
+                    System.err.println("########################################");
+                    System.err.println("########################################");
+                    yield builder.greaterThanOrEqualTo(path.as(Double.class), (Double) value);
                 } else {
                     yield builder.greaterThanOrEqualTo(path.as(String.class), value.toString());
                 }
             }
+
+//            case GREATER_THAN_OR_EQUAL_TO -> {
+//                if (value instanceof LocalDate) {
+//                    yield builder.greaterThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
+//                } else if (value instanceof LocalDateTime) {
+//                    yield builder.greaterThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
+//                } else {
+//                    yield builder.greaterThanOrEqualTo(path.as(String.class), value.toString());
+//                }
+//            }
+//            case LESS_THAN_OR_EQUAL_TO -> {
+//                if (value instanceof LocalDate) {
+//                    yield builder.lessThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
+//                } else if (value instanceof LocalDateTime) {
+//                    yield builder.lessThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
+//                } else {
+//                    yield builder.lessThanOrEqualTo(path.as(String.class), value.toString());
+//                }
+//            }
             case LESS_THAN_OR_EQUAL_TO -> {
                 if (value instanceof LocalDate) {
                     yield builder.lessThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.lessThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else if (value instanceof Double) {
+                    yield builder.lessThanOrEqualTo(path.as(Double.class), (Double) value);
                 } else {
                     yield builder.lessThanOrEqualTo(path.as(String.class), value.toString());
                 }
             }
-            case NOT_EQUALS -> builder.notEqual(path, value);
+
+            case NOT_EQUALS ->
+                builder.notEqual(path, value);
             case IN -> {
                 CriteriaBuilder.In<Object> inClause = builder.in(path);
                 if (value instanceof List) {
@@ -137,15 +171,20 @@ public class GenericSpecification<T> implements Specification<T> {
                 }
                 yield builder.not(inClause);
             }
-            case IS_NULL -> builder.isNull(path);
-            case IS_NOT_NULL -> builder.isNotNull(path);
-            case IS_TRUE -> builder.isTrue(path.as(Boolean.class));
-            case IS_FALSE -> builder.isFalse(path.as(Boolean.class));
+            case IS_NULL ->
+                builder.isNull(path);
+            case IS_NOT_NULL ->
+                builder.isNotNull(path);
+            case IS_TRUE ->
+                builder.isTrue(path.as(Boolean.class));
+            case IS_FALSE ->
+                builder.isFalse(path.as(Boolean.class));
             case EXISTS -> {
                 Join<T, ?> join = root.join(criteria.getKey(), JoinType.LEFT);
                 yield builder.isNotNull(join.get("id"));
             }
-            default -> throw new IllegalArgumentException("Operación no soportada: " + criteria.getOperation());
+            default ->
+                throw new IllegalArgumentException("Operación no soportada: " + criteria.getOperation());
         };
     }
 

@@ -10,14 +10,13 @@
 	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Profuturo-Finamer-Payment"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="FINAMER_PAYMENT"/>
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="448"/>
 	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="538"/>
-	<parameter name="fechayHora" class="java.lang.String"/>
-	<parameter name="idPayment" class="java.lang.Long"/>
+	<parameter name="idPayment" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT * FROM generate_payment_report('5da74855-245a-4e07-ba06-2717f6c2f302');]]>
+		<![CDATA[SELECT * FROM generate_payment_report($P{idPayment}::UUID);]]>
 	</queryString>
 	<field name="Id Payment" class="java.lang.Integer">
 		<property name="com.jaspersoft.studio.field.name" value="Id Payment"/>
@@ -144,13 +143,6 @@
 					<text><![CDATA[Payment Template]]></text>
 				</staticText>
 			</frame>
-			<textField>
-				<reportElement x="380" y="50" width="100" height="19" uuid="5f4652e6-2ef1-42b9-8949-fdf5e28fc2bb"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{fechayHora}]]></textFieldExpression>
-			</textField>
 			<staticText>
 				<reportElement x="820" y="0" width="90" height="10" uuid="f8b01159-79fc-45f3-b550-a88a73c3f211"/>
 				<textElement textAlignment="Center">
@@ -162,6 +154,17 @@
 				<reportElement x="820" y="10" width="90" height="70" uuid="70cbb1f6-d1db-44b0-9dae-2728fdf068f5"/>
 				<imageExpression><![CDATA["https://finamer.net/wp-content/uploads/2022/01/1-removebg-preview.png"]]></imageExpression>
 			</image>
+			<textField pattern="dd/MM/yyyy  HH:mm aaaa">
+				<reportElement x="380" y="50" width="100" height="19" uuid="01350d52-436d-4540-be51-bb8a6fc9b20f">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font size="7" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
 		</band>
 	</title>
 	<columnHeader>

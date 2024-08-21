@@ -26,7 +26,6 @@ import java.util.UUID;
 @Service
 public class DBConectionServiceImpl implements IDBConectionService {
 
-    @Autowired
     private final DBConectionWriteDataJPARepository repositoryCommand;
 
     private final DBConectionReadDataJPARepository repositoryQuery;
@@ -35,7 +34,6 @@ public class DBConectionServiceImpl implements IDBConectionService {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
     }
-
     @Override
     public void create(DBConectionDto object) {
         DBConection dbConection = new DBConection(object);
@@ -73,6 +71,11 @@ public class DBConectionServiceImpl implements IDBConectionService {
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND,
                 new ErrorField("id",  DomainErrorMessage.NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public Long countByCodeAndNotId(String code, UUID id) {
+        return this.repositoryQuery.countByCodeAndNotId(code, id);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<DBConection> data) {

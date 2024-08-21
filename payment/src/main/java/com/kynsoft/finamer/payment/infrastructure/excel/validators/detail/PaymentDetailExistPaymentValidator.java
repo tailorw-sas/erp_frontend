@@ -20,7 +20,11 @@ public class PaymentDetailExistPaymentValidator extends ExcelRuleValidator<Payme
 
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
-         if (Objects.isNull(obj.getPaymentId()) || !paymentService.existPayment(Long.parseLong(obj.getPaymentId()))){
+        if (Objects.isNull(obj.getPaymentId())){
+            errorFieldList.add(new ErrorField("Payment id","Payment can't be empty"));
+            return false;
+        }
+         if (!paymentService.existPayment(Long.parseLong(obj.getPaymentId()))){
              errorFieldList.add(new ErrorField("Payment id","Payment not exist"));
              return false;
          }

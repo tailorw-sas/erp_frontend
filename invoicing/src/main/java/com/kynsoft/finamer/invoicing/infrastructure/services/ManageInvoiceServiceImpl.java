@@ -41,7 +41,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final ManageInvoiceReadDataJPARepository repositoryQuery;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-                                    ManageInvoiceReadDataJPARepository repositoryQuery) {
+            ManageInvoiceReadDataJPARepository repositoryQuery) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
     }
@@ -53,11 +53,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return lastInvoiceNo;
     }
 
-
     @Override
     public void calculateInvoiceAmount(ManageInvoiceDto dto) {
         Double InvoiceAmount = 0.00;
-
 
         if (dto.getBookings() != null) {
 
@@ -83,7 +81,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         entity.setInvoiceNo(lastInvoiceNo);
         dto.setInvoiceNo(lastInvoiceNo);
 
-
         return this.repositoryCommand.saveAndFlush(entity).toAggregate();
     }
 
@@ -101,7 +98,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream) {
         List<ManageInvoiceResponse> data = this.search(pageable, filterCriteria).getData();
 
-
         List<ExportInvoiceRow> rows = new ArrayList<>();
         List<String> sheets = new ArrayList<>();
 
@@ -110,7 +106,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         for (int i = 0; i < data.size(); i++) {
             ManageInvoiceResponse invoice = data.get(i);
             rows.add(new ExportInvoiceRow(0, invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", invoice.getInvoiceNumber(), invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "", invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "", invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "", invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", null));
-
 
         }
 
@@ -126,7 +121,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         ExcelWriter<ExportInvoiceRow> writter = new ExcelBeanWriter<ExportInvoiceRow>(config);
 
         writter.write(outputStream);
-
 
     }
 
@@ -187,6 +181,18 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 }
             }
         }
+    }
+
+    @Override
+    public List<ManageInvoiceDto> findAllToReplicate() {
+        List<ManageInvoice> objects = this.repositoryQuery.findAll();
+        List<ManageInvoiceDto> objectDtos = new ArrayList<>();
+
+        for (ManageInvoice object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
     }
 
 }

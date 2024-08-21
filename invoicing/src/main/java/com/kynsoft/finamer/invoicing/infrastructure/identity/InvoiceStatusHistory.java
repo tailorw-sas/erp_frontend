@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceStatusHistoryDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,6 +33,9 @@ public class InvoiceStatusHistory  implements Serializable {
 
     private String employee;
 
+    @Enumerated(EnumType.STRING)
+    private EInvoiceStatus invoiceStatus;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -44,10 +48,11 @@ public class InvoiceStatusHistory  implements Serializable {
         this.invoice = new ManageInvoice(dto.getInvoice());
         this.description = dto.getDescription();
         this.employee =dto.getEmployee();
+        this.invoiceStatus = dto.getInvoiceStatus() != null ? dto.getInvoiceStatus() : EInvoiceStatus.PROCECSED;
     }
 
     public InvoiceStatusHistoryDto toAggregate(){
-        return new InvoiceStatusHistoryDto(id, invoice.toAggregate(), description, createdAt, employee);
+        return new InvoiceStatusHistoryDto(id, invoice.toAggregate(), description, createdAt, employee, invoiceStatus);
     }
 
 }

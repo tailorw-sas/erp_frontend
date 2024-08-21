@@ -18,18 +18,21 @@ public class CreateAttachmentTypeCommand implements ICommand {
     private String description;
     private Status status;
     private Boolean defaults;
+    private boolean antiToIncomeImport;
 
-    public CreateAttachmentTypeCommand(String code, String name, String description, Status status, Boolean defaults) {
+    public CreateAttachmentTypeCommand(String code, String name, String description, Status status, Boolean defaults,boolean antiToIncomeImport) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
         this.description = description;
         this.status = status;
         this.defaults = defaults;
+        this.antiToIncomeImport=antiToIncomeImport;
     }
 
     public static CreateAttachmentTypeCommand fromRequest(CreateAttachmentTypeRequest request) {
-        return new CreateAttachmentTypeCommand(request.getCode(),  request.getName(), request.getDescription(), request.getStatus(), request.getDefaults());
+        return new CreateAttachmentTypeCommand(request.getCode(),  request.getName(), request.getDescription(),
+                request.getStatus(), request.getDefaults(), request.isAntiToIncomeImport());
     }
 
     @Override

@@ -19,13 +19,13 @@ import java.time.ZoneId;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AntiToIncomeRow extends Row implements Serializable {
-    @Cell(position = -1)
+    @Cell(position = -1,headerName = "")
     protected int rowNumber;
-    @Cell(position = 0,cellType = CustomCellType.DATAFORMAT)
-    private String transactionId;
-    @Cell(position = 1,cellType = CustomCellType.NUMERIC)
+    @Cell(position = 0,cellType = CustomCellType.NUMERIC,headerName = "Id ANTI")
+    private Double transactionId;
+    @Cell(position = 1,cellType = CustomCellType.NUMERIC,headerName = "AMOUNT")
     private Double amount;
-    @Cell(position = 2)
+    @Cell(position = 2,headerName = "Remark")
     private String remarks;
 
     private String paymentId;

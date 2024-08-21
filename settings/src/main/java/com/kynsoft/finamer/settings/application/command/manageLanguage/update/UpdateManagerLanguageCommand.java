@@ -17,6 +17,7 @@ public class UpdateManagerLanguageCommand implements ICommand {
     private Status status;
     private String name;
     private Boolean isEnabled;
+    private Boolean defaults;
 
     public static UpdateManagerLanguageCommand fromRequest(UpdateManagerLanguageRequest request, UUID id){
         return new UpdateManagerLanguageCommand(
@@ -24,7 +25,8 @@ public class UpdateManagerLanguageCommand implements ICommand {
                 request.getDescription(),
                 request.getStatus(),
                 request.getName(),
-                request.getIsEnabled()
+                request.getIsEnabled(),
+                request.getDefaults()
         );
     }
 

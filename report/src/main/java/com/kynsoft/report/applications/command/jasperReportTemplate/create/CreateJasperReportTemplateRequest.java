@@ -35,4 +35,5 @@ public class CreateJasperReportTemplateRequest {
     private String rootIndex;
     private String language;
     private UUID dbConection;
+    private String query;
 }

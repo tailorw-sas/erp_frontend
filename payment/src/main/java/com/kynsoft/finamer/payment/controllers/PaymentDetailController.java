@@ -4,6 +4,9 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailRequest;
@@ -42,6 +45,14 @@ public class PaymentDetailController {
     public ResponseEntity<CreatePaymentDetailMessage> create(@RequestBody CreatePaymentDetailRequest request) {
         CreatePaymentDetailCommand createCommand = CreatePaymentDetailCommand.fromRequest(request);
         CreatePaymentDetailMessage response = mediator.send(createCommand);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/apply-payment")
+    public ResponseEntity<ApplyPaymentDetailMessage> applyPayment(@RequestBody ApplyPaymentDetailRequest request) {
+        ApplyPaymentDetailCommand createCommand = ApplyPaymentDetailCommand.fromRequest(request);
+        ApplyPaymentDetailMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);
     }

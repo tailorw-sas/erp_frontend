@@ -27,6 +27,9 @@ public abstract class AbstractPaymentImportHelperService {
 
     public abstract PaginatedResponse getPaymentImportErrors(String importProcessId, Pageable pageable);
 
+    public UUID getPaymentIdStoreFromCache(String paymentId){
+        return null;
+    }
     public String getPaymentImportProcessStatus(String importProcessId) {
         return redisTemplate.opsForValue().get(importProcessId);
     }

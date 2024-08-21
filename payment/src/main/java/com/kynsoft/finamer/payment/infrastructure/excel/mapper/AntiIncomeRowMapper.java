@@ -14,7 +14,7 @@ public class AntiIncomeRowMapper implements IMapper<PaymentImportCache, AntiToIn
         AntiToIncomeRow antiToIncomeRow = new AntiToIncomeRow();
         antiToIncomeRow.setAmount(Double.parseDouble(obj.getPaymentAmount()));
         antiToIncomeRow.setRemarks(obj.getRemarks());
-        antiToIncomeRow.setTransactionId(obj.getTransactionId());
+        antiToIncomeRow.setTransactionId(Double.parseDouble(obj.getTransactionId()));
         antiToIncomeRow.setImportType(obj.getImportType());
         antiToIncomeRow.setImportProcessId(obj.getImportProcessId());
         antiToIncomeRow.setRowNumber(obj.getRowNumber());

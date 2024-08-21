@@ -18,4 +18,5 @@ public class UpdateManageHotelKafka implements Serializable {
     private String status;
     private Boolean isVirtual;
     private boolean requiresFlatRate;
+    private Boolean applyByTradingCompany;
 }

@@ -10,15 +10,12 @@ import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.Cr
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateMessage;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.LinkedList;
 import java.util.List;
-
 import java.util.stream.Collectors;
 
 @Getter
@@ -33,16 +30,18 @@ public class CreateBulkInvoiceCommand implements ICommand {
         private List<CreateAttachmentCommand> attachmentCommands;
         private Long invoiceId;
         private String invoiceNo;
+        private String employee;
 
         public CreateBulkInvoiceCommand(CreateInvoiceCommand invoiceCommand, List<CreateBookingCommand> bookingCommands,
                         List<CreateRoomRateCommand> roomRateCommands,
                         List<CreateAdjustmentCommand> adjustmentCommands,
-                        List<CreateAttachmentCommand> attachmentCommands) {
+                        List<CreateAttachmentCommand> attachmentCommands, String employee) {
                 this.invoiceCommand = invoiceCommand;
                 this.bookingCommands = bookingCommands;
                 this.roomRateCommands = roomRateCommands;
                 this.adjustmentCommands = adjustmentCommands;
                 this.attachmentCommands = attachmentCommands;
+                this.employee = employee;
         }
 
         public static CreateBulkInvoiceCommand fromRequest(CreateBulkInvoiceRequest request) {
@@ -66,7 +65,7 @@ public class CreateBulkInvoiceCommand implements ICommand {
                 return new CreateBulkInvoiceCommand(
                                 CreateInvoiceCommand.fromRequest(request.getInvoice()), bookingCommands,
                                 roomRateCommands,
-                                adjustmentCommands, attachmentCommands);
+                                adjustmentCommands, attachmentCommands, request.getEmployee());
         }
 
         @Override

@@ -11,8 +11,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -39,6 +37,8 @@ public class ManagerLanguage implements Serializable {
 
     private Boolean isEnabled;
 
+    private Boolean defaults;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -53,9 +53,10 @@ public class ManagerLanguage implements Serializable {
         this.description = dto.getDescription();
         this.name = dto.getName();
         this.isEnabled = dto.getIsEnabled();
+        this.defaults = dto.getDefaults();
     }
 
     public ManagerLanguageDto toAggregate(){
-        return new ManagerLanguageDto(id, code, description, status, name, isEnabled);
+        return new ManagerLanguageDto(id, code, description, status, name, isEnabled, defaults);
     }
 }

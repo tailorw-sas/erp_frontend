@@ -23,5 +23,5 @@ public interface IManageMerchantHotelEnrolleService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-    List<ManageHotelDto> findHotelsByManageMerchant(ManageMerchantDto manageMerchant);
+    PaginatedResponse findHotelsByManageMerchant(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

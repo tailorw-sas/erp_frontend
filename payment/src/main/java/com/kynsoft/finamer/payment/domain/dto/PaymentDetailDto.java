@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.payment.domain.dto;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -24,6 +23,7 @@ public class PaymentDetailDto {
     private Double amount;
     private String remark;
     private List<PaymentDetailDto> children;
+    private ManageBookingDto manageBooking;
 
     private Double bookingId;
     private String invoiceId;

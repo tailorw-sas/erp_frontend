@@ -19,8 +19,6 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerReplicateManagePaymentTransactionTypeService;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Component
 public class CreateReplicateCommandHandler implements ICommandHandler<CreateReplicateCommand> {
 
@@ -201,7 +199,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 hotelDto.getManageTradingCompanies() != null ? hotelDto.getManageTradingCompanies().getId() : null, 
                                 hotelDto.getStatus().name(),
                                 hotelDto.getRequiresFlatRate(),
-                                hotelDto.getIsVirtual()
+                                hotelDto.getIsVirtual(),
+                                hotelDto.getApplyByTradingCompany()
                         ));
                     }
                 }
