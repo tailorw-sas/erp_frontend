@@ -97,9 +97,9 @@ pipeline {
         success {
             emailext(
                 subject: "DEVOPS - TAILORW - SUCCESS: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
-                body: """<h2>Build Successful!</h2>
+                body: """<h2><strong>Build Successful!</strong></h2>
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
-                        <p>Branch: ${env.BRANCH_NAME} Requested by: ${PR_AUTHOR}</p>""",
+                        <p>Branch: ${env.BRANCH_NAME}</p>""",
                 to: 'dan.n.n.y@hotmail.com, admin@tailorw.com',
                 from: 'devops@tailorw.net',
             )
@@ -107,9 +107,9 @@ pipeline {
         failure {
             emailext(
                 subject: "DEVOPS - TAILORW - FAILURE: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
-                body: """<h2>Build Failed!</h2>
+                body: """<h2><strong>Build Failed!</strong></h2>
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
-                        <p>Branch: ${env.BRANCH_NAME} Requested by: ${PR_AUTHOR}</p>""",
+                        <p>Branch: ${env.BRANCH_NAME}</p>""",
                 to: 'dan.n.n.y@hotmail.com, admin@tailorw.com',
                 from: 'devops@tailorw.net',
             )
