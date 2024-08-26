@@ -66,7 +66,7 @@ pipeline {
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
-                        env.EMAIL_LIST = 'yulienfg@tailorw.com, admin@tailorw.com',
+                        env.EMAIL_LIST = 'yulienfg@tailorw.com, admin@tailorw.com'
                     }
                 }
             }
