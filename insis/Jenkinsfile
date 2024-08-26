@@ -63,11 +63,11 @@ pipeline {
 
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
-                        env.EMAIL_LIST = 'dan.n.n.y@hotmail.com, admin@tailorw.com'
+                        env.EMAIL_LIST = env.EMAIL_LIST_DEV
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
-                        env.EMAIL_LIST = 'yulienfg@tailorw.com, admin@tailorw.com'
+                        env.EMAIL_LIST = env.EMAIL_LIST_QA
                     }
                 }
             }
@@ -104,7 +104,6 @@ pipeline {
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME}</p>""",
                 to: "${EMAIL_LIST}",
-                //from: 'devops@tailorw.net',
                 from: "${EMAIL_FROM}"
             )
         }
@@ -115,7 +114,6 @@ pipeline {
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME}</p>""",
                 to: "${EMAIL_LIST}",
-                //from: 'devops@tailorw.net',
                 from: "${EMAIL_FROM}"
             )
         }
