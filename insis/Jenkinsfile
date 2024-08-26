@@ -19,6 +19,7 @@ pipeline {
         DEPLOYMENT_NAME = 'insis'
         URL_DEV = credentials("URL-K3S-dev")
         URL_QA = credentials("URL-K3S-qa")
+        EMAIL_FROM = "${env.CORREO_ORIGEN}"
     }
     
     triggers {
@@ -103,7 +104,8 @@ pipeline {
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME}</p>""",
                 to: "${EMAIL_LIST}",
-                from: 'devops@tailorw.net',
+                //from: 'devops@tailorw.net',
+                from: "${EMAIL_FROM}"
             )
         }
         failure {
@@ -113,7 +115,8 @@ pipeline {
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME}</p>""",
                 to: "${EMAIL_LIST}",
-                from: 'devops@tailorw.net',
+                //from: 'devops@tailorw.net',
+                from: "${EMAIL_FROM}"
             )
         }
     }
