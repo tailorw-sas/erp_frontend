@@ -66,12 +66,6 @@ pipeline {
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
                     }
-
-                    def prTitle = env.CHANGE_TITLE
-                    env.PR_TITLE = prTitle
-
-                    def prAuthor = env.CHANGE_AUTHOR
-                    env.PR_AUTHOR = prAuthor
                 }
             }
         }
@@ -102,22 +96,24 @@ pipeline {
     post {
         success {
             emailext(
-                subject: "DEVOPS - TAILORW - SUCCESS: Job '${env.JOB_NAME} [${PR_TITLE}]' (${env.BRANCH_NAME})",
-                body: """
-                Build Successful!
-                Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]
-                Branch: ${env.BRANCH_NAME} Requested by: ${PR_AUTHOR}""",
+                subject: "DEVOPS - TAILORW - SUCCESS: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
+                body: """<h2>Build Successful!</h2>
+                        <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
+                        <p>Branch: ${env.BRANCH_NAME} Requested by: ${PR_AUTHOR}</p>""",
                 to: 'dan.n.n.y@hotmail.com'
+                cc: 'admin@tailorw.com'
+                from: 'devops@tailorw.net'
             )
         }
         failure {
             emailext(
-                subject: "DEVOPS - TAILORW - FAILURE: Job '${env.JOB_NAME} [${PR_TITLE}]' (${env.BRANCH_NAME})",
-                body: """
-                Build Failed!
-                Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]
-                Branch: ${env.BRANCH_NAME} Requested by: ${PR_AUTHOR}""",
+                subject: "DEVOPS - TAILORW - FAILURE: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
+                body: """<h2>Build Failed!</h2>
+                        <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
+                        <p>Branch: ${env.BRANCH_NAME} Requested by: ${PR_AUTHOR}</p>""",
                 to: 'dan.n.n.y@hotmail.com'
+                cc: 'admin@tailorw.com'
+                from: 'devops@tailorw.net'
             )
         }
     }
