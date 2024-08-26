@@ -114,10 +114,11 @@ pipeline {
         success {
             emailext(
                 subject: "DEVOPS - TAILORW - SUCCESS: Job '${env.JOB_NAME} [${env.CHANGE_TITLE}]' (${env.BRANCH_NAME})",
-                body: """Build Successful!
-                         Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]
-                         Branch: ${env.BRANCH_NAME}
-                         Requested by: $(env.CHANGE_AUTHOR)
+                body: """
+                Build Successful!
+                Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]
+                Branch: [${env.BRANCH_NAME}]
+                Requested by: [$(env.CHANGE_AUTHOR)]
                 """,
                 to: 'dan.n.n.y@hotmail.com'
             )
@@ -125,10 +126,11 @@ pipeline {
         failure {
             emailext(
                 subject: "DEVOPS - TAILORW - FAILURE: Job '${env.JOB_NAME} [${env.CHANGE_TITLE}]' (${env.BRANCH_NAME})",
-                body: """Build Failed!
-                         Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]
-                         Branch: ${env.BRANCH_NAME}
-                         Requested by: $(env.CHANGE_AUTHOR)
+                body: """
+                Build Failed!
+                Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]
+                Branch: [${env.BRANCH_NAME}]
+                Requested by: [$(env.CHANGE_AUTHOR)]
                 """,
                 to: 'dan.n.n.y@hotmail.com'
             )
