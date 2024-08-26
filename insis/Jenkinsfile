@@ -100,9 +100,9 @@ pipeline {
                 body: """<h2>Build Successful!</h2>
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME} Requested by: ${PR_AUTHOR}</p>""",
-                to: 'dan.n.n.y@hotmail.com'
-                cc: 'admin@tailorw.com'
-                from: 'devops@tailorw.net'
+                to: 'dan.n.n.y@hotmail.com',
+                cc: 'admin@tailorw.com',
+                from: 'devops@tailorw.net',
             )
         }
         failure {
@@ -111,9 +111,9 @@ pipeline {
                 body: """<h2>Build Failed!</h2>
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME} Requested by: ${PR_AUTHOR}</p>""",
-                to: 'dan.n.n.y@hotmail.com'
-                cc: 'admin@tailorw.com'
-                from: 'devops@tailorw.net'
+                to: 'dan.n.n.y@hotmail.com',
+                cc: 'admin@tailorw.com',
+                from: 'devops@tailorw.net',
             )
         }
     }
