@@ -107,16 +107,16 @@ pipeline {
     post {
         success {
             emailext(
-                subject: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME})",
-                body: """<p>Build Successful!</p>
-                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
-                         <p>Branch: ${env.BRANCH_NAME}</p>""",
+                subject: "DEVOPS - TAILORW - SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME})",
+                body: """Build Successful!
+                         Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]
+                         Branch: ${env.BRANCH_NAME}""",
                 to: 'dan.n.n.y@hotmail.com'
             )
         }
         failure {
             emailext(
-                subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME})",
+                subject: "DEVOPS - TAILORW - FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME})",
                 body: """<p>Build Failed!</p>
                          <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                          <p>Branch: ${env.BRANCH_NAME}</p>""",
