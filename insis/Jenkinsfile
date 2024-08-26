@@ -62,9 +62,11 @@ pipeline {
 
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
+                        env.EMAIL_LIST = 'dan.n.n.y@hotmail.com, admin@tailorw.com'
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
+                        env.EMAIL_LIST = 'yulienfg@tailorw.com, admin@tailorw.com',
                     }
                 }
             }
@@ -94,14 +96,6 @@ pipeline {
     }
 
     post {
-        script {
-            if(env.BRANCH_NAME == 'dev'){
-                env.EMAIL_LIST = 'dan.n.n.y@hotmail.com, admin@tailorw.com',
-            }
-            if(env.BRANCH_NAME == 'qa'){
-                env.EMAIL_LIST = 'yulienfg@tailorw.com, admin@tailorw.com',
-            }
-        }
         success {
             emailext(
                 subject: "DEVOPS - TAILORW - SUCCESS: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
