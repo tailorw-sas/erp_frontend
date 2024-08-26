@@ -117,9 +117,7 @@ pipeline {
                 body: """
                 Build Successful!
                 Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]
-                Branch: '${env.BRANCH_NAME}'
-                Requested by: '$(env.CHANGE_AUTHOR)'
-                """,
+                Branch: ${env.BRANCH_NAME}""",
                 to: 'dan.n.n.y@hotmail.com'
             )
         }
@@ -129,9 +127,7 @@ pipeline {
                 body: """
                 Build Failed!
                 Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]
-                Branch: '${env.BRANCH_NAME}'
-                Requested by: '$(env.CHANGE_AUTHOR)'
-                """,
+                Branch: ${env.BRANCH_NAME}""",
                 to: 'dan.n.n.y@hotmail.com'
             )
         }
