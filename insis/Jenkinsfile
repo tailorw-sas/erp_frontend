@@ -94,13 +94,21 @@ pipeline {
     }
 
     post {
+        script {
+            if(env.BRANCH_NAME == 'dev'){
+                env.EMAIL_LIST = 'dan.n.n.y@hotmail.com, admin@tailorw.com',
+            }
+            if(env.BRANCH_NAME == 'qa'){
+                env.EMAIL_LIST = 'yulienfg@tailorw.com, admin@tailorw.com',
+            }
+        }
         success {
             emailext(
                 subject: "DEVOPS - TAILORW - SUCCESS: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
                 body: """<h2><strong>Build Successful!</strong></h2>
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME}</p>""",
-                to: 'dan.n.n.y@hotmail.com, admin@tailorw.com',
+                to: "${EMAIL_LIST}",
                 from: 'devops@tailorw.net',
             )
         }
@@ -110,7 +118,7 @@ pipeline {
                 body: """<h2><strong>Build Failed!</strong></h2>
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME}</p>""",
-                to: 'dan.n.n.y@hotmail.com, admin@tailorw.com',
+                to: "${EMAIL_LIST}",
                 from: 'devops@tailorw.net',
             )
         }
