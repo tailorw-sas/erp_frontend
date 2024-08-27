@@ -20,7 +20,7 @@ pipeline {
         URL_DEV = credentials("URL-K3S-dev")
         URL_QA = credentials("URL-K3S-qa")
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
-        PR_ID = '${env.CHANGE_ID}'
+        PR_ID = "${env.CHANGE_ID}"
     }
     
     triggers {
