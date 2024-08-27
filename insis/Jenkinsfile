@@ -20,6 +20,7 @@ pipeline {
         URL_DEV = credentials("URL-K3S-dev")
         URL_QA = credentials("URL-K3S-qa")
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
+        PR_ID = '${env.CHANGE_ID}'
     }
     
     triggers {
@@ -32,6 +33,7 @@ pipeline {
             steps {
                 echo '* * * * STAGE: Checking for changes in a specific project * * * *'
                 script {
+                    echo "El ID del Pull Request es: ${PR_ID}"
                     if (!params.FORCE_BUILD){
                         def folderPaths = [env.SRC, env.SRC_SHARE]
                         def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
