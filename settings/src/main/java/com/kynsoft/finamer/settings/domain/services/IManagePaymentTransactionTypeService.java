@@ -27,4 +27,10 @@ public interface IManagePaymentTransactionTypeService {
     Long countByDefaultAndNotId(UUID id);
 
     List<ManagePaymentTransactionTypeDto> findAllToReplicate();
+
+    Long countByIncomeDefaultAndNotId(UUID id);
+
+    Long countByApplyDepositAndNotId(UUID id);
+
+    Long countByDepositAndNotId(UUID id);
 }

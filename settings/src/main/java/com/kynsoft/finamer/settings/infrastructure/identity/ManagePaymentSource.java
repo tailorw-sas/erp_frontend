@@ -44,6 +44,9 @@ public class ManagePaymentSource implements Serializable {
 
     private Boolean isBank;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean expense;
+
     public ManagePaymentSource(ManagePaymentSourceDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -51,9 +54,10 @@ public class ManagePaymentSource implements Serializable {
         this.description = dto.getDescription();
         this.name = dto.getName();
         this.isBank = dto.getIsBank();
+        this.expense = dto.getExpense();
     }
 
     public ManagePaymentSourceDto toAggregate(){
-        return new ManagePaymentSourceDto(id, code, description, status, name, isBank);
+        return new ManagePaymentSourceDto(id, code, description, status, name, isBank, expense);
     }
 }

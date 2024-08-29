@@ -16,4 +16,5 @@ public class ManagePaymentStatusDto {
     private String code;
     private String name;
     private String status;
+    private Boolean applied;
 }

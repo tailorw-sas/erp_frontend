@@ -16,7 +16,7 @@ public class CreateManageInvoiceStatusCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
-
+    private Boolean showClone;
 
     @Override
     public ICommandMessage getMessage() {

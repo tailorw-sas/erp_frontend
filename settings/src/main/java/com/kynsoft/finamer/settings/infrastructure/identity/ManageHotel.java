@@ -47,6 +47,7 @@ public class ManageHotel implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id")
     private ManageCountry manageCountry;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "city_state_id")
     private ManageCityState manageCityState;
@@ -77,6 +78,9 @@ public class ManageHotel implements Serializable {
 
     private Boolean isApplyByVCC;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean autoApplyCredit;
+
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -96,9 +100,10 @@ public class ManageHotel implements Serializable {
         this.isVirtual = dto.getIsVirtual();
         this.requiresFlatRate = dto.getRequiresFlatRate();
         this.isApplyByVCC = dto.getIsApplyByVCC();
+        this.autoApplyCredit = dto.getAutoApplyCredit();
     }
 
-    public ManageHotelDto toAggregate(){
+    public ManageHotelDto toAggregate() {
         return new ManageHotelDto(
                 id,
                 code,
@@ -113,7 +118,7 @@ public class ManageHotel implements Serializable {
                 manageCurrency != null ? manageCurrency.toAggregate() : null,
                 manageRegion != null ? manageRegion.toAggregate() : null,
                 manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null,
-                applyByTradingCompany, prefixToInvoice, isVirtual, requiresFlatRate, isApplyByVCC
+                applyByTradingCompany, prefixToInvoice, isVirtual, requiresFlatRate, isApplyByVCC, autoApplyCredit
         );
     }
 }

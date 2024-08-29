@@ -112,4 +112,19 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
         return objectDtos;
     }
 
+    @Override
+    public Long countByIncomeDefaultAndNotId(UUID id) {
+        return this.repositoryQuery.countByIncomeDefaultAndNotId(id);
+    }
+
+    @Override
+    public Long countByApplyDepositAndNotId(UUID id) {
+        return this.repositoryQuery.countByApplyDepositAndNotId(id);
+    }
+
+    @Override
+    public Long countByDepositAndNotId(UUID id) {
+        return this.repositoryQuery.countByDepositAndNotId(id);
+    }
+
 }

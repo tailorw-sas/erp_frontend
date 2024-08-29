@@ -13,4 +13,5 @@ public class UpdatePaymentStatusRequest {
     private Boolean collected;
     private String description;
     private Boolean defaults;
+    private Boolean applied;
 }

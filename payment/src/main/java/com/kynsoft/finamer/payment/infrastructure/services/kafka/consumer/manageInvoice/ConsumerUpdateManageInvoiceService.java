@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,13 +48,16 @@ public class ConsumerUpdateManageInvoiceService {
                     ));
                 }
             }
+
             this.service.update(new ManageInvoiceDto(
                     objKafka.getId(), 
                     objKafka.getInvoiceId(), 
                     objKafka.getInvoiceNo(), 
                     objKafka.getInvoiceNumber(), 
+                    EInvoiceType.valueOf(objKafka.getInvoiceType()),
                     objKafka.getInvoiceAmount(), 
-                    bookingDtos
+                    bookingDtos,
+                    objKafka.getHasAttachment()
             ));
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);

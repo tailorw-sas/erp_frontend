@@ -2,12 +2,10 @@ package com.kynsoft.finamer.settings.application.command.manageInvoiceStatus.cre
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Navigate;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,11 +25,13 @@ public class CreateManageInvoiceStatusCommand implements ICommand {
     private Boolean processStatus;
     private List<UUID> navigate;
 
+    private Boolean showClone;
+
     public CreateManageInvoiceStatusCommand(String code, String description, Status status,
                                             String name, Boolean enabledToPrint,
                                             Boolean enabledToPropagate, Boolean enabledToApply,
                                             Boolean enabledToPolicy, Boolean processStatus,
-                                            List<UUID> navigate) {
+                                            List<UUID> navigate, Boolean showClone) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
@@ -43,6 +43,7 @@ public class CreateManageInvoiceStatusCommand implements ICommand {
         this.enabledToPolicy = enabledToPolicy;
         this.processStatus = processStatus;
         this.navigate = navigate;
+        this.showClone = showClone;
     }
 
     public static CreateManageInvoiceStatusCommand fromRequest(CreateManageInvoiceStatusRequest request){
@@ -56,7 +57,8 @@ public class CreateManageInvoiceStatusCommand implements ICommand {
                 request.getEnabledToApply(),
                 request.getEnabledToPolicy(),
                 request.getProcessStatus(),
-                request.getNavigate()
+                request.getNavigate(),
+                request.getShowClone()
         );
     }
 

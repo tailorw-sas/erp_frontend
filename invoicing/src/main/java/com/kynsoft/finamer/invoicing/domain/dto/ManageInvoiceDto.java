@@ -41,4 +41,7 @@ public class ManageInvoiceDto {
     private ManageInvoiceStatusDto manageInvoiceStatus;
     private LocalDateTime createdAt;
 
+    private Boolean isCloned;
+    private ManageInvoiceDto parent;
+
 }

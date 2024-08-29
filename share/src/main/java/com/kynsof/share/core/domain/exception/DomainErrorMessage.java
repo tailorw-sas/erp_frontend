@@ -296,9 +296,10 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     INVOICE_ATTACHMENT_TYPE_CHECK_DEFAULT(1075, Series.DOMAIN_ERROR, "Only a income support by income is allowed."),
     AMOUNT_MISMATCH(1076, Series.DOMAIN_ERROR, "The total amount isn't equals to the imported total."),
     ATTACHMENT_TYPE_CHECK_ANTI(1077, Series.DOMAIN_ERROR, "Only a anti to income import property checked is allowed."),
-    PASSWORD_MISMATCH(1078, Series.DOMAIN_ERROR, "Password does not match.")
-
-    ;
+    PASSWORD_MISMATCH(1078, Series.DOMAIN_ERROR, "Password does not match."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_INCOME_DEFAULT(1079, Series.DOMAIN_ERROR,"Another item already exists with income default."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_APPLY_DEPOSIT_(1080, Series.DOMAIN_ERROR,"Another item already exists with default."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_DEPOSIT_(1081, Series.DOMAIN_ERROR,"Another item already exists with default.");
 
     private static final DomainErrorMessage[] VALUES;
 

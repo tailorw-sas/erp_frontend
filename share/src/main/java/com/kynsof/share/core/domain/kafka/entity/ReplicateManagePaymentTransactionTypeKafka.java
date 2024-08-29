@@ -25,4 +25,5 @@ public class ReplicateManagePaymentTransactionTypeKafka implements Serializable 
     private Integer minNumberOfCharacter;
     private String defaultRemark;
     private Boolean defaults;
+    private Boolean paymentInvoice;
 }

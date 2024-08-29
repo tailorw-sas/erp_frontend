@@ -22,6 +22,8 @@ public class AttachmentTypeResponse implements IResponse {
     private String description;
     private Status status;
     private Boolean defaults;
+    private boolean antiToIncomeImport;
+
 
     public AttachmentTypeResponse(AttachmentTypeDto dto) {
         this.id = dto.getId();
@@ -30,6 +32,7 @@ public class AttachmentTypeResponse implements IResponse {
         this.description = dto.getDescription();
         this.status = dto.getStatus();
         this.defaults = dto.getDefaults();
+        this.antiToIncomeImport=dto.isAntiToIncomeImport();
     }
 
 }

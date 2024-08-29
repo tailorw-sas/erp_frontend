@@ -56,6 +56,8 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 "Manage Currency State cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageRegion(), "manageRegion",
                 "Manage Region cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageTradingCompanies(), "manageTradingCompanies",
+                "Manage Trading Company cannot be null."));
 
         ManagerCountryDto countryDto = countryService.findById(command.getManageCountry());
         ManageCityStateDto cityStateDto = cityStateService.findById(command.getManageCityState());
@@ -70,17 +72,19 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 command.getName(), command.getBabelCode(), countryDto, cityStateDto, command.getCity(),
                 command.getAddress(), currencyDto, regionDto, tradingCompaniesDto, command.getApplyByTradingCompany(),
                 command.getPrefixToInvoice(), command.getIsVirtual(), command.getRequiresFlatRate(),
-                command.getIsApplyByVCC()));
+                command.getIsApplyByVCC(), command.getAutoApplyCredit()));
+
         this.producerReplicateManageHotelService.create(new ReplicateManageHotelKafka(
                 command.getId(),
-                command.getCode(), 
-                command.getName(), 
-                command.getIsApplyByVCC(), 
-                command.getManageTradingCompanies(), 
+                command.getCode(),
+                command.getName(),
+                command.getIsApplyByVCC(),
+                command.getManageTradingCompanies(),
                 command.getStatus().name(),
                 command.getRequiresFlatRate(),
                 command.getIsVirtual(),
-                command.getApplyByTradingCompany()
+                command.getApplyByTradingCompany(),
+                command.getAutoApplyCredit()
         ));
     }
 }

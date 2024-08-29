@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageInvoiceStatus;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceStatusKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoiceStatus.create.CreateManageInvoiceStatusCommand;
@@ -27,7 +24,7 @@ public class ConsumerReplicateManageInvoiceStatusService {
         try {
 
             CreateManageInvoiceStatusCommand command = new CreateManageInvoiceStatusCommand(objKafka.getId(),
-                    objKafka.getCode(), objKafka.getName());
+                    objKafka.getCode(), objKafka.getName(), objKafka.getShowClone());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageInvoiceStatusService.class.getName()).log(Level.SEVERE, null, ex);

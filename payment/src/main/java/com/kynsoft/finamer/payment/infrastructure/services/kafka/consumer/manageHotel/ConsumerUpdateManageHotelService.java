@@ -32,7 +32,9 @@ public class ConsumerUpdateManageHotelService {
                     objKafka.getId(), 
                     objKafka.getName(), 
                     objKafka.getStatus(), 
-                    objKafka.getApplyByTradingCompany()
+                    objKafka.getApplyByTradingCompany(),
+                    objKafka.getManageTradingCompany(),
+                    objKafka.getAutoApplyCredit()
             );
             mediator.send(command);
 

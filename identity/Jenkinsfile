@@ -19,6 +19,7 @@ pipeline {
         DEPLOYMENT_NAME = 'identity'
         URL_DEV = credentials("URL-K3S-dev")
         URL_QA = credentials("URL-K3S-qa")
+        EMAIL_FROM = "${env.CORREO_ORIGEN}"
     }
     
     triggers {
@@ -73,9 +74,11 @@ pipeline {
 
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
+                        env.EMAIL_LIST = env.EMAIL_LIST_DEV
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
+                        env.EMAIL_LIST = env.EMAIL_LIST_QA
                     }
                 }
             }
@@ -101,6 +104,29 @@ pipeline {
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
                 }
             }
+        }
+    }
+
+     post {
+        success {
+            emailext(
+                subject: "DEVOPS - TAILORW - SUCCESS: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
+                body: """<h2><strong>Build Successful!</strong></h2>
+                        <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
+                        <p>Branch: ${env.BRANCH_NAME}</p>""",
+                to: "${EMAIL_LIST}",
+                from: "${EMAIL_FROM}"
+            )
+        }
+        failure {
+            emailext(
+                subject: "DEVOPS - TAILORW - FAILURE: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
+                body: """<h2><strong>Build Failed!</strong></h2>
+                        <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
+                        <p>Branch: ${env.BRANCH_NAME}</p>""",
+                to: "${EMAIL_LIST}",
+                from: "${EMAIL_FROM}"
+            )
         }
     }
 }

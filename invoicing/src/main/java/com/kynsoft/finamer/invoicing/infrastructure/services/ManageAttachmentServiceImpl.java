@@ -102,6 +102,15 @@ public class ManageAttachmentServiceImpl implements IManageAttachmentService {
         return repositoryQuery.findAllById(ids).stream().map(ManageAttachment::toAggregate).toList();
     }
 
+    @Override
+    public void create(List<ManageAttachmentDto> dtos) {
+        List<ManageAttachment> attachments = new ArrayList<>();
+        for(ManageAttachmentDto dto : dtos){
+            attachments.add(new ManageAttachment(dto));
+        }
+        this.repositoryCommand.saveAll(attachments);
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

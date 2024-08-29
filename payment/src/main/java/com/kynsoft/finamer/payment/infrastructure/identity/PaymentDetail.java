@@ -160,4 +160,31 @@ public class PaymentDetail implements Serializable {
                 applyDepositValue
         );
     }
+
+    public PaymentDetailDto toAggregateSimpleNotPayment() {
+
+        return new PaymentDetailDto(
+                id,
+                status,
+                null,
+                transactionType.toAggregate(),
+                amount,
+                remark,
+                null,
+                manageBooking != null ? manageBooking.toAggregate() : null,
+                bookingId != null ? bookingId : null,
+                invoiceId != null ? invoiceId : null,
+                transactionDate != null ? transactionDate : null,
+                firstName != null ? firstName : null,
+                lastName != null ? lastName : null,
+                reservation != null ? reservation : null,
+                couponNo != null ? couponNo : null,
+                adults != null ? adults : null,
+                childrens != null ? childrens : null,
+                createdAt,
+                paymentDetailId,
+                parentId,
+                applyDepositValue
+        );
+    }
 }

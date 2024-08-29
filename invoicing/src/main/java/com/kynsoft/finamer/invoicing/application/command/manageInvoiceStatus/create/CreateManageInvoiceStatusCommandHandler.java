@@ -22,7 +22,8 @@ public class CreateManageInvoiceStatusCommandHandler implements ICommandHandler<
                 command.getId(),
                 command.getCode(),
 
-                command.getName()
+                command.getName(),
+                command.getShowClone()
 
         ));
     }

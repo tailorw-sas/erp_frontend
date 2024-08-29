@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceStatusDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Navigate;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -58,6 +57,8 @@ public class ManageInvoiceStatus implements Serializable {
     )
     private List<ManageInvoiceStatus> navigate = new ArrayList<>();
 
+    private Boolean showClone;
+
     public ManageInvoiceStatus(ManageInvoiceStatusDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -74,13 +75,14 @@ public class ManageInvoiceStatus implements Serializable {
                     .map(ManageInvoiceStatus::new)
                     .collect(Collectors.toList());
         }
+        this.showClone = dto.getShowClone();
     }
 
     public ManageInvoiceStatusDto toAggregateSimple(){
         return new ManageInvoiceStatusDto(
                 id, code, description, status, name, enabledToPrint, enabledToPropagate,
                 enabledToApply, enabledToPolicy, processStatus,
-                 null
+                 null, showClone
         );
     }
 
@@ -88,7 +90,8 @@ public class ManageInvoiceStatus implements Serializable {
         return new ManageInvoiceStatusDto(
                 id, code, description, status, name, enabledToPrint, enabledToPropagate,
                 enabledToApply, enabledToPolicy, processStatus,
-                navigate != null ? navigate.stream().map(ManageInvoiceStatus::toAggregateSimple).toList() : null
+                navigate != null ? navigate.stream().map(ManageInvoiceStatus::toAggregateSimple).toList() : null,
+                showClone
         );
     }
 }

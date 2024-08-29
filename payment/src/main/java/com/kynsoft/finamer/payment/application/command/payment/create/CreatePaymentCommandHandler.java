@@ -144,7 +144,10 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 0.0,
                 0.0,
                 command.getPaymentAmount(),
+                command.getPaymentAmount(),//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
+                0.0,
                 command.getRemark(),
+                null,
                 null,
                 null
         );

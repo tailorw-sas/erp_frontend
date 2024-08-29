@@ -53,13 +53,15 @@ public class BookingImportCache {
 
     private double amountPAX;
 
-    private double roomNumber;
+    private String roomNumber;
 
     private double hotelInvoiceAmount;
     @Indexed
     private String bookingDate;
 
     private String hotelType;
+
+    private String nightType;
 
     public BookingImportCache() {
     }
@@ -87,6 +89,7 @@ public class BookingImportCache {
         this.hotelInvoiceAmount = bookingRow.getHotelInvoiceAmount();
         this.bookingDate = bookingRow.getBookingDate();
         this.hotelType = bookingRow.getHotelType();
+        this.nightType=bookingRow.getNightType();
     }
 
     public BookingRow toAggregate() {
@@ -113,6 +116,7 @@ public class BookingImportCache {
         bookingRow.setHotelInvoiceAmount(this.hotelInvoiceAmount);
         bookingRow.setBookingDate(this.bookingDate);
         bookingRow.setHotelType(this.hotelType);
+        bookingRow.setNightType(this.nightType);
         return  bookingRow;
     }
 }

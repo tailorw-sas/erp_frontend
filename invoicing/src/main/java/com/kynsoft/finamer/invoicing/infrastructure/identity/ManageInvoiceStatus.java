@@ -30,20 +30,20 @@ public class ManageInvoiceStatus implements Serializable {
 
 
     private String name;
-
+    private Boolean showClone;
 
     public ManageInvoiceStatus(ManageInvoiceStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
 
         this.name = dto.getName();
-
+        this.showClone = dto.getShowClone();
     }
 
 
     public ManageInvoiceStatusDto toAggregate() {
         return new ManageInvoiceStatusDto(
-                id, code, name
+                id, code, name, showClone
         );
     }
 }

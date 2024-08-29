@@ -13,4 +13,5 @@ public class CreateManagePaymentSourceRequest {
     private Status status;
     private String name;
     private Boolean isBank;
+    private Boolean expense;
 }

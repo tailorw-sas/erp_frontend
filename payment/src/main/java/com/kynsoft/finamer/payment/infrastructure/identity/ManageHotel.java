@@ -34,8 +34,15 @@ public class ManageHotel implements Serializable {
 
     private String name;
     private String status;
+
     @Column(nullable = true)
     private Boolean applyByTradingCompany;
+
+    @Column(nullable = true)
+    private UUID manageTradingCompany;
+
+    @Column(nullable = true)
+    private Boolean autoApplyCredit;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -51,13 +58,15 @@ public class ManageHotel implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.applyByTradingCompany = dto.getApplyByTradingCompany();
+        this.manageTradingCompany = dto.getManageTradingCompany();
         this.name = dto.getName();
         this.status = dto.getStatus();
+        this.autoApplyCredit = dto.getAutoApplyCredit();
     }
 
     public ManageHotelDto toAggregate() {
         return new ManageHotelDto(
-                id, code, name, status, applyByTradingCompany
+                id, code, name, status, applyByTradingCompany, manageTradingCompany, autoApplyCredit
         );
     }
 }

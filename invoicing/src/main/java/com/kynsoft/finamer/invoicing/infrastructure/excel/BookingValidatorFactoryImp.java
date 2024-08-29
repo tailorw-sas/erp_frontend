@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationServi
 import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingAdultsValidator;
@@ -22,6 +23,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBooki
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingHotelValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingInvoiceAmountValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingNameValidator;
+import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingNightTypeValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingNightsValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingRatePlanValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingRoomTypeValidator;
@@ -44,6 +46,7 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
 
     private final BookingImportCacheRedisRepository cacheRedisRepository;
     private final IInvoiceCloseOperationService closeOperationService;
+    private final IManageNightTypeService nightTypeService;
 
 
     public BookingValidatorFactoryImp(ApplicationEventPublisher applicationEventPublisher,
@@ -53,7 +56,8 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
                                       IManageAgencyService manageAgencyService,
                                       IManageBookingService manageBookingService,
                                       BookingImportCacheRedisRepository cacheRedisRepository,
-                                      IInvoiceCloseOperationService closeOperationService) {
+                                      IInvoiceCloseOperationService closeOperationService,
+                                      IManageNightTypeService nightTypeService) {
         super(applicationEventPublisher);
         this.manageHotelService = manageHotelService;
         this.roomTypeService = roomTypeService;
@@ -62,29 +66,33 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
         this.manageBookingService = manageBookingService;
         this.cacheRedisRepository = cacheRedisRepository;
         this.closeOperationService = closeOperationService;
+        this.nightTypeService = nightTypeService;
     }
 
     @Override
     public void createValidators(String importType) {
-        validators.put(ImportBookingDuplicateValidator.class.getName(), new ImportBookingDuplicateValidator(manageBookingService, cacheRedisRepository));
-        validators.put(ImportBookingTransactionDateValidator.class.getName(), new ImportBookingTransactionDateValidator(closeOperationService,manageHotelService));
-        validators.put(ImportBookingHotelValidator.class.getName(), new ImportBookingHotelValidator(manageHotelService));
-        validators.put(ImportBookingAgencyValidator.class.getName(), new ImportBookingAgencyValidator(manageAgencyService));
-        validators.put(ImportBookingNameValidator.class.getName(), new ImportBookingNameValidator());
-        validators.put(ImportBookingCheckInValidator.class.getName(), new ImportBookingCheckInValidator());
-        validators.put(ImportBookingCheckOutValidator.class.getName(), new ImportBookingCheckOutValidator());
-        validators.put(ImportBookingNightsValidator.class.getName(), new ImportBookingNightsValidator());
-        validators.put(ImportBookingAdultsValidator.class.getName(), new ImportBookingAdultsValidator());
-        validators.put(ImportBookingInvoiceAmountValidator.class.getName(), new ImportBookingInvoiceAmountValidator());
-        validators.put(ImportBookingCouponValidator.class.getName(), new ImportBookingCouponValidator());
-        validators.put(ImportBookingRoomTypeValidator.class.getName(), new ImportBookingRoomTypeValidator(roomTypeService));
-        validators.put(ImportBookingRatePlanValidator.class.getName(), new ImportBookingRatePlanValidator(ratePlanService));
-        validators.put(ImportBookingHotelBookingNoValidator.class.getName(), new ImportBookingHotelBookingNoValidator());
-        validators.put(ImportBookingHotelInvoiceNumberValidator.class.getName(), new ImportBookingHotelInvoiceNumberValidator(manageHotelService));
-        validators.put(ImportBookingAmountPaxValidator.class.getName(), new ImportBookingAmountPaxValidator());
-        validators.put(ImportBookingHotelInvoiceAmountValidator.class.getName(), new ImportBookingHotelInvoiceAmountValidator(manageHotelService));
-        validators.put(ImportBookingDateValidator.class.getName(), new ImportBookingDateValidator());
-        validators.put(ImportBookingTypeValidator.class.getName(), new ImportBookingTypeValidator(importType,manageHotelService));
+        if (validators.isEmpty()) {
+            validators.put(ImportBookingDuplicateValidator.class.getName(), new ImportBookingDuplicateValidator(manageBookingService, cacheRedisRepository));
+            validators.put(ImportBookingTransactionDateValidator.class.getName(), new ImportBookingTransactionDateValidator(closeOperationService, manageHotelService));
+            validators.put(ImportBookingHotelValidator.class.getName(), new ImportBookingHotelValidator(manageHotelService));
+            validators.put(ImportBookingAgencyValidator.class.getName(), new ImportBookingAgencyValidator(manageAgencyService));
+            validators.put(ImportBookingNameValidator.class.getName(), new ImportBookingNameValidator());
+            validators.put(ImportBookingCheckInValidator.class.getName(), new ImportBookingCheckInValidator());
+            validators.put(ImportBookingCheckOutValidator.class.getName(), new ImportBookingCheckOutValidator());
+            validators.put(ImportBookingNightsValidator.class.getName(), new ImportBookingNightsValidator());
+            validators.put(ImportBookingAdultsValidator.class.getName(), new ImportBookingAdultsValidator());
+            validators.put(ImportBookingInvoiceAmountValidator.class.getName(), new ImportBookingInvoiceAmountValidator());
+            validators.put(ImportBookingCouponValidator.class.getName(), new ImportBookingCouponValidator());
+            validators.put(ImportBookingRoomTypeValidator.class.getName(), new ImportBookingRoomTypeValidator(roomTypeService));
+            validators.put(ImportBookingRatePlanValidator.class.getName(), new ImportBookingRatePlanValidator(ratePlanService));
+            validators.put(ImportBookingHotelBookingNoValidator.class.getName(), new ImportBookingHotelBookingNoValidator());
+            validators.put(ImportBookingHotelInvoiceNumberValidator.class.getName(), new ImportBookingHotelInvoiceNumberValidator(manageHotelService));
+            validators.put(ImportBookingAmountPaxValidator.class.getName(), new ImportBookingAmountPaxValidator());
+            validators.put(ImportBookingHotelInvoiceAmountValidator.class.getName(), new ImportBookingHotelInvoiceAmountValidator(manageHotelService));
+            validators.put(ImportBookingDateValidator.class.getName(), new ImportBookingDateValidator());
+            validators.put(ImportBookingTypeValidator.class.getName(), new ImportBookingTypeValidator(importType, manageHotelService));
+            validators.put(ImportBookingNightTypeValidator.class.getName(), new ImportBookingNightTypeValidator(nightTypeService,manageAgencyService));
+        }
     }
 
     @Override

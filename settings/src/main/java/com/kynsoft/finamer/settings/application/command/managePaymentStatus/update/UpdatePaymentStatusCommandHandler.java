@@ -36,12 +36,13 @@ public class UpdatePaymentStatusCommandHandler implements ICommandHandler<Update
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setCollected, command.getCollected(), dto.getCollected(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setApplied, command.getApplied(), dto.getApplied(), update::setUpdate);
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManagePaymentStatusService.update(new UpdateManagePaymentStatusKafka(dto.getId(), dto.getName(), command.getStatus().name()));
+            this.producerUpdateManagePaymentStatusService.update(new UpdateManagePaymentStatusKafka(dto.getId(), dto.getName(), command.getStatus().name(), command.getApplied()));
         }
     }
 

@@ -4,12 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentTransactionTypeKafka;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransactionTypeCodeMustBeUniqueRule;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransactionTypeCodeSizeRule;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransactionTypeDefaultMustBeUniqueRule;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransantionTypeValidateApplyDepositRule;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransantionTypeValidateCashRule;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransantionTypeValidateDepositRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.*;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerReplicateManagePaymentTransactionTypeService;
 import org.springframework.stereotype.Component;
@@ -38,6 +33,15 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
 //        if (command.getDefaults()) {
 //            RulesChecker.checkRule(new ManagePaymentTransactionTypeDefaultMustBeUniqueRule(service, command.getId()));
 //        }
+        if (command.getIncomeDefault()) {
+            RulesChecker.checkRule(new ManagePaymentTransactionTypeIncomeDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.getApplyDeposit()) {
+            RulesChecker.checkRule(new ManagePaymentTransactionTypeApplyDepositMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.getDeposit()) {
+            RulesChecker.checkRule(new ManagePaymentTransactionTypeDepositMustBeUniqueRule(this.service, command.getId()));
+        }
 
         service.create(new ManagePaymentTransactionTypeDto(
                 command.getId(),
@@ -55,7 +59,9 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
                 command.getDeposit(),
                 command.getApplyDeposit(),
                 command.getDefaults(),
-                command.getAntiToIncome()
+                command.getAntiToIncome(),
+                command.getIncomeDefault(),
+                command.getPaymentInvoice()
         ));
         this.producerReplicateManagePaymentTransactionTypeService
                 .create(new ReplicateManagePaymentTransactionTypeKafka(
@@ -69,7 +75,8 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
                         command.getRemarkRequired(),
                         command.getMinNumberOfCharacter(),
                         command.getDefaultRemark(),
-                        command.getDefaults()
+                        command.getDefaults(),
+                        command.getPaymentInvoice()
                 ));
     }
 }

@@ -20,7 +20,7 @@ public class ExcelBeanIterator<T> implements Iterator<T> {
     public boolean hasNext() {
         this.bean = beanReader.readSingleLine();
         boolean finished = Objects.nonNull(bean);
-        if (finished){
+        if (!finished){
             beanReader.close();
         }
         return finished;

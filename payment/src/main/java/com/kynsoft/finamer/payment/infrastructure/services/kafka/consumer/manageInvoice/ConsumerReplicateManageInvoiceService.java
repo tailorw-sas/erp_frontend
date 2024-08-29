@@ -2,8 +2,13 @@ package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.manag
 
 import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.payment.application.command.payment.createPaymentToCredit.CreatePaymentToCreditCommand;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +22,15 @@ import java.util.logging.Logger;
 public class ConsumerReplicateManageInvoiceService {
 
     private final IManageInvoiceService service;
+    private final IManageHotelService hotelService;
+    private final IMediator mediator;
 
-    public ConsumerReplicateManageInvoiceService(IManageInvoiceService service) {
-
+    public ConsumerReplicateManageInvoiceService(IManageInvoiceService service, 
+                                                 IMediator mediator,
+                                                 IManageHotelService hotelService) {
+        this.mediator = mediator;
         this.service = service;
+        this.hotelService = hotelService;
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-invoice", groupId = "payment-entity-replica")
@@ -47,14 +57,26 @@ public class ConsumerReplicateManageInvoiceService {
                     ));
                 }
             }
-            this.service.create(new ManageInvoiceDto(
+
+            ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
                     objKafka.getId(), 
                     objKafka.getInvoiceId(), 
                     objKafka.getInvoiceNo(), 
                     objKafka.getInvoiceNumber(), 
+                    EInvoiceType.valueOf(objKafka.getInvoiceType()),
                     objKafka.getInvoiceAmount(), 
-                    bookingDtos
-            ));
+                    bookingDtos,
+                    objKafka.getHasAttachment() //!= null ? objKafka.getHasAttachment() : false
+            );
+
+            this.service.create(invoiceDto);
+
+            if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
+                ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
+                if (hotelDto.getAutoApplyCredit()) {
+                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto));
+                }
+            }
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
         }
