@@ -1,3 +1,6 @@
+@Library('emailNotification') _
+import com.tailorw-sas.notificaciones.NotificadorEmail
+
 pipeline {
     
     agent any
