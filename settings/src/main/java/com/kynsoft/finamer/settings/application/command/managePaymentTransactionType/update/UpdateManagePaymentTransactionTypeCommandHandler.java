@@ -8,10 +8,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransactionTypeDefaultMustBeUniqueRule;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransantionTypeValidateApplyDepositRule;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransantionTypeValidateCashRule;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransantionTypeValidateDepositRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.*;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerUpdateManagePaymentTransactionTypeService;
 import org.springframework.stereotype.Component;
@@ -55,9 +52,14 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
         UpdateIfNotNull.updateBoolean(dto::setApplyDeposit, command.getApplyDeposit(), dto.getApplyDeposit(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setAntiToIncome, command.getAntiToIncome(), dto.getAntiToIncome(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setPaymentInvoice, command.getPaymentInvoice(), dto.getPaymentInvoice(), update::setUpdate);
 //        if (UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate)) {
 //            RulesChecker.checkRule(new ManagePaymentTransactionTypeDefaultMustBeUniqueRule(service, command.getId()));
 //        }
+
+        if(UpdateIfNotNull.updateBoolean(dto::setIncomeDefault, command.getIncomeDefault(), dto.getIncomeDefault(), update::setUpdate)){
+            RulesChecker.checkRule(new ManagePaymentTransactionTypeIncomeDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 
@@ -73,7 +75,8 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
                     dto.getRemarkRequired(), 
                     dto.getMinNumberOfCharacter(),
                     command.getDefaultRemark(),
-                    command.getDefaults()
+                    command.getDefaults(),
+                    command.getPaymentInvoice()
             ));
         }
     }

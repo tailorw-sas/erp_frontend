@@ -15,6 +15,7 @@ public class UpdateManageInvoiceStatusCommand implements ICommand {
 
     private UUID id;
     private String name;
+    private Boolean showClone;
 
 
     @Override

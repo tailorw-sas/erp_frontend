@@ -14,7 +14,7 @@ import java.util.UUID;
 public class ManageBookingKafka {
     private UUID id;
     private Long bookingId;
-    private Long reservationNumber;
+    private String reservationNumber;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 

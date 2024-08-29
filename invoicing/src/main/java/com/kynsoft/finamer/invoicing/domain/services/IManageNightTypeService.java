@@ -13,6 +13,10 @@ public interface IManageNightTypeService {
 
     ManageNightTypeDto findById(UUID id);
 
+    boolean existNightTypeByCode(String code);
+
+    ManageNightTypeDto findByCode(String code);
+
 
 
     Long countByCodeAndNotId(String code, UUID id);

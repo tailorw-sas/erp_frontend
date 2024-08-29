@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.query;
 
-import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Query;
 
 @Repository
 public interface ManagePaymentSourceReadDataJPARepository extends JpaRepository<ManagePaymentSource, UUID>,
@@ -18,4 +18,7 @@ public interface ManagePaymentSourceReadDataJPARepository extends JpaRepository<
 
     Page<ManagePaymentSource> findAll(Specification specification, Pageable pageable);
     Optional<ManagePaymentSource> findByCodeAndStatus(String code, String status);
+
+    @Query("SELECT b FROM ManagePaymentSource b WHERE b.expense = true")
+    Optional<ManagePaymentSource> findByExpense();
 }

@@ -26,4 +26,5 @@ public class UpdateManageHotelRequest {
     private Boolean isVirtual;
     private Boolean requiresFlatRate;
     private Boolean isApplyByVCC;
+    private Boolean autoApplyCredit;
 }

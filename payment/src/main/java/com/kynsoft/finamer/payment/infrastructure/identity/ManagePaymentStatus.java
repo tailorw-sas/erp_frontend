@@ -22,15 +22,17 @@ public class ManagePaymentStatus {
     private String code;
     private String name;
     private String status;
+    private Boolean applied;
 
     public ManagePaymentStatus(ManagePaymentStatusDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.status = dto.getStatus();
+        this.applied = dto.getApplied();
     }
     
     public ManagePaymentStatusDto toAggregate(){
-        return new ManagePaymentStatusDto(id, code, name, status);
+        return new ManagePaymentStatusDto(id, code, name, status, applied);
     }
 }

@@ -91,14 +91,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     && command.getInvoiceCommand().getInvoiceType() != null
                     && !command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)) {
 
-                int endIndex = command.getBookingCommands().get(i).getHotelBookingNumber().length() - 2;
-
                 RulesChecker.checkRule(new ManageBookingHotelBookingNumberValidationRule(bookingService,
-                        command.getBookingCommands().get(i).getHotelBookingNumber().substring(
-                                endIndex,
-                                command.getBookingCommands().get(i)
-                                        .getHotelBookingNumber()
-                                        .length()),
+                        command.getBookingCommands().get(i).getHotelBookingNumber()
+                                .split("\\s+")[command.getBookingCommands().get(i).getHotelBookingNumber()
+                                        .split("\\s+").length - 1],
                         command.getInvoiceCommand().getHotel()));
             }
 
@@ -216,18 +212,18 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     .getTransactionType() != null
                     && !command
                             .getAdjustmentCommands().get(i).getTransactionType().equals("")
-                    ? transactionTypeService.findById(
-                            command.getAdjustmentCommands()
-                                    .get(i)
-                                    .getTransactionType())
-                    : null;
+                                    ? transactionTypeService.findById(
+                                            command.getAdjustmentCommands()
+                                                    .get(i)
+                                                    .getTransactionType())
+                                    : null;
 
             ManagePaymentTransactionTypeDto paymnetTransactionTypeDto = command.getAdjustmentCommands()
                     .get(i).getPaymentTransactionType() != null
-                    ? paymentTransactionTypeService
-                            .findById(command.getAdjustmentCommands().get(i)
-                                    .getPaymentTransactionType())
-                    : null;
+                            ? paymentTransactionTypeService
+                                    .findById(command.getAdjustmentCommands().get(i)
+                                            .getPaymentTransactionType())
+                            : null;
 
             ManageAdjustmentDto adjustmentDto = new ManageAdjustmentDto(
                     command.getAdjustmentCommands().get(i).getId(),
@@ -299,7 +295,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         EInvoiceStatus status = EInvoiceStatus.PROCECSED;
 
-        if (command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)) {
+        if (command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)
+                || command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
             status = EInvoiceStatus.SENT;
         }
 
@@ -314,17 +311,18 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 command.getInvoiceCommand().getInvoiceAmount(),
                 command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
                 command.getInvoiceCommand().getInvoiceType(), status,
-                false, bookings, attachmentDtos, null, null, null, null, null);
+                false, bookings, attachmentDtos, null, null, null, null, null,  false,
+                null);
 
         ManageInvoiceDto created = service.create(invoiceDto);
 
         command.setInvoiceId(created.getInvoiceId());
         command.setInvoiceNo(created.getInvoiceNumber());
 
-        try {
-            this.producerReplicateManageInvoiceService.create(created);
-        } catch (Exception e) {
-        }
+//        try {
+//            this.producerReplicateManageInvoiceService.create(created);
+//        } catch (Exception e) {
+//        }
 
     }
 
@@ -343,4 +341,5 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         }
     }
+
 }

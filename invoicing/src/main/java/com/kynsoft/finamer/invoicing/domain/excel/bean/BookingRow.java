@@ -53,14 +53,16 @@ public class BookingRow {
     private String remarks;
     @Cell(position = 17, cellType = CustomCellType.FORMULA,headerName = "CANTIDAD DE PAX")
     private Double amountPAX;
-    @Cell(position = 18, cellType = CustomCellType.NUMERIC,headerName = "Room Number")
-    private Double roomNumber;
+    @Cell(position = 18, cellType = CustomCellType.DATAFORMAT,headerName = "Room Number")
+    private String roomNumber;
     @Cell(position = 19, cellType = CustomCellType.NUMERIC,headerName = "Hotel Invoice Amount")
     private Double hotelInvoiceAmount;
     @Cell(position = 20, cellType = CustomCellType.DATAFORMAT,headerName = "Booking Date")
     private String bookingDate;
     @Cell(position = 21,headerName = "IDENTIFICADOR EN HOTELES DOBLE O TRIPLE")
     private String hotelType;
+    @Cell(position = 22,headerName = "Night Type")
+    private String nightType;
 
 
     private String trendingCompany;
@@ -83,7 +85,7 @@ public class BookingRow {
         manageBookingDto.setHotelBookingNumber(Objects.nonNull(this.hotelBookingNumber) ? this.hotelBookingNumber : "");
         manageBookingDto.setHotelInvoiceNumber(Objects.nonNull(this.hotelInvoiceNumber) ? this.hotelInvoiceNumber : "");
         manageBookingDto.setDescription(Objects.nonNull(this.remarks) ? this.remarks : "");
-        manageBookingDto.setRoomNumber(String.valueOf(Objects.nonNull(this.roomNumber) ? this.roomNumber : 0));
+        manageBookingDto.setRoomNumber(this.roomNumber);
         manageBookingDto.setInvoiceAmount(this.invoiceAmount);
         manageBookingDto.setDueAmount(this.invoiceAmount);
         // manageBookingDto.setAmountPax();

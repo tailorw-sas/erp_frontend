@@ -22,4 +22,6 @@ public interface IManageAttachmentService {
     ManageAttachmentDto findById(UUID id);
 
     List<ManageAttachmentDto> findByIds(List<UUID> ids);
+
+    void create(List<ManageAttachmentDto> dtos);
 }

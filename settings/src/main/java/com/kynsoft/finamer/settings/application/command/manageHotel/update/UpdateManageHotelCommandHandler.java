@@ -55,6 +55,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageCityState(), "manageCityState", "Manage City State cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageCurrency(), "manageCurrency", "Manage Currency State cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageRegion(), "manageRegion", "Manage Region cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageTradingCompanies(), "manageTradingCompanies", "Manage Trading Company cannot be null."));
 
         ManageHotelDto dto = service.findById(command.getId());
 
@@ -83,6 +84,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
         UpdateIfNotNull.updateBoolean(dto::setIsVirtual, command.getIsVirtual(), dto.getIsVirtual(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setRequiresFlatRate, command.getRequiresFlatRate(), dto.getRequiresFlatRate(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsApplyByVCC, command.getIsApplyByVCC(), dto.getIsApplyByVCC(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setAutoApplyCredit, command.getAutoApplyCredit(), dto.getAutoApplyCredit(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
@@ -94,7 +96,8 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
                     command.getStatus().name(),
                     command.getIsVirtual(),
                     command.getRequiresFlatRate(),
-                    command.getApplyByTradingCompany()
+                    command.getApplyByTradingCompany(),
+                    command.getAutoApplyCredit()
             ));
         }
     }

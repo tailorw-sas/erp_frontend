@@ -18,4 +18,6 @@ public class ManageHotelDto {
     private String name;
     private String status;
     private Boolean applyByTradingCompany;
+    private UUID manageTradingCompany;
+    private Boolean autoApplyCredit;
 }

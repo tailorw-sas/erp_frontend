@@ -35,11 +35,15 @@ public class ManageInvoiceResponse implements IResponse {
     private boolean autoRec;
     private boolean hasAttachments;
     private Boolean reSend;
+    private Boolean isCloned;
     private LocalDate reSendDate;
     private LocalDate dueDate;
     private ManageInvoiceTypeResponse manageInvoiceType;
     private ManageInvoiceStatusResponse manageInvoiceStatus;
     private LocalDateTime createdAt;
+    private Boolean isInCloseOperation = true;
+
+    private ManageInvoiceDto parent;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -61,5 +65,7 @@ public class ManageInvoiceResponse implements IResponse {
         this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null ? new ManageInvoiceStatusResponse(dto.getManageInvoiceStatus()) : null;
         this.createdAt = dto.getCreatedAt();
         this.dueDate = dto.getDueDate();
+        this.isCloned = dto.getIsCloned();
+        this.parent = dto.getParent();
     }
 }

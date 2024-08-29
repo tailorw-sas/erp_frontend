@@ -19,11 +19,7 @@ public class ImportBookingRatePlanValidator extends ExcelRuleValidator<BookingRo
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-        if (Objects.isNull(obj.getRatePlan()) ||obj.getRatePlan().isEmpty()){
-            errorFieldList.add(new ErrorField("Rate Plan", "Rate Plan  must be not empty"));
-            return false;
-        }
-        else if (!ratePlanService.existByCode(obj.getRatePlan())) {
+       if (Objects.nonNull(obj.getRatePlan())&&!ratePlanService.existByCode(obj.getRatePlan())) {
             errorFieldList.add(new ErrorField("Rate Plan", "Rate Plan not exist"));
             return false;
         }

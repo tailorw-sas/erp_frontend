@@ -16,13 +16,17 @@ public class CreateManageHotelCommand implements ICommand {
     private String name;
     private String status;
     private Boolean applyByTradingCompany;
+    private UUID manageTradingCompany;
+    private Boolean autoApplyCredit;
 
-    public CreateManageHotelCommand(UUID id, String code, String name, String status, Boolean applyByTradingCompany) {
+    public CreateManageHotelCommand(UUID id, String code, String name, String status, Boolean applyByTradingCompany, UUID manageTradingCompany, Boolean autoApplyCredit) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.status = status;
         this.applyByTradingCompany = applyByTradingCompany;
+        this.manageTradingCompany = manageTradingCompany;
+        this.autoApplyCredit = autoApplyCredit;
     }
 
     @Override

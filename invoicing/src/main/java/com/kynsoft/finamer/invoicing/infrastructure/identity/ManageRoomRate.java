@@ -92,7 +92,7 @@ public class ManageRoomRate {
 
     public ManageRoomRateDto toAggregate() {
         return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, invoiceAmount, roomNumber, adults, children,
-                rateAdult, rateChild, hotelAmount, remark, booking.toAggregate(),
+                rateAdult, rateChild, hotelAmount, remark, booking !=null ?  booking.toAggregate() : null,
                 adjustments != null ? adjustments.stream().map(b -> {
                     return b.toAggregateSample();
                 }).collect(Collectors.toList()) : null, nights);

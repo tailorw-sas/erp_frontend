@@ -14,11 +14,13 @@ public class UpdateManagePaymentStatusCommand implements ICommand {
     private UUID id;
     private String name;
     private String status;
+    private Boolean applied;
 
-    public UpdateManagePaymentStatusCommand(UUID id, String name, String status) {
+    public UpdateManagePaymentStatusCommand(UUID id, String name, String status, Boolean applied) {
         this.id = id;
         this.name = name;
         this.status = status;
+        this.applied = applied;
     }
 
     @Override

@@ -45,12 +45,13 @@ public class UpdateManageInvoiceStatusCommandHandler implements ICommandHandler<
         UpdateIfNotNull.updateBoolean(dto::setEnabledToApply, command.getEnabledToApply(), dto.getEnabledToApply(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setEnabledToPolicy, command.getEnabledToPolicy(), dto.getEnabledToPolicy(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setProcessStatus, command.getProcessStatus(), dto.getProcessStatus(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setShowClone, command.getShowClone(), dto.getShowClone(), update::setUpdate);
 
         updateNavigates(dto::setNavigate, command.getNavigate(), dto.getNavigate().stream().map(ManageInvoiceStatusDto::getId).toList(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageInvoiceStatusService.update(new UpdateManageInvoiceStatusKafka(dto.getId(), dto.getName()));
+            this.producerUpdateManageInvoiceStatusService.update(new UpdateManageInvoiceStatusKafka(dto.getId(), dto.getName(), dto.getShowClone()));
         }
     }
 

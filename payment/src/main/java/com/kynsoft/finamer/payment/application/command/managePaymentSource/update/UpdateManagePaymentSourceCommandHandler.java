@@ -20,6 +20,7 @@ public class UpdateManagePaymentSourceCommandHandler implements ICommandHandler<
         ManagePaymentSourceDto update = this.service.findById(command.getId());
         update.setName(command.getName());
         update.setStatus(command.getStatus());
+        update.setExpense(command.getExpense());
         service.update(update);
     }
 }

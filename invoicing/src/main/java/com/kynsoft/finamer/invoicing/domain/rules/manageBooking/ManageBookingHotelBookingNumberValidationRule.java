@@ -28,7 +28,7 @@ public class ManageBookingHotelBookingNumberValidationRule extends BusinessRule 
 
     @Override
     public boolean isBroken() {
-        return this.service.existsByExactLastTwoChars(lastChars, hotelId);
+        return this.service.existsByExactLastChars(lastChars, hotelId);
     }
 
 }

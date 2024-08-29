@@ -21,4 +21,6 @@ public interface IManagePaymentSourceService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    ManagePaymentSourceDto findByExpense();
+
 }

@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -33,10 +34,12 @@ public class CreateIncomeCommand implements ICommand {
     private IncomeDto income;
     private String employee;
 
+    private List<CreateIncomeAttachmentRequest> attachments;
+
     public CreateIncomeCommand(Status status, LocalDateTime invoiceDate, Boolean manual,
                                UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
                                Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate,
-                               UUID invoiceStatus, String employee) {
+                               UUID invoiceStatus, String employee, List<CreateIncomeAttachmentRequest> attachments) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.invoiceDate = invoiceDate;
@@ -51,6 +54,7 @@ public class CreateIncomeCommand implements ICommand {
         this.reSend = reSend;
         this.reSendDate = reSendDate;
         this.employee = employee;
+        this.attachments = attachments;
     }
 
     public static CreateIncomeCommand fromRequest(CreateIncomeRequest request) {
@@ -67,7 +71,8 @@ public class CreateIncomeCommand implements ICommand {
                 request.getReSend(),
                 request.getReSendDate(),
                 request.getInvoiceStatus(),
-                request.getEmployee()
+                request.getEmployee(),
+                request.getAttachments()
         );
     }
 

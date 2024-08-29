@@ -106,4 +106,15 @@ public class ManagePaymentSourceServiceImpl implements IManagePaymentSourceServi
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
+    @Override
+    public ManagePaymentSourceDto findByExpense() {
+        Optional<ManagePaymentSource> optionalEntity = repositoryQuery.findByExpense();
+        if(optionalEntity.isPresent()){
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_SOURCE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_SOURCE_NOT_FOUND.getReasonPhrase())));
+        
+    }
+
 }

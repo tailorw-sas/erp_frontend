@@ -22,6 +22,7 @@ public class ManagePaymentSourceResponse implements IResponse {
     private Status status;
     private String name;
     private Boolean isBank;
+    private Boolean expense;
 
     public ManagePaymentSourceResponse(ManagePaymentSourceDto dto){
         this.id = dto.getId();
@@ -30,5 +31,6 @@ public class ManagePaymentSourceResponse implements IResponse {
         this.status = dto.getStatus();
         this.name = dto.getName();
         this.isBank = dto.getIsBank();
+        this.expense = dto.getExpense();
     }
 }

@@ -18,8 +18,8 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Manage
 
     Page<ManageBooking> findAll(Specification specification, Pageable pageable);
 
-    @Query(value = "SELECT CASE WHEN EXISTS (SELECT 1 FROM manage_booking mb JOIN manage_invoice  ON mb.manage_invoice=manage_invoice.id  WHERE SUBSTR(mb.hotelbookingnumber,LENGTH(mb.hotelbookingnumber) - 1) = :lastTwoChars AND manage_invoice.manage_hotel = :hotelId) THEN true ELSE false END", nativeQuery = true)
-    boolean existsByExactLastTwoChars(@Param("lastTwoChars") String lastTwoChars, @Param("hotelId") UUID hotelId);
+    @Query(value = "SELECT CASE WHEN EXISTS (SELECT 1 FROM manage_booking mb JOIN manage_invoice  ON mb.manage_invoice=manage_invoice.id  WHERE SPLIT_PART(TRIM(mb.hotelbookingnumber), ' ', 3) = :lastChars AND manage_invoice.manage_hotel = :hotelId) THEN true ELSE false END", nativeQuery = true)
+    boolean existsByExactLastChars(@Param("lastChars") String lastChars, @Param("hotelId") UUID hotelId);
 
     boolean existsByHotelBookingNumber(String bookingNumber);
 }

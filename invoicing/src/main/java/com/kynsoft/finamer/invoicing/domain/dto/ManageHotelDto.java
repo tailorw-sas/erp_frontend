@@ -21,4 +21,5 @@ public class ManageHotelDto {
     private boolean virtual;
     private String status;
     private boolean requiresFlatRate;
+    private Boolean autoApplyCredit;
 }

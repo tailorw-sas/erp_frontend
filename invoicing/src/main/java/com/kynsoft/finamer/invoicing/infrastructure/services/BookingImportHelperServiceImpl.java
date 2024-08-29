@@ -1,5 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.kynsof.share.core.domain.ServiceBaseURL;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBulk.CreateBulkInvoiceCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
@@ -11,6 +14,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImpo
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportRowErrorRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
+import org.apache.commons.math3.stat.descriptive.summary.Sum;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 @Service
 public class BookingImportHelperServiceImpl implements IBookingImportHelperService {
@@ -121,23 +126,41 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         });
     }
 
+
     private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList) {
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
         manageInvoiceDto.setAgency(agency);
         manageInvoiceDto.setHotel(hotel);
         manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);
         manageInvoiceDto.setIsManual(false);
+        manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
+        manageInvoiceDto.setBookings(createBooking(bookingRowList));
+        manageInvoiceDto.setId(UUID.randomUUID());
+        manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
+        manageInvoiceDto.setInvoiceAmount(calculateInvoiceAmount(bookingRowList));
+        manageInvoiceDto.setDueAmount(calculateInvoiceAmount(bookingRowList));
+        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
+        if(hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()){
+            invoiceNumber+= "-" + hotel.getManageTradingCompanies().getCode();
+        }else{
+            invoiceNumber+= "-" + hotel.getCode();
+        }
+        manageInvoiceDto.setInvoiceNumber(invoiceNumber);
+        invoiceService.create(manageInvoiceDto);
 
-        LocalDateTime[] transactionDate=new LocalDateTime[]{LocalDateTime.now()};
-        List<ManageBookingDto> bookingDtos = bookingRowList.stream().map(bookingRow -> {
-            LocalDateTime excelDate=DateUtil.parseDateToDateTime(bookingRow.getTransactionDate());
-            if(Objects.nonNull(bookingRow.getTransactionDate()) &&
-                    Objects.nonNull(excelDate) &&
-                    !LocalDate.now().isEqual(excelDate.toLocalDate())){
-                transactionDate[0]=excelDate;
-            }
-            ManageRatePlanDto ratePlanDto = ratePlanService.findByCode(bookingRow.getRatePlan());
-            ManageRoomTypeDto roomTypeDto = roomTypeService.findByCode(bookingRow.getRoomType());
+        //TODO: aqui se envia a crear el invoice con sun booking en payment
+        try {
+            this.producerReplicateManageInvoiceService.create(manageInvoiceDto);
+        } catch (Exception e) {
+        }
+    }
+
+    private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList){
+        return bookingRowList.stream().map(bookingRow -> {
+            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan())?
+                    ratePlanService.findByCode(bookingRow.getRatePlan()):null;
+            ManageRoomTypeDto roomTypeDto =Objects.nonNull(bookingRow.getRoomType())?
+                    roomTypeService.findByCode(bookingRow.getRoomType()):null;
             ManageBookingDto bookingDto = bookingRow.toAggregate();
             bookingDto.setRatePlan(ratePlanDto);
             bookingDto.setRoomType(roomTypeDto);
@@ -154,25 +177,21 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             bookingDto.setRoomRates(List.of(manageRoomRateDto));
             return bookingDto;
         }).toList();
-        manageInvoiceDto.setInvoiceDate(transactionDate[0]);
-        manageInvoiceDto.setBookings(bookingDtos);
-        manageInvoiceDto.setId(UUID.randomUUID());
-        manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
-        manageInvoiceDto.setInvoiceAmount(InvoiceUtils.calculateInvoiceAmount(manageInvoiceDto));
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
-        if(hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()){
-            invoiceNumber+= "-" + hotel.getManageTradingCompanies().getCode();
-        }else{
-            invoiceNumber+= "-" + hotel.getCode();
-        }
-        manageInvoiceDto.setInvoiceNumber(invoiceNumber);
-        invoiceService.create(manageInvoiceDto);
+    }
 
-        //TODO: aqui se envia a crear el invoice con sun booking en payment
-        try {
-            this.producerReplicateManageInvoiceService.create(manageInvoiceDto);
-        } catch (Exception e) {
+    private double calculateInvoiceAmount(List<BookingRow> bookingRowList){
+       return bookingRowList.stream().mapToDouble(BookingRow::getInvoiceAmount).sum();
+    }
+
+    private LocalDateTime getInvoiceDate(BookingRow bookingRow){
+        LocalDateTime excelDate=DateUtil.parseDateToDateTime(bookingRow.getTransactionDate());
+        LocalDateTime transactionDate=LocalDateTime.now();
+        if(Objects.nonNull(bookingRow.getTransactionDate()) &&
+                Objects.nonNull(excelDate) &&
+                !LocalDate.now().isEqual(excelDate.toLocalDate())){
+            transactionDate=excelDate;
         }
+        return transactionDate;
     }
     private void createCache(BookingRow bookingRow,String generationType){
         BookingImportCache bookingImportCache = new BookingImportCache(bookingRow);

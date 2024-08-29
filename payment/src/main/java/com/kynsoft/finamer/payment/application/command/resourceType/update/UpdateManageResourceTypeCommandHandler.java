@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.resourceType.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdatePaymentResourceTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -12,6 +13,7 @@ import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
 
 import java.util.function.Consumer;
 
+import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.resourceType.ProducerUpdateResourceTypeService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,8 +21,11 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
 
     private final IManageResourceTypeService service;
 
-    public UpdateManageResourceTypeCommandHandler(IManageResourceTypeService service) {
+    private final ProducerUpdateResourceTypeService producer;
+
+    public UpdateManageResourceTypeCommandHandler(IManageResourceTypeService service, ProducerUpdateResourceTypeService producer) {
         this.service = service;
+        this.producer = producer;
     }
 
     @Override
@@ -41,6 +46,7 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
 
         if (update.getUpdate() > 0) {
             this.service.update(resourceTypeDto);
+            this.producer.update(new UpdatePaymentResourceTypeKafka(resourceTypeDto.getId(), resourceTypeDto.getName()));
         }
 
     }

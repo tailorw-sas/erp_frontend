@@ -34,6 +34,8 @@ public class ManagePaymentTransactionTypeResponse  implements IResponse {
     private Boolean applyDeposit;
     private Boolean defaults;
     private Boolean antiToIncome;
+    private Boolean incomeDefault;
+    private Boolean paymentInvoice;
 
     public ManagePaymentTransactionTypeResponse(ManagePaymentTransactionTypeDto dto) {
         this.id = dto.getId();
@@ -52,6 +54,8 @@ public class ManagePaymentTransactionTypeResponse  implements IResponse {
         this.deposit = dto.getDeposit();
         this.defaults = dto.getDefaults();
         this.antiToIncome = dto.getAntiToIncome();
+        this.incomeDefault = dto.getIncomeDefault();
+        this.paymentInvoice = dto.getPaymentInvoice();
     }
 
 }

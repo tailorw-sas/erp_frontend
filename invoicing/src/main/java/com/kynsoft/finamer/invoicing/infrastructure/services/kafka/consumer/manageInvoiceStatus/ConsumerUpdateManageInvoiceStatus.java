@@ -1,9 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageInvoiceStatus;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageInvoiceStatusKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoiceStatus.update.UpdateManageInvoiceStatusCommand;
@@ -33,7 +29,7 @@ public class ConsumerUpdateManageInvoiceStatus {
             // ReplicateAttachmentTypeKafka objKafka = objectMapper.treeToValue(rootNode,
             // ReplicateAttachmentTypeKafka.class);
             UpdateManageInvoiceStatusCommand command = new UpdateManageInvoiceStatusCommand(objKafka.getId(),
-                    objKafka.getName());
+                    objKafka.getName(), objKafka.getShowClone());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageInvoiceStatus.class.getName()).log(Level.SEVERE, null, ex);

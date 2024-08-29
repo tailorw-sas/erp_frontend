@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
@@ -65,6 +64,8 @@ public class ManageHotel implements Serializable {
     @Column(columnDefinition = "boolean default false")
     private boolean requiresFlatRate;
 
+    private Boolean autoApplyCredit;
+
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -76,11 +77,12 @@ public class ManageHotel implements Serializable {
         this.isVirtual=dto.isVirtual();
         this.status = dto.getStatus();
         this.requiresFlatRate=dto.isRequiresFlatRate();
+        this.autoApplyCredit = dto.getAutoApplyCredit();
     }
 
     public ManageHotelDto toAggregate() {
         return new ManageHotelDto(
                 id, code, name, manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null, null,
-                isVirtual != null ? isVirtual : false, status,requiresFlatRate);
+                isVirtual != null ? isVirtual : false, status,requiresFlatRate, autoApplyCredit);
     }
 }
