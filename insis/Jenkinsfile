@@ -104,7 +104,7 @@ pipeline {
     post {
         success {
             script {
-                def notificator = new NotificadorEmail()
+                def notificator = new NotificadorEmail(this)
                 def body = """<h2><strong>Build Successful!!!!</strong></h2>
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME}</p>"""
