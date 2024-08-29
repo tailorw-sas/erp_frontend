@@ -15,12 +15,14 @@ public class CreateManagePaymentSourceCommand implements ICommand {
     private String code;
     private String name;
     private String status;
+    private Boolean expense;
 
-    public CreateManagePaymentSourceCommand(UUID id, String code, String name, String status) {
+    public CreateManagePaymentSourceCommand(UUID id, String code, String name, String status, Boolean expense) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.status = status;
+        this.expense = expense;
     }
 
     @Override

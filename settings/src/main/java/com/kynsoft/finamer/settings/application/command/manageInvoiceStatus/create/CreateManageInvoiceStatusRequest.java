@@ -1,11 +1,9 @@
 package com.kynsoft.finamer.settings.application.command.manageInvoiceStatus.create;
 
-import com.kynsoft.finamer.settings.domain.dtoEnum.Navigate;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,4 +21,6 @@ public class CreateManageInvoiceStatusRequest {
     private Boolean enabledToPolicy;
     private Boolean processStatus;
     private List<UUID> navigate;
+
+    private Boolean showClone;
 }

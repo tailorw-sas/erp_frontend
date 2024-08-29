@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ManageNightTypeReadDataJPARepository extends JpaRepository<ManageNightType, UUID>,
@@ -18,5 +19,9 @@ public interface ManageNightTypeReadDataJPARepository extends JpaRepository<Mana
 
     @Query("SELECT COUNT(b) FROM ManageNightType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    boolean existsManageNightTypeByCode(String code);
+
+    Optional<ManageNightType> findManageNightTypeByCode(String code);
 
 }

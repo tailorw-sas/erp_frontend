@@ -15,9 +15,14 @@ import java.util.UUID;
 public class ManageInvoiceKafka {
 
     private UUID id;
+    private UUID hotel;
+    private UUID client;
+    private UUID agency;
     private Long invoiceId;
     private Long invoiceNo;
     private String invoiceNumber;
+    private String invoiceType;
     private Double invoiceAmount;
     private List<ManageBookingKafka> bookings;
+    private Boolean hasAttachment;
 }

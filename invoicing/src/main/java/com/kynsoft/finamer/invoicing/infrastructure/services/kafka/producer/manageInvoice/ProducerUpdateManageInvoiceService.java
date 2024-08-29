@@ -31,7 +31,7 @@ public class ProducerUpdateManageInvoiceService {
                     bookingKafkas.add(new ManageBookingKafka(
                             booking.getId(),
                             booking.getBookingId(),
-                            booking.getReservationNumber(),
+                            booking.getHotelBookingNumber(),
                             booking.getCheckIn(),
                             booking.getCheckOut(),
                             booking.getFullName(),
@@ -49,11 +49,16 @@ public class ProducerUpdateManageInvoiceService {
 
             this.producer.send("finamer-update-manage-invoice", new ManageInvoiceKafka(
                     entity.getId(),
+                    entity.getHotel().getId(),
+                    entity.getAgency().getClient().getId(),
+                    entity.getAgency().getId(),
                     entity.getInvoiceId(),
                     entity.getInvoiceNo(),
                     entity.getInvoiceNumber(),
+                    entity.getInvoiceType().toString(),
                     entity.getInvoiceAmount(),
-                    bookingKafkas
+                    bookingKafkas,
+                    !entity.getAttachments().isEmpty()
             ));
         } catch (Exception ex) {
             Logger.getLogger(ProducerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);

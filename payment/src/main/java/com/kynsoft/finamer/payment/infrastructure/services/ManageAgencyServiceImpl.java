@@ -13,11 +13,17 @@ import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageAgenc
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageAgencyReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.payment.application.query.objectResponse.ManageAgencyResponse;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class ManageAgencyServiceImpl implements IManageAgencyService {
@@ -84,6 +90,25 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
                 .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
                         new ErrorField("code", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND.getReasonPhrase()))));
 
+    }
+
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+
+        GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageAgency> data = repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageAgency> data) {
+        List<ManageAgencyResponse> responseList = new ArrayList<>();
+        for (ManageAgency entity : data.getContent()) {
+            responseList.add(new ManageAgencyResponse(entity.toAggregate()));
+        }
+        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

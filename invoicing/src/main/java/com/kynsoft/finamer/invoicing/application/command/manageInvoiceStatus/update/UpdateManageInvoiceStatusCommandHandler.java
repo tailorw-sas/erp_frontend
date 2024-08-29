@@ -28,7 +28,7 @@ public class UpdateManageInvoiceStatusCommandHandler implements ICommandHandler<
 
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
-
+        UpdateIfNotNull.updateBoolean(dto::setShowClone, command.getShowClone(), dto.getShowClone(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);

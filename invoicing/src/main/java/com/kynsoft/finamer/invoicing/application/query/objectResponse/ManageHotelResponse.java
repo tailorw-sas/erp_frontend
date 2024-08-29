@@ -20,6 +20,7 @@ public class ManageHotelResponse implements IResponse {
     private String name;
     private String status;
     private boolean virtual;
+    private Boolean autoApplyCredit;
 
     public ManageHotelResponse(ManageHotelDto dto) {
         this.id = dto.getId();

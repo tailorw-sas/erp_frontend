@@ -11,6 +11,7 @@ import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageRoom
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageRoomRateWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageRoomRateReadDataJPARepository;
@@ -103,6 +104,11 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public List<ManageRoomRate> findByBooking(ManageBooking booking){
+        return this.repositoryQuery.findByBooking(booking);
     }
 
     @Override

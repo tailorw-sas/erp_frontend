@@ -31,17 +31,19 @@ public class UpdateManageHotelCommand implements ICommand {
     private Boolean isVirtual;
     private Boolean requiresFlatRate;
     private Boolean isApplyByVCC;
+    private Boolean autoApplyCredit;
 
-    public static UpdateManageHotelCommand fromRequest(UpdateManageHotelRequest request, UUID id){
+    public static UpdateManageHotelCommand fromRequest(UpdateManageHotelRequest request, UUID id) {
         return new UpdateManageHotelCommand(
                 id, request.getDescription(), request.getStatus(), request.getName(),
                 request.getBabelCode(), request.getManageCountry(), request.getManageCityState(),
                 request.getCity(), request.getAddress(), request.getManageCurrency(), request.getManageRegion(),
                 request.getManageTradingCompanies(), request.getApplyByTradingCompany(),
                 request.getPrefixToInvoice(), request.getIsVirtual(), request.getRequiresFlatRate(),
-                request.getIsApplyByVCC()
+                request.getIsApplyByVCC(), request.getAutoApplyCredit()
         );
     }
+
     @Override
     public ICommandMessage getMessage() {
         return new UpdateManageHotelMessage(id);

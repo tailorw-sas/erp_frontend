@@ -22,8 +22,15 @@ public class ConsumerUpdateManageHotelService {
     @KafkaListener(topics = "finamer-update-manage-hotel", groupId = "invoicing-entity-replica")
     public void listen(UpdateManageHotelKafka objKafka) {
         try {
-            UpdateManageHotelCommand command = new UpdateManageHotelCommand(objKafka.getId(), objKafka.getName(),
-                    objKafka.getManageTradingCompany(), objKafka.getStatus(), objKafka.getIsVirtual(),objKafka.isRequiresFlatRate());
+            UpdateManageHotelCommand command = new UpdateManageHotelCommand(
+                    objKafka.getId(), 
+                    objKafka.getName(),
+                    objKafka.getManageTradingCompany(), 
+                    objKafka.getStatus(), 
+                    objKafka.getIsVirtual(),
+                    objKafka.isRequiresFlatRate(),
+                    objKafka.getAutoApplyCredit()
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageHotelService.class.getName()).log(Level.SEVERE, null, ex);

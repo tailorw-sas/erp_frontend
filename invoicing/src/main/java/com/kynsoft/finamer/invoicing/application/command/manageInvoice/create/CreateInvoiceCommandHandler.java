@@ -50,7 +50,8 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
                 invoiceNumber, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),
                 command.getInvoiceAmount(), command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCECSED,
                 false,
-                null, null, null, null, null, null, null));
+                null, null, null, null, null, null, null,  false,
+                null));
         command.setInvoiceId(invoiceDto.getInvoiceId());
         try {
             this.producerReplicateManageInvoiceService.create(invoiceDto);

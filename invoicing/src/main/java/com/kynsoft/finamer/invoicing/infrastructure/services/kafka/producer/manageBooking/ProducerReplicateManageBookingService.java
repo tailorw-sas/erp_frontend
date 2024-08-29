@@ -24,7 +24,7 @@ public class ProducerReplicateManageBookingService {
             this.producer.send("finamer-replicate-manage-booking", new ManageBookingKafka(
                     entity.getId(), 
                     entity.getBookingId(),
-                    entity.getReservationNumber(), 
+                    entity.getHotelBookingNumber(), 
                     entity.getCheckIn(), 
                     entity.getCheckOut(), 
                     entity.getFullName(), 

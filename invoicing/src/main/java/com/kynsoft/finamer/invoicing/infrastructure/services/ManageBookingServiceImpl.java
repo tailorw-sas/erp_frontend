@@ -107,8 +107,8 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
-    public boolean existsByExactLastTwoChars(String lastTwoChars, UUID hotelId) {
-        boolean exists = this.repositoryQuery.existsByExactLastTwoChars(lastTwoChars, hotelId);
+    public boolean existsByExactLastChars(String lastChars, UUID hotelId) {
+        boolean exists = this.repositoryQuery.existsByExactLastChars(lastChars, hotelId);
 
         return exists;
     }

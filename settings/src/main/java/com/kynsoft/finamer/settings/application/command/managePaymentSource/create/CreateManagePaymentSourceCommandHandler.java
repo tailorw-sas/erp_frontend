@@ -35,8 +35,9 @@ public class CreateManagePaymentSourceCommandHandler implements ICommandHandler<
                 command.getDescription(),
                 command.getStatus(),
                 command.getName(),
-                command.getIsBank()
+                command.getIsBank(),
+                command.getExpense()
         ));
-        this.producerReplicateManagePaymentSourceService.create(new ReplicateManagePaymentSourceKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name()));
+        this.producerReplicateManagePaymentSourceService.create(new ReplicateManagePaymentSourceKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name(), command.getExpense()));
     }
 }

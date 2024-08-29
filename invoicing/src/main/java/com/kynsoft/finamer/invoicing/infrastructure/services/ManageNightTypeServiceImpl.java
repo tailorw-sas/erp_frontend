@@ -64,6 +64,19 @@ public class ManageNightTypeServiceImpl implements IManageNightTypeService {
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "Manage Night Type not found.")));
     }
 
+    @Override
+    public boolean existNightTypeByCode(String code) {
+        return repositoryQuery.existsManageNightTypeByCode(code);
+    }
+
+    @Override
+    public ManageNightTypeDto findByCode(String code) {
+        Optional<ManageNightType> userSystem = this.repositoryQuery.findManageNightTypeByCode(code);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Night Type not found.")));
+    }
 
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

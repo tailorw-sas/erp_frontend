@@ -37,11 +37,13 @@ public class ManagePaymentTransactionType implements Serializable {
     private Boolean policyCredit;
     private Boolean remarkRequired;
     @Column(nullable = true)
-    private Boolean deposit;
+        private Boolean deposit;
     @Column(nullable = true)
     private Boolean applyDeposit;
     private Boolean defaults;
     private Boolean antiToIncome;
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean paymentInvoice;
 
     private Integer minNumberOfCharacter;
     private String defaultRemark;
@@ -49,6 +51,8 @@ public class ManagePaymentTransactionType implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    private Boolean incomeDefault;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -74,6 +78,8 @@ public class ManagePaymentTransactionType implements Serializable {
         this.applyDeposit = dto.getApplyDeposit();
         this.defaults = dto.getDefaults();
         this.antiToIncome = dto.getAntiToIncome();
+        this.incomeDefault = dto.getIncomeDefault();
+        this.paymentInvoice = dto.getPaymentInvoice();
     }
 
     public ManagePaymentTransactionTypeDto toAggregate(){
@@ -87,7 +93,9 @@ public class ManagePaymentTransactionType implements Serializable {
                 deposit,
                 applyDeposit,
                 defaults,
-                antiToIncome
+                antiToIncome,
+                incomeDefault,
+                paymentInvoice
         );
     }
 

@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.invoicing.application.command.invoiceStatusHistory.update.UpdateInvoiceStatusHistoryCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentRequest;
@@ -36,6 +37,10 @@ public class AttachmentController {
     public ResponseEntity<CreateAttachmentMessage> create(@RequestBody CreateAttachmentRequest request) {
         CreateAttachmentCommand createCommand = CreateAttachmentCommand.fromRequest(request);
         CreateAttachmentMessage response = mediator.send(createCommand);
+
+        UpdateInvoiceStatusHistoryCommand invoiceCommand = new UpdateInvoiceStatusHistoryCommand(request.getInvoice(), request.getEmployee());
+
+        this.mediator.send(invoiceCommand);
 
         return ResponseEntity.ok(response);
     }

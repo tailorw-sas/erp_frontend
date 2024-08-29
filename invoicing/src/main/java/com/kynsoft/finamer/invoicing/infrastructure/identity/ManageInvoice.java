@@ -16,6 +16,7 @@ import org.hibernate.generator.EventType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -49,10 +50,15 @@ public class ManageInvoice {
     private Boolean autoRec;
 
     private Boolean reSend;
+    private Boolean isCloned;
+
     private LocalDate reSendDate;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "invoice_type_id")
+    private ManageInvoice parent;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "invoice_id")
     private ManageInvoiceType manageInvoiceType;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -139,7 +145,8 @@ public class ManageInvoice {
 
             if (firstIndex != -1 && lastIndex != -1 && firstIndex != lastIndex) {
                 String beginInvoiceNumber = dto.getInvoiceNumber().substring(0, firstIndex);
-                String lastInvoiceNumber = dto.getInvoiceNumber().substring(lastIndex + 1, dto.getInvoiceNumber().length());
+                String lastInvoiceNumber = dto.getInvoiceNumber().substring(lastIndex + 1,
+                        dto.getInvoiceNumber().length());
 
                 invoiceNumberPrefix = beginInvoiceNumber + "-" + lastInvoiceNumber;
 
@@ -152,12 +159,14 @@ public class ManageInvoice {
 
                     this.invoiceNo = Long.parseLong(dto.getInvoiceNumber().substring(lastIndex + 1));
 
-
                 } catch (NumberFormatException e) {
                     invoiceNo = invoiceId;
                 }
             }
         }
+
+        this.isCloned = dto.getIsCloned();
+        this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
 
     }
 
@@ -168,7 +177,8 @@ public class ManageInvoice {
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt);
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
+                parent != null ? parent.toAggregate() : null);
 
     }
 
@@ -177,14 +187,15 @@ public class ManageInvoice {
                 invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, bookings != null ? bookings.stream().map(b -> {
-            return b.toAggregateSample();
-        }).collect(Collectors.toList()) : null, attachments != null ? attachments.stream().map(b -> {
-            return b.toAggregateSample();
-        }).collect(Collectors.toList()) : null,
+                    return b.toAggregateSample();
+                }).collect(Collectors.toList()) : null, attachments != null ? attachments.stream().map(b -> {
+                    return b.toAggregateSample();
+                }).collect(Collectors.toList()) : null,
                 reSend,
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt);
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
+                parent != null ? parent.toAggregate() : null);
     }
 
     @PostLoad
@@ -192,7 +203,6 @@ public class ManageInvoice {
         if (dueAmount == null) {
             dueAmount = 0.0;
         }
-
 
     }
 

@@ -60,6 +60,11 @@ public class Payment implements Serializable {
     @JoinColumn(name = "hotel_id")
     private ManageHotel hotel;
 
+    //TODO: este invoice es para relacionar el Payment con el CREDIT padre en el proceso automatico. HU 154
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "invoice_id")
+    private ManageInvoice invoice;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bank_account_id")
     private ManageBankAccount bankAccount;
@@ -71,6 +76,10 @@ public class Payment implements Serializable {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "resource")
     private List<MasterPaymentAttachment> attachments;
 
+    /**
+     * Para obtener la informacion de los invoice, hay que navegar por los detalles
+     * del Payment, los booking asociados a el cuando se aplica el pago, son quienes proporcionan la invoice.
+     */
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "payment")
     private List<PaymentDetail> paymentDetails;
 
@@ -82,6 +91,8 @@ public class Payment implements Serializable {
     private Double otherDeductions;
     private Double identified;
     private Double notIdentified;
+    private Double notApplied;
+    private Double applied;
     private String remark;
 
     //@CreationTimestamp
@@ -115,7 +126,10 @@ public class Payment implements Serializable {
         this.otherDeductions = ScaleAmount.scaleAmount(dto.getOtherDeductions());
         this.identified = ScaleAmount.scaleAmount(dto.getIdentified());
         this.notIdentified = ScaleAmount.scaleAmount(dto.getNotIdentified());
+        this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied());
+        this.applied = ScaleAmount.scaleAmount(dto.getApplied());
         this.remark = dto.getRemark();
+        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
     }
 
     public PaymentDto toAggregate(){
@@ -123,7 +137,7 @@ public class Payment implements Serializable {
                 id, 
                 paymentId,
                 status,
-                paymentSource.toAggregate() != null ? paymentSource.toAggregate() : null,
+                paymentSource != null ? paymentSource.toAggregate() : null,
                 reference, 
                 transactionDate, 
                 paymentStatus != null ? paymentStatus.toAggregate() : null,
@@ -138,12 +152,54 @@ public class Payment implements Serializable {
                 depositBalance, 
                 otherDeductions, 
                 identified, 
-                notIdentified, 
+                notIdentified,
+                notApplied,
+                applied,
                 remark,
+                invoice != null ? invoice.toAggregateSample() : null,
                 attachments != null ? attachments.stream().map(b -> {
                     return b.toAggregateSimple();
                 }).collect(Collectors.toList()) : null,
                 createdAt
+        );
+    }
+
+    /**
+     * Con este metodo se puede obtener un Payment y sus Detalles.
+     * @return 
+     */
+    public PaymentDto toAggregateWihtDetails() {
+        return new PaymentDto(
+                id, 
+                paymentId,
+                status,
+                paymentSource != null ? paymentSource.toAggregate() : null,
+                reference, 
+                transactionDate, 
+                paymentStatus != null ? paymentStatus.toAggregate() : null,
+                client != null ? client.toAggregate() : null,
+                agency != null ? agency.toAggregate() : null,
+                hotel != null ? hotel.toAggregate() : null,
+                bankAccount!= null ? bankAccount.toAggregate() : null,
+                attachmentStatus != null ? attachmentStatus.toAggregate() : null,
+                paymentAmount, 
+                paymentBalance, 
+                depositAmount, 
+                depositBalance, 
+                otherDeductions, 
+                identified, 
+                notIdentified,
+                notApplied,
+                applied,
+                remark,
+                invoice != null ? invoice.toAggregateSample() : null,
+                attachments != null ? attachments.stream().map(b -> {
+                    return b.toAggregateSimple();
+                }).collect(Collectors.toList()) : null,
+                createdAt,
+                paymentDetails != null ? paymentDetails.stream().map(b -> {
+                    return b.toAggregateSimpleNotPayment();
+                }).collect(Collectors.toList()) : null
         );
     }
 

@@ -21,11 +21,12 @@ public class UpdateManagePaymentTransactionTypeCommand implements ICommand {
     private Integer minNumberOfCharacter;
     private String defaultRemark;
     private Boolean defaults;
+    private Boolean paymentInvoice;
 
     public UpdateManagePaymentTransactionTypeCommand(UUID id, String name, String status,
                                                      Boolean cash, Boolean deposit, Boolean applyDeposit, 
                                                      Boolean remarkRequired, Integer minNumberOfCharacter,
-                                                     String defaultRemark,Boolean defaults) {
+                                                     String defaultRemark,Boolean defaults, Boolean paymentInvoice) {
         this.id = id;
         this.name = name;
         this.status = status;
@@ -35,7 +36,8 @@ public class UpdateManagePaymentTransactionTypeCommand implements ICommand {
         this.remarkRequired = remarkRequired;
         this.minNumberOfCharacter = minNumberOfCharacter;
         this.defaultRemark = defaultRemark;
-        this.defaults=defaults;
+        this.defaults = defaults;
+        this.paymentInvoice = paymentInvoice;
     }
 
     @Override

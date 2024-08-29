@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -50,4 +51,38 @@ public class ManageBookingDto {
     private ManageRoomCategoryDto roomCategory;
     private List<ManageRoomRateDto> roomRates;
     private Long nights;
+
+    public ManageBookingDto(ManageBookingDto dto) {
+        this.id = UUID.randomUUID();
+        this.bookingId = dto.getBookingId();
+        this.reservationNumber = dto.getReservationNumber();
+        this.hotelCreationDate = dto.getHotelCreationDate();
+        this.bookingDate = dto.getBookingDate();
+        this.checkIn = dto.getCheckIn();
+        this.checkOut = dto.getCheckOut();
+        this.hotelBookingNumber = dto.getHotelBookingNumber();
+        this.fullName = dto.getFullName();
+        this.firstName = dto.getFirstName();
+        this.lastName = dto.getLastName();
+        this.invoiceAmount = dto.getInvoiceAmount();
+        this.dueAmount = dto.getDueAmount();
+        this.roomNumber = dto.getRoomNumber();
+        this.couponNumber = dto.getCouponNumber();
+        this.adults = dto.getAdults();
+        this.children = dto.getChildren();
+        this.rateAdult = dto.getRateAdult();
+        this.rateChild = dto.getRateChild();
+        this.hotelInvoiceNumber = dto.getHotelInvoiceNumber();
+        this.folioNumber = dto.getFolioNumber();
+        this.hotelAmount = dto.getHotelAmount();
+        this.description = dto.getDescription();
+        this.invoice = dto.getInvoice();
+        this.ratePlan = dto.getRatePlan();
+        this.nightType = dto.getNightType();
+        this.roomType = dto.getRoomType();
+        this.roomCategory = dto.getRoomCategory();
+        this.roomRates = new ArrayList<>();
+        this.nights = dto.getNights();
+
+    }
 }

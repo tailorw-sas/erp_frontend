@@ -18,12 +18,14 @@ public class ManagePaymentStatusResponse implements IResponse {
     private String code;
     private String name;
     private String status;
+    private Boolean applied;
 
     public ManagePaymentStatusResponse(ManagePaymentStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.status = dto.getStatus();
+        this.applied = dto.getApplied();
     }
 
 }

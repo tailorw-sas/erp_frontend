@@ -72,6 +72,15 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
+    public PaymentDto findPaymentByIdAndDetails(UUID id) {
+        Optional<Payment> userSystem = this.repositoryQuery.findById(id);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregateWihtDetails();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
     @Cacheable(cacheNames =  CacheConfig.USER_CACHE, unless = "#result == null")
     public boolean existPayment(long genId) {
         return repositoryQuery.existsPaymentByPaymentId(genId);

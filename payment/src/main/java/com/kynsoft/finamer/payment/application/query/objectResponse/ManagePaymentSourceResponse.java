@@ -19,12 +19,14 @@ public class ManagePaymentSourceResponse implements IResponse {
     private String code;
     private String name;
     private String status;
+    private Boolean expense;
 
     public ManagePaymentSourceResponse(ManagePaymentSourceDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.status = dto.getStatus();
+        this.expense = dto.getExpense();
     }
 
 }

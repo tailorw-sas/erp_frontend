@@ -12,11 +12,13 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanWriter;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
+import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.excel.ExportInvoiceRow;
+import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
@@ -40,10 +42,14 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Autowired
     private final ManageInvoiceReadDataJPARepository repositoryQuery;
 
+    @Autowired
+    private final IInvoiceCloseOperationService closeOperationService;
+
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-            ManageInvoiceReadDataJPARepository repositoryQuery) {
+                                    ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.closeOperationService = closeOperationService;
     }
 
     public Long getInvoiceNumberSequence(String invoiceNumber) {
@@ -127,7 +133,19 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private PaginatedResponse getPaginatedResponse(Page<ManageInvoice> data) {
         List<ManageInvoiceResponse> responseList = new ArrayList<>();
         for (ManageInvoice entity : data.getContent()) {
-            responseList.add(new ManageInvoiceResponse(entity.toAggregate()));
+            try{
+                ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
+                InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(response.getHotel().getId());
+                if(response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
+                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())){
+                    response.setIsInCloseOperation(false);
+                }
+                responseList.add(response);
+            } catch (Exception e){
+                ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
+                response.setIsInCloseOperation(false);
+                responseList.add(response);
+            }
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());

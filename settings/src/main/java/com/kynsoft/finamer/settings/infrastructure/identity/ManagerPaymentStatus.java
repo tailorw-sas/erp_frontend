@@ -36,6 +36,9 @@ public class ManagerPaymentStatus {
 
     private Boolean defaults;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean applied;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,10 +54,19 @@ public class ManagerPaymentStatus {
         this.collected = dto.getCollected();
         this.description = dto.getDescription();
         this.defaults = dto.getDefaults();
+        this.applied = dto.getApplied();
     }
     
     public ManagerPaymentStatusDto toAggregate() {
-        return new ManagerPaymentStatusDto(id, code, name, status, collected, description, 
-                defaults != null ? defaults : null);
+        return new ManagerPaymentStatusDto(
+                id, 
+                code, 
+                name, 
+                status, 
+                collected, 
+                description, 
+                defaults != null ? defaults : null,
+                applied
+        );
     }
 }

@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,6 +28,12 @@ public class ManageInvoice {
     private String invoiceNumber;
     private Double invoiceAmount;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean hasAttachment;
+
+    @Enumerated(EnumType.STRING)
+    private EInvoiceType invoiceType;
+
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
     private List<ManageBooking> bookings;
 
@@ -34,6 +41,7 @@ public class ManageInvoice {
         this.id = dto.getId();
         this.invoiceId = dto.getInvoiceId();
         this.invoiceNumber = dto.getInvoiceNumber();
+        this.invoiceType = dto.getInvoiceType();
         this.invoiceAmount = dto.getInvoiceAmount();
         this.bookings = dto.getBookings() != null ? dto.getBookings().stream().map(_booking -> {
             ManageBooking booking = new ManageBooking(_booking);
@@ -41,6 +49,7 @@ public class ManageInvoice {
             return booking;
         }).collect(Collectors.toList()) : null;
         this.invoiceNo = dto.getInvoiceNo();
+        this.hasAttachment = dto.getHasAttachment();
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -49,8 +58,10 @@ public class ManageInvoice {
                 invoiceId,
                 invoiceNo,
                 invoiceNumber,
+                invoiceType,
                 invoiceAmount,
-                null
+                null,
+                hasAttachment
         );
     }
 
@@ -60,10 +71,13 @@ public class ManageInvoice {
                 invoiceId,
                 invoiceNo,
                 invoiceNumber,
+                invoiceType,
                 invoiceAmount,
                 bookings != null ? bookings.stream().map(b -> {
                             return b.toAggregateSimple();
-                        }).collect(Collectors.toList()) : null);
+                        }).collect(Collectors.toList()) : null,
+                hasAttachment
+        );
     }
 
 }

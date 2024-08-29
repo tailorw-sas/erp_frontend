@@ -18,6 +18,7 @@ public class UpdateManagePaymentStatusCommandHandler implements ICommandHandler<
         ManagePaymentStatusDto update = this.service.findById(command.getId());
         update.setName(command.getName());
         update.setStatus(command.getStatus());
+        update.setApplied(command.getApplied());
         service.update(update);
     }
 }

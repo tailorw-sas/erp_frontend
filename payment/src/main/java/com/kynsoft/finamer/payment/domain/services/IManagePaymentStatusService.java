@@ -21,4 +21,6 @@ public interface IManagePaymentStatusService {
     ManagePaymentStatusDto findByCode(String code);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    ManagePaymentStatusDto findByApplied();
 }

@@ -23,7 +23,9 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 command.getCode(), 
                 command.getName(), 
                 command.getStatus(), 
-                command.getApplyByTradingCompany()
+                command.getApplyByTradingCompany(),
+                command.getManageTradingCompany(),
+                command.getAutoApplyCredit()
         ));
     }
 }

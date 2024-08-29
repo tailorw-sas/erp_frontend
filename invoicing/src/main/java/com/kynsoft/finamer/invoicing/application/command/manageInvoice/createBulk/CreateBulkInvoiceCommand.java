@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create.CreateAdjustmentCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create.CreateAdjustmentMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
@@ -76,6 +77,8 @@ public class CreateBulkInvoiceCommand implements ICommand {
                                 roomRateCommands.stream().map(e -> new CreateRoomRateMessage(e.getId()))
                                                 .collect(Collectors.toList()),
                                 adjustmentCommands.stream().map(e -> new CreateAdjustmentMessage(e.getId()))
+                                                .collect(Collectors.toList()),
+                                attachmentCommands.stream().map(e -> new CreateAttachmentMessage(e.getId()))
                                                 .collect(Collectors.toList()),
                                 invoiceId, invoiceNo);
         }

@@ -2,13 +2,11 @@ package com.kynsoft.finamer.settings.application.command.manageInvoiceStatus.upd
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Navigate;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +25,7 @@ public class UpdateManageInvoiceStatusCommand implements ICommand {
     private Boolean enabledToPolicy;
     private Boolean processStatus;
     private List<UUID> navigate;
+    private Boolean showClone;
 
     public static UpdateManageInvoiceStatusCommand fromRequest(UpdateManageInvoiceStatusRequest request, UUID id){
         return new UpdateManageInvoiceStatusCommand(
@@ -39,7 +38,8 @@ public class UpdateManageInvoiceStatusCommand implements ICommand {
                 request.getEnabledToApply(),
                 request.getEnabledToPolicy(),
                 request.getProcessStatus(),
-                request.getNavigate()
+                request.getNavigate(),
+                request.getShowClone()
         );
     }
 
