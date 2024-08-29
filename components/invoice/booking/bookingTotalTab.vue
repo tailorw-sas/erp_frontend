@@ -13,7 +13,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import BookingDialog from './BookingDialog.vue'
+import BookingTotalDialog from './BookingPartialDialog.vue'
 
 const props = defineProps({
   isDialogOpen: {
@@ -786,7 +786,7 @@ const Payload = ref<IQueryRequest>({
   pageSize: 10,
   page: 0,
   sortBy: 'bookingId',
-  sortType: ENUM_SHORT_TYPE.DESC
+  sortType: ENUM_SHORT_TYPE.ASC
 })
 const Pagination = ref<IPagination>({
   page: 0,
@@ -1590,7 +1590,7 @@ onMounted(() => {
   <ContextMenu v-if="!isDetailView" ref="bookingContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen" style="h-fit">
-    <BookingDialog :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen"
+    <BookingTotalDialog :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen"
       :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
       :require-confirmation-to-save="saveBooking" :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
       :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" :close-dialog="() => {

@@ -128,6 +128,7 @@ async function onChangeFile(event: any) {
     inputFile.value = event.target.files[0]
     invoiceFile.value = inputFile.value.name
     uploadComplete.value = false
+    event.target.value = ''
   }
 }
 
@@ -274,7 +275,7 @@ onMounted(async () => {
                     <input
                       ref="fileUpload" type="file" style="display: none;"
                       accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                      @change="onChangeFile"
+                      @change="onChangeFile($event)"
                     >
                   </div>
                 </div>

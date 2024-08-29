@@ -192,10 +192,15 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
             logicalOperation: 'AND'
           }]
         : [{
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          }, {
             key: 'name',
             operator: 'LIKE',
             value: query,
-            logicalOperation: 'AND'
+            logicalOperation: 'OR'
           }, {
             key: 'subcategory',
             operator: 'LIKE',
@@ -259,10 +264,15 @@ async function getSubCategoryList(query: string, isDefault: boolean = false) {
             logicalOperation: 'AND'
           }]
         : [{
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          }, {
             key: 'name',
             operator: 'LIKE',
             value: query,
-            logicalOperation: 'AND'
+            logicalOperation: 'OR'
           }, {
             key: 'subcategory',
             operator: 'LIKE',
@@ -321,10 +331,15 @@ async function getAgencyList(query: string, isDefault: boolean = false) {
             logicalOperation: 'AND'
           }]
         : [{
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          }, {
             key: 'name',
             operator: 'LIKE',
             value: query,
-            logicalOperation: 'AND'
+            logicalOperation: 'OR'
           }, {
             key: 'status',
             operator: 'EQUALS',

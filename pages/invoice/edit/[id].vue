@@ -1008,7 +1008,7 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
                   <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED" />
+                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"  />
                   </IfCan>
                   <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-SHOW-HISTORY']"> 
                     <Button v-tooltip.top="'Show History'" class="w-3rem mx-1" :loading="loadingSaveAll"

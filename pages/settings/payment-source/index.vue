@@ -50,6 +50,12 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
   {
+    field: 'expense',
+    header: 'Expense',
+    dataType: 'check',
+    class: 'field col-12 required mb-3 mt-3',
+  },
+  {
     field: 'isBank',
     header: 'Bank',
     dataType: 'check',
@@ -77,6 +83,7 @@ const item = ref<GenericObject>({
   description: '',
   status: true,
   isBank: false,
+  expense: false,
 })
 
 const itemTemp = ref<GenericObject>({
@@ -85,6 +92,7 @@ const itemTemp = ref<GenericObject>({
   description: '',
   status: true,
   isBank: false,
+  expense: false,
 })
 
 const formTitle = computed(() => {
@@ -238,6 +246,7 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
         item.value.isBank = response.isBank
+        item.value.expense = response.expense
       }
       fields[0].disabled = true
       fields[1].disabled = true

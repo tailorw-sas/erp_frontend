@@ -171,12 +171,12 @@ async function loadDefaultsValues() {
           operator: 'EQUALS',
           value: true
         },
-        // {
-        //   key: 'defaults',
-        //   logicalOperation: 'AND',
-        //   operator: 'EQUALS',
-        //   value: true,
-        // },
+        {
+          key: 'defaults',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: true,
+        },
         {
           key: 'status',
           logicalOperation: 'AND',
@@ -239,7 +239,7 @@ async function loadDefaultsValues() {
   switch (props.action) {
     case 'new-detail': {
       if (transactionTypeList.value.length > 0) {
-        const objDefault = transactionTypeList.value.find((item: ListItem) => item.default === true)
+        const objDefault = transactionTypeList.value.find((item: ListItem) => item.default === true && item.cash === true)
         if (objDefault) {
           item.value.transactionType = objDefault
         }

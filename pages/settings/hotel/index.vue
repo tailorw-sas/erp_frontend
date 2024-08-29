@@ -147,6 +147,12 @@ const fields: Array<FieldDefinitionType> = [
   //   class: 'field col-12 mt-3',
   // },
   {
+    field: 'autoApplyCredit',
+    header: 'Auto Apply Credit',
+    dataType: 'check',
+    class: 'field col-12',
+  },
+  {
     field: 'isVirtual',
     header: 'Is Virtual',
     dataType: 'check',
@@ -194,6 +200,7 @@ const item = ref<GenericObject>({
   applyByTradingCompany: false,
   prefixToInvoice: '',
   // isNightType: false,
+  autoApplyCredit: false,
   isVirtual: false,
   requiresFlatRate: false,
   isApplyByVCC: false,
@@ -215,6 +222,7 @@ const itemTemp = ref<GenericObject>({
   applyByTradingCompany: false,
   prefixToInvoice: '',
   // isNightType: false,
+  autoApplyCredit: false,
   isVirtual: false,
   requiresFlatRate: false,
   isApplyByVCC: false,
@@ -375,6 +383,7 @@ async function getItemById(id: string) {
         item.value.address = response.address
         item.value.applyByTradingCompany = response.applyByTradingCompany
         item.value.prefixToInvoice = response.prefixToInvoice
+        item.value.autoApplyCredit = response.autoApplyCredit
         // item.value.isNightType = response.isNightType
         item.value.isVirtual = response.isVirtual
         item.value.requiresFlatRate = response.requiresFlatRate

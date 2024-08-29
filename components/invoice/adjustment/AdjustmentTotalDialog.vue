@@ -125,10 +125,10 @@ onMounted(() => {
     :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
     @hide="closeDialog"
   >
-    <div class="w-full h-full overflow-hidden mt-2">
+    <div class="w-full h-full overflow-hidden p-2">
       <EditFormV2WithContainer
         :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
-        :loading-save="loadingSaveAll" :container-class="containerClass"  @cancel="clearForm"
+        :loading-save="loadingSaveAll" :container-class="containerClass" @cancel="clearForm"
         @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
       >
         <template #field-date="{ item: data, onUpdate }">
@@ -188,22 +188,20 @@ onMounted(() => {
         </template>
 
         <template #form-footer="props">
-          <div class="field flex justify-content-end mr-3 mb-2">
           <Button
-            v-tooltip.top="'Save'" label="Save" class="w-6rem mx-1" icon="pi pi-save" @click="($event) => {
+            v-tooltip.top="'Save'" label="Save" class="w-3rem mx-2 sticky" icon="pi pi-save" @click="($event) => {
               if (!amountError) {
                 props.item.submitForm($event)
               }
             }"
           />
           <Button
-            v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class="w-6rem mx-1 " icon="pi pi-times" @click="() => {
+            v-tooltip.top="'Cancel'" severity="secondary" label="Cancel" class="w-6rem mx-1" icon="pi pi-times" @click="() => {
 
               clearForm()
               closeDialog()
             }"
           />
-          </div>
         </template>
       </EditFormV2WithContainer>
     </div>

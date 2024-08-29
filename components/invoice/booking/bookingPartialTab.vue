@@ -13,7 +13,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import BookingDialog from './BookingDialog.vue'
+import BookingPartialDialog from './BookingPartialDialog.vue'
 
 const props = defineProps({
   isDialogOpen: {
@@ -1497,7 +1497,7 @@ onMounted(() => {
   })
   const computedShowMenuItemEditBooking = computed(() => {
     return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:BOOKING-EDIT'])))
-  })
+  })/*
   menuModel.value = [
     {
       label: 'Add Room Rate',
@@ -1518,9 +1518,11 @@ onMounted(() => {
         command: () => openEditBooking(selectedBooking.value),
         disabled: computedShowMenuItemEditBooking
       },
+      
+
     ]
   }
-
+*/
 
 
   if (!props.isCreationDialog) {
@@ -1536,7 +1538,7 @@ onMounted(() => {
     <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns" :options="Options"
       :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-sort-field="OnSortField" @on-row-right-click="onRowRightClick"
+      @on-list-item="ResetListItems" @on-sort-field="OnSortField" 
       @on-table-cell-edit-complete="onCellEditComplete" @on-row-double-click="($event) => {
 
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
@@ -1590,7 +1592,7 @@ onMounted(() => {
   <ContextMenu v-if="!isDetailView" ref="bookingContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen" style="h-fit">
-    <BookingDialog :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen"
+    <BookingPartialDialog :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen"
       :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
       :require-confirmation-to-save="saveBooking" :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
       :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" :close-dialog="() => {

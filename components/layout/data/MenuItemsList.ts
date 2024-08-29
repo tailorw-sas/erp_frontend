@@ -120,11 +120,6 @@ export const model = ref([
           //   icon: 'pi pi-fw pi-file-o',
           //   to: '/settings/report'
           // },
-          {
-            label: 'Attachment Type',
-            icon: 'pi pi-fw pi-folder',
-            to: '/settings/attachment-type'
-          },
         ]
       },
       // {
@@ -387,6 +382,11 @@ export const model = ref([
             label: 'Night Type',
             icon: 'pi pi-fw pi-folder',
             to: '/settings/night-type'
+          },
+          {
+            label: 'Invoice Attachment Type',
+            icon: 'pi pi-fw pi-folder',
+            to: '/settings/attachment-type'
           },
           //     {
           //       label: 'Room Type',
@@ -707,12 +707,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/settings/report-param-type'),
               items: []
             },
-            {
-              label: 'Attachment Type',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/attachment-type'),
-              items: []
-            }
           ]
         },
         {
@@ -725,7 +719,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
             {
-              label: 'Invoice Types',
+              label: 'Invoice Type',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/invoice-type'),
               items: []
@@ -746,6 +740,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'Night Type',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/night-type'),
+              items: []
+            },
+            {
+              label: 'Invoice Attachment Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/attachment-type'),
               items: []
             }
           ]

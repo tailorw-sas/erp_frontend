@@ -153,7 +153,7 @@ const columns: IColumn[] = [
   { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'text' },
   { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'text' },
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'text' },
-  { field: 'noApplied', header: 'Not Applied', tooltip: 'Not Applied', width: '60px', type: 'text' },
+  { field: 'notApplied', header: 'Not Applied', tooltip: 'Not Applied', width: '60px', type: 'text' },
   { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
   { field: 'paymentStatus', header: 'Status', width: '100px', frozen: true, type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: true },
   // { field: 'totalAmount', header: 'T.Amount', tooltip: 'Total Amount', width: '60px', type: 'text' },

@@ -65,7 +65,8 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 required mt-3',
     headerClass: 'mb-1',
-    validation: z.string().trim().min(1, 'Minimum 1 characters').max(5, 'Maximum 5 haracter').regex(phoneCodeRegex, 'This is not a valid Dial Code').nullable().optional()
+    validation: z.string().trim().min(1, 'Minimum 1 characters').max(10, 'Maximum 10 haracter').nullable().optional()
+    // validation: z.string().trim().min(1, 'Minimum 1 characters').max(10, 'Maximum 10 haracter').regex(phoneCodeRegex, 'This is not a valid Dial Code').nullable().optional()
   },
   {
     field: 'iso3',
@@ -362,17 +363,26 @@ async function saveItem(item: { [key: string]: any }) {
 async function getListLanguage(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
@@ -384,7 +394,7 @@ async function getListLanguage(query: string) {
     const { data: dataList } = response
     languageList.value = []
     for (const iterator of dataList) {
-      languageList.value = [...languageList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      languageList.value = [...languageList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

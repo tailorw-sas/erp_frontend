@@ -135,6 +135,7 @@ async function onChangeFile(event: any) {
     inputFile.value = event.target.files[0]
     importModel.value.importFile = inputFile.value.name
     uploadComplete.value = false
+    event.target.value = ''
   }
 }
 
@@ -233,7 +234,12 @@ function onSortField(event: any) {
 }
 
 async function goToList() {
-  await navigateTo('/payment')
+  if (paymentId && paymentId !== '') {
+    await navigateTo(`/payment/form?id=${paymentId}`)
+  }
+  else {
+    await navigateTo('/payment')
+  }
 }
 
 watch(payloadOnChangePage, (newValue) => {
@@ -284,7 +290,7 @@ onMounted(async () => {
                     <input
                       ref="fileUpload" type="file" style="display: none;"
                       accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                      @change="onChangeFile"
+                      @change="onChangeFile($event)"
                     >
                   </div>
                 </div>

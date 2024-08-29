@@ -968,8 +968,8 @@ function requireConfirmationToDelete(event: any) {
     confirm.require({
       target: event.currentTarget,
       group: 'headless',
-      header: 'Save the record',
-      message: 'Do you want to save the change?',
+      header: 'Delete the record',
+      message: 'Do you want to delete the record?',
       acceptClass: 'p-button-danger',
       rejectLabel: 'Cancel',
       acceptLabel: 'Accept',

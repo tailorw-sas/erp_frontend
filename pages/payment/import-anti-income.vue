@@ -141,6 +141,7 @@ async function onChangeFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     inputFile.value = event.target.files[0]
     importModel.value.importFile = inputFile.value.name
+    event.target.value = ''
     await activeImport()
   }
 }
@@ -149,6 +150,7 @@ async function onChangeAttachFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     attachFile.value = event.target.files[0]
     importModel.value.attachFile = attachFile.value.name
+    event.target.value = ''
     await activeImport()
   }
 }
@@ -362,7 +364,7 @@ onMounted(async () => {
                     <input
                       ref="fileUpload" type="file" style="display: none;"
                       accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                      @change="onChangeFile"
+                      @change="onChangeFile($event)"
                     >
                   </div>
                 </div>
@@ -384,7 +386,7 @@ onMounted(async () => {
                     <small id="username-help" style="color: #808080;">Select a file of type PDF</small>
                     <input
                       ref="attachUpload" type="file" style="display: none;" accept="application/pdf"
-                      @change="onChangeAttachFile"
+                      @change="onChangeAttachFile($event)"
                     >
                   </div>
                 </div>

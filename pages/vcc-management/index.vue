@@ -726,7 +726,7 @@ onMounted(() => {
     <div class="my-2 flex justify-content-end px-0">
       <PopupNavigationMenu menu-id="vcc-menu" :items="createItems" icon="pi pi-plus" label="New" class="vcc-menu" />
       <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled />
-      <Button class="ml-2" icon="pi pi-upload" label="Export" disabled />
+      <Button class="ml-2" icon="pi pi-download" label="Export" disabled />
     </div>
   </div>
   <div class="grid">
