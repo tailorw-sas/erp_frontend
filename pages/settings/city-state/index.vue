@@ -40,7 +40,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'code',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(5, 'Maximum 5 characters').regex(/^[a-z]+$/i, 'Only text characters allowed')
+    validation: z.string().trim().min(1, 'The code field is required').min(1, 'Minimum 3 characters').max(8, 'Maximum 5 characters').regex(/^[a-z]+$/i, 'Only text characters allowed')
   },
   {
     field: 'name',
