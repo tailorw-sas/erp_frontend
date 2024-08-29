@@ -5,32 +5,37 @@ import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import dayjs from 'dayjs'
-import type { Container } from '~/components/form/EditFormV2WithContainer'
+
 import { GenericService } from '~/services/generic-services'
 
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import InvoiceTabView from '~/components/invoice/InvoiceTabView/InvoiceTabView.vue'
+import InvoicePartialTabView from '~/components/invoice/InvoiceTabView/InvoiceTabView.vue'
+import type { IPagination } from '~/components/table/interfaces/ITableInterfaces'
 
-import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 
+const totalInvoiceAmount = ref(0)
+const idItemToLoadFirstTime = ref('')
+const totalAmount = ref(0)
+const totalHotelAmount = ref(0)
 const toast = useToast()
-
+const openAdjustment = ref(true)
 const forceUpdate = ref(false)
 const active = ref(0)
 const route = useRoute()
-
+const transactionTypeList = ref<any[]>([])
+const listItems = ref<any[]>([])
 const { data: userData } = useAuth()
 
 const selectedInvoice = ref({})
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
-
+const selectedInvoicing = ref<any>('');
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 const agencyError = ref(false)
 const hotelError = ref(false)
-
+let globalSelectedInvoicing = '';
 const bookingDialogOpen = ref<boolean>(false)
 const roomRateDialogOpen = ref<boolean>(false)
 const adjustmentDialogOpen = ref<boolean>(false)
@@ -43,6 +48,10 @@ const loadedRoomRates = ref<any[]>([])
 const adjustmentList = ref<any[]>([])
 const attachmentList = ref<any[]>([])
 
+const confClonationPartialApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/partial-clone',
+})
 
 const nightTypeRequired = ref(false)
 const requiresFlatRate = ref(false)
@@ -68,6 +77,22 @@ const confinvoiceTypeListtApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
 })
+
+const confAttachmentApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-attachment',
+})
+
+const confAdjustmentsApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-adjustment',
+})
+const confRoomApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-room-rate',
+})
+
+
 
 const CreditFields = ref<FieldDefinitionType[]>([
   {
@@ -146,7 +171,7 @@ const CreditFields = ref<FieldDefinitionType[]>([
     field: 'isManual',
     header: 'Manual',
     dataType: 'check',
-    class: `field col-12 md:col-1  flex align-items-end pb-2   ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
+    class: `field col-12 md:col-1  flex align-items-end pb-1   ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: true
   },
 
@@ -159,28 +184,13 @@ const Fields = ref<FieldDefinitionType[]>([
     dataType: 'text',
     class: `field col-12 md:col-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`,
     disabled: true,
-
   },
   {
     field: 'invoiceDate',
     header: 'Invoice Date',
     dataType: 'date',
-    class: 'field col-12 md:col-3  required',
-    validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
-  },
-  {
-    field: 'hotel',
-    header: 'Hotel',
-    dataType: 'select',
     class: 'field col-12 md:col-3 required',
-    disabled: String(route.query.type) as any === InvoiceType.CREDIT,
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    })
-      .required()
-      .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` })
+    validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
   },
   {
     field: 'invoiceType',
@@ -191,6 +201,16 @@ const Fields = ref<FieldDefinitionType[]>([
     disabled: true
   },
   {
+    field: 'status',
+    header: 'Status',
+    dataType: 'select',
+    class: 'field col-12 md:col-3 mb-5',
+    containerFieldClass: '',
+    disabled: true
+  },
+
+
+  {
     field: 'invoiceNumber',
     header: 'Invoice Number',
     dataType: 'text',
@@ -198,6 +218,7 @@ const Fields = ref<FieldDefinitionType[]>([
     disabled: true,
 
   },
+
   {
     field: 'invoiceAmount',
     header: 'Invoice Amount',
@@ -206,38 +227,21 @@ const Fields = ref<FieldDefinitionType[]>([
     disabled: true,
     ...(route.query.type === InvoiceType.OLD_CREDIT && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
   },
-
-  {
-    field: 'agency',
-    header: 'Agency',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    disabled: String(route.query.type) as any === InvoiceType.CREDIT,
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    }).required()
-      .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
-  },
-
-  {
-    field: 'status',
-    header: 'Status',
-    dataType: 'select',
-    class: 'field col-12 md:col-2 mb-5',
-    containerFieldClass: '',
-    disabled: true
-  },
-
   {
     field: 'isManual',
     header: 'Manual',
     dataType: 'check',
-    class: `field col-12 md:col-1  flex align-items-center pb-2 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
+    class: `field col-12 md:col-1  flex align-items-center pb-0 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: true
   },
+
+
+
 ])
+
+
+//tablas
+
 
 // VARIABLES -----------------------------------------------------------------------------------------
 
@@ -253,17 +257,17 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 
+
 const item = ref<GenericObject>({
   invoiceId: 0,
   invoiceNumber: '',
   invoiceDate: new Date(),
-  isManual: true,
+   isManual: true,
   invoiceAmount: '0.00',
-  hotel: null,
-  agency: null,
   status: route.query.type === InvoiceType.CREDIT ? ENUM_INVOICE_STATUS[5] : ENUM_INVOICE_STATUS[2],
-  invoiceType: route.query.type === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === route.query.type)),
-})
+ invoiceType: route.query.type === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === route.query.type)),
+
+ })
 
 const itemTemp = ref<GenericObject>({
   invoiceId: 0,
@@ -271,8 +275,6 @@ const itemTemp = ref<GenericObject>({
   invoiceDate: new Date(),
   isManual: true,
   invoiceAmount: '0.00',
-  hotel: null,
-  agency: null,
   invoiceType: route.query.type === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === route.query.type)),
   status: route.query.type === InvoiceType.CREDIT ? ENUM_INVOICE_STATUS[5] : ENUM_INVOICE_STATUS[2]
 })
@@ -309,7 +311,11 @@ const bookingApi = {
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
 }
-
+const transactionTypeApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-invoice-transaction-type',
+  keyValue: 'name'
+})
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -326,36 +332,613 @@ function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
 
+// metodo de clonacion de factura parcial
+
+//listado de bookings 
+/*
+async function getBookingList(globalSelectedInvoicing: any) {
+  try {
+    const Payload: any = ({
+      filter: [{
+        key: 'invoice.id',
+        operator: 'EQUALS',
+        value: globalSelectedInvoicing,
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    });
+
+    bookingList.value = [];
+
+    const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, Payload);
+
+    const { data: dataList, page, size, totalElements, totalPages } = response;
+
+    Pagination.value.page = page;
+    Pagination.value.limit = size;
+    Pagination.value.totalElements = totalElements;
+    Pagination.value.totalPages = totalPages;
+
+    const bookings = dataList.map(iterator => ({
+      ...iterator,
+      id: v4(),
+      bookingId: '',
+      loadingEdit: false,
+      loadingDelete: false,
+      agency: iterator?.invoice?.agency,
+      invoiceAmount: 0,
+      originalAmount: iterator?.invoiceAmount,
+      nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+      fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
+    }));
+
+    return bookings;
+  } catch (error) {
+    console.error(error);
+    return []; // Devolver un array vacío en caso de error
+  }
+}
+
+*/
+async function getBookingList(clearFilter: boolean = false) {
+  try {
+    const Payload: any = ({
+      filter: [{
+
+        key: 'invoice.id',
+        operator: 'EQUALS',
+        value: globalSelectedInvoicing,
+        logicalOperation: 'AND'
+
+      }],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    })
+    bookingList.value = []
+
+    const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, Payload)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+  //    const id = v4()
+      bookingList.value = [...bookingList.value, {
+        ...iterator,
+      //   id,
+        loadingEdit: false,
+        loadingDelete: false,
+      //  bookingId:'',
+        hotelAmount:0,
+        dueAmount:0,
+        agency: iterator?.invoice?.agency,
+        invoiceAmount: 0,
+        originalAmount: iterator?.invoiceAmount,
+        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
+      }]
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    // Options.value.loading = false
+  }
+}
+let bookingAssociated: any = [];
+/*
+async function getRoomRateList(globalSelectedInvoicing: any) {
+  console.log(globalSelectedInvoicing, 'Id del booking en room rate')
+  try {
+    const Payload: any = {
+      filter: [
+        {
+          key: 'booking.invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    };
+    roomRateList.value = []
+
+    listItems.value = [];
+
+    const response = await GenericService.search(confRoomApi.moduleApi, confRoomApi.uriApi, Payload);
+
+    const { data: dataList, page, size, totalElements, totalPages } = response;
+
+    Pagination.value.page = page;
+    Pagination.value.limit = size;
+    Pagination.value.totalElements = totalElements;
+    Pagination.value.totalPages = totalPages;
+
+ 
+    const roomRates= dataList.map(iterator => ({
+      ...iterator,
+      
+      loadingEdit: false,
+      loadingDelete: false,
+      invoiceAmount: iterator?.invoiceAmount || 0,
+      hotelAmount: iterator?.hotelAmount || 0,
+      nights: dayjs(iterator?.booking?.checkOut).endOf('day').diff(dayjs(iterator?.booking?.checkIn).startOf('day'), 'day', false),
+      fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
+      bookingId: iterator.booking.bookingId,
+      roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
+      nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
+      ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
+      agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
+    }));
+
+    let countRR = 0;
+    totalInvoiceAmount.value = 0;
+    totalHotelAmount.value = 0;
+    for (const item of roomRates) {
+      countRR++;
+      if (typeof +item.invoiceAmount === 'number') {
+        totalInvoiceAmount.value += Number(item.invoiceAmount);
+      }
+      if (typeof +item.hotelAmount === 'number') {
+        totalHotelAmount.value += Number(item.hotelAmount);
+      }
+    }
+
+    if (roomRates.length > 0) {
+      idItemToLoadFirstTime.value = roomRates[0].id;
+    }
+
+    return roomRates;
+  } catch (error) {
+    console.error(error);
+    return []; // Devolver un array vacío en caso de error
+  }
+}*/
+
+async function getRoomRateList(globalSelectedInvoicing:any) {
+  try {
+    const Payload = {
+      filter: [
+        {
+          key: 'booking.invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    };
+
+    idItemToLoadFirstTime.value = '';
+   
+    roomRateList.value = [];
+
+    const response = await GenericService.search(confRoomApi.moduleApi, confRoomApi.uriApi, Payload);
+
+    const { data: dataList, page, size, totalElements, totalPages } = response;
+
+    Pagination.value.page = page;
+    Pagination.value.limit = size;
+    Pagination.value.totalElements = totalElements;
+    Pagination.value.totalPages = totalPages;
+
+    let countRR = 0;
+    totalInvoiceAmount.value = 0;
+    totalHotelAmount.value = 0;
+
+    for (const iterator of dataList) {
+      countRR++;
+ 
+      roomRateList.value = [...roomRateList.value, {
+        ...iterator,
+        invoiceAmount: iterator?.invoiceAmount || 0,
+        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        loadingEdit: false,
+        loadingDelete: false,
+        fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
+        bookingId: iterator.booking.bookingId,
+        roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
+        nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
+        ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
+        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
+      }]
+
+      if (typeof +iterator.invoiceAmount === 'number') {
+        totalInvoiceAmount.value += Number(iterator.invoiceAmount);
+      }
+
+      if (typeof +iterator.hotelAmount === 'number') {
+        totalHotelAmount.value += Number(iterator.hotelAmount);
+      }
+    }
+
+    if (roomRateList.value.length > 0) {
+      idItemToLoadFirstTime.value = roomRateList.value[0].id;
+    }
+  } catch (error) {
+    console.error(error);
+  } 
+}
+async function getAdjustmentList(globalSelectedInvoicing: any) {
+  try {
+    idItemToLoadFirstTime.value = '';
+    listItems.value = [];
+    totalAmount.value = 0;
+
+    const payload: any = {
+      filter: [
+        {
+          key: 'roomRate.booking.invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    };
+
+    const response = await GenericService.search(confAdjustmentsApi.moduleApi, confAdjustmentsApi.uriApi, payload);
+
+    const { data: dataList, page, size, totalElements, totalPages } = response;
+
+    Pagination.value.page = page;
+    Pagination.value.limit = size;
+    Pagination.value.totalElements = totalElements;
+    Pagination.value.totalPages = totalPages;
+
+    const adjustmentList = [];
+    for (const iterator of dataList) {
+      let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` };
+
+      if (iterator?.invoice?.invoiceType === InvoiceType.INCOME) {
+        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ""}-${iterator?.paymentTransactionType?.name || ""}` };
+      }
+
+      adjustmentList.push({
+        ...iterator,
+        loadingEdit: false,
+        loadingDelete: false,
+        roomRateId: iterator?.roomRate?.roomRateId,
+        date: iterator?.date,
+      });
+
+      if (typeof +iterator?.amount === 'number') {
+        totalAmount.value += Number(iterator?.amount);
+      }
+    }
+
+    if (adjustmentList.length > 0) {
+      idItemToLoadFirstTime.value = adjustmentList[0].id;
+    }
+
+    return adjustmentList;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+async function getAttachmentList(globalSelectedInvoicing: any) {
+  try {
+    // Inicializar variables y estados
+    idItemToLoadFirstTime.value = '';
+    listItems.value = [];
+
+    // Construir el payload para la búsqueda
+    const payload: any = {
+      filter: [
+        {
+          key: 'invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    };
+
+    // Realizar la búsqueda utilizando el GenericService
+    const response = await GenericService.search(
+      confAttachmentApi.moduleApi,
+      confAttachmentApi.uriApi,
+      payload
+    );
+
+    // Extraer los datos de la respuesta
+    const { data: dataList, page, size, totalElements, totalPages } = response;
+
+    // Actualizar los valores de la paginación
+    Pagination.value.page = page;
+    Pagination.value.limit = size;
+    Pagination.value.totalElements = totalElements;
+    Pagination.value.totalPages = totalPages;
+
+    // Procesar y formatear los datos de la lista de adjuntos
+    const attachments = dataList.map((item: any) => ({
+      ...item,
+      type: {
+        ...item?.type,
+        name: `${item?.type?.code}-${item?.type?.name}`
+      },
+      paymenResourceType: "INV-Invoice",
+      resource: globalSelectedInvoicing
+    }));
+
+    // Establecer el primer elemento de la lista como el que se cargará inicialmente
+    if (attachments.length > 0) {
+      idItemToLoadFirstTime.value = attachments[0].id;
+    }
+
+    // Devolver la lista de adjuntos
+    return attachments;
+  } catch (error) {
+    console.error(error);
+    return []; // Devolver una lista de adjuntos vacía en caso de error
+  }
+}
+
+async function findBookingByInvoiceId() {
+  console.log('id desde find booking', globalSelectedInvoicing);
+  try {
+    const bookings = await getBookingList(); // Obtener el listado completo de bookings
+
+
+    return bookings;
+  } catch (error) {
+    console.error('Error al buscar el booking asociado a la factura:', error);
+    return [];
+  }
+}
+
+async function findRoomRates() {
+  try {
+    const roomRates = await getRoomRateList(globalSelectedInvoicing);
+    console.log('Room Rates encontrados:', roomRates);
+
+   
+  } catch (error) {
+    console.error('Error al buscar los room rates asociados a la factura:', error);
+    return [];
+  }
+}
+/*
+async function findRoomRates() {
+  try {
+    const roomRates = await getRoomRateList(globalSelectedInvoicing);
+    console.log('Room Rates encontrados:', roomRates);
+
+    if (roomRates.length > 0) {
+      console.log('Room Rates asociados encontrados:', roomRates);
+      return roomRates;
+    } else {
+      console.error('No se encontraron room rates asociados a la factura seleccionada.');
+      return [];
+    }
+  } catch (error) {
+    console.error('Error al buscar los room rates asociados a la factura:', error);
+    return [];
+  }
+}
+*/
+async function findAdjustments() {
+  try {
+    const adjustmentList = await getAdjustmentList(globalSelectedInvoicing);
+    console.log('Adjustments encontrados:', adjustmentList);
+    return adjustmentList;
+  } catch (error) {
+    console.error('Error al buscar los adjustments asociados a la factura:', error);
+    return [];
+  }
+}
+async function getAttachments(globalSelectedInvoicing: any) {
+  try {
+    console.log('Llamando a getAttachmentList() con selectedInvoice:', globalSelectedInvoicing);
+    const attachments = await getAttachmentList(globalSelectedInvoicing);
+    console.log('Attachments encontrados:', attachments);
+    return attachments;
+  } catch (error) {
+    console.error('Error al buscar los attachments asociados a la factura:', error);
+    return []; // Devolver una lista de adjuntos vacía en caso de error
+  }
+}
+//Variante 1
+async function createPartialClonation(item: { [key: string]: any }) {
+  try {
+    loadingSaveAll.value = true;
+
+    const payload: { [key: string]: any } = { ...item };
+    payload.employee = userData?.value?.user?.name;
+    payload.invoice = globalSelectedInvoicing;
+  
+    const roomRates: any = await findRoomRates();
+    const adjustments: any = await findAdjustments();
+    const attachments = [];
+
+    // Agregar los attachments localmente al payload
+    for (let i = 0; i < attachmentList.value.length; i++) {
+      const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file);
+      attachments.push({
+        ...attachmentList.value[i],
+        type: attachmentList.value[i]?.type?.id,
+        id: attachmentList.value[i]?.id,
+        resourceType:'INV-Invoice',
+        resource:globalSelectedInvoicing,
+        file: fileurl,
+        
+      });
+    }
+
+    // Asignar los attachments al payload
+    payload.attachments = attachments;
+
+    // Inicializar roomRateAdjustments como un array vacío
+    payload.roomRateAdjustments = [];
+
+    if (adjustments && adjustments.length > 0 && roomRates && roomRates.length > 0) {
+      for (let i = 0; i < adjustments.length; i++) {
+        const adjustment = adjustments[i];
+        const roomRate = roomRates[i];
+
+        payload.roomRateAdjustments.push({
+          roomRate: roomRate.id,
+          adjustment: {
+            id: adjustment.id,
+            amount: adjustment.amount,
+            transaction: adjustment.transaction,
+            employee: adjustment.employee
+          }
+        });
+      }
+    }
+
+    // Realizar cualquier otra manipulación necesaria en el payload
+
+    console.log('Payload:', payload);
+    console.log('Attchments locales:', attachments);
+    console.log('roomRateAdjustments:', payload.roomRateAdjustments);
+
+    // Llamada al servicio genérico para enviar el payload al servidor
+    const response = await GenericService.create(confClonationPartialApi.moduleApi, confClonationPartialApi.uriApi, payload);
+
+    return response;
+  } catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 })
+
+  } finally {
+    loadingSaveAll.value = false;
+  }
+}// 
+//Termina la variante 1
+//
+/*Variante 2
+async function createPartialClonation() {
+  try {
+    loadingSaveAll.value = true;
+
+    // const booking: any = findBookingByInvoiceId();
+    const roomRates: any = await findRoomRates();
+    const adjustments: any = await findAdjustments();
+  //  const attachments: any = await getAttachments(selectedInvoice);
+  const attachments = [];
+
+// Agregar los attachments localmente al payload
+for (let i = 0; i < attachmentList.value.length; i++) {
+  const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file);
+  attachments.push({
+    ...attachmentList.value[i],
+    type: attachmentList.value[i]?.type?.id,
+    id: attachmentList.value[i]?.id,
+    resourceType:'INV-Invoice',
+    file: fileurl,
+    
+  });
+}
+
+// Asignar los attachments al payload
+  
+    const payload: any = {
+      attachments: attachments,
+      employee: userData?.value?.user?.name,
+      invoice: globalSelectedInvoicing,
+      roomRateAdjustments: []
+    };
+
+   if (adjustments && adjustments.length > 0 && roomRates && roomRates.length > 0) {
+      for (let i = 0; i < adjustments.length; i++) {
+        const adjustment = adjustments[i];
+        const roomRate = roomRates[i]; // Asigna el roomRate correspondiente de forma secuencial
+
+        payload.roomRateAdjustments.push({
+          roomRate: roomRate.id,
+          adjustment: {
+            id:adjustment.id,
+            amount: adjustment.amount,          
+            transaction: adjustment.transaction,
+            employee: adjustment.employee
+          }
+        });
+      }
+    }
+
+    // Aquí puedes enviar el payload al servidor o realizar cualquier otra acción necesaria
+    console.log('Payload:', payload);
+
+    // Imprime roomRateAdjustments en la consola para verificar
+    console.log('roomRateAdjustments:', payload.roomRateAdjustments);
+
+    // Llamada al servicio genérico para hacer la solicitud HTTP
+    await GenericService.create(confClonationPartialApi.moduleApi, confClonationPartialApi.uriApi, payload);
+    console.log('entra aqui')
+   await getBookingList()
+   await getRoomRateList(globalSelectedInvoicing)
+   console.log('aqui no esta entrando')
+  } catch (error:any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
+  } finally {
+    loadingSaveAll.value = false;
+  }
+}
+
+*/
+
 async function getHotelList(query = '') {
   try {
     const payload
       = {
-        filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
@@ -373,32 +956,32 @@ async function getAgencyList(query = '') {
   try {
     const payload
       = {
-        filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
 
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
@@ -432,7 +1015,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.hotel = item.hotel?.id
     payload.agency = item.agency?.id
     payload.invoiceType = route.query.type
-    
+
 
     if (invoiceAmount.value === 0) {
       throw new Error('The Invoice amount field cannot be 0')
@@ -557,38 +1140,105 @@ async function deleteItem(id: string) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if (!item?.hotel?.id) {
-    hotelError.value = true
-  }
-  if (!item?.agency?.id) {
-    agencyError.value = true
-  }
-
-  if (hotelError.value || agencyError.value) {
-    return null
-  }
-
-  if (invoiceAmountError.value) { return null }
-  loadingSaveAll.value = true
-  let successOperation = true
+  loadingSaveAll.value = true;
+  let successOperation = true;
+  let itemDetails = null;
 
   try {
-    const response: any = await createItem(item)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
-    if (route.query.type === InvoiceType.CREDIT) { return navigateTo({ path: `/invoice` }) }
-    navigateTo({ path: `/invoice/edit/${response?.id}` })
-  }
-  catch (error: any) {
-    successOperation = false
-    toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 })
+    const response: any = await createPartialClonation(item);
+    console.log('Response:', response); // Imprimir la respuesta en la consola
+
+    if (response && response.id) {
+      // Llamar a getItemById para actualizar los campos invoiceId e invoiceNo
+      itemDetails = await getItemById(response.id);
+
+      // Actualizar los campos del item con los detalles obtenidos
+     
+      if (itemDetails) {
+    console.log('Item details:', itemDetails); // Imprimir los detalles del item en la consola
+
+    // Actualizar los campos del formulario con los detalles obtenidos
+    
+ 
+    item.value.invoiceId = itemDetails.invoiceId;
+    item.value.invoiceNumber = itemDetails.invoiceNumber;
+   
+    item.value.status = itemDetails.status;
+   
   }
 
-  loadingSaveAll.value = false
-  if (successOperation) {
-    clearForm()
+      const invoiceNo = itemDetails.invoiceNumber;
+      toast.add({
+        severity: 'info',
+        summary: 'Confirmed',
+        detail: `The clonation invoice ${invoiceNo} was created successfully`,
+        life: 10000
+      });
+
+      console.log(getBookingList(), 'se llama a la función después de crear');
+    } else {
+      throw new Error("Response object or ID is undefined");
+    }
+  } catch (error: any) {
+    successOperation = false;
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error?.data?.data?.error?.errorMessage || error?.message,
+      life: 10000
+    });
+  } finally {
+    loadingSaveAll.value = false;
+    if (successOperation) {
+      clearForm();
+    }
   }
 }
 const goToList = async () => await navigateTo('/invoice')
+
+
+async function getTransactionTypeList(query = '') {
+  try {
+    const payload
+      = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    transactionTypeList.value = []
+    const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
+    const { data: dataList } = response
+    for (const iterator of dataList) {
+      transactionTypeList.value = [...transactionTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, fullName: `${iterator?.code}-${iterator?.name}` }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+}
 
 function requireConfirmationToSave(item: any) {
   const { event } = item
@@ -649,6 +1299,7 @@ function openAdjustmentDialog(roomRate?: any) {
 
   adjustmentDialogOpen.value = true
 }
+
 
 function sortBooking(event: any) {
   if (event) {
@@ -760,6 +1411,7 @@ async function getItemById(id: any) {
 
       if (response) {
         item.value.id = response.id
+        item.value.invoiceNo=response.invoiceNo
         item.value.invoiceId = response.invoiceId
         const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
@@ -767,10 +1419,9 @@ async function getItemById(id: any) {
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
         item.value.invoiceAmount = toNegative(response.invoiceAmount)
-        item.value.hotel = response.hotel
-        item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
-        item.value.agency = response.agency
-        item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
+      
+       
+     
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
         item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
 
@@ -778,10 +1429,11 @@ async function getItemById(id: any) {
           item.value.originalAmount = response.invoiceAmount
           item.value.invoiceDate = new Date()
         }
-        await getInvoiceAgency(response.agency?.id)
+       
       }
 
       formReload.value += 1
+      return response;
     }
     catch (error) {
       if (error) {
@@ -794,7 +1446,7 @@ async function getItemById(id: any) {
   }
 }
 
-async function getBookingList(clearFilter: boolean = false) {
+/*async function getBookingList(clearFilter: boolean = false) {
   try {
     const Payload: any = ({
       filter: [{
@@ -845,7 +1497,7 @@ async function getBookingList(clearFilter: boolean = false) {
     // Options.value.loading = false
   }
 }
-
+*/
 function calcBookingInvoiceAmount(roomRate: any) {
   const bookingIndex = bookingList.value.findIndex(b => b?.id === roomRate?.booking)
 
@@ -913,7 +1565,7 @@ function updateBooking(booking: any) {
         firstName: booking?.firstName,
         lastName: booking?.lastName,
         hotelAmount: booking?.hotelAmount,
-        
+
       }
     }
   }
@@ -1021,52 +1673,51 @@ watch(invoiceAmount, () => {
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-
+  selectedInvoicing.value = route.query.clonedInvoiceId;
+  globalSelectedInvoicing = selectedInvoicing.value;
   item.value.invoiceType = ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
 
+  // if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
+
+ /* if (route.query.type === InvoiceType.INVOICE && route.query.selected) {
+    await getItemById(route.query.selected); // Llamar a getItemById después de listar y crear la factura
+    calcInvoiceAmount()
+  }*/
   if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
     await getItemById(route.query.selected)
     await getBookingList()
     calcInvoiceAmount()
   }
+  // }
 })
 </script>
 
 <template>
   <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-    {{ OBJ_INVOICE_TITLE[String(route.query.type)] }} {{ route.query.type === InvoiceType.CREDIT ? item?.invoiceId
-      : "" }}
+    Partial Clone
   </div>
   <div class="p-4">
-    <EditFormV2
-      :key="formReload" :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields" :item="item"
+    <EditFormV2 :key="formReload" :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields" :item="item"
       :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid pt-3"
-      @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
-    >
+      @cancel="clearForm" @delete="requireConfirmationToDelete($event)">
       <template #field-invoiceDate="{ item: data, onUpdate }">
-        <Calendar
-          v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
+        <Calendar v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
           @update:model-value="($event) => {
             onUpdate('invoiceDate', $event)
-          }"
-        />
+          }" />
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
-        <InputText
-          v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
-            invoiceAmountError = false
-            onUpdate('invoiceAmount', $event)
-          }"
-        />
+        <InputText v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
+          invoiceAmountError = false
+          onUpdate('invoiceAmount', $event)
+        }" />
         <span v-if="invoiceAmountError" class="error-message p-error text-xs">{{ invoiceAmountErrorMessage }}</span>
       </template>
       <template #field-invoiceType="{ item: data, onUpdate }">
-        <Dropdown
-          v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
+        <Dropdown v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
           option-label="name" return-object="false" show-clear disabled @update:model-value="($event) => {
             onUpdate('invoiceType', $event)
-          }"
-        >
+          }">
           <template #option="props">
             {{ props.option?.code }}-{{ props.option?.name }}
           </template>
@@ -1077,12 +1728,10 @@ onMounted(async () => {
         <Skeleton v-else height="2rem" class="mb-2" />
       </template>
       <template #field-status="{ item: data, onUpdate }">
-        <Dropdown
-          v-if="!loadingSaveAll" v-model="data.status" :options="[...ENUM_INVOICE_STATUS]" option-label="name"
+        <Dropdown v-if="!loadingSaveAll" v-model="data.status" :options="[...ENUM_INVOICE_STATUS]" option-label="name"
           return-object="false" show-clear disabled @update:model-value="($event) => {
             onUpdate('status', $event)
-          }"
-        >
+          }">
           <template #option="props">
             {{ props.option?.code }}-{{ props.option?.name }}
           </template>
@@ -1092,143 +1741,132 @@ onMounted(async () => {
         </Dropdown>
         <Skeleton v-else height="2rem" class="mb-2" />
       </template>
-      <template #field-hotel="{ item: data, onUpdate }">
-        <DebouncedAutoCompleteComponent
-          v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :model="data.hotel" :disabled="String(route.query.type) as any === InvoiceType.CREDIT"
-          :suggestions="hotelList" @change="($event) => {
-            hotelError = false
-            onUpdate('hotel', $event)
-          }" @load="($event) => getHotelList($event)"
-        >
-          <template #option="props">
-            <span>{{ props.item.fullName }}</span>
-          </template>
-          <template #chip="{ value }">
-            <div>
-              {{ value?.fullName }}
-            </div>
-          </template>
-        </DebouncedAutoCompleteComponent>
-        <span v-if="hotelError" class="error-message p-error text-xs">The hotel field is required</span>
-      </template>
-      <template #field-agency="{ item: data, onUpdate }">
-        <DebouncedAutoCompleteComponent
-          v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :model="data.agency" :disabled="String(route.query.type) as any === InvoiceType.CREDIT"
-          :suggestions="agencyList" @change="($event) => {
-            agencyError = false
-            onUpdate('agency', $event)
-          }" @load="($event) => getAgencyList($event)"
-        >
-          <template #option="props">
-            <span>{{ props.item.fullName }}</span>
-          </template>
-          <template #chip="{ value }">
-            <div>
-              {{ value?.fullName }}
-            </div>
-          </template>
-        </DebouncedAutoCompleteComponent>
-        <span v-if="agencyError" class="error-message p-error text-xs">The agency field is required</span>
-      </template>
+
 
       <template #form-footer="props">
         <div style="width: 100%; height: 100%;">
-          <InvoiceTabView
-            :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
+        
+
+          <InvoicePartialTabView :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
             :invoice-obj-amount="invoiceAmount" :is-dialog-open="bookingDialogOpen"
             :close-dialog="() => { bookingDialogOpen = false }" :open-dialog="handleDialogOpen"
             :selected-booking="selectedBooking" :open-adjustment-dialog="openAdjustmentDialog"
             :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
             :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
-            :add-room-rate="addRoomRate" :update-room-rate="updateRoomRate" :is-creation-dialog="true"
-            :selected-invoice="selectedInvoice as any" :booking-list="bookingList" :add-booking="addBooking"
-            :update-booking="updateBooking" :adjustment-list="adjustmentList" :add-adjustment="addAdjustment"
+           :update-room-rate="updateRoomRate" :is-creation-dialog="true"
+            :selected-invoice="selectedInvoice as any"  :booking-list="bookingList" 
+            :adjustment-list="adjustmentList" :add-adjustment="addAdjustment"
             :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
 
               active = $event
-            }"
-          />
+            }" />
 
+        
+   
           <div>
             <div class="flex justify-content-end">
-              <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
-                <Button
-                  v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-                  :disabled="bookingList.length === 0 || attachmentList.length === 0" @click="() => {
-                    saveItem(props.item.fieldValues)
-                  }"
-                />
-              </IfCan>
 
-              <IfCan :perms="['INVOICE-MANAGEMENT:PRINT']">
-                <Button
-                  v-if="route.query.type !== InvoiceType.OLD_CREDIT" v-tooltip.top="'Export'" class="w-3rem mx-1"
-                  icon="pi pi-print" :loading="loadingSaveAll" disabled
-                />
-              </IfCan>
+              <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
+                :disabled=" attachmentList.length === 0" @click="() => {
+                 saveItem(props.item.fieldValues)
+                // createPartialClonation()
+                }" />
 
-              <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
-                <Button
-                  v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                  :loading="loadingSaveAll"  @click="handleAttachmentDialogOpen()"
-                />
-              </IfCan>
-              <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-SHOW-HISTORY']">
-                <Button
-                  v-if="route.query.type !== InvoiceType.OLD_CREDIT" v-tooltip.top="'Show History'"
-                  class="w-3rem mx-1" :loading="loadingSaveAll" disabled @click="handleAttachmentHistoryDialogOpen()"
-                >
-                  <template #icon>
-                    <span class="flex align-items-center justify-content-center p-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px"
-                        fill="#e8eaed"
-                      >
-                        <path
-                          d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"
-                        />
-                      </svg>
-                    </span>
-                  </template>
-                </Button>
-              </IfCan>
-              <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-CREATE']">
-                <Button
-                  v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                  :disabled="route.query.type === InvoiceType.CREDIT" :loading="loadingSaveAll"
-                  @click="handleDialogOpen()"
-                />
-              </IfCan>
 
-              <Button
-                v-if="route.query.type !== InvoiceType.OLD_CREDIT" v-tooltip.top="'Update'" class="w-3rem mx-1"
-                icon="pi pi-replay" :loading="loadingSaveAll"
-              />
-              <Button
-                v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times"
-                @click="goToList"
-              />
+             <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
+                <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
+                  :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" />
+              </IfCan>
+              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times"
+                @click="goToList" />
             </div>
           </div>
         </div>
         <div v-if="attachmentDialogOpen">
-          <AttachmentDialog
-            :add-item="addAttachment" :close-dialog="() => { attachmentDialogOpen = false }"
+          <AttachmentDialogClone :add-item="addAttachment" :close-dialog="() => { attachmentDialogOpen = false }"
             :is-creation-dialog="true" header="Manage Invoice Attachment" :list-items="attachmentList"
             :open-dialog="attachmentDialogOpen" :update-item="updateAttachment" selected-invoice=""
-            :selected-invoice-obj="{}" :delete-item="deleteAttachment"
-          />
+            :selected-invoice-obj="{}" :delete-item="deleteAttachment" />
         </div>
-        <div v-if="attachmentHistoryDialogOpen" class="w-fit h-fit">
-          <AttachmentHistoryDialog
-            selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
-            header="Attachment Status History" :list-items="attachmentList" :open-dialog="attachmentHistoryDialogOpen"
-            selected-invoice="" :selected-invoice-obj="{}" :is-creation-dialog="true"
-          />
+        <div v-if="openAdjustment">
+          <Dialog :visible="openAdjustment && bookingList.length === 1" :id-item="idItem" modal class="mx-2 sm:mx-0"
+            content-class="border-round-bottom border-top-1 surface-border" :style="{ width: '33%' }" :pt="{
+              root: {
+                class: 'custom-dialog',
+              },
+              header: {
+                style: 'padding-top: 0.5rem; padding-bottom: 0.5 rem',
+              },
+
+            }" @hide="openAdjustment = false">
+            <template #header>
+              <div class="flex justify-content-between">
+                <p class="mt-2 mb-0 text-lg">
+                  New Adjustment
+                </p>
+              </div>
+            </template>
+            <template #default>
+
+              <form class="flex flex-column justify-content-center mx-4">
+                <div class="mt-3">
+                  <label for="amount" class="block font-bold mb-1  required">Amount <span
+                      class="required-indicator ml-1"> * </span></label>
+
+                  <InputText id="amount" v-model="item.amount" type="text" class="w-full" required />
+
+                </div>
+                <div class="mt-1">
+                  <label for="amount" class="block font-bold mb-1 required">Date <span class="required-indicator ml-1">
+                      * </span></label>
+                  <Calendar id="amount" v-model="item.date" date-format="yy-mm-dd"
+                    :max-date="dayjs().endOf('day').toDate()" :default-date="dayjs().startOf('day').toDate()"
+                    class="w-full" required> </Calendar>
+
+                </div>
+                <div class="mt-1">
+                  <label for="amount" class="block font-bold mb-1  required">Transaction Type <span
+                      class="required-indicator ml-1"> * </span></label>
+
+                  <DebouncedAutoCompleteComponent class="w-full" v-if="!loadingSaveAll" id="autocomplete"
+                    field="fullName" item-value="id" :model="transactionType" :suggestions="transactionTypeList"
+                    @change="($event) => {
+                      onUpdate('transactionType', $event)
+                    }" @load="($event) => getTransactionTypeList($event)" />
+                </div>
+                <div class="mt-2">
+                  <label for="amount" class="block font-bold mb-1  required">Remark </label>
+
+                  <InputText id="amount" v-model="item.amount" type="text" class="w-full" required />
+
+                </div>
+                <div class="field flex justify-content-end mt-4 mb-2">
+                  <Button v-tooltip.top="'Save'" label="Save" type="submit" class="p-button-primary mr-2 w-6rem mx-1"
+                    icon="pi pi-save" />
+                  <Button v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class=" mr-2 w-6rem mx-1"
+                    @click="openAdjustment = false" icon="pi pi-times" />
+                </div>
+
+              </form>
+
+            </template>
+          </Dialog>
+
+
         </div>
       </template>
     </EditFormV2>
   </div>
 </template>
+<style scoped lang="scss">
+.required {
+  position: relative;
+}
+
+.required-indicator {
+  color: rgba(199, 17, 17, 0.863);
+  font-size: 16px;
+  position: absolute;
+  top: 0;
+}
+</style>

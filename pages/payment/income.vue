@@ -46,6 +46,7 @@ const onOffDialogPaymentDetail = ref(false)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const exportAttachmentsDialogOpen = ref<boolean>(false)
+const LocalAttachmentList = ref<any[]>([])
 const AdjustmentList = ref<any[]>([])
 const AdjustmentTableList = ref<any[]>([])
 const activeTab = ref(2)
@@ -197,7 +198,7 @@ const columns: IColumn[] = [
   { field: 'bookingId', header: 'ID', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'fullName', header: 'Full Name', type: 'text' },
-  { field: 'reservationNumber', header: 'Reservation No.', type: 'text' },
+  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text' },
   { field: 'cuponNumber', header: 'Cupon No.', type: 'text' },
   { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
   { field: 'checkIn', header: 'Check In', type: 'date' },
@@ -656,10 +657,22 @@ async function createItem(item: { [key: string]: any }) {
 
     // Asignación del invoiceAmount total al payload
     payload.incomeAmount = totalIncomeAmount
+    if (LocalAttachmentList.value.length > 0) {
+      payload.attachments = LocalAttachmentList.value.map(item => ({
+        filename: item.filename,
+        file: item.file,
+        remark: item.remark,
+        type: item.type.id,
+        employee: item.employee,
+        employeeId: item.employeeId,
+        paymentResourceType: item.paymentResourceType.id,
+      }))
+    }
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     if (response && response.id) {
       // Guarda el id del elemento creado
       idItem.value = response.id
+      LocalAttachmentList.value = []
       toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice INC-${response.invoiceId ?? ''} was created successful`, life: 10000 })
     }
     else {
@@ -1381,7 +1394,7 @@ onMounted(async () => {
           exportAttachmentsDialogOpen = true
         }"
       />
-      <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" :disabled="idItem.length === 0" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
+      <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
       <Button v-tooltip.top="'Show history'" class="w-3rem ml-1" :disabled="idItem.length === 0" @click="handleAttachmentHistoryDialogOpen">
         <template #icon>
           <span class="flex align-items-center justify-content-center p-0">
@@ -1417,7 +1430,9 @@ onMounted(async () => {
         :close-dialog="(total: number) => {
           attachmentDialogOpen = false
           item.hasAttachments = total > 0
-        }" :is-creation-dialog="false" header="Manage Income Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item"
+        }" :is-creation-dialog="idItem === ''" header="Manage Income Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item"
+        :list-items="LocalAttachmentList" @update:list-items="($event) => LocalAttachmentList = [...LocalAttachmentList, $event]"
+        @delete-list-items="($id) => LocalAttachmentList = LocalAttachmentList.filter(item => item.id !== $id)"
       />
     </div>
 

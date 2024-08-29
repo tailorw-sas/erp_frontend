@@ -18,6 +18,8 @@ export enum ENUM_SHORT_TYPE {
   ASC = 'ASC',
 }
 
+
+
 export const ENUM_INVOICE_TYPE = [
   { id: 'CREDIT', name: 'Credit', code: 'CRE' },
   { id: 'INCOME', name: 'Income', code: 'INC' },
@@ -76,6 +78,14 @@ export enum InvoiceStatus {
   SENT = 'SENT',
   CANCELED = 'CANCELED',
   PENDING = 'PENDING'
+}
+
+export const OBJ_INVOICE_STATUS_NAME = {
+  [InvoiceStatus.PROCECSED]: "PROCESSED",
+  [InvoiceStatus.RECONCILED]: "RECONCILED",
+  [InvoiceStatus.SENT]: "SENT",
+  [InvoiceStatus.CANCELED]: "CANCELED",
+  [InvoiceStatus.PENDING]: "PENDING",
 }
 
 export const OBJ_INVOICE_TITLE: any = {

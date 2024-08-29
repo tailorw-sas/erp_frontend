@@ -260,7 +260,7 @@ const columns: IColumn[] = [
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
   { field: 'reservationNumber', header: 'Reservation', tooltip: 'Reservation', width: 'auto', type: 'text' },
-  { field: 'couponNumber', header: 'Cupon No', tooltip: 'Cupon No', width: 'auto', type: 'text' },
+  { field: 'couponNumber', header: 'Coupon No', tooltip: 'Coupon No', width: 'auto', type: 'text' },
   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
@@ -889,7 +889,6 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-      console.log('response', response)
 
       if (response) {
         item.value.id = id
@@ -929,14 +928,15 @@ async function getItemById(id: string) {
           : null
         agencyList.value = [agencyTemp]
         item.value.agency = agencyTemp
-        console.log(response.hotel)
 
         const hotelTemp = response.hotel
           ? {
               id: response.hotel.id,
-              name: `${response.hotel.code} - ${response.hotel.name}`,
-              status: response.hotel.status,
-              applyByTradingCompany: response.hotel.applyByTradingCompany
+              name: `${response.hotel?.code} - ${response.hotel?.name}`,
+              status: response.hotel?.status,
+              applyByTradingCompany: response.hotel?.applyByTradingCompany,
+              manageTradingCompany: response.hotel?.manageTradingCompany
+
             }
           : null
         hotelList.value = [hotelTemp]
@@ -1075,7 +1075,7 @@ async function getListPaymentDetail() {
         iterator.children = iterator.manageBooking?.children?.toString()
         iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
         iterator.fullName = iterator.manageBooking?.fullName
-        iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
+        iterator.reservationNumber = iterator.manageBooking?.hotelBookingNumber?.toString()
         iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
         iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNo?.toString()
       }
@@ -1753,8 +1753,6 @@ async function historyGetList() {
 }
 
 async function applyPaymentGetList() {
-  // console.log(ite.value)
-
   if (applyPaymentOptions.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -1820,9 +1818,64 @@ async function applyPaymentGetList() {
       }
     }
 
-    // Validacion para busar por por los hoteles
-    console.log(item.value)
+    // Validacion para bucsar por los hoteles
+    if (item.value.hotel && item.value.hotel.id) {
+      if (item.value.hotel.applyByTradingCompany) {
+        // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
+        const filter: FilterCriteria[] = [
+          // {
+          //   key: 'agency.id',
+          //   logicalOperation: 'AND',
+          //   operator: 'EQUALS',
+          //   value: item.value.agency.id,
+          // },
+          {
+            key: 'manageTradingCompanies.id',
+            logicalOperation: 'AND',
+            operator: 'EQUALS',
+            value: item.value.hotel?.manageTradingCompany,
+          },
+        ]
+        const objQueryToSearch = {
+          query: '',
+          keys: ['name', 'code'],
+        }
 
+        let listHotelsForApplyPayment: any[] = []
+        listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
+
+        if (listHotelsForApplyPayment.length > 0) {
+          const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
+
+          if (objFilter) {
+            objFilter.value = listHotelsForApplyPayment.map(item => item.id)
+          }
+          else {
+            applyPaymentPayload.value.filter.push({
+              key: 'invoice.hotel.id',
+              operator: 'IN',
+              value: listHotelsForApplyPayment.map(item => item.id),
+              logicalOperation: 'AND'
+            })
+          }
+        }
+      }
+      else {
+        const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
+
+        if (objFilter) {
+          objFilter.value = item.value.hotel.id
+        }
+        else {
+          applyPaymentPayload.value.filter.push({
+            key: 'invoice.hotel.id',
+            operator: 'EQUALS',
+            value: item.value.hotel.id,
+            logicalOperation: 'AND'
+          })
+        }
+      }
+    }
     const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -2145,6 +2198,10 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
     if (response) {
       openDialogApplyPayment.value = false
       toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
+      if (route?.query?.id) {
+        const id = route.query.id.toString()
+        await getItemById(id)
+      }
     }
   }
   catch (error) {
@@ -2500,6 +2557,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
+            :disabled="true"
             :model="data.attachmentStatus"
             :suggestions="[...attachmentStatusList]"
             @change="($event) => {
@@ -2653,9 +2711,9 @@ onMounted(async () => {
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        mask: {
-          style: 'backdrop-filter: blur(5px)',
-        },
+        // mask: {
+        //   style: 'backdrop-filter: blur(5px)',
+        // },
       }"
       @hide="openDialogHistory = false"
     >
@@ -2740,9 +2798,9 @@ onMounted(async () => {
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        mask: {
-          style: 'backdrop-filter: blur(5px)',
-        },
+        // mask: {
+        //   style: 'backdrop-filter: blur(5px)',
+        // },
       }"
       @hide="openPrint = false"
     >

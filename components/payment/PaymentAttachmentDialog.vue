@@ -360,6 +360,7 @@ function onSortFieldHistory(event: any) {
 }
 
 async function clearForm() {
+  updateFieldProperty(fieldsV2, 'remark', 'disabled', false)
   item.value = { ...itemTemp.value }
   idItem.value = ''
 
@@ -604,8 +605,16 @@ function mapFunction(data: DataListItem): ListItem {
     defaults: data?.defaults
   }
 }
+function mapFunctionResourceType(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    defaults: data?.defaults
+  }
+}
 async function getResourceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  resourceTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
+  resourceTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionResourceType)
 }
 
 async function getAttachmentTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -886,6 +895,7 @@ async function getItemById(id: string) {
         item.value.remark = response.remark
         item.value.invoice = response.invoice
         pathFileLocal.value = response.path
+        updateFieldProperty(fieldsV2, 'remark', 'disabled', true)
       }
 
       formReload.value += 1
@@ -962,19 +972,31 @@ async function clearFormAndReload() {
 
 function requireConfirmationToDelete(event: any) {
   if (externalProps.isCreateOrEditPayment === 'create') {
-    listItemsLocal.value = JSON.parse(JSON.stringify(listItemsLocal.value.filter((item: any) => item.id !== idItem.value)))
-    listItemsLocalTemp.value = JSON.parse(JSON.stringify(listItemsLocalTemp.value.filter((item: any) => item.id !== idItem.value)))
-    clearFormAndReload()
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Delete the record',
+      message: 'Do you want to delete the record?',
+      acceptClass: 'p-button-danger',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        listItemsLocal.value = JSON.parse(JSON.stringify(listItemsLocal.value.filter((item: any) => item.id !== idItem.value)))
+        listItemsLocalTemp.value = JSON.parse(JSON.stringify(listItemsLocalTemp.value.filter((item: any) => item.id !== idItem.value)))
+        clearFormAndReload()
+      },
+      reject: () => {}
+    })
   }
-  else if (!useRuntimeConfig().public.showDeleteConfirm) {
-    deleteItem(idItem.value)
-  }
+  // else if (!useRuntimeConfig().public.showDeleteConfirm) {
+  //   deleteItem(idItem.value)
+  // }
   else {
     confirm.require({
       target: event.currentTarget,
       group: 'headless',
-      header: 'Save the record',
-      message: 'Do you want to save the change?',
+      header: 'Delete the record',
+      message: 'Do you want to delete the record?',
       acceptClass: 'p-button-danger',
       rejectLabel: 'Cancel',
       acceptLabel: 'Accept',
@@ -1032,6 +1054,7 @@ async function loadDefaultsValues() {
     query: '',
     keys: ['name', 'code'],
   }, filter)
+
   item.value.resourceType = resourceTypeList.value.length > 0 ? resourceTypeList.value[0] : null
 
   formReload.value++
@@ -1175,7 +1198,8 @@ onMounted(async () => {
             @update:clicked-item="getItemByIdLocal($event)"
             @on-confirm-create="clearForm"
             @on-change-pagination="payloadOnChangePage = $event"
-            @on-list-item="ResetListItems" @on-sort-field="onSortFieldLocal"
+            @on-list-item="ResetListItems"
+            @on-sort-field="onSortFieldLocal"
           />
           <DynamicTable
             v-else
@@ -1210,6 +1234,7 @@ onMounted(async () => {
                 @submit="requireConfirmationToSave($event)"
               >
                 <template #field-resourceType="{ item: data, onUpdate }">
+                  <!-- :disabled="disabledOrEnabledResourceType()" -->
                   <DebouncedAutoCompleteComponent
                     v-if="!loadingSaveAll"
                     id="autocomplete"
@@ -1217,7 +1242,7 @@ onMounted(async () => {
                     item-value="id"
                     :model="data.resourceType"
                     :suggestions="resourceTypeList"
-                    :disabled="disabledOrEnabledResourceType()"
+                    :disabled="true"
                     @change="($event) => {
                       onUpdate('resourceType', $event)
                     }" @load="($event) => {
@@ -1244,6 +1269,7 @@ onMounted(async () => {
                     item-value="id"
                     :model="data.attachmentType"
                     :suggestions="attachmentTypeList"
+                    :disabled="idItem !== '' || idItem === null"
                     @change="($event) => {
                       onUpdate('attachmentType', $event)
                     }" @load="($event) => {

@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { FieldDefinitionType } from '../form/EditFormV2'
+import type {FilterCriteria} from "~/composables/list";
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -18,6 +20,7 @@ const confirm = useConfirm()
 const onOffDialog = ref(props.visible)
 const transactionTypeList = ref<any[]>([])
 const formReload = ref(0)
+const loadingDefaultTransactionType = ref(false)
 
 const forceSave = ref(false)
 let submitEvent: Event = new Event('')
@@ -84,10 +87,46 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
-async function getTransactionTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[], short?: IQueryToSort) {
-  transactionTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, short)
-}
+async function getTransactionTypeList(queryFilter: string, isDefault: boolean = false) {
+  try {
+    console.log(`listing default: ${isDefault}`)
+    const objQueryToSearch = {
+      query: queryFilter,
+      keys: ['name', 'code'],
+    }
+    let filter: FilterCriteria[] = []
+    const sortObj = {
+      sortBy: '',
+      // sortType: ENUM_SHORT_TYPE.DESC,
+    }
+    if (isDefault) {
+      loadingDefaultTransactionType.value = true
+      filter = [{
+        key: 'incomeDefault',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      }, {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }]
+    }
 
+    // await getTransactionTypeList(objApis.transactionType.moduleApi, objApis.transactionType.uriApi, objQueryToSearch, filter, sortObj)
+    transactionTypeList.value = await getDataList<DataListItem, ListItem>(objApis.value.transactionType.moduleApi, objApis.value.transactionType.uriApi, filter, objQueryToSearch, mapFunction, sortObj,)
+    if (isDefault && transactionTypeList.value.length > 0) {
+      item.value.transactionType = transactionTypeList.value[0]
+      formReload.value += 1
+    }
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultTransactionType.value = false
+    }
+  }
+}
 
 function requireConfirmationToSave(item: any) {
   confirm.require({
@@ -107,6 +146,9 @@ function requireConfirmationToSave(item: any) {
 watch(() => props.visible, (newValue) => {
   onOffDialog.value = newValue
   emit('update:visible', newValue)
+  if (newValue) {
+    getTransactionTypeList('', true)
+  }
 })
 // watch(() => item.value, async (newValue) => {
 //   if (newValue) {
@@ -162,7 +204,7 @@ watch(() => props.item, async (newValue) => {
       >
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!props.loadingSaveAll"
+            v-if="!loadingDefaultTransactionType && !props.loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -172,38 +214,7 @@ watch(() => props.item, async (newValue) => {
               onUpdate('transactionType', $event)
             }"
             @load="async($event) => {
-              const objQueryToSearch = {
-                query: $event,
-                keys: ['name', 'code'],
-              }
-              const filter: FilterCriteria[] = []
-              const sortObj = {
-                sortBy: '',
-                // sortType: ENUM_SHORT_TYPE.DESC,
-              }
-              switch (props.action) {
-              case 'new-detail':
-                // sortObj.sortBy = 'defaults'
-                break
-
-              case 'deposit-transfer':
-                filter.push(
-                  // {
-                  //   key: 'deposit',
-                  //   logicalOperation: 'AND',
-                  //   operator: 'EQUALS',
-                  //   value: true,
-                  // },
-                  {
-                    key: 'defaults',
-                    logicalOperation: 'OR',
-                    operator: 'EQUALS',
-                    value: true,
-                  },
-                )
-                break
-              }
-              await getTransactionTypeList(objApis.transactionType.moduleApi, objApis.transactionType.uriApi, objQueryToSearch, filter, sortObj)
+              await getTransactionTypeList($event, false)
             }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />

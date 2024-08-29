@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
-import AttachmentHistoryDialog from './AttachmentHistoryDialog.vue'
+import AttachmentHistoryPartial from './AttachmentHistoryPartial.vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -793,7 +793,7 @@ onMounted(() => {
   </Dialog>
 
   <div v-if="attachmentHistoryDialogOpen">
-    <AttachmentHistoryDialog :selected-attachment="selectedAttachment"
+    <AttachmentHistoryPartial :selected-attachment="selectedAttachment"
       :close-dialog="() => { attachmentHistoryDialogOpen = false; selectedAttachment = '' }"
       header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
       :selected-invoice-obj="item" :is-creation-dialog="false" />

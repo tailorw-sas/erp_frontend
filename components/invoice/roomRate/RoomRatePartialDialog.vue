@@ -72,7 +72,7 @@ const dialogVisible = ref(props.openDialog)
     <div class="w-full h-full overflow-hidden p-2">
       <EditFormV2
         :key="formReload" :fields="fields" :item="item" :show-actions="true"
-        :loading-save="loadingSaveAll" :container-class="containerClass" 
+        :loading-save="loadingSaveAll" :container-class="containerClass"
         @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
       >
         <template #field-invoiceAmount="{ onUpdate, item: data }">
