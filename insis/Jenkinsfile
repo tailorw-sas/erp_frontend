@@ -1,5 +1,5 @@
 @Library('emailNotification') _
-import com.tailorw-sas.notificaciones.NotificadorEmail
+import com.tailorwsas.notificaciones.NotificadorEmail
 
 pipeline {
     
