@@ -103,11 +103,13 @@ pipeline {
 
     post {
         success {
-            def notificator = new NotificadorEmail()
-            def body = """<h2><strong>Build Successful!!!!</strong></h2>
+            script {
+                def notificator = new NotificadorEmail()
+                def body = """<h2><strong>Build Successful!!!!</strong></h2>
                         <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
                         <p>Branch: ${env.BRANCH_NAME}</p>"""
-            notificator.enviarEmail("${EMAIL_LIST}", "DEVOPS - TAILORW - FAILURE: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})", body, "${EMAIL_FROM}")
+                notificator.enviarEmail(env.EMAIL_LIST, "DEVOPS - TAILORW - FAILURE: Job ${JOB_NAME} (${BRANCH_NAME})", body, env.EMAIL_FROM)
+            }
         }
         failure {
             emailext(
