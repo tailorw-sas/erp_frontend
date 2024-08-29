@@ -101,6 +101,7 @@ const Columns: IColumn[] = [
 ]
 
 const incomeColumns: IColumn[] = [
+  { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
   { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '70px' },
   { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px' },
   { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
@@ -112,7 +113,7 @@ const dialogVisible = ref(props.openDialog)
 const options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
-  uriApi: 'invoice-status-history',
+  uriApi: 'attachment-status-history',
   loading: false,
   showDelete: false,
   showFilters: false,
@@ -154,20 +155,23 @@ function OnSortField(event: any) {
   }
 }
 
-function getSortField(field: any) {
 
+function getSortField(field: any) {
+  
   switch (field) {
     case 'status':
-      return 'invoiceStatus'
+      return 'type.status'
 
-    case 'invoiceId':
+    case 'invoiceId'  :
       return 'invoice.invoiceId'
+   
 
 
     default: return field
-
+      
   }
 }
+
 
 function clearForm() {
   item.value = { ...itemTemp.value }
@@ -192,14 +196,8 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId, 
-        //@ts-ignore
-        status: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus || iterator?.invoice?.status] }]
-
-
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId, status: iterator?.type?.status || 'ACTIVE' }]
     }
-
-    console.log(ListItems.value);
   }
   catch (error) {
     console.error(error)
@@ -218,13 +216,13 @@ async function getAttachmentTypeList() {
   try {
     const payload
       = {
-      filter: [],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     attachmentTypeList.value = []
     const response = await GenericService.search(confattachmentTypeListApi.moduleApi, confattachmentTypeListApi.uriApi, payload)
@@ -276,6 +274,46 @@ async function deleteItem(id: string) {
   }
 }
 
+async function saveItem(item: { [key: string]: any }) {
+  loadingSaveAll.value = true
+  let successOperation = true
+
+  if (idItem.value) {
+    try {
+      if (props.isCreationDialog) {
+        await props.updateItem(item)
+        clearForm()
+        return loadingSaveAll.value = false
+      }
+      await updateItem(item)
+    }
+    catch (error: any) {
+      successOperation = false
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+    idItem.value = ''
+  }
+  else {
+    try {
+      if (props.isCreationDialog) {
+        await props.addItem(item)
+        clearForm()
+        return loadingSaveAll.value = false
+      }
+      await createItem(item)
+    }
+    catch (error: any) {
+      successOperation = false
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+  }
+  loadingSaveAll.value = false
+  if (successOperation) {
+    clearForm()
+    getList()
+  }
+}
+
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
 })
@@ -306,23 +344,29 @@ onMounted(() => {
 </script>
 
 <template>
-  <Dialog v-model:visible="dialogVisible" modal
-    :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status history' : header"
-    class="p-4 h-fit w-fit" content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
-    style="width: 800px;" @hide="closeDialog">
+  <Dialog
+    v-model:visible="dialogVisible" modal :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? 'Income Status history' : header" class="p-4 h-fit w-fit"
+    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
+    style="width: 800px;" @hide="closeDialog"
+  >
     <div class=" h-fit overflow-hidden mt-4">
       <div class="flex flex-row align-items-center">
-        <div class="flex flex-column" style="width: 700px;overflow: auto;">
-          <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="incomeColumns"
-            :options="options" :pagination="Pagination" @on-confirm-create="clearForm"
-            @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-            @on-list-item="ResetListItems" @on-sort-field="OnSortField" />
-          <div class=" flex w-full justify-content-end ">
-            <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
+        <div class="flex flex-column" style="max-width: 900px;overflow: auto;">
+          <DynamicTable
+            :data="isCreationDialog ? listItems as any : ListItems" :columns="props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? incomeColumns : Columns"
+            :options="options" :pagination="Pagination"
 
-              clearForm()
-              closeDialog()
-            }" />
+            @on-confirm-create="clearForm"
+            @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+          />
+          <div class=" flex w-full justify-content-end ">
+            <Button
+              v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
+
+                clearForm()
+                closeDialog()
+              }"
+            />
           </div>
         </div>
       </div>

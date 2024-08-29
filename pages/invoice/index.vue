@@ -15,17 +15,23 @@ import { GenericService } from '~/services/generic-services'
 import { statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import getUrlByImage from '~/composables/files'
+import { v4 } from 'uuid'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
+const route = useRoute()
+const { data: userData } = useAuth()
 const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
 const menu = ref()
+let selectedInvoice = ref('')
 const menu_import = ref()
-const menu_reconcile=ref()
+const menu_reconcile = ref()
 const toast = useToast()
+const entryCode = ref('')
+const randomCode = ref(generateRandomCode());
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const formReload = ref(0)
@@ -33,7 +39,8 @@ const invoiceTypeList = ref<any[]>()
 
 const totalInvoiceAmount = ref(0)
 const totalDueAmount = ref(0)
-
+const totalAmount = ref(0)
+const totalHotelAmount = ref(0)
 const bookingDialogOpen = ref<boolean>(false)
 
 const loadingSaveAll = ref(false)
@@ -43,9 +50,17 @@ const loadingSearch = ref(false)
 const hotelError = ref(false)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
+const doubleFactorOpen = ref<boolean>(false)
+const doubleFactorTotalOpen = ref<boolean>(false)
 const attachmentInvoice = <any>ref(null)
-
+const bookingList = ref<any[]>([])
+const roomRateList = ref<any[]>([])
 const active = ref(0)
+
+const bookingApi = {
+  moduleApi: 'invoicing',
+  uriApi: 'manage-booking',
+}
 
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
@@ -67,8 +82,25 @@ const confApi = reactive({
   uriApi: 'manage-invoice',
 })
 
+
+const confAttachmentApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-attachment',
+})
+
+const confAdjustmentsApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-adjustment',
+})
+const confRoomApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-room-rate',
+})
+
+
 const disableClient = ref<boolean>(false)
 const disableDates = ref<boolean>(true)
+
 
 const expandedInvoice = ref('')
 
@@ -80,6 +112,11 @@ const agencyList = ref<any[]>([])
 const confclientListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-client',
+})
+
+const confClonationPartialApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/partial-clone',
 })
 
 const confhotelListApi = reactive({
@@ -97,6 +134,10 @@ const confinvoiceTypeListtApi = reactive({
   uriApi: 'manage-invoice-type',
 })
 
+function generateRandomCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
 const computedShowMenuItemNewCedit = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CREDIT-CREATE'])))
 })
@@ -112,6 +153,12 @@ const computedShowMenuItemPrint = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:PRINT'])))
 })
 
+const computedShowClone = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CLONE'])))
+})
+const computedShowCloneTotal = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CLONE-TOTAL'])))
+})
 
 const invoiceContextMenu = ref()
 const invoiceAllContextMenuItems = ref([
@@ -119,7 +166,8 @@ const invoiceAllContextMenuItems = ref([
     label: 'Change Agency',
     icon: 'pi pi-pencil',
     command: () => { },
-    default: false
+    default: true,
+    showItem: false,
   },
   {
     label: 'New Credit',
@@ -128,14 +176,16 @@ const invoiceAllContextMenuItems = ref([
       navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
     },
     default: true,
-    disabled: computedShowMenuItemNewCedit
+    disabled: computedShowMenuItemNewCedit,
+    showItem: true,
   },
   {
     label: 'Status History',
     icon: 'pi pi-file',
     command: handleAttachmentHistoryDialogOpen,
     default: true,
-    disabled: computedShowMenuItemShowHistory
+    disabled: computedShowMenuItemShowHistory,
+    showItem: true,
   },
   {
     label: 'Document',
@@ -144,7 +194,8 @@ const invoiceAllContextMenuItems = ref([
       attachmentDialogOpen.value = true
     },
     default: true,
-    disabled: computedShowMenuItemAttachment
+    disabled: computedShowMenuItemAttachment,
+    showItem: true,
   },
   {
     label: 'Print',
@@ -155,7 +206,68 @@ const invoiceAllContextMenuItems = ref([
       }
     },
     default: true,
-    disabled: computedShowMenuItemPrint
+    disabled: computedShowMenuItemPrint,
+    showItem: true,
+  },
+  {
+    label: 'Clone',
+    icon: 'pi pi-copy',
+    command: () => doubleFactor(selectedInvoice),
+    default: true,
+    disabled: computedShowClone,
+    showItem: false,
+  },
+  {
+    label: 'Adjustment',
+    icon: 'pi pi-wrench',
+    command: () => {
+    },
+    default: true,
+    showItem: false,
+  },
+  {
+    label: 'Undo Import',
+    icon: 'pi pi-file-import',
+    command: () => { },
+    default: true,
+    showItem: false,
+  },
+  {
+    label: 'Payments',
+    icon: 'pi pi-money-bill',
+    command: () => { },
+    default: true,
+    showItem: false,
+  },
+  {
+    label: 'Clone Complete',
+    icon: 'pi pi-clone',
+    command: () => { },
+    default: true,
+    showItem: false,
+  },
+  {
+    label: 'Re-Send',
+    icon: 'pi pi-send',
+    command: () => { },
+    default: true,
+    showItem: false,
+  },
+  {
+    label: 'From Invoice',
+    icon: 'pi pi-receipt',
+    command: () => { },
+    default: true,
+    showItem: false,
+  },
+  {
+    label: 'Clone Total',
+    icon: 'pi pi-clone',
+    command: () => {
+      doubleFactorTotal()
+    },
+    default: true,
+    disabled: computedShowCloneTotal
   },
 ])
 
@@ -191,6 +303,37 @@ const computedShowMenuItemCredit = computed(() => {
 const computedShowMenuItemOldCredit = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:OLD-CREDIT-CREATE'])))
 })
+function handleDialogClose() {
+    doubleFactorOpen.value = false;
+    entryCode.value = '';
+    randomCode.value = generateRandomCode();
+}
+function handleDialogCloseTotal() {
+ 
+  doubleFactorTotalOpen.value = false;
+  entryCode.value = '';
+  randomCode.value = generateRandomCode();
+}
+
+
+async function handleApplyClick() {
+
+    // Captura el invoice ID desde props
+    const invoiceId = selectedInvoice;
+    entryCode.value = '';
+    // Redirecciona a la nueva interfaz
+    navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&clonedInvoiceId=${selectedInvoice}`, { open: { target: '_blank' } });
+
+    console.log('Hola estoy en la función');
+   
+    // Cierra el diálogo
+    handleDialogClose();
+  
+}
+function handleTotalApplyClick() {
+  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}`, { open: { target: '_blank' } }),
+    handleDialogCloseTotal();
+}
 
 const createItems = ref([
   {
@@ -365,6 +508,19 @@ function clearForm() {
 function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
+function doubleFactor() {
+   // Limpiar el campo entryCode
+
+
+  doubleFactorOpen.value = true;
+  entryCode.value = '';
+  randomCode.value = generateRandomCode();
+}
+
+
+function doubleFactorTotal() {
+  doubleFactorTotalOpen.value = true
+}
 
 
 async function exportToPdf() {
@@ -436,7 +592,7 @@ async function getList() {
           invoiceNumber = iterator?.invoiceNumber
         }
         newListItems.push({
-          ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code, dueAmount: iterator?.dueAmount || '0', invoiceNumber: invoiceNumber.replace("OLD", "CRE"),
+          ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code, dueAmount: iterator?.dueAmount || 0, invoiceNumber: invoiceNumber.replace("OLD", "CRE"),
 
 
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
@@ -803,7 +959,7 @@ async function getClientList(query = '') {
 async function getStatusList(query = '') {
   try {
     statusList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_STATUS]
-    
+
     if (query) {
       statusList.value = statusList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
     }
@@ -981,20 +1137,86 @@ function toggleImport(event) {
   menu_import.value.toggle(event)
 }
 
-function setMenuOptions(statusId: string) {
-  invoiceContextMenuItems.value = [...invoiceAllContextMenuItems.value.filter((item: any) => item?.default)]
+function setMenuOptions() {
+  invoiceContextMenuItems.value = [...invoiceAllContextMenuItems.value.filter((item: any) => item?.default).map((item) => ({ ...item }))]
+}
+
+function findMenuItemByLabelSetShow(label: string, list: any[], showItem: boolean) {
+  let menuItem = list.find((item: any) => item.label === label);
+  if (menuItem) {
+    menuItem.showItem = showItem
+  }
 }
 
 function onRowRightClick(event: any) {
 
-  setMenuOptions(event.data.status)
-  console.log(event?.data);
+  selectedInvoice = event.data.id
+  console.log(event.data, 'hola')
+  setMenuOptions()
+  // console.log(event?.data);
 
-  if (event.data?.invoiceType !== InvoiceType.INVOICE) {
+  if (event.data?.invoiceType !== InvoiceType.INVOICE || ![InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)) {
     console.log('event');
     invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.label !== 'New Credit')]
   }
 
+  if (event.data?.invoiceType === InvoiceType.INVOICE) {
+    // Mostrar Clone solo si es de tipo Invoice TODO: falta aclarar la parte del check Show en el Manage Invoice Status
+    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status)) {
+      findMenuItemByLabelSetShow('Clone', invoiceContextMenuItems.value, true)
+    }
+
+    // Mostrar undo import solo para Processed y no sea manual (Solo para invoice)
+    // Codigo comentado hasta que se impplemente la importacion de Inssist, ya que otra condicion es que se muestre para las importadas desde Inssist
+    // No Borrar.
+    /*if (event?.data?.status === InvoiceStatus.PROCECSED && !event.data.isManual) {
+      findMenuItemByLabelSetShow('Undo Import', invoiceContextMenuItems.value, true)
+    }*/
+
+    // Mostrar Clone Complete solo para Reconciled,Sent y e iguales amounts. Debe estar en close operation el invoice date
+    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
+      && event?.data.dueAmount === event?.data.invoiceAmount && event.data.isInCloseOperation) {
+      findMenuItemByLabelSetShow('Clone Complete', invoiceContextMenuItems.value, true)
+    }
+  }
+
+  //Change Agency
+  if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status)
+    && event?.data.dueAmount === event?.data.invoiceAmount) {
+    if (event.data.status === InvoiceStatus.PROCECSED) {
+      if (event.data.isInCloseOperation) {
+        let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency')
+        changeAgencyItem.showItem = true
+      }
+    } else {
+      if (event?.data.hotel?.virtual) {
+        let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency')
+        changeAgencyItem.showItem = true
+      }
+    }
+  }
+
+  // Payments
+  if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
+    findMenuItemByLabelSetShow('Payments', invoiceContextMenuItems.value, true)
+  }
+
+  // Resend
+  if (event?.data?.status === InvoiceStatus.SENT) {
+    findMenuItemByLabelSetShow('Re-Send', invoiceContextMenuItems.value, true)
+  }
+
+  // From Invoice
+  if (event?.data?.status === InvoiceStatus.CANCELED && [InvoiceType.CREDIT, InvoiceType.OLD_CREDIT].includes(event.data?.invoiceType)) {
+    findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
+  }
+
+  // Adjustment
+  if (event?.data?.status === InvoiceStatus.PROCECSED) {
+    findMenuItemByLabelSetShow('Adjustment', invoiceContextMenuItems.value, true)
+  }
+
+  invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.showItem)]
   // Mostrar solo si es para estos estados
   attachmentInvoice.value = event.data
   invoiceContextMenu.value.show(event.originalEvent)
@@ -1107,19 +1329,20 @@ const legend = ref(
         </PopupNavigationMenu>
         <!-- <SplitButton class="ml-2" icon="pi pi-download" label="Import" :model="itemsMenuImport" /> -->
         <!---<Button class="ml-2" icon="pi pi-copy" label="Rec Inv" />.-->
-        <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-RECONCILE']))" v-tooltip.left="'Reconcile Invoice'" class="ml-2" label="Rec Inv" icon="pi pi-copy" severity="primary"
-          aria-haspopup="true" aria-controls="overlay_menu_reconcile" @click="toggleReconcile"/>
+        <Button
+          v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-RECONCILE']))"
+          v-tooltip.left="'Reconcile Invoice'" class="ml-2" label="Rec Inv" icon="pi pi-copy" severity="primary"
+          aria-haspopup="true" aria-controls="overlay_menu_reconcile" @click="toggleReconcile" />
 
         <Menu id="overlay_menu_reconcile" ref="menu_reconcile" :model="createReconcile" :popup="true" />
 
-<PopupNavigationMenu v-if="false" :items="createReconcile" icon="pi pi-copy" label="Rec Inv">
-  <template #item="props">
-    <button 
-      style="border: none; width: 100%;">
-      {{ props.props.label }}
-    </button>
-  </template>
-</PopupNavigationMenu>
+        <PopupNavigationMenu v-if="false" :items="createReconcile" icon="pi pi-copy" label="Rec Inv">
+          <template #item="props">
+            <button style="border: none; width: 100%;">
+              {{ props.props.label }}
+            </button>
+          </template>
+        </PopupNavigationMenu>
 
 
         <Button class="ml-2" icon="pi pi-envelope" label="Send" />
@@ -1445,6 +1668,84 @@ const legend = ref(
       header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="attachmentInvoice?.id"
       :selected-invoice-obj="attachmentInvoice" />
   </div>
+  <div v-if="doubleFactorOpen">
+    <Dialog v-model:visible="doubleFactorOpen" modal class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border" :style="{ width: '25%' }" :pt="{
+        root: {
+          class: 'custom-dialog',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+        mask: {
+          style: 'backdrop-filter: blur(5px)',
+        },
+      }"  @hide="doubleFactorOpen = false">
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Do you want to clone this invoice ?
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-2 pb-0">
+          <div class="flex align-items-center justify-content-between mt-3 mb-2">
+            <span class="font-bold text-2xl ml-5">{{ randomCode }}</span>
+            <InputText v-model="entryCode" type="text" placeholder="Enter code" class="w-15rem h-3rem mr-2 ml-2" />
+          </div>
+          <div class="flex justify-content-end mb-0">
+            <Button :disabled="entryCode !== randomCode" class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
+              icon="pi pi-save" @click="handleApplyClick" />
+            <Button class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2" icon="pi pi-times ml-1 mr-1 "
+            @click="doubleFactorOpen = false"  />
+
+          </div>
+        </div>
+      </template>
+
+    </Dialog>
+
+  </div>
+  <div v-if="doubleFactorTotalOpen">
+    <Dialog v-model:visible="doubleFactorTotalOpen" :id-item="idItem" modal class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border" :style="{ width: '25%' }" :pt="{
+        root: {
+          class: 'custom-dialog',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+        mask: {
+          style: 'backdrop-filter: blur(5px)',
+        },
+      }" @hide="doubleFactorOpen = false">
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Do you want to clone this invoice?
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-2 pb-2">
+          <div class="flex align-items-center justify-content-between mt-4 mb-0">
+            <span class="font-bold text-2xl ml-5">{{ randomCode }}</span>
+            <InputText v-model="entryCode" type="text" placeholder="Enter code" class="w-15rem h-3rem mr-2 ml-2" />
+          </div>
+          <div class="flex justify-content-end mb-0">
+            <Button :disabled="entryCode !== randomCode" class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
+              icon="pi pi-save" @click="handleTotalApplyClick" />
+            <Button label="Cancel" class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2"
+              icon="pi pi-times ml-1 mr-1 " @click="handleDialogClose" />
+
+          </div>
+        </div>
+      </template>
+
+    </Dialog>
+
+  </div>
   <div v-if="attachmentHistoryDialogOpen">
     <InvoiceHistoryDialog :selected-attachment="''" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
       header="Invoice Status History" :open-dialog="attachmentHistoryDialogOpen"
@@ -1465,3 +1766,16 @@ const legend = ref(
       :open-dialog="exportAttachmentsDialogOpen" :payload="payload" :invoice="attachmentInvoice" />
   </div>
 </template>
+
+
+<style scoped lang="sass">
+.p-button-gray
+  background-color: #f5f5f5 !important
+  color: #666 !important
+  border-color: #ddd !important
+
+  &:hover
+    background-color: #e6e6e6 !important
+    border-color: #ccc !important
+    color: #333 !important
+</style>

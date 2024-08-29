@@ -119,7 +119,7 @@ const dialogVisible = ref(props.openDialog)
             v-tooltip.top="'Save'" label="Save" class="w-6rem mx-2 sticky" icon="pi pi-save"
             @click="props.item.submitForm($event)"
           />
-          <Button v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class="w-6rem mx-1" icon="pi pi-times" @click="closeDialog" />
+          <Button v-tooltip.top="'Cancel'" label="Save" severity="secondary" class="w-6rem mx-1" icon="pi pi-times" @click="closeDialog" />
         </template>
       </EditFormV2>
     </div>

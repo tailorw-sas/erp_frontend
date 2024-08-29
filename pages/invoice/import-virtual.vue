@@ -49,7 +49,7 @@ const columns: IColumn[] = [
   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
   { field: 'invoiceAmount', header: 'Amount', type: 'text' },
-  { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', showFilter: false },
+  { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', frozen: true, showFilter: false },
 ]
 
 const columnsExpandable: IColumn[] = [
@@ -149,6 +149,7 @@ async function onChangeFile(event: any) {
     inputFile.value = event.target.files[0]
     invoiceFile.value = inputFile.value.name
     uploadComplete.value = false
+    event.target.value = ''
   }
 }
 
@@ -290,7 +291,7 @@ onMounted(async () => {
                       </span>
                     </div>
                     <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                    <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile">
+                    <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile($event)">
                   </div>
                 </div>
               </div>

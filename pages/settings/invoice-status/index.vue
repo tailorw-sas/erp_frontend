@@ -85,6 +85,12 @@ const fields: Array<FieldDefinitionType> = [
     field: 'processStatus',
     header: 'Process Status',
     dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'showClone',
+    header: 'Show Clone',
+    dataType: 'check',
     class: 'field col-12 required mb-3',
   },
   {
@@ -112,6 +118,7 @@ const item = ref<GenericObject>({
   enabledToApply: false,
   enabledToPolicy: false,
   processStatus: false,
+  showClone: false,
   navigate: [],
 })
 
@@ -125,6 +132,7 @@ const itemTemp = ref<GenericObject>({
   enabledToApply: false,
   enabledToPolicy: false,
   processStatus: false,
+  showClone: false,
   navigate: [],
 })
 
@@ -325,6 +333,7 @@ async function getItemById(id: string) {
         item.value.enabledToApply = response.enabledToApply
         item.value.enabledToPolicy = response.enabledToPolicy
         item.value.processStatus = response.processStatus
+        item.value.showClone = response.showClone
         item.value.navigate = response.navigate.map((nav: any) => {
           let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
           if (!enumStatus) {

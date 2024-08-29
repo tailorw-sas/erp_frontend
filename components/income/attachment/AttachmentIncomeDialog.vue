@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
+import { v4 } from 'uuid'
 import { ref, watch } from 'vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
@@ -8,6 +9,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import AttachmentIncomeHistoryDialog from '~/components/income/attachment/AttachmentIncomeHistoryDialog.vue'
+import { updateFieldProperty } from '~/utils/helpers'
 
 const props = defineProps({
 
@@ -49,6 +51,8 @@ const props = defineProps({
     required: true
   }
 })
+
+const emit = defineEmits(['update:listItems', 'deleteListItems'])
 
 const { data: userData } = useAuth()
 
@@ -123,6 +127,7 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
+    disabled: false
   },
   {
     field: 'type',
@@ -150,7 +155,6 @@ const Fields: Array<FieldDefinitionType> = [
     header: 'Filename',
     dataType: 'text',
     class: 'field col-12 required',
-    disabled: true,
     headerClass: 'mb-1',
   },
   {
@@ -344,12 +348,20 @@ async function createItem(item: { [key: string]: any }) {
     const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
     payload.invoice = props.selectedInvoice
     payload.file = file
-    payload.type = item.type?.id
-    payload.paymentResourceType = item.resourceType?.id
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
     delete payload.resourceType
-    await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+    if (props.isCreationDialog) {
+      payload.id = v4()
+      payload.type = item.type
+      payload.paymentResourceType = item.resourceType
+      emit('update:listItems', payload)
+    }
+    else {
+      payload.type = item.type?.id
+      payload.paymentResourceType = item.resourceType?.id
+      await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+    }
   }
 }
 
@@ -369,9 +381,14 @@ async function updateItem(item: { [key: string]: any }) {
 async function deleteItem(id: string) {
   try {
     loadingSaveAll.value = true
-    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
+    if (props.isCreationDialog) {
+      emit('deleteListItems', id)
+    }
+    else {
+      await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+    }
     clearForm()
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
   }
   catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
@@ -406,11 +423,11 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      if (props.isCreationDialog) {
+      /* if (props.isCreationDialog) {
         await props.addItem(item)
         clearForm()
         return loadingSaveAll.value = false
-      }
+      } */
       await createItem(item)
     }
     catch (error: any) {
@@ -421,7 +438,9 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    if (!props.isCreationDialog) {
+      getList()
+    }
   }
 }
 
@@ -436,7 +455,9 @@ function requireConfirmationToDelete(event: any) {
     acceptLabel: 'Accept',
     accept: async () => {
       await deleteItem(idItem.value)
-      getList()
+      if (!props.isCreationDialog) {
+        getList()
+      }
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
@@ -444,25 +465,38 @@ function requireConfirmationToDelete(event: any) {
   })
 }
 
-async function getItemById(id: string) {
-  if (id) {
+async function getItemById(id: string | null | undefined) {
+  if (id === undefined || id === null) {
+    return
+  }
+  if (id !== '') {
     idItem.value = id
     loadingSaveAll.value = true
     try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-
-      if (response) {
-        item.value.id = response.id
-        item.value.type = { ...response.type, fullName: `${response?.type?.code} - ${response?.type?.name}` }
-        item.value.filename = response.filename
-        item.value.file = response.file
-        item.value.remark = response.remark
-        item.value.invoice = response.invoice
-        item.value.resource = response.invoice.invoiceId
-        item.value.resourceType = response.paymenResourceType
-        selectedAttachment.value = response.attachmentId
+      if (props.isCreationDialog && props.listItems) {
+        const data = props.listItems?.find((e: any) => e.id === id) as any
+        item.value.id = data.id
+        item.value.type = { ...data.type, fullName: `${data?.type?.code} - ${data?.type?.name}` }
+        item.value.filename = data.filename
+        item.value.file = data.file
+        item.value.remark = data.remark
+        item.value.resourceType = data.paymentResourceType
       }
+      else {
+        const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
 
+        if (response) {
+          item.value.id = response.id
+          item.value.type = { ...response.type, fullName: `${response?.type?.code} - ${response?.type?.name}` }
+          item.value.filename = response.filename
+          item.value.file = response.file
+          item.value.remark = response.remark
+          item.value.invoice = response.invoice
+          item.value.resource = response.invoice.invoiceId
+          item.value.resourceType = response.paymenResourceType
+          selectedAttachment.value = response.attachmentId
+        }
+      }
       formReload.value += 1
     }
     catch (error) {
@@ -528,6 +562,24 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 
+watch(() => idItem.value, async (newValue) => {
+  if (newValue === '') {
+    updateFieldProperty(Fields, 'filename', 'disabled', false)
+    updateFieldProperty(Fields, 'remark', 'disabled', false)
+  }
+  else {
+    updateFieldProperty(Fields, 'filename', 'disabled', true)
+    updateFieldProperty(Fields, 'remark', 'disabled', true)
+  }
+})
+
+watch(() => props.listItems, async (newValue) => {
+  // console.log(newValue)
+  if (props.isCreationDialog && props.listItems) {
+    Pagination.value.totalElements = newValue?.length ?? 0
+  }
+})
+
 onMounted(() => {
   const invoice = props.selectedInvoice || props.selectedInvoiceObj?.id
   if (invoice) {
@@ -540,6 +592,9 @@ onMounted(() => {
   }
   if (!props.isCreationDialog && invoice) {
     getList()
+  }
+  if (props.isCreationDialog) {
+    Pagination.value.totalElements = props.listItems?.length ?? 0
   }
 })
 </script>
@@ -593,7 +648,7 @@ onMounted(() => {
       <div class="col-12 order-2 md:order-0 md:col-3 pt-5">
         <div>
           <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-            {{ idItem ? "Edit" : "Add" }}
+            {{ idItem !== '' ? "Edit" : "Add" }}
           </div>
           <div class="card">
             <EditFormV2
@@ -607,6 +662,7 @@ onMounted(() => {
                   id="autocomplete"
                   field="name"
                   item-value="id"
+                  :disabled="idItem !== ''"
                   :model="data.resourceType"
                   :suggestions="resourceTypeList"
                   @change="($event) => {
@@ -621,7 +677,7 @@ onMounted(() => {
               </template>
               <template #field-type="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll" id="autocomplete" field="fullName"
+                  v-if="!loadingSaveAll" id="autocomplete" field="fullName" :disabled="idItem !== ''"
                   item-value="id" :model="data.type" :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
                     typeError = false
@@ -635,7 +691,7 @@ onMounted(() => {
               </template>
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
-                  accept="application/pdf"
+                  accept="application/pdf" :disabled="idItem !== ''"
                   :max-file-size="1000000" :multiple="false" auto custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
                     onUpdate('file', file)
@@ -675,17 +731,17 @@ onMounted(() => {
                   </template>
                 </FileUpload>
               </template>
-              <template #form-footer="props">
+              <template #form-footer="footProps">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save"
-                  :disabled="idItem !== '' && idItem !== null" @click="saveItem(props.item.fieldValues)"
+                  :disabled="idItem !== ''" @click="saveItem(footProps.item.fieldValues)"
                 />
                 <Button
                   v-tooltip.top="'View File'" class="w-3rem ml-1 sticky" icon="pi pi-eye"
-                  :disabled="!idItem" @click="downloadFile"
+                  :disabled="idItem === ''" @click="downloadFile"
                 />
                 <Button
-                  v-if="true"
+                  :disabled="props.isCreationDialog"
                   v-tooltip.top="'Show History'" class="w-3rem ml-1 sticky" icon="pi pi-book"
                   @click="() => attachmentHistoryDialogOpen = true"
                 />
@@ -696,7 +752,7 @@ onMounted(() => {
                     clearForm()
                   }"
                 />
-                <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" :disabled="!idItem" @click="requireConfirmationToDelete" />
+                <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" :disabled="idItem === ''" @click="requireConfirmationToDelete" />
                 <Button
                   v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="() => {
                     clearForm()

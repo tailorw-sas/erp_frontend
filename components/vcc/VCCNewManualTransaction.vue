@@ -357,10 +357,15 @@ async function getAgencyList(query: string) {
   try {
     const payload = {
       filter: [{
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -399,10 +404,15 @@ async function getLanguageList(query: string, isDefault: boolean = false) {
             value: true,
             logicalOperation: 'AND'
           }, {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          }, {
             key: 'name',
             operator: 'LIKE',
             value: query,
-            logicalOperation: 'AND'
+            logicalOperation: 'OR'
           }, {
             key: 'status',
             operator: 'EQUALS',
@@ -414,7 +424,13 @@ async function getLanguageList(query: string, isDefault: boolean = false) {
               key: 'name',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
             },
             {
               key: 'status',
