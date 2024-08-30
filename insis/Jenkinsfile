@@ -107,7 +107,7 @@ pipeline {
         success {
             script {
                 def notificator = new NotificadorEmail(this)
-                notificator.enviarEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.JOB_NAME, env.BRANCH_NAME, env.ESTADO_OK)
+                notificator.sendEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.JOB_NAME, env.BRANCH_NAME, env.ESTADO_OK)
             }
         }
         failure {
