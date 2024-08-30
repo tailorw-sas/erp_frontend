@@ -10,6 +10,7 @@ pipeline {
     }
     
     environment {
+        SISTEMA = 'ERP'
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-payments:version'
         SRC = 'payment'
@@ -105,13 +106,13 @@ pipeline {
         success {
             script {
                 def notificator = new NotificadorEmail(this)
-                notificator.sendEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.BRANCH_NAME, env.ESTADO_OK)
+                notificator.sendEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK)
             }
         }
         failure {
             script {
                 def notificator = new NotificadorEmail(this)
-                notificator.sendEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.BRANCH_NAME, env.ESTADO_ERROR)
+                notificator.sendEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR)
             }
         }
     }
