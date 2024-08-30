@@ -67,7 +67,7 @@ pipeline {
 
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
-                        env.EMAIL_LIST = env.EMAIL_LIST_DEV
+                        env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
