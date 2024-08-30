@@ -24,6 +24,8 @@ pipeline {
         URL_QA = credentials("URL-K3S-qa")
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
         PR_ID = "${env.CHANGE_ID}"
+        ESTADO_OK = 'OK'
+        ESTADO_ERROR = 'ERROR'
     }
     
     triggers {
@@ -105,7 +107,7 @@ pipeline {
         success {
             script {
                 def notificator = new NotificadorEmail(this)
-                notificator.enviarEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.JOB_NAME, env.BRANCH_NAME, 'OK')
+                notificator.enviarEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.JOB_NAME, env.BRANCH_NAME, env.ESTADO_OK)
             }
         }
         failure {
