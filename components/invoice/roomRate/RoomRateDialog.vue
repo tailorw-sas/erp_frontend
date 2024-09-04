@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import dayjs from 'dayjs'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 
 const props = defineProps({
   fields: {
@@ -58,21 +58,18 @@ const props = defineProps({
   }
 })
 const dialogVisible = ref(props.openDialog)
-
-
-
 </script>
 
 <template>
   <Dialog
     v-model:visible="dialogVisible" modal :header="header" :class="props.class || 'p-4 h-fit'"
     :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
-    @hide="closeDialog" style="width: 600px;"
-  > 
-    <div class="w-full h-full overflow-hidden p-2">
+    style="width: 600px;" @hide="closeDialog"
+  >
+    <div class="w-full h-full overflow-hidden p-2 mt-3">
       <EditFormV2
         :key="formReload" :fields="fields" :item="item" :show-actions="true"
-        :loading-save="loadingSaveAll" :container-class="containerClass" 
+        :loading-save="loadingSaveAll" :container-class="containerClass"
         @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
       >
         <template #field-invoiceAmount="{ onUpdate, item: data }">
@@ -102,15 +99,15 @@ const dialogVisible = ref(props.openDialog)
             date-format="yy-mm-dd"
             :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
             @update:model-value="($event) => {
-              
-              onUpdate('checkOut',   dayjs($event).startOf('day').toDate())
+
+              onUpdate('checkOut', dayjs($event).startOf('day').toDate())
             }"
           />
         </template>
         <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
-            show-clear 
+            show-clear
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
         </template>

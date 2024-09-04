@@ -793,16 +793,19 @@ async function deleteItem(id: string) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
+  if (loadingSaveAll.value === true) { return } // Esto es para que no se ejecute dos veces el save
   loadingSaveAll.value = true
   let successOperation = true
   if (idItem.value) {
     try {
       if (externalProps.isCreateOrEditPayment === 'create') {
         item.id = idItem.value
-        updateItemLocal(item)
+        await updateItemLocal(item)
+        loadingSaveAll.value = false
       }
       else {
         await updateItem(item)
+        loadingSaveAll.value = false
         toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
       }
     }
@@ -815,7 +818,8 @@ async function saveItem(item: { [key: string]: any }) {
     try {
       if (externalProps.isCreateOrEditPayment === 'create') {
         try {
-          createItemLocal(item)
+          await createItemLocal(item)
+          loadingSaveAll.value = false
         }
         catch (error) {
           successOperation = false
@@ -824,6 +828,7 @@ async function saveItem(item: { [key: string]: any }) {
       }
       else {
         await createItem(item)
+        loadingSaveAll.value = false
         toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
       }
     }
@@ -832,7 +837,6 @@ async function saveItem(item: { [key: string]: any }) {
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
-  loadingSaveAll.value = false
   if (successOperation && !haveError.value) {
     clearForm()
     getList()
@@ -1359,6 +1363,7 @@ onMounted(async () => {
                   <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT-ATTACHMENT'] : ['PAYMENT-MANAGEMENT:CREATE-ATTACHMENT']">
                     <Button
                       v-tooltip.top="'Save'"
+                      :loading="loadingSaveAll"
                       :disabled="idItem !== '' && idItem !== null" class="w-3rem sticky" icon="pi pi-save"
                       @click="props.item.submitForm($event)"
                     />

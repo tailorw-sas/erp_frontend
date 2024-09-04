@@ -53,6 +53,12 @@ const hasBeenEdited = ref(0)
 const hasBeenCreated = ref(0)
 const actionOfModal = ref<'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined>(undefined)
 
+const isApplyPaymentFromTheForm = ref(false)
+const payloadToApplyPayment = ref<GenericObject> ({
+  applyPayment: false,
+  booking: ''
+})
+
 interface SubTotals {
   depositAmount: number
 }
@@ -66,6 +72,7 @@ const paymentDetailsList = ref<any[]>([])
 const contextMenu = ref()
 const objItemSelectedForRightClick = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
+const objItemSelectedForRightClickNavigateToInvoice = ref({} as GenericObject)
 const allMenuListItems = ref([
   {
     id: 'applayDeposit',
@@ -80,6 +87,14 @@ const allMenuListItems = ref([
     label: 'Apply Payment',
     icon: 'pi pi-cog',
     command: ($event: any) => openModalApplyPayment($event),
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'navigateToInvoice',
+    label: 'Navigate to Invoice',
+    icon: 'pi pi-cog',
+    command: ($event: any) => navigateToInvoice($event),
     disabled: true,
     visible: true,
   },
@@ -113,8 +128,8 @@ const applyPaymentPayload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'createdAt',
-  sortType: ENUM_SHORT_TYPE.DESC
+  sortBy: 'bookingId',
+  sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
   page: 0,
@@ -259,7 +274,7 @@ const columns: IColumn[] = [
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
-  { field: 'reservationNumber', header: 'Reservation', tooltip: 'Reservation', width: 'auto', type: 'text' },
+  { field: 'reservationNumber', header: 'Reservation No', tooltip: 'Reservation', width: 'auto', type: 'text' },
   { field: 'couponNumber', header: 'Coupon No', tooltip: 'Coupon No', width: 'auto', type: 'text' },
   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
@@ -781,6 +796,13 @@ function goToForm(item: string) {
   navigateTo({ path: '/payment/form', query: { id: item } })
 }
 
+function navigateToInvoice($event: any) {
+  if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
+    const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
+    window.open(url, '_blank')
+  }
+}
+
 function transformObjects(inputArray: FileObject[]) {
   return inputArray.map(item => ({
     status: item.resourceType.status,
@@ -1075,9 +1097,9 @@ async function getListPaymentDetail() {
         iterator.children = iterator.manageBooking?.children?.toString()
         iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
         iterator.fullName = iterator.manageBooking?.fullName
-        iterator.reservationNumber = iterator.manageBooking?.hotelBookingNumber?.toString()
+        iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
         iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
-        iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNo?.toString()
+        iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
       }
 
       // Verificar si el ID ya existe en la lista
@@ -1111,23 +1133,25 @@ function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolea
     return false // Si no se encuentra el objeto principal, devolver false
   }
 
-  // Verificar si el objeto principal o alguno de sus hijos tiene una transacción de tipo deposit
   const hasDeposit = (item: TransactionItem): boolean => {
-    if (item.transactionType.deposit) {
-      return true
-    }
+    // Verificar si es de tipo deposit
+    // Verificar que no se le haya aplicado deposito anteriormente
 
-    // Verificar en los hijos del objeto
-    if (item.childrens && item.childrens.length > 0) {
-      return item.childrens.some(child => hasDeposit(child))
-    }
+    // if (item.transactionType.deposit) {
+    //   return true
+    // }
 
-    return false
+    // // Verificar en los hijos del objeto
+    // if (item.children && item.children.length > 0) {
+    //   return item.children.some(child => hasDeposit(child))
+    // }
+
+    return item.transactionType.deposit && item.hasApplyDeposit === false
   }
   let amount = Number.parseFloat(mainItem.amount)
   amount = Number.isNaN(amount) ? 0 : amount
   amount = Math.abs(amount)
-  return hasDeposit(mainItem) && Math.abs(amount) > 0.01 && (mainItem?.childrens?.length === 0 || mainItem?.childrens === undefined || mainItem?.childrens === null)
+  return hasDeposit(mainItem) && Math.abs(amount) > 0.01 && (mainItem?.children?.length === 0 || mainItem?.children === undefined || mainItem?.children === null)
 }
 
 function hasDepositSummaryTransaction(items: TransactionItem[]): boolean {
@@ -1350,7 +1374,13 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveAndReload(item: { [key: string]: any }) {
+  item.applyPayment = payloadToApplyPayment.value.applyPayment || false
+  item.booking = payloadToApplyPayment.value.booking || ''
   try {
+    // if (payloadToApplyPayment.value.applyPayment) {
+    //   item.applyPayment = true
+    //   item.booking = payloadToApplyPayment.value.booking
+    // }
     if (actionOfModal.value === 'apply-deposit') {
       // item.paymentDetail = item.id
 
@@ -1363,6 +1393,10 @@ async function saveAndReload(item: { [key: string]: any }) {
       await updatePaymentDetails(item)
     }
     else {
+      // if (payloadToApplyPayment.value.applyPayment) {
+      //   item.applyPayment = true
+      //   item.booking = payloadToApplyPayment.value.booking
+      // }
       await createPaymentDetails(item)
     }
     itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
@@ -1639,6 +1673,8 @@ function onCloseDialog($event: any) {
   if ($event === false) {
     isSplitAction.value = false
     actionOfModal.value = 'new-detail'
+    payloadToApplyPayment.value.applyPayment = false
+    payloadToApplyPayment.value.booking = ''
   }
   itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
   dialogPaymentDetailFormReload.value += 1
@@ -1752,7 +1788,7 @@ async function historyGetList() {
   }
 }
 
-async function applyPaymentGetList() {
+async function applyPaymentGetList(amountComingOfForm: any = null) {
   if (applyPaymentOptions.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -1761,9 +1797,17 @@ async function applyPaymentGetList() {
     applyPaymentOptions.value.loading = true
     applyPaymentList.value = []
     const newListItems = []
+
     const validNumber = detailItemForApplyPayment.value?.amount
       ? detailItemForApplyPayment.value.amount.replace(/,/g, '')
-      : 0
+      : amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : 0
+
+    if (amountComingOfForm) {
+      isApplyPaymentFromTheForm.value = true
+    }
+    else {
+      isApplyPaymentFromTheForm.value = false
+    }
 
     // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
     const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
@@ -1925,7 +1969,7 @@ async function openDialogStatusHistory() {
 
 async function openModalApplyPayment($event: any) {
   openDialogApplyPayment.value = true
-  await applyPaymentGetList()
+  await applyPaymentGetList($event.amount)
 }
 
 async function openDialogImportExcel(idItem: string) {
@@ -2028,11 +2072,6 @@ async function deleteItem(id: string) {
 
 async function paymentPrint(event: any) {
   try {
-    // PAYMENT_DETAILS,
-    //   PAYMENT_SUPPORT,
-    //   INVOICE_RELATED,
-    //   INVOICE_RELATED_SUPPORT,
-    //   ALL_SUPPORT
     loadingPrintDetail.value = true
     let nameOfPdf = ''
     const payloadTemp = {
@@ -2158,7 +2197,7 @@ function onRowContextMenu(event: any) {
 
   // Validaciones para el applay payment
   if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']))) {
-    if (event && event.data && event.data.transactionType && (event.data.transactionType.cash === true || event.data.transactionType.applyDeposit === true)) {
+    if (event && event.data && event.data.transactionType && (event.data.transactionType.cash === true || event.data.transactionType.applyDeposit === true) && event.data.applyPayment === false) {
       objItemSelectedForRightClickApplyPayment.value = event.data
       const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
       if (menuItemApplayPayment) {
@@ -2174,6 +2213,27 @@ function onRowContextMenu(event: any) {
         menuItemApplayPayment.visible = false
       }
     }
+
+    // Validaciones para el navigateToInvoice
+    if (event && event.data && event.data.applyPayment === false) {
+      objItemSelectedForRightClickNavigateToInvoice.value = {}
+      const menuItemNavigateToInvoice = allMenuListItems.value.find(item => item.id === 'navigateToInvoice')
+      if (menuItemNavigateToInvoice) {
+        menuItemNavigateToInvoice.disabled = true
+        menuItemNavigateToInvoice.visible = false
+      }
+    }
+    else {
+      objItemSelectedForRightClickNavigateToInvoice.value = event.data
+      if (event && event.data && event.data.applyPayment === true) {
+        // objItemSelectedForRightClickApplyPayment.value = event.data
+        const menuItemNavigateToInvoice = allMenuListItems.value.find(item => item.id === 'navigateToInvoice')
+        if (menuItemNavigateToInvoice) {
+          menuItemNavigateToInvoice.disabled = false
+          menuItemNavigateToInvoice.visible = true
+        }
+      }
+    }
   }
 
   // Mostrar menu contextual si hay items visibles
@@ -2187,26 +2247,39 @@ function onRowContextMenu(event: any) {
 }
 
 async function onRowDoubleClickInDataTableApplyPayment(event: any) {
-  try {
-    const payloadToApplyPayment: GenericObject = {
-      paymentDetail: idPaymentDetail.value || '',
-      booking: event.id
-    }
+  if (isApplyPaymentFromTheForm.value) {
+    payloadToApplyPayment.value.booking = event?.id
+    payloadToApplyPayment.value.applyPayment = true
+    openDialogApplyPayment.value = false
+    toast.add({ severity: 'success', summary: 'Successful', detail: 'The selected payment will be applied once the corresponding detail is created.', life: 3000 })
+  }
+  else {
+    try {
+      const payloadToApplyPayment: GenericObject = {
+        paymentDetail: idPaymentDetail.value || '',
+        booking: event.id
+      }
 
-    const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
+      const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
 
-    if (response) {
-      openDialogApplyPayment.value = false
-      toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
-      if (route?.query?.id) {
-        const id = route.query.id.toString()
-        await getItemById(id)
+      if (response) {
+        openDialogApplyPayment.value = false
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
+        if (route?.query?.id) {
+          const id = route.query.id.toString()
+          await getItemById(id)
+        }
       }
     }
+    catch (error) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
+    }
   }
-  catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
-  }
+}
+
+function closeModalApplyPayment() {
+  detailItemForApplyPayment.value = null
+  openDialogApplyPayment.value = false
 }
 
 watch(() => hasBeenEdited.value, async (newValue) => {
@@ -2673,6 +2746,7 @@ onMounted(async () => {
         :selected-payment="item"
         :is-split-action="isSplitAction"
         :action="actionOfModal"
+        @apply-payment="openModalApplyPayment($event)"
         @update:visible="onCloseDialog($event)"
         @save="saveAndReload($event)"
       />
@@ -2758,7 +2832,7 @@ onMounted(async () => {
         //   style: 'backdrop-filter: blur(5px)',
         // },
       }"
-      @hide="openDialogApplyPayment = false"
+      @hide="closeModalApplyPayment()"
     >
       <template #header>
         <div class="flex justify-content-between">
