@@ -316,9 +316,7 @@ function requireConfirmationToSave(item: any) {
       accept: () => {
         saveItem(item)
       },
-      reject: () => {
-        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-      }
+      reject: () => {}
     })
   }
 }
