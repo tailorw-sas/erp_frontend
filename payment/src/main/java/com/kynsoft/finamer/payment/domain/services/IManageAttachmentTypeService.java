@@ -17,6 +17,8 @@ public interface IManageAttachmentTypeService {
 
     AttachmentTypeDto findById(UUID id);
 
+    AttachmentTypeDto findByCode(String code);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);

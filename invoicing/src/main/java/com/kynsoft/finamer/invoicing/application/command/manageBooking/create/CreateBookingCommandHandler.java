@@ -116,7 +116,7 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                                 nightTypeDto,
                                 roomTypeDto,
                                 roomCategoryDto,
-                                null, null);
+                                null, null, null);
                 bookingService.create(newBooking);
 
                 try {

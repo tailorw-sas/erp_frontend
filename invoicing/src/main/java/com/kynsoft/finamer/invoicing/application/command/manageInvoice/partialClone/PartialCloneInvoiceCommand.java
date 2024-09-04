@@ -27,6 +27,7 @@ public class PartialCloneInvoiceCommand implements ICommand {
         private List<UUID> roomRates;
         private List<UUID> attachments;
         private String employee;
+        private UUID cloned;
 
         public PartialCloneInvoiceCommand(UUID invoice, List<PartialCloneInvoiceAdjustmentRelation> roomRateAdjustments,
                         List<CreateAttachmentCommand> attachmentCommands, String employee) {
@@ -44,6 +45,6 @@ public class PartialCloneInvoiceCommand implements ICommand {
 
         @Override
         public ICommandMessage getMessage() {
-                return new PartialCloneInvoiceMessage(invoice);
+                return new PartialCloneInvoiceMessage(invoice, cloned);
         }
 }

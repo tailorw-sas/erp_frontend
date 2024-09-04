@@ -24,5 +24,6 @@ public class ManageInvoiceKafka {
     private String invoiceType;
     private Double invoiceAmount;
     private List<ManageBookingKafka> bookings;
+    private List<AttachmentKafka> attachments;
     private Boolean hasAttachment;
 }

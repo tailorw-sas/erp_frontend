@@ -19,6 +19,8 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentImportDetailService;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.createAttachment.CreateAttachmentEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.process.PaymentImportProcessEvent;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportProcessStatusRepository;
+import com.kynsoft.finamer.payment.infrastructure.services.helpers.PaymentImportAntiIncomeHelperServiceImpl;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -69,39 +71,21 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
                     new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
                             request.getImportProcessId(), true, e.getMessage())));
             paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
-            e.printStackTrace();
+            log.error(e.getMessage());
             return;
         }
-        //Este paso solo funciona para los anti income
-        //Para los otros tipos de importacion paymentsId siempre va a ser null.
-        //TODO mover esto para donde pertenece
-        UUID paymentsId = paymentImportHelperService.getPaymentIdStoreFromCache(request.getImportProcessId());
-        //Primero mando a crear el attachment antes de crear los details.
-        if (Objects.nonNull(paymentsId) && Objects.nonNull(request.getAttachment())) {
-            try {
-                CreateAttachmentEvent createAttachmentEvent = new CreateAttachmentEvent(this, paymentsId, request.getAttachment(),
-                        UUID.fromString(request.getEmployeeId()),
-                        request.getAttachmentFileName(),
-                        String.valueOf(request.getFile().length));
-                paymentEventPublisher.publishEvent(createAttachmentEvent);
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
-                paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
-                        new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
-                                request.getImportProcessId(), true, "The attachment could not be created")));
-                return;
-            }
-        }
-
         try {
-            //Si ocurre algun error al crear los attacment esta parte no se ejecuta.
+            if (EImportPaymentType.ANTI.equals(request.getImportPaymentType())){
+                ((PaymentImportAntiIncomeHelperServiceImpl) paymentImportHelperService).createAttachment(request);
+            }
             paymentImportHelperService.readPaymentCacheAndSave(request);
         }catch (Exception e){
             paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
                     new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
                             request.getImportProcessId(), true, "Excel couldn't be imported")));
+            log.error(e.getMessage());
+            return;
         }
         paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
         paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,

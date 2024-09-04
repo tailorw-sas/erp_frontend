@@ -299,7 +299,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     PASSWORD_MISMATCH(1078, Series.DOMAIN_ERROR, "Password does not match."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_INCOME_DEFAULT(1079, Series.DOMAIN_ERROR,"Another item already exists with income default."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_APPLY_DEPOSIT_(1080, Series.DOMAIN_ERROR,"Another item already exists with default."),
-    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_DEPOSIT_(1081, Series.DOMAIN_ERROR,"Another item already exists with default.");
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_DEPOSIT_(1081, Series.DOMAIN_ERROR,"Another item already exists with default."),
+    CREDITS_CANNOT_EXCEED_INVOICE_AMOUNT(1082, Series.DOMAIN_ERROR,"The amount of credits cannot exceed the invoice amount.");
 
     private static final DomainErrorMessage[] VALUES;
 

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,4 +27,6 @@ public interface AttachmentTypeReadDataJPARepository extends JpaRepository<Attac
 
     @Query("SELECT COUNT(b) FROM AttachmentType b WHERE b.antiToIncomeImport = true AND b.id <> :id")
     Long countByAntiToIncomeImportAndNotId(@Param("id") UUID id);
+
+    Optional<AttachmentType> findByCode(String code);
 }

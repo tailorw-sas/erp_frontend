@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.kynsof.share.core.domain.ServiceBaseURL;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBulk.CreateBulkInvoiceCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
@@ -13,8 +10,6 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.Booking
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportRowErrorRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
-import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
-import org.apache.commons.math3.stat.descriptive.summary.Sum;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,7 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 @Service
 public class BookingImportHelperServiceImpl implements IBookingImportHelperService {
@@ -45,14 +39,18 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
-    public BookingImportHelperServiceImpl(IManageAgencyService agencyService, 
+    private final IParameterizationService parameterizationService;
+
+    private final IManageInvoiceStatusService manageInvoiceStatusService;
+
+    public BookingImportHelperServiceImpl(IManageAgencyService agencyService,
                                           IManageHotelService manageHotelService,
-                                          IManageInvoiceService invoiceService, 
+                                          IManageInvoiceService invoiceService,
                                           IManageRatePlanService ratePlanService,
-                                          IManageRoomTypeService roomTypeService, 
-                                          BookingImportCacheRedisRepository repository, 
+                                          IManageRoomTypeService roomTypeService,
+                                          BookingImportCacheRedisRepository repository,
                                           BookingImportRowErrorRedisRepository errorRedisRepository,
-                                          ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
+                                          ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.invoiceService = invoiceService;
@@ -61,6 +59,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         this.repository = repository;
         this.errorRedisRepository = errorRedisRepository;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
+        this.parameterizationService = parameterizationService;
+        this.manageInvoiceStatusService = manageInvoiceStatusService;
     }
 
     @Override
@@ -128,6 +128,12 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
 
     private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList) {
+        ManageInvoiceStatusDto invoiceStatus = null;
+        try{
+            ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
+            invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getProcessed()) : null;
+        } catch (Exception ignored){
+        }
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
         manageInvoiceDto.setAgency(agency);
         manageInvoiceDto.setHotel(hotel);
@@ -137,6 +143,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageInvoiceDto.setBookings(createBooking(bookingRowList));
         manageInvoiceDto.setId(UUID.randomUUID());
         manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
+        manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
         manageInvoiceDto.setInvoiceAmount(calculateInvoiceAmount(bookingRowList));
         manageInvoiceDto.setDueAmount(calculateInvoiceAmount(bookingRowList));
         String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);

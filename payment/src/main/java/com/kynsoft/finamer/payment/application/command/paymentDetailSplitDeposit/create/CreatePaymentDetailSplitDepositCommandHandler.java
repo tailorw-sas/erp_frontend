@@ -83,7 +83,8 @@ public class CreatePaymentDetailSplitDepositCommandHandler implements ICommandHa
                 null,
                 null,
                 null,
-                null
+                null,
+                false
         );
         split.setApplyDepositValue(command.getAmount());
         Long paymentDetailId = paymentDetailService.create(split);

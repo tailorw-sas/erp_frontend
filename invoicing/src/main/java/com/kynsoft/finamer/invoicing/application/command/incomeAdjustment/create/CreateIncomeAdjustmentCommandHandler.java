@@ -8,7 +8,6 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
-import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIsWithInRangeRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
@@ -133,7 +132,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                                 null,
                                 null,
                                 roomRates,
-                                null);
+                                null, null);
                 this.bookingService.create(bookingDto);
 
                 // this.manageAdjustmentService.create(adjustmentDtos);

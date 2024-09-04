@@ -6,7 +6,6 @@ import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import java.util.List;
 import java.util.UUID;
 
 public abstract class AbstractPaymentImportHelperService {
@@ -23,7 +22,7 @@ public abstract class AbstractPaymentImportHelperService {
 
     public abstract void clearPaymentImportCache(String importProcessId);
 
-    public abstract List<UUID> readPaymentCacheAndSave(Object request);
+    public abstract void readPaymentCacheAndSave(Object request);
 
     public abstract PaginatedResponse getPaymentImportErrors(String importProcessId, Pageable pageable);
 

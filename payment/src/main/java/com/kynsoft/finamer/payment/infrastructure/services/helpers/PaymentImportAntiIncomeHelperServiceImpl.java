@@ -21,6 +21,7 @@ import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionType
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.applyDeposit.ApplyDepositEvent;
+import com.kynsoft.finamer.payment.infrastructure.excel.event.createAttachment.CreateAttachmentEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentAntiValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportErrorRepository;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -86,6 +88,21 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         }
     }
 
+    public void createAttachment(PaymentImportDetailRequest request) {
+        UUID paymentsId = this.getPaymentIdStoreFromCache(request.getImportProcessId());
+        if (Objects.nonNull(paymentsId) && Objects.nonNull(request.getAttachment())) {
+            this.sentToCreateAttachment(paymentsId, request);
+        }
+    }
+
+    private void sentToCreateAttachment(UUID paymentsId, PaymentImportDetailRequest request) {
+        CreateAttachmentEvent createAttachmentEvent = new CreateAttachmentEvent(this, paymentsId, request.getAttachment(),
+                UUID.fromString(request.getEmployeeId()),
+                request.getAttachmentFileName(),
+                String.valueOf(request.getFile().length));
+        applicationEventPublisher.publishEvent(createAttachmentEvent);
+    }
+
 
     @Override
     public void cachingPaymentImport(Row paymentRow) {
@@ -105,11 +122,10 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     }
 
     @Override
-    public List<UUID> readPaymentCacheAndSave(Object rawRequest) {
+    public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
         Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
         Page<PaymentImportCache> cacheList;
-        Set<UUID> paymentIds = new HashSet<>();
         if (!paymentImportErrorRepository.existsPaymentImportErrorByImportProcessId(request.getImportProcessId())) {
             do {
                 cacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId(), pageable);
@@ -122,12 +138,10 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                             UUID.fromString(request.getInvoiceTransactionTypeId()),
                             paymentImportCache.getRemarks()
                     );
-                    paymentIds.add(parentPaymentDetail.getPayment().getId());
                 });
                 pageable = pageable.next();
             } while (cacheList.hasNext());
         }
-        return paymentIds.stream().toList();
     }
 
     @Override
@@ -179,5 +193,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         ManagePaymentTransactionTypeResponse response1 = (ManagePaymentTransactionTypeResponse) response.getData().get(0);
         return response1.getId();
     }
+
 
 }

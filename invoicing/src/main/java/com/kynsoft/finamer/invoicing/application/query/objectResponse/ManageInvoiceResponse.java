@@ -44,11 +44,12 @@ public class ManageInvoiceResponse implements IResponse {
     private Boolean isInCloseOperation = true;
 
     private ManageInvoiceDto parent;
+    private Double credits;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceId = dto.getInvoiceId();
-        this.invoiceNumber = dto.getInvoiceNumber();
+        this.invoiceNumber = this.deleteHotelInfo(dto.getInvoiceNumber());
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
         this.invoiceAmount = dto.getInvoiceAmount();
@@ -67,5 +68,12 @@ public class ManageInvoiceResponse implements IResponse {
         this.dueDate = dto.getDueDate();
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent();
+        this.invoiceNo = dto.getInvoiceNo();
+        this.credits = dto.getCredits();
     }
+
+    private String deleteHotelInfo(String input) {
+        return input.replaceAll("-(.*?)-", "-");
+    }
+
 }

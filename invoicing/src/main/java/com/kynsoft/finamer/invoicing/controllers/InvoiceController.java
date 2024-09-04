@@ -16,6 +16,9 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBul
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBulk.CreateBulkInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.delete.DeleteInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.delete.DeleteInvoiceMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit.CreateNewCreditCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit.CreateNewCreditMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit.CreateNewCreditRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceRequest;
@@ -111,9 +114,9 @@ public class InvoiceController {
         PartialCloneInvoiceMessage message = this.mediator.send(command);
 
         this.mediator.send(
-                new CalculateInvoiceAmountCommand(message.getId(), command.getBookings(), command.getRoomRates()));
+                new CalculateInvoiceAmountCommand(message.getCloned(), command.getBookings(), command.getRoomRates()));
 
-        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
+        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getCloned(), command.getEmployee()));
 
         for (UUID attacmhment : command.getAttachments()) {
             this.mediator.send(new CreateAttachmentStatusHistoryCommand(attacmhment));
@@ -171,6 +174,14 @@ public class InvoiceController {
 
         UpdateInvoiceCommand command = UpdateInvoiceCommand.fromRequest(request, id);
         UpdateInvoiceMessage response = mediator.send(command);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/new-credit")
+    public ResponseEntity<?> newCredit(@RequestBody CreateNewCreditRequest request){
+        CreateNewCreditCommand command = CreateNewCreditCommand.fromRequest(request);
+        CreateNewCreditMessage response = this.mediator.send(command);
+
         return ResponseEntity.ok(response);
     }
 }

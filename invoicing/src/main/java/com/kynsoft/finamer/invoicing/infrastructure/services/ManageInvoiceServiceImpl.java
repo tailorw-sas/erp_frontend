@@ -213,4 +213,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return objectDtos;
     }
 
+    @Override
+    public Double findSumOfAmountByParentId(UUID parentId) {
+        return this.repositoryQuery.findSumOfAmountByParentId(parentId).orElse(0.0);
+    }
+
 }

@@ -65,6 +65,15 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
     }
 
     @Override
+    public AttachmentTypeDto findByCode(String code) {
+        Optional<AttachmentType> userSystem = this.repositoryQuery.findByCode(code);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND, new ErrorField("code", DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 

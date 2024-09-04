@@ -16,7 +16,6 @@ import org.hibernate.generator.EventType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -97,6 +96,8 @@ public class ManageInvoice {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    private Double credits;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -167,7 +168,7 @@ public class ManageInvoice {
 
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
-
+        this.credits = dto.getCredits();
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -178,7 +179,7 @@ public class ManageInvoice {
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregate() : null);
+                parent != null ? parent.toAggregate() : null, credits);
 
     }
 
@@ -195,7 +196,7 @@ public class ManageInvoice {
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregate() : null);
+                parent != null ? parent.toAggregate() : null, credits);
     }
 
     @PostLoad

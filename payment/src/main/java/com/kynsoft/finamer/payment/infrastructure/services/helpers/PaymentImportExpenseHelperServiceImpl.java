@@ -33,7 +33,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -111,7 +110,7 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
 
 
     @Override
-    public List<UUID> readPaymentCacheAndSave(Object rawRequest) {
+    public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
         if (!expenseErrorRepository.existsPaymentImportErrorByImportProcessId(request.getImportProcessId())) {
             Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
@@ -131,13 +130,14 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
                     Optional<ManagePaymentStatusDto> paymentStatusOptional = Optional.ofNullable(paymentStatusService.findByCode(PAYMENT_STATUS_CONF_CODE));
                     paymentStatusOptional.ifPresent(paymentDto::setPaymentStatus);
                     paymentDto.setId(UUID.randomUUID());
+                    paymentDto.setApplied(0.0);
+                    paymentDto.setNotApplied(0.0);
                     return paymentDto;
                 }).toList();
                 paymentService.createBulk(paymentDtoList);
                pageable= pageable.next();
             } while (cacheList.hasNext());
         }
-        return Collections.EMPTY_LIST;
     }
 
     @Override

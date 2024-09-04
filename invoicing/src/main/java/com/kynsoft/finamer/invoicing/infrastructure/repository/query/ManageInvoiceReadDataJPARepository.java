@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -22,5 +23,6 @@ public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Manage
     @Query("SELECT COUNT(b) FROM ManageInvoice b WHERE b.invoiceNumber LIKE %:invoiceNumber%")
     Long findByInvoiceNumber( @Param("invoiceNumber") String invoiceNumber);
 
-
+    @Query("SELECT SUM(t.invoiceAmount) FROM ManageInvoice t WHERE t.parent IS NOT NULL AND t.parent.id = :parentId AND t.invoiceType = 'CREDIT'")
+    Optional<Double> findSumOfAmountByParentId(@Param("parentId") UUID parentId);
 }
