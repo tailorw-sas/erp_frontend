@@ -25,7 +25,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     private final IPaymentService paymentService;
 
     public ApplyPaymentCommandHandler(IPaymentService paymentService,
-                                      IManageInvoiceService manageInvoiceService) {
+            IManageInvoiceService manageInvoiceService) {
         this.paymentService = paymentService;
         this.manageInvoiceService = manageInvoiceService;
     }
