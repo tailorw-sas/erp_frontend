@@ -129,7 +129,7 @@ const confagencyListApi = reactive({
   uriApi: 'manage-agency',
 })
 
-const confinvoiceTypeListtApi = reactive({
+const confinvoiceTypeListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
 })
@@ -322,7 +322,7 @@ async function handleApplyClick() {
     const invoiceId = selectedInvoice;
     entryCode.value = '';
     // Redirecciona a la nueva interfaz
-    navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&clonedInvoiceId=${selectedInvoice}`, { open: { target: '_blank' } });
+    navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
 
     console.log('Hola estoy en la función');
    
@@ -457,7 +457,8 @@ const columns: IColumn[] = [
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
   // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
-  { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
+  // { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
@@ -465,6 +466,13 @@ const ENUM_FILTER = [
   { id: 'invoiceDate', name: 'Invoice Date' },
   { id: 'invoiceAmount', name: 'Invoice Amount' },
 ]
+
+// const sClassMap: IStatusClass[] = [
+//   { status: 'Transit', class: 'text-transit' },
+//   { status: 'Cancelled', class: 'text-cancelled' },
+//   { status: 'Confirmed', class: 'text-confirmed' },
+//   { status: 'Applied', class: 'text-applied' },
+// ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Invoice',
@@ -485,8 +493,8 @@ const payload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'invoiceId',
-  sortType: ENUM_SHORT_TYPE.ASC
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -627,8 +635,8 @@ function searchAndFilter() {
     query: '',
     pageSize: 50,
     page: 0,
-    sortBy: 'invoiceId',
-    sortType: ENUM_SHORT_TYPE.ASC
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
   }
 
 
@@ -758,8 +766,8 @@ function clearFilterToSearch() {
     query: '',
     pageSize: 50,
     page: 0,
-    sortBy: 'invoiceId',
-    sortType: ENUM_SHORT_TYPE.ASC
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value = {
     criteria: ENUM_INVOICE_CRITERIA[3],
@@ -971,16 +979,53 @@ async function getStatusList(query = '') {
 
 async function getInvoiceTypeList(query = '') {
   try {
-    invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_TYPE]
 
-    if (query) {
-      invoiceTypeList.value = invoiceTypeList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
+    const payload
+      = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
     }
+
+    invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }]
+    const response = await GenericService.search(confinvoiceTypeListApi.moduleApi, confinvoiceTypeListApi.uriApi, payload)
+    const { data: dataList } = response
+    for (const iterator of dataList) {
+      invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+    }
+
+    // invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_TYPE]
+
+    // if (query) {
+    //   invoiceTypeList.value = invoiceTypeList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
+    // }
 
 
   }
   catch (error) {
-    console.error('Error loading hotel list:', error)
+    console.error('Error loading invoice type list:', error)
   }
 }
 
@@ -1081,6 +1126,9 @@ function onSortField(event: any) {
     if (event.sortField === 'agency') {
       event.sortField = 'agency.name'
     }
+    if(event.sortField === 'status') {
+      event.sortField = 'invoiceStatus'
+    }
     // if (event.sortField === 'invoiceNumber') {
     //   event.sortField = 'invoiceNumber'
     // }
@@ -1117,6 +1165,7 @@ function getStatusName(code: string) {
   }
 }
 
+
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criterial && filterToSearch.value.search)
   return false
@@ -1149,11 +1198,8 @@ function findMenuItemByLabelSetShow(label: string, list: any[], showItem: boolea
 }
 
 function onRowRightClick(event: any) {
-
   selectedInvoice = event.data.id
-  console.log(event.data, 'hola')
   setMenuOptions()
-  // console.log(event?.data);
 
   if (event.data?.invoiceType !== InvoiceType.INVOICE || ![InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)) {
     console.log('event');
@@ -1161,8 +1207,9 @@ function onRowRightClick(event: any) {
   }
 
   if (event.data?.invoiceType === InvoiceType.INVOICE) {
-    // Mostrar Clone solo si es de tipo Invoice TODO: falta aclarar la parte del check Show en el Manage Invoice Status
-    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status)) {
+    // Mostrar Clone solo si es de tipo Invoice y esta como showClone el status en el nomenclador Invoice Status
+    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status) &&
+      event.data?.manageInvoiceStatus?.showClone) {
       findMenuItemByLabelSetShow('Clone', invoiceContextMenuItems.value, true)
     }
 

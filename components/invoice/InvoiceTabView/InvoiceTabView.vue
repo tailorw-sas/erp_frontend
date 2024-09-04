@@ -111,7 +111,11 @@ const props = defineProps({
   invoiceObjAmount: { type: Number, required: true },
   nightTypeRequired: Boolean,
   requiresFlatRate: Boolean,
-
+  openAdjustmentDialogFirstTime: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 })
 
 const activeTab = ref(props.active)
@@ -124,8 +128,6 @@ const toast = useToast()
 
 const selectedBooking = ref<string>('')
 const bookingObj = ref<any>(null)
-
-
 
 const selectedRoomRate = ref<string>('')
 
@@ -264,8 +266,6 @@ function openRoomRateDialog(booking?: any) {
   if (booking?.id) {
     selectedBooking.value = booking?.id
     bookingObj.value = booking
-
-   
   }
 
   roomRateDialogOpen.value = true
@@ -283,6 +283,12 @@ function openAdjustmentDialog(roomRate?: any) {
 
 watch(activeTab, () => {
   props.setActive(activeTab.value)
+})
+
+watch(() => props.openAdjustmentDialogFirstTime, (newValue) => {
+  if (newValue && props.roomRateList && props.roomRateList.length > 0) {
+    openAdjustmentDialog(props.roomRateList[0])
+  }
 })
 
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
@@ -320,12 +326,14 @@ onMounted(async () => {
               </span>
             </div>
           </template>
+
+          <!-- BookingTab -> components/invoice/booking/bookingTab.vue  -->
           <BookingTab
-          :refetch-invoice="refetchInvoice"
-          :get-invoice-agency="getInvoiceAgency"
+            :refetch-invoice="refetchInvoice"
+            :get-invoice-agency="getInvoiceAgency"
             :is-dialog-open="isDialogOpen" :close-dialog="() => closeDialog()"
             :open-dialog="openDialog" :open-room-rate-dialog="openRoomRateDialog" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :sort-booking="sortBooking" :selected-invoice="selectedInvoice as any"
+            :toggle-force-update="toggleForceUpdate" :sort-booking="sortBooking" :selected-invoice="selectedInvoice"
             :add-item="addBooking" :update-item="updateBooking" :list-items="bookingList"
             :night-type-required="nightTypeRequired"
             :is-creation-dialog="isCreationDialog" :invoice-obj="invoiceObj" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-detail-view="isDetailView" :show-totals="showTotals"
@@ -344,9 +352,11 @@ onMounted(async () => {
               </span>
             </div>
           </template>
+
+          <!-- RoomRateTab -> components/invoice/roomRate/roomRateTab.vue  -->
           <RoomRateTab
-          :booking-obj="bookingObj"
-          :refetch-invoice="refetchInvoice" :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
+            :booking-obj="bookingObj"
+            :refetch-invoice="refetchInvoice" :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
             :is-dialog-open="roomRateDialogOpen" :close-dialog="() => { roomRateDialogOpen = false }"
             :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
             :open-adjustment-dialog="openAdjustmentDialog" :sort-room-rate="sortRoomRate" :force-update="forceUpdate"
@@ -367,6 +377,8 @@ onMounted(async () => {
               </span>
             </div>
           </template>
+
+          <!-- AdjustmentTab -> components/invoice/adjustment/adjustmentTab.vue  -->
           <AdjustmentTab
             :invoice-obj="invoiceObj"
             :invoice-obj-amount="invoiceObjAmount"

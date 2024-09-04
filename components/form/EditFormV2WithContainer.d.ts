@@ -27,7 +27,7 @@ interface FieldDefinition {
 }
 
 interface Container {
-  containerClass: string,
+  containerClass: string
   childs: FieldDefinition[]
 }
 

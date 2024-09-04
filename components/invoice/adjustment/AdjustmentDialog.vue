@@ -128,7 +128,7 @@ onMounted(() => {
     <div class="w-full h-full overflow-hidden mt-2">
       <EditFormV2WithContainer
         :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
-        :loading-save="loadingSaveAll" :container-class="containerClass"  @cancel="clearForm"
+        :loading-save="loadingSaveAll" :container-class="containerClass" @cancel="clearForm"
         @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
       >
         <template #field-date="{ item: data, onUpdate }">
@@ -136,20 +136,21 @@ onMounted(() => {
             v-if="!loadingSaveAll" v-model="data.date" date-format="yy-mm-dd"
             :max-date="dayjs().endOf('day').toDate()" @update:model-value="($event) => {
 
-              if(dayjs($event).isValid()){
-              onUpdate('date', dayjs($event).startOf('day').toDate())}
+              if (dayjs($event).isValid()){
+                onUpdate('date', dayjs($event).startOf('day').toDate())
+              }
             }"
           />
         </template>
 
         <template #field-amount="{ item: data, onUpdate }">
           <InputText
-          
+
             v-model="data.amount" @update:model-value="($event: any) => {
 
               console.log($event);
 
-              if(isNaN(+$event)){
+              if (isNaN(+$event)){
                 $event = 0
               }
 
@@ -180,29 +181,40 @@ onMounted(() => {
 
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-            :model="data.transactionType" :suggestions="transactionTypeList" @change="($event) => {
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="fullName"
+            item-value="id"
+            :model="data.transactionType"
+            :suggestions="transactionTypeList"
+            @change="($event) => {
               onUpdate('transactionType', $event)
+              if ($event !== null && $event?.isRemarkRequired){
+                onUpdate('description', $event?.defaultRemark)
+              }
+              else {
+                onUpdate('description', '')
+              }
             }" @load="($event) => getTransactionTypeList($event)"
           />
         </template>
 
         <template #form-footer="props">
           <div class="field flex justify-content-end mr-3 mb-2">
-          <Button
-            v-tooltip.top="'Save'" label="Save" class="w-6rem mx-1" icon="pi pi-save" @click="($event) => {
-              if (!amountError) {
-                props.item.submitForm($event)
-              }
-            }"
-          />
-          <Button
-            v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class="w-6rem mx-1 " icon="pi pi-times" @click="() => {
+            <Button
+              v-tooltip.top="'Save'" label="Save" class="w-6rem mx-1" icon="pi pi-save" @click="($event) => {
+                if (!amountError) {
+                  props.item.submitForm($event)
+                }
+              }"
+            />
+            <Button
+              v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class="w-6rem mx-1 " icon="pi pi-times" @click="() => {
 
-              clearForm()
-              closeDialog()
-            }"
-          />
+                clearForm()
+                closeDialog()
+              }"
+            />
           </div>
         </template>
       </EditFormV2WithContainer>

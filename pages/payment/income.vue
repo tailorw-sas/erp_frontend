@@ -1320,8 +1320,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Totals:" :colspan="10" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="totalhotelbooking" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :footer="totalamountbooking" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="String(totalhotelbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="String(totalamountbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
@@ -1347,8 +1347,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="totalHotel" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :footer="totalInvoice" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="String(totalHotel)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="String(totalInvoice)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
@@ -1374,7 +1374,7 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Total:" :colspan="1" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="totalAmount" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="String(totalAmount)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                 <Column :colspan="5" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
@@ -1388,7 +1388,7 @@ onMounted(async () => {
       @on-sort-field="onSortField" -->
 
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :disabled="idItem.length > 0" @click="forceSave = true" />
+      <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :disabled="idItem.length > 0 || (idItem === '' && LocalAttachmentList.length === 0)" @click="forceSave = true" />
       <Button
         v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" :disabled="!item.hasAttachments" @click="() => {
           exportAttachmentsDialogOpen = true

@@ -15,7 +15,7 @@ export interface TransactionItem {
   transactionType: TransactionType
   amount: string
   remark: string
-  children: string | null
+  childrens: string | null
   bookingId: string | null
   invoiceId: string | null
   transactionDate: string
@@ -24,6 +24,7 @@ export interface TransactionItem {
   reservation: string | null
   couponNo: string | null
   adults: string | null
-  childrens: TransactionItem[] // Array de objetos TransactionItem para hijos
+  hasApplyDeposit: boolean
+  children: TransactionItem[] // Array de objetos TransactionItem para hijos
   createdAt: string
 }
