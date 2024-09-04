@@ -61,7 +61,7 @@ const bookingApi = {
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
 }
-console.log(bookingApi)
+
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
   criteria: ENUM_INVOICE_CRITERIA[3],
