@@ -59,15 +59,6 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
             if (Objects.isNull(paymentDetailDto.getApplyDepositValue()) || obj.getAmount()+amountTotal > paymentDetailDto.getApplyDepositValue()){
                 errorFieldList.add(new ErrorField("Payment Amount","Deposit Amount must be greather than zero and less or equal than the selected transaction amount."));
             }
-//            if (obj.getAmount() > paymentDetailDto.getPayment().getPaymentBalance()) {
-//                errorFieldList.add(new ErrorField("Payment Amount", "Payment Amount is greater than payment balance."));
-//                return false;
-//            }
-//            amountTotal = amountTotal + obj.getAmount();
-//            if (amountTotal > paymentDetailDto.getPayment().getDepositBalance()) {
-//                errorFieldList.add(new ErrorField("Payment Amount", "Payment Amount is greater than deposit balance."));
-//                return false;
-//            }
         }
         return true;
 

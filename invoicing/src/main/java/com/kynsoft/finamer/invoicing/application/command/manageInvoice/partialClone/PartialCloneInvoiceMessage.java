@@ -13,12 +13,13 @@ public class PartialCloneInvoiceMessage implements ICommandMessage {
 
     private final String command = "PARTIAL_CLONE_INVOICE";
     private UUID id;
+    private UUID cloned;
 
    
 
-    public PartialCloneInvoiceMessage(UUID id) {
+    public PartialCloneInvoiceMessage(UUID id, UUID cloned) {
         this.id = id;
-      
+        this.cloned = cloned;
     }
 
 }

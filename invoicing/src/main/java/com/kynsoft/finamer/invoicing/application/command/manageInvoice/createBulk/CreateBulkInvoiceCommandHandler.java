@@ -40,18 +40,20 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
+    private final IParameterizationService parameterizationService;
+
     public CreateBulkInvoiceCommandHandler(IManageRatePlanService ratePlanService,
-            IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
-            IManageRoomCategoryService roomCategoryService,
-            IManageInvoiceTransactionTypeService transactionTypeService,
-            IManageInvoiceService service, IManageAgencyService agencyService,
-            IManageHotelService hotelService,
-            IManageInvoiceTypeService iManageInvoiceTypeService,
-            IManageInvoiceStatusService manageInvoiceStatusService,
-            IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
-            IManageRoomRateService rateService, IInvoiceCloseOperationService closeOperationService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
+                                           IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
+                                           IManageRoomCategoryService roomCategoryService,
+                                           IManageInvoiceTransactionTypeService transactionTypeService,
+                                           IManageInvoiceService service, IManageAgencyService agencyService,
+                                           IManageHotelService hotelService,
+                                           IManageInvoiceTypeService iManageInvoiceTypeService,
+                                           IManageInvoiceStatusService manageInvoiceStatusService,
+                                           IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
+                                           IManageRoomRateService rateService, IInvoiceCloseOperationService closeOperationService,
+                                           IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService) {
 
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
@@ -69,6 +71,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         this.closeOperationService = closeOperationService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -158,7 +161,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     ratePlanDto,
                     nightTypeDto,
                     roomTypeDto,
-                    roomCategoryDto, new LinkedList<>(), null));
+                    roomCategoryDto, new LinkedList<>(), null, null));
 
         }
 
@@ -294,14 +297,19 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         }
 
         EInvoiceStatus status = EInvoiceStatus.PROCECSED;
-
+        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
+        ManageInvoiceStatusDto invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getProcessed()) : null;
         if (command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)
                 || command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
             status = EInvoiceStatus.SENT;
+            //TODO setear el objeto ManageInvoiceStatus segun la parametrización a partir de el codigo EInvoiceStatus.SENT
+            invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getSent()) : null;
         }
 
-        if (status.equals(EInvoiceStatus.PROCECSED) && attachmentDtos.size() > 0) {
+        if (status.equals(EInvoiceStatus.PROCECSED) && !attachmentDtos.isEmpty()) {
             status = EInvoiceStatus.RECONCILED;
+            //TODO setear el objeto ManageInvoiceStatus segun la parametrización a partir de el codigo EInvoiceStatus.RECONCILED
+            invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getReconciled()) : null;
         }
 
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
@@ -311,8 +319,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 command.getInvoiceCommand().getInvoiceAmount(),
                 command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
                 command.getInvoiceCommand().getInvoiceType(), status,
-                false, bookings, attachmentDtos, null, null, null, null, null,  false,
-                null);
+                false, bookings, attachmentDtos, null, null, null, invoiceStatus, null,  false,
+                null, 0.0);
 
         ManageInvoiceDto created = service.create(invoiceDto);
 

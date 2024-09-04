@@ -56,6 +56,9 @@ public class PaymentDetail implements Serializable {
     private Double applyDepositValue;
     private String remark;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean applayPayment;
+
     private Double bookingId;
     private String invoiceId;
     private OffsetDateTime transactionDate;
@@ -105,6 +108,7 @@ public class PaymentDetail implements Serializable {
         this.parentId = dto.getParentId() != null ? dto.getParentId() : null;
         this.applyDepositValue = dto.getApplyDepositValue() != null ? ScaleAmount.scaleAmount(dto.getApplyDepositValue()) : null;
         this.manageBooking = dto.getManageBooking() != null ? new ManageBooking(dto.getManageBooking()) : null;
+        this.applayPayment = dto.getApplayPayment();
     }
 
     public PaymentDetailDto toAggregate() {
@@ -130,7 +134,8 @@ public class PaymentDetail implements Serializable {
                 createdAt,
                 paymentDetailId,
                 parentId,
-                applyDepositValue
+                applyDepositValue,
+                applayPayment
         );
     }
 
@@ -157,7 +162,8 @@ public class PaymentDetail implements Serializable {
                 createdAt,
                 paymentDetailId,
                 parentId,
-                applyDepositValue
+                applyDepositValue,
+                applayPayment
         );
     }
 
@@ -184,7 +190,8 @@ public class PaymentDetail implements Serializable {
                 createdAt,
                 paymentDetailId,
                 parentId,
-                applyDepositValue
+                applyDepositValue,
+                applayPayment
         );
     }
 }

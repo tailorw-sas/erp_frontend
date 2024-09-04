@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
@@ -22,6 +23,7 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class CreatePaymentDetailCommandHandler implements ICommandHandler<CreatePaymentDetailCommand> {
@@ -47,8 +49,9 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
     }
 
     @Override
+    //@Transactional
     public void handle(CreatePaymentDetailCommand command) {
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "id", "Employee ID cannot be null."));
+        //RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "id", "Employee ID cannot be null."));
         ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(command.getEmployee());
 
         ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.paymentTransactionTypeService.findById(command.getTransactionType());
@@ -110,7 +113,8 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
                 null,
                 null,
                 null,
-                null
+                null,
+                false
         );
         if (paymentTransactionTypeDto.getDeposit()) {
             // Crear regla que valide que el Amount ingresado no debe de ser mayor que el valor del Payment Balance y mayor que cero.
@@ -131,6 +135,9 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         }
 
         Long paymentDetail = this.paymentDetailService.create(newDetailDto);
+        if (command.getApplyPayment() && paymentTransactionTypeDto.getCash()) {
+            command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking()));
+        }
 
         if (updatePayment.getUpdate() > 0) {
             this.paymentService.update(paymentDto);

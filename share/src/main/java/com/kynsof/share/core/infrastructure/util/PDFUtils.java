@@ -7,13 +7,17 @@ import com.itextpdf.text.pdf.PdfImportedPage;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfWriter;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class PDFUtils {
 
@@ -53,8 +57,7 @@ public class PDFUtils {
             //Create page and add content.
             while (currentPdfReaderPage <= pdfReader.getNumberOfPages()) {
                 document.newPage();
-                pdfImportedPage = writer.getImportedPage(
-                        pdfReader, currentPdfReaderPage);
+                pdfImportedPage = writer.getImportedPage(pdfReader, currentPdfReaderPage);
                 //aqui hay que ver si despues se cambia segun la rotacion de la hoja
                 pageContentByte.addTemplate(pdfImportedPage, 0, 0);
                 currentPdfReaderPage++;
@@ -66,8 +69,8 @@ public class PDFUtils {
         outputStream.flush();
         document.close();
         outputStream.close();
-
         return outputStream;
-
     }
+
+
 }

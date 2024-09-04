@@ -1,13 +1,16 @@
 package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.manageInvoice;
 
+import com.kynsof.share.core.domain.kafka.entity.AttachmentKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.payment.application.command.payment.create.CreateAttachmentRequest;
 import com.kynsoft.finamer.payment.application.command.payment.createPaymentToCredit.CreatePaymentToCreditCommand;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import java.util.ArrayList;
@@ -25,9 +28,9 @@ public class ConsumerReplicateManageInvoiceService {
     private final IManageHotelService hotelService;
     private final IMediator mediator;
 
-    public ConsumerReplicateManageInvoiceService(IManageInvoiceService service, 
-                                                 IMediator mediator,
-                                                 IManageHotelService hotelService) {
+    public ConsumerReplicateManageInvoiceService(IManageInvoiceService service,
+            IMediator mediator,
+            IManageHotelService hotelService) {
         this.mediator = mediator;
         this.service = service;
         this.hotelService = hotelService;
@@ -40,31 +43,31 @@ public class ConsumerReplicateManageInvoiceService {
             if (objKafka.getBookings() != null) {
                 for (ManageBookingKafka booking : objKafka.getBookings()) {
                     bookingDtos.add(new ManageBookingDto(
-                            booking.getId(), 
+                            booking.getId(),
                             booking.getBookingId(),
-                            booking.getReservationNumber(), 
-                            booking.getCheckIn(), 
-                            booking.getCheckOut(), 
-                            booking.getFullName(), 
-                            booking.getFirstName(), 
-                            booking.getLastName(), 
-                            booking.getInvoiceAmount(), 
-                            booking.getAmountBalance(), 
-                            booking.getCouponNumber(), 
-                            booking.getAdults(), 
-                            booking.getChildren(), 
+                            booking.getReservationNumber(),
+                            booking.getCheckIn(),
+                            booking.getCheckOut(),
+                            booking.getFullName(),
+                            booking.getFirstName(),
+                            booking.getLastName(),
+                            booking.getInvoiceAmount(),
+                            booking.getAmountBalance(),
+                            booking.getCouponNumber(),
+                            booking.getAdults(),
+                            booking.getChildren(),
                             null
                     ));
                 }
             }
 
             ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
-                    objKafka.getId(), 
-                    objKafka.getInvoiceId(), 
-                    objKafka.getInvoiceNo(), 
-                    objKafka.getInvoiceNumber(), 
+                    objKafka.getId(),
+                    objKafka.getInvoiceId(),
+                    objKafka.getInvoiceNo(),
+                    objKafka.getInvoiceNumber(),
                     EInvoiceType.valueOf(objKafka.getInvoiceType()),
-                    objKafka.getInvoiceAmount(), 
+                    objKafka.getInvoiceAmount(),
                     bookingDtos,
                     objKafka.getHasAttachment() //!= null ? objKafka.getHasAttachment() : false
             );
@@ -74,7 +77,24 @@ public class ConsumerReplicateManageInvoiceService {
             if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
                 if (hotelDto.getAutoApplyCredit()) {
-                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto));
+
+                    List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
+                    if (objKafka.getAttachments() != null) {
+                        for (AttachmentKafka attDto : objKafka.getAttachments()) {
+                            attachmentKafkas.add(new CreateAttachmentRequest(
+                                    Status.ACTIVE,
+                                    attDto.getEmployee(),
+                                    null,
+                                    null,
+                                    attDto.getFileName(),
+                                    "",
+                                    attDto.getPath(),
+                                    attDto.getRemark()
+                            ));
+                        }
+                    }
+
+                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, mediator));
                 }
             }
         } catch (Exception ex) {

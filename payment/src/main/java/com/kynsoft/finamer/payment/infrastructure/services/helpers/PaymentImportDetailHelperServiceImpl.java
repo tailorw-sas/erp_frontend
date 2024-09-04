@@ -34,8 +34,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -43,14 +41,11 @@ import java.util.UUID;
 public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportHelperService {
 
     private final PaymentImportCacheRepository paymentImportCacheRepository;
-
     private final PaymentDetailValidatorFactory paymentDetailValidatorFactory;
-
     private final PaymentDetailAntiValidatorFactory paymentDetailAntiValidatorFactory;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final IManagePaymentTransactionTypeService transactionTypeService;
     private final IPaymentService paymentService;
-
     private final IPaymentDetailService paymentDetailService;
     private final PaymentImportDetailErrorRepository detailErrorRepository;
 
@@ -78,7 +73,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
         paymentDetailValidatorFactory.createValidators();
-        paymentDetailAntiValidatorFactory.createValidators();
         ExcelBeanReader<PaymentDetailRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentDetailRow.class);
         ExcelBean<PaymentDetailRow> excelBean = new ExcelBean<>(excelBeanReader);
         for (PaymentDetailRow row : excelBean) {
@@ -88,11 +82,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     !request.getPaymentId().isEmpty()) {
                 row.setExternalPaymentId(UUID.fromString(request.getPaymentId()));
             }
-            if (Objects.nonNull(row.getAnti())) {
-                if (paymentDetailAntiValidatorFactory.validate(row)) {
-                    cachingPaymentImport(row);
-                }
-            }else if (paymentDetailValidatorFactory.validate(row)) {
+            if (paymentDetailValidatorFactory.validate(row)) {
                 cachingPaymentImport(row);
             }
         }
@@ -116,7 +106,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     @Override
-    public List<UUID> readPaymentCacheAndSave(Object rawRequest) {
+    public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
         Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
         Page<PaymentImportCache> cacheList;
@@ -133,7 +123,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             UUID.fromString(request.getEmployeeId()),
                             managePaymentTransactionTypeDto.getId(),
                             null,
-                            paymentImportCache.getRemarks()
+                            getRemarks(paymentImportCache,managePaymentTransactionTypeDto)
                     );
 
                 } else {
@@ -141,12 +131,18 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             Double.parseDouble(paymentImportCache.getPaymentAmount()),
                             UUID.fromString(request.getEmployeeId()),
                             managePaymentTransactionTypeDto.getId(),
-                            paymentImportCache.getRemarks());
+                            getRemarks(paymentImportCache,managePaymentTransactionTypeDto));
                 }
             });
             pageable = pageable.next();
         } while (cacheList.hasNext());
-        return Collections.EMPTY_LIST;
+    }
+
+    private String getRemarks(PaymentImportCache paymentImportCache,ManagePaymentTransactionTypeDto transactionTypeDto){
+        if (Objects.isNull(paymentImportCache.getRemarks())|| paymentImportCache.getRemarks().isEmpty()){
+            return transactionTypeDto.getDefaultRemark();
+        }
+        return paymentImportCache.getRemarks();
     }
 
     @Override

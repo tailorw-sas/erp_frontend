@@ -1,7 +1,9 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice;
 
+import com.kynsof.share.core.domain.kafka.entity.AttachmentKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import java.util.ArrayList;
@@ -47,6 +49,20 @@ public class ProducerUpdateManageInvoiceService {
                 }
             }
 
+            List<AttachmentKafka> attachmentKafkas = new ArrayList<>();
+            if (entity.getAttachments() != null) {
+                for (ManageAttachmentDto attDto : entity.getAttachments()) {
+                    attachmentKafkas.add(new AttachmentKafka(
+                            attDto.getId(), 
+                            attDto.getEmployeeId(), 
+                            attDto.getFilename(), 
+                            "", 
+                            attDto.getFile(), 
+                            attDto.getRemark()
+                    ));
+                }
+            }
+
             this.producer.send("finamer-update-manage-invoice", new ManageInvoiceKafka(
                     entity.getId(),
                     entity.getHotel().getId(),
@@ -58,6 +74,7 @@ public class ProducerUpdateManageInvoiceService {
                     entity.getInvoiceType().toString(),
                     entity.getInvoiceAmount(),
                     bookingKafkas,
+                    attachmentKafkas,
                     !entity.getAttachments().isEmpty()
             ));
         } catch (Exception ex) {

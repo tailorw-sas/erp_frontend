@@ -81,7 +81,6 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    @Cacheable(cacheNames =  CacheConfig.USER_CACHE, unless = "#result == null")
     public boolean existPayment(long genId) {
         return repositoryQuery.existsPaymentByPaymentId(genId);
     }
