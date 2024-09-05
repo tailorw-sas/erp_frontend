@@ -1,3 +1,6 @@
+@Library('emailNotification') _
+import com.tailorwsas.notificaciones.NotificadorEmail
+
 pipeline {
     
     agent any
@@ -12,6 +15,9 @@ pipeline {
         DEPLOYMENT_NAME = 'finamer-admin'
         URL_DEV = credentials("URL-K3S-dev")
         URL_QA = credentials("URL-K3S-qa")
+		EMAIL_FROM = "${env.CORREO_ORIGEN}"
+        ESTADO_OK = 'OK'
+        ESTADO_ERROR = 'ERROR'
     }
     
     triggers {
@@ -58,6 +64,21 @@ pipeline {
                     //sh 'kubectl apply -f $YAML'
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
                 }
+            }
+        }
+    }
+	
+	post {
+        success {
+            script {
+                def notificator = new NotificadorEmail(this)
+                notificator.sendEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK)
+            }
+        }
+        failure {
+            script {
+                def notificator = new NotificadorEmail(this)
+                notificator.sendEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR)
             }
         }
     }
