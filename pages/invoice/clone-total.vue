@@ -10,8 +10,19 @@ import { GenericService } from '~/services/generic-services'
 
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTabView.vue'
+import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTotalTabView.vue'
 
+const Options = ref({
+  tableName: 'Invoice',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-adjustment',
+  messageToDelete: 'Do you want to save the change?',
+  loading: false,
+  showFilters: false,
+  actionsAsMenu: false,
+
+})
+const adjustmentList = ref<any[]>([])
 const toast = useToast()
 const totalHotelAmount = ref(0)
 const totalInvoiceAmount = ref(0)
@@ -22,13 +33,13 @@ const forceUpdate = ref(false)
 const active = ref(0)
 const route = useRoute()
 const transactionTypeList = ref<any[]>([])
-
+const ListItems = ref<any[]>([])
 const { data: userData } = useAuth()
 
 const selectedInvoice = ref({})
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
-
+const totalAmount = ref(0)
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 const agencyError = ref(false)
@@ -39,17 +50,17 @@ const roomRateDialogOpen = ref<boolean>(false)
 const adjustmentDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
-  const showAdjustmentDialogFirstTime = ref(false)
+const showAdjustmentDialogFirstTime = ref(false)
 const bookingList = ref<any[]>([])
 const roomRateList = ref<any[]>([])
 const loadedRoomRates = ref<any[]>([])
-const adjustmentList = ref<any[]>([])
+
 const attachmentList = ref<any[]>([])
 
 
 const nightTypeRequired = ref(false)
 const requiresFlatRate = ref(false)
-
+const listItems = ref<any[]>([])
 const invoiceAmountError = ref(false)
 const invoiceAmountErrorMessage = ref('')
 
@@ -70,6 +81,11 @@ const confagencyListApi = reactive({
 const confinvoiceTypeListtApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
+})
+
+const confAdjustmentsApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-adjustment',
 })
 
 const CreditFields = ref<FieldDefinitionType[]>([
@@ -236,7 +252,7 @@ const Fields = ref<FieldDefinitionType[]>([
     header: 'Re-Send Date',
     dataType: 'date',
   
-    class: 'field col-12 md:col-2   required',
+    class: 'field col-12 md:col-2',
     validation: z.date({ required_error: 'The Due Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
   },
   {
@@ -696,6 +712,69 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
   }
 }
 
+async function getAdjustmentList() {
+  try {
+    idItemToLoadFirstTime.value = ''
+    Options.value.loading = true
+    ListItems.value = []
+    totalAmount.value = 0
+
+    const payload: any = {
+      filter: [
+        {
+          key: 'roomRate.booking.invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+
+    const response = await GenericService.search(confAdjustmentsApi.moduleApi, confAdjustmentsApi.uriApi, payload)
+
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+
+
+      let  transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
+
+      if(iterator?.invoice?.invoiceType === InvoiceType.INCOME){
+        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ""}-${iterator?.paymentTransactionType?.name || ""}` }
+      }
+
+      ListItems.value = [...ListItems.value, {
+        ...iterator, loadingEdit: false, loadingDelete: false,adjustmentId:'', roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date,
+       
+      }]
+
+      if (typeof +iterator?.amount === 'number') {
+        totalAmount.value += Number(iterator?.amount)
+      }
+    }
+    if (ListItems.value.length > 0) {
+      idItemToLoadFirstTime.value = ListItems.value[0].id
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    Options.value.loading = false
+  }
+}
+
 function requireConfirmationToSave(item: any) {
   const { event } = item
   confirm.require({
@@ -1130,6 +1209,7 @@ onMounted(async () => {
     await getItemById(route.query.selected)
     await getBookingList()
     await getRoomRateList(globalSelectedInvoicing)
+    await getAdjustmentList()
     calcInvoiceAmount()
  // }
 })
@@ -1257,7 +1337,7 @@ onMounted(async () => {
             :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
             :add-room-rate="addRoomRate" :update-room-rate="updateRoomRate" :is-creation-dialog="true"
             :selected-invoice="selectedInvoice as any" :booking-list="bookingList" :add-booking="addBooking"
-            :update-booking="updateBooking" :adjustment-list="adjustmentList" :add-adjustment="addAdjustment"
+            :update-booking="updateBooking" :adjustment-list="ListItems" :add-adjustment="addAdjustment"
             :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
 
               active = $event
