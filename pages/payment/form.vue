@@ -2197,7 +2197,7 @@ function onRowContextMenu(event: any) {
 
   // Validaciones para el applay payment
   if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']))) {
-    if (event && event.data && event.data.transactionType && (event.data.transactionType.cash === true || event.data.transactionType.applyDeposit === true) && event.data.applyPayment === false) {
+    if (event && event.data && event.data.transactionType && (event.data.transactionType.cash === true || event.data.transactionType.applyDeposit === false) && event.data.applyPayment === false) {
       objItemSelectedForRightClickApplyPayment.value = event.data
       const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
       if (menuItemApplayPayment) {
