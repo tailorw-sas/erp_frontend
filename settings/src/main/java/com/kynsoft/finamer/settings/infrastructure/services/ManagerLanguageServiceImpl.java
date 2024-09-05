@@ -99,4 +99,17 @@ public class ManagerLanguageServiceImpl implements IManagerLanguageService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManagerLanguageDto> findAllToReplicate() {
+        List<ManagerLanguage> objects = this.repositoryQuery.findAll();
+        List<ManagerLanguageDto> objectDtos = new ArrayList<>();
+
+        for (ManagerLanguage object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

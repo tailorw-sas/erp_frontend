@@ -2,6 +2,9 @@ package com.kynsoft.finamer.settings.application.command.replicate.objects;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.*;
+import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageLanguageKafka;
+import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageTransactionStatusKafka;
+import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageVCCTransactionTypeKafka;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.services.*;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerReplicateManageAgencyService;
@@ -14,10 +17,13 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceStatus.ProducerReplicateManageInvoiceStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceTransactionType.ProducerReplicateManageInvoiceTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceType.ProducerReplicateManageInvoiceTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageLanguage.ProducerReplicateManageLanguageService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentAttachmentStatus.ProducerReplicateManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentSource.ProducerReplicateManagePaymentSourceService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentStatus.ProducerReplicateManagePaymentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerReplicateManagePaymentTransactionTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTransactionStatus.ProducerReplicateManageTransactionStatusService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerReplicateManageVCCTransactionTypeService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -45,6 +51,10 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final IManagerClientService managerClientService;
     private final IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService;
 
+    private final IManagerLanguageService managerLanguageService;
+    private final IManageVCCTransactionTypeService manageVCCTransactionTypeService;
+    private final IManageTransactionStatusService manageTransactionStatusService;
+
     private final ProducerReplicateManageAgencyService replicateManageAgencyService;
     private final ProducerReplicateManageBankAccount replicateManageBankAccount;
     private final ProducerReplicateManageEmployeeService replicateManageEmployeeService;
@@ -53,6 +63,9 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final ProducerReplicateManagePaymentAttachmentStatusService replicateManagePaymentAttachmentStatusService;
     private final ProducerReplicateManageAttachmentTypeService replicateManageAttachmentTypeService;
     private final ProducerReplicateManageAgencyTypeService replicateManageAgencyTypeService;
+    private final ProducerReplicateManageLanguageService replicateManageLanguageService;
+    private final ProducerReplicateManageVCCTransactionTypeService replicateManageVCCTransactionTypeService;
+    private final ProducerReplicateManageTransactionStatusService replicateManageTransactionStatusService;
 
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService, 
                                          IManagerPaymentStatusService paymentStatusService, 
@@ -78,8 +91,16 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManageAttachmentTypeService replicateManageAttachmentTypeService,
                                          IManageAttachmentTypeService attachmentTypeService,
                                          IManageAgencyTypeService manageAgencyTypeService,
-                                         ProducerReplicateManageAgencyTypeService replicateManageAgencyTypeService
-                                         ) {
+                                         ProducerReplicateManageAgencyTypeService replicateManageAgencyTypeService,
+                                         IManagerLanguageService managerLanguageService,
+                                         IManageVCCTransactionTypeService manageVCCTransactionTypeService,
+                                         IManageTransactionStatusService manageTransactionStatusService,
+                                         ProducerReplicateManageLanguageService replicateManageLanguageService,
+                                         ProducerReplicateManageVCCTransactionTypeService replicateManageVCCTransactionTypeService,
+                                         ProducerReplicateManageTransactionStatusService replicateManageTransactionStatusService) {
+        this.managerLanguageService = managerLanguageService;
+        this.manageVCCTransactionTypeService = manageVCCTransactionTypeService;
+        this.manageTransactionStatusService = manageTransactionStatusService;
         this.invoiceTypeService = invoiceTypeService;
         this.paymentStatusService = paymentStatusService;
         this.paymentSourceService = paymentSourceService;
@@ -108,12 +129,30 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.replicateManageAttachmentTypeService = replicateManageAttachmentTypeService;
         this.manageAgencyTypeService = manageAgencyTypeService;
         this.replicateManageAgencyTypeService = replicateManageAgencyTypeService;
+        this.replicateManageLanguageService = replicateManageLanguageService;
+        this.replicateManageVCCTransactionTypeService = replicateManageVCCTransactionTypeService;
+        this.replicateManageTransactionStatusService = replicateManageTransactionStatusService;
     }
 
     @Override
     public void handle(CreateReplicateCommand command) {
         for (ObjectEnum object : command.getObjects()) {
             switch (object) {
+                case MANAGE_TRANSACTION_STATUS -> {
+                    for (ManageTransactionStatusDto transactionStatusDto : this.manageTransactionStatusService.findAllToReplicate()) {
+                        this.replicateManageTransactionStatusService.create(new ReplicateManageTransactionStatusKafka(transactionStatusDto.getId(), transactionStatusDto.getCode(), transactionStatusDto.getName()));
+                    }
+                }
+                case MANAGE_VCC_TRANSACTION_TYPE -> {
+                    for (ManageVCCTransactionTypeDto transactionTypeDto : this.manageVCCTransactionTypeService.findAllToReplicate()) {
+                        this.replicateManageVCCTransactionTypeService.create(new ReplicateManageVCCTransactionTypeKafka(transactionTypeDto.getId(), transactionTypeDto.getCode(), transactionTypeDto.getName()));
+                    }
+                }
+                case MANAGE_LANGUAGE -> {
+                    for (ManagerLanguageDto managerLanguageDto : this.managerLanguageService.findAllToReplicate()) {
+                        this.replicateManageLanguageService.create(new ReplicateManageLanguageKafka(managerLanguageDto.getId(), managerLanguageDto.getCode(), managerLanguageDto.getName()));
+                    }
+                }
                 case MANAGE_INVOICE_TYPE -> {
                     for (ManageInvoiceTypeDto invoiceType : this.invoiceTypeService.findAllToReplicate()) {
                         this.replicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(invoiceType.getId(), invoiceType.getCode(), invoiceType.getName()));
