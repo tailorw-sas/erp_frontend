@@ -6,6 +6,8 @@ pipeline {
     agent any
 
     environment {
+        SISTEMA = 'ERP'
+        SRC = 'finamer-admin'
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-admin:version'
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
@@ -15,7 +17,7 @@ pipeline {
         DEPLOYMENT_NAME = 'finamer-admin'
         URL_DEV = credentials("URL-K3S-dev")
         URL_QA = credentials("URL-K3S-qa")
-		EMAIL_FROM = "${env.CORREO_ORIGEN}"
+	EMAIL_FROM = "${env.CORREO_ORIGEN}"
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
     }
@@ -41,9 +43,11 @@ pipeline {
 
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
+                        env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP_FRONTEND
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
+                        env.EMAIL_LIST = env.EMAIL_LIST_QA
                     }
                 }
             }
