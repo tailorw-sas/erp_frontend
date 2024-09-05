@@ -24,9 +24,11 @@ public class ReportUtil {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
        if (Objects.nonNull(pdfContent)) {
            baos.write(pdfContent);
+           baos.close();
            return new PaymentReportResponse(fileName, baos);
        }else{
            baos.write(defaultPdfContent());
+           baos.close();
            return new PaymentReportResponse(fileName,baos);
        }
 
