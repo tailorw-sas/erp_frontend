@@ -660,20 +660,6 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
 //       isApplyPaymentFromTheForm.value = false
 //     }
 
-//     // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
-//     const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
-
-//     if (objFilter) {
-//       objFilter.value = validNumber.toString()
-//     }
-//     else {
-//       applyPaymentPayload.value.filter.push({
-//         key: 'dueAmount',
-//         operator: 'GREATER_THAN_OR_EQUAL_TO',
-//         value: validNumber.toString(),
-//         logicalOperation: 'AND'
-//       })
-//     }
 //     // Validacion para busar por por las agencias
 //     const filter: FilterCriteria[] = [
 //       {
