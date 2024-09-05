@@ -214,7 +214,7 @@ const invoiceAllContextMenuItems = ref([
     icon: 'pi pi-copy',
     command: () => doubleFactor(selectedInvoice),
     default: true,
-    disabled: computedShowClone,
+   // disabled: computedShowClone,
     showItem: false,
   },
   {
