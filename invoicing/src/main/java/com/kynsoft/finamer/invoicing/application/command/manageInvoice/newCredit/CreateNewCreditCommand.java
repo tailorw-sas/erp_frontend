@@ -22,12 +22,12 @@ public class CreateNewCreditCommand implements ICommand {
     private String employee;
     private UUID credit;
     private List<CreateNewCreditBookingRequest> bookings;
-    private List<CreateAttachmentCommand> attachmentCommands;
+    private List<CreateNewCreditAttachmentRequest> attachmentCommands;
     private Long invoiceId;
 
     public CreateNewCreditCommand(LocalDateTime invoiceDate, UUID invoice, String employee,
                                   List<CreateNewCreditBookingRequest> bookings,
-                                  List<CreateAttachmentCommand> attachmentCommands) {
+                                  List<CreateNewCreditAttachmentRequest> attachmentCommands) {
         this.invoiceDate = invoiceDate;
         this.invoice = invoice;
         this.employee = employee;
@@ -36,11 +36,10 @@ public class CreateNewCreditCommand implements ICommand {
     }
 
     public static CreateNewCreditCommand fromRequest(CreateNewCreditRequest request) {
-        List<CreateAttachmentCommand> attachments = request.getAttachments()
-                .stream().map(CreateAttachmentCommand::fromRequest).collect(Collectors.toList());
+
         return new CreateNewCreditCommand(
                 request.getInvoiceDate(), request.getInvoice(), request.getEmployee(),
-                request.getBookings(), attachments
+                request.getBookings(), request.getAttachments()
         );
     }
 

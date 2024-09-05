@@ -45,6 +45,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
 
     private final IParameterizationService parameterizationService;
 
+
+
     public CreateNewCreditCommandHandler(IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService, IManageInvoiceTransactionTypeService transactionTypeService, IManagePaymentTransactionTypeService paymentTransactionTypeService, IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IManageRoomRateService rateService, IInvoiceCloseOperationService closeOperationService, ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService) {
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
@@ -145,14 +147,14 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                     command.getAttachmentCommands().get(i).getType());
 
             ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
-                    command.getAttachmentCommands().get(i).getId(),
+                    UUID.randomUUID(),
                     null,
                     command.getAttachmentCommands().get(i).getFilename(),
                     command.getAttachmentCommands().get(i).getFile(),
                     command.getAttachmentCommands().get(i).getRemark(),
                     attachmentType,
-                    null, command.getAttachmentCommands().get(i).getEmployee(),
-                    command.getAttachmentCommands().get(i).getEmployeeId(), null, null);
+                    null, command.getEmployee(), //TODO hay que colocar el nombre del empleado
+                    UUID.fromString(command.getEmployee()), null, null);
 
             attachments.add(attachmentDto);
         }
