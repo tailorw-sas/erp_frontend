@@ -70,6 +70,16 @@ const confinvoiceTypeListtApi = reactive({
   uriApi: 'manage-invoice-type',
 })
 
+const confResourceTypeApi = reactive({
+  moduleApi: 'payment',
+  uriApi: 'resource-type',
+})
+
+const confInvoiceApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice',
+})
+
 const CreditFields = ref<FieldDefinitionType[]>([
   {
     field: 'invoiceId',
@@ -485,7 +495,7 @@ async function createItem(item: { [key: string]: any }) {
     await getInvoiceHotel(item.hotel?.id)
 
     const adjustments = []
-    const bookings = []
+    const bookings: any[] = []
     let roomRates = []
     const attachments = []
 
@@ -570,6 +580,46 @@ async function createItem(item: { [key: string]: any }) {
   }
 }
 
+async function createItemCredit(item: any) {
+  loadingSaveAll.value = true
+
+  const bookings: { id: any, amount: number }[] = []
+  const attachments = []
+
+  console.log('booking list', bookingList.value)
+  bookingList.value?.forEach((booking) => {
+    if (booking?.invoiceAmount !== 0) {
+      bookings.push({
+        id: booking?.id,
+        amount: toNegative(booking?.invoiceAmount)
+      })
+    }
+  })
+
+  for (let i = 0; i < attachmentList.value.length; i++) {
+    const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
+    attachments.push({
+      // ...attachmentList.value[i],
+      type: attachmentList.value[i]?.type?.id,
+      file: fileurl,
+      filename: attachmentList.value[i]?.filename,
+      remark: attachmentList.value[i]?.remark,
+      paymentResourceType: '67c10e87-89c0-4a3a-abe3-5cebc400d280'// attachmentList.value[i]?.resourceType
+
+    })
+  }
+
+  const payload = {
+    invoice: route.query.selected,
+    invoiceDate: dayjs(item.invoiceDate).startOf('day').toISOString(),
+    employee: userData?.value?.user?.userId || '',
+    bookings,
+    attachments
+  }
+
+  await GenericService.createInvoiceType(confInvoiceApi.moduleApi, `${confInvoiceApi.uriApi}/new-credit`, payload)
+}
+
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
@@ -616,7 +666,13 @@ async function saveItem(item: { [key: string]: any }) {
   let successOperation = true
 
   try {
-    const response: any = await createItem(item)
+    let response: any = null
+    if (route.query.type === InvoiceType.CREDIT) {
+      response = await createItemCredit(item)
+    }
+    else {
+      response = await createItem(item)
+    }
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     if (route.query.type === InvoiceType.CREDIT) { return navigateTo({ path: `/invoice` }) }
     navigateTo({ path: `/invoice/edit/${response?.id}` })
@@ -863,11 +919,11 @@ async function getBookingList(clearFilter: boolean = false) {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      const id = v4()
+      // const id = v4()
       bookingList.value = [...bookingList.value, {
         ...iterator,
-        id,
-        bookingId: '',
+        id: iterator?.id,
+        bookingId: iterator?.bookingId,
         loadingEdit: false,
         loadingDelete: false,
         agency: iterator?.invoice?.agency,
