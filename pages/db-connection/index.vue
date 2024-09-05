@@ -15,6 +15,7 @@ import { statusToBoolean, statusToString, updateFieldProperty } from '~/utils/he
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 // VARIABLES -----------------------------------------------------------------------------------------
 const openDialogPass = ref(false)
+const prueba =ref(false)
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
