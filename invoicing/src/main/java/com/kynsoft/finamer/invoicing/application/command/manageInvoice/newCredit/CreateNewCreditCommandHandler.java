@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ResourceType;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
@@ -44,10 +45,11 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     private final IParameterizationService parameterizationService;
+    private final IManageResourceTypeService resourceTypeService;
 
 
 
-    public CreateNewCreditCommandHandler(IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService, IManageInvoiceTransactionTypeService transactionTypeService, IManagePaymentTransactionTypeService paymentTransactionTypeService, IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IManageRoomRateService rateService, IInvoiceCloseOperationService closeOperationService, ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService) {
+    public CreateNewCreditCommandHandler(IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService, IManageInvoiceTransactionTypeService transactionTypeService, IManagePaymentTransactionTypeService paymentTransactionTypeService, IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IManageRoomRateService rateService, IInvoiceCloseOperationService closeOperationService, ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService) {
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
         this.roomTypeService = roomTypeService;
@@ -65,6 +67,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         this.closeOperationService = closeOperationService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
         this.parameterizationService = parameterizationService;
+        this.resourceTypeService = resourceTypeService;
     }
 
     @Override
@@ -146,6 +149,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
 
+            ResourceTypeDto resourceTypeDto = resourceTypeService.findById(command.getAttachmentCommands().get(i).getPaymentResourceType());
+
             ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
                     UUID.randomUUID(),
                     null,
@@ -154,7 +159,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                     command.getAttachmentCommands().get(i).getRemark(),
                     attachmentType,
                     null, command.getEmployee(), //TODO hay que colocar el nombre del empleado
-                    UUID.fromString(command.getEmployee()), null, null);
+                    UUID.fromString(command.getEmployee()), null, resourceTypeDto);
 
             attachments.add(attachmentDto);
         }
