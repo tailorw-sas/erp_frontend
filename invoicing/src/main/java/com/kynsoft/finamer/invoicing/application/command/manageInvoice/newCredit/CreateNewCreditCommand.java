@@ -2,7 +2,6 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredi
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,7 +9,6 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -24,6 +22,7 @@ public class CreateNewCreditCommand implements ICommand {
     private List<CreateNewCreditBookingRequest> bookings;
     private List<CreateNewCreditAttachmentRequest> attachmentCommands;
     private Long invoiceId;
+    private String invoiceNumber;
 
     public CreateNewCreditCommand(LocalDateTime invoiceDate, UUID invoice, String employee,
                                   List<CreateNewCreditBookingRequest> bookings,
@@ -46,7 +45,7 @@ public class CreateNewCreditCommand implements ICommand {
     @Override
     public ICommandMessage getMessage() {
         return new CreateNewCreditMessage(
-                invoice, credit
+                invoice, credit, invoiceId, invoiceNumber
         );
     }
 }
