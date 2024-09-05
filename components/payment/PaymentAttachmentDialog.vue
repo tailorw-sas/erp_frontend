@@ -841,6 +841,9 @@ async function saveItem(item: { [key: string]: any }) {
     clearForm()
     getList()
   }
+  else {
+    loadingSaveAll.value = false
+  }
 }
 
 async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
