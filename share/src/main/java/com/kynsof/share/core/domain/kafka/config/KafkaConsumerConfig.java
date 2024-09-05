@@ -35,14 +35,17 @@ public class KafkaConsumerConfig {
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> configProps = createBaseProps();
         // Verificar si SASL es requerido
-        if (saslUsername != null && !saslUsername.isEmpty() && saslPassword != null && !saslPassword.isEmpty()) {
-            addSaslConfig(configProps, saslUsername, saslPassword);
-        } else {
-            // Asegúrate de que no esté configurado ningún protocolo de seguridad si no se requiere
-            configProps.remove("security.protocol");
-            configProps.remove("sasl.mechanism");
-            configProps.remove("sasl.jaas.config");
-        }
+//        if (saslUsername != null && !saslUsername.isEmpty() && saslPassword != null && !saslPassword.isEmpty()) {
+//            addSaslConfig(configProps, saslUsername, saslPassword);
+//        } else {
+//            // Asegúrate de que no esté configurado ningún protocolo de seguridad si no se requiere
+//            configProps.remove("security.protocol");
+//            configProps.remove("sasl.mechanism");
+//            configProps.remove("sasl.jaas.config");
+//        }
+//        configProps.remove("security.protocol");
+//        configProps.remove("sasl.mechanism");
+//        configProps.remove("sasl.jaas.config");
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
