@@ -4,7 +4,7 @@ import { defineEventHandler, readBody } from 'h3'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
-  const {
+  let {
     merchantId,
     merchantName,
     merchantType,
@@ -17,25 +17,10 @@ export default defineEventHandler(async (event) => {
     cancelUrl,
   } = body
 
-  const privateKey = 'asdhakjshdkjasdasmndajksdkjaskldga8odya9d8yoasyd98asdyaisdhoaisyd0a8sydoashd8oasydoiahdpiashd09ayusidhaos8dy0a8dya08syd0a8ssdsax'
-
-  /* const data = [
-    '39038540035',
-    'Prueba AZUL',
-    'ECommerce',
-    '$',
-    '002',
-    '50000',
-    '000',
-    'https://freebieflux.com/freebies-by-category/figma-app-designs',
-    'http://localhost/payment.php',
-    'http://localhost/payment.php',
-    '0', // UseCustomField1
-    '',
-    '0', // UseCustomField2
-    '',
-    privateKey,
-  ].join('') */
+  const privateKey = process.env.BLUE_MERCHANT_SECRET_KEY || ''
+  approvedUrl = `${process.env.AUTH_ORIGIN}/${approvedUrl}`
+  declinedUrl = `${process.env.AUTH_ORIGIN}/${declinedUrl}`
+  cancelUrl = `${process.env.AUTH_ORIGIN}/${cancelUrl}`
 
   const data = [
     merchantId,

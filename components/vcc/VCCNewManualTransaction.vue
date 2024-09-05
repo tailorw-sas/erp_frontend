@@ -205,11 +205,11 @@ function clearForm() {
 
 async function handleMerchantRedirect(item: any) {
   const data = {
-    orderNumber: '002',
+    orderNumber: `${item.id}`,
     amount: `${item.amount}00`,
-    approvedUrl: 'https://freebieflux.com/freebies-by-category/figma-app-designs',
-    declinedUrl: 'http://localhost/payment.php',
-    cancelUrl: 'http://localhost/payment.php',
+    approvedUrl: `vcc-management/transaction-result?status=success`,
+    declinedUrl: `vcc-management/transaction-result?status=declined`,
+    cancelUrl: `vcc-management/transaction-result?status=cancelled`,
     merchantId: '39038540035',
     merchantName: item.merchant.name ?? '',
     merchantType: 'ECommerce',
@@ -226,8 +226,8 @@ async function handleMerchantRedirect(item: any) {
 
   if (response.ok) {
     const newTab = window.open('', '_blank')
-    newTab.document.write(await response.text())
-    newTab.document.close()
+    newTab?.document.write(await response.text())
+    newTab?.document.close()
   }
   else {
     console.error('Error al redirigir al merchant')
@@ -268,6 +268,7 @@ async function save(item: { [key: string]: any }) {
     delete payload.event
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
+    item.id = response.id
     handleMerchantRedirect(item)
     onClose(false)
   }
