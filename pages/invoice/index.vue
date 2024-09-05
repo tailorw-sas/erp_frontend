@@ -242,9 +242,11 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Clone Complete',
     icon: 'pi pi-clone',
-    command: () => { },
+    command: () => {
+      doubleFactorTotal()
+    },
     default: true,
-    showItem: false,
+   
   },
   {
     label: 'Re-Send',
@@ -331,7 +333,8 @@ async function handleApplyClick() {
   
 }
 function handleTotalApplyClick() {
-  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}`, { open: { target: '_blank' } }),
+  entryCode.value = '';
+  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } }),
     handleDialogCloseTotal();
 }
 
@@ -357,7 +360,7 @@ const createReconcile = ref([
   {
     label: 'Reconcile Automatic',
     command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
-    disabled: computedShowMenuItemReconcile
+   // disabled: computedShowMenuItemReconcile
   },
   // {
   //   label: 'Credit',
@@ -528,6 +531,8 @@ function doubleFactor() {
 
 function doubleFactorTotal() {
   doubleFactorTotalOpen.value = true
+  entryCode.value = '';
+  randomCode.value = generateRandomCode();
 }
 
 
@@ -1377,7 +1382,7 @@ const legend = ref(
         <!-- <SplitButton class="ml-2" icon="pi pi-download" label="Import" :model="itemsMenuImport" /> -->
         <!---<Button class="ml-2" icon="pi pi-copy" label="Rec Inv" />.-->
         <Button
-          v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-RECONCILE']))"
+         
           v-tooltip.left="'Reconcile Invoice'" class="ml-2" label="Rec Inv" icon="pi pi-copy" severity="primary"
           aria-haspopup="true" aria-controls="overlay_menu_reconcile" @click="toggleReconcile" />
 
@@ -1766,7 +1771,7 @@ const legend = ref(
         mask: {
           style: 'backdrop-filter: blur(5px)',
         },
-      }" @hide="doubleFactorOpen = false">
+      }" @hide="doubleFactorTotalOpen = false">
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
@@ -1783,8 +1788,8 @@ const legend = ref(
           <div class="flex justify-content-end mb-0">
             <Button :disabled="entryCode !== randomCode" class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
               icon="pi pi-save" @click="handleTotalApplyClick" />
-            <Button label="Cancel" class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2"
-              icon="pi pi-times ml-1 mr-1 " @click="handleDialogClose" />
+            <Button  class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2"
+              icon="pi pi-times ml-1 mr-1 "   @click="doubleFactorTotalOpen = false" />
 
           </div>
         </div>

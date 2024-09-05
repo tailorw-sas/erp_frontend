@@ -1254,102 +1254,10 @@ onMounted(async () => {
             :selected-invoice-obj="{}"
           />
         </div>
-        <div v-if="openAdjustment">
-          <Dialog
-      v-model:visible="openAdjustment"
-      :id-item="idItem"
-    
-      modal
-      class="mx-2 sm:mx-0"
-      content-class="border-round-bottom border-top-1 surface-border"
-    :style="{width:'33%'}"
-      :pt="{
-        root: {
-          class: 'custom-dialog',
-        },
-        header: {
-          style: 'padding-top: 0.5rem; padding-bottom: 0.5 rem',
-        },
-      
-      }"
-      @hide="openAdjustment = false"
-    >
-      <template #header>
-        <div class="flex justify-content-between">
-          <p class="mt-2 mb-0 text-lg">
-           New Adjustment
-          </p>
-        </div>
-      </template>
-      <template #default>
-      
-    <form class="flex flex-column justify-content-center mx-4" >
-      <div class="mt-3">
-        <label for="amount" class="block font-bold mb-1  required">Amount <span class="required-indicator ml-1"> * </span></label>
-    
-           <InputText
-          id="amount"
-          v-model="item.amount"
-          type="text"
-       class="w-full"
-       
-          required
-        />
-      
-      </div>
-      <div class="mt-1">
-        <label for="amount" class="block font-bold mb-1 required">Date <span class="required-indicator ml-1"> * </span></label>
-        <Calendar 
-  id="amount"
-  
-  v-model="item.date"
-  date-format="yy-mm-dd"
-  :max-date="dayjs().endOf('day').toDate()"
-  :default-date="dayjs().startOf('day').toDate()"
-  class="w-full"
-
-  required
-> </Calendar>
-      
-      </div>
-      <div class="mt-1">
-        <label for="amount" class="block font-bold mb-1  required">Transaction Type <span class="required-indicator ml-1"> * </span></label>
-    
-        <DebouncedAutoCompleteComponent
-        class="w-full"
-            v-if="!loadingSaveAll" id="autocomplete"  field="fullName" item-value="id"
-            :model="transactionType" :suggestions="transactionTypeList" @change="($event) => {
-              onUpdate('transactionType', $event)
-            }" @load="($event) => getTransactionTypeList($event)"
-          />
-      </div>
-      <div class="mt-2">
-        <label for="amount" class="block font-bold mb-1  required">Remark </label>
-    
-           <InputText
-          id="amount"
-          v-model="item.amount"
-          type="text"
-        class="w-full"
-         
-       
-          required
-        />
-      
-      </div>
-      <div class="field flex justify-content-end mt-4 mb-2">
-        <Button  v-tooltip.top="'Save'"  label="Save" type="submit"  class="p-button-primary mr-2 w-6rem mx-1" icon="pi pi-save"/>
-        <Button  v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class=" mr-2 w-6rem mx-1" @click="openAdjustment = false" icon="pi pi-times" />
-      </div>
-    
-    </form>
- 
-  </template>
-    </Dialog>
+   
              
         
-</div>
-  
+
       
        
       </template>
