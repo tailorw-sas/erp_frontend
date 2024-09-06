@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit;
 
-import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,4 +20,5 @@ public class CreateNewCreditRequest {
     private String employee;
     private List<CreateNewCreditBookingRequest> bookings;
     private List<CreateNewCreditAttachmentRequest> attachments;
+    private String employeeName;
 }

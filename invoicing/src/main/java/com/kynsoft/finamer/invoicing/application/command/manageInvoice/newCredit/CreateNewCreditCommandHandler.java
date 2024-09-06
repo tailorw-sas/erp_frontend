@@ -10,7 +10,6 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ResourceType;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
@@ -24,13 +23,6 @@ import java.util.UUID;
 @Component
 public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewCreditCommand> {
 
-    private final IManageRatePlanService ratePlanService;
-    private final IManageNightTypeService nightTypeService;
-    private final IManageRoomTypeService roomTypeService;
-    private final IManageRoomCategoryService roomCategoryService;
-    private final IManageInvoiceTransactionTypeService transactionTypeService;
-    private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
-
     private final IManageInvoiceService invoiceService;
     private final IManageAgencyService agencyService;
     private final IManageHotelService hotelService;
@@ -38,24 +30,18 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageBookingService bookingService;
-    private final IManageRoomRateService rateService;
 
     private final IInvoiceCloseOperationService closeOperationService;
 
-    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
-
     private final IParameterizationService parameterizationService;
     private final IManageResourceTypeService resourceTypeService;
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
-
-    public CreateNewCreditCommandHandler(IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService, IManageInvoiceTransactionTypeService transactionTypeService, IManagePaymentTransactionTypeService paymentTransactionTypeService, IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IManageRoomRateService rateService, IInvoiceCloseOperationService closeOperationService, ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService) {
-        this.ratePlanService = ratePlanService;
-        this.nightTypeService = nightTypeService;
-        this.roomTypeService = roomTypeService;
-        this.roomCategoryService = roomCategoryService;
-        this.transactionTypeService = transactionTypeService;
-        this.paymentTransactionTypeService = paymentTransactionTypeService;
+    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                         ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -63,11 +49,12 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.attachmentTypeService = attachmentTypeService;
         this.bookingService = bookingService;
-        this.rateService = rateService;
         this.closeOperationService = closeOperationService;
-        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
         this.parameterizationService = parameterizationService;
         this.resourceTypeService = resourceTypeService;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
     }
 
     @Override
@@ -216,9 +203,36 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 0.0
         );
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
+        this.producerReplicateManageInvoiceService.create(created);
+
         command.setCredit(created.getId());
         command.setInvoiceId(created.getInvoiceId());
+        command.setInvoiceNumber(created.getInvoiceNumber());
         parentInvoice.setCredits(Math.abs(credits) + Math.abs(invoiceAmount));
         this.invoiceService.update(parentInvoice);
+        this.invoiceStatusHistoryService.create(
+                new InvoiceStatusHistoryDto(
+                        UUID.randomUUID(),
+                        created,
+                        "The invoice data was inserted.",
+                        null,
+                        command.getEmployeeName(),
+                        invoiceStatus
+                )
+        );
+        for(ManageAttachmentDto attachment : created.getAttachments()){
+            this.attachmentStatusHistoryService.create(
+                    new AttachmentStatusHistoryDto(
+                            UUID.randomUUID(),
+                            "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
+                            attachment.getAttachmentId(),
+                            created,
+                            command.getEmployeeName(),
+                            UUID.fromString(command.getEmployee()),
+                            null,
+                            null
+                    )
+            );
+        }
     }
 }

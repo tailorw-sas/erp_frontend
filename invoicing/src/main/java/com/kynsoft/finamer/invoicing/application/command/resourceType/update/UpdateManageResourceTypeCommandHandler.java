@@ -27,10 +27,9 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(resourceTypeDto::setName, command.getName(),
                 resourceTypeDto.getName(), update::setUpdate);
+        resourceTypeDto.setInvoice(command.isInvoice());
 
-        if (update.getUpdate() > 0) {
-            this.service.update(resourceTypeDto);
-        }
+        this.service.update(resourceTypeDto);
 
     }
 

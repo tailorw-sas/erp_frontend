@@ -16,5 +16,6 @@ public class ReplicatePaymentResourceTypeKafka {
     private UUID id;
     private String code;
     private String name;
+    private boolean invoice;
 
 }

@@ -25,7 +25,7 @@ public class ManageAgencyCodeSizeRule extends BusinessRule {
     }
 
     private boolean validateCode(String code) {
-        Pattern pattern = Pattern.compile("^[a-zA-Z]{3,20}$");
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9]{3,20}$");
         Matcher matcher = pattern.matcher(code);
 
         return matcher.matches();

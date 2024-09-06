@@ -13,4 +13,5 @@ public class CreateManageResourceTypeRequest {
     private String description;
     private Status status;
     private Boolean defaults;
+    private boolean invoice;
 }
