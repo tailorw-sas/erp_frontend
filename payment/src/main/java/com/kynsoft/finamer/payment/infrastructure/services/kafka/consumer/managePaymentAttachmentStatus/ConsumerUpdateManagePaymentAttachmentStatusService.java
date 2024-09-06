@@ -22,7 +22,7 @@ public class ConsumerUpdateManagePaymentAttachmentStatusService {
     @KafkaListener(topics = "finamer-update-payment-attachment-status", groupId = "payment-entity-replica")
     public void listen(UpdateManagePaymentAttachmentStatusKafka objKafka) {
         try {
-            UpdateManagePaymentAttachmentStatusCommand command = new UpdateManagePaymentAttachmentStatusCommand(objKafka.getId(), objKafka.getName(), objKafka.getStatus());
+            UpdateManagePaymentAttachmentStatusCommand command = new UpdateManagePaymentAttachmentStatusCommand(objKafka.getId(), objKafka.getName(), objKafka.getStatus(), objKafka.getDefaults());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManagePaymentAttachmentStatusService.class.getName()).log(Level.SEVERE, null, ex);

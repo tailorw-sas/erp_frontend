@@ -8,20 +8,20 @@ import org.springframework.context.ApplicationEventPublisher;
 import java.util.List;
 import java.util.Objects;
 
-public class PaymentImportAmountValidator extends ExcelRuleValidator<PaymentDetailRow> {
-    protected PaymentImportAmountValidator(ApplicationEventPublisher applicationEventPublisher) {
+public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<PaymentDetailRow> {
+    protected PaymentImportDetailAmountValidator(ApplicationEventPublisher applicationEventPublisher) {
         super(applicationEventPublisher);
     }
 
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
         if (Objects.isNull(obj.getBalance())){
-            errorFieldList.add(new ErrorField("Balance", "Balance can't be empty"));
+            errorFieldList.add(new ErrorField("Balance", "Payment Amount can't be empty"));
             return false;
         }
         boolean valid = obj.getBalance() > 0;
         if (!valid) {
-            errorFieldList.add(new ErrorField("Balance", "Balance must be greater than 0"));
+            errorFieldList.add(new ErrorField("Balance", "Payment Amount must be greater than 0"));
             return false;
         }
         return true;

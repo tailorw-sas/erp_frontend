@@ -1,3 +1,6 @@
+@Library(['PullRequestInfo', 'emailNotification']) _
+import com.tailorwsas.notificaciones.NotificadorEmail
+
 pipeline {
     
     agent any
@@ -7,6 +10,9 @@ pipeline {
     }
     
     environment {
+        SISTEMA = 'ERP'
+		GITHUB_REPO = 'erp_backend'
+		GIT_TOKEN = "${env.GITHUB_TOKEN}"
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-cloud-bridges:version'
         SRC = 'cloudBridges'
@@ -20,6 +26,8 @@ pipeline {
         URL_DEV = credentials("URL-K3S-dev")
         URL_QA = credentials("URL-K3S-qa")
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
+        ESTADO_OK = 'OK'
+        ESTADO_ERROR = 'ERROR'
     }
     
     triggers {
@@ -61,9 +69,14 @@ pipeline {
                     def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
                     env.SERVER_K3S_CREDENTIALS = k3sCredentials
 
+                    def prInfo = pullrequests.getPullRequestInfoByGitCommit(env.SISTEMA, env.GITHUB_REPO, env.GIT_COMMIT, env.GIT_TOKEN)
+                    env.PR_TITLE = prInfo.title
+                    env.PR_AUTHOR = prInfo.author
+                    env.EMAIL_AUTHOR = prInfo.authorEmail
+					
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
-                        env.EMAIL_LIST = env.EMAIL_LIST_DEV
+                        env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
@@ -98,24 +111,16 @@ pipeline {
 
      post {
         success {
-            emailext(
-                subject: "DEVOPS - TAILORW - SUCCESS: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
-                body: """<h2><strong>Build Successful!</strong></h2>
-                        <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
-                        <p>Branch: ${env.BRANCH_NAME}</p>""",
-                to: "${EMAIL_LIST}",
-                from: "${EMAIL_FROM}"
-            )
+            script {
+                def notificator = new NotificadorEmail(this)
+                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
+            }
         }
         failure {
-            emailext(
-                subject: "DEVOPS - TAILORW - FAILURE: Job '${env.JOB_NAME}' (${env.BRANCH_NAME})",
-                body: """<h2><strong>Build Failed!</strong></h2>
-                        <p>Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]</p>
-                        <p>Branch: ${env.BRANCH_NAME}</p>""",
-                to: "${EMAIL_LIST}",
-                from: "${EMAIL_FROM}"
-            )
+            script {
+                def notificator = new NotificadorEmail(this)
+                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR)
+            }
         }
     }
 }

@@ -20,7 +20,8 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
                 command.getId(), 
                 command.getCode(), 
                 command.getName(),
-                command.getStatus()
+                command.getStatus(),
+                command.getDefaults()
         ));
     }
 }

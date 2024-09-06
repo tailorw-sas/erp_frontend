@@ -38,8 +38,9 @@ public class PaymentDetailDto {
     private Long paymentDetailId;
     private Long parentId;
     private Double applyDepositValue;
+    private Boolean applayPayment;
 
-    public PaymentDetailDto(UUID id, Status status, PaymentDto payment, ManagePaymentTransactionTypeDto transactionType, Double amount, String remark, List<PaymentDetailDto> children, Double bookingId, String invoiceId, OffsetDateTime transactionDate, String firstName, String lastName, String reservation, String couponNo, Integer adults, Integer childrens) {
+    public PaymentDetailDto(UUID id, Status status, PaymentDto payment, ManagePaymentTransactionTypeDto transactionType, Double amount, String remark, List<PaymentDetailDto> children, Double bookingId, String invoiceId, OffsetDateTime transactionDate, String firstName, String lastName, String reservation, String couponNo, Integer adults, Integer childrens, Boolean applayPayment) {
         this.id = id;
         this.status = status;
         this.payment = payment;
@@ -56,6 +57,7 @@ public class PaymentDetailDto {
         this.couponNo = couponNo;
         this.adults = adults;
         this.childrens = childrens;
+        this.applayPayment = applayPayment;
     }
 
 }

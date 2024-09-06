@@ -30,7 +30,7 @@ public class ManageInvoiceResponse implements IResponse {
         this.id = dto.getId();
         this.invoiceId = dto.getInvoiceId();
         this.invoiceNo = dto.getInvoiceNo();
-        this.invoiceNumber = dto.getInvoiceNumber();
+        this.invoiceNumber = deleteHotelInfo(dto.getInvoiceNumber());
         this.invoiceType = dto.getInvoiceType();
         this.invoiceAmount = dto.getInvoiceAmount();
         if (dto.getBookings() != null) {
@@ -38,6 +38,10 @@ public class ManageInvoiceResponse implements IResponse {
                 this.bookings.add(new ManageBookingResponse(booking));
             }
         }
+    }
+
+    private String deleteHotelInfo(String input) {
+        return input.replaceAll("-(.*?)-", "-");
     }
 
 }

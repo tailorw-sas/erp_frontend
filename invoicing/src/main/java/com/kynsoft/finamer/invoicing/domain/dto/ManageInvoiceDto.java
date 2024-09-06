@@ -43,5 +43,6 @@ public class ManageInvoiceDto {
 
     private Boolean isCloned;
     private ManageInvoiceDto parent;
+    private Double credits;
 
 }

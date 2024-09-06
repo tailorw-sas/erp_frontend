@@ -22,11 +22,12 @@ public class PaymentDetailsNoApplyDepositValidator extends ExcelRuleValidator<Pa
 
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
-        ManagePaymentTransactionTypeDto transactionTypeDto = transactionTypeService.findByCode(obj.getTransactionType());
         if (Objects.isNull(obj.getTransactionType())){
             errorFieldList.add(new ErrorField("Transaction type","Transaction type can't be empty"));
             return false;
         }
+        ManagePaymentTransactionTypeDto transactionTypeDto = transactionTypeService.findByCode(obj.getTransactionType().trim());
+
         if (Objects.isNull(transactionTypeDto)){
             errorFieldList.add(new ErrorField("Transaction type","Transaction type not exist"));
             return false;
@@ -37,6 +38,10 @@ public class PaymentDetailsNoApplyDepositValidator extends ExcelRuleValidator<Pa
         }
         if (transactionTypeDto.getApplyDeposit()){
             errorFieldList.add(new ErrorField("Transaction type","Transaction type can't be Apply Deposit"));
+            return false;
+        }
+        if (Objects.nonNull(obj.getAnti()) && !transactionTypeDto.getDeposit()){
+            errorFieldList.add(new ErrorField("Transaction type","Transaction type must be a deposit type"));
             return false;
         }
 

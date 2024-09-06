@@ -43,7 +43,7 @@ public class PaymentDetailController {
 
     @PostMapping()
     public ResponseEntity<CreatePaymentDetailMessage> create(@RequestBody CreatePaymentDetailRequest request) {
-        CreatePaymentDetailCommand createCommand = CreatePaymentDetailCommand.fromRequest(request);
+        CreatePaymentDetailCommand createCommand = CreatePaymentDetailCommand.fromRequest(request, mediator);
         CreatePaymentDetailMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);
@@ -59,7 +59,7 @@ public class PaymentDetailController {
 
     @PostMapping("/apply-deposit")
     public ResponseEntity<CreatePaymentDetailApplyDepositMessage> createApplyDeposit(@RequestBody CreatePaymentDetailApplyDepositRequest request) {
-        CreatePaymentDetailApplyDepositCommand createCommand = CreatePaymentDetailApplyDepositCommand.fromRequest(request);
+        CreatePaymentDetailApplyDepositCommand createCommand = CreatePaymentDetailApplyDepositCommand.fromRequest(request, mediator);
         CreatePaymentDetailApplyDepositMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);

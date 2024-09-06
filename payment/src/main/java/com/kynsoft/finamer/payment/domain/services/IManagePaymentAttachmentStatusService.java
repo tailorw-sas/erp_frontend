@@ -18,4 +18,6 @@ public interface IManagePaymentAttachmentStatusService {
     ManagePaymentAttachmentStatusDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    ManagePaymentAttachmentStatusDto findByDefaults();
 }

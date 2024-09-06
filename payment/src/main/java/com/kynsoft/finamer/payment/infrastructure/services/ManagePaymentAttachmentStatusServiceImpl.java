@@ -97,4 +97,14 @@ public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentA
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
+    @Override
+    public ManagePaymentAttachmentStatusDto findByDefaults() {
+        Optional<ManagePaymentAttachmentStatus> optionalEntity = repositoryQuery.findByDefault();
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
 }

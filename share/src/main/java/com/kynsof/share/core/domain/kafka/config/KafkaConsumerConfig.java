@@ -1,8 +1,6 @@
 package com.kynsof.share.core.domain.kafka.config;
 
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -36,9 +34,18 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> configProps = createBaseProps();
-        if (!saslUsername.isEmpty() && !saslPassword.isEmpty()) {
-            addSaslConfig(configProps, saslUsername, saslPassword);
-        }
+        // Verificar si SASL es requerido
+//        if (saslUsername != null && !saslUsername.isEmpty() && saslPassword != null && !saslPassword.isEmpty()) {
+//            addSaslConfig(configProps, saslUsername, saslPassword);
+//        } else {
+//            // Asegúrate de que no esté configurado ningún protocolo de seguridad si no se requiere
+//            configProps.remove("security.protocol");
+//            configProps.remove("sasl.mechanism");
+//            configProps.remove("sasl.jaas.config");
+//        }
+//        configProps.remove("security.protocol");
+//        configProps.remove("sasl.mechanism");
+//        configProps.remove("sasl.jaas.config");
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
@@ -55,9 +62,9 @@ public class KafkaConsumerConfig {
     }
 
     private void addSaslConfig(Map<String, Object> props, String username, String password) {
-        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-        props.put(SaslConfigs.SASL_JAAS_CONFIG,
+        props.put("security.protocol", "SASL_PLAINTEXT");
+        props.put("sasl.mechanism", "PLAIN");
+        props.put("sasl.jaas.config",
                 String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
     }
 

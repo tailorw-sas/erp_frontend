@@ -24,6 +24,10 @@ public class PaymentDetailExistPaymentValidator extends ExcelRuleValidator<Payme
             errorFieldList.add(new ErrorField("Payment id","Payment can't be empty"));
             return false;
         }
+        if (Integer.parseInt(obj.getPaymentId())<0){
+            errorFieldList.add(new ErrorField("Payment id","Payment must be greater than 0"));
+            return false;
+        }
          if (!paymentService.existPayment(Long.parseLong(obj.getPaymentId()))){
              errorFieldList.add(new ErrorField("Payment id","Payment not exist"));
              return false;

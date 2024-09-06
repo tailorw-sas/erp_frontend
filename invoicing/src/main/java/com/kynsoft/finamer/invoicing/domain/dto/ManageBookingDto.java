@@ -52,6 +52,8 @@ public class ManageBookingDto {
     private List<ManageRoomRateDto> roomRates;
     private Long nights;
 
+    private ManageBookingDto parent;
+
     public ManageBookingDto(ManageBookingDto dto) {
         this.id = UUID.randomUUID();
         this.bookingId = dto.getBookingId();
@@ -83,6 +85,5 @@ public class ManageBookingDto {
         this.roomCategory = dto.getRoomCategory();
         this.roomRates = new ArrayList<>();
         this.nights = dto.getNights();
-
     }
 }

@@ -46,6 +46,8 @@ public class ManageBookingResponse implements IResponse {
     private ManageRoomCategoryDto roomCategory;
     private Long nights;
 
+    private ManageBookingResponse parent;
+
     public ManageBookingResponse(ManageBookingDto dto) {
         this.id = dto.getId();
         this.bookingId = dto.getBookingId();
@@ -76,5 +78,6 @@ public class ManageBookingResponse implements IResponse {
         this.roomCategory = dto.getRoomCategory();
         this.reservationNumber = dto.getReservationNumber();
         this.nights = dto.getNights();
+        this.parent = dto.getParent() != null ? new ManageBookingResponse(dto.getParent()) : null;
     }
 }

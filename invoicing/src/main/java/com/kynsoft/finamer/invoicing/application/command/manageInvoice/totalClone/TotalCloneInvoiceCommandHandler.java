@@ -33,18 +33,20 @@ public class TotalCloneInvoiceCommandHandler implements ICommandHandler<TotalClo
     private final IManageHotelService hotelService;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageBookingService bookingService;
+    private final IParameterizationService parameterizationService;
+    private final IManageInvoiceStatusService invoiceStatusService;
 
     private final IInvoiceCloseOperationService closeOperationService;
 
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     public TotalCloneInvoiceCommandHandler(IManageRatePlanService ratePlanService,
-            IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
-            IManageRoomCategoryService roomCategoryService, IManageInvoiceService service,
-            IManageAgencyService agencyService, IManageHotelService hotelService,
-            IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
-            IInvoiceCloseOperationService closeOperationService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
+                                           IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
+                                           IManageRoomCategoryService roomCategoryService, IManageInvoiceService service,
+                                           IManageAgencyService agencyService, IManageHotelService hotelService,
+                                           IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IParameterizationService parameterizationService, IManageInvoiceStatusService invoiceStatusService,
+                                           IInvoiceCloseOperationService closeOperationService,
+                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
         this.roomTypeService = roomTypeService;
@@ -54,6 +56,8 @@ public class TotalCloneInvoiceCommandHandler implements ICommandHandler<TotalClo
         this.hotelService = hotelService;
         this.attachmentTypeService = attachmentTypeService;
         this.bookingService = bookingService;
+        this.parameterizationService = parameterizationService;
+        this.invoiceStatusService = invoiceStatusService;
         this.closeOperationService = closeOperationService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
     }
@@ -161,7 +165,7 @@ public class TotalCloneInvoiceCommandHandler implements ICommandHandler<TotalClo
                     ratePlanDto,
                     nightTypeDto,
                     roomTypeDto,
-                    roomCategoryDto, new LinkedList<>(), null);
+                    roomCategoryDto, new LinkedList<>(), null, null);
 
             ManageBookingDto oldBookingDto = this.bookingService.findById(command.getBookingCommands().get(i).getId());
 
@@ -238,7 +242,8 @@ public class TotalCloneInvoiceCommandHandler implements ICommandHandler<TotalClo
         }
 
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
-
+        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
+        ManageInvoiceStatusDto invoiceStatus = parameterization != null ? this.invoiceStatusService.findByCode(parameterization.getProcessed()) : null;
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
                 invoiceNumber,
                 command.getInvoiceCommand().getInvoiceDate(), command.getInvoiceCommand().getDueDate(),
@@ -246,8 +251,8 @@ public class TotalCloneInvoiceCommandHandler implements ICommandHandler<TotalClo
                 0.00,
                 0.00, hotelDto, agencyDto,
                 command.getInvoiceCommand().getInvoiceType(), status,
-                false, bookings, attachmentDtos, null, null, null, null, null, true,
-                invoiceToClone);
+                false, bookings, attachmentDtos, null, null, null, invoiceStatus, null, true,
+                invoiceToClone, invoiceToClone.getCredits());
 
         ManageInvoiceDto created = service.create(invoiceDto);
 

@@ -56,29 +56,10 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         List<ManagePaymentAttachmentStatusDto> managePaymentAttachmentStatusDtoList = service.findByIds(command.getNavigate());
         dto.setRelatedStatuses(managePaymentAttachmentStatusDtoList);
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
-
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("LLega: " + dto.getModule());
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
         this.updateModule(dto::setModule, command.getModule(), dto.getModule().getId(), update::setUpdate);
 
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
         this.service.update(dto);
-        this.producerUpdateManagePaymentAttachmentStatusService.update(new UpdateManagePaymentAttachmentStatusKafka(dto.getId(), dto.getName(), command.getStatus().name()));
+        this.producerUpdateManagePaymentAttachmentStatusService.update(new UpdateManagePaymentAttachmentStatusKafka(dto.getId(), dto.getName(), command.getStatus().name(), dto.getDefaults()));
 //        if (update.getUpdate() > 0) {
 //        }
     }
