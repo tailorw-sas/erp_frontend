@@ -1306,7 +1306,8 @@ async function saveItem(item: { [key: string]: any }) {
       if (itemDetails && itemDetails.cloned) {
         await getBookingClonationList()
         await getRoomRateClonationList(idItemCreated.value)
-        await getItemById(itemDetails.cloned)
+        await getItemById(itemDetails)
+      //  await getItemById(itemDetails.cloned)
 
         // Obtener los detalles del elemento recién creado
       }
