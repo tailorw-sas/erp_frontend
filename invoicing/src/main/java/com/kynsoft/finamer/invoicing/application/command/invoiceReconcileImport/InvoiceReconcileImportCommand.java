@@ -12,8 +12,10 @@ public class InvoiceReconcileImportCommand implements ICommand {
     private final String employeeId;
 
 
-    public InvoiceReconcileImportCommand(String importProcessId) {
+    public InvoiceReconcileImportCommand(String importProcessId, String employee, String employeeId) {
         this.importProcessId = importProcessId;
+        this.employee = employee;
+        this.employeeId = employeeId;
     }
 
     @Override
