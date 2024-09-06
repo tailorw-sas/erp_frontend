@@ -331,7 +331,6 @@ function handleAttachmentHistoryDialogOpen() {
 
 // metodo de clonacion de factura parcial
 
-
 async function getBookingList(clearFilter: boolean = false) {
   try {
     const Payload: any = ({
@@ -435,8 +434,6 @@ async function getBookingClonationList(clearFilter: boolean = false) {
     // Options.value.loading = false
   }
 }
-
-
 
 async function getRoomRateClonationList(idItemCreated: any) {
   try {
@@ -918,32 +915,32 @@ async function getHotelList(query = '') {
   try {
     const payload
       = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
@@ -961,32 +958,32 @@ async function getAgencyList(query = '') {
   try {
     const payload
       = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
@@ -1143,13 +1140,27 @@ async function deleteItem(id: string) {
   }
 }
 
-function disabledButtonSave(){
+function disabledButtonSave() {
   let result = false
- if (adjustmentList.value.length === 0 || attachmentList.value.length === 0){
-   result = true
- }
+  if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
+    result = true
+  }
+  else {
+    const listIds = roomRateList.value.map((roomRate: any) => roomRate.id)
+    if (listIds.length === 0) {
+      result = true
+    }
+    else {
+      // recorrer la lista de ids y ver si todos los ids existen en la lista de adjustments y la propiedad a verificar se llama roomRate
+      for (let i = 0; i < listIds.length; i++) {
+        if (!adjustmentList.value.some((adjustment: any) => adjustment.roomRate === listIds[i])) {
+          result = true
+          break
+        }
+      }
+    }
+  }
   return result
-
 }
 
 async function saveItem(item: { [key: string]: any }) {
@@ -1204,10 +1215,9 @@ async function saveItem(item: { [key: string]: any }) {
 
       // clearForm();
     }
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    navigateTo('/invoice');
+    await new Promise(resolve => setTimeout(resolve, 5000))
+    navigateTo('/invoice')
   }
-
 }
 const goToList = async () => await navigateTo('/invoice')
 
@@ -1215,32 +1225,32 @@ async function getTransactionTypeList(query = '') {
   try {
     const payload
       = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     transactionTypeList.value = []
     const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
@@ -1685,27 +1695,35 @@ onMounted(async () => {
     Partial Clone
   </div>
   <div class="p-4">
-    <EditFormV2 :key="formReload" :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields" :item="item"
+    <EditFormV2
+      :key="formReload" :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields" :item="item"
       :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid pt-3"
-      @cancel="clearForm" @delete="requireConfirmationToDelete($event)">
+      @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
+    >
       <template #field-invoiceDate="{ item: data, onUpdate }">
-        <Calendar v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
+        <Calendar
+          v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
           @update:model-value="($event) => {
             onUpdate('invoiceDate', $event)
-          }" />
+          }"
+        />
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
-        <InputText v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
-          invoiceAmountError = false
-          onUpdate('invoiceAmount', $event)
-        }" />
+        <InputText
+          v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
+            invoiceAmountError = false
+            onUpdate('invoiceAmount', $event)
+          }"
+        />
         <span v-if="invoiceAmountError" class="error-message p-error text-xs">{{ invoiceAmountErrorMessage }}</span>
       </template>
       <template #field-invoiceType="{ item: data, onUpdate }">
-        <Dropdown v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
+        <Dropdown
+          v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
           option-label="name" return-object="false" show-clear disabled @update:model-value="($event) => {
             onUpdate('invoiceType', $event)
-          }">
+          }"
+        >
           <template #option="props">
             {{ props.option?.code }}-{{ props.option?.name }}
           </template>
@@ -1716,10 +1734,12 @@ onMounted(async () => {
         <Skeleton v-else height="2rem" class="mb-2" />
       </template>
       <template #field-status="{ item: data, onUpdate }">
-        <Dropdown v-if="!loadingSaveAll" v-model="data.status" :options="[...ENUM_INVOICE_STATUS]" option-label="name"
+        <Dropdown
+          v-if="!loadingSaveAll" v-model="data.status" :options="[...ENUM_INVOICE_STATUS]" option-label="name"
           return-object="false" show-clear disabled @update:model-value="($event) => {
             onUpdate('status', $event)
-          }">
+          }"
+        >
           <template #option="props">
             {{ props.option?.code }}-{{ props.option?.name }}
           </template>
@@ -1732,7 +1752,8 @@ onMounted(async () => {
 
       <template #form-footer="props">
         <div style="width: 100%; height: 100%;">
-          <InvoicePartialTabView :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
+          <InvoicePartialTabView
+            :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
             :invoice-obj-amount="invoiceAmount" :is-dialog-open="bookingDialogOpen"
             :close-dialog="() => { bookingDialogOpen = false }" :open-dialog="handleDialogOpen"
             :selected-booking="selectedBooking" :open-adjustment-dialog="openAdjustmentDialog"
@@ -1742,31 +1763,40 @@ onMounted(async () => {
             :selected-invoice="idItemCreated" :booking-list="bookingList" :adjustment-list="adjustmentList"
             :add-adjustment="addAdjustment" :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
               active = $event
-            }" :open-adjustment-dialog-first-time="showAdjustmentDialogFirstTime" />
+            }" :open-adjustment-dialog-first-time="showAdjustmentDialogFirstTime"
+          />
 
           <div>
             <div class="flex justify-content-end">
-              <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-              :disabled="disabledButtonSave()" @click="() => {
-      saveItem(props.item.fieldValues)
-      // createPartialClonation()
-    }" />
+              <Button
+                v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
+                :disabled="disabledButtonSave()" @click="() => {
+                  saveItem(props.item.fieldValues)
+                  // createPartialClonation()
+                }"
+              />
 
               <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
-                <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                  :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" />
+                <Button
+                  v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
+                  :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
+                />
               </IfCan>
-              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times"
-                @click="goToList" />
+              <Button
+                v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times"
+                @click="goToList"
+              />
             </div>
           </div>
         </div>
         <div v-if="attachmentDialogOpen">
-          <AttachmentDialogClone :add-item="addAttachment"
+          <AttachmentDialogClone
+            :add-item="addAttachment"
             :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem); }"
             :is-creation-dialog="idItemCreated === ''" header="Manage Invoice Attachment" :list-items="attachmentList"
             :open-dialog="attachmentDialogOpen" :update-item="updateAttachment"
-            :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item" :delete-item="deleteAttachment" />
+            :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item" :delete-item="deleteAttachment"
+          />
         </div>
       </template>
     </EditFormV2>
