@@ -12,6 +12,7 @@ import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTotalTabView.vue'
 
+const idItemCreated = ref('')
 const Options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
@@ -81,6 +82,11 @@ const confagencyListApi = reactive({
 const confinvoiceTypeListtApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
+})
+
+const confAttachmentApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-attachment',
 })
 
 const confAdjustmentsApi = reactive({
@@ -618,6 +624,7 @@ async function saveItem(item: { [key: string]: any }) {
 
   try {
     const response: any = await createItem(item)
+    idItemCreated.value = response.cloned
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     if (route.query.type === InvoiceType.CREDIT) { return navigateTo({ path: `/invoice` }) }
     navigateTo({ path: `/invoice/edit/${response?.id}` })
@@ -1032,6 +1039,72 @@ async function getBookingList(clearFilter: boolean = false) {
   }
 }
 
+
+async function getAttachmentList(globalSelectedInvoicing: any) {
+  try {
+    // Inicializar variables y estados
+    idItemToLoadFirstTime.value = ''
+    listItems.value = []
+
+    // Construir el payload para la búsqueda
+    const payload: any = {
+      filter: [
+        {
+          key: 'invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+
+    // Realizar la búsqueda utilizando el GenericService
+    const response = await GenericService.search(
+      confAttachmentApi.moduleApi,
+      confAttachmentApi.uriApi,
+      payload
+    )
+
+    // Extraer los datos de la respuesta
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    // Actualizar los valores de la paginación
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    // Procesar y formatear los datos de la lista de adjuntos
+    const attachments = dataList.map((item: any) => ({
+      ...item,
+      type: {
+        ...item?.type,
+        name: `${item?.type?.code}-${item?.type?.name}`
+      },
+      paymenResourceType: 'INV-Invoice',
+      resource: globalSelectedInvoicing
+    }))
+
+    // Establecer el primer elemento de la lista como el que se cargará inicialmente
+    if (attachments.length > 0) {
+      idItemToLoadFirstTime.value = attachments[0].id
+    }
+
+    // Devolver la lista de adjuntos
+    return attachments
+  }
+  catch (error) {
+    console.error(error)
+    return [] // Devolver una lista de adjuntos vacía en caso de error
+  }
+}
+
+
 function calcBookingInvoiceAmount(roomRate: any) {
   const bookingIndex = bookingList.value.findIndex(b => b?.id === roomRate?.booking)
 
@@ -1372,12 +1445,9 @@ onMounted(async () => {
           </div>
         </div>
         <div v-if="attachmentDialogOpen">
-          <AttachmentDialogTotal
-            :add-item="addAttachment" :close-dialog="() => { attachmentDialogOpen = false }"
-            :is-creation-dialog="true" header="Manage Invoice Attachment" :list-items="attachmentList"
-            :open-dialog="attachmentDialogOpen" :update-item="updateAttachment" selected-invoice=""
-            :selected-invoice-obj="{}"
-          />
+          <AttachmentDialogTotal :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
+        :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
+        :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item" />
         </div>
    
              
