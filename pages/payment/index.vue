@@ -265,6 +265,17 @@ const applyPaymentOptions = ref({
   messageToDelete: 'Do you want to save the change?'
 })
 
+const applyPaymentBookingOptions = ref({
+  tableName: 'Booking',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-booking',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+
 const payloadToApplyPayment = ref<GenericObject> ({
   applyPayment: false,
   booking: ''
@@ -1450,6 +1461,7 @@ onMounted(async () => {
             @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
             @update:clicked-item="invoiceSelectedListForApplyPayment = $event"
           >
+            <!-- @on-expand-row="onExpandRowApplyPayment($event)" -->
             <template #column-status="{ data: item }">
               <Badge
                 :value="getStatusName(item?.status)"
@@ -1458,9 +1470,18 @@ onMounted(async () => {
             </template>
 
             <template #expansion="{ data: lista }">
-              Esto es una prueba
+              <!-- <pre>{{ invoiceSelectedListForApplyPayment }}</pre> -->
               <pre>{{ lista.bookings }}</pre>
               <div class="p-0 m-0">
+                <DynamicTable
+                  class="card p-0"
+                  :data="applyPaymentListOfInvoice"
+                  :columns="columnsExpandTable"
+                  :options="applyPaymentBookingOptions"
+                  :pagination="applyPaymentPagination"
+                  @on-change-pagination="applyPaymentOnChangePage = $event"
+                />
+
                 <!-- <DataTable :value="lista.bookings" striped-rows>
                   <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
                   <template #empty>
