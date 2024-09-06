@@ -255,7 +255,7 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, type: {
+      ListItems.value = [...ListItems.value, { ...iterator,attachmentId:'', loadingEdit: false, loadingDelete: false, type: {
         ...iterator?.type,
         name: `${iterator?.type?.code}-${iterator?.type?.name}`
       } }]
@@ -491,7 +491,7 @@ async function getItemById(id: string) {
         item.value.file = response.file
         item.value.remark = response.remark
         item.value.invoice = response.invoice
-        item.value.resource = response.invoice.invoiceId
+     //   item.value.resource = response.invoice.invoiceId
         item.value.resourceType = `${`${OBJ_ENUM_INVOICE_TYPE_CODE[response.invoice.invoiceType]}-${OBJ_ENUM_INVOICE[response.invoice.invoiceType]}`}`
         selectedAttachment.value = response.attachmentId
       }
