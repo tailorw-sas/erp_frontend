@@ -1,12 +1,10 @@
 package com.kynsoft.finamer.invoicing.application.command.invoiceReconcileImport;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.event.createAttachment.CreateAttachmentEvent;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.StorageService;
-import org.apache.catalina.core.ApplicationContext;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,14 +13,12 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
 
 @Component
 public class InvoiceReconcileImportCommandHandler implements ICommandHandler<InvoiceReconcileImportCommand> {
-
     private final Logger log = LoggerFactory.getLogger(InvoiceReconcileImportCommandHandler.class);
     private final StorageService storageService;
     private final IManageInvoiceService invoiceService;
@@ -38,11 +34,12 @@ public class InvoiceReconcileImportCommandHandler implements ICommandHandler<Inv
     @Override
     public void handle(InvoiceReconcileImportCommand command) {
 
-        storageService.loadAll()
+        storageService.loadAll(command.getImportProcessId())
                 .parallel()
                 .map(Path::toFile )
                 .filter(this::isAttachmentValid)
                 .forEach(attachmentFile->createInvoiceAttachment(attachmentFile,command));
+        this.cleanImportationResource(command.getImportProcessId());
     }
 
     private boolean isAttachmentValid(File file){
@@ -74,5 +71,9 @@ public class InvoiceReconcileImportCommandHandler implements ICommandHandler<Inv
             }
 
 
+    }
+
+    private void cleanImportationResource(String importProcessId){
+        storageService.deleteAll(importProcessId);
     }
 }

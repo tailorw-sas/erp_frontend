@@ -30,7 +30,7 @@ public class InvoiceReconcileImportController {
                                                            @RequestPart("importProcessId") String importProcessId) {
 
         return storageService
-                .store(files)
+                .store(files,importProcessId )
                 .flatMap(other -> {
                             InvoiceReconcileImportCommand command = new InvoiceReconcileImportCommand(importProcessId);
                             return Mono.just(ResponseEntity.ok(mediator.send(command)));

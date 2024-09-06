@@ -11,13 +11,15 @@ public interface StorageService {
 
     void init();
 
-    Flux<?> store(Flux<FilePart> files);
+    Flux<?> store(Flux<FilePart> files,String importProcessId);
 
-    Stream<Path> loadAll();
+    Stream<Path> loadAll(String importProcessId);
 
     Path load(String filename);
 
     InputStream loadAsResource(String filename);
 
-    void deleteAll();
+    void deleteAll(String importProcessId);
+
+    void createDirectory(Path path);
 }

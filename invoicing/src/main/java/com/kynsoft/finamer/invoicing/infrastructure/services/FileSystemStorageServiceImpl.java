@@ -7,6 +7,7 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import reactor.core.publisher.Flux;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,16 +29,19 @@ public class FileSystemStorageServiceImpl implements StorageService {
     }
 
     @Override
-    public Flux<?> store(Flux<FilePart> files) {
-        return files.map(filePart -> filePart.transferTo(rootLocation));
+    public Flux<?> store(Flux<FilePart> files, String importProcessId) {
+        Path importPath = getImportLocation(importProcessId);
+        this.createDirectory(importPath);
+        return files.map(filePart -> filePart.transferTo(importPath));
     }
 
     @Override
-    public Stream<Path> loadAll() {
+    public Stream<Path> loadAll(String importProcessId) {
         try {
-            return Files.walk(this.rootLocation, 1)
-                    .filter(path -> !path.equals(this.rootLocation))
-                    .map(this.rootLocation::relativize);
+            Path importPath=getImportLocation(importProcessId);
+            return Files.walk(importPath, 1)
+                    .filter(path -> !path.equals(importPath))
+                    .map(importPath::relativize);
         } catch (IOException e) {
             throw new StorageException("Failed to read stored files", e);
         }
@@ -60,16 +64,27 @@ public class FileSystemStorageServiceImpl implements StorageService {
     }
 
     @Override
-    public void deleteAll() {
-        FileSystemUtils.deleteRecursively(rootLocation.toFile());
+    public void deleteAll(String importProcessId) {
+        Path importPath=getImportLocation(importProcessId);
+        FileSystemUtils.deleteRecursively(importPath.toFile());
     }
 
     @Override
-    public void init() {
+    public void createDirectory(Path path) {
         try {
-            Files.createDirectories(rootLocation);
+            Files.createDirectories(path);
         } catch (IOException e) {
             throw new StorageException("Could not initialize storage", e);
         }
     }
+
+    @Override
+    public void init() {
+        createDirectory(rootLocation);
+    }
+
+    private Path getImportLocation(String importProcessId) {
+        return Paths.get(rootLocation.toFile().getAbsolutePath(), importProcessId);
+    }
+
 }
