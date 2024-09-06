@@ -35,8 +35,9 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     private final IParameterizationService parameterizationService;
     private final IManageResourceTypeService resourceTypeService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
-    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService) {
+    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -48,6 +49,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         this.parameterizationService = parameterizationService;
         this.resourceTypeService = resourceTypeService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
     }
 
     @Override
@@ -211,5 +213,19 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                         invoiceStatus
                 )
         );
+        for(ManageAttachmentDto attachment : created.getAttachments()){
+            this.attachmentStatusHistoryService.create(
+                    new AttachmentStatusHistoryDto(
+                            UUID.randomUUID(),
+                            "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
+                            attachment.getAttachmentId(),
+                            created,
+                            command.getEmployeeName(),
+                            UUID.fromString(command.getEmployee()),
+                            null,
+                            null
+                    )
+            );
+        }
     }
 }
