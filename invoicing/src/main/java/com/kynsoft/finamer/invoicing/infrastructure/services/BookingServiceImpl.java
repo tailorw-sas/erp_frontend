@@ -11,7 +11,6 @@ import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooki
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.BookingImportProcessDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
@@ -20,8 +19,8 @@ import com.kynsoft.finamer.invoicing.domain.services.ImportBookingService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingProcessEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportProcessRedisEntity;
-import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportProcessRedisRepository;
-import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportRowErrorRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportProcessRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportRowErrorRedisRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.Async;
@@ -29,7 +28,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Optional;
 
 @Service
 public class BookingServiceImpl implements ImportBookingService {

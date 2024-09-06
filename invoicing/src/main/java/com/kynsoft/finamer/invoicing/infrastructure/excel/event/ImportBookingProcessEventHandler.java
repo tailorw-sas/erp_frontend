@@ -1,9 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.event;
 
 import com.kynsoft.finamer.invoicing.domain.dto.BookingImportProcessDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportProcessRedisEntity;
-import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportProcessRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportProcessRedisRepository;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 

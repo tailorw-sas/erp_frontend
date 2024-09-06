@@ -32,4 +32,8 @@ public interface IManageInvoiceService {
     List<ManageInvoiceDto> findAllToReplicate();
 
     Double findSumOfAmountByParentId(UUID parentId);
+
+    ManageInvoiceDto findByInvoiceId(long id);
+
+    boolean existManageInvoiceByInvoiceId(long invoiceId);
 }

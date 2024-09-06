@@ -241,4 +241,17 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return this.repositoryQuery.findSumOfAmountByParentId(parentId).orElse(0.0);
     }
 
+    @Override
+    public ManageInvoiceDto findByInvoiceId(long id) {
+        return repositoryQuery.findByInvoiceId(id)
+                .map(ManageInvoice::toAggregate)
+                .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
+                        new ErrorField("invoiceId", "The invoice not found."))));
+    }
+
+    @Override
+    public boolean existManageInvoiceByInvoiceId(long invoiceId) {
+        return repositoryQuery.existsByInvoiceId(invoiceId);
+    }
+
 }

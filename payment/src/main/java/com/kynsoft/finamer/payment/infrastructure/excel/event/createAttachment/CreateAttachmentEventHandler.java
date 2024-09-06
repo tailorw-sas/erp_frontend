@@ -82,8 +82,6 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
 
         ResourceTypeResponse resourceTypeResponse = (ResourceTypeResponse)resourceType.getData().get(0);
 
-
-
         AttachmentTypeResponse attachmentTypeResponse =  (AttachmentTypeResponse)attachmentType.getData().get(0);
 
         ObjectMapper objectMapper = new ObjectMapper();

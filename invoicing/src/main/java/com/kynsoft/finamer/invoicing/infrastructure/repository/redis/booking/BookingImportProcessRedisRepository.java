@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.infrastructure.repository.redis;
+package com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking;
 
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportProcessRedisEntity;
 import org.springframework.data.repository.CrudRepository;
