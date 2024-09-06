@@ -1,4 +1,4 @@
-@Library('emailNotification') _
+@Library(['PullRequestInfo', 'emailNotification']) _
 import com.tailorwsas.notificaciones.NotificadorEmail
 
 pipeline {
@@ -11,6 +11,8 @@ pipeline {
     
     environment {
         SISTEMA = 'ERP'
+		GITHUB_REPO = 'erp_backend'
+		GIT_TOKEN = "${env.GITHUB_TOKEN}"
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-identity:version'
         SRC = 'identity'
@@ -78,6 +80,11 @@ pipeline {
                     def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
                     env.SERVER_K3S_CREDENTIALS = k3sCredentials
 
+                    def prInfo = pullrequests.getPullRequestInfoByGitCommit(env.SISTEMA, env.GITHUB_REPO, env.GIT_COMMIT, env.GIT_TOKEN)
+                    env.PR_TITLE = prInfo.title
+                    env.PR_AUTHOR = prInfo.author
+                    env.EMAIL_AUTHOR = prInfo.authorEmail
+					
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
                         env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
@@ -117,13 +124,13 @@ pipeline {
         success {
             script {
                 def notificator = new NotificadorEmail(this)
-                notificator.sendEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK)
+                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
             }
         }
         failure {
             script {
                 def notificator = new NotificadorEmail(this)
-                notificator.sendEmail(env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR)
+                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR)
             }
         }
     }

@@ -22,16 +22,16 @@ public class KafkaProducerConfig {
     @Value("${KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
     private String bootstrapAddress;
 
-    @Bean
-    @Profile("dev")
-    public ProducerFactory<String, Object> devProducerFactory() {
-        Map<String, Object> configProps = createBaseProps();
-        addSaslConfig(configProps, "user1", "AkC7B1ooWO");
-        return new DefaultKafkaProducerFactory<>(configProps);
-    }
+//    @Bean
+//    @Profile("dev")
+//    public ProducerFactory<String, Object> devProducerFactory() {
+//        Map<String, Object> configProps = createBaseProps();
+//        addSaslConfig(configProps, "user1", "AkC7B1ooWO");
+//        return new DefaultKafkaProducerFactory<>(configProps);
+//    }
 
     @Bean
-    @Profile("!dev")
+    //@Profile("!dev")
     public ProducerFactory<String, Object> defaultProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         return new DefaultKafkaProducerFactory<>(configProps);

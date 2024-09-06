@@ -20,7 +20,6 @@ public class AgencyController {
 
         this.mediator = mediator;
     }
-
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
