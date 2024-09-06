@@ -36,20 +36,16 @@ public class InvoiceReconcileImportController {
     }
 
     @PostMapping("/import-reconcile")
-    public Flux<ResponseEntity<?>> importReconcileFromFile(@RequestPart("files") Flux<FilePart> files,
-                                                           @RequestPart("importProcessId") String importProcessId,
-                                                           @RequestPart("employee") String employee,
-                                                           @RequestPart("employeeId") String employeeId
+    public ResponseEntity<?> importReconcileFromFile(@RequestPart("files") Flux<FilePart> files,
+                                                     @RequestPart("importProcessId") String importProcessId,
+                                                     @RequestPart("employee") String employee,
+                                                     @RequestPart("employeeId") String employeeId
     ) {
-
-        return storageService
-                .store(files, importProcessId)
-                .flatMap(other -> {
-                            InvoiceReconcileImportRequest request = new InvoiceReconcileImportRequest(importProcessId, employee, employeeId);
-                            InvoiceReconcileImportCommand command = new InvoiceReconcileImportCommand(request);
-                            return Mono.just(ResponseEntity.ok(mediator.send(command)));
-                        }
-                );
+        this.storageService.store(files, importProcessId);
+        InvoiceReconcileImportRequest request = new InvoiceReconcileImportRequest(importProcessId, employee, employeeId);
+        InvoiceReconcileImportCommand command = new InvoiceReconcileImportCommand(request);
+        mediator.send(command);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping(path = "/import-search")

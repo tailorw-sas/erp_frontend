@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.domain.exception;
+package com.kynsof.share.core.infrastructure.exceptions;
 
 public class StorageException extends RuntimeException {
     public StorageException(String message) {

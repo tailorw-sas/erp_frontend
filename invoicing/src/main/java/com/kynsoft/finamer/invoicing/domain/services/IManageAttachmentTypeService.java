@@ -18,4 +18,5 @@ public interface IManageAttachmentTypeService {
 
     ManageAttachmentTypeDto findById(UUID id);
 
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filter);
 }

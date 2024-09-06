@@ -1,21 +1,19 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileImport.importReconcile.InvoiceReconcileImportCommand;
 import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileImport.importReconcile.InvoiceReconcileImportRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.InvoiceReconcileImportProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.InvoiceReconcileImportProcessStatusResponse;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.InvoiceReconcileImportErrorRequest;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.BookingImportProcessDto;
+import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileImportProcessStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.event.createAttachment.CreateAttachmentEvent;
+import com.kynsoft.finamer.invoicing.domain.event.importError.CreateImportErrorEvent;
+import com.kynsoft.finamer.invoicing.domain.event.importStatus.CreateImportStatusEvent;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.InvoiceReconcileImportService;
 import com.kynsoft.finamer.invoicing.domain.services.StorageService;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportProcessRedisEntity;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.InvoiceReconcileImportError;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.InvoiceReconcileImportProcessStatusRedisEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcile.InvoiceReconcileImportErrorRedisRepository;
@@ -29,8 +27,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,48 +60,79 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
     @Override
     @Async
     public void importReconcileFromFile(InvoiceReconcileImportRequest request) {
+        this.createImportProcessStatusEvent(
+                InvoiceReconcileImportProcessStatusDto.builder()
+                        .status(EProcessStatus.RUNNING)
+                        .importProcessId(request.getImportProcessId()).build()
+        );
         storageService.loadAll(request.getImportProcessId())
                 .parallel()
-                .map(Path::toFile )
-                .filter(this::isAttachmentValid)
-                .forEach(attachmentFile->createInvoiceAttachment(attachmentFile,request));
+                .map(Path::toFile)
+                .filter(file -> this.isAttachmentValid(file, request.getImportProcessId()))
+                .forEach(attachmentFile -> createInvoiceAttachment(attachmentFile, request));
         this.cleanImportationResource(request.getImportProcessId());
+        this.createImportProcessStatusEvent(
+                InvoiceReconcileImportProcessStatusDto.builder()
+                        .status(EProcessStatus.FINISHED)
+                        .importProcessId(request.getImportProcessId()).build()
+        );
     }
 
-    private boolean isAttachmentValid(File file){
+    private void createImportProcessStatusEvent(InvoiceReconcileImportProcessStatusDto dto) {
+        CreateImportStatusEvent createImportStatusEvent = new CreateImportStatusEvent(this, dto);
+        applicationEventPublisher.publishEvent(createImportStatusEvent);
+    }
+
+    private boolean isAttachmentValid(File file, String importProcessId) {
         try {
-            return invoiceService.existManageInvoiceByInvoiceId(getInvoiceIdFromFileName(file));
-        }catch (Exception e){
-            log.error(e.getMessage());
+            return invoiceService.existManageInvoiceByInvoiceId(Long.parseLong(getInvoiceIdFromFileName(file)));
+        } catch (Exception e) {
+            this.processError("File name is not valid " + getInvoiceIdFromFileName(file), importProcessId);
             return false;
         }
     }
-    private long getInvoiceIdFromFileName(File file){
-        String fileName = FilenameUtils.removeExtension(file.getName());
-        return Long.parseLong(fileName);
+
+    private String getInvoiceIdFromFileName(File file) {
+        return FilenameUtils.removeExtension(file.getName());
     }
-    private void createInvoiceAttachment(File attachment, InvoiceReconcileImportRequest request){
-        try (FileInputStream fileInputStream = new FileInputStream(attachment)) {
-            ManageInvoiceDto manageInvoiceDto = invoiceService.findByInvoiceId(getInvoiceIdFromFileName(attachment));
+
+    private void createInvoiceAttachment(File attachment, InvoiceReconcileImportRequest request) {
+        try (InputStream inputStream = storageService.loadAsResource(attachment.getName(), request.getImportProcessId())) {
+            ManageInvoiceDto manageInvoiceDto = invoiceService.findByInvoiceId(Long.parseLong(getInvoiceIdFromFileName(attachment)));
             CreateAttachmentEvent createAttachmentEvent = new CreateAttachmentEvent(this,
                     manageInvoiceDto.getId(),
                     request.getEmployee(),
                     UUID.fromString(request.getEmployeeId()),
                     String.valueOf(getInvoiceIdFromFileName(attachment)),
                     "Uploaded from file",
-                    fileInputStream.readAllBytes()
-                    );
+                    inputStream.readAllBytes()
+            );
             applicationEventPublisher.publishEvent(createAttachmentEvent);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            this.createImportProcessStatusEvent(
+                    InvoiceReconcileImportProcessStatusDto.builder()
+                            .status(EProcessStatus.FINISHED)
+                            .hasError(true)
+                            .exceptionMessage("The attachment could not be created")
+                            .importProcessId(request.getImportProcessId()).build()
+            );
+
         }
 
 
     }
 
-    private void cleanImportationResource(String importProcessId){
+    private void processError(String message, String importProcessId) {
+        log.error(message);
+        InvoiceReconcileImportError error = new InvoiceReconcileImportError(null, importProcessId, message);
+        CreateImportErrorEvent createImportErrorEvent = new CreateImportErrorEvent(this, error);
+        applicationEventPublisher.publishEvent(createImportErrorEvent);
+    }
+
+    private void cleanImportationResource(String importProcessId) {
         storageService.deleteAll(importProcessId);
     }
+
 
     @Override
     public PaginatedResponse getReconcileImportErrors(InvoiceReconcileImportErrorRequest request) {
@@ -120,15 +149,15 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
 
     @Override
     public InvoiceReconcileImportProcessStatusResponse getReconcileImportProcessStatus(InvoiceReconcileImportProcessStatusRequest request) {
-         Optional<InvoiceReconcileImportProcessStatusRedisEntity> entity =
+        Optional<InvoiceReconcileImportProcessStatusRedisEntity> entity =
                 statusRedisRepository.findByImportProcessId(request.getImportProcessId());
 
-         if (entity.isPresent()){
-             if (entity.get().isHasError()) {
-                 throw new RuntimeException(entity.get().getExceptionMessage());
-             }
-             return new InvoiceReconcileImportProcessStatusResponse(entity.get().getStatus().name());
-         }
+        if (entity.isPresent()) {
+            if (entity.get().isHasError()) {
+                throw new RuntimeException(entity.get().getExceptionMessage());
+            }
+            return new InvoiceReconcileImportProcessStatusResponse(entity.get().getStatus().name());
+        }
         return null;
     }
 

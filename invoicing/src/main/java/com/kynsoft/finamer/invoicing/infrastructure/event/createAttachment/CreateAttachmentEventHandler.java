@@ -9,12 +9,15 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
 import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
+import com.kynsoft.finamer.invoicing.application.query.manageAttachmentType.search.GetSearchAttachmentTypeQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageAttachmentType.search.GetSearchManageAttachmentTypeResponse;
 import com.kynsoft.finamer.invoicing.application.query.managePaymentTransactionType.search.GetSearchManagePaymentTransactionTypeQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
 import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeQuery;
 import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeResponse;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.event.createAttachment.CreateAttachmentEvent;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAttachmentType;
 import io.jsonwebtoken.lang.Assert;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
@@ -48,8 +51,6 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
 
     @Override
     public void onApplicationEvent(CreateAttachmentEvent event) {
-        ResponseEntity<String> response = restTemplate.postForEntity(UPLOAD_FILE_URL, this.createBody(event), String.class);
-
         FilterCriteria filterDefault = new FilterCriteria();
         filterDefault.setKey("defaults");
         filterDefault.setValue(true);
@@ -61,8 +62,13 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
         statusActive.setValue(Status.ACTIVE);
         statusActive.setOperator(SearchOperation.EQUALS);
 
-        GetSearchResourceTypeQuery resourceTypeQuery = new GetSearchResourceTypeQuery(Pageable.unpaged(), List.of(filterDefault,statusActive), "");
-        GetSearchManagePaymentTransactionTypeQuery attachmentTypeQuery = new GetSearchManagePaymentTransactionTypeQuery(Pageable.unpaged(), List.of(filterDefault,statusActive), "");
+        FilterCriteria codeFilter = new FilterCriteria();
+        codeFilter.setKey("code");
+        codeFilter.setValue("INV");
+        codeFilter.setOperator(SearchOperation.EQUALS);
+
+        GetSearchResourceTypeQuery resourceTypeQuery = new GetSearchResourceTypeQuery(Pageable.unpaged(), List.of(codeFilter), "");
+        GetSearchAttachmentTypeQuery attachmentTypeQuery = new GetSearchAttachmentTypeQuery(Pageable.unpaged(), List.of(filterDefault,statusActive), "");
         PaginatedResponse resourceType = mediator.send(resourceTypeQuery);
         PaginatedResponse attachmentType = mediator.send(attachmentTypeQuery);
 
@@ -71,7 +77,9 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
 
         GetSearchResourceTypeResponse resourceTypeResponse = (GetSearchResourceTypeResponse)resourceType.getData().get(0);
 
-        ManagePaymentTransactionTypeResponse attachmentTypeResponse =  (ManagePaymentTransactionTypeResponse)attachmentType.getData().get(0);
+        GetSearchManageAttachmentTypeResponse attachmentTypeResponse =  (GetSearchManageAttachmentTypeResponse)attachmentType.getData().get(0);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(UPLOAD_FILE_URL, this.createBody(event), String.class);
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {

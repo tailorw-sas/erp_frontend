@@ -1,9 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.kynsoft.finamer.invoicing.domain.services.StorageService;
-import com.kynsoft.finamer.invoicing.domain.exception.StorageException;
+import com.kynsof.share.core.infrastructure.exceptions.StorageException;
 import com.kynsoft.finamer.invoicing.infrastructure.config.StorageConfig;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
@@ -30,16 +29,19 @@ public class FileSystemStorageServiceImpl implements StorageService {
     }
 
     @Override
-    public Flux<?> store(Flux<FilePart> files, String importProcessId) {
+    public void store(Flux<FilePart> files, String importProcessId) {
         Path importPath = getImportLocation(importProcessId);
         this.createDirectory(importPath);
-        return files.map(filePart -> filePart.transferTo(importPath));
+        files.flatMap(filePart -> {
+            Path transferPath = Paths.get(importPath.toFile().getAbsolutePath(), filePart.filename());
+          return filePart.transferTo(transferPath.toFile());
+        }).subscribe();
     }
 
     @Override
     public Stream<Path> loadAll(String importProcessId) {
         try {
-            Path importPath=getImportLocation(importProcessId);
+            Path importPath = getImportLocation(importProcessId);
             return Files.walk(importPath, 1)
                     .filter(path -> !path.equals(importPath))
                     .map(importPath::relativize);
@@ -55,10 +57,11 @@ public class FileSystemStorageServiceImpl implements StorageService {
     }
 
     @Override
-    public InputStream loadAsResource(String filename) {
+    public InputStream loadAsResource(String filename, String importProcessId) {
         try {
-            Path file = load(filename);
-            return new FileInputStream(file.toFile());
+            Path file = getImportLocation(importProcessId);
+
+            return new FileInputStream(Paths.get(file.toFile().getAbsolutePath(),filename).toFile());
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -66,7 +69,7 @@ public class FileSystemStorageServiceImpl implements StorageService {
 
     @Override
     public void deleteAll(String importProcessId) {
-        Path importPath=getImportLocation(importProcessId);
+        Path importPath = getImportLocation(importProcessId);
         FileSystemUtils.deleteRecursively(importPath.toFile());
     }
 

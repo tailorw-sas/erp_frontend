@@ -79,7 +79,6 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
         filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<ResourceType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ResourceType> data = repositoryQuery.findAll(specifications, pageable);
-
         return getPaginatedResponse(data);
     }
 
@@ -96,7 +95,6 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
-
             if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
                 try {
                     Status enumValue = Status.valueOf((String) filter.getValue());
