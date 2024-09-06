@@ -13,7 +13,11 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTabView.vue'
 
 const toast = useToast()
-const openAdjustment=ref(true)
+const totalHotelAmount = ref(0)
+const totalInvoiceAmount = ref(0)
+const idItemToLoadFirstTime = ref('')
+const selectedInvoicing = ref<any>('')
+let globalSelectedInvoicing = ''
 const forceUpdate = ref(false)
 const active = ref(0)
 const route = useRoute()
@@ -35,7 +39,7 @@ const roomRateDialogOpen = ref<boolean>(false)
 const adjustmentDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
-
+  const showAdjustmentDialogFirstTime = ref(false)
 const bookingList = ref<any[]>([])
 const roomRateList = ref<any[]>([])
 const loadedRoomRates = ref<any[]>([])
@@ -155,7 +159,7 @@ const Fields = ref<FieldDefinitionType[]>([
 
   {
     field: 'invoiceId',
-    header: 'ID:',
+    header: 'ID',
     dataType: 'text',
     class: `field col-12  md:col-2 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`,
     disabled: true,
@@ -163,7 +167,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'invoiceDate',
-    header: 'Invoice Date:',
+    header: 'Invoice Date',
     dataType: 'date',
   
     class: 'field col-12 md:col-2 required ',
@@ -172,14 +176,14 @@ const Fields = ref<FieldDefinitionType[]>([
  
   {
     field: 'isManual',
-    header: 'Manual:',
+    header: 'Manual',
     dataType: 'check',
     class: `field col-12 md:col-1  flex align-items-center pb-0 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: true
   },
   {
     field: 'invoiceAmount',
-    header: 'Invoice Amount:',
+    header: 'Invoice Amount',
     dataType: 'text',
  
     class: 'field col-12 md:col-2 required  ',
@@ -188,7 +192,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'invoiceType',
-    header: 'Invoice Type:',
+    header: 'Invoice Type',
     dataType: 'select',
     class: 'field col-12 md:col-2  mb-5',
  
@@ -196,7 +200,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'agency',
-    header: 'Agency:',
+    header: 'Agency',
     dataType: 'select',
     class: 'field col-12 md:col-3 mb-5   required',
    
@@ -205,7 +209,7 @@ const Fields = ref<FieldDefinitionType[]>([
  
   {
     field: 'invoiceNumber',
-    header: 'Invoice Number:',
+    header: 'Invoice Number',
     dataType: 'text',
     
     class: 'field col-12 md:col-2  ',
@@ -214,7 +218,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'dueDate',
-    header: 'Due Date:',
+    header: 'Due Date',
     dataType: 'date',
   
     class: 'field col-12 md:col-2 required ',
@@ -222,14 +226,14 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'reSend',
-    header: 'Re-Send:',
+    header: 'Re-Send',
     dataType: 'check',
     class: `field col-12 md:col-1 mb-3    flex align-items-center pb-0 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: false
   },
   {
     field: 'reSenDate',
-    header: 'Re-Send Date:',
+    header: 'Re-Send Date',
     dataType: 'date',
   
     class: 'field col-12 md:col-2   required',
@@ -237,7 +241,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'hotel',
-    header: 'Hotel:',
+    header: 'Hotel',
     dataType: 'select',
     class: 'field col-12 md:col-2 mb-5  required',
  
@@ -245,7 +249,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'status',
-    header: 'Status:',
+    header: 'Status',
     dataType: 'select',
     class: 'field col-12 md:col-3 mb-5  required',
  
@@ -325,6 +329,10 @@ const bookingApi = {
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
 }
+const confRoomApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-room-rate',
+})
 const transactionTypeApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-transaction-type',
@@ -611,46 +619,80 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 
-async function getTransactionTypeList(query = '') {
+async function getRoomRateList(globalSelectedInvoicing: any) {
   try {
-    const payload
-      = {
+    const Payload = {
       filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
+        {
+          key: 'booking.invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
-      pageSize: 200,
+      pageSize: 10,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
     }
 
-    transactionTypeList.value = []
-    const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
-    const { data: dataList } = response
+    idItemToLoadFirstTime.value = ''
+
+    roomRateList.value = []
+
+    const response = await GenericService.search(confRoomApi.moduleApi, confRoomApi.uriApi, Payload)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    let countRR = 0
+    totalInvoiceAmount.value = 0
+    totalHotelAmount.value = 0
+
     for (const iterator of dataList) {
-      transactionTypeList.value = [...transactionTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, fullName: `${iterator?.code}-${iterator?.name}` }]
+      countRR++
+
+      roomRateList.value = [...roomRateList.value, {
+        ...iterator,
+        roomRateId: '',
+        //   invoiceAmount: iterator?.invoiceAmount || 0,
+       // hotelAmount: 0,
+       // invoiceAmount: 0,
+        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        loadingEdit: false,
+        loadingDelete: false,
+        fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
+        bookingId: iterator.booking.bookingId,
+        roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
+        nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
+        ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
+        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
+      }]
+
+      if (typeof +iterator.invoiceAmount === 'number') {
+        totalInvoiceAmount.value += Number(iterator.invoiceAmount)
+      }
+
+      if (typeof +iterator.hotelAmount === 'number') {
+        totalHotelAmount.value += Number(iterator.hotelAmount)
+      }
     }
+
+    if (roomRateList.value.length > 0) {
+      idItemToLoadFirstTime.value = roomRateList.value[0].id
+    }
+
+ /*   if (bookingList.value.length === 1) {
+      showAdjustmentDialogFirstTime.value = true
+    }*/
   }
   catch (error) {
-    console.error('Error loading hotel list:', error)
+    console.error(error)
   }
 }
 
@@ -825,19 +867,19 @@ async function getItemById(id: any) {
 
       if (response) {
         item.value.id = response.id
-        item.value.invoiceId = response.invoiceId
-        const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
+     //   item.value.invoiceId = response.invoiceId
+      //  const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
-        item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
+      //  item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
-        item.value.invoiceAmount = toNegative(response.invoiceAmount)
+        item.value.invoiceAmount = response.invoiceAmount
         item.value.hotel = response.hotel
         item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
         item.value.agency = response.agency
         item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
-        item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
+      //  item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
 
         if (route.query.type === InvoiceType.CREDIT) {
           item.value.originalAmount = response.invoiceAmount
@@ -896,8 +938,8 @@ async function getBookingList(clearFilter: boolean = false) {
         loadingEdit: false,
         loadingDelete: false,
         agency: iterator?.invoice?.agency,
-        invoiceAmount: 0,
-        originalAmount: iterator?.invoiceAmount,
+      //  invoiceAmount: 0,
+      //  originalAmount: iterator?.invoiceAmount,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
@@ -1080,13 +1122,16 @@ watch(invoiceAmount, () => {
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
+  selectedInvoicing.value = route.query.selected
+  globalSelectedInvoicing = selectedInvoicing.value
   item.value.invoiceType = ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
 
-  if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
+ // if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
     await getItemById(route.query.selected)
     await getBookingList()
+    await getRoomRateList(globalSelectedInvoicing)
     calcInvoiceAmount()
-  }
+ // }
 })
 </script>
 
