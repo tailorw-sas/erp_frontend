@@ -203,7 +203,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 0.0
         );
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
-        this.producerReplicateManageInvoiceService.create(invoiceDto);
+        this.producerReplicateManageInvoiceService.create(created);
 
         command.setCredit(created.getId());
         command.setInvoiceId(created.getInvoiceId());
