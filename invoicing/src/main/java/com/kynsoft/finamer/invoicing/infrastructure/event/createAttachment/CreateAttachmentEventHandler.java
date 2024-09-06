@@ -8,13 +8,13 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
 import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
+import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
+import com.kynsoft.finamer.invoicing.application.query.managePaymentTransactionType.search.GetSearchManagePaymentTransactionTypeQuery;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
+import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeQuery;
+import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeResponse;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.event.createAttachment.CreateAttachmentEvent;
-import com.kynsoft.finamer.payment.application.command.masterPaymentAttachment.create.CreateMasterPaymentAttachmentCommand;
-import com.kynsoft.finamer.payment.application.query.attachmentType.search.GetSearchAttachmentTypeQuery;
-import com.kynsoft.finamer.payment.application.query.manageResourceType.search.GetSearchManageResourceTypeQuery;
-import com.kynsoft.finamer.payment.application.query.objectResponse.AttachmentTypeResponse;
-import com.kynsoft.finamer.payment.application.query.objectResponse.ResourceTypeResponse;
-import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import io.jsonwebtoken.lang.Assert;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
@@ -34,7 +34,7 @@ import java.util.List;
 
 @Component
 public class CreateAttachmentEventHandler implements ApplicationListener<CreateAttachmentEvent> {
-    @Value("${payment.file.service.url}")
+    @Value("${file.service.url}")
     private String UPLOAD_FILE_URL;
     private final RestTemplate restTemplate;
 
@@ -50,12 +50,6 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
     public void onApplicationEvent(CreateAttachmentEvent event) {
         ResponseEntity<String> response = restTemplate.postForEntity(UPLOAD_FILE_URL, this.createBody(event), String.class);
 
-        FilterCriteria filterCriteria = new FilterCriteria();
-        filterCriteria.setKey("antiToIncomeImport");
-        filterCriteria.setValue(true);
-        filterCriteria.setOperator(SearchOperation.EQUALS);
-        filterCriteria.setLogicalOperation(LogicalOperation.AND);
-
         FilterCriteria filterDefault = new FilterCriteria();
         filterDefault.setKey("defaults");
         filterDefault.setValue(true);
@@ -67,29 +61,32 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
         statusActive.setValue(Status.ACTIVE);
         statusActive.setOperator(SearchOperation.EQUALS);
 
-        GetSearchAtt resourceTypeQuery = new GetSearchManageResourceTypeQuery(Pageable.unpaged(), List.of(filterDefault,statusActive), "");
-        GetSearchAttachmentTypeQuery attachmentTypeQuery = new GetSearchAttachmentTypeQuery(Pageable.unpaged(), List.of(filterCriteria,statusActive), "");
+        GetSearchResourceTypeQuery resourceTypeQuery = new GetSearchResourceTypeQuery(Pageable.unpaged(), List.of(filterDefault,statusActive), "");
+        GetSearchManagePaymentTransactionTypeQuery attachmentTypeQuery = new GetSearchManagePaymentTransactionTypeQuery(Pageable.unpaged(), List.of(filterDefault,statusActive), "");
         PaginatedResponse resourceType = mediator.send(resourceTypeQuery);
         PaginatedResponse attachmentType = mediator.send(attachmentTypeQuery);
 
         Assert.notEmpty(resourceType.getData(),"No existe resource type por defecto para crear el attachement");
-        Assert.notEmpty(attachmentType.getData(),"No existe attachment para anti income");
+        Assert.notEmpty(attachmentType.getData(),"No existe attachment default");
 
-        ResourceTypeResponse resourceTypeResponse = (ResourceTypeResponse)resourceType.getData().get(0);
+        GetSearchResourceTypeResponse resourceTypeResponse = (GetSearchResourceTypeResponse)resourceType.getData().get(0);
 
-        AttachmentTypeResponse attachmentTypeResponse =  (AttachmentTypeResponse)attachmentType.getData().get(0);
+        ManagePaymentTransactionTypeResponse attachmentTypeResponse =  (ManagePaymentTransactionTypeResponse)attachmentType.getData().get(0);
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             ApiResponse apiResponse = objectMapper.readValue(response.getBody(), ApiResponse.class);
             LinkedHashMap<String,String> saveFileS3Message = (LinkedHashMap) apiResponse.getData();
-
-                CreateMasterPaymentAttachmentCommand createMasterPaymentAttachmentCommand =
-                        new CreateMasterPaymentAttachmentCommand(Status.ACTIVE, event.getEmployeeId(),
-                               event.getPaymentIds()
-                                , resourceTypeResponse.getId(), attachmentTypeResponse.getId(),
-                                event.getFileName(), saveFileS3Message.get("url"), "Uploaded", event.getFileSize());
-                mediator.send(createMasterPaymentAttachmentCommand);
+            CreateAttachmentCommand createAttachmentCommand =
+                        new CreateAttachmentCommand(event.getFileName(),
+                                saveFileS3Message.get("url"),
+                                event.getRemarks(),
+                                attachmentTypeResponse.getId(),
+                                event.getInvoiceId(),
+                                event.getEmployee(),
+                                event.getEmployeeId(),
+                                resourceTypeResponse.getId());
+                mediator.send(createAttachmentCommand);
 
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -98,11 +95,7 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
 
     private HttpEntity<MultiValueMap<String, Object>> createBody(CreateAttachmentEvent event){
         HttpHeaders headers = new HttpHeaders();
-       // headers.add("Authorization","Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIxT0lxYlEwY2tXNVhwejgybFFuZzR1bzcxMEtkWnpfV0VDLVU5c2NGRWJNIn0.eyJleHAiOjE3MjQyNzMwMDksImlhdCI6MTcyNDE2NTAwOSwianRpIjoiZTQ2YzU3MzUtNjkyZC00ZjgzLTg3ZWQtNzdjNWVmMDlkY2FkIiwiaXNzIjoiaHR0cHM6Ly9zc28ua3luc29mdC5uZXQvcmVhbG1zL2t5bnNvZnQiLCJzdWIiOiIxYTU3MDE2My01NzYxLTQzNGMtOTA3Mi1mYjNmNzZiZmU1MDEiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJtZWRpbmVjIiwic2Vzc2lvbl9zdGF0ZSI6IjBlODY3MzY0LTUyZTAtNDBjYi04Yzc4LWM3MmUzYTEyNjNmMSIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIkFETUlOIiwiVVNFUiIsImRlZmF1bHQtcm9sZXMta3lzb2Z0LXJlYWxtIl19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJzaWQiOiIwZTg2NzM2NC01MmUwLTQwY2ItOGM3OC1jNzJlM2ExMjYzZjEiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFETUlOIEFETUlOIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiYWRtaW4tdXNlckBnbWFpbC5jb20iLCJnaXZlbl9uYW1lIjoiQURNSU4iLCJmYW1pbHlfbmFtZSI6IkFETUlOIiwiZW1haWwiOiJhZG1pbi11c2VyQGdtYWlsLmNvbSJ9.0Uddw9HVrNNUEYFOaWIpU3vw0znxxQm2rvlvpLvFKp2YQHxJWNahr_f84GNhsfmiF1hbie1OiZIK9yDdvd1DoK9Z5ugZ0vn92BVhTGZEmK3fkdOsDRmM5XWu13HQngx1I8Vut6MVZs0-tAZy9a4Ii0J8d3GzZ8en68Ahjtlc1yeyI4a9rNH_VHChpTybZvWQIZBTvTz9aBW6QwnKFlH6XRqEBGyX6DdchtS3jaLliIq-5m6egmHL8rQieXePjrXuS1RY1kZ5p2w2poJz2T60xEFJt2POqVmXbry0xZ8eTYKCW7yOMU3Vmp2NQWPdZrO2MfSJNDZBz_7UucOp8nfa1Q");
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        //TODO keymer
-       // headers.setBearerAuth();
-
         MultiValueMap<String, String> contentDispositionMap = new LinkedMultiValueMap<>();
         ContentDisposition contentDisposition = ContentDisposition
                 .builder("form-data")

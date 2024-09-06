@@ -1,23 +1,29 @@
 package com.kynsoft.finamer.invoicing.domain.event.createAttachment;
 
+import lombok.Builder;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.UUID;
 
 @Getter
+@Builder
 public class CreateAttachmentEvent extends ApplicationEvent {
-    private final UUID paymentIds;
-    private final byte[] file;
+    private final UUID invoiceId;
+    private final String employee;
     private final UUID employeeId;
     private final String fileName;
-    private final String fileSize;
-    public CreateAttachmentEvent(Object source, UUID paymentIds, byte[] file, UUID employeeId, String fileName, String fileSize) {
+    private final String remarks;
+    private final byte[] file;
+    public CreateAttachmentEvent(Object source, UUID invoiceId, String employee,
+                                 UUID employeeId, String fileName,
+                                 String remarks, byte[] file) {
         super(source);
-        this.paymentIds = paymentIds;
-        this.file = file;
+        this.invoiceId = invoiceId;
+        this.employee = employee;
         this.employeeId = employeeId;
         this.fileName = fileName;
-        this.fileSize = fileSize;
+        this.remarks = remarks;
+        this.file = file;
     }
 }

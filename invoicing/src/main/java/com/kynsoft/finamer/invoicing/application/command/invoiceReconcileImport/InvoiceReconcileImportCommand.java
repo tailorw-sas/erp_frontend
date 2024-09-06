@@ -8,6 +8,9 @@ import lombok.Getter;
 public class InvoiceReconcileImportCommand implements ICommand {
 
     private final String importProcessId;
+    private final String employee;
+    private final String employeeId;
+
 
     public InvoiceReconcileImportCommand(String importProcessId) {
         this.importProcessId = importProcessId;
