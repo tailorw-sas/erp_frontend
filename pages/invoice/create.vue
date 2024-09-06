@@ -70,11 +70,6 @@ const confinvoiceTypeListtApi = reactive({
   uriApi: 'manage-invoice-type',
 })
 
-const confResourceTypeApi = reactive({
-  moduleApi: 'payment',
-  uriApi: 'resource-type',
-})
-
 const confInvoiceApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice',
@@ -466,6 +461,49 @@ async function getInvoiceTypeList(query = '') {
   }
 }
 
+async function getResourceTypeList(query = '') {
+  try {
+    const payload
+      = {
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'name',
+        sortType: ENUM_SHORT_TYPE.ASC
+      }
+
+    resourceTypeList.value = []
+    const response = await GenericService.search(confResourceTypeApi.moduleApi, confResourceTypeApi.uriApi, payload)
+    const { data: dataList } = response
+    for (const iterator of dataList) {
+      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading resource type list:', error)
+  }
+}
+
 function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
@@ -586,7 +624,6 @@ async function createItemCredit(item: any) {
   const bookings: { id: any, amount: number }[] = []
   const attachments = []
 
-  console.log('booking list', bookingList.value)
   bookingList.value?.forEach((booking) => {
     if (booking?.invoiceAmount !== 0) {
       bookings.push({
@@ -604,7 +641,7 @@ async function createItemCredit(item: any) {
       file: fileurl,
       filename: attachmentList.value[i]?.filename,
       remark: attachmentList.value[i]?.remark,
-      paymentResourceType: '67c10e87-89c0-4a3a-abe3-5cebc400d280'// attachmentList.value[i]?.resourceType
+      paymentResourceType: attachmentList.value[i]?.resourceType.id // '67c10e87-89c0-4a3a-abe3-5cebc400d280'
 
     })
   }
@@ -613,11 +650,13 @@ async function createItemCredit(item: any) {
     invoice: route.query.selected,
     invoiceDate: dayjs(item.invoiceDate).startOf('day').toISOString(),
     employee: userData?.value?.user?.userId || '',
+    employeeName: userData?.value?.user?.name || '',
     bookings,
     attachments
   }
 
-  await GenericService.createInvoiceType(confInvoiceApi.moduleApi, `${confInvoiceApi.uriApi}/new-credit`, payload)
+  const response = await GenericService.createInvoiceType(confInvoiceApi.moduleApi, `${confInvoiceApi.uriApi}/new-credit`, payload)
+  return response
 }
 
 async function updateItem(item: { [key: string]: any }) {
@@ -669,11 +708,12 @@ async function saveItem(item: { [key: string]: any }) {
     let response: any = null
     if (route.query.type === InvoiceType.CREDIT) {
       response = await createItemCredit(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`} was created successfully`, life: 10000 })
     }
     else {
       response = await createItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     }
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     if (route.query.type === InvoiceType.CREDIT) { return navigateTo({ path: `/invoice` }) }
     navigateTo({ path: `/invoice/edit/${response?.id}` })
   }
@@ -951,6 +991,7 @@ function calcBookingInvoiceAmount(roomRate: any) {
 
   roomRates.forEach((roomRate) => {
     bookingList.value[bookingIndex].invoiceAmount += Number(roomRate.invoiceAmount)
+    // bookingList.value[bookingIndex].dueAmount += Number(roomRate.invoiceAmount)
   })
   calcInvoiceAmount()
 
@@ -981,15 +1022,27 @@ function calcRoomRateInvoiceAmount(newAdjustment: any) {
 
   if (roomRateIndex > -1) {
     roomRateList.value[roomRateIndex].invoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) + Number(newAdjustment.amount)
+    roomRateList.value[roomRateIndex].dueAmount = Number(roomRateList.value[roomRateIndex].dueAmount) + Number(newAdjustment.amount)
     calcBookingInvoiceAmount(roomRateList.value[roomRateIndex])
   }
 }
 
-function calcInvoiceAmount() {
+async function calcInvoiceAmount() {
   invoiceAmount.value = 0
 
   bookingList.value.forEach((b) => {
     invoiceAmount.value = Number(invoiceAmount.value) + Number(b?.invoiceAmount)
+  })
+}
+
+async function calcInvoiceAmountInBookingByRoomRate() {
+  bookingList.value.forEach((b) => {
+    const roomRates = roomRateList.value.find((roomRate: any) => roomRate.booking === b?.id)
+
+    if (roomRates) {
+      b.invoiceAmount = Number(roomRates.invoiceAmount) || 0
+      b.dueAmount = Number(roomRates.invoiceAmount) || 0
+    }
   })
 }
 
@@ -1072,6 +1125,7 @@ function updateRoomRate(roomRate: any) {
 function addAdjustment(adjustment: any) {
   calcRoomRateInvoiceAmount(adjustment)
   adjustmentList.value = [...adjustmentList.value, { ...adjustment, transaction: { ...adjustment?.transactionType, name: `${adjustment?.transactionType?.code || ''}-${adjustment?.transactionType?.name || ''}` }, date: dayjs(adjustment?.date).startOf('day').toISOString() }]
+  calcInvoiceAmountInBookingByRoomRate()
 }
 
 function updateAdjustment(adjustment: any) {
@@ -1122,8 +1176,9 @@ onMounted(async () => {
   if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
     await getItemById(route.query.selected)
     await getBookingList()
-    calcInvoiceAmount()
+    await calcInvoiceAmount()
   }
+  // await calcInvoiceAmountInBookingByRoomRate()
 })
 </script>
 

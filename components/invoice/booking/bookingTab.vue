@@ -1234,7 +1234,7 @@ async function saveBooking(item: { [key: string]: any }) {
     }
   }
 
-  debugger
+  
   item.fullName = `${item?.firstName ?? ''} ${item?.lastName ?? ''}`
    item.ratePlan = ratePlanList.value.find((ratePlan: any) => ratePlan?.id === item?.ratePlan?.id)
 
@@ -1525,8 +1525,6 @@ onMounted(() => {
       },
     ]
   }
-
-
 
   if (!props.isCreationDialog) {
     getBookingList()
