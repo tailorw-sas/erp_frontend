@@ -23,4 +23,6 @@ public interface IManagerLanguageService {
     Long countByCodeAndNotId(String code, UUID id);
 
     Long countByDefaultAndNotId(UUID id);
+
+    List<ManagerLanguageDto> findAllToReplicate();
 }

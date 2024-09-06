@@ -20,5 +20,5 @@ public class CreateNewCreditRequest {
     private LocalDateTime invoiceDate;
     private String employee;
     private List<CreateNewCreditBookingRequest> bookings;
-    private List<CreateAttachmentRequest> attachments;
+    private List<CreateNewCreditAttachmentRequest> attachments;
 }

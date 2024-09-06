@@ -88,4 +88,17 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
+
+    @Override
+    public List<ManageVCCTransactionTypeDto> findAllToReplicate() {
+        List<ManageVCCTransactionType> objects = this.repositoryQuery.findAll();
+        List<ManageVCCTransactionTypeDto> objectDtos = new ArrayList<>();
+
+        for (ManageVCCTransactionType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

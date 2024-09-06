@@ -112,4 +112,16 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManageTransactionStatusDto> findAllToReplicate() {
+        List<ManageTransactionStatus> objects = this.repositoryQuery.findAll();
+        List<ManageTransactionStatusDto> objectDtos = new ArrayList<>();
+
+        for (ManageTransactionStatus object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }
