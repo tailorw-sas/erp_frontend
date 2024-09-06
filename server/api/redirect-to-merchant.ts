@@ -18,9 +18,9 @@ export default defineEventHandler(async (event) => {
   } = body
 
   const privateKey = process.env.BLUE_MERCHANT_SECRET_KEY || ''
-  approvedUrl = `${process.env.AUTH_ORIGIN}/${approvedUrl}`
-  declinedUrl = `${process.env.AUTH_ORIGIN}/${declinedUrl}`
-  cancelUrl = `${process.env.AUTH_ORIGIN}/${cancelUrl}`
+  approvedUrl = `${(process.env.AUTH_ORIGIN || '').replace(/\/$/, '')}/${approvedUrl.replace(/^\//, '')}`
+  declinedUrl = `${(process.env.AUTH_ORIGIN || '').replace(/\/$/, '')}/${declinedUrl.replace(/^\//, '')}`
+  cancelUrl = `${(process.env.AUTH_ORIGIN || '').replace(/\/$/, '')}/${cancelUrl.replace(/^\//, '')}`
 
   const data = [
     merchantId,
