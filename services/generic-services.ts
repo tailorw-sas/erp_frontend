@@ -47,6 +47,15 @@ export const GenericService = {
     })
   },
 
+  async get(MODULE_NAME: string, URI_API: string) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+    return $api<any>(url, {
+      method: 'GET',
+    })
+  },
+
   async create(MODULE_NAME: string, URI_API: string, payload: any) {
     const { $api } = useNuxtApp()
     const serverUrl = useRequestURL()
@@ -153,6 +162,16 @@ export const GenericService = {
       method: 'POST',
       body: formData
 
+    })
+  },
+
+  async createInvoiceType(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+    return $api<PaginatedResponse>(url, {
+      method: 'POST',
+      body: payload
     })
   },
 }

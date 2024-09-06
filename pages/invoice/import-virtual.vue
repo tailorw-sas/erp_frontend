@@ -18,6 +18,8 @@ const invoiceFile = ref('')
 const uploadComplete = ref(false)
 const loadingSaveAll = ref(false)
 const haveErrorImportStatus = ref(false)
+const openSuccessDialog = ref(false)
+const messageDialog = ref('')
 
 const confApi = reactive({
   moduleApi: 'invoicing',
@@ -186,9 +188,11 @@ async function importFile() {
     if (!haveErrorImportStatus.value) {
       await getErrorList()
       if (listItems.value.length === 0) {
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
+        // toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 10000 })
         options.value.loading = false
-        await clearForm()
+        messageDialog.value = 'The file was imported successfully'
+        openSuccessDialog.value = true
+        // await clearForm()
       }
     }
     // clearForm()
@@ -343,6 +347,34 @@ onMounted(async () => {
       </div>
     </div>
   </div>
+
+  <Dialog
+    v-model:visible="openSuccessDialog"
+    modal
+    class="mx-3 sm:mx-0 sm:w-full md:w-3"
+    content-class="border-round-bottom border-top-1 surface-border"
+    @hide="goToList"
+  >
+    <template #header>
+      <div class="flex justify-content-between">
+        <h5 class="m-0">
+          Import Status
+        </h5>
+      </div>
+    </template>
+    <template #default>
+      <div style="border-radius: 0px !important; ">
+        <div class="col-12 order-1 md:order-0 justify-content-center align-items-center">
+          <p class="m-0" style="border-bottom-left-radius: 5px !important; font-size: 16px; font-weight: 600; margin-bottom: 25px; margin-top: 20px; color: #0f8bfd; text-align: center">
+            {{ messageDialog }}
+          </p>
+        </div>
+      </div>
+    </template>
+    <template #footer>
+      <Button label="Close" class="flex justify-content-end align-items-end" @click="goToList()" />
+    </template>
+  </Dialog>
 </template>
 
 <style lang="scss">
@@ -350,5 +382,10 @@ onMounted(async () => {
   background-color: transparent !important;
   border: none !important;
   text-align: left !important;
+}
+
+.border-round-bottom {
+    border-bottom-left-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
 }
 </style>

@@ -295,8 +295,6 @@ async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], lo
       }
     }
     else {
-      console.log('localItems', localItems)
-
       listItems = [...localItems]
     }
     return [...listItems]

@@ -487,7 +487,7 @@ async function getCountriesList(query: string) {
   }
 }
 
-async function getCityStatesList(countryId: string, query: string) {
+async function getCityStatesList(countryId: string, query: string = '') {
   try {
     const payload = {
       filter: [{
@@ -499,12 +499,12 @@ async function getCityStatesList(countryId: string, query: string) {
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
       }, {
         key: 'code',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',

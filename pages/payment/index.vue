@@ -13,6 +13,7 @@ import { itemMenuList } from '~/components/payment/indexBtns'
 import IfCan from '~/components/auth/IfCan.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
+const toast = useToast()
 const authStore = useAuthStore()
 const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
@@ -23,6 +24,8 @@ const clientItemsList = ref<any[]>([])
 const agencyItemsList = ref<any[]>([])
 const hotelItemsList = ref<any[]>([])
 const statusItemsList = ref<any[]>([])
+const openDialogApplyPayment = ref(false)
+const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
@@ -91,6 +94,34 @@ const filterToSearchTemp = ref<GenericObject>({
   payApplied: null,
   detail: true,
 })
+
+const contextMenu = ref()
+const allMenuListItems = ref([
+  // {
+  //   id: 'applayDeposit',
+  //   label: 'Apply Deposit',
+  //   icon: 'pi pi-dollar',
+  //   command: ($event: any) => openModalWithContentMenu($event),
+  //   disabled: true,
+  //   visible: true,
+  // },
+  {
+    id: 'applyPayment',
+    label: 'Apply Payment',
+    icon: 'pi pi-cog',
+    command: ($event: any) => openModalApplyPayment($event),
+    disabled: true,
+    visible: true,
+  },
+  // {
+  //   id: 'navigateToInvoice',
+  //   label: 'Navigate to Invoice',
+  //   icon: 'pi pi-cog',
+  //   command: ($event: any) => navigateToInvoice($event),
+  //   disabled: true,
+  //   visible: true,
+  // },
+])
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -193,9 +224,99 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
+const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
+const loadingSaveApplyPayment = ref(false)
+const invoiceSelectedListForApplyPayment = ref<any[]>([])
+const applyPaymentListOfInvoice = ref<any[]>([])
+const applyPaymentColumns = ref<IColumn[]>([
+  { field: 'invoiceNo', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
+  { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: false, showFilter: false },
+])
+
+// Table
+const columnsExpandTable: IColumn[] = [
+  { field: 'bookingId', header: 'Booking Id', width: '120px', type: 'text' },
+  { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text' },
+  { field: 'firstName', header: 'First Name', width: '200px', type: 'text' },
+  { field: 'lastName', header: 'Last Name', width: '90px', type: 'text' },
+  { field: 'couponCode', header: 'Coupon No', width: '120px', type: 'text' },
+  { field: 'adult', header: 'Adult', width: '120px', type: 'text' },
+  { field: 'children', header: 'Children', width: '100px', type: 'text' },
+  { field: 'paymentAmount', header: 'Payment Amount', width: '100px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
+]
+
+const applyPaymentOptions = ref({
+  tableName: 'Apply Payment',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice',
+  expandableRows: true,
+  selectionMode: 'multiple',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+
+const payloadToApplyPayment = ref<GenericObject> ({
+  applyPayment: false,
+  booking: ''
+})
+
+const applyPaymentPayload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+const applyPaymentPagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+const applyPaymentOnChangePage = ref<PageState>()
+
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+
+function getStatusBadgeBackgroundColor(code: string) {
+  switch (code) {
+    case 'PROCECSED': return '#FF8D00'
+    case 'RECONCILED': return '#005FB7'
+    case 'SENT': return '#006400'
+    case 'CANCELED': return '#F90303'
+    case 'PENDING': return '#686868'
+
+    default:
+      return '#686868'
+  }
+}
+
+function getStatusName(code: string) {
+  switch (code) {
+    case 'PROCECSED': return 'Processed'
+
+    case 'RECONCILED': return 'Reconciled'
+    case 'SENT': return 'Sent'
+    case 'CANCELED': return 'Canceled'
+    case 'PENDING': return 'Pending'
+
+    default:
+      return ''
+  }
+}
 
 // Go To Create Form
 function goToCreateForm() {
@@ -556,6 +677,9 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
   agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
   agencyItemsList.value = [...agencyItemsList.value, ...agencyTemp]
 }
+async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let hotelTemp: any[] = []
   hotelItemsList.value = [allDefaultItem]
@@ -563,11 +687,218 @@ async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query
   hotelItemsList.value = [...hotelItemsList.value, ...hotelTemp]
 }
 
+async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
+
 async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let statusTemp: any[] = []
   statusItemsList.value = [allDefaultItem]
   statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
   statusItemsList.value = [...statusItemsList.value, ...statusTemp]
+}
+
+async function applyPaymentGetList() {
+  if (applyPaymentOptions.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    applyPaymentOptions.value.loading = true
+    applyPaymentListOfInvoice.value = []
+    const newListItems = []
+
+    // Validacion para busar por por las agencias
+    const filter: FilterCriteria[] = [
+      {
+        key: 'client.id',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: objItemSelectedForRightClickApplyPayment.value?.client.id,
+      },
+      {
+        key: 'status',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+      },
+    ]
+    const objQueryToSearch = {
+      query: '',
+      keys: ['name', 'code'],
+    }
+
+    let listAgenciesForApplyPayment: any[] = []
+    listAgenciesForApplyPayment = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
+
+    if (listAgenciesForApplyPayment.length > 0) {
+      const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'agency.id')
+
+      if (objFilter) {
+        objFilter.value = listAgenciesForApplyPayment.map(item => item.id)
+      }
+      else {
+        applyPaymentPayload.value.filter.push({
+          key: 'agency.id',
+          operator: 'IN',
+          value: listAgenciesForApplyPayment.map(item => item.id),
+          logicalOperation: 'AND'
+        })
+      }
+    }
+
+    // Validacion para bucsar por los hoteles
+    if (objItemSelectedForRightClickApplyPayment.value?.hotel && objItemSelectedForRightClickApplyPayment.value?.hotel.id) {
+      if (objItemSelectedForRightClickApplyPayment.value?.hotel.applyByTradingCompany) {
+        // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
+        const filter: FilterCriteria[] = [
+          // {
+          //   key: 'agency.id',
+          //   logicalOperation: 'AND',
+          //   operator: 'EQUALS',
+          //   value: item.value.agency.id,
+          // },
+          {
+            key: 'manageTradingCompanies.id',
+            logicalOperation: 'AND',
+            operator: 'EQUALS',
+            value: objItemSelectedForRightClickApplyPayment.value?.hotel?.manageTradingCompany,
+          },
+        ]
+        const objQueryToSearch = {
+          query: '',
+          keys: ['name', 'code'],
+        }
+
+        let listHotelsForApplyPayment: any[] = []
+        listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
+
+        if (listHotelsForApplyPayment.length > 0) {
+          const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'hotel.id')
+
+          if (objFilter) {
+            objFilter.value = listHotelsForApplyPayment.map(item => item.id)
+          }
+          else {
+            applyPaymentPayload.value.filter.push({
+              key: 'hotel.id',
+              operator: 'IN',
+              value: listHotelsForApplyPayment.map(item => item.id),
+              logicalOperation: 'AND'
+            })
+          }
+        }
+      }
+      else {
+        const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'hotel.id')
+
+        if (objFilter) {
+          objFilter.value = objItemSelectedForRightClickApplyPayment.value?.hotel.id
+        }
+        else {
+          applyPaymentPayload.value.filter.push({
+            key: 'hotel.id',
+            operator: 'EQUALS',
+            value: objItemSelectedForRightClickApplyPayment.value?.hotel.id,
+            logicalOperation: 'AND'
+          })
+        }
+      }
+    }
+    const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    applyPaymentPagination.value.page = page
+    applyPaymentPagination.value.limit = size
+    applyPaymentPagination.value.totalElements = totalElements
+    applyPaymentPagination.value.totalPages = totalPages
+
+    const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+      // iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
+      // iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
+      // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+      // iterator.bookingBalance = iterator.dueAmount?.toString()
+      // iterator.paymentStatus = iterator.status
+
+      // if (!iterator.hasOwnProperty('bookings')) {
+      //   iterator.bookings = []
+      // }
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    applyPaymentListOfInvoice.value = [...applyPaymentListOfInvoice.value, ...newListItems]
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    applyPaymentOptions.value.loading = false
+  }
+}
+
+function closeModalApplyPayment() {
+  objItemSelectedForRightClickApplyPayment.value = {}
+  openDialogApplyPayment.value = false
+}
+
+async function openModalApplyPayment() {
+  openDialogApplyPayment.value = true
+  await applyPaymentGetList()
+}
+
+function onRowContextMenu(event: any) {
+  if (event && event.data && (event.data.notIdentified !== '' || event.data.notIdentified !== null) && event.data.notIdentified > 0) {
+    objItemSelectedForRightClickApplyPayment.value = event.data
+    const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
+    if (menuItemApplayPayment) {
+      menuItemApplayPayment.disabled = false
+      menuItemApplayPayment.visible = true
+    }
+  }
+  else {
+    objItemSelectedForRightClickApplyPayment.value = {}
+    const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
+    if (menuItemApplayPayment) {
+      menuItemApplayPayment.disabled = true
+      menuItemApplayPayment.visible = false
+    }
+  }
+
+  const allHidden = allMenuListItems.value.every(item => !item.visible)
+  if (!allHidden) {
+    contextMenu.value.show(event.originalEvent)
+  }
+  else {
+    contextMenu.value.hide()
+  }
+}
+
+async function onRowDoubleClickInDataTableApplyPayment(event: any) {
+  try {
+    const payloadToApplyPayment: GenericObject = {
+      payment: objItemSelectedForRightClickApplyPayment.value.id || '',
+      invoices: []
+    }
+
+    const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
+
+    if (response) {
+      openDialogApplyPayment.value = false
+      toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
+    }
+  }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
+  }
 }
 
 function getMonthStartAndEnd(date) {
@@ -928,8 +1259,6 @@ onMounted(async () => {
                       binary
                       class="mr-2"
                       @change="() => {
-                        console.log(filterAllDateRange);
-
                         if (!filterAllDateRange) {
                           filterToSearch.from = startOfMonth
                           filterToSearch.to = endOfMonth
@@ -1049,6 +1378,7 @@ onMounted(async () => {
       @on-sort-field="onSortField"
       @open-edit-dialog="goToFormInNewTab($event)"
       @on-row-double-click="goToFormInNewTab($event)"
+      @on-row-right-click="onRowContextMenu($event)"
     >
       <template #column-icon="{ data, column }">
         <Button
@@ -1081,7 +1411,86 @@ onMounted(async () => {
         </ColumnGroup>
       </template>
     </DynamicTable>
+    <!-- Dialog Apply Payment -->
+    <Dialog
+      v-model:visible="openDialogApplyPayment"
+      modal
+      class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border"
+      :style="{ width: '60%' }"
+      :pt="{
+        root: {
+          class: 'custom-dialog-history',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+        // mask: {
+        //   style: 'backdrop-filter: blur(5px)',
+        // },
+      }"
+      @hide="closeModalApplyPayment()"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Apply Payment Details
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-3">
+          <DynamicTable
+            class="card p-0"
+            :data="applyPaymentListOfInvoice"
+            :columns="applyPaymentColumns"
+            :options="applyPaymentOptions"
+            :pagination="applyPaymentPagination"
+            @on-change-pagination="applyPaymentOnChangePage = $event"
+            @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
+            @update:clicked-item="invoiceSelectedListForApplyPayment = $event"
+          >
+            <template #column-status="{ data: item }">
+              <Badge
+                :value="getStatusName(item?.status)"
+                :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+              />
+            </template>
+
+            <template #expansion="{ data: lista }">
+              Esto es una prueba
+              <pre>{{ lista.bookings }}</pre>
+              <div class="p-0 m-0">
+                <!-- <DataTable :value="lista.bookings" striped-rows>
+                  <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                  <template #empty>
+                    <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                      <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                        <div class="row">
+                          <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                        </div>
+                        <div class="row">
+                          <p>{{ messageForEmptyTable }}</p>
+                        </div>
+                      </span>
+                      <span v-else class="flex flex-column align-items-center justify-content-center">
+                        <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                      </span>
+                    </div>
+                  </template>
+                </DataTable> -->
+              </div>
+            </template>
+          </DynamicTable>
+        </div>
+        <div class="flex justify-content-end">
+          <Button v-tooltip.top="'Apply Payment'" class="w-3rem mx-1" icon="pi pi-check" :loading="loadingSaveApplyPayment" @click="closeModalApplyPayment()" />
+          <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
+        </div>
+      </template>
+    </Dialog>
   </div>
+  <ContextMenu ref="contextMenu" :model="allMenuListItems" />
 </template>
 
 <style lang="scss">

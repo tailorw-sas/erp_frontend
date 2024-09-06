@@ -19,6 +19,10 @@ const props = defineProps({
     type: Boolean,
     required: true
   },
+  isSaveFormAdjustment: {
+    type: Boolean,
+    required: true
+  },
   closeDialog: {
     type: Function as any,
     required: true
@@ -83,8 +87,13 @@ const props = defineProps({
   invoiceObjAmount: { type: Number, required: true }
 })
 
-const { data } = useAuth()
+const emits = defineEmits([
+  'isSaveFormAdjustment',
 
+])
+
+const { data } = useAuth()
+const adjustmentDialogOpen = ref(false)
 const toast = useToast()
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
@@ -121,7 +130,7 @@ const Fields: Array<Container> = [
         dataType: 'number',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.number({ invalid_type_error: "The Amount field is required" }).refine((value: number) => {
+        validation: z.number({ invalid_type_error: 'The Amount field is required' }).refine((value: number) => {
           if (!value) { return false }
           return true
         }, { message: 'The Amount field cannot be 0' })
@@ -155,7 +164,6 @@ const Fields: Array<Container> = [
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-
 
       },
 
@@ -202,7 +210,6 @@ const IncomeAttachmentFields: Array<Container> = [
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-
 
       },
 
@@ -259,7 +266,6 @@ const ENUM_FILTER = [
 ]
 
 async function openEditDialog(item: any) {
-  console.log(item)
   props.openDialog()
   if (item?.id) {
     idItem.value = item?.id
@@ -344,17 +350,19 @@ async function getAdjustmentList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
+      let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ''}-${iterator?.transaction?.name || ''}` }
 
-
-      let  transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
-
-      if(iterator?.invoice?.invoiceType === InvoiceType.INCOME){
-        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ""}-${iterator?.paymentTransactionType?.name || ""}` }
+      if (iterator?.invoice?.invoiceType === InvoiceType.INCOME) {
+        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ''}-${iterator?.paymentTransactionType?.name || ''}` }
       }
 
       ListItems.value = [...ListItems.value, {
-        ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date,
-       
+        ...iterator,
+        loadingEdit: false,
+        loadingDelete: false,
+        roomRateId: iterator?.roomRate?.roomRateId,
+        date: iterator?.date,
+
       }]
 
       if (typeof +iterator?.amount === 'number') {
@@ -539,6 +547,7 @@ async function saveAdjustment(item: { [key: string]: any }) {
       props.refetchInvoice()
     }
     ClearForm()
+    emits('isSaveFormAdjustment', true)
     props.closeDialog()
   }
 }
@@ -565,38 +574,45 @@ async function getTransactionTypeList(query = '') {
   try {
     const payload
       = {
-      filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     transactionTypeList.value = []
     const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
     const { data: dataList } = response
     for (const iterator of dataList) {
-      transactionTypeList.value = [...transactionTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, fullName: `${iterator?.code}-${iterator?.name}` }]
+      transactionTypeList.value = [...transactionTypeList.value, {
+        id: iterator.id,
+        name: iterator.name,
+        code: iterator.code,
+        isRemarkRequired: iterator.isRemarkRequired,
+        defaultRemark: iterator.defaultRemark,
+        fullName: `${iterator?.code}-${iterator?.name}`
+      }]
     }
   }
   catch (error) {
@@ -605,8 +621,7 @@ async function getTransactionTypeList(query = '') {
 }
 
 function onRowRightClick(event: any) {
-
-  return;
+  return
 
   if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
     return
@@ -654,7 +669,6 @@ function OnSortField(event: any) {
 
 function openDialog() {
   dialogOpen.value = true
-  console.log(dialogOpen)
 }
 
 watch(() => props.forceUpdate, () => {
@@ -673,13 +687,11 @@ watch(() => props.listItems, () => {
   }
 }, { deep: true })
 
-
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
   Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
   getAdjustmentList()
 })
-
 
 onMounted(() => {
   if (props.selectedInvoice) {
@@ -698,15 +710,15 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="Options"
+    <DynamicTable
+      :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="Options"
       :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
       @on-list-item="ResetListItems" @on-row-right-click="onRowRightClick" @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
-     
-
-    }">
+      }"
+    >
       <template v-if="isCreationDialog" #pagination-total="props">
         <span class="font-bold font">
           {{ listItems?.length }}
@@ -728,19 +740,21 @@ onMounted(() => {
   <ContextMenu v-if="!isDetailView" ref="adjustmentContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen">
-    <AdjustmentPartialDialog :invoice-obj="invoiceObj" :invoice-amount="invoiceObjAmount"
+    <AdjustmentPartialDialog
+      :invoice-obj="invoiceObj" :invoice-amount="invoiceObjAmount"
       :fields="route.query.type === InvoiceType.INCOME ? IncomeAttachmentFields : Fields" :item="item"
       :open-dialog="isDialogOpen" :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
-      :require-confirmation-to-save="saveAdjustment"
+      :require-confirmation-to-save="saveAdjustment" :booking-list="props.bookingList"
       :require-confirmation-to-delete="requireConfirmationToDeleteAdjustment"
       :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'" :id-item="idItem" :close-dialog="() => {
-      ClearForm()
-      idItem = ''
+        ClearForm()
+        idItem = ''
 
-      closeDialog()
+        closeDialog()
 
-    }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
+      }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
       content-class="w-full h-fit" :transaction-type-list="transactionTypeList"
-      :get-transaction-type-list="getTransactionTypeList" />
+      :get-transaction-type-list="getTransactionTypeList"
+    />
   </div>
 </template>

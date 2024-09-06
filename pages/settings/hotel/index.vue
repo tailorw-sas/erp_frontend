@@ -117,13 +117,14 @@ const fields: Array<FieldDefinitionType> = [
     field: 'manageTradingCompanies',
     header: 'Trading Company',
     dataType: 'select',
-    class: 'field col-12',
+    class: 'field col-12 required',
     headerClass: 'mb-1',
     validation: z.object({
       id: z.string(),
       company: z.string(),
       status: z.enum(['ACTIVE', 'INACTIVE'], { message: 'The trading company must be either ACTIVE or INACTIVE' })
     }).nullable()
+      .refine(value => value && value.id && value.company, { message: `The Trading Company field is required` })
       .refine(value => value === null || value.status === 'ACTIVE', {
         message: 'This trading company is not active',
       })

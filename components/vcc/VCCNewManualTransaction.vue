@@ -203,9 +203,40 @@ function clearForm() {
   formReload.value++
 }
 
-function requireConfirmationToSave(item: any) {
+async function handleMerchantRedirect(item: any) {
+  const data = {
+    orderNumber: `${item.id}`,
+    amount: `${item.amount}00`,
+    approvedUrl: `vcc-management/transaction-result?status=success`,
+    declinedUrl: `vcc-management/transaction-result?status=declined`,
+    cancelUrl: `vcc-management/transaction-result?status=cancelled`,
+    merchantId: '39038540035',
+    merchantName: item.merchant.name ?? '',
+    merchantType: 'ECommerce',
+    currencyCode: '$',
+    itbis: '000'
+  }
+  const response = await fetch('/api/redirect-to-merchant', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (response.ok) {
+    const newTab = window.open('', '_blank')
+    newTab?.document.write(await response.text())
+    newTab?.document.close()
+  }
+  else {
+    console.error('Error al redirigir al merchant')
+  }
+}
+
+async function requireConfirmationToSave(item: any) {
   if (!useRuntimeConfig().public.showSaveConfirm) {
-    save(item)
+    await save(item)
   }
   else {
     confirm.require({
@@ -237,6 +268,8 @@ async function save(item: { [key: string]: any }) {
     delete payload.event
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
+    item.id = response.id
+    handleMerchantRedirect(item)
     onClose(false)
   }
   catch (error: any) {

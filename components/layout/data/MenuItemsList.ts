@@ -638,6 +638,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/close-operation/invoice'),
               items: []
             },
+            {
+              label: 'Invoice Parameterization',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/parameterization/invoice'),
+              items: []
+            },
           ]
         }
       ],
@@ -655,6 +661,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'VCC Close Operation',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/close-operation/vcc'),
+              items: []
+            },
+            {
+              label: 'VCC Parameterization',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/parameterization/vcc'),
               items: []
             },
           ]

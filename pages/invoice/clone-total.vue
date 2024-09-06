@@ -10,21 +10,37 @@ import { GenericService } from '~/services/generic-services'
 
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTabView.vue'
+import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTotalTabView.vue'
 
+const idItemCreated = ref('')
+const Options = ref({
+  tableName: 'Invoice',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-adjustment',
+  messageToDelete: 'Do you want to save the change?',
+  loading: false,
+  showFilters: false,
+  actionsAsMenu: false,
+
+})
+const adjustmentList = ref<any[]>([])
 const toast = useToast()
-const openAdjustment=ref(true)
+const totalHotelAmount = ref(0)
+const totalInvoiceAmount = ref(0)
+const idItemToLoadFirstTime = ref('')
+const selectedInvoicing = ref<any>('')
+let globalSelectedInvoicing = ''
 const forceUpdate = ref(false)
 const active = ref(0)
 const route = useRoute()
 const transactionTypeList = ref<any[]>([])
-
+const ListItems = ref<any[]>([])
 const { data: userData } = useAuth()
 
 const selectedInvoice = ref({})
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
-
+const totalAmount = ref(0)
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 const agencyError = ref(false)
@@ -35,17 +51,17 @@ const roomRateDialogOpen = ref<boolean>(false)
 const adjustmentDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
-
+const showAdjustmentDialogFirstTime = ref(false)
 const bookingList = ref<any[]>([])
 const roomRateList = ref<any[]>([])
 const loadedRoomRates = ref<any[]>([])
-const adjustmentList = ref<any[]>([])
+
 const attachmentList = ref<any[]>([])
 
 
 const nightTypeRequired = ref(false)
 const requiresFlatRate = ref(false)
-
+const listItems = ref<any[]>([])
 const invoiceAmountError = ref(false)
 const invoiceAmountErrorMessage = ref('')
 
@@ -66,6 +82,16 @@ const confagencyListApi = reactive({
 const confinvoiceTypeListtApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
+})
+
+const confAttachmentApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-attachment',
+})
+
+const confAdjustmentsApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-adjustment',
 })
 
 const CreditFields = ref<FieldDefinitionType[]>([
@@ -155,7 +181,7 @@ const Fields = ref<FieldDefinitionType[]>([
 
   {
     field: 'invoiceId',
-    header: 'ID:',
+    header: 'ID',
     dataType: 'text',
     class: `field col-12  md:col-2 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`,
     disabled: true,
@@ -163,7 +189,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'invoiceDate',
-    header: 'Invoice Date:',
+    header: 'Invoice Date',
     dataType: 'date',
   
     class: 'field col-12 md:col-2 required ',
@@ -172,14 +198,14 @@ const Fields = ref<FieldDefinitionType[]>([
  
   {
     field: 'isManual',
-    header: 'Manual:',
+    header: 'Manual',
     dataType: 'check',
     class: `field col-12 md:col-1  flex align-items-center pb-0 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: true
   },
   {
     field: 'invoiceAmount',
-    header: 'Invoice Amount:',
+    header: 'Invoice Amount',
     dataType: 'text',
  
     class: 'field col-12 md:col-2 required  ',
@@ -188,7 +214,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'invoiceType',
-    header: 'Invoice Type:',
+    header: 'Invoice Type',
     dataType: 'select',
     class: 'field col-12 md:col-2  mb-5',
  
@@ -196,7 +222,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'agency',
-    header: 'Agency:',
+    header: 'Agency',
     dataType: 'select',
     class: 'field col-12 md:col-3 mb-5   required',
    
@@ -205,7 +231,7 @@ const Fields = ref<FieldDefinitionType[]>([
  
   {
     field: 'invoiceNumber',
-    header: 'Invoice Number:',
+    header: 'Invoice Number',
     dataType: 'text',
     
     class: 'field col-12 md:col-2  ',
@@ -214,7 +240,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'dueDate',
-    header: 'Due Date:',
+    header: 'Due Date',
     dataType: 'date',
   
     class: 'field col-12 md:col-2 required ',
@@ -222,22 +248,22 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'reSend',
-    header: 'Re-Send:',
+    header: 'Re-Send',
     dataType: 'check',
     class: `field col-12 md:col-1 mb-3    flex align-items-center pb-0 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: false
   },
   {
     field: 'reSenDate',
-    header: 'Re-Send Date:',
+    header: 'Re-Send Date',
     dataType: 'date',
   
-    class: 'field col-12 md:col-2   required',
+    class: 'field col-12 md:col-2',
     validation: z.date({ required_error: 'The Due Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
   },
   {
     field: 'hotel',
-    header: 'Hotel:',
+    header: 'Hotel',
     dataType: 'select',
     class: 'field col-12 md:col-2 mb-5  required',
  
@@ -245,7 +271,7 @@ const Fields = ref<FieldDefinitionType[]>([
   },
   {
     field: 'status',
-    header: 'Status:',
+    header: 'Status',
     dataType: 'select',
     class: 'field col-12 md:col-3 mb-5  required',
  
@@ -325,6 +351,10 @@ const bookingApi = {
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
 }
+const confRoomApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-room-rate',
+})
 const transactionTypeApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-transaction-type',
@@ -594,6 +624,7 @@ async function saveItem(item: { [key: string]: any }) {
 
   try {
     const response: any = await createItem(item)
+    idItemCreated.value = response.cloned
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     if (route.query.type === InvoiceType.CREDIT) { return navigateTo({ path: `/invoice` }) }
     navigateTo({ path: `/invoice/edit/${response?.id}` })
@@ -611,46 +642,143 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 
-async function getTransactionTypeList(query = '') {
+async function getRoomRateList(globalSelectedInvoicing: any) {
   try {
-    const payload
-      = {
+    const Payload = {
       filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
+        {
+          key: 'booking.invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
-      pageSize: 200,
+      pageSize: 10,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
     }
 
-    transactionTypeList.value = []
-    const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
-    const { data: dataList } = response
+    idItemToLoadFirstTime.value = ''
+
+    roomRateList.value = []
+
+    const response = await GenericService.search(confRoomApi.moduleApi, confRoomApi.uriApi, Payload)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    let countRR = 0
+    totalInvoiceAmount.value = 0
+    totalHotelAmount.value = 0
+
     for (const iterator of dataList) {
-      transactionTypeList.value = [...transactionTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, fullName: `${iterator?.code}-${iterator?.name}` }]
+      countRR++
+
+      roomRateList.value = [...roomRateList.value, {
+        ...iterator,
+        roomRateId: '',
+        //   invoiceAmount: iterator?.invoiceAmount || 0,
+       // hotelAmount: 0,
+       // invoiceAmount: 0,
+        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        loadingEdit: false,
+        loadingDelete: false,
+        fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
+        bookingId: iterator.booking.bookingId,
+        roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
+        nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
+        ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
+        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
+      }]
+
+      if (typeof +iterator.invoiceAmount === 'number') {
+        totalInvoiceAmount.value += Number(iterator.invoiceAmount)
+      }
+
+      if (typeof +iterator.hotelAmount === 'number') {
+        totalHotelAmount.value += Number(iterator.hotelAmount)
+      }
+    }
+
+    if (roomRateList.value.length > 0) {
+      idItemToLoadFirstTime.value = roomRateList.value[0].id
+    }
+
+ /*   if (bookingList.value.length === 1) {
+      showAdjustmentDialogFirstTime.value = true
+    }*/
+  }
+  catch (error) {
+    console.error(error)
+  }
+}
+
+async function getAdjustmentList() {
+  try {
+    idItemToLoadFirstTime.value = ''
+    Options.value.loading = true
+    ListItems.value = []
+    totalAmount.value = 0
+
+    const payload: any = {
+      filter: [
+        {
+          key: 'roomRate.booking.invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+
+    const response = await GenericService.search(confAdjustmentsApi.moduleApi, confAdjustmentsApi.uriApi, payload)
+
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+
+
+      let  transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
+
+      if(iterator?.invoice?.invoiceType === InvoiceType.INCOME){
+        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ""}-${iterator?.paymentTransactionType?.name || ""}` }
+      }
+
+      ListItems.value = [...ListItems.value, {
+        ...iterator, loadingEdit: false, loadingDelete: false,adjustmentId:'', roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date,
+       
+      }]
+
+      if (typeof +iterator?.amount === 'number') {
+        totalAmount.value += Number(iterator?.amount)
+      }
+    }
+    if (ListItems.value.length > 0) {
+      idItemToLoadFirstTime.value = ListItems.value[0].id
     }
   }
   catch (error) {
-    console.error('Error loading hotel list:', error)
+    console.error(error)
+  }
+  finally {
+    Options.value.loading = false
   }
 }
 
@@ -825,19 +953,19 @@ async function getItemById(id: any) {
 
       if (response) {
         item.value.id = response.id
-        item.value.invoiceId = response.invoiceId
-        const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
+     //   item.value.invoiceId = response.invoiceId
+      //  const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
-        item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
+      //  item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
-        item.value.invoiceAmount = toNegative(response.invoiceAmount)
+        item.value.invoiceAmount = response.invoiceAmount
         item.value.hotel = response.hotel
         item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
         item.value.agency = response.agency
         item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
-        item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
+      //  item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
 
         if (route.query.type === InvoiceType.CREDIT) {
           item.value.originalAmount = response.invoiceAmount
@@ -896,8 +1024,8 @@ async function getBookingList(clearFilter: boolean = false) {
         loadingEdit: false,
         loadingDelete: false,
         agency: iterator?.invoice?.agency,
-        invoiceAmount: 0,
-        originalAmount: iterator?.invoiceAmount,
+      //  invoiceAmount: 0,
+      //  originalAmount: iterator?.invoiceAmount,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
@@ -910,6 +1038,72 @@ async function getBookingList(clearFilter: boolean = false) {
     // Options.value.loading = false
   }
 }
+
+
+async function getAttachmentList(globalSelectedInvoicing: any) {
+  try {
+    // Inicializar variables y estados
+    idItemToLoadFirstTime.value = ''
+    listItems.value = []
+
+    // Construir el payload para la búsqueda
+    const payload: any = {
+      filter: [
+        {
+          key: 'invoice.id',
+          operator: 'EQUALS',
+          value: globalSelectedInvoicing,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+
+    // Realizar la búsqueda utilizando el GenericService
+    const response = await GenericService.search(
+      confAttachmentApi.moduleApi,
+      confAttachmentApi.uriApi,
+      payload
+    )
+
+    // Extraer los datos de la respuesta
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    // Actualizar los valores de la paginación
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    // Procesar y formatear los datos de la lista de adjuntos
+    const attachments = dataList.map((item: any) => ({
+      ...item,
+      type: {
+        ...item?.type,
+        name: `${item?.type?.code}-${item?.type?.name}`
+      },
+      paymenResourceType: 'INV-Invoice',
+      resource: globalSelectedInvoicing
+    }))
+
+    // Establecer el primer elemento de la lista como el que se cargará inicialmente
+    if (attachments.length > 0) {
+      idItemToLoadFirstTime.value = attachments[0].id
+    }
+
+    // Devolver la lista de adjuntos
+    return attachments
+  }
+  catch (error) {
+    console.error(error)
+    return [] // Devolver una lista de adjuntos vacía en caso de error
+  }
+}
+
 
 function calcBookingInvoiceAmount(roomRate: any) {
   const bookingIndex = bookingList.value.findIndex(b => b?.id === roomRate?.booking)
@@ -1080,13 +1274,17 @@ watch(invoiceAmount, () => {
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
+  selectedInvoicing.value = route.query.selected
+  globalSelectedInvoicing = selectedInvoicing.value
   item.value.invoiceType = ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
 
-  if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
+ // if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
     await getItemById(route.query.selected)
     await getBookingList()
+    await getRoomRateList(globalSelectedInvoicing)
+    await getAdjustmentList()
     calcInvoiceAmount()
-  }
+ // }
 })
 </script>
 
@@ -1212,7 +1410,7 @@ onMounted(async () => {
             :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
             :add-room-rate="addRoomRate" :update-room-rate="updateRoomRate" :is-creation-dialog="true"
             :selected-invoice="selectedInvoice as any" :booking-list="bookingList" :add-booking="addBooking"
-            :update-booking="updateBooking" :adjustment-list="adjustmentList" :add-adjustment="addAdjustment"
+            :update-booking="updateBooking" :adjustment-list="ListItems" :add-adjustment="addAdjustment"
             :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
 
               active = $event
@@ -1247,109 +1445,14 @@ onMounted(async () => {
           </div>
         </div>
         <div v-if="attachmentDialogOpen">
-          <AttachmentDialogTotal
-            :add-item="addAttachment" :close-dialog="() => { attachmentDialogOpen = false }"
-            :is-creation-dialog="true" header="Manage Invoice Attachment" :list-items="attachmentList"
-            :open-dialog="attachmentDialogOpen" :update-item="updateAttachment" selected-invoice=""
-            :selected-invoice-obj="{}"
-          />
+          <AttachmentDialogTotal :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
+        :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
+        :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item" />
         </div>
-        <div v-if="openAdjustment">
-          <Dialog
-      v-model:visible="openAdjustment"
-      :id-item="idItem"
-    
-      modal
-      class="mx-2 sm:mx-0"
-      content-class="border-round-bottom border-top-1 surface-border"
-    :style="{width:'33%'}"
-      :pt="{
-        root: {
-          class: 'custom-dialog',
-        },
-        header: {
-          style: 'padding-top: 0.5rem; padding-bottom: 0.5 rem',
-        },
-      
-      }"
-      @hide="openAdjustment = false"
-    >
-      <template #header>
-        <div class="flex justify-content-between">
-          <p class="mt-2 mb-0 text-lg">
-           New Adjustment
-          </p>
-        </div>
-      </template>
-      <template #default>
-      
-    <form class="flex flex-column justify-content-center mx-4" >
-      <div class="mt-3">
-        <label for="amount" class="block font-bold mb-1  required">Amount <span class="required-indicator ml-1"> * </span></label>
-    
-           <InputText
-          id="amount"
-          v-model="item.amount"
-          type="text"
-       class="w-full"
-       
-          required
-        />
-      
-      </div>
-      <div class="mt-1">
-        <label for="amount" class="block font-bold mb-1 required">Date <span class="required-indicator ml-1"> * </span></label>
-        <Calendar 
-  id="amount"
-  
-  v-model="item.date"
-  date-format="yy-mm-dd"
-  :max-date="dayjs().endOf('day').toDate()"
-  :default-date="dayjs().startOf('day').toDate()"
-  class="w-full"
-
-  required
-> </Calendar>
-      
-      </div>
-      <div class="mt-1">
-        <label for="amount" class="block font-bold mb-1  required">Transaction Type <span class="required-indicator ml-1"> * </span></label>
-    
-        <DebouncedAutoCompleteComponent
-        class="w-full"
-            v-if="!loadingSaveAll" id="autocomplete"  field="fullName" item-value="id"
-            :model="transactionType" :suggestions="transactionTypeList" @change="($event) => {
-              onUpdate('transactionType', $event)
-            }" @load="($event) => getTransactionTypeList($event)"
-          />
-      </div>
-      <div class="mt-2">
-        <label for="amount" class="block font-bold mb-1  required">Remark </label>
-    
-           <InputText
-          id="amount"
-          v-model="item.amount"
-          type="text"
-        class="w-full"
-         
-       
-          required
-        />
-      
-      </div>
-      <div class="field flex justify-content-end mt-4 mb-2">
-        <Button  v-tooltip.top="'Save'"  label="Save" type="submit"  class="p-button-primary mr-2 w-6rem mx-1" icon="pi pi-save"/>
-        <Button  v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class=" mr-2 w-6rem mx-1" @click="openAdjustment = false" icon="pi pi-times" />
-      </div>
-    
-    </form>
- 
-  </template>
-    </Dialog>
+   
              
         
-</div>
-  
+
       
        
       </template>

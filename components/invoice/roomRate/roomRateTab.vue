@@ -184,9 +184,9 @@ const fields: Array<FieldDefinitionType> = [
     field: 'roomNumber',
     header: 'Room Number',
     dataType: 'number',
-    class: 'field col-12 md:col-6 required',
+    class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
-    validation: z.number({ invalid_type_error: 'The Room Number field must be greater than 0 ' }).min(1, 'The Room Number field must be greater than 0')
+    // validation: z.number({ invalid_type_error: 'The Room Number field must be greater than 0 ' }).min(1, 'The Room Number field must be greater than 0')
 
   },
 
@@ -510,9 +510,9 @@ function ClearForm() {
 }
 
 function onRowRightClick(event: any) {
-  if( !props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
-        return;
-      }
+  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+    return
+  }
   selectedRoomRate.value = event.data
   roomRateContextMenu.value.show(event.originalEvent)
 }
@@ -824,7 +824,6 @@ watch(PayloadOnChangePage, (newValue) => {
   getRoomRateList()
 })
 
-
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
     getRoomRateList()
@@ -901,11 +900,11 @@ watch(() => props.bookingObj, () => {
       @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME ) {
+        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
           return;
         }
 
-        if( !props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
+        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
           return;
         }
         openEditDialog($event)

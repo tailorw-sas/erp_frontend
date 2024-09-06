@@ -5,7 +5,7 @@ import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import dayjs from 'dayjs'
-import type { Container } from '~/components/form/EditFormV2WithContainer'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import { GenericService } from '~/services/generic-services'
 
 import type { GenericObject } from '~/types'
@@ -13,6 +13,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoiceTabView from '~/components/invoice/InvoiceTabView/InvoiceTabView.vue'
 
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
+import type { IPagination } from '~/components/table/interfaces/ITableInterfaces'
 
 const toast = useToast()
 
@@ -43,7 +44,6 @@ const loadedRoomRates = ref<any[]>([])
 const adjustmentList = ref<any[]>([])
 const attachmentList = ref<any[]>([])
 
-
 const nightTypeRequired = ref(false)
 const requiresFlatRate = ref(false)
 
@@ -53,6 +53,7 @@ const invoiceAmountErrorMessage = ref('')
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 const invoiceTypeList = ref<any[]>([])
+const codeInvoiceType = ref<string>('')
 
 const confhotelListApi = reactive({
   moduleApi: 'settings',
@@ -67,6 +68,16 @@ const confagencyListApi = reactive({
 const confinvoiceTypeListtApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
+})
+
+const confResourceTypeApi = reactive({
+  moduleApi: 'payment',
+  uriApi: 'resource-type',
+})
+
+const confInvoiceApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice',
 })
 
 const CreditFields = ref<FieldDefinitionType[]>([
@@ -331,25 +342,25 @@ async function getHotelList(query = '') {
     const payload
       = {
         filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -374,25 +385,25 @@ async function getAgencyList(query = '') {
     const payload
       = {
         filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -409,6 +420,49 @@ async function getAgencyList(query = '') {
   }
   catch (error) {
     console.error('Error loading agency list:', error)
+  }
+}
+
+async function getInvoiceTypeList(query = '') {
+  try {
+    const payload
+      = {
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'name',
+        sortType: ENUM_SHORT_TYPE.ASC
+      }
+
+    invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }]
+    const response = await GenericService.search(confinvoiceTypeListtApi.moduleApi, confinvoiceTypeListtApi.uriApi, payload)
+    const { data: dataList } = response
+    for (const iterator of dataList) {
+      invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading invoice type list:', error)
   }
 }
 
@@ -432,7 +486,6 @@ async function createItem(item: { [key: string]: any }) {
     payload.hotel = item.hotel?.id
     payload.agency = item.agency?.id
     payload.invoiceType = route.query.type
-    
 
     if (invoiceAmount.value === 0) {
       throw new Error('The Invoice amount field cannot be 0')
@@ -442,7 +495,7 @@ async function createItem(item: { [key: string]: any }) {
     await getInvoiceHotel(item.hotel?.id)
 
     const adjustments = []
-    const bookings = []
+    const bookings: any[] = []
     let roomRates = []
     const attachments = []
 
@@ -527,6 +580,46 @@ async function createItem(item: { [key: string]: any }) {
   }
 }
 
+async function createItemCredit(item: any) {
+  loadingSaveAll.value = true
+
+  const bookings: { id: any, amount: number }[] = []
+  const attachments = []
+
+  console.log('booking list', bookingList.value)
+  bookingList.value?.forEach((booking) => {
+    if (booking?.invoiceAmount !== 0) {
+      bookings.push({
+        id: booking?.id,
+        amount: toNegative(booking?.invoiceAmount)
+      })
+    }
+  })
+
+  for (let i = 0; i < attachmentList.value.length; i++) {
+    const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
+    attachments.push({
+      // ...attachmentList.value[i],
+      type: attachmentList.value[i]?.type?.id,
+      file: fileurl,
+      filename: attachmentList.value[i]?.filename,
+      remark: attachmentList.value[i]?.remark,
+      paymentResourceType: '67c10e87-89c0-4a3a-abe3-5cebc400d280'// attachmentList.value[i]?.resourceType
+
+    })
+  }
+
+  const payload = {
+    invoice: route.query.selected,
+    invoiceDate: dayjs(item.invoiceDate).startOf('day').toISOString(),
+    employee: userData?.value?.user?.userId || '',
+    bookings,
+    attachments
+  }
+
+  await GenericService.createInvoiceType(confInvoiceApi.moduleApi, `${confInvoiceApi.uriApi}/new-credit`, payload)
+}
+
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
@@ -573,7 +666,13 @@ async function saveItem(item: { [key: string]: any }) {
   let successOperation = true
 
   try {
-    const response: any = await createItem(item)
+    let response: any = null
+    if (route.query.type === InvoiceType.CREDIT) {
+      response = await createItemCredit(item)
+    }
+    else {
+      response = await createItem(item)
+    }
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     if (route.query.type === InvoiceType.CREDIT) { return navigateTo({ path: `/invoice` }) }
     navigateTo({ path: `/invoice/edit/${response?.id}` })
@@ -697,7 +796,6 @@ function addBooking(booking: any) {
     ratePlan: { ...booking?.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
   }]
 
-  console.log(booking)
   roomRateList.value = [...roomRateList.value, {
     checkIn: dayjs(booking?.checkIn).toISOString(),
     checkOut: dayjs(booking?.checkOut).toISOString(),
@@ -719,8 +817,6 @@ function addBooking(booking: any) {
     lastName: booking?.lastName,
     id: v4()
   }]
-
-  console.log(roomRateList)
 
   calcInvoiceAmount()
 }
@@ -823,11 +919,11 @@ async function getBookingList(clearFilter: boolean = false) {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      const id = v4()
+      // const id = v4()
       bookingList.value = [...bookingList.value, {
         ...iterator,
-        id,
-        bookingId: '',
+        id: iterator?.id,
+        bookingId: iterator?.bookingId,
         loadingEdit: false,
         loadingDelete: false,
         agency: iterator?.invoice?.agency,
@@ -913,7 +1009,7 @@ function updateBooking(booking: any) {
         firstName: booking?.firstName,
         lastName: booking?.lastName,
         hotelAmount: booking?.hotelAmount,
-        
+
       }
     }
   }
@@ -946,7 +1042,6 @@ function addRoomRate(rate: any) {
     children: booking?.children,
     rateChild: booking?.rateChild,
     rateAdult: booking?.rateAdult
-
 
   }]
   calcBookingInvoiceAmount(rate)
@@ -989,11 +1084,10 @@ function addAttachment(attachment: any) {
   attachmentList.value = [...attachmentList.value, attachment]
 }
 
-function deleteAttachment(id: string){
+function deleteAttachment(id: string) {
   const newList = attachmentList.value.filter(attachment => attachment?.id !== id)
 
   attachmentList.value = newList
-
 }
 
 function updateAttachment(attachment: any) {
@@ -1002,8 +1096,6 @@ function updateAttachment(attachment: any) {
 }
 
 watch(invoiceAmount, () => {
-  console.log(item)
-
   invoiceAmountError.value = false
 
   if (route.query.type === InvoiceType.INVOICE) {
@@ -1021,8 +1113,11 @@ watch(invoiceAmount, () => {
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
+  await getInvoiceTypeList()
+  codeInvoiceType.value = route.query.type ? route.query.type.toString().split('_')[0] : ''
+  const invoiceTypeTemp = invoiceTypeList.value.find(element => element.code === codeInvoiceType.value) // ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
 
-  item.value.invoiceType = ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
+  item.value.invoiceType = invoiceTypeTemp
 
   if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
     await getItemById(route.query.selected)
@@ -1172,7 +1267,7 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
                 <Button
                   v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                  :loading="loadingSaveAll"  @click="handleAttachmentDialogOpen()"
+                  :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
                 />
               </IfCan>
               <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-SHOW-HISTORY']">

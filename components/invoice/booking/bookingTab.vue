@@ -6,7 +6,6 @@ import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import dayjs from 'dayjs'
 import getUrlByImage from '~/composables/files'
-import { ModulesService } from '~/services/modules-services'
 import { GenericService } from '~/services/generic-services'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -274,6 +273,14 @@ const Fields = ref<Array<Container>>([
         headerClass: 'mb-1',
 
       },
+      {
+        field: 'dueAmount',
+        header: 'Balance Amount',
+        dataType: 'number',
+        class: 'field col-12 required',
+        headerClass: 'mb-1',
+        hidden: true
+      }
 
     ],
     containerClass: ''
@@ -613,12 +620,6 @@ const fieldsV2: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
 
   },
-
-
-
-
-
-
 
   // Rate Plan
   {
@@ -992,8 +993,9 @@ async function getBookingList(clearFilter: boolean = false) {
     Options.value.loading = true
     ListItems.value = []
 
+    
     const response = await GenericService.search(Options.value.moduleApi, Options.value.uriApi, Payload.value)
-
+    console.log(response)
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     Pagination.value.page = page
@@ -1005,7 +1007,9 @@ async function getBookingList(clearFilter: boolean = false) {
     totalHotelAmount.value = 0
     totalOriginalAmount.value = 0
 
+    
     for (const iterator of dataList) {
+      const rt = iterator?.roomType ? roomTypeList.value.find(item => item.id === iterator?.roomType?.id) : null
       ListItems.value = [...ListItems.value, {
         ...iterator,
         roomType: { ...iterator?.roomType, name: iterator?.roomType?.code ? `${iterator?.roomType?.code || ""}-${iterator?.roomType?.name || ""}` : "" },
@@ -1081,6 +1085,7 @@ function clearFilterToSearch() {
   getBookingList()
 }
 async function GetItemById(id: string) {
+  
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
@@ -1112,9 +1117,9 @@ async function GetItemById(id: string) {
       item.value.hotelAmount = element.hotelAmount ? String(element?.hotelAmount) : '0'
       item.value.description = element.description
       item.value.invoice = element.invoice
-      item.value.ratePlan = element.ratePlan
+      item.value.ratePlan = element.ratePlan?.name == '-' ? null : element.ratePlan
       item.value.nightType = element.nightType
-      item.value.roomType = element.roomType
+      item.value.roomType = element.roomType?.name == '-' ? null : element.roomType
       item.value.roomCategory = element.roomCategory
       loadingSaveAll.value = false
       return formReload.value += 1
@@ -1122,6 +1127,7 @@ async function GetItemById(id: string) {
 
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
+      
       if (response) {
         item.value.id = response.id
         item.value.bookingId = response.bookingId
@@ -1147,9 +1153,9 @@ async function GetItemById(id: string) {
         item.value.hotelAmount = String(response.hotelAmount)
         item.value.description = response.description
         item.value.invoice = response.invoice
-        item.value.ratePlan = response.ratePlan
+        item.value.ratePlan = response.ratePlan?.name == '-' ? null : response.ratePlan
         item.value.nightType = response.nightType
-        item.value.roomType = response.roomType
+        item.value.roomType = response.roomType?.name == '-' ? null : response.roomType
         item.value.roomCategory = response.roomCategory
       }
       formReload.value += 1
@@ -1209,7 +1215,7 @@ async function deleteBooking(id: string) {
 
 
 async function saveBooking(item: { [key: string]: any }) {
-
+  
   item.hotelBookingNumber = item.hotelBookingNumber.split(" ").filter((a: string) => a !== "").join(" ")
   item.checkIn = dayjs(item.checkIn).startOf('day').toDate()
   item.checkOut = dayjs(item.checkOut).startOf('day').toDate()
@@ -1222,21 +1228,18 @@ async function saveBooking(item: { [key: string]: any }) {
 
   console.log(props.nightTypeRequired);
   if (!props.isCreationDialog) {
-
     await props.getInvoiceAgency(props?.invoiceObj?.agency?.id)
-
     if (props.nightTypeRequired && !item?.nightType?.id) {
-
-
       return toast.add({ severity: 'error', summary: 'Error', detail: 'The Night Type field is required for this client', life: 10000 })
     }
-
-
-
   }
 
+  debugger
   item.fullName = `${item?.firstName ?? ''} ${item?.lastName ?? ''}`
+   item.ratePlan = ratePlanList.value.find((ratePlan: any) => ratePlan?.id === item?.ratePlan?.id)
 
+  item.roomType = roomTypeList.value.find((roomType: any) => roomType?.id === item?.roomType?.id)
+  item.dueAmount = item.invoiceAmount
   if (props.isCreationDialog) {
     const invalid: any = props?.listItems?.find((booking: any) => booking?.hotelBookingNumber === item?.hotelBookingNumber)
 
@@ -1288,6 +1291,7 @@ async function saveBooking(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     ClearForm()
+    //getBookingList()
     if (!props.isCreationDialog) {
       props.refetchInvoice()
       // props?.toggleForceUpdate()
@@ -1444,6 +1448,7 @@ watch(PayloadOnChangePage, (newValue) => {
 
 
 onMounted(() => {
+  
   if (props.selectedInvoice) {
     Payload.value.filter = [{
       key: 'invoice.id',

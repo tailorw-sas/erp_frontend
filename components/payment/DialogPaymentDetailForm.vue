@@ -15,14 +15,16 @@ const props = defineProps({
     default: 'new-detail'
   }
 })
-const emit = defineEmits(['update:visible', 'save'])
+const emit = defineEmits(['update:visible', 'save', 'applyPayment'])
 const confirm = useConfirm()
 const onOffDialog = ref(props.visible)
 const transactionTypeList = ref<any[]>([])
 const formReload = ref(0)
-
+const disabledBtnApplyPaymentByTransactionType = ref(true)
 const forceSave = ref(false)
 let submitEvent: Event = new Event('')
+
+const amountLocalTemp = ref('0')
 
 const item = ref({ ...props.item })
 
@@ -61,6 +63,10 @@ function handleSaveForm($event: any) {
   }
 
   emit('save', item.value)
+}
+
+function applyPayment(event: Event) {
+  emit('applyPayment', { event, amount: amountLocalTemp.value })
 }
 
 interface DataListItem {
@@ -389,7 +395,12 @@ async function loadDefaultsValues() {
       }
       break
     case 'apply-deposit':
-      item.value.transactionType = transactionTypeList.value.length > 0 ? transactionTypeList.value[0] : null
+      if (transactionTypeList.value.length === 1) {
+        item.value.transactionType = transactionTypeList.value[0]
+      }
+      else if (transactionTypeList.value.length > 1) {
+        item.value.transactionType = transactionTypeList.value.find((item: any) => item.default === true)
+      }
 
       if (item.value.transactionType && item.value.transactionType.remarkRequired === false) {
         const decimalSchema = z.object(
@@ -411,6 +422,9 @@ async function loadDefaultsValues() {
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
       }
+      break
+
+    default:
       break
   }
 
@@ -605,6 +619,12 @@ function processValidation($event: any, data: any) {
               onUpdate('transactionType', $event)
               if ($event) {
                 onUpdate('remark', '')
+                if ($event.cash || $event.applyDeposit) {
+                  disabledBtnApplyPaymentByTransactionType = true
+                }
+                else {
+                  disabledBtnApplyPaymentByTransactionType = false
+                }
               }
               processValidation($event, data)
             }"
@@ -698,12 +718,24 @@ function processValidation($event: any, data: any) {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
+        <template #field-amount="{ item: data, onUpdate }">
+          <InputText
+            v-if="!props.loadingSaveAll"
+            v-model="data.amount"
+            class="w-full"
+            @update:model-value="($event) => {
+              onUpdate('amount', $event)
+              amountLocalTemp = $event
+            }"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
       </EditFormV2>
     </template>
 
     <template #footer>
       <IfCan :perms="['PAYMENT-MANAGEMENT:APPLY-PAYMENT']">
-        <Button v-if="action === 'new-detail' || action === 'apply-deposit'" v-tooltip.top="'Apply Payment'" link class="w-auto ml-1 sticky">
+        <Button v-if="(action === 'new-detail' || action === 'apply-deposit') && disabledBtnApplyPaymentByTransactionType" v-tooltip.top="'Apply Payment'" link class="w-auto ml-1 sticky" @click="applyPayment($event)">
           <Button class="ml-1 w-3rem p-button-primary" icon="pi pi-cog" />
           <span class="ml-2 font-bold">
             Apply Payment
