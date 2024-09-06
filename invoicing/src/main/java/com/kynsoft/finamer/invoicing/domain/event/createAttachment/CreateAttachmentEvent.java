@@ -7,7 +7,6 @@ import org.springframework.context.ApplicationEvent;
 import java.util.UUID;
 
 @Getter
-@Builder
 public class CreateAttachmentEvent extends ApplicationEvent {
     private final UUID invoiceId;
     private final String employee;

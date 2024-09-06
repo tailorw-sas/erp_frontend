@@ -85,14 +85,14 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
     private void createInvoiceAttachment(File attachment, InvoiceReconcileImportRequest request){
         try (FileInputStream fileInputStream = new FileInputStream(attachment)) {
             ManageInvoiceDto manageInvoiceDto = invoiceService.findByInvoiceId(getInvoiceIdFromFileName(attachment));
-            CreateAttachmentEvent createAttachmentEvent = CreateAttachmentEvent.builder()
-                    .invoiceId(manageInvoiceDto.getId())
-                    .employee(request.getEmployee())
-                    .remarks("Uploaded from file")
-                    .employeeId(UUID.fromString(request.getEmployeeId()))
-                    .fileName(String.valueOf(getInvoiceIdFromFileName(attachment)))
-                    .file(fileInputStream.readAllBytes())
-                    .build();
+            CreateAttachmentEvent createAttachmentEvent = new CreateAttachmentEvent(this,
+                    manageInvoiceDto.getId(),
+                    request.getEmployee(),
+                    UUID.fromString(request.getEmployeeId()),
+                    String.valueOf(getInvoiceIdFromFileName(attachment)),
+                    "Uploaded from file",
+                    fileInputStream.readAllBytes()
+                    );
             applicationEventPublisher.publishEvent(createAttachmentEvent);
         } catch (IOException e) {
             throw new RuntimeException(e);

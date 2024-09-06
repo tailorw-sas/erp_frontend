@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.kynsoft.finamer.invoicing.domain.services.StorageService;
 import com.kynsoft.finamer.invoicing.domain.exception.StorageException;
+import com.kynsoft.finamer.invoicing.infrastructure.config.StorageConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
@@ -19,13 +20,13 @@ import java.util.stream.Stream;
 
 @Service
 public class FileSystemStorageServiceImpl implements StorageService {
-    private final Path rootLocation;
-    @Value("${upload.location}")
-    private String location;
+    private Path rootLocation;
+    private final StorageConfig config;
 
 
-    public FileSystemStorageServiceImpl() {
-        this.rootLocation = Paths.get(location);
+    public FileSystemStorageServiceImpl(StorageConfig config) {
+        this.config = config;
+        init();
     }
 
     @Override
@@ -80,6 +81,7 @@ public class FileSystemStorageServiceImpl implements StorageService {
 
     @Override
     public void init() {
+        this.rootLocation = Paths.get(config.getUploadLocation());
         createDirectory(rootLocation);
     }
 
