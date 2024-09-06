@@ -12,4 +12,5 @@ public class UpdateManageResourceTypeRequest {
     private String name;
     private Status status;
     private Boolean defaults;
+    private boolean invoice;
 }
