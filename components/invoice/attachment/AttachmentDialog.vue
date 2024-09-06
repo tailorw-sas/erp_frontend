@@ -883,7 +883,7 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
                   <Button
-                    v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus" :disabled="!isCreationDialog" @click="() => {
+                    v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus" :disabled="!isCreationDialog && ListItems.length > 0" @click="() => {
                       idItem = ''
                       item = itemTemp
                       clearForm()
