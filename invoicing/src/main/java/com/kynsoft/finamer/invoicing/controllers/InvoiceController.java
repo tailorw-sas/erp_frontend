@@ -31,6 +31,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.Up
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.ExportInvoiceQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.GetSearchInvoiceQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageInvoice.toPayment.search.GetSearchInvoiceToPaymentQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ExportInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import org.springframework.data.domain.Pageable;
@@ -149,6 +150,15 @@ public class InvoiceController {
         Pageable pageable = PageableUtil.createPageable(request);
 
         GetSearchInvoiceQuery query = new GetSearchInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/search-payment")
+    public ResponseEntity<?> searchToPayment(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchInvoiceToPaymentQuery query = new GetSearchInvoiceToPaymentQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
