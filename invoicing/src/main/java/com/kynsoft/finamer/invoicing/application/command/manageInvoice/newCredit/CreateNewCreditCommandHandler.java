@@ -34,8 +34,9 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
 
     private final IParameterizationService parameterizationService;
     private final IManageResourceTypeService resourceTypeService;
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
-    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService) {
+    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -46,6 +47,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         this.closeOperationService = closeOperationService;
         this.parameterizationService = parameterizationService;
         this.resourceTypeService = resourceTypeService;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
     }
 
     @Override
@@ -199,5 +201,15 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         command.setInvoiceNumber(created.getInvoiceNumber());
         parentInvoice.setCredits(Math.abs(credits) + Math.abs(invoiceAmount));
         this.invoiceService.update(parentInvoice);
+        this.invoiceStatusHistoryService.create(
+                new InvoiceStatusHistoryDto(
+                        UUID.randomUUID(),
+                        created,
+                        "The invoice data was inserted.",
+                        null,
+                        command.getEmployeeName(),
+                        invoiceStatus
+                )
+        );
     }
 }
