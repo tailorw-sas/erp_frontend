@@ -358,7 +358,7 @@ const createItems = ref([
 
 const createReconcile = ref([
   {
-    label: 'Reconcile Automatic',
+    label: 'Automatic',
     command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
    // disabled: computedShowMenuItemReconcile
   },
