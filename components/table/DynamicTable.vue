@@ -56,6 +56,10 @@ const props = defineProps({
     type: Number,
     default: 90,
   },
+  parentComponentLoading: {
+    type: Boolean,
+    required: false,
+  }
 })
 
 const emits = defineEmits<{
@@ -490,7 +494,7 @@ getOptionsList()
     </template>
   </Toolbar>
 
-  <BlockUI :blocked="options?.loading">
+  <BlockUI :blocked="options?.loading || parentComponentLoading">
     <div class="card p-0">
       <DataTable
         v-model:filters="filters1"

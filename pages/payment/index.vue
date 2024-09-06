@@ -241,15 +241,15 @@ const applyPaymentColumns = ref<IColumn[]>([
 
 // Table
 const columnsExpandTable: IColumn[] = [
-  { field: 'bookingId', header: 'Booking Id', width: '120px', type: 'text' },
-  { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text' },
-  { field: 'firstName', header: 'First Name', width: '200px', type: 'text' },
-  { field: 'lastName', header: 'Last Name', width: '90px', type: 'text' },
-  { field: 'couponCode', header: 'Coupon No', width: '120px', type: 'text' },
-  { field: 'adult', header: 'Adult', width: '120px', type: 'text' },
-  { field: 'children', header: 'Children', width: '100px', type: 'text' },
-  { field: 'paymentAmount', header: 'Payment Amount', width: '100px', type: 'text' },
-  { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
+  { field: 'bookingId', header: 'Booking Id', width: '120px', type: 'text', sortable: false },
+  { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
+  { field: 'firstName', header: 'First Name', width: '200px', type: 'text', sortable: false },
+  { field: 'lastName', header: 'Last Name', width: '90px', type: 'text', sortable: false },
+  { field: 'couponCode', header: 'Coupon No', width: '120px', type: 'text', sortable: false },
+  { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
+  { field: 'children', header: 'Children', width: '100px', type: 'text', sortable: false },
+  { field: 'paymentAmount', header: 'Payment Amount', width: '100px', type: 'text', sortable: false },
+  { field: 'remark', header: 'Remark', width: '100px', type: 'text', sortable: false },
 ]
 
 const applyPaymentOptions = ref({
@@ -269,9 +269,8 @@ const applyPaymentBookingOptions = ref({
   tableName: 'Booking',
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
-  loading: false,
   showDelete: false,
-  showFilters: true,
+  showFilters: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
 })
@@ -297,6 +296,23 @@ const applyPaymentPagination = ref<IPagination>({
   search: ''
 })
 const applyPaymentOnChangePage = ref<PageState>()
+
+const applyPaymentBookingPayload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+const applyPaymentBookingPagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+const applyPaymentBookingOnChangePage = ref<PageState>()
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -835,13 +851,11 @@ async function applyPaymentGetList() {
       // iterator.bookingBalance = iterator.dueAmount?.toString()
       // iterator.paymentStatus = iterator.status
 
-      // if (!iterator.hasOwnProperty('bookings')) {
-      //   iterator.bookings = []
-      // }
+      iterator.bookingsList = []
 
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -856,6 +870,68 @@ async function applyPaymentGetList() {
   }
 }
 
+async function applyPaymentBookingGetList(idInvoice: string = '') {
+  if (idInvoice && idInvoice !== '') {
+    const objInvoice = applyPaymentListOfInvoice.value.find(item => item.id === idInvoice)
+    if (objInvoice.loadingBookings) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+      return
+    }
+    try {
+      objInvoice.loadingBookings = true
+      let listBookingsForApplyPayment: any[] = []
+      const newListItems = []
+
+      applyPaymentBookingPayload.value.filter = [
+        {
+          key: 'invoice.id',
+          operator: 'EQUALS',
+          value: idInvoice,
+          logicalOperation: 'AND'
+        }
+      ]
+
+      const response = await GenericService.search(applyPaymentBookingOptions.value.moduleApi, applyPaymentBookingOptions.value.uriApi, applyPaymentBookingPayload.value)
+
+      const { data: dataList, page, size, totalElements, totalPages } = response
+
+      applyPaymentBookingPagination.value.page = page
+      applyPaymentBookingPagination.value.limit = size
+      applyPaymentBookingPagination.value.totalElements = totalElements
+      applyPaymentBookingPagination.value.totalPages = totalPages
+
+      const existingIds = new Set(listBookingsForApplyPayment.map(item => item.id))
+
+      for (const iterator of dataList) {
+        iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+        iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
+        iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
+        iterator.bookingAmount = iterator.invoiceAmount?.toString()
+        iterator.bookingBalance = iterator.dueAmount?.toString()
+
+        // Verificar si el ID ya existe en la lista
+        if (!existingIds.has(iterator.id)) {
+          newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+          existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+        }
+      }
+
+      listBookingsForApplyPayment = [...listBookingsForApplyPayment, ...newListItems]
+      objInvoice.bookingsList = [...listBookingsForApplyPayment]
+    }
+    catch (error) {
+      objInvoice.loadingBookings = false
+      console.error(error)
+    }
+    finally {
+      objInvoice.loadingBookings = false
+    }
+  }
+  else {
+    applyPaymentBookingPayload.value.filter = []
+  }
+}
+
 function closeModalApplyPayment() {
   objItemSelectedForRightClickApplyPayment.value = {}
   openDialogApplyPayment.value = false
@@ -864,6 +940,10 @@ function closeModalApplyPayment() {
 async function openModalApplyPayment() {
   openDialogApplyPayment.value = true
   await applyPaymentGetList()
+}
+
+async function onExpandRowApplyPayment(event: any) {
+  await applyPaymentBookingGetList(event)
 }
 
 function onRowContextMenu(event: any) {
@@ -1460,8 +1540,8 @@ onMounted(async () => {
             @on-change-pagination="applyPaymentOnChangePage = $event"
             @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
             @update:clicked-item="invoiceSelectedListForApplyPayment = $event"
+            @on-expand-row="onExpandRowApplyPayment($event)"
           >
-            <!-- @on-expand-row="onExpandRowApplyPayment($event)" -->
             <template #column-status="{ data: item }">
               <Badge
                 :value="getStatusName(item?.status)"
@@ -1469,17 +1549,17 @@ onMounted(async () => {
               />
             </template>
 
-            <template #expansion="{ data: lista }">
-              <!-- <pre>{{ invoiceSelectedListForApplyPayment }}</pre> -->
-              <pre>{{ lista.bookings }}</pre>
+            <template #expansion="{ data: item }">
+              <!-- <pre>{{ item.bookingsList }}</pre> -->
               <div class="p-0 m-0">
                 <DynamicTable
                   class="card p-0"
-                  :data="applyPaymentListOfInvoice"
+                  :parent-component-loading="item.loadingBookings"
+                  :data="item.bookingsList"
                   :columns="columnsExpandTable"
                   :options="applyPaymentBookingOptions"
-                  :pagination="applyPaymentPagination"
-                  @on-change-pagination="applyPaymentOnChangePage = $event"
+                  :pagination="applyPaymentBookingPagination"
+                  @on-change-pagination="applyPaymentBookingOnChangePage = $event"
                 />
 
                 <!-- <DataTable :value="lista.bookings" striped-rows>
