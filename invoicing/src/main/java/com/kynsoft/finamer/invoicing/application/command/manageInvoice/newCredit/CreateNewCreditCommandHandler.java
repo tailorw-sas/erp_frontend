@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -37,7 +38,10 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
-    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
+
+    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                         ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -50,6 +54,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         this.resourceTypeService = resourceTypeService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
     }
 
     @Override
@@ -198,6 +203,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 0.0
         );
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
+        this.producerReplicateManageInvoiceService.create(invoiceDto);
+
         command.setCredit(created.getId());
         command.setInvoiceId(created.getInvoiceId());
         command.setInvoiceNumber(created.getInvoiceNumber());
