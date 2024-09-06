@@ -17,5 +17,6 @@ public class ResourceTypeDto {
     private UUID id;
     private String code;
     private String name;
+    private boolean invoice;
   
 }

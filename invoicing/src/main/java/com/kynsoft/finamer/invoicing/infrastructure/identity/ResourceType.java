@@ -31,7 +31,9 @@ public class ResourceType {
     private String code;
 
     private String name;
-    
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean invoice;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -44,12 +46,12 @@ public class ResourceType {
         this.id = dto.getId();
         this.name = dto.getName();
         this.code = dto.getCode();
-      
+        this.invoice = dto.isInvoice();
     }
 
     public ResourceTypeDto toAggregate() {
         return new ResourceTypeDto(
-                id, code, name
+                id, code, name, invoice
         );
     }
 }
