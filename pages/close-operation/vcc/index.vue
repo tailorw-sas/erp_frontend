@@ -410,7 +410,7 @@ onMounted(async () => {
       </div>
     </div>
   </div>
-  <Menu id="vcc_co" ref="menu" :popup="true" style="max-width: 220px">
+  <Menu id="vcc_co" ref="menu" :popup="true">
     <template #start>
       <Calendar v-model="selectedDate" inline view="month" @update:model-value="handleCalendarSelect" />
     </template>
