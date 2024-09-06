@@ -24,6 +24,7 @@ public class CreateNewCreditCommand implements ICommand {
     private List<CreateNewCreditBookingRequest> bookings;
     private List<CreateNewCreditAttachmentRequest> attachmentCommands;
     private Long invoiceId;
+    
 
     public CreateNewCreditCommand(LocalDateTime invoiceDate, UUID invoice, String employee,
                                   List<CreateNewCreditBookingRequest> bookings,
