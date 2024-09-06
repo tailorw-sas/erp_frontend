@@ -1729,9 +1729,7 @@ const legend = ref(
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        mask: {
-          style: 'backdrop-filter: blur(5px)',
-        },
+     
       }"  @hide="doubleFactorOpen = false">
       <template #header>
         <div class="flex justify-content-between">
@@ -1768,9 +1766,7 @@ const legend = ref(
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        mask: {
-          style: 'backdrop-filter: blur(5px)',
-        },
+      
       }" @hide="doubleFactorTotalOpen = false">
       <template #header>
         <div class="flex justify-content-between">
