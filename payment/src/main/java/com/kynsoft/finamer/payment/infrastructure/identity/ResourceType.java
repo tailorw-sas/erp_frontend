@@ -40,6 +40,9 @@ public class ResourceType {
 
     private Boolean defaults;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean invoice;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -54,12 +57,14 @@ public class ResourceType {
         this.description = dto.getDescription();
         this.status = dto.getStatus();
         this.defaults = dto.getDefaults();
+        this.invoice = dto.isInvoice();
     }
 
     public ResourceTypeDto toAggregate() {
         return new ResourceTypeDto(
                 id, code, name, description, status,
-                defaults != null ? defaults : null
+                defaults != null ? defaults : null,
+                invoice
         );
     }
 }
