@@ -23,23 +23,26 @@ public class CreateNewCreditCommand implements ICommand {
     private List<CreateNewCreditAttachmentRequest> attachmentCommands;
     private Long invoiceId;
     private String invoiceNumber;
+    private String employeeName;
     
 
     public CreateNewCreditCommand(LocalDateTime invoiceDate, UUID invoice, String employee,
                                   List<CreateNewCreditBookingRequest> bookings,
-                                  List<CreateNewCreditAttachmentRequest> attachmentCommands) {
+                                  List<CreateNewCreditAttachmentRequest> attachmentCommands,
+                                  String employeeName) {
         this.invoiceDate = invoiceDate;
         this.invoice = invoice;
         this.employee = employee;
         this.bookings = bookings;
         this.attachmentCommands = attachmentCommands;
+        this.employeeName = employeeName;
     }
 
     public static CreateNewCreditCommand fromRequest(CreateNewCreditRequest request) {
 
         return new CreateNewCreditCommand(
                 request.getInvoiceDate(), request.getInvoice(), request.getEmployee(),
-                request.getBookings(), request.getAttachments()
+                request.getBookings(), request.getAttachments(), request.getEmployeeName()
         );
     }
 
