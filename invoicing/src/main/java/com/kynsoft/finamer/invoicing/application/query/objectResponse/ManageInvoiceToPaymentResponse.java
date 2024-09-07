@@ -5,6 +5,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,6 +29,7 @@ public class ManageInvoiceToPaymentResponse implements IResponse {
     private ManageHotelDto hotel;
     private ManageAgencyDto agency;
     private EInvoiceType invoiceType;
+    private EInvoiceStatus status;
 
     private List<ManageBookingDto> bookings;
 
@@ -42,6 +44,7 @@ public class ManageInvoiceToPaymentResponse implements IResponse {
         this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
         this.invoiceNo = dto.getInvoiceNo();
         this.bookings = dto.getBookings();
+        this.status = dto.getStatus();
     }
 
     private String deleteHotelInfo(String input) {
