@@ -154,7 +154,7 @@ public class InvoiceController {
         return ResponseEntity.ok(data);
     }
 
-    @PostMapping("/search-payment")
+    @PostMapping("/search-payment/search")
     public ResponseEntity<?> searchToPayment(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
