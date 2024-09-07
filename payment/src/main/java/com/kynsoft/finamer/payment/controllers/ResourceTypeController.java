@@ -59,17 +59,14 @@ public class ResourceTypeController {
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<?> getById(@PathVariable UUID id) {
-
         FindManageResourceTypeByIdQuery query = new FindManageResourceTypeByIdQuery(id);
         ResourceTypeResponse response = mediator.send(query);
-
         return ResponseEntity.ok(response);
     }
     
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
-
         GetSearchManageResourceTypeQuery query = new GetSearchManageResourceTypeQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);

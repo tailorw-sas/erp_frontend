@@ -25,4 +25,8 @@ public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Manage
 
     @Query("SELECT SUM(t.invoiceAmount) FROM ManageInvoice t WHERE t.parent IS NOT NULL AND t.parent.id = :parentId AND t.invoiceType = 'CREDIT'")
     Optional<Double> findSumOfAmountByParentId(@Param("parentId") UUID parentId);
+
+    Optional<ManageInvoice> findByInvoiceId(long invoiceId);
+
+    boolean existsByInvoiceId(long invoiceId);
 }
