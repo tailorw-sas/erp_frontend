@@ -127,4 +127,9 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
         return this.repositoryQuery.countByDepositAndNotId(id);
     }
 
+    @Override
+    public Long countByPaymentInvoiceAndNotId(UUID id) {
+        return this.repositoryQuery.countByPaymentInvoiceAndNotId(id);
+    }
+
 }

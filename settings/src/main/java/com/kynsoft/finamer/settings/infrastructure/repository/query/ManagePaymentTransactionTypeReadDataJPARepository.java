@@ -33,4 +33,7 @@ public interface ManagePaymentTransactionTypeReadDataJPARepository extends JpaRe
 
     @Query("SELECT COUNT(b) FROM ManagePaymentTransactionType b WHERE b.applyDeposit = true AND b.id <> :id")
     Long countByApplyDepositAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManagePaymentTransactionType b WHERE b.paymentInvoice = true AND b.id <> :id")
+    Long countByPaymentInvoiceAndNotId(@Param("id") UUID id);
 }
