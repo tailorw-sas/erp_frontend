@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IManagePaymentTransactionTypeService {
+
     UUID create(ManagePaymentTransactionTypeDto dto);
 
     void update(ManagePaymentTransactionTypeDto dto);
@@ -33,4 +34,6 @@ public interface IManagePaymentTransactionTypeService {
     Long countByApplyDepositAndNotId(UUID id);
 
     Long countByDepositAndNotId(UUID id);
+
+    Long countByPaymentInvoiceAndNotId(UUID id);
 }
