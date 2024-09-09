@@ -224,6 +224,9 @@ function onSelectItem(item: any) {
         const ids = item.map((i: any) => i.id)
         emits('update:clickedItem', ids)
       }
+      else if (item.length === 0) {
+        emits('update:clickedItem', [])
+      }
     }
     else {
       if (typeof item === 'object') {
