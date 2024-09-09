@@ -4,9 +4,11 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Method;
 import lombok.Data;
 
 import java.util.UUID;
+
 @Data
 public class UpdateManageMerchantConfigRequest {
-    private UUID manageMerchantUuid;
+
+    private UUID manageMerchant;
     private String url;
     private String altUrl;
     private String successUrl;

@@ -26,7 +26,7 @@ public class ManagerMerchant implements Serializable {
     private UUID id;
     @Column(unique = true)
     private String code;
-    
+
     private String description;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -45,7 +45,8 @@ public class ManagerMerchant implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
-    @OneToOne(mappedBy = "managerMerchant", cascade = CascadeType.ALL) // Relación inversa
+
+    @OneToOne(mappedBy = "managerMerchant") // Relación inversa
     private ManagerMerchantConfig managerMerchantConfig;
 
     public ManagerMerchant(ManagerMerchantDto dto) {
