@@ -165,7 +165,7 @@ const computedShowMenuItemEditRoomRate = computed(() => {
 })
 
 const menuModel = ref([
-  { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
+  { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value) },
  // { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
 
 ])
