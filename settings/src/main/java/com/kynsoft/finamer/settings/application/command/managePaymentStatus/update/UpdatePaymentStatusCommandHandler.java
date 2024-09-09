@@ -8,6 +8,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagerPaymentStatusDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.rules.managerPaymentStatus.ManagePaymentStatusAppliedMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManagerPaymentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentStatus.ProducerUpdateManagePaymentStatusService;
 import org.springframework.stereotype.Component;
@@ -16,12 +17,12 @@ import java.util.function.Consumer;
 
 @Component
 public class UpdatePaymentStatusCommandHandler implements ICommandHandler<UpdatePaymentStatusCommand> {
-    
+
     private final IManagerPaymentStatusService service;
     private final ProducerUpdateManagePaymentStatusService producerUpdateManagePaymentStatusService;
-    
+
     public UpdatePaymentStatusCommandHandler(final IManagerPaymentStatusService service,
-                                            ProducerUpdateManagePaymentStatusService producerUpdateManagePaymentStatusService) {
+            ProducerUpdateManagePaymentStatusService producerUpdateManagePaymentStatusService) {
         this.service = service;
         this.producerUpdateManagePaymentStatusService = producerUpdateManagePaymentStatusService;
     }
@@ -36,7 +37,9 @@ public class UpdatePaymentStatusCommandHandler implements ICommandHandler<Update
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setCollected, command.getCollected(), dto.getCollected(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(dto::setApplied, command.getApplied(), dto.getApplied(), update::setUpdate);
+        if (UpdateIfNotNull.updateBoolean(dto::setApplied, command.getApplied(), dto.getApplied(), update::setUpdate)) {
+            RulesChecker.checkRule(new ManagePaymentStatusAppliedMustBeUniqueRule(service, command.getId()));
+        }
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 
