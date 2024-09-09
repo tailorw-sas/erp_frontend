@@ -45,10 +45,10 @@ public class PaymentController {
 
     @PostMapping("/apply-payment")
     public ResponseEntity<ApplyPaymentMessage> applyPayment(@RequestBody ApplyPaymentRequest request) {
-//        ApplyPaymentCommand createCommand = ApplyPaymentCommand.fromRequest(request, mediator);
-//        ApplyPaymentMessage response = mediator.send(createCommand);
+        ApplyPaymentCommand createCommand = ApplyPaymentCommand.fromRequest(request, mediator);
+        ApplyPaymentMessage response = mediator.send(createCommand);
 
-        return ResponseEntity.ok(new ApplyPaymentMessage());
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping(path = "/{id}")
