@@ -114,8 +114,8 @@ public class InvoiceController {
 
         PartialCloneInvoiceMessage message = this.mediator.send(command);
 
-        this.mediator.send(
-                new CalculateInvoiceAmountCommand(message.getCloned(), command.getBookings(), command.getRoomRates()));
+//        this.mediator.send(
+//                new CalculateInvoiceAmountCommand(message.getCloned(), command.getBookings(), command.getRoomRates()));
 
         this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getCloned(), command.getEmployee()));
 
