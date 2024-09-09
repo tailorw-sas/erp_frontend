@@ -27,4 +27,5 @@ public class ManageBookingKafka {
     private Integer adults;
     private Integer children;
     private UUID invoice;
+    private UUID bookingParent;
 }
