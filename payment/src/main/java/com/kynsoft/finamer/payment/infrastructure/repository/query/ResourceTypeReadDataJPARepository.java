@@ -24,4 +24,7 @@ public interface ResourceTypeReadDataJPARepository extends JpaRepository<Resourc
     @Query("SELECT COUNT(b) FROM ResourceType b WHERE b.defaults = true AND b.id <> :id")
     Long countByDefaultAndNotId(@Param("id") UUID id);
 
+    @Query("SELECT COUNT(b) FROM ResourceType b WHERE b.invoice = true AND b.id <> :id")
+    Long countByInvoiceAndNotId(@Param("id") UUID id);
+
 }
