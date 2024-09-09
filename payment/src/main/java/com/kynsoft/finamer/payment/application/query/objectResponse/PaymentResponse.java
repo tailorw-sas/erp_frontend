@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import lombok.AllArgsConstructor;
@@ -47,6 +48,7 @@ public class PaymentResponse implements IResponse {
     private String remark;
     private ManageInvoiceResponse invoice;
     private Boolean hasAttachment;
+    private boolean hasDetailTypeDeposit = false;
     private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
 
     public PaymentResponse(PaymentDto dto) {
@@ -83,6 +85,14 @@ public class PaymentResponse implements IResponse {
         if (dto.getInvoice() != null) {
             if (dto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 this.hasAttachment = dto.getInvoice().getHasAttachment();
+            }
+        }
+        if (dto.getPaymentDetails() != null) {
+            for (PaymentDetailDto paymentDetail : dto.getPaymentDetails()) {
+                if (paymentDetail.getTransactionType().getDeposit()) {
+                    this.hasDetailTypeDeposit = true;
+                    break;
+                }
             }
         }
     }
