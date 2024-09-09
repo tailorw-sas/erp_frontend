@@ -17,6 +17,7 @@ public class ManageInvoiceKafka {
     private UUID id;
     private UUID hotel;
     private UUID client;
+    private UUID invoiceParent;
     private UUID agency;
     private Long invoiceId;
     private Long invoiceNo;

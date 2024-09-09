@@ -35,7 +35,8 @@ public class ProducerReplicateManageBookingService {
                     entity.getCouponNumber(), 
                     entity.getAdults(), 
                     entity.getChildren(), 
-                    entity.getInvoice() != null ? entity.getInvoice().getId() : null
+                    entity.getInvoice() != null ? entity.getInvoice().getId() : null,
+                    entity.getParent() != null ? entity.getParent().getId() : null
             ));
         } catch (Exception ex) {
             Logger.getLogger(ProducerReplicateManageBookingService.class.getName()).log(Level.SEVERE, null, ex);
