@@ -16,4 +16,6 @@ public interface ManagerPaymentStatusReadDataJpaRepository extends JpaRepository
     @Query("SELECT COUNT(b) FROM ManagerPaymentStatus b WHERE b.code = :code AND b.id <> :id")
     Long countByCode(@Param("code") String code, @Param("id") UUID id);
 
+    @Query("SELECT COUNT(b) FROM ManagerPaymentStatus b WHERE b.applied = true AND b.id <> :id")
+    Long countByAppliedAndNotId(@Param("id") UUID id);
 }
