@@ -53,14 +53,16 @@ const attachmentDialogOpen = ref<boolean>(false)
 const doubleFactorOpen = ref<boolean>(false)
 const doubleFactorTotalOpen = ref<boolean>(false)
 const attachmentInvoice = <any>ref(null)
-const bookingList = ref<any[]>([])
-const roomRateList = ref<any[]>([])
+
 const active = ref(0)
 
-const bookingApi = {
-  moduleApi: 'invoicing',
-  uriApi: 'manage-booking',
-}
+
+const confClientApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-client',
+})
+
+
 
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
@@ -251,7 +253,7 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Re-Send',
     icon: 'pi pi-send',
-    command: () => { },
+    command: () => { TypeInvoicetoSend() },
     default: true,
     showItem: false,
   },
@@ -281,6 +283,13 @@ const exportAttachmentsDialogOpen = ref(false)
 const exportBlob = ref<any>(null)
 
 ////
+
+async function TypeInvoicetoSend() {
+  navigateTo(`invoice/sendInvoice?type=${InvoiceType.CREDIT}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
+
+}
+
+
 const computedexpandedInvoice = computed(() => {
   return expandedInvoice.value === ''
 })
@@ -369,7 +378,7 @@ const createReconcile = ref([
   // },
   {
     label: 'Reconcile from Files',
-    command: () => navigateTo('reconcile-automatic', { open: { target: '_blank' } }),
+    command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
     disabled: computedShowMenuItemOldCredit
   },
 ])
