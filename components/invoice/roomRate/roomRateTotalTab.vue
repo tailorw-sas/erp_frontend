@@ -165,8 +165,8 @@ const computedShowMenuItemEditRoomRate = computed(() => {
 })
 
 const menuModel = ref([
-  { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
-  { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
+ // { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
+  //{ label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
 
 ])
 
@@ -510,11 +510,13 @@ function ClearForm() {
 }
 
 function onRowRightClick(event: any) {
+  /*
   if( !props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
         return;
       }
   selectedRoomRate.value = event.data
   roomRateContextMenu.value.show(event.originalEvent)
+  */
 }
 
 const OpenCreateDialog = async () => await navigateTo({ path: 'invoice/create' })

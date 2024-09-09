@@ -1499,15 +1499,15 @@ onMounted(() => {
     return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:BOOKING-EDIT'])))
   })
   menuModel.value = [
-    {
+   /* {
       label: 'Add Room Rate',
       command: () => props.openRoomRateDialog(selectedBooking.value),
       disabled: computedShowMenuItemAddRoomRate
-    },
+    },*/
     {
       label: 'Edit booking',
       command: () => openEditBooking(selectedBooking.value),
-      disabled: computedShowMenuItemEditBooking
+   //   disabled: computedShowMenuItemEditBooking
     }
   ]
 
