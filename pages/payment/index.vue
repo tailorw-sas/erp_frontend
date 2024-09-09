@@ -25,12 +25,14 @@ const agencyItemsList = ref<any[]>([])
 const hotelItemsList = ref<any[]>([])
 const statusItemsList = ref<any[]>([])
 const openDialogApplyPayment = ref(false)
+const disabledBtnApplyPayment = ref(true)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
 
 const checkApplyPayment = ref(true)
+const idInvoicesSelectedToApplyPayment = ref<string[]>([])
 const invoiceAmmountSelected = ref(0)
 const paymentAmmountSelected = ref(0)
 
@@ -1002,8 +1004,10 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
 }
 
 async function addAmmountsToApplyPayment(event: any) {
+  idInvoicesSelectedToApplyPayment.value = event
   const selectedIds = event
   if (selectedIds.length === 0) {
+    disabledBtnApplyPayment.value = true
     return invoiceAmmountSelected.value = 0
   }
   // Filtramos los objetos cuyos IDs coincidan con los del array 'selectedIds'
@@ -1018,6 +1022,29 @@ async function addAmmountsToApplyPayment(event: any) {
         return total // Si no es válido, simplemente lo ignoramos
       }
     }, 0) // 0 es el valor inicial
+  disabledBtnApplyPayment.value = false
+}
+
+async function saveApplyPayment() {
+  try {
+    loadingSaveApplyPayment.value = true
+    const payload = {
+      payment: objItemSelectedForRightClickApplyPayment.value.id || '',
+      invoices: [...idInvoicesSelectedToApplyPayment.value]
+    }
+    const response = await GenericService.create('payment', 'apply-payment', payload)
+
+    if (response) {
+      loadingSaveApplyPayment.value = false
+      openDialogApplyPayment.value = false
+    }
+  }
+  catch (error) {
+    objItemSelectedForRightClickApplyPayment.value = {}
+    idInvoicesSelectedToApplyPayment.value = []
+    loadingSaveApplyPayment.value = false
+    console.log(error)
+  }
 }
 
 function getMonthStartAndEnd(date) {
@@ -1636,7 +1663,7 @@ onMounted(async () => {
             </label>
           </div>
           <div>
-            <Button v-tooltip.top="'Apply Payment'" class="w-3rem mx-1" icon="pi pi-check" :loading="loadingSaveApplyPayment" @click="closeModalApplyPayment()" />
+            <Button v-tooltip.top="'Apply Payment'" class="w-3rem mx-1" icon="pi pi-check" :disabled="disabledBtnApplyPayment" :loading="loadingSaveApplyPayment" @click="saveApplyPayment" />
             <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
           </div>
         </div>
