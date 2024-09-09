@@ -30,6 +30,10 @@ const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
 
+const checkApplyPayment = ref(true)
+const invoiceAmmountSelected = ref(0)
+const paymentAmmountSelected = ref(0)
+
 const idItemToLoadFirstTime = ref('')
 const objApis = ref({
   client: { moduleApi: 'settings', uriApi: 'manage-client' },
@@ -241,21 +245,23 @@ const applyPaymentColumns = ref<IColumn[]>([
 
 // Table
 const columnsExpandTable: IColumn[] = [
-  { field: 'bookingId', header: 'Booking Id', width: '120px', type: 'text', sortable: false },
-  { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
-  { field: 'firstName', header: 'First Name', width: '200px', type: 'text', sortable: false },
-  { field: 'lastName', header: 'Last Name', width: '90px', type: 'text', sortable: false },
+  { field: 'bookingId', header: 'Id', width: '120px', type: 'text', sortable: false },
+  { field: 'fullName', header: 'Full Name', width: '200px', type: 'text', sortable: false },
+  { field: 'reservationNumber', header: 'Reservation No', width: '120px', type: 'text', sortable: false },
+  // { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
   { field: 'couponCode', header: 'Coupon No', width: '120px', type: 'text', sortable: false },
-  { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
-  { field: 'children', header: 'Children', width: '100px', type: 'text', sortable: false },
-  { field: 'paymentAmount', header: 'Payment Amount', width: '100px', type: 'text', sortable: false },
-  { field: 'remark', header: 'Remark', width: '100px', type: 'text', sortable: false },
+  // { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
+  { field: 'checkIn', header: 'Check-In', width: '120px', type: 'text', sortable: false },
+  { field: 'checkOut', header: 'Check-Out', width: '120px', type: 'text', sortable: false },
+  { field: 'nights', header: 'Nights', width: '100px', type: 'text', sortable: false },
+  { field: 'invoiceAmount', header: 'Booking Amount', width: '100px', type: 'text', sortable: false },
+  { field: 'dueAmount', header: 'Booking Balance', width: '100px', type: 'text', sortable: false },
 ]
 
 const applyPaymentOptions = ref({
   tableName: 'Apply Payment',
   moduleApi: 'invoicing',
-  uriApi: 'manage-invoice',
+  uriApi: 'manage-invoice/search-payment',
   expandableRows: true,
   selectionMode: 'multiple',
   loading: false,
@@ -765,12 +771,12 @@ async function applyPaymentGetList() {
         objFilter.value = listAgenciesForApplyPayment.map(item => item.id)
       }
       else {
-        applyPaymentPayload.value.filter.push({
-          key: 'agency.id',
-          operator: 'IN',
-          value: listAgenciesForApplyPayment.map(item => item.id),
-          logicalOperation: 'AND'
-        })
+        // applyPaymentPayload.value.filter.push({
+        //   key: 'agency.id',
+        //   operator: 'IN',
+        //   value: listAgenciesForApplyPayment.map(item => item.id),
+        //   logicalOperation: 'AND'
+        // })
       }
     }
 
@@ -823,12 +829,12 @@ async function applyPaymentGetList() {
           objFilter.value = objItemSelectedForRightClickApplyPayment.value?.hotel.id
         }
         else {
-          applyPaymentPayload.value.filter.push({
-            key: 'hotel.id',
-            operator: 'EQUALS',
-            value: objItemSelectedForRightClickApplyPayment.value?.hotel.id,
-            logicalOperation: 'AND'
-          })
+          // applyPaymentPayload.value.filter.push({
+          //   key: 'hotel.id',
+          //   operator: 'EQUALS',
+          //   value: objItemSelectedForRightClickApplyPayment.value?.hotel.id,
+          //   logicalOperation: 'AND'
+          // })
         }
       }
     }
@@ -844,9 +850,11 @@ async function applyPaymentGetList() {
     const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
 
     for (const iterator of dataList) {
+      for (const booking of iterator.bookings) {
+        booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+        booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+      }
       // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-      // iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-      // iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
       // iterator.bookingAmount = iterator.invoiceAmount?.toString()
       // iterator.bookingBalance = iterator.dueAmount?.toString()
       // iterator.paymentStatus = iterator.status
@@ -939,6 +947,7 @@ function closeModalApplyPayment() {
 
 async function openModalApplyPayment() {
   openDialogApplyPayment.value = true
+  paymentAmmountSelected.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   await applyPaymentGetList()
 }
 
@@ -990,6 +999,25 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
   catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
   }
+}
+
+async function addAmmountsToApplyPayment(event: any) {
+  const selectedIds = event
+  if (selectedIds.length === 0) {
+    return invoiceAmmountSelected.value = 0
+  }
+  // Filtramos los objetos cuyos IDs coincidan con los del array 'selectedIds'
+  invoiceAmmountSelected.value = applyPaymentListOfInvoice.value
+    .filter(item => selectedIds.includes(item.id)) // Solo los que tengan un id que coincida
+    .reduce((total, item) => {
+      // Verificamos si invoiceAmount es un número válido
+      if (typeof item.invoiceAmount === 'number' && !Number.isNaN(item.invoiceAmount)) {
+        return total + item.invoiceAmount
+      }
+      else {
+        return total // Si no es válido, simplemente lo ignoramos
+      }
+    }, 0) // 0 es el valor inicial
 }
 
 function getMonthStartAndEnd(date) {
@@ -1044,6 +1072,10 @@ watch(filterToSearch, (newValue) => {
     filterToSearch.value.status = newValue.status.filter((item: { id: string, name: string, status?: string }) => item.id !== 'All')
   }
 }, { deep: true })
+
+// watch(invoiceSelectedListForApplyPayment, (newValue) => {
+//   console.log(newValue)
+// }, { deep: true })
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -1539,9 +1571,10 @@ onMounted(async () => {
             :pagination="applyPaymentPagination"
             @on-change-pagination="applyPaymentOnChangePage = $event"
             @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
-            @update:clicked-item="invoiceSelectedListForApplyPayment = $event"
             @on-expand-row="onExpandRowApplyPayment($event)"
+            @update:clicked-item="addAmmountsToApplyPayment($event)"
           >
+            <!-- @update:clicked-item="invoiceSelectedListForApplyPayment = $event" -->
             <template #column-status="{ data: item }">
               <Badge
                 :value="getStatusName(item?.status)"
@@ -1552,7 +1585,7 @@ onMounted(async () => {
             <template #expansion="{ data: item }">
               <!-- <pre>{{ item.bookingsList }}</pre> -->
               <div class="p-0 m-0">
-                <DynamicTable
+                <!-- <DynamicTable
                   class="card p-0"
                   :parent-component-loading="item.loadingBookings"
                   :data="item.bookingsList"
@@ -1560,9 +1593,9 @@ onMounted(async () => {
                   :options="applyPaymentBookingOptions"
                   :pagination="applyPaymentBookingPagination"
                   @on-change-pagination="applyPaymentBookingOnChangePage = $event"
-                />
+                /> -->
 
-                <!-- <DataTable :value="lista.bookings" striped-rows>
+                <DataTable :value="item.bookings" striped-rows>
                   <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
                   <template #empty>
                     <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
@@ -1579,14 +1612,33 @@ onMounted(async () => {
                       </span>
                     </div>
                   </template>
-                </DataTable> -->
+                </DataTable>
               </div>
             </template>
           </DynamicTable>
         </div>
-        <div class="flex justify-content-end">
-          <Button v-tooltip.top="'Apply Payment'" class="w-3rem mx-1" icon="pi pi-check" :loading="loadingSaveApplyPayment" @click="closeModalApplyPayment()" />
-          <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
+        <div class="flex justify-content-between">
+          <div class="flex align-items-center">
+            <Chip class="bg-primary py-1 font-bold" label="Applied Payment Amount:">
+              Available Payment Amount: ${{ paymentAmmountSelected }}
+            </Chip>
+            <Chip class="bg-primary py-1 mx-2 font-bold" label="Invoice Amount Selected: $0.00">
+              Invoice Amount Selected: ${{ invoiceAmmountSelected }}
+            </Chip>
+            <Checkbox
+              id="checkApplyPayment"
+              v-model="checkApplyPayment"
+              :binary="true"
+              @update:model-value="($event) => {}"
+            />
+            <label for="checkApplyPayment" class="ml-2 font-bold">
+              Apply Payment
+            </label>
+          </div>
+          <div>
+            <Button v-tooltip.top="'Apply Payment'" class="w-3rem mx-1" icon="pi pi-check" :loading="loadingSaveApplyPayment" @click="closeModalApplyPayment()" />
+            <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
+          </div>
         </div>
       </template>
     </Dialog>
