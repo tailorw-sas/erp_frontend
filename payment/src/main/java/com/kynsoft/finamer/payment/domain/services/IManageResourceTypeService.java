@@ -24,4 +24,6 @@ public interface IManageResourceTypeService {
     Long countByDefaultAndNotId(UUID id);
 
   List<ResourceTypeDto> findAllToReplicate();
+
+  Long countByInvoiceAndNotId(UUID id);
 }

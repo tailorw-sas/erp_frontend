@@ -32,12 +32,13 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
     private final IParameterizationService parameterizationService;
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final IInvoiceCloseOperationService closeOperationService;
+    private final IManageBookingService bookingService;
 
     public PartialCloneInvoiceCommandHandler(
 
             IManageInvoiceService service,
             IManageAttachmentTypeService attachmentTypeService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageRoomRateService rateService, IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService, IInvoiceCloseOperationService closeOperationService) {
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageRoomRateService rateService, IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService, IInvoiceCloseOperationService closeOperationService, IManageBookingService bookingService) {
 
         this.service = service;
 
@@ -48,6 +49,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         this.parameterizationService = parameterizationService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.closeOperationService = closeOperationService;
+        this.bookingService = bookingService;
     }
 
     @Override
@@ -72,6 +74,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 newRoomRate.setBooking(newBooking);
                 newRoomRate.setAdjustments(null);
                 newRoomRate.setHotelAmount(0.00);
+                newRoomRate.setInvoiceAmount(0.00);
                 roomRateDtos.add(newRoomRate);
 
             }
@@ -150,6 +153,13 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 false, bookingDtos, attachmentDtos, null, null, null, invoiceStatus, null, true, invoiceToClone, invoiceToClone.getCredits());
 
         ManageInvoiceDto created = service.create(invoiceDto);
+
+        //calcular el amount de los bookings
+        for(ManageBookingDto booking : created.getBookings()){
+            this.bookingService.calculateInvoiceAmount(booking);
+        }
+        //calcular el amount del invoice
+        this.service.calculateInvoiceAmount(created);
 
         try {
             this.producerReplicateManageInvoiceService.create(created);
