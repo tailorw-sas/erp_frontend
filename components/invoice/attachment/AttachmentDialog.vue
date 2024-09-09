@@ -683,12 +683,16 @@ onMounted(async () => {
 
   if (!props.isCreationDialog) {
     await getList()
+
+    if (props?.listItems?.length === 0) {
+      resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
+    }
   }
   else {
     if (props?.listItems?.length > 0) {
       idItemToLoadFirstTime.value = props?.listItems[0]?.id
     }
-    if (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME) {
+    if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
     // item.value.resourceType = `${OBJ_ENUM_INVOICE_TYPE_CODE[route.query.type]}-${OBJ_ENUM_INVOICE[route.query.type]}`
@@ -783,7 +787,7 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                  :disabled="!isCreationDialog"
+                  :disabled="!isCreationDialog && ListItems.length > 0"
                   :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
                     typeError = false
@@ -824,9 +828,9 @@ onMounted(async () => {
                   <template #header="{ chooseCallback }">
                     <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
                       <div class="flex gap-2">
-                        <Button id="btn-choose" class="p-2" icon="pi pi-plus" :disabled="!isCreationDialog" text @click="chooseCallback()" />
+                        <Button id="btn-choose" class="p-2" icon="pi pi-plus" :disabled="!isCreationDialog && ListItems.length > 0" text @click="chooseCallback()" />
                         <Button
-                          icon="pi pi-times" class="ml-2" severity="danger" :disabled="!data.file || !isCreationDialog" text
+                          icon="pi pi-times" class="ml-2" severity="danger" :disabled="!data.file || !isCreationDialog && ListItems.length > 0" text
                           @click="onUpdate('file', null)"
                         />
                       </div>
@@ -866,7 +870,7 @@ onMounted(async () => {
                 <Textarea
                   v-model="data.remark"
                   field="remark"
-                  :disabled="!isCreationDialog"
+                  :disabled="!isCreationDialog && ListItems.length > 0"
                   rows="5"
                 />
               </template>
