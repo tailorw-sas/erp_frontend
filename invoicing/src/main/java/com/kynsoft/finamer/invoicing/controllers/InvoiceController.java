@@ -117,11 +117,11 @@ public class InvoiceController {
 //        this.mediator.send(
 //                new CalculateInvoiceAmountCommand(message.getCloned(), command.getBookings(), command.getRoomRates()));
 
-        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getCloned(), command.getEmployee()));
-
-        for (UUID attacmhment : command.getAttachments()) {
-            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attacmhment));
-        }
+//        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getCloned(), command.getEmployee()));
+//
+//        for (UUID attacmhment : command.getAttachments()) {
+//            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attacmhment));
+//        }
 
         return ResponseEntity.ok(message);
 
