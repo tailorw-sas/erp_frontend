@@ -45,6 +45,8 @@ public class ManagerMerchant implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
+    @OneToOne(mappedBy = "managerMerchant", cascade = CascadeType.ALL) // Relación inversa
+    private ManagerMerchantConfig managerMerchantConfig;
 
     public ManagerMerchant(ManagerMerchantDto dto) {
         this.id = dto.getId();
