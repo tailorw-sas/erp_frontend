@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentResourceTypeKafka;
 import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceDefaultMustBeUniqueRule;
+import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceInvoiceMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceTypeCodeMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.resourceType.ProducerReplicateResourceTypeService;
@@ -28,6 +29,10 @@ public class CreateManageResourceTypeCommandHandler implements ICommandHandler<C
         RulesChecker.checkRule(new ResourceTypeCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
         if (command.getDefaults()) {
             RulesChecker.checkRule(new ResourceDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
+
+        if (command.isInvoice()) {
+            RulesChecker.checkRule(new ResourceInvoiceMustBeUniqueRule(this.service, command.getId()));
         }
 
         service.create(new ResourceTypeDto(
