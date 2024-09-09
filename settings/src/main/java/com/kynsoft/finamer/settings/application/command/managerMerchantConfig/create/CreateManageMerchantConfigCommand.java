@@ -9,8 +9,9 @@ import java.util.UUID;
 
 @Data
 public class CreateManageMerchantConfigCommand implements ICommand {
-    private UUID uuid;
-    private UUID manageMerchantUuid;
+
+    private UUID id;
+    private UUID manageMerchant;
     private String url;
     private String altUrl;
     private String successUrl;
@@ -21,9 +22,9 @@ public class CreateManageMerchantConfigCommand implements ICommand {
     private Method method;
     private String institutionCode;
 
-    public CreateManageMerchantConfigCommand(UUID manageMerchantUuid,String url, String altUrl, String successUrl, String errorUrl, String declinedUrl, String merchantType, String name, Method method, String institutionCode) {
-        this.uuid = UUID.randomUUID();
-        this.manageMerchantUuid = manageMerchantUuid;
+    public CreateManageMerchantConfigCommand(UUID manageMerchant, String url, String altUrl, String successUrl, String errorUrl, String declinedUrl, String merchantType, String name, Method method, String institutionCode) {
+        this.id = UUID.randomUUID();
+        this.manageMerchant = manageMerchant;
         this.url = url;
         this.altUrl = altUrl;
         this.successUrl = successUrl;
@@ -34,14 +35,24 @@ public class CreateManageMerchantConfigCommand implements ICommand {
         this.method = method;
         this.institutionCode = institutionCode;
     }
+
     public static CreateManageMerchantConfigCommand fromRequest(CreateManageMerchantConfigRequest request) {
         return new CreateManageMerchantConfigCommand(
-                request.getManageMerchantUuid(),request.getUrl(),request.getAltUrl(),request.getSuccessUrl(),request.getErrorUrl(),request.getDeclinedUrl(),
-                request.getMerchantType(),request.getName(),request.getMethod(),request.getInstitutionCode()
+                request.getManageMerchant(), 
+                request.getUrl(), 
+                request.getAltUrl(), 
+                request.getSuccessUrl(), 
+                request.getErrorUrl(), 
+                request.getDeclinedUrl(),
+                request.getMerchantType(), 
+                request.getName(), 
+                request.getMethod(), 
+                request.getInstitutionCode()
         );
     }
+
     @Override
     public ICommandMessage getMessage() {
-        return new CreateManageMerchantConfigMessage(uuid);
+        return new CreateManageMerchantConfigMessage(id);
     }
 }

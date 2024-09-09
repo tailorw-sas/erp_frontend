@@ -3,7 +3,7 @@ package com.kynsoft.finamer.settings.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigDto;
-import com.kynsoft.finamer.settings.domain.dto.me.ManagerMerchantConfigResponseDto;
+import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigResponseDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

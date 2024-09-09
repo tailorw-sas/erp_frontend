@@ -2,12 +2,13 @@ package com.kynsoft.finamer.settings.application.query.managerMerchantConfig.get
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerMerchantConfigResponse;
-import com.kynsoft.finamer.settings.domain.dto.me.ManagerMerchantConfigResponseDto;
+import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigResponseDto;
 import com.kynsoft.finamer.settings.domain.services.IManageMerchantConfigService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class FindManagerMerchantConfigByIdQueryHandler implements IQueryHandler<FindManagerMerchantConfigByIdQuery, ManagerMerchantConfigResponse> {
+
     private final IManageMerchantConfigService service;
 
     public FindManagerMerchantConfigByIdQueryHandler(IManageMerchantConfigService service) {

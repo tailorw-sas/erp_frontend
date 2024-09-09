@@ -1,16 +1,16 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigDto;
-import com.kynsoft.finamer.settings.domain.dto.me.ManagerMerchantConfigResponseDto;
+import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigResponseDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Method;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
-
+import org.hibernate.annotations.CreationTimestamp;
 
 @Data
 @AllArgsConstructor
@@ -21,7 +21,7 @@ public class ManagerMerchantConfig implements Serializable {
 
     @Id
     @Column(name = "id") // Cambia este campo si el identificador real es otro
-    private UUID uuid;
+    private UUID id;
 
     @OneToOne
     @JoinColumn(name = "manager_merchat_id", referencedColumnName = "id") // Propietario de la relación
@@ -55,16 +55,15 @@ public class ManagerMerchantConfig implements Serializable {
     @Column(name = "institution_code")
     private String institutionCode;
 
-    @Column(name = "created_at")
-    private Timestamp createdAt;
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private Timestamp updatedAt;
-
-
+    @Column(nullable = true, updatable = true)
+    private LocalDateTime updatedAt;
 
     public ManagerMerchantConfig(ManagerMerchantConfigDto dto) {
-        this.uuid = dto.getUuid();
+        this.id = dto.getId();
         this.managerMerchant = new ManagerMerchant(dto.getManagerMerchantDto());
         this.url = dto.getUrl();
         this.altUrl = dto.getAltUrl();
@@ -76,8 +75,9 @@ public class ManagerMerchantConfig implements Serializable {
         this.method = dto.getMethod();
         this.institutionCode = dto.getInstitutionCode();
     }
+
     public ManagerMerchantConfig(ManagerMerchantConfigResponseDto dto) {
-        this.uuid = dto.getUuid();
+        this.id = dto.getId();
         this.managerMerchant = new ManagerMerchant(dto.getManagerMerchantDto());
         this.url = dto.getUrl();
         this.altUrl = dto.getAltUrl();
@@ -93,9 +93,36 @@ public class ManagerMerchantConfig implements Serializable {
     }
 
     public ManagerMerchantConfigDto toAggregate() {
-        return new ManagerMerchantConfigDto(uuid,managerMerchant != null ? managerMerchant.toAggregate() : null,url, altUrl,successUrl,errorUrl,declinedUrl,merchantType,name,method,institutionCode);
+        return new ManagerMerchantConfigDto(
+                id, 
+                managerMerchant != null ? managerMerchant.toAggregate() : null, 
+                url, 
+                altUrl, 
+                successUrl, 
+                errorUrl, 
+                declinedUrl, 
+                merchantType, 
+                name, 
+                method, 
+                institutionCode
+        );
     }
+
     public ManagerMerchantConfigResponseDto toAggregateWithDate() {
-        return new ManagerMerchantConfigResponseDto(uuid,managerMerchant != null ? managerMerchant.toAggregate() : null,url, altUrl,successUrl,errorUrl,declinedUrl,merchantType,name,method,institutionCode,createdAt,updatedAt);
+        return new ManagerMerchantConfigResponseDto(
+                id, 
+                managerMerchant != null ? managerMerchant.toAggregate() : null, 
+                url, 
+                altUrl, 
+                successUrl, 
+                errorUrl, 
+                declinedUrl, 
+                merchantType, 
+                name, 
+                method, 
+                institutionCode, 
+                createdAt, 
+                updatedAt
+        );
     }
 }

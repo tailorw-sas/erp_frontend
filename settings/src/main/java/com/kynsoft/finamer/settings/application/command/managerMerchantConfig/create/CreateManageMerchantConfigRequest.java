@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Data
 public class CreateManageMerchantConfigRequest {
-    private UUID manageMerchantUuid;
+    private UUID manageMerchant;
     private String url;
     private String altUrl;
     private String successUrl;

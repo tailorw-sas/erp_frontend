@@ -15,7 +15,6 @@ import com.kynsoft.finamer.settings.application.command.managerMerchantConfig.up
 import com.kynsoft.finamer.settings.application.query.managerMerchantConfig.getById.FindManagerMerchantConfigByIdQuery;
 import com.kynsoft.finamer.settings.application.query.managerMerchantConfig.search.GetSearchManagerMerchantConfigQuery;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerMerchantConfigResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,10 +22,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/merchantConfig")
+@RequestMapping("/api/merchant-config")
 public class ManageMerchantConfigController {
-    @Autowired
-    private IMediator mediator;
+
+    private final IMediator mediator;
+
+    public ManageMerchantConfigController(IMediator mediator) {
+        this.mediator = mediator;
+    }
 
     @PostMapping()
     public ResponseEntity<CreateManageMerchantConfigMessage> create(@RequestBody CreateManageMerchantConfigRequest request) {
@@ -34,12 +37,14 @@ public class ManageMerchantConfigController {
         CreateManageMerchantConfigMessage response = mediator.send(merchantConfigCommand);
         return ResponseEntity.ok(response);
     }
+
     @PatchMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateManageMerchantConfigRequest request) {
         UpdateManageMerchantConfigCommand command = UpdateManageMerchantConfigCommand.fromRequest(request, id);
         UpdateManageMerchantConfigMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
     }
+
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
@@ -47,6 +52,7 @@ public class ManageMerchantConfigController {
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
+
     @GetMapping(path = "/{id}")
     public ResponseEntity<?> getById(@PathVariable UUID id) {
 
@@ -55,6 +61,7 @@ public class ManageMerchantConfigController {
 
         return ResponseEntity.ok(response);
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteById(@PathVariable(value = "id") UUID id) {
         DeleteManagerMerchantConfigCommand command = new DeleteManagerMerchantConfigCommand(id);

@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 
 @Component
 public class UpdateManageMerchantConfigCommandHandler implements ICommandHandler<UpdateManageMerchantConfigCommand> {
+
     private final IManagerMerchantService service;
     private final IManageMerchantConfigService configService;
     private final ProducerUpdateManagerMerchantConfigService producerService;
@@ -28,6 +29,7 @@ public class UpdateManageMerchantConfigCommandHandler implements ICommandHandler
         this.configService = configService;
         this.producerService = producerService;
     }
+
     @Override
     public void handle(UpdateManageMerchantConfigCommand command) {
 
@@ -47,11 +49,11 @@ public class UpdateManageMerchantConfigCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setInstitutionCode, command.getInstitutionCode(), test.getInstitutionCode(), update::setUpdate);
 
         this.updateStatus(test::setMethod, command.getMethod(), test.getMethod(), update::setUpdate);
-        this.updateManagerMerchant(test::setManagerMerchantDto, command.getManageMerchantUuid(), test.getManagerMerchantDto().getId(), update::setUpdate);
+        this.updateManagerMerchant(test::setManagerMerchantDto, command.getManageMerchant(), test.getManagerMerchantDto().getId(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.configService.update(test);
-            this.producerService.update(new UpdateManageMerchantConfigKafka(test.getUuid()));
+            this.producerService.update(new UpdateManageMerchantConfigKafka(test.getId()));
         }
 
     }

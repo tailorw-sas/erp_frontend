@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.settings.domain.dto.me;
+package com.kynsoft.finamer.settings.domain.dto;
 
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Method;
@@ -8,14 +8,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class ManagerMerchantConfigResponseDto {
-    private UUID uuid;
+    private UUID id;
     private ManagerMerchantDto managerMerchantDto;
     private String url;
     private String altUrl;
@@ -27,6 +27,6 @@ public class ManagerMerchantConfigResponseDto {
     @Enumerated(EnumType.STRING)
     private Method method;
     private String institutionCode;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
