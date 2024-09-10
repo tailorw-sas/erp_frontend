@@ -534,11 +534,11 @@ getOptionsList()
           </div>
         </template>
         <!-- :show-filter-match-modes="column.type !== 'bool' " -->
-        <Column expander style="width: 5rem">
+        <Column expander style="width: 1rem">
           <template #rowtogglericon="props">
             <i
               :class="`${props.rowExpanded ? 'pi pi-minus' : 'pi pi-plus'}`"
-              style=" color: black; border: 1px solid black; border-radius: 4px; padding: 2px;" </i
+              style=" color: black; border: 1px solid black; border-radius: 4px; padding: 0px;" </i
             />
           </template>
         </Column>
