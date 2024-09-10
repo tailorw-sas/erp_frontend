@@ -1,28 +1,24 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.send;
 
+import com.kynsof.share.core.application.mailjet.*;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
-import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @Transactional
 public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCommand> {
 
     private final IManageInvoiceService service;
-    public SendInvoiceCommandHandler(IManageInvoiceService service) {
+    private final MailService mailService;
+
+    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService) {
         this.service = service;
+        this.mailService = mailService;
     }
 
     @Override
@@ -30,7 +26,34 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     public void handle(SendInvoiceCommand command) {
 
         ManageInvoiceDto invoice = this.service.findById(command.getInvoice());
+        //TODO capturar la forma de envio de la agencia
+        //TODO replicar el b2bPartner de la agencia para obtener el método de envio
+
+
+        //Send Email
+        SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+        request.setSubject("INVOICE " + invoice.getInvoiceNumber());
+        request.setTemplateId(1234565);//Cambiar en configuración
+
+        List<MailJetVar> vars = Arrays.asList(
+                new MailJetVar("username", "Niurka"),
+                new MailJetVar("otp_token", "5826384")
+        );
+        request.setMailJetVars(vars);
+
+        MailJetRecipient recipient = new MailJetRecipient("email@example.com", "Nombre Example");
+        List<MailJetRecipient> recipients = new ArrayList<>();
+        recipients.add(recipient);
+        request.setRecipientEmail(recipients);
+
+        var nameFile = invoice.getInvoiceNumber()+".pdf";
+        MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, "base64");
+        List<MailJetAttachment> attachments = new ArrayList<>();
+        attachments.add(attachment);
+        request.setMailJetAttachments(attachments);
+
+        mailService.sendMail(request);
         command.setResult(true);
-        }
+    }
 
 }

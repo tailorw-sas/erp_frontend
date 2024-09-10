@@ -1,28 +1,14 @@
 package com.kynsoft.notification.controller;
 
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.notification.application.SendEmailResponse;
 import com.kynsoft.notification.application.command.sendMailjetEmail.SendMailJetEMailCommand;
-import com.kynsoft.notification.application.command.sendMailjetEmail.SendMailJetEMailRequest;
+import com.kynsof.share.core.application.mailjet.SendMailJetEMailRequest;
 import com.kynsoft.notification.application.command.sendMailjetEmail.SendMailjetEmailMessage;
-import com.kynsoft.notification.domain.dto.EmailRequest;
-import com.kynsoft.notification.domain.dto.MailJetAttachment;
-import com.kynsoft.notification.domain.dto.MailJetRecipient;
-import com.kynsoft.notification.domain.dto.MailJetVar;
-import com.kynsoft.notification.domain.service.IEmailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/mail")
