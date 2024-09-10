@@ -226,7 +226,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     }
 
     private PaymentDetailDto createPaymentDetailsToCreditApplyDeposit(PaymentDto payment, ManageBookingDto booking, PaymentDetailDto parentDetailDto, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, booking, parentDetailDto));
+        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, booking, parentDetailDto, false));
         command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), booking.getId()));
         return message.getNewDetailDto();
     }

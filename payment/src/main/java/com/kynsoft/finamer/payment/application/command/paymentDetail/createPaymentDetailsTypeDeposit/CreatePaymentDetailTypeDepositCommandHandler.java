@@ -5,6 +5,8 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -39,6 +41,10 @@ public class CreatePaymentDetailTypeDepositCommandHandler implements ICommandHan
                 null,
                 false
         );
+
+        newDetailDto.setApplyDepositValue(newDetailDto.getAmount());
+        newDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
+
         this.paymentDetailService.create(newDetailDto);
         command.setNewDetailDto(newDetailDto);
     }
