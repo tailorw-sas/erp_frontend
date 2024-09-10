@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GetSearchManagerMerchantConfigQueryHandler implements IQueryHandler<GetSearchManagerMerchantConfigQuery, PaginatedResponse> {
+
     private final IManageMerchantConfigService service;
 
     public GetSearchManagerMerchantConfigQueryHandler(IManageMerchantConfigService service) {
@@ -16,6 +17,6 @@ public class GetSearchManagerMerchantConfigQueryHandler implements IQueryHandler
     @Override
     public PaginatedResponse handle(GetSearchManagerMerchantConfigQuery query) {
 
-        return this.service.search(query.getPageable(),query.getFilter());
+        return this.service.search(query.getPageable(), query.getFilter());
     }
 }

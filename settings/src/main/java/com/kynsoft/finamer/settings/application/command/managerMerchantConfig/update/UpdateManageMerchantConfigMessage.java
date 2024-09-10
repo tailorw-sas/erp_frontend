@@ -7,12 +7,11 @@ import java.util.UUID;
 
 @Data
 public class UpdateManageMerchantConfigMessage implements ICommandMessage {
-    private UUID uuid;
+
+    private UUID id;
     private String command = "UPDATE_MANAGER_MERCHANT_CONFIG";
 
-
-
-    public UpdateManageMerchantConfigMessage(UUID uuid) {
-        this.uuid = uuid;
+    public UpdateManageMerchantConfigMessage(UUID id) {
+        this.id = id;
     }
 }

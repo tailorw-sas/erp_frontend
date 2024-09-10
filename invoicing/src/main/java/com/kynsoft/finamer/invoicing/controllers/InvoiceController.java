@@ -73,18 +73,18 @@ public class InvoiceController {
 
         CreateBulkInvoiceMessage message = this.mediator.send(command);
 
-        this.mediator.send(
-                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
-                    return b.getId();
-                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
-                    return rr.getId();
-                }).collect(Collectors.toList())));
+//        this.mediator.send(
+//                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
+//                    return b.getId();
+//                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
+//                    return rr.getId();
+//                }).collect(Collectors.toList())));
 
-        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
-
-        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
-            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
-        }
+//        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
+//
+//        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
+//            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
+//        }
 
         return ResponseEntity.ok(message);
 
@@ -117,11 +117,11 @@ public class InvoiceController {
 //        this.mediator.send(
 //                new CalculateInvoiceAmountCommand(message.getCloned(), command.getBookings(), command.getRoomRates()));
 
-        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getCloned(), command.getEmployee()));
-
-        for (UUID attacmhment : command.getAttachments()) {
-            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attacmhment));
-        }
+//        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getCloned(), command.getEmployee()));
+//
+//        for (UUID attacmhment : command.getAttachments()) {
+//            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attacmhment));
+//        }
 
         return ResponseEntity.ok(message);
 

@@ -15,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class ManagerMerchantConfigDto {
-    private UUID uuid;
+    private UUID id;
     private ManagerMerchantDto managerMerchantDto;
     private String url;
     private String altUrl;

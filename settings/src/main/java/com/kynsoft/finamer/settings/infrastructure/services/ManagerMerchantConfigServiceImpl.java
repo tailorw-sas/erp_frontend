@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.settings.infrastructure.services;
 
-
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -10,7 +9,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerMerchantConfigResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigDto;
-import com.kynsoft.finamer.settings.domain.dto.me.ManagerMerchantConfigResponseDto;
+import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigResponseDto;
 import com.kynsoft.finamer.settings.domain.services.IManageMerchantConfigService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagerMerchantConfig;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagerMerchantConfigWriteDataJpaRepository;
@@ -20,12 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
 @Service
 public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigService {
+
     @Autowired
     private ManagerMerchantConfigWriteDataJpaRepository repositoryCommand;
     @Autowired
@@ -34,24 +34,20 @@ public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigSe
     @Override
     public UUID create(ManagerMerchantConfigDto dto) {
         ManagerMerchantConfig data = new ManagerMerchantConfig(dto);
-        data.setCreatedAt(new Timestamp(new Date().getTime()));
-        data.setUpdatedAt(new Timestamp(new Date().getTime()));
         ManagerMerchantConfig merchantConfig = this.repositoryCommand.save(data);
-        return merchantConfig.getUuid();
+        return merchantConfig.getId();
     }
 
     public void update(ManagerMerchantConfigDto dto) {
         ManagerMerchantConfig update = new ManagerMerchantConfig(dto);
-        Timestamp createAt = repositoryQuery.findById(dto.getUuid()).get().getCreatedAt();
-        update.setUpdatedAt(new Timestamp(new Date().getTime()));
-        update.setCreatedAt(createAt);
+        update.setUpdatedAt(LocalDateTime.now());
         this.repositoryCommand.save(update);
     }
 
     @Override
     public void delete(ManagerMerchantConfigDto dto) {
         try {
-            this.repositoryCommand.deleteById(dto.getUuid());
+            this.repositoryCommand.deleteById(dto.getId());
         } catch (Exception e) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
@@ -65,6 +61,7 @@ public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigSe
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_CURRENCY_NOT_FOUND, new ErrorField("id", "Manager Merchant Currency not found.")));
     }
+
     @Override
     public ManagerMerchantConfigResponseDto findByIdWithDate(UUID id) {
         Optional<ManagerMerchantConfig> userSystem = this.repositoryQuery.findById(id);
