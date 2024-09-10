@@ -46,14 +46,17 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         recipients.add(recipient);
         request.setRecipientEmail(recipients);
 
-        var nameFile = invoice.getInvoiceNumber()+".pdf";
+        var nameFile = invoice.getInvoiceNumber() + ".pdf";
         MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, "base64");
         List<MailJetAttachment> attachments = new ArrayList<>();
         attachments.add(attachment);
         request.setMailJetAttachments(attachments);
+        try {
+            mailService.sendMail(request);
 
-        mailService.sendMail(request);
-        command.setResult(true);
+        } catch (Exception e) {
+            command.setResult(false);
+        }
     }
 
 }
