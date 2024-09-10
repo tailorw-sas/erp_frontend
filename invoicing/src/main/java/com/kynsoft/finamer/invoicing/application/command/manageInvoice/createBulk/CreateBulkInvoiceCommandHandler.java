@@ -198,6 +198,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                             rates.add(roomRateDto);
                         } else {
                             rates = new LinkedList<>();
+                            rates.add(roomRateDto);
                         }
 
                         bookingDto.setRoomRates(rates);
