@@ -194,4 +194,12 @@ public class InvoiceController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/send")
+    public ResponseEntity<?> send(@RequestBody CreateNewCreditRequest request){
+        CreateNewCreditCommand command = CreateNewCreditCommand.fromRequest(request);
+        CreateNewCreditMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
 }
