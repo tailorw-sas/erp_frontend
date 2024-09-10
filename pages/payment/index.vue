@@ -29,6 +29,7 @@ const disabledBtnApplyPayment = ref(true)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const paymentDetailsTypeDepositList = ref<any[]>([])
 const paymentDetailsTypeDepositLoading = ref(false)
+const paymentDetailsTypeDepositSelected = ref<any[]>([])
 
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
@@ -37,6 +38,7 @@ const checkApplyPayment = ref(true)
 const idInvoicesSelectedToApplyPayment = ref<string[]>([])
 const invoiceAmmountSelected = ref(0)
 const paymentAmmountSelected = ref(0)
+const paymentBalance = ref(0)
 
 const idItemToLoadFirstTime = ref('')
 const objApis = ref({
@@ -265,7 +267,8 @@ const columnsExpandTable: IColumn[] = [
 const columnsPaymentDetailTypeDeposit: IColumn[] = [
   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'text' },
-  { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
+  { field: 'amount', header: 'Deposit Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
+  { field: 'applyDepositValue', header: 'Deposit. Balance', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
   { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
   // { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
   // { field: 'invoiceNumber', header: 'Invoice No', tooltip: 'Invoice No', width: '100px', type: 'text' },
@@ -1084,6 +1087,7 @@ function closeModalApplyPayment() {
 async function openModalApplyPayment() {
   openDialogApplyPayment.value = true
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
+  paymentBalance.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   applyPaymentGetList()
   getListPaymentDetailTypeDeposit()
 }
@@ -1160,6 +1164,37 @@ async function addAmmountsToApplyPayment(event: any) {
   disabledBtnApplyPayment.value = false
 }
 
+function sumAmountOfPaymentDetailTypeDeposit(transactions: any[]) {
+  if (!transactions || transactions.length === 0) {
+    return 0 // Si el array no tiene valores, devolver 0
+  }
+
+  return transactions.reduce((total, item) => {
+    const amount = Number.parseFloat(item.amount.replace(/,/g, ''))
+
+    // Verificar si el amount es un número válido y sumarlo
+    if (!Number.isNaN(amount)) {
+      return total + Math.abs(amount) // Convertir a positivo y sumar
+    }
+
+    return total
+  }, 0) // Valor inicial es 0
+}
+
+function sumApplyPamentAmount(transactions: any[]) {
+  paymentAmmountSelected.value = paymentBalance.value + sumAmountOfPaymentDetailTypeDeposit(transactions)
+}
+
+async function changeValueByCheckApplyPaymentBalance(valueOfCheckbox: boolean) {
+  // paymentDetailsTypeDepositSelected
+  if (valueOfCheckbox) {
+    sumApplyPamentAmount(paymentDetailsTypeDepositSelected.value)
+  }
+  else {
+    paymentAmmountSelected.value = 0 + sumAmountOfPaymentDetailTypeDeposit(paymentDetailsTypeDepositSelected.value)
+  }
+}
+
 async function saveApplyPayment() {
   try {
     loadingSaveApplyPayment.value = true
@@ -1216,6 +1251,10 @@ function havePermissionMenu() {
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
+watch(paymentDetailsTypeDepositSelected, (newValue) => {
+  sumApplyPamentAmount(newValue)
+}, { deep: true })
+
 watch(filterAllDateRange, (newValue) => {
   if (newValue) {
     filterToSearch.value.from = dayjs(startOfMonth.value).format('YYYY-MM-DD')
@@ -1725,8 +1764,19 @@ onMounted(async () => {
       </template>
       <template #default>
         <div class="p-fluid pt-3">
+          <!-- <pre>{{ paymentDetailsTypeDepositSelected }}</pre> -->
           <BlockUI v-if="objItemSelectedForRightClickApplyPayment?.hasDetailTypeDeposit" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
-            <DataTable :value="paymentDetailsTypeDepositList" striped-rows show-gridlines>
+            <DataTable
+              v-model:selection="paymentDetailsTypeDepositSelected"
+              :value="paymentDetailsTypeDepositList"
+              striped-rows
+              show-gridlines
+              data-key="id"
+              selection-mode="multiple"
+            >
+              <!-- @update:selection="onSelectionChange($event)" -->
+              <!-- @selection-change="onSelectionChange" -->
+              <Column selection-mode="multiple" header-style="width: 3rem" />
               <Column v-for="column of columnsPaymentDetailTypeDeposit" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
               <template #empty>
                 <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
@@ -1812,10 +1862,12 @@ onMounted(async () => {
               id="checkApplyPayment"
               v-model="checkApplyPayment"
               :binary="true"
-              @update:model-value="($event) => {}"
+              @update:model-value="($event) => {
+                changeValueByCheckApplyPaymentBalance($event);
+              }"
             />
             <label for="checkApplyPayment" class="ml-2 font-bold">
-              Apply Payment
+              Apply Payment Balance
             </label>
           </div>
           <div>
