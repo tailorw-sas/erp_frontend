@@ -1,13 +1,10 @@
 package com.kynsoft.notification.infrastructure.service.kafka.consumer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.UserOtpKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.notification.application.command.sendMailjetEmail.SendMailJetEMailCommand;
-import com.kynsoft.notification.domain.dto.MailJetRecipient;
-import com.kynsoft.notification.domain.dto.MailJetVar;
+import com.kynsof.share.core.application.mailjet.MailJetRecipient;
+import com.kynsof.share.core.application.mailjet.MailJetVar;
 import com.kynsoft.notification.domain.dto.MailjetTemplateEnum;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.kafka.annotation.KafkaListener;

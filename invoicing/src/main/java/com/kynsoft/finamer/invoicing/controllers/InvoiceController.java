@@ -22,6 +22,8 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceRequest;
@@ -190,6 +192,14 @@ public class InvoiceController {
     @PostMapping("/new-credit")
     public ResponseEntity<?> newCredit(@RequestBody CreateNewCreditRequest request){
         CreateNewCreditCommand command = CreateNewCreditCommand.fromRequest(request);
+        CreateNewCreditMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/send")
+    public ResponseEntity<?> send(@RequestBody SendInvoiceRequest request){
+        SendInvoiceCommand command = SendInvoiceCommand.fromRequest(request);
         CreateNewCreditMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
