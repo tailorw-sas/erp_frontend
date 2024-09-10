@@ -73,18 +73,18 @@ public class InvoiceController {
 
         CreateBulkInvoiceMessage message = this.mediator.send(command);
 
-        this.mediator.send(
-                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
-                    return b.getId();
-                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
-                    return rr.getId();
-                }).collect(Collectors.toList())));
+//        this.mediator.send(
+//                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
+//                    return b.getId();
+//                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
+//                    return rr.getId();
+//                }).collect(Collectors.toList())));
 
-        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
-
-        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
-            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
-        }
+//        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
+//
+//        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
+//            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
+//        }
 
         return ResponseEntity.ok(message);
 

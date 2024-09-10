@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @Transactional
@@ -41,6 +42,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     private final IParameterizationService parameterizationService;
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     public CreateBulkInvoiceCommandHandler(IManageRatePlanService ratePlanService,
                                            IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
@@ -53,7 +56,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                            IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
                                            IManageRoomRateService rateService, IInvoiceCloseOperationService closeOperationService,
                                            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService) {
+                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
 
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
@@ -72,6 +75,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
         this.parameterizationService = parameterizationService;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
     }
 
     @Override
@@ -328,10 +333,45 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         command.setInvoiceId(created.getInvoiceId());
         command.setInvoiceNo(created.getInvoiceNumber());
 
-//        try {
-//            this.producerReplicateManageInvoiceService.create(created);
-//        } catch (Exception e) {
-//        }
+        //calcular el amount de los bookings
+        for(ManageBookingDto booking : created.getBookings()){
+            this.bookingService.calculateInvoiceAmount(booking);
+        }
+        //calcular el amount del invoice
+        this.service.calculateInvoiceAmount(created);
+
+        try {
+            this.producerReplicateManageInvoiceService.create(created);
+        } catch (Exception e) {
+        }
+
+        //invoice status history
+        this.invoiceStatusHistoryService.create(
+                new InvoiceStatusHistoryDto(
+                        UUID.randomUUID(),
+                        created,
+                        "The invoice data was inserted.",
+                        null,
+                        command.getEmployee(),
+                        status
+                )
+        );
+
+        //attachment status history
+        for(ManageAttachmentDto attachment : created.getAttachments()){
+            this.attachmentStatusHistoryService.create(
+                    new AttachmentStatusHistoryDto(
+                            UUID.randomUUID(),
+                            "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
+                            attachment.getAttachmentId(),
+                            created,
+                            attachment.getEmployee(),
+                            attachment.getEmployeeId(),
+                            null,
+                            null
+                    )
+            );
+        }
 
     }
 
