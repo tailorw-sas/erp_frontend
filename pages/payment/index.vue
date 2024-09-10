@@ -876,6 +876,21 @@ async function applyPaymentGetList() {
         }
       }
     }
+
+    const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
+
+    if (objFilter) {
+      objFilter.value = 0
+    }
+    else {
+      applyPaymentPayload.value.filter.push({
+        key: 'dueAmount',
+        operator: 'GREATER_THAN',
+        value: 0,
+        logicalOperation: 'AND'
+      })
+    }
+
     const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -1182,7 +1197,12 @@ function sumAmountOfPaymentDetailTypeDeposit(transactions: any[]) {
 }
 
 function sumApplyPamentAmount(transactions: any[]) {
-  paymentAmmountSelected.value = paymentBalance.value + sumAmountOfPaymentDetailTypeDeposit(transactions)
+  if (checkApplyPayment.value) {
+    paymentAmmountSelected.value = paymentBalance.value + sumAmountOfPaymentDetailTypeDeposit(transactions)
+  }
+  else {
+    paymentAmmountSelected.value = sumAmountOfPaymentDetailTypeDeposit(transactions)
+  }
 }
 
 async function changeValueByCheckApplyPaymentBalance(valueOfCheckbox: boolean) {
@@ -1191,7 +1211,7 @@ async function changeValueByCheckApplyPaymentBalance(valueOfCheckbox: boolean) {
     sumApplyPamentAmount(paymentDetailsTypeDepositSelected.value)
   }
   else {
-    paymentAmmountSelected.value = 0 + sumAmountOfPaymentDetailTypeDeposit(paymentDetailsTypeDepositSelected.value)
+    paymentAmmountSelected.value = sumAmountOfPaymentDetailTypeDeposit(paymentDetailsTypeDepositSelected.value)
   }
 }
 
@@ -1213,7 +1233,6 @@ async function saveApplyPayment() {
     objItemSelectedForRightClickApplyPayment.value = {}
     idInvoicesSelectedToApplyPayment.value = []
     loadingSaveApplyPayment.value = false
-    console.log(error)
   }
 }
 
@@ -1773,6 +1792,7 @@ onMounted(async () => {
               show-gridlines
               data-key="id"
               selection-mode="multiple"
+              style="background-color: #F5F5F5;"
             >
               <!-- @update:selection="onSelectionChange($event)" -->
               <!-- @selection-change="onSelectionChange" -->
