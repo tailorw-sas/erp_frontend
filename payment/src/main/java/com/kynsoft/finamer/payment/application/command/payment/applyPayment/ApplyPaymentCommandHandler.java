@@ -37,8 +37,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 
         List<ManageInvoiceDto> invoiceQueue = new ArrayList<>();
 
+        double paymentBalance = paymentDto.getPaymentBalance();
+        double invoiceTotal = 0.0;
         for (UUID invoice : command.getInvoices()) {
-            invoiceQueue.add(this.manageInvoiceService.findById(invoice));
+            ManageInvoiceDto invoiceDto = this.manageInvoiceService.findById(invoice);
+            invoiceQueue.add(invoiceDto);
+            invoiceTotal += invoiceDto.getInvoiceAmount();
         }
 
         Collections.sort(invoiceQueue, Comparator.comparingDouble(m -> m.getInvoiceAmount()));
@@ -55,6 +59,8 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                         CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true));
                         command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId()));
                         notApplied = notApplied - amountToApply;
+                        invoiceTotal = invoiceTotal - amountToApply;
+                        paymentBalance = paymentBalance - amountToApply;
                     } else {
                         break;
                     }
@@ -67,3 +73,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     }
 
 }
+// Hay que disminuir el Payment Balance
+// Disminuir siempre que se aplique un pago el valor del booking al invoiceTotal y al payment balance.
+// Si el valor del payment balance se hace cero y invoiceTotal todavia tiene valor y notApplied todavia es diferente de cero.
+// Entonces se puede Aplicar pago sobre trx tipo Deposit si fueron seleccionadas.

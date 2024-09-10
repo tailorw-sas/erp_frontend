@@ -47,13 +47,17 @@ public class CreatePaymentDetailTypeCashCommandHandler implements ICommandHandle
         );
         this.paymentDetailService.create(newDetailDto);
         if (command.isApplyPayment()) {
-            this.calculateApplied(command.getPaymentCash(), command.getInvoiceAmount());
+            this.calculate(command.getPaymentCash(), command.getInvoiceAmount());
         }
     }
 
-    private void calculateApplied(PaymentDto paymentDto, double amount) {
+    private void calculate(PaymentDto paymentDto, double amount) {
+        paymentDto.setIdentified(paymentDto.getIdentified() + amount);
+        paymentDto.setNotIdentified(paymentDto.getNotIdentified() - amount);
+
         paymentDto.setApplied(paymentDto.getApplied() + amount);
         paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
+        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
 
         this.paymentService.update(paymentDto);
     }
