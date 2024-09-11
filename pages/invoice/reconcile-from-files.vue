@@ -40,8 +40,8 @@ const idItem = ref('')
 const columns: IColumn[] = [
     { field: 'id', header: 'Id', type: 'text' },
     { field: 'type', header: 'Type', type: 'text' },
-    { field: 'manageAgencyCode', header: 'Agency Cd', type: 'text' },
     { field: 'hotel', header: 'Hotel', type: 'text' },
+    { field: 'manageAgencyCode', header: 'Agency Cd', type: 'text' }, 
     { field: 'agency', header: 'Agency', type: 'text' },
     { field: 'invoiceNumber', header: 'Invoice No', type: 'text' },
     { field: 'generationDate', header: 'Generation Date', type: 'date' },
