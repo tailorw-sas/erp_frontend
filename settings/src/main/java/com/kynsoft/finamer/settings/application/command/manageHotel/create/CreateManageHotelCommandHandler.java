@@ -44,7 +44,7 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
 
     @Override
     public void handle(CreateManageHotelCommand command) {
-        RulesChecker.checkRule(new ManageHotelCodeSizeRule(command.getCode()));
+        //RulesChecker.checkRule(new ManageHotelCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManageHotelNameMustBeNullRule(command.getName()));
         RulesChecker.checkRule(new ManageHotelCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
