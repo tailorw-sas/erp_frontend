@@ -129,6 +129,7 @@ const selectedBooking = ref<any>()
 const totalInvoiceAmount = ref<number>(0)
 const totalHotelAmount = ref<number>(0)
 const totalOriginalAmount = ref<number>(0)
+const totalDueAmount = ref<number>(0)
 
 const confroomCategoryApi = reactive({
   moduleApi: 'settings',
@@ -1006,6 +1007,7 @@ async function getBookingList(clearFilter: boolean = false) {
     totalInvoiceAmount.value = 0
     totalHotelAmount.value = 0
     totalOriginalAmount.value = 0
+    totalDueAmount.value = 0
 
     
     for (const iterator of dataList) {
@@ -1027,6 +1029,9 @@ async function getBookingList(clearFilter: boolean = false) {
 
       if (typeof +iterator.originalAmount === 'number') {
         totalOriginalAmount.value += Number(iterator.originalAmount)
+      }
+      if (typeof +iterator.dueAmount === 'number') {
+        totalDueAmount.value += Number(iterator.dueAmount)
       }
       if (typeof +iterator.hotelAmount === 'number') {
         totalHotelAmount.value += Number(iterator.hotelAmount)
@@ -1390,10 +1395,12 @@ watch(() => props.listItems, () => {
     totalHotelAmount.value = 0
     totalInvoiceAmount.value = 0
     totalOriginalAmount.value = 0
+    totalDueAmount.value = 0
     props?.listItems?.forEach((listItem: any) => {
       totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
       totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
       totalOriginalAmount.value += listItem?.originalAmount ? Number(listItem?.originalAmount) : 0
+      totalDueAmount.value += listItem?.dueAmount ? Number(listItem?.dueAmount) : 0
     })
   }
 }, { deep: true })
@@ -1565,17 +1572,30 @@ onMounted(() => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:"
+            <Column 
+              footer="Totals:"
               :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 10"
-              footer-style="text-align:right; font-weight: 700" />
-            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalHotelAmount" footer-style="font-weight: 700" />
-            <Column v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalOriginalAmount" footer-style="font-weight: 700" />
-            <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
-            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
-
+              footer-style="text-align:right; font-weight: 700"
+            />
+            <Column 
+              v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="totalHotelAmount" 
+              footer-style="font-weight: 700"
+            />
+            <Column 
+              v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="totalOriginalAmount" 
+              footer-style="font-weight: 700"
+            />
+            <Column 
+              :footer="totalInvoiceAmount" 
+              footer-style="font-weight: 700"
+            />
+            <Column 
+              v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="totalDueAmount" 
+              footer-style="font-weight: 700" 
+            />
 
           </Row>
         </ColumnGroup>
