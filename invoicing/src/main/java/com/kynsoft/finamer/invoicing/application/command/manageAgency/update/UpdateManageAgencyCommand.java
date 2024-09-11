@@ -27,6 +27,7 @@ public class UpdateManageAgencyCommand implements ICommand {
     private UUID cityState;
     @JsonProperty("country")
     private UUID country;
+    private String mailingAddress;
 
     @Override
     public ICommandMessage getMessage() {

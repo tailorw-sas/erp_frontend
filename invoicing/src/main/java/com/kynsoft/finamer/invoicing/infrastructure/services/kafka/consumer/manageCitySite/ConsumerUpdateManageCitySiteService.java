@@ -21,11 +21,11 @@ public class ConsumerUpdateManageCitySiteService {
     @KafkaListener(topics = "finamer-update-manage-client", groupId = "invoicing-entity-replica")
     public void listen(UpdateManageAgencyKafka objKafka) {
         try {
-            UpdateManageAgencyCommand command = new UpdateManageAgencyCommand(objKafka.getId(), objKafka.getName(),
-                    objKafka.getClient(),objKafka.getCif(),
-                    objKafka.getAddress(),objKafka.getSentB2BPartner(),
-                    objKafka.getCityState(),objKafka.getCountry());
-            mediator.send(command);
+//            UpdateManageAgencyCommand command = new UpdateManageAgencyCommand(objKafka.getId(), objKafka.getName(),
+//                    objKafka.getClient(),objKafka.getCif(),
+//                    objKafka.getAddress(),objKafka.getSentB2BPartner(),
+//                    objKafka.getCityState(),objKafka.getCountry());
+//            mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageCitySiteService.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -2,7 +2,6 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -75,6 +74,8 @@ public class ManageAgency {
 
     private String status;
 
+    private String mailingAddress;
+
     public ManageAgency(ManageAgencyDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -87,6 +88,7 @@ public class ManageAgency {
         this.sentB2BPartner= dto.getSentB2BPartner() != null ? new ManageB2BPartner(dto.getSentB2BPartner()) : null;
         this.cityState= dto.getCityState() != null ? new ManageCityState(dto.getCityState()) : null;
         this.country= dto.getCountry() != null ? new ManageCountry(dto.getCountry()) : null;
+        this.mailingAddress = dto.getMailingAddress();
     }
 
     public ManageAgencyDto toAggregate() {
@@ -94,7 +96,9 @@ public class ManageAgency {
                 id, code, name, client != null ? client.toAggregate() : null,generationType,status,cif,address,
                 Objects.nonNull(sentB2BPartner)?sentB2BPartner.toAggregate():null,
                 Objects.nonNull(cityState)?cityState.toAggregate():null,
-                Objects.nonNull(country)?country.toAggregate():null);
+                Objects.nonNull(country)?country.toAggregate():null,
+                mailingAddress
+        );
     }
 
     public ManageAgencyDto toAggregateSample() {
@@ -102,6 +106,8 @@ public class ManageAgency {
                 id, code, name, client != null ? client.toAggregate() : null,generationType,status,cif,address,
                 Objects.nonNull(sentB2BPartner)?sentB2BPartner.toAggregate():null,
                 Objects.nonNull(cityState)?cityState.toAggregate():null,
-                Objects.nonNull(country)?country.toAggregate():null);
+                Objects.nonNull(country)?country.toAggregate():null,
+                mailingAddress
+        );
     }
 }

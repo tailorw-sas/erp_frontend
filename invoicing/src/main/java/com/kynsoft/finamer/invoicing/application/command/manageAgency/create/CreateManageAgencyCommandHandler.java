@@ -64,7 +64,8 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
                 command.getAddress(),
                 b2BPartnerDto,
                 cityStateDto,
-                managerCountryDto
-                ));
+                managerCountryDto,
+                command.getMailingAddress()
+        ));
     }
 }
