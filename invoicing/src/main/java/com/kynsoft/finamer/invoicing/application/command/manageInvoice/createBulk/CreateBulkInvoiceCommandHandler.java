@@ -365,7 +365,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                             "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
                             attachment.getAttachmentId(),
                             created,
-                            attachment.getEmployee(),
+                            command.getEmployee(),
                             attachment.getEmployeeId(),
                             null,
                             null
