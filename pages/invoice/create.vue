@@ -1037,11 +1037,21 @@ async function calcInvoiceAmount() {
 
 async function calcInvoiceAmountInBookingByRoomRate() {
   bookingList.value.forEach((b) => {
-    const roomRates = roomRateList.value.find((roomRate: any) => roomRate.booking === b?.id)
+    // const roomRates = roomRateList.value.find((roomRate: any) => roomRate.booking === b?.id)
+    // console.log('Si entro aqui', roomRates)
 
-    if (roomRates) {
-      b.invoiceAmount = Number(roomRates.invoiceAmount) || 0
-      b.dueAmount = Number(roomRates.invoiceAmount) || 0
+    const totalInvoiceAmount = roomRateList.value.reduce((total, item) => {
+      // Verificamos si invoiceAmount es un número válido
+      const invoiceAmount = Number.parseFloat(item.invoiceAmount)
+      if (!Number.isNaN(invoiceAmount)) {
+        return total + invoiceAmount
+      }
+      return total
+    }, 0) // 0 es el valor inicial
+
+    if (totalInvoiceAmount) {
+      b.invoiceAmount = Number(totalInvoiceAmount) || 0
+      b.dueAmount = Number(totalInvoiceAmount) || 0
     }
   })
 }
@@ -1125,7 +1135,17 @@ function updateRoomRate(roomRate: any) {
 
 function addAdjustment(adjustment: any) {
   calcRoomRateInvoiceAmount(adjustment)
-  adjustmentList.value = [...adjustmentList.value, { ...adjustment, transaction: { ...adjustment?.transactionType, name: `${adjustment?.transactionType?.code || ''}-${adjustment?.transactionType?.name || ''}` }, date: dayjs(adjustment?.date).startOf('day').toISOString() }]
+  adjustmentList.value = [
+    ...adjustmentList.value,
+    {
+      ...adjustment,
+      transaction: {
+        ...adjustment?.transactionType,
+        name: `${adjustment?.transactionType?.code || ''}-${adjustment?.transactionType?.name || ''}`
+      },
+      date: dayjs(adjustment?.date).startOf('day').toISOString()
+    }
+  ]
   calcInvoiceAmountInBookingByRoomRate()
 }
 
@@ -1291,17 +1311,31 @@ onMounted(async () => {
       <template #form-footer="props">
         <div style="width: 100%; height: 100%;">
           <InvoiceTabView
-            :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
-            :invoice-obj-amount="invoiceAmount" :is-dialog-open="bookingDialogOpen"
-            :close-dialog="() => { bookingDialogOpen = false }" :open-dialog="handleDialogOpen"
-            :selected-booking="selectedBooking" :open-adjustment-dialog="openAdjustmentDialog"
-            :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
-            :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
-            :add-room-rate="addRoomRate" :update-room-rate="updateRoomRate" :is-creation-dialog="true"
-            :selected-invoice="selectedInvoice as any" :booking-list="bookingList" :add-booking="addBooking"
-            :update-booking="updateBooking" :adjustment-list="adjustmentList" :add-adjustment="addAdjustment"
-            :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
-
+            :requires-flat-rate="requiresFlatRate"
+            :get-invoice-hotel="getInvoiceHotel"
+            :invoice-obj-amount="invoiceAmount"
+            :is-dialog-open="bookingDialogOpen"
+            :close-dialog="() => { bookingDialogOpen = false }"
+            :open-dialog="handleDialogOpen"
+            :selected-booking="selectedBooking"
+            :open-adjustment-dialog="openAdjustmentDialog"
+            :force-update="forceUpdate"
+            :sort-adjustment="sortAdjustment"
+            :sort-booking="sortBooking"
+            :sort-room-rate="sortRoomRate"
+            :toggle-force-update="toggleForceUpdate"
+            :room-rate-list="roomRateList"
+            :add-room-rate="addRoomRate"
+            :update-room-rate="updateRoomRate"
+            :is-creation-dialog="true"
+            :selected-invoice="selectedInvoice as any"
+            :booking-list="bookingList"
+            :add-booking="addBooking"
+            :update-booking="updateBooking"
+            :adjustment-list="adjustmentList"
+            :add-adjustment="addAdjustment"
+            :update-adjustment="updateAdjustment"
+            :active="active" :set-active="($event) => {
               active = $event
             }"
           />
