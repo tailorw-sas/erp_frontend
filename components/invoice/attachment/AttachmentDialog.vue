@@ -52,13 +52,18 @@ const props = defineProps({
   selectedInvoiceObj: {
     type: Object,
     required: true
-  }
+  },
+  disableDeleteBtn: {
+    type: Boolean,
+    required: false
+  },
 })
 
 const { data: userData } = useAuth()
 
 const invoice = ref<any>(props.selectedInvoiceObj)
 const defaultAttachmentType = ref<any>(null)
+const disableDeleteBtn = ref(props.disableDeleteBtn)
 
 const route = useRoute()
 
@@ -913,7 +918,7 @@ onMounted(async () => {
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
                   <Button
                     v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
-                    :disabled="!idItem || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
+                    :disabled="disableDeleteBtn === false ? (!idItem || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)) : true"
                     @click="requireConfirmationToDelete"
                   />
                 </IfCan>

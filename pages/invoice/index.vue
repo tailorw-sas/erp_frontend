@@ -1757,9 +1757,15 @@ const legend = ref(
     <ContextMenu ref="invoiceContextMenu" :model="invoiceContextMenuItems" />
   </div>
   <div v-if="attachmentDialogOpen">
-    <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false, getList() }" :is-creation-dialog="false"
-      header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="attachmentInvoice?.id"
-      :selected-invoice-obj="attachmentInvoice" />
+    <AttachmentDialog 
+      :close-dialog="() => { attachmentDialogOpen = false, getList() }" 
+      :is-creation-dialog="false"
+      header="Manage Invoice Attachment" 
+      :open-dialog="attachmentDialogOpen" 
+      :selected-invoice="attachmentInvoice?.id"
+      :selected-invoice-obj="attachmentInvoice"
+      :disableDeleteBtn="true"
+    />
   </div>
   <div v-if="doubleFactorOpen">
     <Dialog v-model:visible="doubleFactorOpen" modal class="mx-3 sm:mx-0"
