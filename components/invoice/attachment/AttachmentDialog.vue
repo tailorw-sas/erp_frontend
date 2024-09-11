@@ -303,13 +303,20 @@ async function getInvoiceSupportAttachment() {
   try {
     const payload
       = {
-        filter: [{
-          key: 'code',
-          operator: 'EQUALS',
-          value: 'INV',
-          logicalOperation: 'AND',
-
-        }],
+        filter: [
+          {
+            key: 'attachInvDefault',
+            operator: 'EQUALS',
+            value: true,
+            logicalOperation: 'AND',
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND',
+          },
+        ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -675,8 +682,8 @@ watch(PayloadOnChangePage, async (newValue) => {
 })
 
 onMounted(async () => {
-  getInvoiceSupportAttachment()
   await getResourceTypeList()
+  await getInvoiceSupportAttachment()
   if (props.selectedInvoice) {
     Payload.value.filter = [{
       key: 'invoice.id',
@@ -702,6 +709,7 @@ onMounted(async () => {
     }
     // item.value.resourceType = `${OBJ_ENUM_INVOICE_TYPE_CODE[route.query.type]}-${OBJ_ENUM_INVOICE[route.query.type]}`
   }
+  formReload.value += 1
 })
 </script>
 
