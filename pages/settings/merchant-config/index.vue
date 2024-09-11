@@ -18,6 +18,7 @@ const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const loadingSearch = ref(false)
 const MerchantList = ref<any[]>([])
+const MethodEnumList = ref<any[]>([])
 const formReload = ref(0)
 
 const loadingSaveAll = ref(false)
@@ -32,6 +33,11 @@ const confApi = reactive({
   moduleApi: 'settings',
   uriApi: 'merchant-config',
 })
+
+enum ENUM_VCC_MERCHANT_METHOD {
+  AZUL = 'AZUL',
+  CARDNET = 'CARDNET',
+}
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -53,43 +59,49 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Url',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The url field is required')
+    validation: z.string().trim().min(1, 'The url field is required').url('This is not a valid URL')
   },
   {
     field: 'altUrl',
-    header: 'Alternative url',
+    header: 'Alternative Url',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The altUrl field is required')
+    validation: z.string().trim().min(1, 'The altUrl field is required').url('This is not a valid URL')
   },
   {
     field: 'successUrl',
-    header: 'Success url',
+    header: 'Success Url',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The errorUrl field is required')
+    validation: z.string().trim().min(1, 'The errorUrl field is required').url('This is not a valid URL')
   },
   {
     field: 'errorUrl',
-    header: 'Error url',
+    header: 'Error Url',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The errorUrl field is required')
+    validation: z.string().trim().min(1, 'The errorUrl field is required').url('This is not a valid URL')
   },
   {
     field: 'declinedUrl',
-    header: 'Declined url',
+    header: 'Declined Url',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The declinedUrl field is required')
+    validation: z.string().trim().min(1, 'The declinedUrl field is required').url('This is not a valid URL')
+  },
+  {
+    field: 'merchantType',
+    header: 'Merchant Type',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The merchantType field is required')
   },
   {
     field: 'method',
     header: 'Method',
-    dataType: 'text',
-    // dataType: 'select',
+    dataType: 'select',
     class: 'field col-12 required',
-    // validation: validateEntityStatus('method'),
+    validation: validateEntityStatus('method'),
   },
   {
     field: 'institutionCode',
@@ -107,7 +119,6 @@ const item = ref<GenericObject>({
   errorUrl: '',
   declinedUrl: '',
   merchantType: '',
-  description: '',
   name: '',
   method: '',
   institutionCode: '',
@@ -121,7 +132,6 @@ const itemTemp = ref<GenericObject>({
   errorUrl: '',
   declinedUrl: '',
   merchantType: '',
-  description: '',
   name: '',
   method: '',
   institutionCode: '',
@@ -313,7 +323,7 @@ async function getItemById(id: string) {
         item.value.errorUrl = response.errorUrl
         item.value.declinedUrl = response.declinedUrl
         item.value.merchantType = response.merchantType
-        item.value.method = response.method
+        item.value.method = MethodEnumList.value.find((i: any) => i.id === response.method)
         item.value.institutionCode = response.institutionCode
         const objMerchant = {
           id: response.manageMerchant.id,
@@ -341,6 +351,7 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.manageMerchant = typeof payload.manageMerchant === 'object' ? payload.manageMerchant.id : payload.manageMerchant
+    payload.method = typeof payload.method === 'object' ? payload.method.id : payload.method
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
@@ -349,6 +360,7 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.manageMerchant = typeof payload.manageMerchant === 'object' ? payload.manageMerchant.id : payload.manageMerchant
+  payload.method = typeof payload.method === 'object' ? payload.method.id : payload.method
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -492,6 +504,14 @@ onMounted(() => {
   if (useRuntimeConfig().public.loadTableData) {
     getList()
   }
+
+  MethodEnumList.value = Object.entries(ENUM_VCC_MERCHANT_METHOD).map(
+    ([key, value]) => ({
+      id: value,
+      name: key,
+      status: 'ACTIVE'
+    })
+  )
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -592,6 +612,20 @@ onMounted(() => {
                   onUpdate('manageMerchant', $event)
                 }"
                 @load="($event) => getMerchantList($event)"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-method="{ item: data, onUpdate }">
+              <Dropdown
+                v-if="!loadingSaveAll"
+                v-model="data.method"
+                :options="MethodEnumList"
+                option-label="name"
+                return-object="false"
+                class="align-items-center"
+                @update:model-value="($event) => {
+                  onUpdate('method', $event)
+                }"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
