@@ -8,4 +8,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class ImportBookingFromFileErrorQuery implements IQuery {
     private ImportBookingErrorRequest importBookingErrorRequest;
+
 }

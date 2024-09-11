@@ -9,6 +9,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceDefaultMustBeUniqueRule;
+import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceInvoiceMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
 
 import java.util.function.Consumer;
@@ -36,6 +37,10 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
             RulesChecker.checkRule(new ResourceDefaultMustBeUniqueRule(this.service, command.getId()));
         }
 
+        if (command.isInvoice()) {
+            RulesChecker.checkRule(new ResourceInvoiceMustBeUniqueRule(this.service, command.getId()));
+        }
+
         ResourceTypeDto resourceTypeDto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -43,10 +48,11 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(resourceTypeDto::setName, command.getName(), resourceTypeDto.getName(), update::setUpdate);
         this.updateStatus(resourceTypeDto::setStatus, command.getStatus(), resourceTypeDto.getStatus(), update::setUpdate);
         this.updateBooleam(resourceTypeDto::setDefaults, command.getDefaults(), resourceTypeDto.getDefaults(), update::setUpdate);
+        this.updateBooleam(resourceTypeDto::setInvoice, command.isInvoice(), resourceTypeDto.isInvoice(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(resourceTypeDto);
-            this.producer.update(new UpdatePaymentResourceTypeKafka(resourceTypeDto.getId(), resourceTypeDto.getName()));
+            this.producer.update(new UpdatePaymentResourceTypeKafka(resourceTypeDto.getId(), resourceTypeDto.getName(), resourceTypeDto.isInvoice()));
         }
 
     }

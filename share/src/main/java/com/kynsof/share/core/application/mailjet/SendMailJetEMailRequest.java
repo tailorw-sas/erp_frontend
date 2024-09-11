@@ -1,8 +1,6 @@
-package com.kynsoft.notification.application.command.sendMailjetEmail;
+package com.kynsof.share.core.application.mailjet;
 
-import com.kynsoft.notification.domain.dto.MailJetAttachment;
-import com.kynsoft.notification.domain.dto.MailJetRecipient;
-import com.kynsoft.notification.domain.dto.MailJetVar;
+
 import lombok.Getter;
 import lombok.Setter;
 

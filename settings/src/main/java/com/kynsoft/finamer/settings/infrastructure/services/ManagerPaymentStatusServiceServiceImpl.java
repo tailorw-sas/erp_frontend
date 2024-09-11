@@ -98,4 +98,9 @@ public class ManagerPaymentStatusServiceServiceImpl implements IManagerPaymentSt
         return objectDtos;
     }
 
+    @Override
+    public Long countByAppliedAndNotId(UUID id) {
+        return this.repositoryQuery.countByAppliedAndNotId(id);
+    }
+
 }

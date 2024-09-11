@@ -12,6 +12,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanWriter;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceStatus;
@@ -46,7 +47,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final IInvoiceCloseOperationService closeOperationService;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-                                    ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
+            ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
@@ -101,6 +102,16 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
+    public PaginatedResponse searchToPayment(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+
+        GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponseToPayment(data);
+    }
+
+    @Override
     public void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream) {
         List<ManageInvoiceResponse> data = this.search(pageable, filterCriteria).getData();
 
@@ -133,20 +144,32 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private PaginatedResponse getPaginatedResponse(Page<ManageInvoice> data) {
         List<ManageInvoiceResponse> responseList = new ArrayList<>();
         for (ManageInvoice entity : data.getContent()) {
-            try{
+            try {
                 ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
                 InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(response.getHotel().getId());
-                if(response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
-                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())){
+                if (response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
+                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())) {
                     response.setIsInCloseOperation(false);
                 }
                 responseList.add(response);
-            } catch (Exception e){
+            } catch (Exception e) {
                 ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
                 response.setIsInCloseOperation(false);
                 responseList.add(response);
             }
         }
+        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    private PaginatedResponse getPaginatedResponseToPayment(Page<ManageInvoice> data) {
+        List<ManageInvoiceToPaymentResponse> responseList = new ArrayList<>();
+
+        for (ManageInvoice entity : data.getContent()) {
+            ManageInvoiceToPaymentResponse response = new ManageInvoiceToPaymentResponse(entity.toAggregate());
+            responseList.add(response);
+        }
+
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
@@ -216,6 +239,19 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public Double findSumOfAmountByParentId(UUID parentId) {
         return this.repositoryQuery.findSumOfAmountByParentId(parentId).orElse(0.0);
+    }
+
+    @Override
+    public ManageInvoiceDto findByInvoiceId(long id) {
+        return repositoryQuery.findByInvoiceId(id)
+                .map(ManageInvoice::toAggregate)
+                .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
+                        new ErrorField("invoiceId", "The invoice not found."))));
+    }
+
+    @Override
+    public boolean existManageInvoiceByInvoiceId(long invoiceId) {
+        return repositoryQuery.existsByInvoiceId(invoiceId);
     }
 
 }

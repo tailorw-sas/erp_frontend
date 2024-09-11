@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentStatusKafka;
 import com.kynsoft.finamer.settings.domain.dto.ManagerPaymentStatusDto;
+import com.kynsoft.finamer.settings.domain.rules.managerPaymentStatus.ManagePaymentStatusAppliedMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managerPaymentStatus.ManagePaymentStatusCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managerPaymentStatus.ManagePaymentStatusNameCantBeNullRule;
 import com.kynsoft.finamer.settings.domain.rules.managerPaymentStatus.ManagerPaymentStatusCodeSizeRule;
@@ -27,6 +28,9 @@ public class CreateManagePaymentStatusCommandHandler implements ICommandHandler<
         RulesChecker.checkRule(new ManagerPaymentStatusCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManagePaymentStatusCodeMustBeUniqueRule(service, command.getCode(), command.getId()));
         RulesChecker.checkRule(new ManagePaymentStatusNameCantBeNullRule(command.getName()));
+        if (command.getApplied()) {
+            RulesChecker.checkRule(new ManagePaymentStatusAppliedMustBeUniqueRule(service, command.getId()));
+        }
 
         service.create(new ManagerPaymentStatusDto(command.getId(), command.getCode(), command.getName(), command.getStatus(), command.getCollected(), command.getDescription(), command.getDefaults(), command.getApplied()));
         this.producerReplicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name(), command.getApplied()));

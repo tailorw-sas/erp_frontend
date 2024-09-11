@@ -27,7 +27,7 @@ public class ConsumerReplicatePaymentResourceTypeService {
         try {
 
             CreateManageResourceTypeCommand command = new CreateManageResourceTypeCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName());
+                    objKafka.getName(), objKafka.isInvoice());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicatePaymentResourceTypeService.class.getName()).log(Level.SEVERE, null, ex);

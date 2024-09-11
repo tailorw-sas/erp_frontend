@@ -44,7 +44,8 @@ public class ProducerUpdateManageInvoiceService {
                             booking.getCouponNumber(),
                             booking.getAdults(),
                             booking.getChildren(),
-                            entity.getId()
+                            entity.getId(),
+                            booking.getParent() != null ? booking.getParent().getId() : null
                     ));
                 }
             }
@@ -67,6 +68,7 @@ public class ProducerUpdateManageInvoiceService {
                     entity.getId(),
                     entity.getHotel().getId(),
                     entity.getAgency().getClient().getId(),
+                    entity.getParent() != null ? entity.getParent().getId() : null,
                     entity.getAgency().getId(),
                     entity.getInvoiceId(),
                     entity.getInvoiceNo(),

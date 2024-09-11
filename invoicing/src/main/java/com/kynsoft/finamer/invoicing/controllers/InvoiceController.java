@@ -22,6 +22,8 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceRequest;
@@ -31,6 +33,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.Up
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.ExportInvoiceQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.GetSearchInvoiceQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageInvoice.toPayment.search.GetSearchInvoiceToPaymentQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ExportInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import org.springframework.data.domain.Pageable;
@@ -72,18 +75,18 @@ public class InvoiceController {
 
         CreateBulkInvoiceMessage message = this.mediator.send(command);
 
-        this.mediator.send(
-                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
-                    return b.getId();
-                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
-                    return rr.getId();
-                }).collect(Collectors.toList())));
+//        this.mediator.send(
+//                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
+//                    return b.getId();
+//                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
+//                    return rr.getId();
+//                }).collect(Collectors.toList())));
 
-        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
-
-        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
-            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
-        }
+//        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
+//
+//        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
+//            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
+//        }
 
         return ResponseEntity.ok(message);
 
@@ -113,14 +116,14 @@ public class InvoiceController {
 
         PartialCloneInvoiceMessage message = this.mediator.send(command);
 
-        this.mediator.send(
-                new CalculateInvoiceAmountCommand(message.getCloned(), command.getBookings(), command.getRoomRates()));
+//        this.mediator.send(
+//                new CalculateInvoiceAmountCommand(message.getCloned(), command.getBookings(), command.getRoomRates()));
 
-        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getCloned(), command.getEmployee()));
-
-        for (UUID attacmhment : command.getAttachments()) {
-            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attacmhment));
-        }
+//        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getCloned(), command.getEmployee()));
+//
+//        for (UUID attacmhment : command.getAttachments()) {
+//            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attacmhment));
+//        }
 
         return ResponseEntity.ok(message);
 
@@ -153,6 +156,15 @@ public class InvoiceController {
         return ResponseEntity.ok(data);
     }
 
+    @PostMapping("/search-payment/search")
+    public ResponseEntity<?> searchToPayment(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchInvoiceToPaymentQuery query = new GetSearchInvoiceToPaymentQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
     @PostMapping("/export")
     public ResponseEntity<?> export(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
@@ -180,6 +192,14 @@ public class InvoiceController {
     @PostMapping("/new-credit")
     public ResponseEntity<?> newCredit(@RequestBody CreateNewCreditRequest request){
         CreateNewCreditCommand command = CreateNewCreditCommand.fromRequest(request);
+        CreateNewCreditMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/send")
+    public ResponseEntity<?> send(@RequestBody SendInvoiceRequest request){
+        SendInvoiceCommand command = SendInvoiceCommand.fromRequest(request);
         CreateNewCreditMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);

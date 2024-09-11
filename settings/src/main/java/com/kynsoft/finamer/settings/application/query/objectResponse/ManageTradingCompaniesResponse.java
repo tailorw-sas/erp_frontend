@@ -28,7 +28,7 @@ public class ManageTradingCompaniesResponse implements IResponse {
     private ManagerCountryDto country;
     private ManageCityStateDto cityState;
     private String city;
-    private Long zipCode;
+    private String zipCode;
     private String innsistCode;
     private Boolean isApplyInvoice;
 

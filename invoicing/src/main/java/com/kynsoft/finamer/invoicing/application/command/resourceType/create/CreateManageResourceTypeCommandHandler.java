@@ -22,7 +22,8 @@ public class CreateManageResourceTypeCommandHandler implements ICommandHandler<C
         service.create(new ResourceTypeDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
+                command.getName(),
+                command.isInvoice()
         ));
     }
 }

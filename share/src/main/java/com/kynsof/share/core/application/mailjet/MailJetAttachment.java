@@ -1,4 +1,4 @@
-package com.kynsoft.notification.domain.dto;
+package com.kynsof.share.core.application.mailjet;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,9 +13,9 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 public class MailJetAttachment {
-    String contentType;
-    String fileName;
-    String base64Content;
+    private String contentType;
+    private String fileName;
+    private String base64Content;
 
     public static JSONArray generateAttachments(List<MailJetAttachment> mailJetAttachments) throws JSONException {
         JSONArray attachments = new JSONArray();

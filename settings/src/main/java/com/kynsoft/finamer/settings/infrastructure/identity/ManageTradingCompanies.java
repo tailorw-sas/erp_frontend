@@ -56,7 +56,7 @@ public class ManageTradingCompanies implements Serializable {
 
     private String city;
 
-    private Long zipCode;
+    private String zipCode;
 
     private String innsistCode;
 

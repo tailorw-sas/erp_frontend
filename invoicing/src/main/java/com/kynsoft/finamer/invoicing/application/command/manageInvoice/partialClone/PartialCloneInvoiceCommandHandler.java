@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 @Transactional
@@ -32,12 +31,15 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
     private final IParameterizationService parameterizationService;
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final IInvoiceCloseOperationService closeOperationService;
+    private final IManageBookingService bookingService;
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     public PartialCloneInvoiceCommandHandler(
 
             IManageInvoiceService service,
             IManageAttachmentTypeService attachmentTypeService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageRoomRateService rateService, IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService, IInvoiceCloseOperationService closeOperationService) {
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageRoomRateService rateService, IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService, IInvoiceCloseOperationService closeOperationService, IManageBookingService bookingService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
 
         this.service = service;
 
@@ -48,6 +50,9 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         this.parameterizationService = parameterizationService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.closeOperationService = closeOperationService;
+        this.bookingService = bookingService;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
     }
 
     @Override
@@ -72,6 +77,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 newRoomRate.setBooking(newBooking);
                 newRoomRate.setAdjustments(null);
                 newRoomRate.setHotelAmount(0.00);
+                newRoomRate.setInvoiceAmount(0.00);
                 roomRateDtos.add(newRoomRate);
 
             }
@@ -147,18 +153,53 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 invoiceToClone.getInvoiceAmount(),
                 invoiceToClone.getInvoiceAmount(), invoiceToClone.getHotel(), invoiceToClone.getAgency(),
                 invoiceToClone.getInvoiceType(), status,
-                false, bookingDtos, attachmentDtos, null, null, null, invoiceStatus, null, true, invoiceToClone, invoiceToClone.getCredits());
+                false, bookingDtos, attachmentDtos, null, null, null, invoiceStatus, null, true, invoiceToClone, 0.00);
 
         ManageInvoiceDto created = service.create(invoiceDto);
+
+        //calcular el amount de los bookings
+        for(ManageBookingDto booking : created.getBookings()){
+            this.bookingService.calculateInvoiceAmount(booking);
+        }
+        //calcular el amount del invoice
+        this.service.calculateInvoiceAmount(created);
 
         try {
             this.producerReplicateManageInvoiceService.create(created);
         } catch (Exception e) {
         }
 
-        command.setBookings(bookingDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
-        command.setRoomRates(roomRateDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
-        command.setAttachments(attachmentDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
+        //invoice status history
+        this.invoiceStatusHistoryService.create(
+                new InvoiceStatusHistoryDto(
+                        UUID.randomUUID(),
+                        created,
+                        "The invoice data was inserted.",
+                        null,
+                        command.getEmployee(),
+                        status
+                )
+        );
+
+        //attachment status history
+        for(ManageAttachmentDto attachment : created.getAttachments()){
+            this.attachmentStatusHistoryService.create(
+                    new AttachmentStatusHistoryDto(
+                            UUID.randomUUID(),
+                            "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
+                            attachment.getAttachmentId(),
+                            created,
+                            attachment.getEmployee(),
+                            attachment.getEmployeeId(),
+                            null,
+                            null
+                    )
+            );
+        }
+
+//        command.setBookings(bookingDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
+//        command.setRoomRates(roomRateDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
+//        command.setAttachments(attachmentDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
         command.setCloned(created.getId());
     }
 

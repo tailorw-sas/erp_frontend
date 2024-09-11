@@ -29,7 +29,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBooki
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingRoomTypeValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingTransactionDateValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.ImportBookingTypeValidator;
-import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.BookingImportCacheRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 

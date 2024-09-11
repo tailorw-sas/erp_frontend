@@ -2,7 +2,6 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.createPaym
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import lombok.Getter;
@@ -15,17 +14,19 @@ import java.util.UUID;
 public class CreatePaymentDetailTypeApplyDepositCommand implements ICommand {
 
     private PaymentDto payment;
-    private ManageBookingDto booking;
+    private double amount;
     private PaymentDetailDto parentDetailDto;
     private UUID id;
+    private boolean applyPayment;
 
     private PaymentDetailDto newDetailDto;
 
-    public CreatePaymentDetailTypeApplyDepositCommand(PaymentDto payment, ManageBookingDto booking, PaymentDetailDto parentDetailDto) {
+    public CreatePaymentDetailTypeApplyDepositCommand(PaymentDto payment, double amount, PaymentDetailDto parentDetailDto, boolean applyPayment) {
         this.payment = payment;
-        this.booking = booking;
+        this.amount = amount;
         this.parentDetailDto = parentDetailDto;
         this.id = UUID.randomUUID();
+        this.applyPayment = applyPayment;
     }
 
     @Override

@@ -25,4 +25,6 @@ public interface IManageAttachmentTypeService {
     List<ManageAttachmentTypeDto> findAllToReplicate();
 
     Long countByDefaultAndNotId(UUID id);
+
+    Long countByAttachInvDefaultAndNotId(UUID id);
 }

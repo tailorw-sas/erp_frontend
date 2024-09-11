@@ -125,7 +125,7 @@ public class PaymentServiceImpl implements IPaymentService {
     private PaginatedResponse getPaginatedResponse(Page<Payment> data) {
         List<PaymentResponse> responses = new ArrayList<>();
         for (Payment p : data.getContent()) {
-            responses.add(new PaymentResponse(p.toAggregate()));
+            responses.add(new PaymentResponse(p.toAggregateWihtDetails()));
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());

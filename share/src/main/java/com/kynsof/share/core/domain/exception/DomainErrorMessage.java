@@ -300,7 +300,12 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_INCOME_DEFAULT(1079, Series.DOMAIN_ERROR,"Another item already exists with income default."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_APPLY_DEPOSIT_(1080, Series.DOMAIN_ERROR,"Another item already exists with default."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_DEPOSIT_(1081, Series.DOMAIN_ERROR,"Another item already exists with default."),
-    CREDITS_CANNOT_EXCEED_INVOICE_AMOUNT(1082, Series.DOMAIN_ERROR,"The amount of credits cannot exceed the invoice amount.");
+    CREDITS_CANNOT_EXCEED_INVOICE_AMOUNT(1082, Series.DOMAIN_ERROR,"The amount of credits cannot exceed the invoice amount."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_PAYMENT_INVOICE(1083, Series.DOMAIN_ERROR,"Another item already exists with payment invoice."),
+    MANAGE_PAYMENT_STATUS_TO_APPLIED(1084, Series.DOMAIN_ERROR,"Another item already exists with applied."),
+    MANAGER_MERCHANT_CONFIG_MUST_BY_UNIQUE(1085, Series.DOMAIN_ERROR,"Data entered overlaps with others, please check."),
+    MANAGE_PAYMENT_RESOURCE_TYPE_CHECK_INVOICE(1086, Series.DOMAIN_ERROR,"Data entered overlaps with others, please check."),
+    ATTACHMENT_TYPE_CHECK_INV_DEFAULT(1087, Series.DOMAIN_ERROR, "Only one invoice default attachment type is allowed.");
 
     private static final DomainErrorMessage[] VALUES;
 

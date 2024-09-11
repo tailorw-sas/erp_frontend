@@ -1,4 +1,4 @@
-package com.kynsoft.notification.domain.dto;
+package com.kynsof.share.core.application.mailjet;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

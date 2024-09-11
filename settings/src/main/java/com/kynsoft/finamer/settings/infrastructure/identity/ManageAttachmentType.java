@@ -37,6 +37,8 @@ public class ManageAttachmentType implements Serializable {
 
     private Boolean defaults;
 
+    private Boolean attachInvDefault;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,11 +53,12 @@ public class ManageAttachmentType implements Serializable {
         this.description = dto.getDescription();
         this.name = dto.getName();
         this.defaults = dto.getDefaults();
+        this.attachInvDefault = dto.getAttachInvDefault();
     }
 
     public ManageAttachmentTypeDto toAggregate(){
         return new ManageAttachmentTypeDto(
-                id, code, description, status, name, defaults
+                id, code, description, status, name, defaults, attachInvDefault
         );
     }
 

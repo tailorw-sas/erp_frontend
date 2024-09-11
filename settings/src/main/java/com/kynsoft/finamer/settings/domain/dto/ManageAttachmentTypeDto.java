@@ -20,4 +20,5 @@ public class ManageAttachmentTypeDto {
     private Status status;
     private String name;
     private Boolean defaults;
+    private Boolean attachInvDefault;
 }
