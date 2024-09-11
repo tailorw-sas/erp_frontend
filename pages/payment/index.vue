@@ -1220,7 +1220,9 @@ async function saveApplyPayment() {
     loadingSaveApplyPayment.value = true
     const payload = {
       payment: objItemSelectedForRightClickApplyPayment.value.id || '',
-      invoices: [...idInvoicesSelectedToApplyPayment.value]
+      invoices: [...idInvoicesSelectedToApplyPayment.value],
+      applyDeposit: paymentDetailsTypeDepositSelected.value.length > 0,
+      deposits: [...paymentDetailsTypeDepositSelected.value],
     }
     const response = await GenericService.create('payment', 'payment/apply-payment', payload)
 
