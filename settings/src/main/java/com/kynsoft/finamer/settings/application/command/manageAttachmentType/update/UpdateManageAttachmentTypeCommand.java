@@ -19,6 +19,7 @@ public class UpdateManageAttachmentTypeCommand implements ICommand {
     private Status status;
     private String name;
     private Boolean defaults;
+    private Boolean attachInvDefault;
 
     public static UpdateManageAttachmentTypeCommand fromRequest(UpdateManageAttachmentTypeRequest request, UUID id){
         return new UpdateManageAttachmentTypeCommand(
@@ -26,7 +27,8 @@ public class UpdateManageAttachmentTypeCommand implements ICommand {
                 request.getDescription(),
                 request.getStatus(),
                 request.getName(),
-                request.getDefaults()
+                request.getDefaults(),
+                request.getAttachInvDefault()
         );
     }
 

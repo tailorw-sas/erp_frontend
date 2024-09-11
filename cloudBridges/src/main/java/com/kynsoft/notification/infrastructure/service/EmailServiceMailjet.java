@@ -1,9 +1,9 @@
 package com.kynsoft.notification.infrastructure.service;
 
 import com.kynsoft.notification.domain.dto.EmailRequest;
-import com.kynsoft.notification.domain.dto.MailJetAttachment;
-import com.kynsoft.notification.domain.dto.MailJetRecipient;
-import com.kynsoft.notification.domain.dto.MailJetVar;
+import com.kynsof.share.core.application.mailjet.MailJetAttachment;
+import com.kynsof.share.core.application.mailjet.MailJetRecipient;
+import com.kynsof.share.core.application.mailjet.MailJetVar;
 import com.kynsoft.notification.domain.service.IEmailService;
 import com.mailjet.client.MailjetClient;
 import com.mailjet.client.MailjetRequest;
