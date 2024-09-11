@@ -1179,7 +1179,8 @@ async function saveItem(item: { [key: string]: any }) {
       itemDetails = await getItemById(response.cloned)
 
       // Actualizar los campos del item con los detalles obtenidos
-      const invoiceNo = itemDetails.invoiceNo
+      const invoiceNo = itemDetails.invoiceNumber
+      console.log(invoiceNo)
       toast.add({
         severity: 'info',
         summary: 'Confirmed',
