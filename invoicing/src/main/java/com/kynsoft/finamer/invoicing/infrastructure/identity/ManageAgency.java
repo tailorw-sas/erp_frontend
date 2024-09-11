@@ -84,9 +84,9 @@ public class ManageAgency {
         this.status=dto.getStatus();
         this.cif= dto.getCif();
         this.address= dto.getAddress();
-        this.sentB2BPartner= new ManageB2BPartner(dto.getSentB2BPartner());
-        this.cityState= new ManageCityState(dto.getCityState());
-        this.country= new ManageCountry(dto.getCountry());
+        this.sentB2BPartner= dto.getSentB2BPartner() != null ? new ManageB2BPartner(dto.getSentB2BPartner()) : null;
+        this.cityState= dto.getCityState() != null ? new ManageCityState(dto.getCityState()) : null;
+        this.country= dto.getCountry() != null ? new ManageCountry(dto.getCountry()) : null;
     }
 
     public ManageAgencyDto toAggregate() {
