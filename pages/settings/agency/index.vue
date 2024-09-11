@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useDebounceFn } from '@vueuse/core'
+import { filter } from 'lodash'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -42,7 +43,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'code',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(20, 'Maximum 20 characters').regex(/^[a-z]+$/i, 'Only letters are allowed')
+    validation: z.string().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(20, 'Maximum 20 characters').regex(/^[a-z0-9]+$/i, 'Only letters and numbers are allowed') // .regex(/^[a-z]+$/i, 'Only letters are allowed')
   },
   {
     field: 'cif',
@@ -372,9 +373,7 @@ const confCityStateApi = reactive({
   uriApi: 'manage-city-state',
 })
 
-const agencyAliasList = ref<any[]>([
-
-])
+const agencyAliasList = ref<any[]>([])
 const defaultAgencyAlias = ref<any>({
   id: '000-MySelf',
   name: '000-MySelf',
@@ -753,12 +752,45 @@ async function GetAgenciesList(param: any) {
     for (const iterator of agencies) {
       agencyAliasList.value = [...agencyAliasList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code, status: iterator.status }]
     }
-    // if (agencies.length === 0) {
-    //   agencyAliasList.value = [defaultAgencyAlias.value]
-    // }
   }
   catch (error) {
     console.error('Error loading agency list:', error)
+  }
+}
+
+interface DataListItem {
+  id: string
+  code: string
+  status: string | boolean
+  name: string
+}
+
+interface ListItem {
+  id: string
+  code: string
+  name: string
+  status: string | boolean
+}
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    code: data.code,
+    status: data.status,
+  }
+}
+
+async function getAgenciesListForSelect(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[], short?: IQueryToSort) {
+  // Buscar en los filtro si viene el filtro de client.id, en caso de que si venga se ejecuta la funcion y en caso de que no, solo devolver el listado vacio
+  const filterClientId = filter?.find(item => item.key === 'client.id')
+
+  if (filterClientId && filterClientId.value) {
+    agencyAliasList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, short)
+    agencyAliasList.value.push(defaultAgencyAlias.value)
+  }
+  else {
+    agencyAliasList.value = []
+    agencyAliasList.value.push(defaultAgencyAlias.value)
   }
 }
 
@@ -860,7 +892,7 @@ async function getCountryList(param: any) {
             {
               key: 'code',
               operator: 'LIKE',
-              value: param.toLowerCase(),
+              value: param,
               logicalOperation: 'OR'
             },
             {
@@ -1156,7 +1188,7 @@ onMounted(() => {
             </template>
 
             <template #field-agencyAlias="{ item: data, onUpdate }">
-              <Dropdown
+              <!-- <Dropdown
                 v-if="!loadingSaveAll"
                 v-model="data.agencyAlias"
                 :options="[...agencyAliasList]"
@@ -1165,6 +1197,34 @@ onMounted(() => {
                 show-clear
                 @update:model-value="($event) => {
                   onUpdate('agencyAlias', $event)
+                }"
+              /> -->
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll"
+                id="autocompleteAgencyAlias"
+                :model="data.agencyAlias"
+                field="name"
+                item-value="id"
+                :suggestions="agencyAliasList"
+                @change="($event) => {
+                  onUpdate('agencyAlias', $event)
+                }"
+                @load="async ($event) => {
+                  const objQueryToSearch = {
+                    query: $event,
+                    keys: ['name', 'code'],
+                  }
+                  const filter: FilterCriteria[] = []
+                  filter.push(
+                    {
+                      key: 'client.id',
+                      logicalOperation: 'AND',
+                      operator: 'EQUALS',
+                      value: data.client?.id,
+                    },
+                  )
+                  await getAgenciesListForSelect(options.moduleApi, options.uriApi, objQueryToSearch, filter)
+
                 }"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
@@ -1234,6 +1294,7 @@ onMounted(() => {
                 :options="[...ENUM_GENERATION_TYPE]"
                 option-label="name"
                 return-object="false"
+                filter
                 show-clear
                 @update:model-value="($event) => {
                   onUpdate('generationType', $event)
@@ -1249,6 +1310,7 @@ onMounted(() => {
                 :options="[...ENUM_FILE_FORMAT]"
                 option-label="name"
                 return-object="false"
+                filter
                 show-clear
                 @update:model-value="($event) => {
                   onUpdate('sentFileFormat', $event)

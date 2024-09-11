@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 
 const isLoading = ref(true) // Nuevo estado de carga
-const isSuccess = ref<boolean | null>(null)
+const transactionStatus = ref<string>('')
 const orderNumber = ref<string>('')
 const amount = ref<string>('')
 const itbis = ref<string | null>('')
@@ -22,21 +22,17 @@ const router = useRouter()
 onMounted(() => {
   const status = route.query.status || 'error'
 
-  if (status === 'success') {
-    isSuccess.value = true
-    orderNumber.value = String(route.query.OrderNumber) || ''
-    amount.value = (Number.parseFloat(String(route.query.Amount)) / 100).toFixed(2) || '0.00'
-    itbis.value = String(route.query.Itbis) || ''
-    authorizationCode.value = String(route.query.AuthorizationCode) || ''
-    dateTime.value = dayjs(String(route.query.DateTime), 'YYYYMMDDHHmmss').format('YYYY/MM/DD HH:mm') || ''
-    responseMessage.value = String(route.query.ResponseMessage) || ''
-    isoCode.value = String(route.query.IsoCode) || ''
-    rrn.value = String(route.query.RRN) || ''
-    cardNumber.value = String(route.query.CardNumber) || ''
-  }
-  else {
-    isSuccess.value = false
-  }
+  transactionStatus.value = String(status) // Asignar el estado recibido a transactionStatus
+  orderNumber.value = String(route.query.OrderNumber) || ''
+  amount.value = (Number.parseFloat(String(route.query.Amount)) / 100).toFixed(2) || '0.00'
+  itbis.value = (Number.parseFloat(String(route.query.Itbis)) / 100).toFixed(2) || '0.00'
+  authorizationCode.value = String(route.query.AuthorizationCode) || ''
+  dateTime.value = dayjs(String(route.query.DateTime), 'YYYYMMDDHHmmss').format('YYYY/MM/DD HH:mm') || ''
+  responseMessage.value = String(route.query.ResponseMessage) || ''
+  isoCode.value = String(route.query.IsoCode) || ''
+  rrn.value = String(route.query.RRN) || ''
+  cardNumber.value = String(route.query.CardNumber) || ''
+
   isLoading.value = false // Los datos han sido cargados
 })
 
@@ -51,42 +47,56 @@ function toggleDetails() {
 
 <template>
   <div class="transaction-result">
-    <Card v-if="isLoading">
+    <Card v-if="isLoading" class="loading-card card-bg-color">
       <template #content>
-        <p>Cargando...</p>
+        <div class="loading-container">
+          <ProgressSpinner style="width: 50px; height: 50px;" strokeWidth="4" animationDuration=".5s" />
+          <p class="loading-text">Processing your transaction, please wait...</p>
+        </div>
       </template>
     </Card>
-    <Card v-else class="card">
+    <Card v-else class="card card-bg-color">
       <template #content>
         <div class="flex flex-column align-items-center">
           <div class="flex flex-column align-items-center mb-4">
-            <i class="pi pi-check-circle" style="font-size: 4rem; color: #0F8BFD;" />
-            <h2> {{ isSuccess ? '¡Transacción Exitosa!' : 'Error en la Transacción' }}</h2>
-            <p v-if="isSuccess">
-              Gracias por tu compra. Hemos procesado tu pago correctamente.
+            <i v-if="transactionStatus === 'success'" class="pi pi-check-circle" style="font-size: 4rem; color: #0F8BFD;" />
+            <i v-if="transactionStatus === 'declined'" class="pi pi-times-circle" style="font-size: 4rem; color: red;" />
+            <i v-if="transactionStatus === 'cancelled'" class="pi pi-exclamation-circle" style="font-size: 4rem; color: orange;" />
+            <h2>
+              {{ transactionStatus === 'success' ? 'Transaction Successful!'
+                : transactionStatus === 'declined' ? 'Transaction Declined'
+                  : 'Transaction Cancelled' }}
+            </h2>
+            <p v-if="transactionStatus === 'success'">
+              We have successfully processed your payment.
             </p>
-            <p v-else>
-              Hubo un problema al procesar tu pago. Por favor, intenta nuevamente.
+            <p v-else-if="transactionStatus === 'declined'">
+              Your payment was declined. Please try again.
+            </p>
+            <p v-else-if="transactionStatus === 'cancelled'">
+              The transaction was cancelled.
             </p>
           </div>
-          <ButtonGroup v-if="isSuccess">
-            <Button label="Detalles" icon="pi pi-chevron-down" @click="toggleDetails" />
-            <Button label="Ir al inicio" @click="goHome" />
+          <ButtonGroup v-if="transactionStatus === 'success'">
+            <Button label="Details" icon="pi pi-chevron-down" style="margin-right: 2px;" @click="toggleDetails" />
+            <Button label="Go to Home" @click="goHome" />
           </ButtonGroup>
         </div>
         <div v-if="showDetails" class="details-card">
-          <Card class="">
+          <Card class="" style="background-color: #fff">
             <template #content>
-              <h4 class="text-center">Detalles de la Transacción:</h4>
-              <Divider></Divider>
-              <p><strong>Número de Orden:</strong> {{ route.query.OrderNumber }}</p>
-              <p><strong>Monto:</strong> {{ amount }}</p>
-              <p><strong>ITBIS:</strong> {{ route.query.ITBIS }}</p>
-              <p><strong>Código de Autorización:</strong> {{ route.query.AuthorizationCode }}</p>
-              <p><strong>Fecha y Hora:</strong> {{ dateTime }}</p>
-              <p><strong>Respuesta del Merchant:</strong> {{ route.query.ResponseMessage }} ({{ route.query.IsoCode }})</p>
-              <p><strong>Número de Referencia:</strong> {{ route.query.RRN }}</p>
-              <p><strong>Número de Tarjeta:</strong> {{ route.query.CardNumber }}</p>
+              <h4 class="text-center">
+                Transaction Details:
+              </h4>
+              <Divider />
+              <p><strong>Order Number:</strong> {{ route.query.OrderNumber }}</p>
+              <p><strong>Amount:</strong> {{ amount }}</p>
+              <p><strong>ITBIS:</strong> {{ itbis }}</p>
+              <p><strong>Authorization Code:</strong> {{ route.query.AuthorizationCode }}</p>
+              <p><strong>Date and Time:</strong> {{ dateTime }}</p>
+              <p><strong>Merchant Response:</strong> {{ route.query.ResponseMessage }} ({{ route.query.IsoCode }})</p>
+              <p><strong>Reference Number:</strong> {{ route.query.RRN }}</p>
+              <p><strong>Card Number:</strong> {{ route.query.CardNumber }}</p>
             </template>
           </Card>
         </div>
@@ -107,7 +117,6 @@ function toggleDetails() {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: var(--primary-color)
 }
 
 .transaction-card {
@@ -132,5 +141,21 @@ function toggleDetails() {
 
 .details-card p {
   margin: 5px 0;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loading-text {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.card-bg-color {
+  background-color: #ececf9;
 }
 </style>

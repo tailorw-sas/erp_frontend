@@ -42,7 +42,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: false,
     dataType: 'code',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(5, 'Maximum 5 characters').regex(/^[a-z]+$/i, 'Only text characters allowed')
+    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(5, 'Maximum 5 characters').regex(/^[a-z0-9]+$/i, 'Only letters and numbers are allowed')
   },
   {
     field: 'cif',
@@ -91,8 +91,9 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Zip Code',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The Zip Code field is required').regex(/^\d+$/, 'Only numeric characters allowed')
+    validation: z.string().trim().min(1, 'The Zip Code field is required') // .regex(/^\d+$/, 'Only numeric characters allowed')
   },
+
   {
     field: 'innsistCode',
     header: 'Innsist Code',

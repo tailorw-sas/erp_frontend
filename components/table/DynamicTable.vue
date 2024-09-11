@@ -56,6 +56,10 @@ const props = defineProps({
     type: Number,
     default: 90,
   },
+  parentComponentLoading: {
+    type: Boolean,
+    required: false,
+  }
 })
 
 const emits = defineEmits<{
@@ -73,6 +77,7 @@ const emits = defineEmits<{
   (e: 'onRowRightClick', value: any): void
   (e: 'onCellEditComplete', value: any): void
   (e: 'onTableCellEditComplete', value: any): void
+  (e: 'onExpandRow', value: any): void
 }>()
 
 const menu = ref()
@@ -160,6 +165,13 @@ const menuItemsSelect = ref(ENUM_OPERATOR_SELECT)
 
 const selectMultiple1: Ref = ref(null)
 
+async function onRowExpand({ data }: any) {
+  emits('onExpandRow', data?.id)
+}
+function onRowCollapse(event: { data: { name: any } }) {
+  emits('onExpandRow', '')
+}
+
 function onListItem() {
   emits('onListItem')
 }
@@ -211,6 +223,9 @@ function onSelectItem(item: any) {
       if (item.length > 0) {
         const ids = item.map((i: any) => i.id)
         emits('update:clickedItem', ids)
+      }
+      else if (item.length === 0) {
+        emits('update:clickedItem', [])
       }
     }
     else {
@@ -482,7 +497,7 @@ getOptionsList()
     </template>
   </Toolbar>
 
-  <BlockUI :blocked="options?.loading">
+  <BlockUI :blocked="options?.loading || parentComponentLoading">
     <div class="card p-0">
       <DataTable
         v-model:filters="filters1"
@@ -511,6 +526,8 @@ getOptionsList()
         @row-dblclick="onRowDoubleClick"
         @row-contextmenu="onRowRightClick"
         @cell-edit-complete="onTableCellEditComplete"
+        @row-expand="onRowExpand"
+        @row-collapse="onRowCollapse"
       >
         <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
           <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">

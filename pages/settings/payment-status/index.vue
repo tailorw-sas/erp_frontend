@@ -57,6 +57,12 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 mb-3 mt-3',
   },
   {
+    field: 'applied',
+    header: 'Applied',
+    dataType: 'check',
+    class: 'field col-12 mb-3 mt-3',
+  },
+  {
     field: 'collected',
     header: 'Collected',
     dataType: 'check',
@@ -86,6 +92,7 @@ const item = ref<GenericObject>({
   description: '',
   defaults: false,
   collected: false,
+  applied: false,
   status: true
 })
 
@@ -95,6 +102,7 @@ const itemTemp = ref<GenericObject>({
   description: '',
   defaults: false,
   collected: false,
+  applied: false,
   status: true
 })
 
@@ -244,6 +252,7 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.collected = response.collected
         item.value.defaults = response.defaults
+        item.value.applied = response.applied
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)

@@ -9,83 +9,122 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
-import { ENUM_STATUS } from '~/utils/Enums'
 import type { IData } from '~/components/table/interfaces/IModelData'
+import { validateEntityStatus } from '~/utils/schemaValidations'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
+const loadingSearch = ref(false)
+const MerchantList = ref<any[]>([])
 const formReload = ref(0)
 
 const loadingSaveAll = ref(false)
+const loadingDelete = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
-const loadingSearch = ref(false)
-const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
 })
 const confApi = reactive({
   moduleApi: 'settings',
-  uriApi: 'manage-client',
+  uriApi: 'merchant-config',
 })
 
 const fields: Array<FieldDefinitionType> = [
   {
-    field: 'code',
-    header: 'Code',
-    disabled: false,
-    dataType: 'code',
+    field: 'manageMerchant',
+    header: 'Merchant',
+    dataType: 'select',
     class: 'field col-12 required',
-    headerClass: 'mb-1',
-    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(15, 'Maximum 15 characters').regex(/^[a-z0-9]+$/i, 'Only letters and numbers are allowed') // .regex(/^[a-z]+$/i, 'Only text characters allowed')
+    validation: validateEntityStatus('manageMerchant'),
   },
   {
     field: 'name',
     header: 'Name',
     dataType: 'text',
     class: 'field col-12 required',
-    headerClass: 'mb-1',
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
   {
-    field: 'description',
-    header: 'Description',
-    dataType: 'textarea',
+    field: 'url',
+    header: 'Url',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The url field is required')
+  },
+  {
+    field: 'altUrl',
+    header: 'Alternative url',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The altUrl field is required')
+  },
+  {
+    field: 'successUrl',
+    header: 'Success url',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The errorUrl field is required')
+  },
+  {
+    field: 'errorUrl',
+    header: 'Error url',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The errorUrl field is required')
+  },
+  {
+    field: 'declinedUrl',
+    header: 'Declined url',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The declinedUrl field is required')
+  },
+  {
+    field: 'method',
+    header: 'Method',
+    dataType: 'text',
+    // dataType: 'select',
+    class: 'field col-12 required',
+    // validation: validateEntityStatus('method'),
+  },
+  {
+    field: 'institutionCode',
+    header: 'Institution Code',
+    dataType: 'text',
     class: 'field col-12',
-    headerClass: 'mb-1'
-  },
-  {
-    field: 'isNightType',
-    header: 'Night Type',
-    dataType: 'check',
-    class: 'field col-12 mt-3',
-  },
-  {
-    field: 'status',
-    header: 'Active',
-    dataType: 'check',
-    disabled: true,
-    class: 'field col-12 required mb-3 mt-3',
   },
 ]
 
 const item = ref<GenericObject>({
-  name: '',
-  code: '',
+  manageMerchant: null,
+  url: '',
+  altUrl: '',
+  successUrl: '',
+  errorUrl: '',
+  declinedUrl: '',
+  merchantType: '',
   description: '',
-  isNightType: false,
-  status: true
+  name: '',
+  method: '',
+  institutionCode: '',
 })
 
 const itemTemp = ref<GenericObject>({
-  name: '',
-  code: '',
+  manageMerchant: null,
+  url: '',
+  altUrl: '',
+  successUrl: '',
+  errorUrl: '',
+  declinedUrl: '',
+  merchantType: '',
   description: '',
-  isNightType: false,
-  status: true
+  name: '',
+  method: '',
+  institutionCode: '',
 })
 
 const formTitle = computed(() => {
@@ -95,25 +134,26 @@ const formTitle = computed(() => {
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
-const columns: IColumn[] = [
-  { field: 'code', header: 'Code', type: 'text' },
-  { field: 'name', header: 'Name', type: 'text' },
-  { field: 'description', header: 'Description', type: 'text' },
-  { field: 'status', header: 'Active', type: 'bool' },
-]
-// -------------------------------------------------------------------------------------------------------
+
 const ENUM_FILTER = [
-  { id: 'code', name: 'Code' },
   { id: 'name', name: 'Name' },
 ]
+
+const columns: IColumn[] = [
+  { field: 'name', header: 'Name', type: 'text' },
+  { field: 'method', header: 'Method', type: 'text' },
+  { field: 'manageMerchant', header: 'Merchant', type: 'text' },
+]
+// -------------------------------------------------------------------------------------------------------
+
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Manage Client',
+  tableName: 'Manage Merchant Config',
   moduleApi: 'settings',
-  uriApi: 'manage-client',
+  uriApi: 'merchant-config',
   loading: false,
   actionsAsMenu: false,
-  messageToDelete: 'Are you sure you want to delete the client: {{name}}?'
+  messageToDelete: 'Do you want to save the change?'
 })
 const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
@@ -137,9 +177,8 @@ const pagination = ref<IPagination>({
 function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
-  fields[0].disabled = false
-  updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
+  MerchantList.value = []
 }
 
 async function getList() {
@@ -165,8 +204,8 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
+      if (Object.prototype.hasOwnProperty.call(iterator, 'manageMerchant')) {
+        iterator.manageMerchant = `${iterator.manageMerchant.code} - ${iterator.manageMerchant.description}`
       }
 
       // Verificar si el ID ya existe en la lista
@@ -216,6 +255,49 @@ async function resetListItems() {
   getList()
 }
 
+async function getMerchantList(query: string = '') {
+  try {
+    const payload
+        = {
+          filter: [
+            {
+              key: 'description',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
+          query: '',
+          pageSize: 20,
+          page: 0,
+          sortBy: 'description',
+          sortType: ENUM_SHORT_TYPE.DESC
+        }
+
+    const response = await GenericService.search('settings', 'manage-merchant', payload)
+    const { data: dataList } = response
+    MerchantList.value = []
+    for (const iterator of dataList) {
+      MerchantList.value = [...MerchantList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.description}`, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error on loading merchant config list:', error)
+  }
+}
+
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
@@ -225,18 +307,27 @@ async function getItemById(id: string) {
       if (response) {
         item.value.id = response.id
         item.value.name = response.name
-        item.value.description = response.description
-        item.value.status = statusToBoolean(response.status)
-        item.value.code = response.code
-        item.value.isNightType = response.isNightType
+        item.value.url = response.url
+        item.value.altUrl = response.altUrl
+        item.value.successUrl = response.successUrl
+        item.value.errorUrl = response.errorUrl
+        item.value.declinedUrl = response.declinedUrl
+        item.value.merchantType = response.merchantType
+        item.value.method = response.method
+        item.value.institutionCode = response.institutionCode
+        const objMerchant = {
+          id: response.manageMerchant.id,
+          name: `${response.manageMerchant.code} ${response.manageMerchant.description ? `- ${response.manageMerchant.description}` : ''}`,
+          status: response.manageMerchant.status
+        }
+        MerchantList.value = [objMerchant]
+        item.value.manageMerchant = objMerchant
       }
-      fields[0].disabled = true
-      updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
     }
     catch (error) {
       if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Client methods could not be loaded', life: 3000 })
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Item could not be loaded', life: 3000 })
       }
     }
     finally {
@@ -249,7 +340,7 @@ async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-    payload.status = statusToString(payload.status)
+    payload.manageMerchant = typeof payload.manageMerchant === 'object' ? payload.manageMerchant.id : payload.manageMerchant
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
@@ -257,7 +348,7 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
-  payload.status = statusToString(payload.status)
+  payload.manageMerchant = typeof payload.manageMerchant === 'object' ? payload.manageMerchant.id : payload.manageMerchant
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -375,6 +466,7 @@ const disabledSearch = computed(() => {
 const disabledClearSearch = computed(() => {
   return !(filterToSearch.value.criterial && filterToSearch.value.search)
 })
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -407,16 +499,16 @@ onMounted(() => {
 <template>
   <div class="flex justify-content-between align-items-center">
     <h3 class="mb-0">
-      Manage Client
+      Manage Merchant Config
     </h3>
-    <IFCan :perms="['CLIENT:CREATE']">
+    <IfCan :perms="['MESSAGE:CREATE']">
       <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
-    </IFCan>
+    </IfCan>
   </div>
   <div class="grid">
-    <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9">
+    <div class="col-12 md:order-1 md:col-6 xl:col-9">
       <div class="card p-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
@@ -453,16 +545,11 @@ onMounted(() => {
                 <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter" />
                 <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :disabled="disabledClearSearch" :loading="loadingSearch" @click="clearFilterToSearch" />
               </div>
-            <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
-            </div> -->
-            <!-- <div class="col-12 md:col-5 flex justify-content-end">
-            </div> -->
             </div>
           </AccordionTab>
         </Accordion>
       </div>
       <DynamicTable
-
         :data="listItems"
         :columns="columns"
         :options="options"
@@ -476,28 +563,44 @@ onMounted(() => {
         @on-sort-field="onSortField"
       />
     </div>
-    <div class="col-12 order-1 md:order-0 md:col-6 xl:col-3">
+    <div class="col-12 md:order-0 md:col-6 xl:col-3">
       <div>
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           {{ formTitle }}
         </div>
-        <div class="card">
+        <div class="card p-4">
           <EditFormV2
             :key="formReload"
             :fields="fields"
             :item="item"
             :show-actions="true"
             :loading-save="loadingSaveAll"
+            :loading-delete="loadingDelete"
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
+            <template #field-manageMerchant="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.manageMerchant"
+                :suggestions="MerchantList"
+                @change="($event) => {
+                  onUpdate('manageMerchant', $event)
+                }"
+                @load="($event) => getMerchantList($event)"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
             <template #form-footer="props">
               <div class="flex justify-content-end">
-                <IfCan :perms="idItem ? ['CLIENT:EDIT'] : ['CLIENT:CREATE']">
+                <IfCan :perms="idItem ? ['MESSAGE:EDIT'] : ['MESSAGE:CREATE']">
                   <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
                 </IfCan>
-                <IfCan :perms="['CLIENT:DELETE']">
+                <IfCan :perms="['MESSAGE:DELETE']">
                   <Button v-tooltip.top="'Delete'" class="w-3rem" severity="danger" outlined :loading="loadingDelete" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
                 </IfCan>
               </div>

@@ -10,9 +10,10 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
+const senttype = ref('');
 const toast = useToast()
 const listItems = ref<any[]>([])
-
+const route = useRoute()
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
 const filterAllDateRange = ref(false)
@@ -37,7 +38,7 @@ const agencyList = ref<any[]>([])
 
 const confApi = reactive({
   moduleApi: 'invoicing',
-  uriApi: 'manage-booking/import',
+  uriApi: 'manage-invoice',
 })
 
 const confHotelApi = reactive({
@@ -54,17 +55,21 @@ const confAgencyApi = reactive({
 //
 const idItem = ref('')
 const ENUM_FILTER = [
-  { id: 'id', name: 'Id' },
+  { id: 'id', name: 'InvoiceId' },
 ]
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Invoice Id', type: 'text' },
   { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
   { field: 'manageAgencyCode', header: 'Invoice No', type: 'text' },
+  { field: 'manageAgencyCode', header: 'Agency CD', type: 'text' },
   { field: 'bookingDate', header: 'Agency', type: 'text' },
+  
+
+ 
   { field: 'fullName', header: 'Generation Date', type: 'date' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-  { field: 'impstatus', header: 'Import Status', type: 'slot-text' },
+  { field: 'impstatus', header: 'Sent Status', type: 'slot-text' },
   { field: 'status', header: 'Status', type: 'text' },
 ]
 
@@ -72,9 +77,9 @@ const columns: IColumn[] = [
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Reconcile',
+  tableName: 'Send invoices',
   moduleApi: 'invoicing',
-  uriApi: 'reconcile-automatic',
+  uriApi: 'send',
   loading: false,
   showDelete: false,
   selectionMode: 'multiple',
@@ -232,6 +237,132 @@ async function getAgencyList(query: string = '') {
   }
 }
 
+async function getAgency(query: string = '') {
+  try {
+    const payload = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        },
+        {
+          key: 'autoReconcile',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
+    console.log(response, 'Respuesta de la API');
+    const { data: dataList } = response
+    agencyList.value = [allDefaultItem]
+    for (const iterator of dataList) {
+      // Asegúrate de que sentB2BPartner sea una lista
+      const b2bPartners = iterator.sentB2BPartner || [];
+      const firstB2BPartner = b2bPartners.length > 0 ? b2bPartners[0].code : null;
+
+      agencyList.value.push({
+        id: iterator.id,
+        name: iterator.name,
+        code: iterator.code,
+        b2bPartner: b2bPartners// Guarda solo el código del primer b2bPartner
+      });
+    }
+
+    return agencyList.value; 
+  } 
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+    return [];
+  }
+}
+
+async function getTypeInvoiceSent(selectedInvoiceId:any) {
+  try {
+    // Paso 1: Obtener la factura usando su ID
+    const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, selectedInvoiceId);
+
+    if (response) {
+      // Paso 2: Suponiendo que el campo 'agency' está presente en la respuesta
+      const agency = response.agency;
+      console.log(agency, 'Agencia');
+
+      if (!agency) {
+        console.error('No se encontró la agencia en la factura');
+        senttype.value = 'No agency found';
+        return;
+      }
+
+      // Paso 3: Obtener el código de la agencia
+      const agencyCode = agency.code; // O cualquier otro identificador que uses para buscar la agencia
+
+      // Llamar a getAgencyList para obtener la lista de agencias
+      const agencyList = await getAgency(); // Obtener todas las agencias
+
+      // Buscar el campo sentB2BPartner en la lista de agencias
+      const foundAgency = agencyList.find(item => item.code === agencyCode);
+console.log(foundAgency,'Encontrar agencia')
+if (foundAgency) {
+        const b2bPartner = foundAgency.b2bPartner; // Accede al b2bPartner
+        const b2bPartnerTypeCode = b2bPartner ? b2bPartner.b2BPartnerType.code : null; // Obtener el código del tipo
+
+        console.log(b2bPartnerTypeCode, 'tipo de envío');
+        // Determinar el texto a mostrar según el valor de b2bPartnerCode
+        if (b2bPartnerTypeCode) {
+          switch (b2bPartnerTypeCode) {
+            case 'FTP':
+              senttype.value = 'Invoice to Send by FTP';
+              break;
+            case 'EML':
+              senttype.value = 'Send by Email';
+              break;
+            case 'BVL':
+              senttype.value = 'Send by Babel';
+              break;
+            default:
+              senttype.value = 'Invoices to Send';
+              break;
+          }
+        } else {
+          console.error('No se encontró el método de envío (b2bPartner)');
+          senttype.value = 'No sending method found';
+        }
+      } else {
+        console.error('Agencia no encontrada en la lista');
+        senttype.value = 'Invoices to Send';
+      }
+    } else {
+      console.error('No se encontró la respuesta para el ID de la factura');
+      senttype.value = 'Invoice not found';
+    }
+  } catch (error) {
+    console.error('Error retrieving invoice type:', error);
+    senttype.value = 'Error retrieving sending method';
+  }
+}
+
+
 async function clearForm() {
   await goToList()
 }
@@ -354,10 +485,12 @@ watch(payloadOnChangePage, (newValue) => {
 
   getErrorList()
 })
-
+async function loadInvoiceType() {
+  await getTypeInvoiceSent(route.query.selected);
+}
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-
+  loadInvoiceType();
   // getErrorList()
 })
 </script>
@@ -371,7 +504,7 @@ onMounted(async () => {
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
-                  Invoices to Reconcile
+                  {{ senttype }}
                 </div>
               </div>
             </template>
@@ -448,7 +581,24 @@ onMounted(async () => {
                   </div>
                 </div>
 
-              
+                <div class="col-12 md:col-1 mt-2 w-auto">
+                  <div class="flex justify-content-end">
+                    <Checkbox
+                      v-model="filterAllDateRange"
+                      binary
+                      class="mr-2"
+                      @change="() => {
+                        console.log(filterAllDateRange);
+
+                        if (!filterAllDateRange) {
+                          filterToSearch.from = startOfMonth
+                          filterToSearch.to = endOfMonth
+                        }
+                      }"
+                    />
+                    <label for="" class="mr-2 font-bold">All</label>
+                  </div>
+                </div>
               </div>
               <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex w-full">
@@ -472,10 +622,31 @@ onMounted(async () => {
                           </IconField>
                         </div>
                       </div>
+
+                    
                     </div>
                   </div>
                 </div>
               </div>
+              <div class="col-12 md:col-1 mt-6 w-auto">
+                  <div class="flex justify-content-end">
+                    <Checkbox
+                      v-model="filterAllDateRange"
+                      binary
+                      class="mr-2"
+                      @change="() => {
+                        console.log(filterAllDateRange);
+
+                        if (!filterAllDateRange) {
+                          filterToSearch.from = startOfMonth
+                          filterToSearch.to = endOfMonth
+                        }
+                      }"
+                    />
+                    <label for="" class="mr-2 mt-1 font-bold">Re-Send</label>
+                  </div>
+                </div>
+              
               <div class="flex align-items-center ">
                 <Button
                   v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search" :disabled="disabledSearch"
