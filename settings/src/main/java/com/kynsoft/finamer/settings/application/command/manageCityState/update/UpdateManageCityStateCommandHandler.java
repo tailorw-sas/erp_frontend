@@ -2,6 +2,8 @@ package com.kynsoft.finamer.settings.application.command.manageCityState.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageCityStateKafka;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageCityStateKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -14,6 +16,9 @@ import com.kynsoft.finamer.settings.domain.services.IManagerCountryService;
 import com.kynsoft.finamer.settings.domain.services.IManagerTimeZoneService;
 import java.util.UUID;
 import java.util.function.Consumer;
+
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCityState.ProducerReplicateManageCityStateService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCityState.ProducerUpdateManageCityStateService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,13 +27,17 @@ public class UpdateManageCityStateCommandHandler implements ICommandHandler<Upda
     private final IManageCityStateService service;
     private final IManagerCountryService serviceCountry;
     private final IManagerTimeZoneService serviceTimeZone;
+    private final ProducerUpdateManageCityStateService producerUpdateManageCityStateService;
 
     public UpdateManageCityStateCommandHandler(IManageCityStateService service,
                                                IManagerCountryService serviceCountry,
-                                               IManagerTimeZoneService serviceTimeZone) {
+                                               IManagerTimeZoneService serviceTimeZone,
+                                               ProducerUpdateManageCityStateService producerUpdateManageCityStateService) {
         this.service = service;
         this.serviceCountry = serviceCountry;
         this.serviceTimeZone = serviceTimeZone;
+
+        this.producerUpdateManageCityStateService = producerUpdateManageCityStateService;
     }
 
     @Override
@@ -52,6 +61,14 @@ public class UpdateManageCityStateCommandHandler implements ICommandHandler<Upda
         if (update.getUpdate() > 0) {
             this.service.update(test);
         }
+
+
+        producerUpdateManageCityStateService.update(UpdateManageCityStateKafka.builder()
+                .id(command.getId())
+                .status(command.getStatus().name())
+                .name(command.getName())
+                .description(command.getDescription())
+                .build());
 
     }
 

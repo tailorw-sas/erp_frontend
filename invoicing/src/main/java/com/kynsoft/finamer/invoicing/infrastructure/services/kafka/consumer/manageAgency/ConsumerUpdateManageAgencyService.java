@@ -22,7 +22,9 @@ public class ConsumerUpdateManageAgencyService {
     public void listen(UpdateManageAgencyKafka objKafka) {
         try {
             UpdateManageAgencyCommand command = new UpdateManageAgencyCommand(objKafka.getId(), objKafka.getName(),
-                    objKafka.getClient());
+                    objKafka.getClient(),objKafka.getCif(),
+                    objKafka.getAddress(),objKafka.getSentB2BPartner(),
+                    objKafka.getCityState(),objKafka.getCountry());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageAgencyService.class.getName()).log(Level.SEVERE, null, ex);

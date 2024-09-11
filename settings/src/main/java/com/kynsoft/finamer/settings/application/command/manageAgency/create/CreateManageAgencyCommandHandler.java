@@ -13,6 +13,8 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateManageAgencyCommand> {
 
@@ -75,6 +77,9 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
 
         this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(command.getId(),
                 command.getCode(), command.getName(), command.getClient(), command.getBookingCouponFormat(), 
-                command.getStatus().name(), command.getGenerationType().name(), command.getAgencyType()));
+                command.getStatus().name(), command.getGenerationType().name(), command.getAgencyType(),command.getCif(),command.getAddress(),
+                command.getSentB2BPartner(),
+                command.getCityState(),
+                command.getCountry()));
     }
 }

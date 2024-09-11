@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageCityState.create;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageCityStateKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.settings.domain.dto.ManageCityStateDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerCountryDto;
@@ -12,6 +13,7 @@ import com.kynsoft.finamer.settings.domain.rules.manageCityState.ManageCityState
 import com.kynsoft.finamer.settings.domain.services.IManageCityStateService;
 import com.kynsoft.finamer.settings.domain.services.IManagerCountryService;
 import com.kynsoft.finamer.settings.domain.services.IManagerTimeZoneService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCityState.ProducerReplicateManageCityStateService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,13 +22,16 @@ public class CreateManageCityStateCommandHandler implements ICommandHandler<Crea
     private final IManageCityStateService service;
     private final IManagerCountryService serviceCountry;
     private final IManagerTimeZoneService serviceTimeZone;
+    private final ProducerReplicateManageCityStateService producerReplicateManageCityStateService;
 
     public CreateManageCityStateCommandHandler(IManageCityStateService service,
                                                IManagerCountryService serviceCountry,
-                                               IManagerTimeZoneService serviceTimeZone) {
+                                               IManagerTimeZoneService serviceTimeZone,
+                                               ProducerReplicateManageCityStateService producerReplicateManageCityStateService) {
         this.service = service;
         this.serviceCountry = serviceCountry;
         this.serviceTimeZone = serviceTimeZone;
+        this.producerReplicateManageCityStateService = producerReplicateManageCityStateService;
     }
 
     @Override
@@ -50,5 +55,14 @@ public class CreateManageCityStateCommandHandler implements ICommandHandler<Crea
                 country,
                 timeZone
         ));
+
+        producerReplicateManageCityStateService.create(ReplicateManageCityStateKafka.builder()
+                        .id(command.getId())
+                        .status(command.getStatus().name())
+                        .code(command.getCode())
+                        .name(command.getName())
+                        .country(country.getId())
+                        .description(command.getDescription())
+                .build());
     }
 }
