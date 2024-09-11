@@ -62,7 +62,9 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
                     dto.getAgencyType().getId(),dto.getCif(), dto.getAddress(),
                     Objects.nonNull(dto.getSentB2BPartner())?dto.getSentB2BPartner().getId():null,
                     Objects.nonNull(dto.getCityState())?dto.getCityState().getId():null,
-                    Objects.nonNull(dto.getCountry())?dto.getCountry().getId():null));
+                    Objects.nonNull(dto.getCountry())?dto.getCountry().getId():null,
+                    dto.getMailingAddress()
+            ));
         }
     }
 

@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.application.command.manageAgency.create;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
@@ -24,9 +23,11 @@ public class CreateManageAgencyCommand implements ICommand {
     private UUID sentB2BPartner;
     private UUID cityState;
     private UUID country;
+    private String mailingAddress;
 
     public CreateManageAgencyCommand(UUID id, String code, String name, UUID client, EGenerationType generationType,
-                                     String status, String cif, String address, UUID sentB2BPartner, UUID cityState, UUID country) {
+                                     String status, String cif, String address, UUID sentB2BPartner, UUID cityState, UUID country,
+                                     String mailingAddress) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -38,6 +39,7 @@ public class CreateManageAgencyCommand implements ICommand {
         this.sentB2BPartner = sentB2BPartner;
         this.cityState = cityState;
         this.country = country;
+        this.mailingAddress = mailingAddress;
     }
 
 
