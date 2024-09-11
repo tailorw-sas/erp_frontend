@@ -21,6 +21,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -73,7 +74,7 @@ public class ManageB2BPartner implements Serializable {
         this.userName = dto.getUserName();
         this.password = dto.getPassword();
         this.token = dto.getToken();
-        this.b2bPartnerType = new ManageB2BPartnerType(dto.getB2BPartnerTypeDto());
+        this.b2bPartnerType = Objects.nonNull(dto.getB2BPartnerTypeDto())? new ManageB2BPartnerType(dto.getB2BPartnerTypeDto()):null;
     }
 
     public ManagerB2BPartnerDto toAggregate() {
