@@ -15,8 +15,6 @@ import dayjs from 'dayjs'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 
-
-
 const toast = useToast()
 const { data: userData } = useAuth()
 
