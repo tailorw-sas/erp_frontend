@@ -23,6 +23,7 @@ import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentH
 const authStore = useAuthStore()
 const route = useRoute()
 const { data: userData } = useAuth()
+
 const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
 const menu = ref()
@@ -63,6 +64,10 @@ const confClientApi = reactive({
 })
 
 
+const itemSend = ref<GenericObject>({
+  employee:userData?.value?.user?.userId,
+  invoice:null,
+})
 
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
@@ -94,9 +99,9 @@ const confAdjustmentsApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-adjustment',
 })
-const confRoomApi = reactive({
+const confSendApi = reactive({
   moduleApi: 'invoicing',
-  uriApi: 'manage-room-rate',
+  uriApi: 'manage-invoice/send',
 })
 
 
@@ -285,10 +290,37 @@ const exportBlob = ref<any>(null)
 ////
 
 async function TypeInvoicetoSend() {
-  navigateTo(`invoice/sendInvoice?type=${InvoiceType.CREDIT}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
+  //try {
+    // Llama a la función send y espera su resultado
+  //  await createSend(); // Asegúrate de que send() retorne una promesa
 
+    // Si la petición es exitosa, navega a la nueva ruta
+    navigateTo(`invoice/sendInvoice?type=${InvoiceType.CREDIT}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
+ // } catch (error:any) {
+    // Manejo de errores: muestra un mensaje de error
+   // console.error('Error al enviar:', error.data.data.error.errorMessage);
+  //  alert('Hubo un error al enviar la factura. Por favor, inténtelo de nuevo.');
+ // }
 }
 
+
+/*
+async function createSend() {
+  loadingSaveAll.value = true;
+
+  // Crear un payload con solo los campos necesarios
+  const payload = {
+    invoice: selectedInvoice,
+    employee: userData?.value?.user?.userId
+  };
+
+  console.log(payload,'Esto es lo que envio')
+  // Enviar el payload a la API
+  await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload);
+
+  loadingSaveAll.value = false; // Opcional: Puedes manejar el estado de carga aquí
+}
+*/
 
 const computedexpandedInvoice = computed(() => {
   return expandedInvoice.value === ''
