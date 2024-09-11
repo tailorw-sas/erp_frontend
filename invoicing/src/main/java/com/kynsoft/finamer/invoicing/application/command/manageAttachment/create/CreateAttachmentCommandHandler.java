@@ -78,7 +78,6 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
 
             this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
         }
-
     }
 
     private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, String fileName, Long attachmentId,
