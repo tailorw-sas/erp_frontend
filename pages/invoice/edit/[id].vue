@@ -999,12 +999,12 @@ onMounted(async () => {
                     }" />
                 </IfCan>
 
-                <IfCan :perms="['INVOICE-MANAGEMENT:PRINT']">
+              
                 <Button v-tooltip.top="'Print'" class="w-3rem mx-1" icon="pi pi-print" :loading="loadingSaveAll"
-                  :disabled="!item.hasAttachments" @click="() => {
+                  @click="() => {
                     exportAttachmentsDialogOpen = true
                   }" />
-                </IfCan>  
+           
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
                   <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
