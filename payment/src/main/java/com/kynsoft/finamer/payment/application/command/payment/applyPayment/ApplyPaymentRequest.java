@@ -11,5 +11,7 @@ import java.util.UUID;
 public class ApplyPaymentRequest {
 
     private UUID payment;
+    private boolean applyDeposit;
     private List<UUID> invoices;
+    private List<UUID> deposits;
 }

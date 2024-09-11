@@ -4,12 +4,16 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeApplyDeposit.CreatePaymentDetailTypeApplyDepositCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeApplyDeposit.CreatePaymentDetailTypeApplyDepositMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashMessage;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,11 +27,14 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 
     private final IManageInvoiceService manageInvoiceService;
     private final IPaymentService paymentService;
+    private final IPaymentDetailService paymentDetailService;
 
     public ApplyPaymentCommandHandler(IPaymentService paymentService,
-            IManageInvoiceService manageInvoiceService) {
+            IManageInvoiceService manageInvoiceService,
+            IPaymentDetailService paymentDetailService) {
         this.paymentService = paymentService;
         this.manageInvoiceService = manageInvoiceService;
+        this.paymentDetailService = paymentDetailService;
     }
 
     @Override
@@ -35,32 +42,34 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPayment(), "id", "Payment ID cannot be null."));
         PaymentDto paymentDto = this.paymentService.findById(command.getPayment());
 
-        List<ManageInvoiceDto> invoiceQueue = new ArrayList<>();
+        List<ManageInvoiceDto> invoiceQueue = createInvoiceQueue(command);
 
         double paymentBalance = paymentDto.getPaymentBalance();
-        double invoiceTotal = 0.0;
-        for (UUID invoice : command.getInvoices()) {
-            ManageInvoiceDto invoiceDto = this.manageInvoiceService.findById(invoice);
-            invoiceQueue.add(invoiceDto);
-            invoiceTotal += invoiceDto.getInvoiceAmount();
-        }
-
-        Collections.sort(invoiceQueue, Comparator.comparingDouble(m -> m.getInvoiceAmount()));
-
         double notApplied = paymentDto.getNotApplied();
         for (ManageInvoiceDto manageInvoiceDto : invoiceQueue) {
-            List<ManageBookingDto> bookingDtos = new ArrayList<>();
-            if (!invoiceQueue.isEmpty()) {
-                bookingDtos.addAll(manageInvoiceDto.getBookings());
-                Collections.sort(bookingDtos, Comparator.comparingDouble(m -> m.getAmountBalance()));
-                for (ManageBookingDto bookingDto : bookingDtos) {
-                    if (notApplied > 0) {
-                        double amountToApply = Math.min(notApplied, bookingDto.getAmountBalance());
-                        CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true));
-                        command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId()));
-                        notApplied = notApplied - amountToApply;
-                        invoiceTotal = invoiceTotal - amountToApply;
-                        paymentBalance = paymentBalance - amountToApply;
+            List<ManageBookingDto> bookingDtos = getSortedBookings(manageInvoiceDto);
+            for (ManageBookingDto bookingDto : bookingDtos) {
+                double amountBalance = bookingDto.getAmountBalance();
+                if (notApplied > 0 && paymentBalance > 0) {
+                    double amountToApply = Math.min(notApplied, amountBalance);
+                    CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true));
+                    command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId()));
+                    notApplied = notApplied - amountToApply;
+                    paymentBalance = paymentBalance - amountToApply;
+                    amountBalance = amountBalance - amountToApply;
+                }
+                if (notApplied > 0 && command.isApplyDeposit() && paymentBalance == 0 && amountBalance > 0) {
+                    if (command.getDeposits() != null && !command.getDeposits().isEmpty()) {
+                        for (UUID deposit : command.getDeposits()) {
+                            PaymentDetailDto paymentDetailTypeDeposit = this.paymentDetailService.findById(deposit);
+                            double depositAmount = paymentDetailTypeDeposit.getAmount() * -1;
+
+                            double amountToApply = Math.min(depositAmount, Math.min(notApplied, bookingDto.getAmountBalance()));
+                            CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply, paymentDetailTypeDeposit, true));
+                            command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId()));
+
+                            notApplied = notApplied - amountToApply;
+                        }
                     } else {
                         break;
                     }
@@ -72,8 +81,22 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         }
     }
 
+    private List<ManageBookingDto> getSortedBookings(ManageInvoiceDto manageInvoiceDto) {
+        List<ManageBookingDto> bookingDtos = new ArrayList<>();
+        if (manageInvoiceDto.getBookings() != null && !manageInvoiceDto.getBookings().isEmpty()) {
+            bookingDtos.addAll(manageInvoiceDto.getBookings());
+            Collections.sort(bookingDtos, Comparator.comparingDouble(m -> m.getAmountBalance()));
+        }
+        return bookingDtos;
+    }
+
+    private List<ManageInvoiceDto> createInvoiceQueue(ApplyPaymentCommand command) {
+        List<ManageInvoiceDto> queue = new ArrayList<>();
+        for (UUID invoice : command.getInvoices()) {
+            queue.add(this.manageInvoiceService.findById(invoice));
+        }
+
+        Collections.sort(queue, Comparator.comparingDouble(m -> m.getInvoiceAmount()));
+        return queue;
+    }
 }
-// Hay que disminuir el Payment Balance
-// Disminuir siempre que se aplique un pago el valor del booking al invoiceTotal y al payment balance.
-// Si el valor del payment balance se hace cero y invoiceTotal todavia tiene valor y notApplied todavia es diferente de cero.
-// Entonces se puede Aplicar pago sobre trx tipo Deposit si fueron seleccionadas.

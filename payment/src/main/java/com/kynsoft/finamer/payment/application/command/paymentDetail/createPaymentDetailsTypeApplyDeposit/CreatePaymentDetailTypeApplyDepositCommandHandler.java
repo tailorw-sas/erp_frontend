@@ -35,7 +35,7 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
                 Status.ACTIVE,
                 command.getPayment(),
                 this.paymentTransactionTypeService.findByApplyDeposit(),
-                command.getBooking().getInvoiceAmount(),
+                command.getAmount(),
                 command.getPayment().getRemark(),
                 null,
                 null,
@@ -71,7 +71,7 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
 
     private void calculate(PaymentDto paymentDto, PaymentDetailDto newDetailDto) {
         paymentDto.setDepositBalance(paymentDto.getDepositBalance() - newDetailDto.getAmount());
-        paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount());
+        paymentDto.setNotApplied(paymentDto.getNotApplied() - newDetailDto.getAmount());
         paymentDto.setIdentified(paymentDto.getIdentified() + newDetailDto.getAmount());
         paymentDto.setNotIdentified(paymentDto.getPaymentAmount() - paymentDto.getIdentified());
 

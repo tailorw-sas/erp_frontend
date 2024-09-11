@@ -14,19 +14,25 @@ import java.util.UUID;
 public class ApplyPaymentCommand implements ICommand {
 
     private UUID payment;
+    private boolean applyDeposit;
     private List<UUID> invoices;
+    private List<UUID> deposits;
     private final IMediator mediator;
 
-    public ApplyPaymentCommand(UUID payment, List<UUID> invoices, final IMediator mediator) {
+    public ApplyPaymentCommand(UUID payment, boolean applyDeposit, List<UUID> invoices, List<UUID> deposits, final IMediator mediator) {
         this.payment = payment;
+        this.applyDeposit = applyDeposit;
         this.invoices = invoices;
+        this.deposits = deposits;
         this.mediator = mediator;
     }
 
     public static ApplyPaymentCommand fromRequest(ApplyPaymentRequest request, final IMediator mediator) {
         return new ApplyPaymentCommand(
                 request.getPayment(),
+                request.isApplyDeposit(),
                 request.getInvoices(),
+                request.getDeposits(),
                 mediator
         );
     }
