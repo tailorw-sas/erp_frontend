@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Getter
@@ -20,8 +21,8 @@ public class CreateManageCityStateCommand implements ICommand {
     private UUID country;
     private UUID timeZone;
 
-    public CreateManageCityStateCommand(String code, String name, String description, Status status, UUID country, UUID timeZone) {
-        this.id = UUID.randomUUID();
+    public CreateManageCityStateCommand(UUID id,String code, String name, String description, Status status, UUID country, UUID timeZone) {
+        this.id = Objects.nonNull(id)?id:UUID.randomUUID();
         this.code = code;
         this.name = name;
         this.description = description;
@@ -32,6 +33,7 @@ public class CreateManageCityStateCommand implements ICommand {
 
     public static CreateManageCityStateCommand fromRequest(CreateManageCityStateRequest request) {
         return new CreateManageCityStateCommand(
+                null,
                 request.getCode(),
                 request.getName(),
                 request.getDescription(),

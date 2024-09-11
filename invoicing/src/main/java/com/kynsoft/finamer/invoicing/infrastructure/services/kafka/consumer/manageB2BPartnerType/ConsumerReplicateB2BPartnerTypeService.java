@@ -26,7 +26,7 @@ public class ConsumerReplicateB2BPartnerTypeService {
     @KafkaListener(topics = "finamer-replicate-b2b-partner-type", groupId = "invoicing-entity-replica")
     public void listen(ReplicateB2BPartnerTypeKafka objKafka) {
         try {
-            CreateManageB2BPartnerTypeCommand command =new CreateManageB2BPartnerTypeCommand(objKafka.getCode(),
+            CreateManageB2BPartnerTypeCommand command =new CreateManageB2BPartnerTypeCommand(objKafka.getId(),objKafka.getCode(),
                     objKafka.getDescription(),objKafka.getName(), Status.valueOf(objKafka.getStatus()));
             mediator.send(command);
         } catch (Exception ex) {

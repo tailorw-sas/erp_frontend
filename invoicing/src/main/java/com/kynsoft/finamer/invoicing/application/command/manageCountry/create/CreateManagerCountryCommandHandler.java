@@ -25,7 +25,7 @@ public class CreateManagerCountryCommandHandler implements ICommandHandler<Creat
         RulesChecker.checkRule(new ManagerCountryCodeSizeRule(command.getCode()));
         //RulesChecker.checkRule(new ManagerCountryDialCodeSizeRule(command.getDialCode()));
         RulesChecker.checkRule(new ManagerCountryNameMustBeNullRule(command.getName()));
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerLanguage(), "id", "Manager Language ID cannot be null."));
+        //RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerLanguage(), "id", "Manager Language ID cannot be null."));
         RulesChecker.checkRule(new ManagerCountryCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
         RulesChecker.checkRule(new ManagerCountryNameMustBeUniqueRule(this.service, command.getName(), command.getId()));
 

@@ -21,7 +21,7 @@ public class ProducerReplicateManageCountryService {
     public void create(ReplicateManageCountryKafka entity) {
 
         try {
-            this.producer.send("finamer-replicate-manage-countru", entity);
+            this.producer.send("finamer-replicate-manage-country", entity);
         } catch (Exception ex) {
             Logger.getLogger(ProducerReplicateManageCountryService.class.getName()).log(Level.SEVERE, null, ex);
         }

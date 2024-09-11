@@ -27,7 +27,7 @@ public class CreateManageCityStateCommandHandler implements ICommandHandler<Crea
     @Override
     public void handle(CreateManageCityStateCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getCountry(), "id", "Manage Country ID cannot be null."));
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getTimeZone(), "id", "Manage Time Zone ID cannot be null."));
+    //    RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getTimeZone(), "id", "Manage Time Zone ID cannot be null."));
 
         RulesChecker.checkRule(new ManageCityStateCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManageCityStateNameMustBeNullRule(command.getName()));

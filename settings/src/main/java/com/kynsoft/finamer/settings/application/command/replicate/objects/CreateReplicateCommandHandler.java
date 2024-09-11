@@ -7,8 +7,6 @@ import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageTransactionS
 import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageVCCTransactionTypeKafka;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.services.*;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManageB2BPartner;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManageB2BPartnerType;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerReplicateManageAgencyService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgencyType.ProducerReplicateManageAgencyTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAttachmentType.ProducerReplicateManageAttachmentTypeService;
@@ -16,7 +14,6 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageB2BPartnerType.ProducerReplicateB2BPartnerTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageBankAccount.ProducerReplicateManageBankAccount;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCityState.ProducerReplicateManageCityStateService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCityState.ProducerUpdateManageCityStateService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageClient.ProducerReplicateManageClientService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCountry.ProducerReplicateManageCountryService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageEmployee.ProducerReplicateManageEmployeeService;
@@ -324,13 +321,14 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                         );
                     }
                 }
-                case MANAGE_CITY_SITE -> {
+                case MANAGE_CITY_STATE -> {
                     for (ManageCityStateDto manageCityStateDto:this.manageCityStateService.findAllToReplicate()){
                         producerReplicateManageCityStateService.create(ReplicateManageCityStateKafka.builder()
                                 .id(manageCityStateDto.getId())
                                 .code(manageCityStateDto.getCode())
                                 .name(manageCityStateDto.getName())
                                 .status(manageCityStateDto.getStatus().name())
+                                .country(manageCityStateDto.getCountry().getId())
                                 .description(manageCityStateDto.getDescription())
                                 .build()
                         );

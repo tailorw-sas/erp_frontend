@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Getter
@@ -22,9 +23,9 @@ public class CreateManagerCountryCommand implements ICommand {
     private UUID managerLanguage;
     private Status status;
 
-    public CreateManagerCountryCommand(String code, String name, String description, String dialCode, 
+    public CreateManagerCountryCommand(UUID id,String code, String name, String description, String dialCode,
                                        String iso3, Boolean isDefault, UUID managerLanguage, Status status) {
-        this.id = UUID.randomUUID();
+        this.id = Objects.nonNull(id)?id:UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.name = name;
@@ -37,6 +38,7 @@ public class CreateManagerCountryCommand implements ICommand {
 
     public static CreateManagerCountryCommand fromRequest(CreateManagerCountryRequest request) {
         return new CreateManagerCountryCommand(
+                null,
                 request.getCode(),
                 request.getName(),
                 request.getDescription(),

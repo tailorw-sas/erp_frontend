@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Getter
@@ -18,8 +19,8 @@ public class CreateManageB2BPartnerTypeCommand implements ICommand {
     private String description;
     private Status status;
 
-    public CreateManageB2BPartnerTypeCommand(String code, String description, String name, Status status) {
-        this.id = UUID.randomUUID();
+    public CreateManageB2BPartnerTypeCommand(UUID id,String code, String description, String name, Status status) {
+        this.id = Objects.nonNull(id)?id:UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.name = name;
@@ -28,6 +29,7 @@ public class CreateManageB2BPartnerTypeCommand implements ICommand {
 
     public static CreateManageB2BPartnerTypeCommand fromRequest(CreateManageB2BPartnerTypeRequest request) {
         return new CreateManageB2BPartnerTypeCommand(
+                null,
                 request.getCode(),
                 request.getDescription(),
                 request.getName(),

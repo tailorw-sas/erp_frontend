@@ -61,6 +61,7 @@ public class CreateManageCityStateCommandHandler implements ICommandHandler<Crea
                         .status(command.getStatus().name())
                         .code(command.getCode())
                         .name(command.getName())
+                        .country(country.getId())
                         .description(command.getDescription())
                 .build());
     }
