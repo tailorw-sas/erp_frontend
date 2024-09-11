@@ -22,11 +22,11 @@ public class CreateManageTradingCompaniesCommand implements ICommand {
     private UUID country;
     private UUID cityState;
     private String city;
-    private Long zipCode;
+    private String zipCode;
     private String innsistCode;
     private Boolean isApplyInvoice;
 
-    public CreateManageTradingCompaniesCommand(String code, String description, Status status, String company, String cif, String address, UUID country, UUID cityState, String city, Long zipCode, String innsistCode, Boolean isApplyInvoice) {
+    public CreateManageTradingCompaniesCommand(String code, String description, Status status, String company, String cif, String address, UUID country, UUID cityState, String city, String zipCode, String innsistCode, Boolean isApplyInvoice) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
