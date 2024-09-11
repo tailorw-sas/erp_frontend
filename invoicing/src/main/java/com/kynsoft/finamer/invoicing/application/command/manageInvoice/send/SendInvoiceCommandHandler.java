@@ -26,14 +26,14 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     public void handle(SendInvoiceCommand command) {
 
         ManageInvoiceDto invoice = this.service.findById(command.getInvoice());
-        //TODO capturar la forma de envio de la agencia
+        //TODO capturar la forma de envio de la agencia el campo mailinAddress
         //TODO replicar el b2bPartner de la agencia para obtener el método de envio
 
 
         //Send Email
         SendMailJetEMailRequest request = new SendMailJetEMailRequest();
         request.setSubject("INVOICE " + invoice.getInvoiceNumber());
-        request.setTemplateId(1234565);//Cambiar en configuración
+        request.setTemplateId(5965446);//Cambiar en configuración
 
         List<MailJetVar> vars = Arrays.asList(
                 new MailJetVar("username", "Niurka"),
@@ -41,7 +41,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         );
         request.setMailJetVars(vars);
 
-        MailJetRecipient recipient = new MailJetRecipient("email@example.com", "Nombre Example");
+        MailJetRecipient recipient = new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes");
         List<MailJetRecipient> recipients = new ArrayList<>();
         recipients.add(recipient);
         request.setRecipientEmail(recipients);
