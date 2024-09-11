@@ -410,8 +410,8 @@ const createReconcile = ref([
   // },
   {
     label: 'Reconcile from Files',
-    command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
-    disabled: computedShowMenuItemOldCredit
+    command: () => navigateTo('invoice/reconcile-from-files', { open: { target: '_blank' } }),
+    
   },
 ])
 
