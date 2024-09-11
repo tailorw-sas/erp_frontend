@@ -631,6 +631,7 @@ onMounted(() => {
               :show-actions="true" :loading-save="loadingSaveAll" class=" w-full " @cancel="clearForm"
               @delete="requireConfirmationToDelete($event)" @submit="saveItem(item)"
             >
+            
               <template #field-type="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
                   v-if="!loadingSaveAll" id="autocomplete" field="fullName"
@@ -731,12 +732,18 @@ onMounted(() => {
                   />
                 </IfCan>
 
-                <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
+              <!-- <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
                   <Button
                     v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
                     :disabled="!idItem" @click="requireConfirmationToDelete"
                   />
+              
                 </IfCan>
+                  --> 
+                  <Button
+                    v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
+                    :disabled="true" @click="requireConfirmationToDelete"
+                  />
                 <Button
                   v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 
