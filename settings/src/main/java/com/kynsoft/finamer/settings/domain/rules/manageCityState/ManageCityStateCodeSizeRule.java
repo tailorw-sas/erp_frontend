@@ -24,7 +24,7 @@ public class ManageCityStateCodeSizeRule extends BusinessRule {
     }
 
     private boolean validateCode(String code) {
-        Pattern pattern = Pattern.compile("^[a-zA-Z0-9]{3,5}$");
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9]{1,5}$");
         Matcher matcher = pattern.matcher(code);
 
         return matcher.matches();
