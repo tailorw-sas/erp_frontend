@@ -160,7 +160,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_ATTACHMENT_TYPE -> {
                     for (ManageAttachmentTypeDto attachmentTypeDto : this.attachmentTypeService.findAllToReplicate()) {
-                        this.replicateManageAttachmentTypeService.create(new ReplicateManageAttachmentTypeKafka(attachmentTypeDto.getId(), attachmentTypeDto.getCode(), attachmentTypeDto.getName(), attachmentTypeDto.getStatus().toString(), attachmentTypeDto.getDefaults()));
+                        this.replicateManageAttachmentTypeService.create(new ReplicateManageAttachmentTypeKafka(attachmentTypeDto.getId(), attachmentTypeDto.getCode(), attachmentTypeDto.getName(), attachmentTypeDto.getStatus().toString(), attachmentTypeDto.getDefaults(), attachmentTypeDto.getAttachInvDefault()));
                     }
                 }
                 case MANAGE_AGENCY_TYPE -> {

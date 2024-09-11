@@ -17,4 +17,5 @@ public class ReplicateManageAttachmentTypeKafka implements Serializable {
     private String name;
     private String status;
     private Boolean defaults;
+    private Boolean attachInvDefault;
 }
