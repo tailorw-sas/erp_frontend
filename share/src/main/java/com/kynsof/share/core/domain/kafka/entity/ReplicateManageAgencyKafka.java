@@ -44,4 +44,5 @@ public class ReplicateManageAgencyKafka implements Serializable {
     private UUID cityState;
     @JsonProperty("country")
     private UUID country;
+    private String mailingAddress;
 }
