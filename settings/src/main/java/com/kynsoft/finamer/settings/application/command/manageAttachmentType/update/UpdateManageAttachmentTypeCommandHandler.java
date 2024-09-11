@@ -9,6 +9,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.manageAttachmentType.ManageAttachmentTypeDefaultMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.manageAttachmentType.ManageAttachmentTypeInvDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAttachmentType.ProducerUpdateManageAttachmentTypeService;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,10 @@ public class UpdateManageAttachmentTypeCommandHandler implements ICommandHandler
             RulesChecker.checkRule(new ManageAttachmentTypeDefaultMustBeUniqueRule(this.service, command.getId()));
         }
 
+        if(command.getAttachInvDefault() != null && command.getAttachInvDefault()) {
+            RulesChecker.checkRule(new ManageAttachmentTypeInvDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
+
         ManageAttachmentTypeDto dto = service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -44,10 +49,11 @@ public class UpdateManageAttachmentTypeCommandHandler implements ICommandHandler
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setAttachInvDefault, command.getAttachInvDefault(), dto.getAttachInvDefault(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageAttachmentTypeService.update(new UpdateManageAttachmentTypeKafka(dto.getId(), dto.getName(), command.getStatus().toString(), command.getDefaults()));
+            this.producerUpdateManageAttachmentTypeService.update(new UpdateManageAttachmentTypeKafka(dto.getId(), dto.getName(), command.getStatus().toString(), command.getDefaults(), command.getAttachInvDefault()));
         }
     }
 
