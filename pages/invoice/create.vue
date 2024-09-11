@@ -1150,6 +1150,10 @@ function updateAttachment(attachment: any) {
   attachmentList.value[index] = attachment
 }
 
+const existsAttachmentTypeInv = computed(() => {
+  return attachmentList.value.some(attachment => attachment?.type?.code === 'INV')
+})
+
 watch(invoiceAmount, () => {
   invoiceAmountError.value = false
 
@@ -1307,7 +1311,7 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-                  :disabled="bookingList.length === 0 || attachmentList.length === 0" @click="() => {
+                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="() => {
                     saveItem(props.item.fieldValues)
                   }"
                 />
