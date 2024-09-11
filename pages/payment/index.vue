@@ -458,15 +458,6 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
     const arrayNumero = []
     for (const iterator of dataList) {
-      // if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-      //   iterator.status = statusToBoolean(iterator.status)
-      // }
-
-      // const agency = await getAgencyTypeByAgency(iterator.agency.id)
-
-      // if (agency.length > 0) {
-      //   iterator.agencyType = agency[0].agencyType
-      // }
       if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
         iterator.agencyType = iterator.agency.agencyTypeResponse
       }
@@ -484,11 +475,11 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'applied')) {
         count.applied += iterator.applied
-        iterator.applied = String(iterator.applied)
+        iterator.applied = formatNumber(iterator.applied)
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'noApplied')) {
-        count.noApplied += iterator.noApplied
-        iterator.noApplied = String(iterator.noApplied)
+      if (Object.prototype.hasOwnProperty.call(iterator, 'notApplied')) {
+        count.noApplied += iterator.notApplied
+        iterator.notApplied = formatNumber(iterator.notApplied)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'depositAmount')) {
         iterator.depositAmount = String(iterator.depositAmount)
@@ -497,10 +488,10 @@ async function getList() {
         iterator.otherDeductions = String(iterator.otherDeductions)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'identified')) {
-        iterator.identified = String(iterator.identified)
+        iterator.identified = formatNumber(iterator.identified)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'notIdentified')) {
-        iterator.notIdentified = String(iterator.notIdentified)
+        iterator.notIdentified = formatNumber(iterator.notIdentified)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'bankAccount')) {
         iterator.bankAccount = {
