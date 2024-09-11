@@ -19,6 +19,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -44,6 +45,8 @@ public class ManageAgency {
     private ManageClient client;
 
     private String name;
+    private String cif;
+    private String address;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -58,6 +61,18 @@ public class ManageAgency {
     @Enumerated(EnumType.STRING)
     private EGenerationType generationType;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_b2bpartner_id")
+    private ManageB2BPartner sentB2BPartner;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_city_state_id")
+    private ManageCityState cityState;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_country_id")
+    private ManageCountry country;
+
     private String status;
 
     public ManageAgency(ManageAgencyDto dto) {
@@ -67,16 +82,26 @@ public class ManageAgency {
         this.client = dto.getClient() != null ? new ManageClient(dto.getClient()) : null;
         this.generationType=dto.getGenerationType();
         this.status=dto.getStatus();
-
+        this.cif= dto.getCif();
+        this.address= dto.getAddress();
+        this.sentB2BPartner= new ManageB2BPartner(dto.getSentB2BPartner());
+        this.cityState= new ManageCityState(dto.getCityState());
+        this.country= new ManageCountry(dto.getCountry());
     }
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, name, client != null ? client.toAggregate() : null,generationType,status);
+                id, code, name, client != null ? client.toAggregate() : null,generationType,status,cif,address,
+                Objects.nonNull(sentB2BPartner)?sentB2BPartner.toAggregate():null,
+                Objects.nonNull(cityState)?cityState.toAggregate():null,
+                Objects.nonNull(country)?country.toAggregate():null);
     }
 
     public ManageAgencyDto toAggregateSample() {
         return new ManageAgencyDto(
-                id, code, name, client != null ? client.toAggregate() : null,generationType,status);
+                id, code, name, client != null ? client.toAggregate() : null,generationType,status,cif,address,
+                Objects.nonNull(sentB2BPartner)?sentB2BPartner.toAggregate():null,
+                Objects.nonNull(cityState)?cityState.toAggregate():null,
+                Objects.nonNull(country)?country.toAggregate():null);
     }
 }

@@ -22,4 +22,6 @@ public interface IManagerCountryService {
     Long countByCodeAndNotId(String code, UUID id);
 
     Long countByNameAndNotId(String name, UUID id);
+
+    List<ManagerCountryDto> findAllToReplicate();
 }

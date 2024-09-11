@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageCountry.create;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageCountryKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.settings.domain.dto.ManagerCountryDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerLanguageDto;
@@ -11,6 +12,7 @@ import com.kynsoft.finamer.settings.domain.rules.managerCountry.ManagerCountryNa
 import com.kynsoft.finamer.settings.domain.rules.managerCountry.ManagerCountryNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManagerCountryService;
 import com.kynsoft.finamer.settings.domain.services.IManagerLanguageService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCountry.ProducerReplicateManageCountryService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,11 +20,14 @@ public class CreateManagerCountryCommandHandler implements ICommandHandler<Creat
 
     private final IManagerLanguageService serviceLanguage;
     private final IManagerCountryService service;
+    private final ProducerReplicateManageCountryService producerReplicateManageCountryService;
 
     public CreateManagerCountryCommandHandler(IManagerCountryService service,
-            IManagerLanguageService serviceLanguage) {
+                                              IManagerLanguageService serviceLanguage,
+                                              ProducerReplicateManageCountryService producerReplicateManageCountryService) {
         this.service = service;
         this.serviceLanguage = serviceLanguage;
+        this.producerReplicateManageCountryService = producerReplicateManageCountryService;
     }
 
     @Override
@@ -47,5 +52,16 @@ public class CreateManagerCountryCommandHandler implements ICommandHandler<Creat
                 languageDto,
                 command.getStatus()
         ));
+        producerReplicateManageCountryService.create(ReplicateManageCountryKafka.builder()
+                .id(command.getId())
+                .status(command.getStatus().name())
+                .name(command.getName())
+                .description(command.getDescription())
+                .code(command.getCode())
+                .build()
+
+
+
+        );
     }
 }

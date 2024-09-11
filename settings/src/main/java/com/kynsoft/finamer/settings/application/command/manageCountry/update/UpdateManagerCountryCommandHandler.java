@@ -2,6 +2,8 @@ package com.kynsoft.finamer.settings.application.command.manageCountry.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageCountryKafka;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageCountryKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -14,6 +16,8 @@ import com.kynsoft.finamer.settings.domain.services.IManagerCountryService;
 import com.kynsoft.finamer.settings.domain.services.IManagerLanguageService;
 import java.util.UUID;
 import java.util.function.Consumer;
+
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCountry.ProducerUpdateManageCountryService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,10 +26,13 @@ public class UpdateManagerCountryCommandHandler implements ICommandHandler<Updat
     private final IManagerCountryService service;
     private final IManagerLanguageService serviceLanguage;
 
+    private final ProducerUpdateManageCountryService updateManageCountryService;
+
     public UpdateManagerCountryCommandHandler(IManagerCountryService service,
-                                              IManagerLanguageService serviceLanguage) {
+                                              IManagerLanguageService serviceLanguage, ProducerUpdateManageCountryService updateManageCountryService) {
         this.service = service;
         this.serviceLanguage = serviceLanguage;
+        this.updateManageCountryService = updateManageCountryService;
     }
 
     @Override
@@ -55,6 +62,13 @@ public class UpdateManagerCountryCommandHandler implements ICommandHandler<Updat
         if (update.getUpdate() > 0) {
             this.service.update(test);
         }
+
+        updateManageCountryService.update(UpdateManageCountryKafka.builder()
+                .id(command.getId())
+                .status(command.getStatus().name())
+                .name(command.getName())
+                .description(command.getDescription())
+                .build());
 
     }
 
