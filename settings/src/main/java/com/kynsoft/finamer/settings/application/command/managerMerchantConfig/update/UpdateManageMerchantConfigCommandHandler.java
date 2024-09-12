@@ -47,6 +47,8 @@ public class UpdateManageMerchantConfigCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setMerchantType, command.getMerchantType(), test.getMerchantType(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setInstitutionCode, command.getInstitutionCode(), test.getInstitutionCode(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setMerchantNumber, command.getMerchantNumber(), test.getMerchantNumber(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setMerchantTerminal, command.getMerchantTerminal(), test.getMerchantTerminal(), update::setUpdate);
 
         this.updateStatus(test::setMethod, command.getMethod(), test.getMethod(), update::setUpdate);
         this.updateManagerMerchant(test::setManagerMerchantDto, command.getManageMerchant(), test.getManagerMerchantDto().getId(), update::setUpdate);

@@ -18,4 +18,6 @@ public class UpdateManageMerchantConfigRequest {
     private String name;
     private Method method;
     private String institutionCode;
+    private String merchantNumber;
+    private String merchantTerminal;
 }
