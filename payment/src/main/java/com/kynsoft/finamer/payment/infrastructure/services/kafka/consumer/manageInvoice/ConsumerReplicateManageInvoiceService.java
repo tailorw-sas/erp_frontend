@@ -42,7 +42,7 @@ public class ConsumerReplicateManageInvoiceService {
 
     @KafkaListener(topics = "finamer-replicate-manage-invoice", groupId = "payment-entity-replica")
     public void listen(ManageInvoiceKafka objKafka) {
-        try {
+//        try {
             List<ManageBookingDto> bookingDtos = new ArrayList<>();
             if (objKafka.getBookings() != null) {
                 for (ManageBookingKafka booking : objKafka.getBookings()) {
@@ -103,9 +103,9 @@ public class ConsumerReplicateManageInvoiceService {
                     this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, mediator));
                 }
             }
-        } catch (Exception ex) {
-            Logger.getLogger(ConsumerReplicateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        } catch (Exception ex) {
+//            Logger.getLogger(ConsumerReplicateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
+//        }
     }
 
 }
