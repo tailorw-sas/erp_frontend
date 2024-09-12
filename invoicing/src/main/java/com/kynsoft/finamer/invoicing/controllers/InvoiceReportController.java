@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.ByteArrayOutputStream;
 
 @RestController
-@RequestMapping("/api/payment")
+@RequestMapping("/api/invoice")
 public class InvoiceReportController {
 
     private final IMediator mediator;
@@ -25,8 +25,8 @@ public class InvoiceReportController {
     }
 
     @PostMapping(value = "/report")
-    public ResponseEntity<?> print(@RequestBody InvoiceReportRequest paymentReportRequest){
-        InvoiceReportQuery invoiceReportQuery = new InvoiceReportQuery(paymentReportRequest);
+    public ResponseEntity<?> print(@RequestBody InvoiceReportRequest invoiceReportRequest){
+        InvoiceReportQuery invoiceReportQuery = new InvoiceReportQuery(invoiceReportRequest);
         InvoiceReportResponse invoiceReportResponse = mediator.send(invoiceReportQuery);
         ByteArrayOutputStream file = invoiceReportResponse.getFile();
         HttpHeaders headers = new HttpHeaders();
