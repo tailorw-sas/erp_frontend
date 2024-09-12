@@ -27,4 +27,5 @@ public class ManageBookingDto {
     private Integer adults;
     private Integer children;
     private ManageInvoiceDto invoice;
+    private ManageBookingDto parent;
 }

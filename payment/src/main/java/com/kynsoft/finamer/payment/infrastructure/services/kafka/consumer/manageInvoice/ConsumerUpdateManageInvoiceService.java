@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +19,13 @@ import java.util.logging.Logger;
 public class ConsumerUpdateManageInvoiceService {
 
     private final IManageInvoiceService service;
+    private final IManageBookingService serviceBookingService;
 
-    public ConsumerUpdateManageInvoiceService(IManageInvoiceService service) {
+    public ConsumerUpdateManageInvoiceService(IManageInvoiceService service,
+            IManageBookingService serviceBookingService) {
 
         this.service = service;
+        this.serviceBookingService = serviceBookingService;
     }
 
     @KafkaListener(topics = "finamer-update-manage-invoice", groupId = "payment-entity-replica")
@@ -44,7 +48,8 @@ public class ConsumerUpdateManageInvoiceService {
                             booking.getCouponNumber(), 
                             booking.getAdults(), 
                             booking.getChildren(), 
-                            null
+                            null,
+                            booking.getBookingParent() != null ? this.serviceBookingService.findById(booking.getBookingParent()) : null
                     ));
                 }
             }

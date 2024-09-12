@@ -30,6 +30,7 @@ public class ManageBookingResponse implements IResponse {
     private Integer children;
 
     private ManageInvoiceResponse invoice;
+    private ManageBookingResponse parent;
 
     public ManageBookingResponse(ManageBookingDto dto) {
         this.id = dto.getId();
@@ -46,6 +47,7 @@ public class ManageBookingResponse implements IResponse {
         this.adults = dto.getAdults();
         this.children = dto.getChildren();
         this.invoice = dto.getInvoice() != null ? new ManageInvoiceResponse(dto.getInvoice()) : null;
+        this.parent = dto.getParent() != null ? new ManageBookingResponse(dto.getParent()) : null;
     }
 
 }

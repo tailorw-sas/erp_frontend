@@ -11,6 +11,7 @@ import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import java.util.ArrayList;
@@ -27,13 +28,16 @@ public class ConsumerReplicateManageInvoiceService {
     private final IManageInvoiceService service;
     private final IManageHotelService hotelService;
     private final IMediator mediator;
+    private final IManageBookingService serviceBookingService;
 
     public ConsumerReplicateManageInvoiceService(IManageInvoiceService service,
             IMediator mediator,
-            IManageHotelService hotelService) {
+            IManageHotelService hotelService,
+            IManageBookingService serviceBookingService) {
         this.mediator = mediator;
         this.service = service;
         this.hotelService = hotelService;
+        this.serviceBookingService = serviceBookingService;
     }
 
     @KafkaListener(topics = "finamer-replicate-manage-invoice", groupId = "payment-entity-replica")
@@ -56,7 +60,8 @@ public class ConsumerReplicateManageInvoiceService {
                             booking.getCouponNumber(),
                             booking.getAdults(),
                             booking.getChildren(),
-                            null
+                            null,
+                            booking.getBookingParent() != null ? this.serviceBookingService.findById(booking.getBookingParent()) : null
                     ));
                 }
             }
