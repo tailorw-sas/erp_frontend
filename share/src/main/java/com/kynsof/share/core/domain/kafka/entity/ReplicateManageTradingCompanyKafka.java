@@ -16,5 +16,8 @@ public class ReplicateManageTradingCompanyKafka {
     private UUID id;
     private String code;
     private boolean isApplyInvoice;
+    private String cif;
+    private String address;
+    private String company;
 
 }

@@ -12,6 +12,7 @@ import com.kynsoft.finamer.settings.domain.services.*;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerUpdateManageAgencyService;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -57,7 +58,13 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
         if (update.getUpdate() > 0) {
             service.update(dto);
             producerUpdateManageAgencyService.update(new UpdateManageAgencyKafka(dto.getId(), dto.getName(), dto.getClient().getId(), 
-                    dto.getBookingCouponFormat(), command.getStatus().name(), dto.getAgencyType().getId()));
+                    dto.getBookingCouponFormat(), command.getStatus().name(),
+                    dto.getAgencyType().getId(),dto.getCif(), dto.getAddress(),
+                    Objects.nonNull(dto.getSentB2BPartner())?dto.getSentB2BPartner().getId():null,
+                    Objects.nonNull(dto.getCityState())?dto.getCityState().getId():null,
+                    Objects.nonNull(dto.getCountry())?dto.getCountry().getId():null,
+                    dto.getMailingAddress()
+            ));
         }
     }
 

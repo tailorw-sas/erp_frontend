@@ -32,6 +32,9 @@ public class ManageTradingCompanies implements Serializable {
     private String code;
 
     private Boolean isApplyInvoice;
+    private String company;
+    private String cif;
+    private String address;
 
     @Column(columnDefinition = "serial", name = "autogen_code")
     @Generated(event = EventType.INSERT)
@@ -41,10 +44,13 @@ public class ManageTradingCompanies implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.isApplyInvoice = dto.getIsApplyInvoice();
+        this.cif=dto.getCif();
+        this.address=dto.getAddress();
+        this.company=dto.getCompany();
     }
 
     public ManageTradingCompaniesDto toAggregate() {
         return new ManageTradingCompaniesDto(
-                id, code, isApplyInvoice, autogen_code);
+                id, code, isApplyInvoice, autogen_code,this.cif,this.address,this.company);
     }
 }

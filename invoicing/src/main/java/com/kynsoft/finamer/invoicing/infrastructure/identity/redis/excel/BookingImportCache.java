@@ -7,6 +7,8 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 import redis.clients.jedis.params.ZParams;
 
+import java.util.Objects;
+
 @Data
 @RedisHash(value = "importcache", timeToLive = 18000L)
 public class BookingImportCache {
@@ -74,10 +76,10 @@ public class BookingImportCache {
         this.lastName = bookingRow.getLastName();
         this.checkIn = bookingRow.getCheckIn();
         this.checkOut = bookingRow.getCheckOut();
-        this.nights = bookingRow.getNights();
-        this.adults = bookingRow.getAdults();
-        this.children = bookingRow.getChildren();
-        this.invoiceAmount = bookingRow.getInvoiceAmount();
+        this.nights = Objects.nonNull(bookingRow.getNights())?bookingRow.getNights():0;
+        this.adults = Objects.nonNull(bookingRow.getAdults())?bookingRow.getAdults():0;
+        this.children = Objects.nonNull(bookingRow.getChildren())?bookingRow.getChildren():0;
+        this.invoiceAmount = Objects.nonNull(bookingRow.getInvoiceAmount())?bookingRow.getInvoiceAmount():0;
         this.coupon = bookingRow.getCoupon();
         this.hotelBookingNumber = bookingRow.getHotelBookingNumber();
         this.roomType = bookingRow.getRoomType();
@@ -86,7 +88,7 @@ public class BookingImportCache {
         this.remarks = bookingRow.getRemarks();
         this.amountPAX = bookingRow.getAmountPAX();
         this.roomNumber = bookingRow.getRoomNumber();
-        this.hotelInvoiceAmount = bookingRow.getHotelInvoiceAmount();
+        this.hotelInvoiceAmount =Objects.nonNull( bookingRow.getHotelInvoiceAmount())?bookingRow.getHotelInvoiceAmount():0;
         this.bookingDate = bookingRow.getBookingDate();
         this.hotelType = bookingRow.getHotelType();
         this.nightType=bookingRow.getNightType();

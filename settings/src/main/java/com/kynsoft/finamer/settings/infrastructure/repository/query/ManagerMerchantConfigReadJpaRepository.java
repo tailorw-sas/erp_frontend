@@ -16,8 +16,8 @@ public interface ManagerMerchantConfigReadJpaRepository extends JpaRepository<Ma
     Page<ManagerMerchantConfig> findAll(Specification specification, Pageable pageable);
 
     @Query(value = "SELECT COUNT(b) FROM ManagerMerchant b WHERE b.managerMerchant.id = :managerMerchant",nativeQuery = true)
-    Long countByManagerMerchant(@Param("managerMerchant") UUID managerMerchant);
+    Long countByManagerMerchantConfig(@Param("managerMerchant") UUID managerMerchant);
 
     @Query(value = "SELECT COUNT(b) FROM ManagerMerchant b WHERE b.managerMerchant.id = :managerMerchant AND b.id <> :id",nativeQuery = true)
-    Long countByManagerMerchantNotId(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant);
+    Long countByManagerMerchantConfigNotId(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant);
 }

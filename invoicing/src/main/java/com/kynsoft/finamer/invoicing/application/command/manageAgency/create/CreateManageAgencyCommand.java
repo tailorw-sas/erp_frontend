@@ -18,15 +18,31 @@ public class CreateManageAgencyCommand implements ICommand {
     private UUID client;
     private EGenerationType generationType;
     private String status;
+    private String cif;
+    private String address;
+    private UUID sentB2BPartner;
+    private UUID cityState;
+    private UUID country;
+    private String mailingAddress;
 
-    public CreateManageAgencyCommand(UUID id, String code, String name, UUID client,EGenerationType generationType,String status) {
+    public CreateManageAgencyCommand(UUID id, String code, String name, UUID client, EGenerationType generationType,
+                                     String status, String cif, String address, UUID sentB2BPartner, UUID cityState, UUID country,
+                                     String mailingAddress) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.client = client;
-        this.generationType=generationType;
-        this.status=status;
+        this.generationType = generationType;
+        this.status = status;
+        this.cif = cif;
+        this.address = address;
+        this.sentB2BPartner = sentB2BPartner;
+        this.cityState = cityState;
+        this.country = country;
+        this.mailingAddress = mailingAddress;
     }
+
+
 
     @Override
     public ICommandMessage getMessage() {

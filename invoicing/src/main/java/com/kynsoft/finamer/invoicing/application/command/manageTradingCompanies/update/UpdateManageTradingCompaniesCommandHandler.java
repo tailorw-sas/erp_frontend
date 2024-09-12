@@ -38,6 +38,9 @@ public class UpdateManageTradingCompaniesCommandHandler
 
         UpdateIfNotNull.updateBoolean(dto::setIsApplyInvoice, command.getIsApplyInvoice(), dto.getIsApplyInvoice(),
                 update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCif,command.getCif(),dto.getCif(),update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setAddress,command.getAddress(),dto.getAddress(),update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCompany,command.getCompany(),dto.getCompany(),update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);

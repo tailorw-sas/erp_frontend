@@ -1,17 +1,20 @@
 package com.kynsof.share.core.application.mailjet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
-
+import org.springframework.beans.factory.annotation.Value;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 @Service
+@Configuration
 public class MailService {
 
-    private static final String MAIL_API_URL = "http://localhost:8080/api/mail/send"; // Reemplaza con la URL de tu API
+    @Value("${mail.api.url:http://localhost:8097/api/mail/send}")
+    private String mailApiUrl;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
@@ -27,7 +30,7 @@ public class MailService {
 
             // Configurar la solicitud HTTP
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI(MAIL_API_URL))
+                    .uri(new URI(mailApiUrl))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                     .build();

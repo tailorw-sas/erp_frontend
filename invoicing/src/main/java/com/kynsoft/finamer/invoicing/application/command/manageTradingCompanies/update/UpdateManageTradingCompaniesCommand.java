@@ -16,6 +16,9 @@ public class UpdateManageTradingCompaniesCommand implements ICommand {
 
     private UUID id;
     private Boolean isApplyInvoice;
+    private String cif;
+    private String address;
+    private String company;
 
     @Override
     public ICommandMessage getMessage() {

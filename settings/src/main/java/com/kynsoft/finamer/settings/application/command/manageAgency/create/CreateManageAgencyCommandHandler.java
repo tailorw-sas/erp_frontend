@@ -75,6 +75,11 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
 
         this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(command.getId(),
                 command.getCode(), command.getName(), command.getClient(), command.getBookingCouponFormat(), 
-                command.getStatus().name(), command.getGenerationType().name(), command.getAgencyType()));
+                command.getStatus().name(), command.getGenerationType().name(), command.getAgencyType(),command.getCif(),command.getAddress(),
+                command.getSentB2BPartner(),
+                command.getCityState(),
+                command.getCountry(),
+                command.getMailingAddress()
+        ));
     }
 }

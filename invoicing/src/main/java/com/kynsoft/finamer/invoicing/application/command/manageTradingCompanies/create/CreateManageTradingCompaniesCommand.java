@@ -3,24 +3,26 @@ package com.kynsoft.finamer.invoicing.application.command.manageTradingCompanies
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateManageTradingCompaniesCommand implements ICommand {
 
     private UUID id;
     private String code;
     private Boolean isApplyInvoice;
+    private String cif;
+    private String address;
+    private String company;
 
-    public CreateManageTradingCompaniesCommand(UUID id, String code, Boolean isApplyInvoice) {
-        this.id = id;
-        this.code = code;
-        this.isApplyInvoice = isApplyInvoice;
-    }
 
     @Override
     public ICommandMessage getMessage() {

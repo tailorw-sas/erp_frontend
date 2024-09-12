@@ -23,6 +23,7 @@ public class ImportBookingProcessEventHandler implements ApplicationListener<Imp
         Optional<BookingImportProcessRedisEntity> importProcessOptional = bookingImportProcessRedisRepository.findByImportProcessId(bookingImportProcessDto.getImportProcessId());
         if (importProcessOptional.isPresent()){
             BookingImportProcessRedisEntity bookingImportProcessRedisEntity = importProcessOptional.get();
+            bookingImportProcessRedisEntity.setTotalRows(bookingImportProcessDto.getTotal());
             bookingImportProcessRedisEntity.setStatus(bookingImportProcessDto.getStatus());
             bookingImportProcessRedisEntity.setHasError(bookingImportProcessDto.isHasError());
             bookingImportProcessRedisEntity.setExceptionMessage(bookingImportProcessDto.getExceptionMessage());

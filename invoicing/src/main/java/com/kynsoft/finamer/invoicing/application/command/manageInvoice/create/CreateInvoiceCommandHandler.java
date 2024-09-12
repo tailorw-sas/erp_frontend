@@ -8,11 +8,14 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoiceCommand> {
 
+    private Logger log = LoggerFactory.getLogger(CreateInvoiceCommandHandler.class);
     private final IManageInvoiceService service;
     private final IManageAgencyService agencyService;
     private final IManageHotelService hotelService;
@@ -56,6 +59,7 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
         try {
             this.producerReplicateManageInvoiceService.create(invoiceDto);
         } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 }
