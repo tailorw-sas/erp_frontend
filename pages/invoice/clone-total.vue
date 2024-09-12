@@ -298,7 +298,7 @@ const filterToSearch = ref<IData>({
 })
 
 const item = ref<GenericObject>({
-  invoiceId: 0,
+  invoiceId: '',
   invoiceNumber: '',
   invoiceDate: new Date(),
   isManual: true,
@@ -1359,26 +1359,21 @@ onMounted(async () => {
         </DebouncedAutoCompleteComponent>
         <span v-if="agencyError" class="error-message p-error text-xs">The agency field is required</span>
       </template>
-       <template #field-hotel="{ item: data, onUpdate }">
-        <DebouncedAutoCompleteComponent
-          v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :model="data.hotel" :disabled="String(route.query.type) as any === InvoiceType.CREDIT"
-          :suggestions="hotelList" @change="($event) => {
-            hotelError = false
-            onUpdate('hotel', $event)
-          }" @load="($event) => getHotelList($event)"
-        >
-          <template #option="props">
-            <span>{{ props.item.fullName }}</span>
-          </template>
-          <template #chip="{ value }">
-            <div>
-              {{ value?.fullName }}
-            </div>
-          </template>
-        </DebouncedAutoCompleteComponent>
-        <span v-if="hotelError" class="error-message p-error text-xs">The hotel field is required</span>
-      </template>
+        <template #field-hotel="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
+            :model="data.hotel" :suggestions="hotelList" @change="($event) => {
+        onUpdate('hotel', $event)
+      }" @load="($event) => getHotelList($event)">
+            <template #option="props">
+              <span>{{ props.item.fullName }}</span>
+            </template>
+            <template #chip="{ value }">
+              <div>
+                {{ value?.fullName }}
+              </div>
+            </template>
+          </DebouncedAutoCompleteComponent>
+        </template>
       <template #field-status="{ item: data, onUpdate }">
         <Dropdown
           v-if="!loadingSaveAll" v-model="data.status" :options="[...ENUM_INVOICE_STATUS]" option-label="name"
