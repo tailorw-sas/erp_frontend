@@ -14,10 +14,14 @@ import com.kynsoft.finamer.invoicing.domain.rules.income.CheckInvoiceTypeIncomeN
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageBooking.ProducerReplicateManageBookingService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CreateBookingCommandHandler implements ICommandHandler<CreateBookingCommand> {
+
+        private final Logger log = LoggerFactory.getLogger(CreateBookingCommandHandler.class);
 
         private final IManageBookingService bookingService;
         private final IManageInvoiceService invoiceService;
@@ -123,6 +127,7 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                         // TODO: aqui se envia el booking para payment
                         this.producerReplicateManageBookingService.create(newBooking);
                 } catch (Exception e) {
+                        log.error(e.getMessage());
                 }
 
                 ManageInvoiceDto invoiceUpdate = this.invoiceService.findById(invoiceDto.getId());
@@ -131,6 +136,7 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                         // TODO: aqui se envia para actualizar el invoice para payment
                         this.producerUpdateManageInvoiceService.update(invoiceUpdate);
                 } catch (Exception e) {
+                        log.error(e.getMessage());
                 }
         }
 }

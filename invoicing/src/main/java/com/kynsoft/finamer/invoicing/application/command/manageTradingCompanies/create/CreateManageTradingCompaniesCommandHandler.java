@@ -25,6 +25,9 @@ public class CreateManageTradingCompaniesCommandHandler
                 command.getId(),
                 command.getCode(),
                 command.getIsApplyInvoice(),
-                null));
+                null,
+                command.getCif(),
+                command.getAddress(),
+                command.getCompany()));
     }
 }
