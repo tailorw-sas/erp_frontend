@@ -19,6 +19,7 @@ const uploadComplete = ref(false)
 const loadingSaveAll = ref(false)
 const haveErrorImportStatus = ref(false)
 const openSuccessDialog = ref(false)
+const totalImportedRows = ref(0)
 const messageDialog = ref('')
 
 const confApi = reactive({
@@ -192,7 +193,7 @@ async function importFile() {
       if (listItems.value.length === 0) {
         // toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 10000 })
         options.value.loading = false
-        messageDialog.value = 'The file was imported successfully'
+        messageDialog.value = `The file was upload successful!. ${totalImportedRows.value} rows imported.`
         openSuccessDialog.value = true
         // await clearForm()
       }
@@ -211,6 +212,7 @@ async function validateStatusImport() {
       try {
         const response = await GenericService.getById(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, idItem.value, 'import-status')
         status = response.status
+        totalImportedRows.value = response.totalRows ?? 0
       }
       catch (error: any) {
         toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 20000 })
