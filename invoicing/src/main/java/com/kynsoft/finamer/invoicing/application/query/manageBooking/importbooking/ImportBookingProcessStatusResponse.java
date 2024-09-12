@@ -9,4 +9,5 @@ import lombok.Getter;
 public class ImportBookingProcessStatusResponse implements IResponse {
 
     private String status;
+    private int totalRows;
 }
