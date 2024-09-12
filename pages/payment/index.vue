@@ -144,11 +144,10 @@ const ENUM_FILTER = [
   { id: 'paymentDetails.amount', name: 'Detail Amount', disabled: false },
   { id: 'paymentDetails.remark', name: 'Detail Remark', disabled: false },
   { id: 'invoice.invoiceNo', name: 'Invoice No', disabled: false },
-  { id: 'bookingId', name: 'Booking Id', disabled: true },
-  { id: 'firstName', name: 'Guest First Name', disabled: true },
-  { id: 'lastName', name: 'Guest Last Name', disabled: true },
-  { id: 'reservation', name: 'Reservation', disabled: true },
-  { id: 'coupon', name: 'Coupon No', disabled: true },
+  { id: 'paymentDetails.manageBooking.bookingId', name: 'Booking Id', disabled: false },
+  { id: 'paymentDetails.manageBooking.fullName', name: 'Full Name', disabled: false },
+  { id: 'paymentDetails.manageBooking.reservationNumber', name: 'Reservation No', disabled: false },
+  { id: 'paymentDetails.manageBooking.couponNumber', name: 'Coupon No', disabled: false },
 ]
 
 const ENUM_FILTER_TYPE = [
@@ -548,7 +547,13 @@ function searchAndFilter() {
     }
     payload.value.filter = [...payload.value.filter, {
       key: keyValue || (filterToSearch.value.criteria ? filterToSearch.value.criteria.id : ''),
-      operator: keyTemp === 'paymentDetails.remark' ? 'LIKE' : 'EQUALS',
+      operator: (
+        keyTemp === 'paymentDetails.remark'
+        || keyTemp === 'paymentDetails.manageBooking.fullName'
+        || keyTemp === 'paymentDetails.manageBooking.reservationNumber'
+      )
+        ? 'LIKE'
+        : 'EQUALS',
       value: filterToSearch.value.value,
       logicalOperation: 'AND',
       type: 'filterSearch',
@@ -1101,7 +1106,7 @@ async function onExpandRowApplyPayment(event: any) {
 }
 
 function onRowContextMenu(event: any) {
-  if (event && event.data && (event.data.notIdentified !== '' || event.data.notIdentified !== null) && event.data.notIdentified > 0) {
+  if (event && event.data && (event.data.notIdentified !== '' || event.data.notApplied !== null) && event.data.notApplied > 0) {
     objItemSelectedForRightClickApplyPayment.value = event.data
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
