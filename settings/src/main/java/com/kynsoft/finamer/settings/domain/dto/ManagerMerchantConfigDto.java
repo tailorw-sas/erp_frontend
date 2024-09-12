@@ -27,4 +27,6 @@ public class ManagerMerchantConfigDto {
     @Enumerated(EnumType.STRING)
     private Method method;
     private String institutionCode;
+    private String merchantNumber;
+    private String merchantTerminal;
 }

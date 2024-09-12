@@ -14,7 +14,7 @@ public class ManagerMerchantConfigMustBeUniqueRule extends BusinessRule {
     private final UUID managerMerchant;
 
 
-    public ManagerMerchantConfigMustBeUniqueRule(IManageMerchantConfigService service, UUID managerMerchant) {
+    public ManagerMerchantConfigMustBeUniqueRule(IManageMerchantConfigService service, UUID managerMerchant ) {
         super(
                 DomainErrorMessage.ITEM_ALREADY_EXITS,
                 new ErrorField("id", DomainErrorMessage.ITEM_ALREADY_EXITS.getReasonPhrase())
