@@ -14,25 +14,48 @@ const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
 const invoiceFile = ref('')
-
+const attachFile = ref()
 const uploadComplete = ref(false)
 const loadingSaveAll = ref(false)
 const haveErrorImportStatus = ref(false)
 const openSuccessDialog = ref(false)
 const messageDialog = ref('')
+const importModel = ref({
+ 
+  attachFile: null,
+  employee: '',
+})
+
+const attachUpload = ref()
 
 const confApi = reactive({
     moduleApi: 'invoicing',
-    uriApi: 'manage-booking/import',
+    uriApi: 'manage-invoice/import-reconcile',
 })
 
 const confInvoiceApi = reactive({
     moduleApi: 'invoicing',
-    uriApi: 'manage-booking',
+    uriApi: 'manage-invoice',
 })
 
 // VARIABLES -----------------------------------------------------------------------------------------
+async function onChangeAttachFile(event: any) {
+  if (event.target.files && event.target.files.length > 0) {
+    attachFile.value = event.target.files[0]
+    importModel.value.attachFile = attachFile.value.name
+    event.target.value = ''
+    await activeImport()
+  }
+}
 
+async function activeImport() {
+  if ( importModel.value.attachFile !== null) {
+    uploadComplete.value = false
+  }
+  else {
+    uploadComplete.value = true
+  }
+}
 //
 const idItem = ref('')
 
@@ -285,18 +308,22 @@ onMounted(async () => {
                                 
                                     <div style="flex: 1; max-width: 500px; min-width: 0;">
                                         <div class="p-inputgroup w-full">
-                                            <InputText ref="fileUpload" v-model="invoiceFile" placeholder="Choose file"
-                                                class="w-full" show-clear aria-describedby="inputtext-help" />
+                                            <InputText
+                        ref="attachUpload" v-model="importModel.attachFile" placeholder="Choose file"
+                        class="w-full" show-clear aria-describedby="inputtext-help"
+                      />
+                                    
                                             <span class="p-inputgroup-addon p-0 m-0">
                                                 <Button icon="pi pi-file-import" severity="secondary"
-                                                    class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                                                    class="w-2rem h-2rem p-0 m-0"  @click="attachUpload.click()" />
                                             </span>
                                         </div>
                                         <small id="username-help" style="color: #808080;">Select a file of type
                                             PDF</small>
-                                        <input ref="fileUpload" type="file" style="display: none;"
-                                            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                                            @change="onChangeFile($event)">
+                                            <input
+                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf"
+                      @change="onChangeAttachFile($event)"
+                    >
                                     </div>
                                 </div>
                             </div>
@@ -340,8 +367,7 @@ onMounted(async () => {
             <div class="flex align-items-end justify-content-end">
                 <Button v-tooltip.top="'Apply'" class="w-3rem  mx-1" icon="pi pi-check" :disabled="uploadComplete"
                     @click="importFile" />
-                <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-sync" :disabled="uploadComplete"
-                    @click="importFile" />
+               
                 <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button mx-1" icon="pi pi-times"
                     @click="clearForm" />
             </div>
