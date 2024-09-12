@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.settings.domain.dto;
 
-import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Method;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -29,4 +28,6 @@ public class ManagerMerchantConfigResponseDto {
     private String institutionCode;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String merchantNumber;
+    private String merchantTerminal;
 }

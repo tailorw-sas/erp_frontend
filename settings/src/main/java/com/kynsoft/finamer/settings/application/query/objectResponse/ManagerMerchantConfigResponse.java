@@ -26,6 +26,10 @@ public class ManagerMerchantConfigResponse implements IResponse {
     private Method method;
     private String institutionCode;
     private LocalDateTime createAt;
+    private LocalDateTime updateAt;
+    private String merchantNumber;
+    private String merchantTerminal;
+
 
     public ManagerMerchantConfigResponse(ManagerMerchantConfigResponseDto dto) {
         this.id = dto.getId();
@@ -40,6 +44,9 @@ public class ManagerMerchantConfigResponse implements IResponse {
         this.method = dto.getMethod();
         this.institutionCode = dto.getInstitutionCode();
         this.createAt = dto.getCreatedAt();
+        this.updateAt = dto.getUpdatedAt();
+        this.merchantNumber = dto.getMerchantNumber();
+        this.merchantTerminal = dto.getMerchantTerminal();
     }
 
 

@@ -91,11 +91,11 @@ public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigSe
 
     @Override
     public Long countByCodeAndNotId(UUID managerMerchant) {
-        return this.repositoryQuery.countByManagerMerchant(managerMerchant);
+        return this.repositoryQuery.countByManagerMerchantConfig(managerMerchant);
     }
 
     @Override
     public Long countByManagerMerchantANDManagerCurrencyIdNotId(UUID id, UUID managerMerchant) {
-        return this.repositoryQuery.countByManagerMerchantNotId(id, managerMerchant);
+        return this.repositoryQuery.countByManagerMerchantConfigNotId(id, managerMerchant);
     }
 }

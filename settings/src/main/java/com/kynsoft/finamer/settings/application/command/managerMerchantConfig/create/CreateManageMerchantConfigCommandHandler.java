@@ -23,6 +23,7 @@ public class CreateManageMerchantConfigCommandHandler implements ICommandHandler
     @Override
     public void handle(CreateManageMerchantConfigCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageMerchant(), "id", "Manager Merchant ID cannot be null."));
+    //    RulesChecker.checkRule(new ManagerMerchantConfigMustBeUniqueRule(this.service, command.getManageMerchant()) );
 
         ManagerMerchantDto managerMerchantDto = this.merchantService.findById(command.getManageMerchant());
 
@@ -37,7 +38,9 @@ public class CreateManageMerchantConfigCommandHandler implements ICommandHandler
                 command.getMerchantType(), 
                 command.getName(), 
                 command.getMethod(), 
-                command.getMerchantType()
+                command.getMerchantType(),
+                command.getMerchantNumber(),
+                command.getMerchantTerminal()
         ));
     }
 }
