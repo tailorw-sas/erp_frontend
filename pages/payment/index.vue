@@ -143,7 +143,7 @@ const ENUM_FILTER = [
   { id: 'paymentDetails.paymentDetailId', name: 'Detail Id', disabled: false },
   { id: 'paymentDetails.amount', name: 'Detail Amount', disabled: false },
   { id: 'paymentDetails.remark', name: 'Detail Remark', disabled: false },
-  { id: 'invoiceNo', name: 'Invoice No', disabled: true },
+  { id: 'invoice.invoiceNo', name: 'Invoice No', disabled: false },
   { id: 'bookingId', name: 'Booking Id', disabled: true },
   { id: 'firstName', name: 'Guest First Name', disabled: true },
   { id: 'lastName', name: 'Guest Last Name', disabled: true },

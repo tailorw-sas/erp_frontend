@@ -919,12 +919,10 @@ async function getItemById(id: string) {
 }
 
 async function getItemByIdLocal(idItemLocal: string) {
-  console.log('Si se esta ejecutando el getItemByIdLocal', typeof idItemLocal, idItemLocal)
   const idTemp = typeof idItemLocal === 'number' ? idItemLocal : idItemLocal?.id
 
   if (idTemp) {
     const objToEdit = listItemsLocal.value.find(x => x.id === idTemp)
-    console.log('Tambien entro aqui:', objToEdit)
 
     if (objToEdit) {
       idItem.value = idTemp
@@ -1116,6 +1114,7 @@ watch(() => listItemsLocal.value, async () => {
     // Esperar almenos 1 segundo antes de cargar el primer item
     await new Promise(resolve => setTimeout(resolve, 1000))
     await getItemByIdLocal(listItemsLocal.value[0].id)
+    emits('update:listItems', listItemsLocal.value)
   }
 })
 
@@ -1417,9 +1416,9 @@ onMounted(async () => {
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
-      mask: {
-        style: 'backdrop-filter: blur(5px)',
-      },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
     }"
     @hide="openDialogHistory = false"
   >
