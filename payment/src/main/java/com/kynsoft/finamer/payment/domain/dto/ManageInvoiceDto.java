@@ -23,4 +23,5 @@ public class ManageInvoiceDto {
     private Double invoiceAmount;
     private List<ManageBookingDto> bookings;
     private Boolean hasAttachment;
+    private ManageInvoiceDto parent;
 }

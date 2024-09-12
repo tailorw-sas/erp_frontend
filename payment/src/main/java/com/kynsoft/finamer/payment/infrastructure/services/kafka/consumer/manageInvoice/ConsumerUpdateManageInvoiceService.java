@@ -57,7 +57,8 @@ public class ConsumerUpdateManageInvoiceService {
                     EInvoiceType.valueOf(objKafka.getInvoiceType()),
                     objKafka.getInvoiceAmount(), 
                     bookingDtos,
-                    objKafka.getHasAttachment()
+                    objKafka.getHasAttachment(),
+                    objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null
             ));
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);

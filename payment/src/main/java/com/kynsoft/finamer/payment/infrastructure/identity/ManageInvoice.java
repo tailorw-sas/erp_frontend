@@ -31,6 +31,9 @@ public class ManageInvoice {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean hasAttachment;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    private ManageInvoice parent;
+
     @Enumerated(EnumType.STRING)
     private EInvoiceType invoiceType;
 
@@ -50,6 +53,7 @@ public class ManageInvoice {
         }).collect(Collectors.toList()) : null;
         this.invoiceNo = dto.getInvoiceNo();
         this.hasAttachment = dto.getHasAttachment();
+        this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -61,7 +65,8 @@ public class ManageInvoice {
                 invoiceType,
                 invoiceAmount,
                 null,
-                hasAttachment
+                hasAttachment,
+                null
         );
     }
 
@@ -76,7 +81,8 @@ public class ManageInvoice {
                 bookings != null ? bookings.stream().map(b -> {
                             return b.toAggregateSimple();
                         }).collect(Collectors.toList()) : null,
-                hasAttachment
+                hasAttachment,
+                parent != null ? parent.toAggregateSample() : null
         );
     }
 
