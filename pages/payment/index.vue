@@ -137,7 +137,7 @@ const allMenuListItems = ref([
 
 const ENUM_FILTER = [
   { id: 'paymentId', name: 'Payment Id', disabled: false },
-  { id: 'referenceNumber', name: 'Reference No', disabled: true },
+  { id: 'reference', name: 'Reference No', disabled: false },
   { id: 'paymentAmount', name: 'P. Amount', disabled: false },
   { id: 'remark', name: 'Remark' },
   { id: 'paymentDetails.paymentDetailId', name: 'Detail Id', disabled: false },
