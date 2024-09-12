@@ -234,7 +234,7 @@ async function ResetListItems() {
 }
 
 function OnSortField(event: any) {
-  if (event) {
+  if (event && !props.isCreationDialog) {
     Payload.value.sortBy = event.sortField
     Payload.value.sortType = event.sortOrder
     getList()
@@ -728,7 +728,7 @@ onMounted(async () => {
           </div>
           <div style="max-width: 700px; overflow: auto;">
             <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="options"
-              :pagination="Pagination" @update:clicked-item="getItemById($event)"
+              :pagination="Pagination" :is-custom-sorting="!isCreationDialog" @update:clicked-item="getItemById($event)"
               @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
               @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField">
               <template v-if="isCreationDialog" #pagination-total="props">
