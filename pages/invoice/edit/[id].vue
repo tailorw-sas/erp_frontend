@@ -984,13 +984,26 @@ onMounted(async () => {
 
         <template #form-footer="props">
           <div style="width: 100%; height: 100%;">
-            <InvoiceTabView :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"  :get-invoice-agency="getInvoiceAgency" :invoice-obj-amount="invoiceAmount"
-              :is-dialog-open="bookingDialogOpen" :close-dialog="() => { bookingDialogOpen = false }"
-              :open-dialog="handleDialogOpen" :selected-booking="selectedBooking" :force-update="forceUpdate"
-              :toggle-force-update="update" :invoice-obj="item" :refetch-invoice="refetchInvoice"
-              :is-creation-dialog="false" :selected-invoice="selectedInvoice as any" :active="active"
-              :set-active="($event) => { active = $event }" :showTotals="true"
-              :night-type-required="nightTypeRequired" />
+            <InvoiceTabView 
+              :requires-flat-rate="requiresFlatRate" 
+              :get-invoice-hotel="getInvoiceHotel"  
+              :get-invoice-agency="getInvoiceAgency" 
+              :invoice-obj-amount="invoiceAmount"
+              :is-dialog-open="bookingDialogOpen" 
+              :close-dialog="() => { bookingDialogOpen = false }"
+              :open-dialog="handleDialogOpen" 
+              :selected-booking="selectedBooking" 
+              :force-update="forceUpdate"
+              :toggle-force-update="update" 
+              :invoice-obj="item" 
+              :refetch-invoice="refetchInvoice"
+              :is-creation-dialog="false" 
+              :selected-invoice="selectedInvoice as any" 
+              :active="active"
+              :set-active="($event) => { active = $event }" 
+              :showTotals="true"
+              :night-type-required="nightTypeRequired" 
+            />
             <div>
               <div class="flex justify-content-end">
                 <IfCan :perms="['INVOICE-MANAGEMENT:EDIT']">
@@ -999,12 +1012,12 @@ onMounted(async () => {
                     }" />
                 </IfCan>
 
-                <IfCan :perms="['INVOICE-MANAGEMENT:PRINT']">
+              
                 <Button v-tooltip.top="'Print'" class="w-3rem mx-1" icon="pi pi-print" :loading="loadingSaveAll"
-                  :disabled="!item.hasAttachments" @click="() => {
+                  @click="() => {
                     exportAttachmentsDialogOpen = true
                   }" />
-                </IfCan>  
+           
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
                   <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"

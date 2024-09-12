@@ -581,24 +581,7 @@ onMounted(async () => {
                   </div>
                 </div>
 
-                <div class="col-12 md:col-1 mt-2 w-auto">
-                  <div class="flex justify-content-end">
-                    <Checkbox
-                      v-model="filterAllDateRange"
-                      binary
-                      class="mr-2"
-                      @change="() => {
-                        console.log(filterAllDateRange);
-
-                        if (!filterAllDateRange) {
-                          filterToSearch.from = startOfMonth
-                          filterToSearch.to = endOfMonth
-                        }
-                      }"
-                    />
-                    <label for="" class="mr-2 font-bold">All</label>
-                  </div>
-                </div>
+              
               </div>
               <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex w-full">

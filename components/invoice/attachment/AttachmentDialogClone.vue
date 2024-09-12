@@ -29,8 +29,9 @@ const props = defineProps({
     required: true
   },
   listItems: {
-    type: Array,
-    required: false
+    type: Array<any>,
+    required: false,
+    default: []
   },
   addItem: {
     type: Function as any,
@@ -58,7 +59,7 @@ const { data: userData } = useAuth()
 
 const invoice = ref<any>(props.selectedInvoiceObj)
 const defaultAttachmentType = ref<any>(null)
-
+const resourceTypeSelected = ref<any>(null)
 const route = useRoute()
 
 const filterToSearch = ref({
@@ -73,11 +74,14 @@ const confattachmentTypeListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-attachment-type',
 })
-
+const confResourceTypeApi = reactive({
+  moduleApi: 'payment',
+  uriApi: 'resource-type',
+})
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
-
+const resourceTypeList = ref<any[]>([])
 const loadingSearch = ref(false)
 
 const loadingDelete = ref(false)
@@ -126,7 +130,7 @@ const Fields: Array<Container> = [
       {
         field: 'resourceType',
         header: 'Resource Type',
-        dataType: 'text',
+        dataType: 'select',
         class: 'field mb-3 col-12 md: required',
         headerClass: 'mb-1',
         disabled: true
@@ -235,13 +239,17 @@ function OnSortField(event: any) {
   }
 }
 
-function clearForm() {
+async function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
-
-  getInvoiceSupportAttachment()
+  await getInvoiceSupportAttachment() 
   formReload.value++
 }
+
+
+   
+
+
 
 async function getList() {
   try {
@@ -290,63 +298,69 @@ async function getInvoiceSupportAttachment() {
   try {
     const payload
       = {
-      filter: [{
-        key: 'code',
-        operator: 'EQUALS',
-        value: 'INV',
-        logicalOperation: 'AND',
-
-      }],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'attachInvDefault',
+            operator: 'EQUALS',
+            value: true,
+            logicalOperation: 'AND',
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND',
+          },
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confattachmentTypeListApi.moduleApi, confattachmentTypeListApi.uriApi, payload)
 
     if (response?.data?.length > 0) {
       defaultAttachmentType.value = { ...response?.data[0], fullName: `${response?.data[0]?.code}-${response?.data[0]?.name}` }
       item.value.type = defaultAttachmentType.value
-      formReload.value++
+      // formReload.value++
     }
   }
   catch (error) {
     console.error('Error loading Attachment Type list:', error)
   }
 }
-
 async function getAttachmentTypeList(query = '') {
   try {
     const payload
       = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     attachmentTypeList.value = []
     const response = await GenericService.search(confattachmentTypeListApi.moduleApi, confattachmentTypeListApi.uriApi, payload)
@@ -357,6 +371,50 @@ async function getAttachmentTypeList(query = '') {
   }
   catch (error) {
     console.error('Error loading Attachment Type list:', error)
+  }
+}
+
+
+async function getResourceTypeList(query = '') {
+  try {
+    const payload
+      = {
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'name',
+        sortType: ENUM_SHORT_TYPE.ASC
+      }
+
+    resourceTypeList.value = []
+    const response = await GenericService.search(confResourceTypeApi.moduleApi, confResourceTypeApi.uriApi, payload)
+    const { data: dataList } = response
+    for (const iterator of dataList) {
+      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading resource type list:', error)
   }
 }
 
@@ -501,7 +559,7 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
 
     console.log(props.isCreationDialog);
-
+ 
     if (props.isCreationDialog) {
       const data = props.listItems?.find((attachment: any) => attachment?.id === id) as any
 
@@ -630,8 +688,9 @@ watch(PayloadOnChangePage, (newValue) => {
 })
 
 
-onMounted(() => {
-  getInvoiceSupportAttachment()
+onMounted(async () => {
+  await getResourceTypeList()
+  await getInvoiceSupportAttachment()
   if (props.selectedInvoice) {
     Payload.value.filter = [{
       key: 'invoice.id',
@@ -640,15 +699,23 @@ onMounted(() => {
       logicalOperation: 'AND'
     }]
   }
-
-  console.log(props?.listItems);
   if (!props.isCreationDialog) {
-    getList()
-  }else{
-    if(props?.listItems?.length > 0){
-      idItemToLoadFirstTime.value = props?.listItems[0]?.id
+    await getList()
+
+    if (props?.listItems?.length === 0) {
+      resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
   }
+  else {
+    if (props?.listItems?.length > 0) {
+      idItemToLoadFirstTime.value = props?.listItems[0]?.id
+    }
+    if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
+      resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
+    }
+    // item.value.resourceType = `${OBJ_ENUM_INVOICE_TYPE_CODE[route.query.type]}-${OBJ_ENUM_INVOICE[route.query.type]}`
+  }
+  formReload.value += 1
 })
 </script>
 
@@ -687,12 +754,48 @@ onMounted(() => {
             <EditFormV2WithContainer :key="formReload" :fields-with-containers="Fields" :item="item"
               :show-actions="true" :loading-save="loadingSaveAll" class=" w-full " @cancel="clearForm"
               @delete="requireConfirmationToDelete($event)" @submit="saveItem(item)">
+              <template #field-resourceType="{ item: data, onUpdate }">
+                <DebouncedAutoCompleteComponent
+                  v-if="!loadingSaveAll"
+                  id="autocomplete"
+                  field="name"
+                  item-value="id"
+                  :model="resourceTypeSelected"
+                  :disabled="resourceTypeSelected"
+                  :suggestions="resourceTypeList"
+                  @change="($event) => {
+                    onUpdate('resourceType', $event)
+                    typeError = false
+                  }"
+                  @load="($event) => getResourceTypeList($event)"
+                >
+                  <template #option="props">
+                    <span>{{ props.item.name }}</span>
+                  </template>
+                  <template #chip="{ value }">
+                    <div>
+                      {{ value?.name }}
+                    </div>
+                  </template>
+                </DebouncedAutoCompleteComponent>
+                <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
+                  required</span>
+              </template>
+
               <template #field-type="{ item: data, onUpdate }">
-                <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName"
-                  item-value="id" :model="data.type" :suggestions="attachmentTypeList" @change="($event) => {
+                <DebouncedAutoCompleteComponent
+                  v-if="!loadingSaveAll"
+                  id="autocomplete"
+                  field="fullName"
+                  item-value="id"
+                  :model="data.type"
+                  :disabled="!isCreationDialog && ListItems.length > 0"
+                  :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
                     typeError = false
-                  }" @load="($event) => getAttachmentTypeList($event)">
+                  }"
+                  @load="($event) => getAttachmentTypeList($event)"
+                >
                   <template #option="props">
                     <span>{{ props.item.fullName }}</span>
                   </template>

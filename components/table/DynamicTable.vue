@@ -59,6 +59,13 @@ const props = defineProps({
   parentComponentLoading: {
     type: Boolean,
     required: false,
+  },
+  // Esta propiedad de va a usar para el ordenamiento local, para que ordene local debe venir en false
+  // En el manejo del onSortField se debe validar que no se llame al api en el padre
+  isCustomSorting: {
+    type: Boolean,
+    required: false,
+    default: true,
   }
 })
 
@@ -515,7 +522,7 @@ getOptionsList()
         show-gridlines
         striped-rows
         removable-sort
-        lazy
+        :lazy="props.isCustomSorting"
         scrollable
         scroll-height="60vh"
         :filters="filters1"

@@ -8,6 +8,7 @@ import type { Container } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
+import { applyFiltersAndSort } from '~/pages/payment/utils/helperFilters'
 
 const props = defineProps({
 
@@ -52,6 +53,15 @@ const props = defineProps({
   selectedInvoiceObj: {
     type: Object,
     required: true
+  },
+  disableDeleteBtn: {
+    type: Boolean,
+    required: false
+  },
+  documentOptionHasBeenUsed: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 })
 
@@ -59,6 +69,8 @@ const { data: userData } = useAuth()
 
 const invoice = ref<any>(props.selectedInvoiceObj)
 const defaultAttachmentType = ref<any>(null)
+const disableDeleteBtn = ref(props.disableDeleteBtn)
+const documentOptionHasBeenUsed = ref(props.documentOptionHasBeenUsed)
 
 const route = useRoute()
 
@@ -223,16 +235,39 @@ const Payload = ref<IQueryRequest>({
 
 const ListItems = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
+const listItemsLocal = ref<any[]>([...props.listItems])
 
 async function ResetListItems() {
   Payload.value.page = 0
 }
 
-function OnSortField(event: any) {
+async function parseDataTableFilterLocal(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
+  Payload.value.filter = [...parseFilter || []]
+  listItemsLocal.value = [...applyFiltersAndSort(Payload.value, listItemsLocal.value)]
+}
+
+function onSortFieldLocal(event: any) {
   if (event) {
+    if (event.sortField === 'type') {
+      event.sortField = 'type.name'
+    }
     Payload.value.sortBy = event.sortField
     Payload.value.sortType = event.sortOrder
-    getList()
+    parseDataTableFilterLocal(event.filter)
+  }
+}
+
+function OnSortField(event: any) {
+  if (event) {
+    if (!props.isCreationDialog) {
+      Payload.value.sortBy = event.sortField
+      Payload.value.sortType = event.sortOrder
+      getList()
+    }
+    else {
+      onSortFieldLocal(event)
+    }
   }
 }
 
@@ -298,13 +333,20 @@ async function getInvoiceSupportAttachment() {
   try {
     const payload
       = {
-        filter: [{
-          key: 'code',
-          operator: 'EQUALS',
-          value: 'INV',
-          logicalOperation: 'AND',
-
-        }],
+        filter: [
+          {
+            key: 'attachInvDefault',
+            operator: 'EQUALS',
+            value: true,
+            logicalOperation: 'AND',
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND',
+          },
+        ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -549,7 +591,7 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
 
     if (props.isCreationDialog) {
-      const data = props.listItems?.find((attachment: any) => attachment?.id === id) as any
+      const data = listItemsLocal.value?.find((attachment: any) => attachment?.id === id) as any
       item.value = { ...data }
       formReload.value += 1
       return loadingSaveAll.value = false
@@ -650,8 +692,18 @@ function downloadFile() {
   }
 }
 
+const haveAttachmentWithAttachmentTypeInv = computed(() => {
+  return ListItems.value?.some((attachment: any) => attachment?.type?.code === 'INV')
+})
+
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
+})
+
+watch(() => props.listItems, async (newValue) => {
+  if (newValue) {
+    listItemsLocal.value = [...newValue]
+  }
 })
 
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
@@ -670,8 +722,8 @@ watch(PayloadOnChangePage, async (newValue) => {
 })
 
 onMounted(async () => {
-  getInvoiceSupportAttachment()
   await getResourceTypeList()
+  await getInvoiceSupportAttachment()
   if (props.selectedInvoice) {
     Payload.value.filter = [{
       key: 'invoice.id',
@@ -684,19 +736,20 @@ onMounted(async () => {
   if (!props.isCreationDialog) {
     await getList()
 
-    if (props?.listItems?.length === 0) {
+    if (listItemsLocal.value?.length === 0) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
   }
   else {
-    if (props?.listItems?.length > 0) {
-      idItemToLoadFirstTime.value = props?.listItems[0]?.id
+    if (listItemsLocal.value?.length > 0) {
+      idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id
     }
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
     // item.value.resourceType = `${OBJ_ENUM_INVOICE_TYPE_CODE[route.query.type]}-${OBJ_ENUM_INVOICE[route.query.type]}`
   }
+  formReload.value += 1
 })
 </script>
 
@@ -719,10 +772,11 @@ onMounted(async () => {
           </div>
           <div style="max-width: 700px; overflow: auto;">
             <DynamicTable
-              :data="isCreationDialog ? listItems as any : ListItems"
+              :data="isCreationDialog ? listItemsLocal as any : ListItems"
               :columns="Columns"
               :options="options"
               :pagination="Pagination"
+              :is-custom-sorting="!isCreationDialog"
               @update:clicked-item="getItemById($event)"
               @open-edit-dialog="getItemById($event)"
               @on-confirm-create="clearForm"
@@ -730,12 +784,9 @@ onMounted(async () => {
               @on-list-item="ResetListItems"
               @on-sort-field="OnSortField"
             >
-              <template
-                v-if="isCreationDialog"
-                #pagination-total="props"
-              >
+              <template v-if="isCreationDialog" #pagination-total="props">
                 <span class="font-bold font">
-                  {{ listItems?.length }}
+                  {{ listItemsLocal?.length }}
                 </span>
               </template>
             </DynamicTable>
@@ -748,24 +799,24 @@ onMounted(async () => {
           </div>
           <div class="card">
             <EditFormV2WithContainer
-              :key="formReload" :fields-with-containers="Fields" :item="item"
-              :show-actions="true" :loading-save="loadingSaveAll" class=" w-full " @cancel="clearForm"
-              @delete="requireConfirmationToDelete($event)" @submit="saveItem(item)"
+              :key="formReload"
+              :fields-with-containers="Fields"
+              :item="item"
+              :show-actions="true"
+              :loading-save="loadingSaveAll"
+              class=" w-full"
+              @cancel="clearForm"
+              @delete="requireConfirmationToDelete($event)"
+              @submit="saveItem(item)"
             >
               <template #field-resourceType="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll"
-                  id="autocomplete"
-                  field="name"
-                  item-value="id"
-                  :model="resourceTypeSelected"
-                  :disabled="resourceTypeSelected"
-                  :suggestions="resourceTypeList"
+                  v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+                  :model="resourceTypeSelected" :disabled="resourceTypeSelected" :suggestions="resourceTypeList"
                   @change="($event) => {
                     onUpdate('resourceType', $event)
                     typeError = false
-                  }"
-                  @load="($event) => getResourceTypeList($event)"
+                  }" @load="($event) => getResourceTypeList($event)"
                 >
                   <template #option="props">
                     <span>{{ props.item.name }}</span>
@@ -787,12 +838,12 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                  :disabled="!isCreationDialog && ListItems.length > 0"
-                  :suggestions="attachmentTypeList" @change="($event) => {
+                  :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? (!haveAttachmentWithAttachmentTypeInv) : (!isCreationDialog && ListItems.length > 0)"
+                  :suggestions="attachmentTypeList"
+                  @change="($event) => {
                     onUpdate('type', $event)
                     typeError = false
-                  }"
-                  @load="($event) => getAttachmentTypeList($event)"
+                  }" @load="($event) => getAttachmentTypeList($event)"
                 >
                   <template #option="props">
                     <span>{{ props.item.fullName }}</span>
@@ -814,11 +865,7 @@ onMounted(async () => {
 
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
-                  accept="application/pdf"
-                  :max-file-size="300 * 1024 * 1024"
-                  :multiple="false"
-                  auto
-
+                  accept="application/pdf" :max-file-size="300 * 1024 * 1024" :multiple="false" auto
                   custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
                     onUpdate('file', file)
@@ -828,9 +875,13 @@ onMounted(async () => {
                   <template #header="{ chooseCallback }">
                     <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
                       <div class="flex gap-2">
-                        <Button id="btn-choose" class="p-2" icon="pi pi-plus" :disabled="!isCreationDialog && ListItems.length > 0" text @click="chooseCallback()" />
                         <Button
-                          icon="pi pi-times" class="ml-2" severity="danger" :disabled="!data.file || !isCreationDialog && ListItems.length > 0" text
+                          id="btn-choose" class="p-2" icon="pi pi-plus"
+                          :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)" text @click="chooseCallback()"
+                        />
+                        <Button
+                          icon="pi pi-times" class="ml-2" severity="danger"
+                          :disabled="!data.file || !isCreationDialog && ListItems.length > 0" text
                           @click="onUpdate('file', null)"
                         />
                       </div>
@@ -859,18 +910,11 @@ onMounted(async () => {
                 </FileUpload>
               </template>
               <template #field-filename="{ item: data }">
-                <InputText
-                  v-model="data.filename"
-                  field="filename"
-                  show-clear
-                  :disabled="!isCreationDialog"
-                />
+                <InputText v-model="data.filename" field="filename" show-clear :disabled="!isCreationDialog" />
               </template>
               <template #field-remark="{ item: data }">
                 <Textarea
-                  v-model="data.remark"
-                  field="remark"
-                  :disabled="!isCreationDialog && ListItems.length > 0"
+                  v-model="data.remark" field="remark" :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)"
                   rows="5"
                 />
               </template>
@@ -887,7 +931,8 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
                   <Button
-                    v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus" :disabled="!isCreationDialog && ListItems.length > 0" @click="() => {
+                    v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus"
+                    :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)" @click="() => {
                       idItem = ''
                       item = itemTemp
                       clearForm()
@@ -905,15 +950,15 @@ onMounted(async () => {
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-SHOW-HISTORY']">
                   <Button
                     v-if="selectedInvoiceObj.invoiceType === InvoiceType.INCOME || route.query.type === InvoiceType.INCOME"
-                    v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book" :disabled="!idItem || !isCreationDialog"
-                    @click="showHistory"
+                    v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book"
+                    :disabled="!idItem || !isCreationDialog" @click="showHistory"
                   />
                 </IfCan>
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
                   <Button
                     v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
-                    :disabled="!idItem || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
+                    :disabled="disableDeleteBtn === false ? (!idItem || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)) : true"
                     @click="requireConfirmationToDelete"
                   />
                 </IfCan>

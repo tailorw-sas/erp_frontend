@@ -919,13 +919,16 @@ async function getItemById(id: string) {
 }
 
 async function getItemByIdLocal(idItemLocal: string) {
-  if (idItemLocal) {
-    const objToEdit = listItemsLocal.value.find(x => x.id === idItemLocal)
+  const idTemp = typeof idItemLocal === 'number' ? idItemLocal : idItemLocal?.id
+
+  if (idTemp) {
+    const objToEdit = listItemsLocal.value.find(x => x.id === idTemp)
+
     if (objToEdit) {
-      idItem.value = idItemLocal
+      idItem.value = idTemp
       loadingSaveAll.value = true
       try {
-        item.value.id = idItemLocal
+        item.value.id = idTemp
         item.value.resource = objToEdit.resource
         item.value.resourceType = objToEdit.resourceType
         item.value.attachmentType = objToEdit.attachmentType
@@ -1103,12 +1106,15 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 
-watch(() => listItemsLocal.value, async (newValue) => {
-  if (!newValue) {
+watch(() => listItemsLocal.value, async () => {
+  if (listItemsLocal.value.length === 0) {
     clearForm()
   }
   else {
+    // Esperar almenos 1 segundo antes de cargar el primer item
+    await new Promise(resolve => setTimeout(resolve, 1000))
     await getItemByIdLocal(listItemsLocal.value[0].id)
+    emits('update:listItems', listItemsLocal.value)
   }
 })
 
@@ -1127,13 +1133,15 @@ watch(() => idItem.value, async (newValue) => {
   }
 })
 
-watch(() => listItemsLocal.value, async (newValue) => {
-  if (newValue) {
-    getItemByIdLocal(newValue[0])
+// watch(() => listItemsLocal.value, async (newValue) => {
+//   console.log('listItemsLocal Se ejecuto el watch', newValue.length)
 
-    emits('update:listItems', listItemsLocal.value)
-  }
-}, { deep: true })
+//   if (newValue.length > 0) {
+//     getItemByIdLocal(newValue[0].id)
+
+//     emits('update:listItems', listItemsLocal.value)
+//   }
+// }, { deep: true })
 
 onMounted(async () => {
   loadDefaultsValues()
@@ -1143,9 +1151,6 @@ onMounted(async () => {
       await getItemById(idItem.value)
     }
   }
-
-  // else {
-  // }
 })
 </script>
 
@@ -1411,9 +1416,9 @@ onMounted(async () => {
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
-      mask: {
-        style: 'backdrop-filter: blur(5px)',
-      },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
     }"
     @hide="openDialogHistory = false"
   >
