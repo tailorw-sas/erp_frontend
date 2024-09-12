@@ -23,6 +23,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialCl
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceMessage;
@@ -200,7 +201,7 @@ public class InvoiceController {
     @PostMapping("/send")
     public ResponseEntity<?> send(@RequestBody SendInvoiceRequest request){
         SendInvoiceCommand command = SendInvoiceCommand.fromRequest(request);
-        CreateNewCreditMessage response = this.mediator.send(command);
+        SendInvoiceMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
     }

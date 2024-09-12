@@ -53,7 +53,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         request.setMailJetAttachments(attachments);
         try {
             mailService.sendMail(request);
-
+            command.setResult(true);
         } catch (Exception e) {
             command.setResult(false);
         }
