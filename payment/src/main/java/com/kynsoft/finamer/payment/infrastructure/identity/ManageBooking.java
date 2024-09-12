@@ -38,6 +38,9 @@ public class ManageBooking {
     @JoinColumn(name = "manage_invoice", nullable = true)
     private ManageInvoice invoice;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    private ManageBooking parent;
+
     public ManageBooking(ManageBookingDto dto) {
         this.id = dto.getId();
         this.bookingId = dto.getBookingId();
@@ -53,6 +56,7 @@ public class ManageBooking {
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
         this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.parent = dto.getParent() != null ? new ManageBooking(dto.getParent()) : null;
     }
 
     public ManageBookingDto toAggregate(){
@@ -70,7 +74,8 @@ public class ManageBooking {
                 couponNumber,
                 adults,
                 children,
-                invoice != null ? invoice.toAggregateSample() : null
+                invoice != null ? invoice.toAggregateSample() : null,
+                parent != null ? parent.toAggregateSimple() : null
         );
     }
 
@@ -89,6 +94,7 @@ public class ManageBooking {
                 couponNumber,
                 adults,
                 children,
+                null,
                 null
         );
     }

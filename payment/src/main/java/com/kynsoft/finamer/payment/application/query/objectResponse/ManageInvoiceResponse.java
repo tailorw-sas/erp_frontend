@@ -25,6 +25,7 @@ public class ManageInvoiceResponse implements IResponse {
     private EInvoiceType invoiceType;
     private Double invoiceAmount;
     private List<ManageBookingResponse> bookings = new ArrayList<>();
+    private ManageInvoiceResponse parent;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -38,6 +39,7 @@ public class ManageInvoiceResponse implements IResponse {
                 this.bookings.add(new ManageBookingResponse(booking));
             }
         }
+        this.parent = dto.getParent() != null ? new ManageInvoiceResponse(dto.getParent()) : null;
     }
 
     private String deleteHotelInfo(String input) {
