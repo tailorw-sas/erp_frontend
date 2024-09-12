@@ -39,6 +39,9 @@ public class ManageBankAccount implements Serializable {
     @Column(unique = true)
     private String accountNumber;
 
+    @Column(name = "bank_name")
+    private String nameOfBank;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -50,22 +53,21 @@ public class ManageBankAccount implements Serializable {
     @JoinColumn(name = "hotel_id")
     private ManageHotel manageHotel;
 
-
     private String description;
 
     public ManageBankAccount(ManageBankAccountDto dto) {
         this.id = dto.getId();
         this.status = dto.getStatus();
         this.accountNumber = dto.getAccountNumber();
-        this.manageHotel = new ManageHotel(dto.getManageHotel());
-        this.description = dto.getDescription();
+        this.manageHotel = new ManageHotel(dto.getManageHotelDto());
     }
 
     public ManageBankAccountDto toAggregate(){
         return new ManageBankAccountDto(
                 id, status, accountNumber,
-                manageHotel != null ? manageHotel.toAggregate() : null,
-                description
+                this.nameOfBank,
+                manageHotel != null ? manageHotel.toAggregate() : null
+
         );
     }
 }

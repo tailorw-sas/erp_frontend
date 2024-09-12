@@ -18,6 +18,6 @@ public class ManageBankAccountDto {
     private UUID id;
     private Status status;
     private String accountNumber;
-    private ManageHotelDto manageHotel;
-    private String description;
+    private String nameOfBank;
+    private ManageHotelDto manageHotelDto;
 }
