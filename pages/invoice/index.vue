@@ -1765,6 +1765,7 @@ const legend = ref(
       :selected-invoice="attachmentInvoice?.id"
       :selected-invoice-obj="attachmentInvoice"
       :disableDeleteBtn="true"
+      :document-option-has-been-used="true"
     />
   </div>
   <div v-if="doubleFactorOpen">
