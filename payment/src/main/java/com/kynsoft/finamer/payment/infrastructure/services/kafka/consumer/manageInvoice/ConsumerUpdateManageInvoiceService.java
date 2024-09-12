@@ -30,7 +30,7 @@ public class ConsumerUpdateManageInvoiceService {
 
     @KafkaListener(topics = "finamer-update-manage-invoice", groupId = "payment-entity-replica")
     public void listen(ManageInvoiceKafka objKafka) {
-        try {
+//        try {
             List<ManageBookingDto> bookingDtos = new ArrayList<>();
             if (objKafka.getBookings() != null) {
                 for (ManageBookingKafka booking : objKafka.getBookings()) {
@@ -65,9 +65,9 @@ public class ConsumerUpdateManageInvoiceService {
                     objKafka.getHasAttachment(),
                     objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null
             ));
-        } catch (Exception ex) {
-            Logger.getLogger(ConsumerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        } catch (Exception ex) {
+//            Logger.getLogger(ConsumerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
+//        }
     }
 
 }
