@@ -103,6 +103,11 @@ public class ManageAttachmentServiceImpl implements IManageAttachmentService {
     }
 
     @Override
+    public List<ManageAttachmentDto> findAllByInvoiceId(UUID invoiceId) {
+        return repositoryQuery.findAllByInvoiceId(invoiceId).stream().map(ManageAttachment::toAggregate).toList();
+    }
+
+    @Override
     public void create(List<ManageAttachmentDto> dtos) {
         List<ManageAttachment> attachments = new ArrayList<>();
         for(ManageAttachmentDto dto : dtos){
