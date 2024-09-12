@@ -67,8 +67,11 @@ public class BookingServiceImpl implements ImportBookingService {
             ExcelBeanReader<BookingRow> reader = new ExcelBeanReader<>(readerConfiguration, BookingRow.class);
             ExcelBean<BookingRow> excelBean = new ExcelBean<>(reader);
             validatorFactory.createValidators(request.getImportType().name());
-            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this,
-                    new BookingImportProcessDto(null, request.getImportProcessId(), EProcessStatus.RUNNING)));
+            BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
+                    .status(EProcessStatus.RUNNING)
+                    .total(0)
+                    .build();
+            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
             for (BookingRow bookingRow : excelBean) {
                 bookingRow.setImportProcessId(request.getImportProcessId());
                 if (validatorFactory.validate(bookingRow)) {
@@ -78,13 +81,20 @@ public class BookingServiceImpl implements ImportBookingService {
             }
             validatorFactory.removeValidators();
             bookingImportHelperService.createInvoiceFromGroupedBooking(request.getImportProcessId());
-            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this,
-                    new BookingImportProcessDto(null, request.getImportProcessId(), EProcessStatus.FINISHED)));
+            BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
+                    .status(EProcessStatus.FINISHED)
+                    .total(reader.totalRows())
+                    .build();
+            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
             bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
         } catch (Exception e) {
-            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this,
-                    new BookingImportProcessDto(null, request.getImportProcessId(), EProcessStatus.FINISHED,
-                            true, e.getMessage())));
+           BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
+                    .hasError(true)
+                    .exceptionMessage(e.getMessage())
+                    .status(EProcessStatus.FINISHED)
+                    .total(0)
+                    .build();
+            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this,bookingImportProcessDto));
         }
 
     }
@@ -111,7 +121,7 @@ public class BookingServiceImpl implements ImportBookingService {
         if (statusDtp.isHasError()) {
             throw new ExcelException(statusDtp.getExceptionMessage());
         }
-        return new ImportBookingProcessStatusResponse(statusDtp.getStatus().name());
+        return new ImportBookingProcessStatusResponse(statusDtp.getStatus().name(),statusDtp.getTotal() );
 
     }
 

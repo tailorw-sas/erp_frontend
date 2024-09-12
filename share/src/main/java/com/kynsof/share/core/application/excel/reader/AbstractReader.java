@@ -65,4 +65,6 @@ public abstract class AbstractReader<T> {
 
     public abstract void hasContent();
 
+    public abstract int totalRows();
+
 }

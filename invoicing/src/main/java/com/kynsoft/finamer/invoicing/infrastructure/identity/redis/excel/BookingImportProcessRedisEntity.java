@@ -23,15 +23,24 @@ public class BookingImportProcessRedisEntity implements Serializable {
     private EProcessStatus status;
     private boolean hasError;
     private String exceptionMessage;
+    private int totalRows;
 
-    public BookingImportProcessRedisEntity(String id, String importProcessId, EProcessStatus status) {
+    public BookingImportProcessRedisEntity(String id, String importProcessId, EProcessStatus status,int totalRows) {
         this.id = id;
         this.importProcessId = importProcessId;
         this.status = status;
+        this.totalRows=totalRows;
     }
 
 
     public BookingImportProcessDto toAgreggate(){
-        return new BookingImportProcessDto(this.id,this.importProcessId,this.status,this.hasError,this.exceptionMessage);
+        return  BookingImportProcessDto.builder()
+                .id(this.id)
+                .importProcessId(this.importProcessId)
+                .status(this.status)
+                .hasError(this.hasError)
+                .exceptionMessage(this.exceptionMessage)
+                .total(totalRows)
+                .build();
     }
 }
