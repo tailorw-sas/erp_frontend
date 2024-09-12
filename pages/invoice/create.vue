@@ -1109,6 +1109,7 @@ function addRoomRate(rate: any) {
   }]
   calcBookingInvoiceAmount(rate)
   calcBookingHotelAmount(rate)
+  calcInvoiceAmountInBookingByRoomRate()
 // calcInvoiceAmountInBookingByRoomRate()
 }
 
