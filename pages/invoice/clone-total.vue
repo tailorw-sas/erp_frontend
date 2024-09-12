@@ -183,7 +183,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'invoiceId',
     header: 'ID',
     dataType: 'text',
-    class: `field col-12  md:col-2 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`,
+    class: `field col-12  md:col-3 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`,
     disabled: true,
     
   },
@@ -192,34 +192,46 @@ const Fields = ref<FieldDefinitionType[]>([
     header: 'Invoice Date',
     dataType: 'date',
   
-    class: 'field col-12 md:col-2 required ',
+    class: 'field col-12 md:col-3 required ',
     validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
   },
- 
   {
-    field: 'isManual',
-    header: 'Manual',
-    dataType: 'check',
-    class: `field col-12 md:col-1  flex align-items-center pb-0 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
+    field: 'hotel',
+    header: 'Hotel',
+    dataType: 'select',
+    class: 'field col-12 md:col-3 mb-5  required',
+ 
     disabled: true
-  },
-  {
-    field: 'invoiceAmount',
-    header: 'Invoice Amount',
-    dataType: 'text',
- 
-    class: 'field col-12 md:col-2 required  ',
-    disabled: true,
-    ...(route.query.type === InvoiceType.OLD_CREDIT && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
   },
   {
     field: 'invoiceType',
     header: 'Invoice Type',
     dataType: 'select',
-    class: 'field col-12 md:col-2  mb-5',
+    class: 'field col-12 md:col-3 mb-5',
  
     disabled: true
   },
+  
+  {
+    field: 'invoiceNumber',
+    header: 'Invoice Number',
+    dataType: 'text',
+    
+    class: 'field col-12 md:col-3  ',
+    disabled: true,
+
+  },
+
+  {
+    field: 'invoiceAmount',
+    header: 'Invoice Amount',
+    dataType: 'text',
+ 
+    class: 'field col-12 md:col-3 required  ',
+    disabled: true,
+    ...(route.query.type === InvoiceType.OLD_CREDIT && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
+  },
+
   {
     field: 'agency',
     header: 'Agency',
@@ -228,53 +240,20 @@ const Fields = ref<FieldDefinitionType[]>([
    
     disabled: true
   },
- 
-  {
-    field: 'invoiceNumber',
-    header: 'Invoice Number',
-    dataType: 'text',
-    
-    class: 'field col-12 md:col-2  ',
-    disabled: true,
 
-  },
-  {
-    field: 'dueDate',
-    header: 'Due Date',
-    dataType: 'date',
-  
-    class: 'field col-12 md:col-2 required ',
-    validation: z.date({ required_error: 'The Due Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
-  },
-  {
-    field: 'reSend',
-    header: 'Re-Send',
-    dataType: 'check',
-    class: `field col-12 md:col-1 mb-3    flex align-items-center pb-0 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
-    disabled: false
-  },
-  {
-    field: 'reSenDate',
-    header: 'Re-Send Date',
-    dataType: 'date',
-  
-    class: 'field col-12 md:col-2',
-    validation: z.date({ required_error: 'The Due Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
-  },
-  {
-    field: 'hotel',
-    header: 'Hotel',
-    dataType: 'select',
-    class: 'field col-12 md:col-2 mb-5  required',
- 
-    disabled: true
-  },
   {
     field: 'status',
     header: 'Status',
     dataType: 'select',
-    class: 'field col-12 md:col-3 mb-5  required',
+    class: 'field col-12 md:col-2 mb-5 ',
  
+    disabled: true
+  },
+  {
+    field: 'isManual',
+    header: 'Manual',
+    dataType: 'check',
+    class: `field col-12 md:col-1 mb-3 flex align-items-center pb-0 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: true
   },
  
