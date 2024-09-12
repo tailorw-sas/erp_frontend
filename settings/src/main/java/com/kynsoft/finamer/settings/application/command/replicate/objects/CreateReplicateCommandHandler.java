@@ -26,6 +26,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentSource.ProducerReplicateManagePaymentSourceService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentStatus.ProducerReplicateManagePaymentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerReplicateManagePaymentTransactionTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTradigCompany.ProducerReplicateManageTradingCompanyService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTransactionStatus.ProducerReplicateManageTransactionStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerReplicateManageVCCTransactionTypeService;
 import org.springframework.stereotype.Component;
@@ -48,6 +49,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final ProducerReplicateManageInvoiceTransactionTypeService replicateManageInvoiceTransactionTypeService;
     private final IManageInvoiceStatusService invoiceStatusService;
     private final IManageAttachmentTypeService attachmentTypeService;
+    private final IManageTradingCompaniesService tradingCompaniesService;
 
     private final IManageAgencyService manageAgencyService;
     private final IManageAgencyTypeService manageAgencyTypeService;
@@ -88,6 +90,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
 
     private final ProducerReplicateManageCountryService producerReplicateManageCountryService;
 
+    private final ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService;
+
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService,
                                          IManagerPaymentStatusService paymentStatusService,
                                          IManagePaymentSourceService paymentSourceService,
@@ -98,7 +102,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManagePaymentTransactionTypeService replicateManagePaymentTransactionTypeService,
                                          ProducerReplicateManageInvoiceStatusService replicateManageInvoiceStatusService,
                                          ProducerReplicateManageInvoiceTransactionTypeService replicateManageInvoiceTransactionTypeService,
-                                         IManageInvoiceStatusService invoiceStatusService, IManageAgencyService manageAgencyService,
+                                         IManageInvoiceStatusService invoiceStatusService, IManageTradingCompaniesService tradingCompaniesService, IManageAgencyService manageAgencyService,
                                          IManageBankAccountService manageBankAccountService, IManageEmployeeService manageEmployeeService,
                                          IManageHotelService manageHotelService, IManagerClientService managerClientService,
                                          IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService,
@@ -123,8 +127,9 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManageTransactionStatusService replicateManageTransactionStatusService,
                                          ProducerReplicateB2BPartnerService producerReplicateB2BPartnerService,
                                          ProducerReplicateB2BPartnerTypeService producerReplicateB2BPartnerTypeService,
-                                          ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
-                                         ProducerReplicateManageCountryService producerReplicateManageCountryService) {
+                                         ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
+                                         ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService) {
+        this.tradingCompaniesService = tradingCompaniesService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerLanguageService = managerLanguageService;
         this.manageVCCTransactionTypeService = manageVCCTransactionTypeService;
@@ -167,6 +172,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.producerReplicateB2BPartnerTypeService = producerReplicateB2BPartnerTypeService;
         this.producerReplicateManageCityStateService = producerReplicateManageCityStateService;
         this.producerReplicateManageCountryService = producerReplicateManageCountryService;
+        this.producerReplicateManageTradingCompanyService = producerReplicateManageTradingCompanyService;
     }
 
     @Override
@@ -345,6 +351,13 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 .description(manageB2BPartnerTypeDto.getDescription())
                                 .build()
                         );
+                    }
+                }
+                case MANAGE_TRADING_COMPANY -> {
+                    for (ManageTradingCompaniesDto manageTradingCompaniesDto:this.tradingCompaniesService.findAll()){
+                        producerReplicateManageTradingCompanyService.create(new ReplicateManageTradingCompanyKafka(manageTradingCompaniesDto.getId(),
+                                manageTradingCompaniesDto.getCode(),manageTradingCompaniesDto.getIsApplyInvoice(),
+                                manageTradingCompaniesDto.getCif(),manageTradingCompaniesDto.getAddress(),manageTradingCompaniesDto.getCompany()));
                     }
                 }
                 default -> System.out.println("Número inválido. Por favor, intenta de nuevo con un número del 1 al 7.");

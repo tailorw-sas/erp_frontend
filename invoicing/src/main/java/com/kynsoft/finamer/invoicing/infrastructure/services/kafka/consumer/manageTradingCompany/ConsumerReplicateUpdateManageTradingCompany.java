@@ -26,7 +26,7 @@ public class ConsumerReplicateUpdateManageTradingCompany {
 
             UpdateManageTradingCompaniesCommand command = new UpdateManageTradingCompaniesCommand(
                     objKafka.getId(),
-                    objKafka.isApplyInvoice());
+                    objKafka.isApplyInvoice(),objKafka.getCif(),objKafka.getAddress(),objKafka.getCompany());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateUpdateManageTradingCompany.class.getName()).log(Level.SEVERE, null, ex);

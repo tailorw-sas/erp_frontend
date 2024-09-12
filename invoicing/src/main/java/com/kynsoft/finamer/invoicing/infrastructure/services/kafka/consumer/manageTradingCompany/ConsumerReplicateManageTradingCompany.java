@@ -30,7 +30,7 @@ public class ConsumerReplicateManageTradingCompany {
         try {
 
             CreateManageTradingCompaniesCommand command = new CreateManageTradingCompaniesCommand(objKafka.getId(),
-                    objKafka.getCode(), objKafka.isApplyInvoice());
+                    objKafka.getCode(), objKafka.isApplyInvoice(),objKafka.getCif(),objKafka.getAddress(),objKafka.getCompany());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageTradingCompany.class.getName()).log(Level.SEVERE, null, ex);

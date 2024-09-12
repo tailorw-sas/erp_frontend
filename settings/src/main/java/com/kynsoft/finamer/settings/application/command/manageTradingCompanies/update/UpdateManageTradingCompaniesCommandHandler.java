@@ -62,7 +62,8 @@ public class UpdateManageTradingCompaniesCommandHandler implements ICommandHandl
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageTradingCompanyService.update(new UpdateManageTradingCompanyKafka(dto.getId(), dto.getIsApplyInvoice()));
+            this.producerUpdateManageTradingCompanyService.update(new UpdateManageTradingCompanyKafka(dto.getId(), dto.getIsApplyInvoice(),
+                    dto.getCif(),dto.getAddress(),dto.getCompany()));
         }
     }
 
