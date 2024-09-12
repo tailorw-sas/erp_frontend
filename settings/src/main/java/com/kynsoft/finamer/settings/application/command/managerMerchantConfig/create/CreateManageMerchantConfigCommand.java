@@ -21,8 +21,10 @@ public class CreateManageMerchantConfigCommand implements ICommand {
     private String name;
     private Method method;
     private String institutionCode;
+    private String merchantNumber;
+    private String merchantTerminal;
 
-    public CreateManageMerchantConfigCommand(UUID manageMerchant, String url, String altUrl, String successUrl, String errorUrl, String declinedUrl, String merchantType, String name, Method method, String institutionCode) {
+    public CreateManageMerchantConfigCommand(UUID manageMerchant, String url, String altUrl, String successUrl, String errorUrl, String declinedUrl, String merchantType, String name, Method method, String institutionCode, String merchantNumber, String merchantTerminal) {
         this.id = UUID.randomUUID();
         this.manageMerchant = manageMerchant;
         this.url = url;
@@ -34,6 +36,8 @@ public class CreateManageMerchantConfigCommand implements ICommand {
         this.name = name;
         this.method = method;
         this.institutionCode = institutionCode;
+        this.merchantNumber = merchantNumber;
+        this.merchantTerminal = merchantTerminal;
     }
 
     public static CreateManageMerchantConfigCommand fromRequest(CreateManageMerchantConfigRequest request) {
@@ -47,7 +51,9 @@ public class CreateManageMerchantConfigCommand implements ICommand {
                 request.getMerchantType(), 
                 request.getName(), 
                 request.getMethod(), 
-                request.getInstitutionCode()
+                request.getInstitutionCode(),
+                request.getMerchantNumber(),
+                request.getMerchantTerminal()
         );
     }
 

@@ -62,6 +62,12 @@ public class ManagerMerchantConfig implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
+    @Column(name = "merchant_number")
+    private String merchantNumber;
+
+    @Column(name = "merchant_terminal")
+    private String merchantTerminal;
+
     public ManagerMerchantConfig(ManagerMerchantConfigDto dto) {
         this.id = dto.getId();
         this.managerMerchant = new ManagerMerchant(dto.getManagerMerchantDto());
@@ -74,6 +80,8 @@ public class ManagerMerchantConfig implements Serializable {
         this.name = dto.getName();
         this.method = dto.getMethod();
         this.institutionCode = dto.getInstitutionCode();
+        this.merchantNumber = dto.getMerchantNumber();
+        this.merchantTerminal = dto.getMerchantTerminal();
     }
 
     public ManagerMerchantConfig(ManagerMerchantConfigResponseDto dto) {
@@ -90,6 +98,8 @@ public class ManagerMerchantConfig implements Serializable {
         this.institutionCode = dto.getInstitutionCode();
         this.createdAt = dto.getCreatedAt();
         this.updatedAt = dto.getUpdatedAt();
+        this.merchantNumber = dto.getMerchantNumber();
+        this.merchantTerminal = dto.getMerchantTerminal();
     }
 
     public ManagerMerchantConfigDto toAggregate() {
@@ -104,7 +114,9 @@ public class ManagerMerchantConfig implements Serializable {
                 merchantType, 
                 name, 
                 method, 
-                institutionCode
+                institutionCode,
+                merchantNumber,
+                merchantTerminal
         );
     }
 
@@ -122,7 +134,9 @@ public class ManagerMerchantConfig implements Serializable {
                 method, 
                 institutionCode, 
                 createdAt, 
-                updatedAt
+                updatedAt,
+                merchantNumber,
+                merchantTerminal
         );
     }
 }
