@@ -213,7 +213,7 @@ async function ResetListItems() {
 }
 
 function OnSortField(event: any) {
-  if (event) {
+  if (event && !props.isCreationDialog) {
     Payload.value.sortBy = event.sortField
     Payload.value.sortType = event.sortOrder
     getList()
@@ -642,7 +642,7 @@ onMounted(() => {
           :pagination="Pagination" @update:clicked-item="getItemById($event)"
           @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
           @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-          @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+          @on-list-item="ResetListItems" @on-sort-field="OnSortField" :is-custom-sorting="!isCreationDialog"
         />
       </div>
       <div class="col-12 order-2 md:order-0 md:col-3 pt-5">
