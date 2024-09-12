@@ -8,6 +8,7 @@ import type { Container } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
+import {applyFiltersAndSort} from "~/pages/payment/utils/helperFilters";
 
 const props = defineProps({
 
@@ -228,16 +229,39 @@ const Payload = ref<IQueryRequest>({
 
 const ListItems = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
+const listItemsLocal = ref<any[]>([...props.listItems])
 
 async function ResetListItems() {
   Payload.value.page = 0
 }
 
-function OnSortField(event: any) {
-  if (event && !props.isCreationDialog) {
+async function parseDataTableFilterLocal(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
+  Payload.value.filter = [...parseFilter || []]
+  listItemsLocal.value = [...applyFiltersAndSort(Payload.value, listItemsLocal.value)]
+}
+
+function onSortFieldLocal(event: any) {
+  if (event) {
+    if (event.sortField === 'type') {
+      event.sortField = 'type.name'
+    }
     Payload.value.sortBy = event.sortField
     Payload.value.sortType = event.sortOrder
-    getList()
+    parseDataTableFilterLocal(event.filter)
+  }
+}
+
+function OnSortField(event: any) {
+  if (event) {
+    if (!props.isCreationDialog) {
+      Payload.value.sortBy = event.sortField
+      Payload.value.sortType = event.sortOrder
+      getList()
+    }
+    else {
+      onSortFieldLocal(event)
+    }
   }
 }
 
@@ -561,7 +585,7 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
 
     if (props.isCreationDialog) {
-      const data = props.listItems?.find((attachment: any) => attachment?.id === id) as any
+      const data = listItemsLocal.value?.find((attachment: any) => attachment?.id === id) as any
       item.value = { ...data }
       formReload.value += 1
       return loadingSaveAll.value = false
@@ -666,6 +690,12 @@ watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
 })
 
+watch(() => props.listItems, async (newValue) => {
+  if (newValue) {
+    listItemsLocal.value = [...newValue]
+  }
+})
+
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
     clearForm()
@@ -696,13 +726,13 @@ onMounted(async () => {
   if (!props.isCreationDialog) {
     await getList()
 
-    if (props?.listItems?.length === 0) {
+    if (listItemsLocal.value?.length === 0) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
   }
   else {
-    if (props?.listItems?.length > 0) {
-      idItemToLoadFirstTime.value = props?.listItems[0]?.id
+    if (listItemsLocal.value?.length > 0) {
+      idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id
     }
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
@@ -727,13 +757,13 @@ onMounted(async () => {
             </div>
           </div>
           <div style="max-width: 700px; overflow: auto;">
-            <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="options"
+            <DynamicTable :data="isCreationDialog ? listItemsLocal as any : ListItems" :columns="Columns" :options="options"
               :pagination="Pagination" :is-custom-sorting="!isCreationDialog" @update:clicked-item="getItemById($event)"
               @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
               @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField">
               <template v-if="isCreationDialog" #pagination-total="props">
                 <span class="font-bold font">
-                  {{ listItems?.length }}
+                  {{ listItemsLocal?.length }}
                 </span>
               </template>
             </DynamicTable>
