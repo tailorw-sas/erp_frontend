@@ -137,13 +137,13 @@ const allMenuListItems = ref([
 
 const ENUM_FILTER = [
   { id: 'paymentId', name: 'Payment Id', disabled: false },
-  { id: 'referenceNumber', name: 'Reference No', disabled: true },
+  { id: 'reference', name: 'Reference No', disabled: false },
   { id: 'paymentAmount', name: 'P. Amount', disabled: false },
   { id: 'remark', name: 'Remark' },
   { id: 'paymentDetails.paymentDetailId', name: 'Detail Id', disabled: false },
   { id: 'paymentDetails.amount', name: 'Detail Amount', disabled: false },
   { id: 'paymentDetails.remark', name: 'Detail Remark', disabled: false },
-  { id: 'invoiceNo', name: 'Invoice No', disabled: true },
+  { id: 'invoice.invoiceNo', name: 'Invoice No', disabled: false },
   { id: 'bookingId', name: 'Booking Id', disabled: true },
   { id: 'firstName', name: 'Guest First Name', disabled: true },
   { id: 'lastName', name: 'Guest Last Name', disabled: true },
@@ -458,15 +458,6 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
     const arrayNumero = []
     for (const iterator of dataList) {
-      // if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-      //   iterator.status = statusToBoolean(iterator.status)
-      // }
-
-      // const agency = await getAgencyTypeByAgency(iterator.agency.id)
-
-      // if (agency.length > 0) {
-      //   iterator.agencyType = agency[0].agencyType
-      // }
       if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
         iterator.agencyType = iterator.agency.agencyTypeResponse
       }
@@ -484,11 +475,11 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'applied')) {
         count.applied += iterator.applied
-        iterator.applied = String(iterator.applied)
+        iterator.applied = formatNumber(iterator.applied)
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'noApplied')) {
-        count.noApplied += iterator.noApplied
-        iterator.noApplied = String(iterator.noApplied)
+      if (Object.prototype.hasOwnProperty.call(iterator, 'notApplied')) {
+        count.noApplied += iterator.notApplied
+        iterator.notApplied = formatNumber(iterator.notApplied)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'depositAmount')) {
         iterator.depositAmount = String(iterator.depositAmount)
@@ -497,10 +488,10 @@ async function getList() {
         iterator.otherDeductions = String(iterator.otherDeductions)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'identified')) {
-        iterator.identified = String(iterator.identified)
+        iterator.identified = formatNumber(iterator.identified)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'notIdentified')) {
-        iterator.notIdentified = String(iterator.notIdentified)
+        iterator.notIdentified = formatNumber(iterator.notIdentified)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'bankAccount')) {
         iterator.bankAccount = {
@@ -736,16 +727,16 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
-async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
   let clientTemp: any[] = []
   clientItemsList.value = [allDefaultItem]
-  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
+  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   clientItemsList.value = [...clientItemsList.value, ...clientTemp]
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
   agencyItemsList.value = [allDefaultItem]
-  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
+  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   agencyItemsList.value = [...agencyItemsList.value, ...agencyTemp]
 }
 async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -754,18 +745,16 @@ async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { 
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let hotelTemp: any[] = []
   hotelItemsList.value = [allDefaultItem]
-  hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
+  hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   hotelItemsList.value = [...hotelItemsList.value, ...hotelTemp]
 }
-
 async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
-
 async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let statusTemp: any[] = []
   statusItemsList.value = [allDefaultItem]
-  statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
+  statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   statusItemsList.value = [...statusItemsList.value, ...statusTemp]
 }
 
@@ -1220,7 +1209,9 @@ async function saveApplyPayment() {
     loadingSaveApplyPayment.value = true
     const payload = {
       payment: objItemSelectedForRightClickApplyPayment.value.id || '',
-      invoices: [...idInvoicesSelectedToApplyPayment.value]
+      invoices: [...idInvoicesSelectedToApplyPayment.value],
+      applyDeposit: paymentDetailsTypeDepositSelected.value.length > 0,
+      deposits: [...paymentDetailsTypeDepositSelected.value],
     }
     const response = await GenericService.create('payment', 'payment/apply-payment', payload)
 
