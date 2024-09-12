@@ -60,6 +60,7 @@ public class ManageBankAccount implements Serializable {
         this.status = dto.getStatus();
         this.accountNumber = dto.getAccountNumber();
         this.manageHotel = new ManageHotel(dto.getManageHotelDto());
+        this.nameOfBank = dto.getNameOfBank();
     }
 
     public ManageBankAccountDto toAggregate(){

@@ -25,7 +25,8 @@ public class CreateManageBankAccountCommandHandler implements ICommandHandler<Cr
          service.create(new ManageBankAccountDto(command.getId(),
                  Status.valueOf(command.getStatus()),
                  command.getAccountNumber(),
-                 command.getNameOfBank(),manageHotelDto));
+                 command.getNameOfBank(),
+                 manageHotelDto));
 
     }
 }
