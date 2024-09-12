@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
-import { z } from 'zod'
-import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { watch } from 'vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -60,8 +57,6 @@ const formReload = ref(0)
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 
-console.log(invoice.value)
-
 const loadingDelete = ref(false)
 
 const idItem = ref('')
@@ -73,7 +68,6 @@ const item = ref<GenericObject>({
   invoice: props.selectedInvoice,
   attachmentId: '',
   resource: invoice.value.invoiceId,
-  // @ts-expect-error
   resourceType: `${invoice.value.invoiceType?.name || OBJ_ENUM_INVOICE[invoice.value.invoiceType]}`
 })
 
@@ -96,8 +90,7 @@ const Columns: IColumn[] = [
   { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
 
   { field: 'description', header: 'Remark', type: 'text', width: '200px' },
-  { field: 'status', header: 'Status', type: 'text', width: '100px' },
-
+  // { field: 'status', header: 'Status', type: 'text', width: '100px', sortable: false },
 ]
 
 const incomeColumns: IColumn[] = [
@@ -148,30 +141,23 @@ async function ResetListItems() {
 
 function OnSortField(event: any) {
   if (event) {
-    console.log(event);
     Payload.value.sortBy = getSortField(event.sortField)
     Payload.value.sortType = event.sortOrder
     getList()
   }
 }
 
-
 function getSortField(field: any) {
-  
   switch (field) {
     case 'status':
       return 'type.status'
 
-    case 'invoiceId'  :
+    case 'invoiceId' :
       return 'invoice.invoiceId'
-   
-
 
     default: return field
-      
   }
 }
-
 
 function clearForm() {
   item.value = { ...itemTemp.value }
@@ -318,6 +304,12 @@ watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
 })
 
+watch(PayloadOnChangePage, (newValue) => {
+  Payload.value.page = newValue?.page ? newValue?.page : 0
+  Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getList()
+})
+
 onMounted(() => {
   if (props.selectedAttachment) {
     Payload.value.filter = [{
@@ -354,9 +346,7 @@ onMounted(() => {
         <div class="flex flex-column" style="max-width: 900px;overflow: auto;">
           <DynamicTable
             :data="isCreationDialog ? listItems as any : ListItems" :columns="props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? incomeColumns : Columns"
-            :options="options" :pagination="Pagination"
-
-            @on-confirm-create="clearForm"
+            :options="options" :pagination="Pagination" @on-confirm-create="clearForm"
             @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
           />
           <div class=" flex w-full justify-content-end ">
