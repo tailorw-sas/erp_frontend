@@ -28,4 +28,6 @@ public interface IManageBookingService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<ManageBookingDto> findByIds(List<UUID> ids);
+
+    List<ManageBookingDto> findAllToReplicate();
 }
