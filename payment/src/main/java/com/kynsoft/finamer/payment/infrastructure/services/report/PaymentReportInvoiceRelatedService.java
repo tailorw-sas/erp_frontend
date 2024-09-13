@@ -50,7 +50,7 @@ public class PaymentReportInvoiceRelatedService implements IPaymentReport {
     public PaymentReportResponse generateReport(EPaymentReportType reportType, UUID paymentId) {
         try {
             PaymentDto paymentDto = paymentService.findById(paymentId);
-            Optional<byte[]> paymentDetailContent = this.getPaymentDetailsReportContent(paymentDto.getPaymentId());
+            Optional<byte[]> paymentDetailContent = this.getPaymentDetailsReportContent(paymentId.toString());
             Optional<ManageInvoiceDto> invoice = Optional.ofNullable(paymentDto.getInvoice());
             List<InputStream> contentToMerge = new LinkedList<>();
             paymentDetailContent.ifPresent(content -> contentToMerge.add(new ByteArrayInputStream(content)));
@@ -70,7 +70,7 @@ public class PaymentReportInvoiceRelatedService implements IPaymentReport {
 
     }
 
-    private Optional<byte[]> getPaymentDetailsReportContent(long paymentId) {
+    private Optional<byte[]> getPaymentDetailsReportContent(String paymentId) {
         AbstractReportContentProvider contentProvider = reportContentProviderFactory
                 .getReportContentProvider(EPaymentContentProvider.PAYMENT_DETAILS_REPORT_CONTENT);
         Map<String, Object> parameters = new HashMap<>();
