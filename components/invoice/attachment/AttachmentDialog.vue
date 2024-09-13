@@ -928,7 +928,7 @@ onMounted(async () => {
                     @click="saveItem(props.item.fieldValues)"
                   />
                 </IfCan>
-
+                
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
                   <Button
                     v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus"
