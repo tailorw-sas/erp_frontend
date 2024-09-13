@@ -1143,7 +1143,7 @@ async function deleteItem(id: string) {
 function disabledButtonSave() {
     let result = false;
 
-    if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
+    if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
        
         const bookingIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.bookingId));
 
@@ -1331,6 +1331,9 @@ function requireConfirmationToDelete(event: any) {
 function toggleForceUpdate() {
   forceUpdate.value = !forceUpdate.value
 }
+const existsAttachmentTypeInv = computed(() => {
+  return attachmentList.value.some(attachment => attachment?.type?.code === 'INV')
+})
 
 function openRoomRateDialog(booking?: any) {
   active.value = 1
