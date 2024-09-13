@@ -1141,6 +1141,30 @@ async function deleteItem(id: string) {
 }
 
 function disabledButtonSave() {
+    let result = false;
+
+    if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
+       
+        const bookingIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.bookingId));
+
+        for (let i = 0; i < roomRateList.value.length; i++) {
+            const roomRate = roomRateList.value[i];
+
+            if (!bookingIdsWithAdjustments.has(roomRate.bookingId)) {
+                result = true; // Deshabilitar el botón si al menos un room rate por booking no tiene ajustes asociados
+                break; // Se encontró un room rate sin ajustes, por lo tanto, se deshabilita el botón
+            }
+        }
+    } else {
+        result = false; // Deshabilitar el botón si no hay ajustes o adjuntos
+    }
+
+  
+    return result;
+}
+
+//Funcion para el cloando total
+/*function disabledButtonSave() {
   let result = false
   if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
     result = true
@@ -1162,6 +1186,8 @@ function disabledButtonSave() {
   }
   return result
 }
+*/
+
 
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
