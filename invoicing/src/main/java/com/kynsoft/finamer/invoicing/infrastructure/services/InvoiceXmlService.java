@@ -7,9 +7,9 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 
 import org.springframework.stereotype.Service;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 import java.io.StringWriter;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
