@@ -40,7 +40,7 @@ public class InvoiceAttachmentContentProvider extends AbstractReportContentProvi
         invoiceRequest.setInvoiceId(invoiceId);
         invoiceRequest.setInvoiceType("INVOICE_SUPPORT");
         ResponseEntity<byte[]> response =
-                restTemplate.postForEntity(INVOICE_SERVICE_URL + "/api/invoice/report",
+                restTemplate.postForEntity(INVOICE_SERVICE_URL + "/api/manage-invoice/report",
                         invoiceRequest, byte[].class);
         if (response.getStatusCode().is2xxSuccessful()){
             return Optional.ofNullable(response.getBody());
