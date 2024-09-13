@@ -187,6 +187,7 @@ const allMenuListItems = ref([
     id: 'statusHistory',
     label: 'Status History',
     icon: 'pi pi-cog',
+    iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
     command: ($event: any) => {},
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:SHOW-HISTORY']),
@@ -195,6 +196,7 @@ const allMenuListItems = ref([
     id: 'applyPayment',
     label: 'Apply Payment',
     icon: 'pi pi-cog',
+    iconSvg: '',
     command: ($event: any) => openModalApplyPayment($event),
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
@@ -202,7 +204,8 @@ const allMenuListItems = ref([
   {
     id: 'document',
     label: 'Document',
-    icon: 'pi pi-cog',
+    icon: 'pi pi-file-word',
+    iconSvg: '',
     command: ($event: any) => {},
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:DOCUMENT']),
@@ -210,7 +213,8 @@ const allMenuListItems = ref([
   {
     id: 'print',
     label: 'Print',
-    icon: 'pi pi-cog',
+    icon: 'pi pi-print',
+    iconSvg: '',
     command: ($event: any) => {
       openDialogPrint()
     },
@@ -220,7 +224,8 @@ const allMenuListItems = ref([
   {
     id: 'changeAgency',
     label: 'Change Agency',
-    icon: 'pi pi-cog',
+    icon: '',
+    iconSvg: '',
     command: ($event: any) => {},
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
@@ -228,7 +233,8 @@ const allMenuListItems = ref([
   {
     id: 'shareFiles',
     label: 'Share Files',
-    icon: 'pi pi-cog',
+    icon: 'pi pi-share-alt',
+    iconSvg: '',
     command: ($event: any) => {},
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
@@ -236,7 +242,8 @@ const allMenuListItems = ref([
   {
     id: 'addTask',
     label: 'Add Task',
-    icon: 'pi pi-cog',
+    icon: 'pi pi-list-check',
+    iconSvg: '',
     command: ($event: any) => {},
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
@@ -245,6 +252,7 @@ const allMenuListItems = ref([
     id: 'importTransaction',
     label: 'Import Transaction',
     icon: 'pi pi-cog',
+    iconSvg: 'M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z',
     command: ($event: any) => {},
     disabled: true,
     visible: true,
@@ -252,7 +260,8 @@ const allMenuListItems = ref([
   {
     id: 'paymentWithoutAttachment',
     label: 'Payment Without Attachment',
-    icon: 'pi pi-cog',
+    icon: '',
+    iconSvg: '',
     command: ($event: any) => {},
     disabled: true,
     visible: true,
@@ -260,7 +269,8 @@ const allMenuListItems = ref([
   {
     id: 'paymentWithAttachment',
     label: 'Payment With Attachment',
-    icon: 'pi pi-cog',
+    icon: '',
+    iconSvg: '',
     command: ($event: any) => {},
     disabled: true,
     visible: true,
@@ -2258,7 +2268,18 @@ onMounted(async () => {
       </template>
     </Dialog>
   </div>
-  <ContextMenu ref="contextMenu" :model="allMenuListItems" />
+  <ContextMenu ref="contextMenu" :model="allMenuListItems">
+    <template #itemicon="{ item }">
+      <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#8d8faa">
+          <path :d="item.iconSvg" />
+        </svg>
+      </div>
+      <div v-else class="w-2rem flex justify-content-center align-items-center">
+        <i v-if="item.icon" :class="item.icon" />
+      </div>
+    </template>
+  </ContextMenu>
 </template>
 
 <style lang="scss">
