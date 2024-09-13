@@ -96,7 +96,7 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
         for (CellInfo cellInfo : annotatedField.keySet()) {
             if (cellInfo.getPosition() != -1) {
                 String cellValue = header.getCell(cellInfo.getPosition()).getStringCellValue();
-                if (!cellInfo.getHeaderName().equals(cellValue)) {
+                if (Objects.isNull(cellValue) || !cellInfo.getHeaderName().trim().equals(cellValue.trim())) {
                     throw new ExcelException("Invalid excel content");
                 }
             }
