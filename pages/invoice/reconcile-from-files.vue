@@ -14,6 +14,7 @@ const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
+const fileInput = ref()
 const invoiceFile = ref('')
 const attachFile = ref()
 const uploadComplete = ref(false)
@@ -194,7 +195,7 @@ async function importFile() {
     let successOperation = true;
     uploadComplete.value = true;
 
-    try {
+   try {
         // Verifica que se hayan seleccionado archivos
         const selectedFiles = importModel.value.attachFile; // Usa el modelo correcto
         console.log('Archivos seleccionados:', selectedFiles);
@@ -214,40 +215,45 @@ async function importFile() {
             toast.add({ severity: 'error', summary: 'Error', detail: errorMessages.join(', '), life: 10000 });
             return;
         }
-
+   
         const uuid = uuidv4();
         idItem.value = uuid;
         const formData = new FormData();
 
         // Procesa cada archivo en el array de archivos
         for (const fileInput of selectedFiles) {
-            console.log('Procesando archivo:', fileInput.name);
+           console.log('Procesando archivo:', fileInput.name);
             const base64String: any = await fileToBase64(fileInput);
             const base64 = base64String.split('base64,')[1];
-            const file = await base64ToFile(base64, fileInput.name, fileInput.type);
-
+            
+           const file = await base64ToFile(base64, fileInput.name, fileInput.type);
+          
             // Agrega cada archivo al FormData
-            formData.append('files[]', file);
+            formData.append('files', file);
         }
 
         // Agrega información adicional al FormData
         formData.append('importProcessId', uuid);
         formData.append('employeeId', userData?.value?.user?.userId || '');
         formData.append('employee', userData?.value?.user?.name || '');
-
+       console.log(formData,'payload')
         // Envía los datos al servicio
         await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData);
 
-    } catch (error: any) {
+    } 
+    catch (error: any) {
         successOperation = false;
         uploadComplete.value = false;
         options.value.loading = false;
         messageDialog.value = error.data?.data?.error?.errorMessage || 'Error desconocido';
+        console.log(' aqui se detiene ')
         openSuccessDialog.value = true;
     }
 
     if (successOperation) {
+        console.log(' nunca entro ')
         await validateStatusImport();
+        console.log('entre')
         if (!haveErrorImportStatus.value) {
             await getErrorList();
             if (listItems.value.length === 0) {
@@ -264,14 +270,16 @@ async function importFile() {
 
 async function validateStatusImport() {
     options.value.loading = true
+    console.log('Starting status validation...'); // Agregar registro al inicio
+
     return new Promise<void>((resolve) => {
         let status = 'RUNNING'
         const intervalID = setInterval(async () => {
             try {
                 const response = await GenericService.getById(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, idItem.value, 'import-status')
                 status = response.status
-            }
-            catch (error: any) {
+            } catch (error: any) {
+                console.error('Error occurred:', error); // Agregar registro de error
                 toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 20000 })
                 haveErrorImportStatus.value = true
                 clearInterval(intervalID)
@@ -281,6 +289,7 @@ async function validateStatusImport() {
             }
 
             if (status === 'FINISHED') {
+                console.log('Import process finished.'); // Agregar registro de finalización
                 clearInterval(intervalID)
                 options.value.loading = false
                 resolve() // Resuelve la promesa cuando el estado es FINISHED
@@ -321,6 +330,7 @@ watch(payloadOnChangePage, (newValue) => {
 
 onMounted(async () => {
     // getErrorList()
+  
 })
 </script>
 
