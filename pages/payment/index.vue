@@ -211,8 +211,10 @@ const allMenuListItems = ref([
     id: 'print',
     label: 'Print',
     icon: 'pi pi-cog',
-    command: ($event: any) => {},
-    disabled: true,
+    command: ($event: any) => {
+      openDialogPrint()
+    },
+    disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:PRINT']),
   },
   {
@@ -1238,7 +1240,8 @@ async function onExpandRowApplyPayment(event: any) {
 }
 
 function onRowContextMenu(event: any) {
-  if (event && event.data && (event.data.notApplied !== '' || event.data.notApplied !== null) && event.data.notApplied > 0 && (event.data.paymentStatus && event.data.paymentStatus.code !== 'CAN')) {
+  idPaymentSelectedForPrint.value = event?.data?.id || ''
+  if (event && event.data && (event.data.notApplied !== '' || event.data.notApplied !== null) && event.data.notApplied.replace(/,/g, '') > 0 && (event.data.paymentStatus && event.data.paymentStatus.code !== 'CAN')) {
     objItemSelectedForRightClickApplyPayment.value = event.data
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
