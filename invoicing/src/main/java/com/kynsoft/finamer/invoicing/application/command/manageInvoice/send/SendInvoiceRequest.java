@@ -14,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SendInvoiceRequest {
-    private UUID invoice;
+    private List<UUID> invoice;
     private String employee;
 
 }

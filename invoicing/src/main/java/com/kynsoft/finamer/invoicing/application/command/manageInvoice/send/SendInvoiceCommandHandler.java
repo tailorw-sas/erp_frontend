@@ -2,7 +2,12 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.send;
 
 import com.kynsof.share.core.application.mailjet.*;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.domain.exception.GlobalBusinessException;
+import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,19 +29,26 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     @Override
     @Transactional
     public void handle(SendInvoiceCommand command) {
-
-        ManageInvoiceDto invoice = this.service.findById(command.getInvoice());
+       //TODO recorrer la lista de incoice
+        ManageInvoiceDto invoice = this.service.findById(command.getInvoice().get(0));
         //TODO replicar el b2bPartner de la agencia para obtener el método de envio
-
+        if (invoice != null
+                && !invoice.getStatus().equals(EInvoiceStatus.SENT )
+               && !invoice.getStatus().equals(EInvoiceStatus.RECONCILED )) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.SERVICE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.SERVICE_NOT_FOUND.getReasonPhrase())));
+        }
         //Send Email
         sendEmail(command, invoice);
+        assert invoice != null;
+        invoice.setStatus(EInvoiceStatus.SENT);
+        this.service.update(invoice);
     }
 
     private void sendEmail(SendInvoiceCommand command, ManageInvoiceDto invoice) {
         if (invoice != null  && invoice.getAgency().getMailingAddress() != null) {
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
             request.setSubject("INVOICE " + invoice.getInvoiceNumber());
-            request.setTemplateId(5965446);//Cambiar en configuración
+            request.setTemplateId(6285030);//Cambiar en configuración
 
             List<MailJetVar> vars = Arrays.asList(
                     new MailJetVar("username", "Niurka"),
