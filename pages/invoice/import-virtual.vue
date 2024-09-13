@@ -189,11 +189,11 @@ async function importFile() {
     if (!haveErrorImportStatus.value) {
       await getErrorList()
       if (listItems.value.length === 0) {
-        // toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 10000 })
         options.value.loading = false
-        messageDialog.value = `The file was upload successful!. ${totalImportedRows.value} rows imported.`
-        openSuccessDialog.value = true
-        // await clearForm()
+        // messageDialog.value = `The file was upload successful!. ${totalImportedRows.value} rows imported.`
+        // openSuccessDialog.value = true
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value} rows imported.`, life: 0 })
+        await clearForm()
       }
     }
     // clearForm()
