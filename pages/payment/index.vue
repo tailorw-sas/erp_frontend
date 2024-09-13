@@ -200,6 +200,22 @@ const allMenuListItems = ref([
     visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
   },
   {
+    id: 'document',
+    label: 'Document',
+    icon: 'pi pi-cog',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:DOCUMENT']),
+  },
+  {
+    id: 'print',
+    label: 'Print',
+    icon: 'pi pi-cog',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:PRINT']),
+  },
+  {
     id: 'changeAgency',
     label: 'Change Agency',
     icon: 'pi pi-cog',
@@ -232,12 +248,20 @@ const allMenuListItems = ref([
     visible: true,
   },
   {
-    id: 'document',
-    label: 'Document',
+    id: 'paymentWithoutAttachment',
+    label: 'Payment Without Attachment',
     icon: 'pi pi-cog',
     command: ($event: any) => {},
     disabled: true,
-    visible: authStore.can(['PAYMENT-MANAGEMENT:DOCUMENT']),
+    visible: true,
+  },
+  {
+    id: 'paymentWithAttachment',
+    label: 'Payment With Attachment',
+    icon: 'pi pi-cog',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: true,
   },
 ])
 
