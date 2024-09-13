@@ -3,6 +3,7 @@ import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import dayjs from 'dayjs'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -69,6 +70,41 @@ const options = ref({
   messageToDelete: 'Do you want to save the change?',
   showTitleBar: false
 })
+
+async function paymentPrint() {
+  try {
+    loading.value = true
+    let nameOfPdf = ''
+    const payloadTemp = {
+      invoiceId: props.invoice.id || '',
+      invoiceType: invoiceSupport.value ? 'INVOICE_SUPPORT' : 'INVOICE_AND_BOOKING',
+    }
+    // En caso de que solo este marcado el paymentAndDetails
+
+    nameOfPdf = invoiceSupport.value ? `invoice-support-${dayjs().format('YYYY-MM-DD')}.pdf` : `invoice-and-bookings-${dayjs().format('YYYY-MM-DD')}.pdf`
+
+    const response: any = await GenericService.create('invoicing', 'manage-invoice/report', payloadTemp)
+
+    const url = window.URL.createObjectURL(new Blob([response]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = nameOfPdf // Nombre del archivo que se descargará
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    loading.value = false
+  }
+  catch (error) {
+    loading.value = false
+  }
+  finally {
+    loading.value = false
+    dialogVisible.value = false
+  }
+
+  // generateStyledPDF()
+}
 
 async function getList() {
   try {
@@ -166,7 +202,10 @@ onMounted(() => {
       <div class=" flex w-full justify-content-end ">
         <Button
           v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loading"
-          @click="() => { handleDownload() }"
+          @click="() => {
+            paymentPrint()
+            // handleDownload()
+          }"
         />
         <Button
           v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
