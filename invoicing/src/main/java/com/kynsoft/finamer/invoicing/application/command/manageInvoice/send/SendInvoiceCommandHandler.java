@@ -29,8 +29,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     @Override
     @Transactional
     public void handle(SendInvoiceCommand command) {
-
-        ManageInvoiceDto invoice = this.service.findById(command.getInvoice());
+       //TODO recorrer la lista de incoice
+        ManageInvoiceDto invoice = this.service.findById(command.getInvoice().get(0));
         //TODO replicar el b2bPartner de la agencia para obtener el método de envio
         if (invoice != null
                 && !invoice.getStatus().equals(EInvoiceStatus.SENT )
