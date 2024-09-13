@@ -1583,21 +1583,21 @@ onMounted(() => {
             />
             <Column 
               v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalHotelAmount" 
+              :footer="Number.parseFloat(totalHotelAmount.toFixed(2))"
               footer-style="font-weight: 700"
             />
             <Column 
               v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalOriginalAmount" 
+              :footer="Number.parseFloat(totalOriginalAmount.toFixed(2))"
               footer-style="font-weight: 700"
             />
             <Column 
-              :footer="totalInvoiceAmount" 
+              :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))"
               footer-style="font-weight: 700"
             />
             <Column 
               v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalDueAmount" 
+              :footer="Number.parseFloat(totalDueAmount.toFixed(2))"
               footer-style="font-weight: 700" 
             />
 

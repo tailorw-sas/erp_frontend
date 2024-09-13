@@ -144,22 +144,16 @@ onMounted(() => {
         </template>
 
         <template #field-amount="{ item: data, onUpdate }">
-          <InputText
-
-            v-model="data.amount" @update:model-value="($event: any) => {
-
-              console.log($event);
-
+          <InputNumber
+            v-model="data.amount" @input="($event: any) => {
+              $event = $event.value
               if (isNaN(+$event)){
                 $event = 0
               }
-
               let amount = invoiceAmount
-
               if (idItem){
                 amount -= item?.amount
               }
-
               amountError = false
               onUpdate('amount', Number($event))
 
@@ -173,8 +167,7 @@ onMounted(() => {
                   amountError = true
                 }
               }
-
-            }"
+            }" :minFractionDigits="0" :max-fraction-digits="2"
           />
           <span v-if="amountError" class="error-message p-error text-xs">The sum of the amount field and invoice amount field is {{ invoiceType === InvoiceType.INVOICE ? 'under' : 'over' }} 0</span>
         </template>

@@ -2,10 +2,9 @@
 import { ref, watch } from 'vue'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
-import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import dayjs from 'dayjs'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import { GenericService } from '~/services/generic-services'
 
 import type { GenericObject } from '~/types'
@@ -315,6 +314,16 @@ const bookingApi = {
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
 }
+
+const formattedInvoiceAmount = computed({
+  get() {
+    // return Math.round((invoiceAmount.value + Number.EPSILON) * 100) / 100
+    return Number.parseFloat(invoiceAmount.value.toFixed(2))
+  },
+  set(value: string) {
+    invoiceAmount.value = Number.parseFloat(value)
+  }
+})
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -993,6 +1002,7 @@ function calcBookingInvoiceAmount(roomRate: any) {
     bookingList.value[bookingIndex].invoiceAmount += Number(roomRate.invoiceAmount)
     // bookingList.value[bookingIndex].dueAmount += Number(roomRate.invoiceAmount)
   })
+  bookingList.value[bookingIndex].invoiceAmount = Number.parseFloat(bookingList.value[bookingIndex].invoiceAmount.toFixed(2))
   calcInvoiceAmount()
 
   // if (bookingIndex > -1) {
@@ -1017,12 +1027,15 @@ function calcRoomRateInvoiceAmount(newAdjustment: any) {
   const adjustmentIndex = adjustmentList.value.findIndex(rr => rr?.id === newAdjustment?.id)
 
   if (adjustmentIndex > -1) {
-    roomRateList.value[roomRateIndex].invoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) - Number(adjustmentList.value[adjustmentIndex]?.amount)
+    const roomRateInvoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) - Number(adjustmentList.value[adjustmentIndex]?.amount)
+    roomRateList.value[roomRateIndex].invoiceAmount = Number.parseFloat(roomRateInvoiceAmount.toFixed(2))
   }
 
   if (roomRateIndex > -1) {
-    roomRateList.value[roomRateIndex].invoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) + Number(newAdjustment.amount)
-    roomRateList.value[roomRateIndex].dueAmount = Number(roomRateList.value[roomRateIndex].dueAmount) + Number(newAdjustment.amount)
+    const roomRateInvoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) + Number(newAdjustment.amount)
+    roomRateList.value[roomRateIndex].invoiceAmount = Number.parseFloat(roomRateInvoiceAmount.toFixed(2))
+    const roomRateDueAmount = Number(roomRateList.value[roomRateIndex].dueAmount) + Number(newAdjustment.amount)
+    roomRateList.value[roomRateIndex].dueAmount = Number.parseFloat(roomRateDueAmount.toFixed(2))
     calcBookingInvoiceAmount(roomRateList.value[roomRateIndex])
   }
 }
@@ -1033,6 +1046,7 @@ async function calcInvoiceAmount() {
   bookingList.value.forEach((b) => {
     invoiceAmount.value = Number(invoiceAmount.value) + Number(b?.invoiceAmount)
   })
+  invoiceAmount.value = Number.parseFloat(invoiceAmount.value.toFixed(2))
 }
 
 async function calcInvoiceAmountInBookingByRoomRate() {
@@ -1050,8 +1064,8 @@ async function calcInvoiceAmountInBookingByRoomRate() {
     }, 0) // 0 es el valor inicial
 
     if (totalInvoiceAmount) {
-      b.invoiceAmount = Number(totalInvoiceAmount) || 0
-      b.dueAmount = Number(totalInvoiceAmount) || 0
+      b.invoiceAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0
+      b.dueAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0
     }
   })
 }
@@ -1229,9 +1243,9 @@ onMounted(async () => {
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
         <InputText
-          v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
+          v-model="formattedInvoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
             invoiceAmountError = false
-            onUpdate('invoiceAmount', $event)
+            // onUpdate('invoiceAmount', $event)
           }"
         />
         <span v-if="invoiceAmountError" class="error-message p-error text-xs">{{ invoiceAmountErrorMessage }}</span>

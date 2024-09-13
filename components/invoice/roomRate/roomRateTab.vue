@@ -923,8 +923,8 @@ watch(() => props.bookingObj, () => {
               footer="Totals:" :colspan="!isDetailView ? 9 : 10"
               footer-style="text-align:right; font-weight: 700"
             />
-            <Column :footer="totalHotelAmount" footer-style="font-weight: 700" />
-            <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+            <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2))" footer-style="font-weight: 700" />
+            <Column :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))" footer-style="font-weight: 700" />
           </Row>
         </ColumnGroup>
       </template>
