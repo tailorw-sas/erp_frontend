@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone;
+package com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone_old;
 
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingRequest;
