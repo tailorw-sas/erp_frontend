@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import dayjs from 'dayjs'
+import { useRoute } from 'vue-router'
 import { formatNumber } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
@@ -11,8 +12,10 @@ import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { itemMenuList } from '~/components/payment/indexBtns'
 import IfCan from '~/components/auth/IfCan.vue'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 
 // VARIABLES -----------------------------------------------------------------------------------------
+const route = useRoute()
 const toast = useToast()
 const authStore = useAuthStore()
 const { status, data } = useAuth()
@@ -39,6 +42,71 @@ const idInvoicesSelectedToApplyPayment = ref<string[]>([])
 const invoiceAmmountSelected = ref(0)
 const paymentAmmountSelected = ref(0)
 const paymentBalance = ref(0)
+
+// PRINT
+const idPaymentSelectedForPrint = ref('')
+const openPrint = ref(false)
+const loadingPrintDetail = ref(false)
+const loadingSaveAll = ref(false)
+const formReload = ref(0)
+const confApiPaymentDetailPrint = reactive({
+  moduleApi: 'payment',
+  uriApi: 'payment/report',
+})
+
+const fieldPrint = ref<FieldDefinitionType[]>([
+  {
+    field: 'paymentAndDetails',
+    header: 'Payment and Details',
+    dataType: 'check',
+    disabled: true,
+    class: 'field col-12 md:col-6 required mb-2',
+  },
+  {
+    field: 'invoiceRelated',
+    header: 'Invoice Related',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 md:col-6 required mb-2',
+  },
+  {
+    field: 'paymentSupport',
+    header: 'Payment Support',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 md:col-6 required mb-2',
+  },
+  {
+    field: 'invoiceRelatedWithSupport',
+    header: 'Invoice Related With Support',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 md:col-6 required mb-2',
+  },
+  {
+    field: 'allPaymentsSupport',
+    header: 'All Payment Support',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 md:col-6 required mb-2',
+  },
+])
+
+const itemPrint = ref<GenericObject>({
+  paymentAndDetails: true,
+  paymentSupport: false,
+  allPaymentsSupport: false,
+  invoiceRelated: false,
+  invoiceRelatedWithSupport: false
+})
+
+const itemTempPrint = ref<GenericObject>({
+  paymentAndDetails: true,
+  paymentSupport: false,
+  allPaymentsSupport: false,
+  invoiceRelated: false,
+  invoiceRelatedWithSupport: false
+})
 
 const idItemToLoadFirstTime = ref('')
 const objApis = ref({
@@ -1263,6 +1331,121 @@ function havePermissionMenu() {
     }
   }
 }
+
+async function paymentPrint(event: any) {
+  try {
+    loadingPrintDetail.value = true
+    let nameOfPdf = ''
+    const payloadTemp = {
+      paymentId: idPaymentSelectedForPrint.value ? idPaymentSelectedForPrint.value.toString() : '',
+      paymentType: '',
+    }
+    // En caso de que solo este marcado el paymentAndDetails
+    if (
+      event && event.paymentAndDetails
+      && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
+    ) {
+      payloadTemp.paymentType = 'PAYMENT_DETAILS'
+      nameOfPdf = `payment-details-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    if (
+      event && event.paymentAndDetails && event.paymentSupport === true
+      && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.allPaymentsSupport === false)
+    ) {
+      payloadTemp.paymentType = 'PAYMENT_SUPPORT'
+      nameOfPdf = `payment-support-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    if (
+      event && event.paymentAndDetails && event.allPaymentsSupport === true
+      && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
+    ) {
+      payloadTemp.paymentType = 'ALL_SUPPORT'
+      nameOfPdf = `payment-all-support-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    if (
+      event && event.paymentAndDetails && event.invoiceRelated === true
+      && (event.allPaymentsSupport === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
+    ) {
+      payloadTemp.paymentType = 'INVOICE_RELATED'
+      nameOfPdf = `payment-invoice-related-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    if (
+      event && event.paymentAndDetails && event.invoiceRelatedWithSupport === true
+      && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.paymentSupport === false)
+    ) {
+      payloadTemp.paymentType = 'INVOICE_RELATED_SUPPORT'
+      nameOfPdf = `payment-invoice-related-support-${dayjs().format('YYYY-MM-DD')}.pdf`
+    }
+
+    const response: any = await GenericService.create(confApiPaymentDetailPrint.moduleApi, confApiPaymentDetailPrint.uriApi, payloadTemp)
+
+    const url = window.URL.createObjectURL(new Blob([response]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = nameOfPdf // Nombre del archivo que se descargará
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    loadingPrintDetail.value = false
+  }
+  catch (error) {
+    loadingPrintDetail.value = false
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was failed', life: 3000 })
+  }
+  finally {
+    loadingPrintDetail.value = false
+    openPrint.value = false
+  }
+
+  // generateStyledPDF()
+}
+
+async function openDialogPrint() {
+  itemPrint.value = JSON.parse(JSON.stringify(itemTempPrint.value))
+  openPrint.value = true
+}
+
+async function closeDialogPrint() {
+  idPaymentSelectedForPrint.value = ''
+  itemPrint.value = JSON.parse(JSON.stringify(itemTempPrint.value))
+  openPrint.value = false
+}
+
+function handleAcctions(itemId: any) {
+  if (itemId) {
+    idPaymentSelectedForPrint.value = itemId
+    const objPayment = listItems.value.find(item => item.id === itemId)
+    if (objPayment && objPayment.id) {
+      if (objPayment.hasDetailTypeDeposit) {
+        const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
+        if (itemMenuObj) {
+          itemMenuObj.btnDisabled = false
+          itemMenuObj.btnOnClick = () => {
+            openDialogPrint()
+            console.log('print enabled')
+          }
+        }
+      }
+      else {
+        const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
+        if (itemMenuObj) {
+          itemMenuObj.btnDisabled = true
+          itemMenuObj.btnOnClick = () => {
+            console.log('print disabled')
+          }
+        }
+      }
+    }
+  }
+  else {
+    idPaymentSelectedForPrint.value = ''
+  }
+}
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -1333,7 +1516,7 @@ onMounted(async () => {
               :disabled="objBtnAndMenu.btnDisabled"
               aria-haspopup="true"
               :aria-controls="objBtnAndMenu.menuId"
-              @click="toggle($event, index)"
+              @click="objBtnAndMenu.menuItems.length > 0 ? toggle($event, index) : (objBtnAndMenu.btnOnClick ? objBtnAndMenu.btnOnClick() : null)"
             >
               <template #icon>
                 <i
@@ -1715,7 +1898,7 @@ onMounted(async () => {
       @on-change-filter="parseDataTableFilter"
       @on-list-item="resetListItems"
       @on-sort-field="onSortField"
-      @open-edit-dialog="goToFormInNewTab($event)"
+      @update:clicked-item="handleAcctions($event)"
       @on-row-double-click="goToFormInNewTab($event)"
       @on-row-right-click="onRowContextMenu($event)"
     >
@@ -1890,6 +2073,120 @@ onMounted(async () => {
             <Button v-tooltip.top="'Apply Payment'" class="w-3rem mx-1" icon="pi pi-check" :disabled="disabledBtnApplyPayment" :loading="loadingSaveApplyPayment" @click="saveApplyPayment" />
             <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
           </div>
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- PRINT -->
+    <Dialog
+      v-model:visible="openPrint"
+      modal
+      class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border"
+      :style="{ width: '35%' }"
+      :pt="{
+        root: {
+          class: 'custom-dialog',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+        // mask: {
+        //   style: 'backdrop-filter: blur(5px)',
+        // },
+      }"
+      @hide="openPrint = false"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Payment To Print
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-3">
+          <EditFormV2
+            :key="formReload"
+            class="mt-3"
+            :fields="fieldPrint"
+            :item="itemPrint"
+            container-class="grid pt-3"
+            :show-actions="true"
+            :loading-save="loadingSaveAll"
+            @cancel="closeDialogPrint"
+            @submit="paymentPrint($event)"
+          >
+            <template #field-paymentSupport="{ item: data, onUpdate }">
+              <Checkbox
+                id="paymentSupport"
+                v-model="data.paymentSupport"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('paymentSupport', $event)
+                  if ($event) {
+                    onUpdate('allPaymentsSupport', false)
+                  }
+                }"
+              />
+              <label for="paymentSupport" class="ml-2 font-bold">
+                Payment Support
+              </label>
+            </template>
+            <template #field-allPaymentsSupport="{ item: data, onUpdate }">
+              <Checkbox
+                id="allPaymentsSupport"
+                v-model="data.allPaymentsSupport"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('allPaymentsSupport', $event)
+                  if ($event) {
+                    onUpdate('paymentSupport', false)
+                  }
+                }"
+              />
+              <label for="allPaymentsSupport" class="ml-2 font-bold">
+                All Payment Supports
+              </label>
+            </template>
+
+            <template #field-invoiceRelated="{ item: data, onUpdate }">
+              <Checkbox
+                id="invoiceRelated"
+                v-model="data.invoiceRelated"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('invoiceRelated', $event)
+                  if ($event) {
+                    onUpdate('invoiceRelatedWithSupport', false)
+                  }
+                }"
+              />
+              <label for="invoiceRelated" class="ml-2 font-bold">
+                Invoice Related
+              </label>
+            </template>
+            <template #field-invoiceRelatedWithSupport="{ item: data, onUpdate }">
+              <Checkbox
+                id="invoiceRelatedWithSupport"
+                v-model="data.invoiceRelatedWithSupport"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('invoiceRelatedWithSupport', $event)
+                  if ($event) {
+                    onUpdate('invoiceRelated', false)
+                  }
+                }"
+              />
+              <label for="invoiceRelatedWithSupport" class="ml-2 font-bold">
+                Invoice Related With Supports
+              </label>
+            </template>
+            <template #form-footer="props">
+              <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
+              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" />
+            </template>
+          </EditFormV2>
         </div>
       </template>
     </Dialog>
