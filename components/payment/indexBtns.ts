@@ -11,6 +11,7 @@ interface SvgIcon {
 }
 
 interface MenuItem {
+  id: string
   btnLabel: string
   btnToolTip: string
   pBtnIcon?: string
@@ -67,6 +68,7 @@ const itemsImport = ref([
 
 export const itemMenuList = ref<MenuItem[]>([
   {
+    id: 'new',
     btnLabel: 'New',
     btnToolTip: 'New',
     btnShowIcon: true,
@@ -88,6 +90,7 @@ export const itemMenuList = ref<MenuItem[]>([
     // Object.prototype.hasOwnProperty.call(options.value, 'showCreate') ? options.value?.showCreate : true,
   },
   {
+    id: 'import',
     btnLabel: 'Import',
     btnToolTip: 'Import',
     pBtnIcon: 'pi pi-file-import',
@@ -146,6 +149,7 @@ export const itemMenuList = ref<MenuItem[]>([
   //   showBtn: () => true,
   // },
   {
+    id: 'print',
     btnLabel: 'Print',
     btnToolTip: 'Print',
     btnShowIcon: true,
@@ -158,6 +162,7 @@ export const itemMenuList = ref<MenuItem[]>([
     },
     btnAriaControls: 'overlay_menu5',
     btnDisabled: true,
+    btnOnClick: () => {},
     menuId: 'overlay_menu5',
     menuRef: null as MenuRefType,
     menuItems: [],
@@ -165,6 +170,7 @@ export const itemMenuList = ref<MenuItem[]>([
     showBtn: () => true,
   },
   {
+    id: 'export',
     btnLabel: 'Export',
     btnToolTip: 'Export',
     btnShowIcon: true,

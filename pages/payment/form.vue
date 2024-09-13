@@ -2272,8 +2272,6 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
       }
     }
     catch (error) {
-      console.log(error)
-
       toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
     }
   }
