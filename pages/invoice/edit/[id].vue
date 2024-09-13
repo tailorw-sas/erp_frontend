@@ -899,8 +899,8 @@ onMounted(async () => {
         </template>
 
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText v-model="invoiceAmount" :disabled="true" />
-
+          <InputText v-model="invoiceAmount" :disabled="true" v-if="!loadingSaveAll"/>
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
         <template #field-invoiceStatus="{ item: data, onUpdate }">
@@ -965,6 +965,7 @@ onMounted(async () => {
               </div>
             </template>
           </DebouncedAutoCompleteComponent>
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-agency="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
@@ -980,6 +981,7 @@ onMounted(async () => {
               </div>
             </template>
           </DebouncedAutoCompleteComponent>
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
         <template #form-footer="props">

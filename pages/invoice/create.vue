@@ -1243,11 +1243,13 @@ onMounted(async () => {
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
         <InputText
+          v-if="!loadingSaveAll"
           v-model="formattedInvoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
             invoiceAmountError = false
             // onUpdate('invoiceAmount', $event)
           }"
         />
+        <Skeleton v-else height="2rem" class="mb-2" />
         <span v-if="invoiceAmountError" class="error-message p-error text-xs">{{ invoiceAmountErrorMessage }}</span>
       </template>
       <template #field-invoiceType="{ item: data, onUpdate }">
@@ -1300,6 +1302,7 @@ onMounted(async () => {
             </div>
           </template>
         </DebouncedAutoCompleteComponent>
+        <Skeleton v-else height="2rem" class="mb-2" />
         <span v-if="hotelError" class="error-message p-error text-xs">The hotel field is required</span>
       </template>
       <template #field-agency="{ item: data, onUpdate }">
@@ -1320,6 +1323,7 @@ onMounted(async () => {
             </div>
           </template>
         </DebouncedAutoCompleteComponent>
+        <Skeleton v-else height="2rem" class="mb-2" />
         <span v-if="agencyError" class="error-message p-error text-xs">The agency field is required</span>
       </template>
 
