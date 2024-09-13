@@ -1,27 +1,22 @@
 package com.kynsof.share.core.infrastructure.excel;
 
-import com.kynsof.share.core.application.excel.BeanField;
 import com.kynsof.share.core.application.excel.CellInfo;
 import com.kynsof.share.core.application.excel.ExcelUtils;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.application.excel.reader.AbstractReader;
-import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.ExcelException;
-import com.kynsof.share.core.domain.response.ErrorField;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Objects;
 
 
 public class ExcelBeanReader<T> extends AbstractReader<T> {
 
+    private int totalReadRows;
     public ExcelBeanReader(ReaderConfiguration readerConfiguration, Class<T> type) {
         super(readerConfiguration, type);
     }
@@ -66,6 +61,7 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
                 return bean;
             }
         }
+        totalReadRows=rowCursor;
         rowCursor = null;
         return null;
     }
@@ -84,6 +80,14 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
         }
     }
 
+    @Override
+    public int totalRows() {
+        if (readerConfiguration.isIgnoreHeaders() && totalReadRows>0){
+            return totalReadRows-1;
+        }
+        return totalReadRows;
+    }
+
     private void hasValidHeaderOrder(){
         Row header = sheetToRead.getRow(0);
         if(ExcelUtils.isRowEmpty(header)){
@@ -92,7 +96,7 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
         for (CellInfo cellInfo : annotatedField.keySet()) {
             if (cellInfo.getPosition() != -1) {
                 String cellValue = header.getCell(cellInfo.getPosition()).getStringCellValue();
-                if (!cellInfo.getHeaderName().equals(cellValue)) {
+                if (Objects.isNull(cellValue) || !cellInfo.getHeaderName().trim().equals(cellValue.trim())) {
                     throw new ExcelException("Invalid excel content");
                 }
             }
