@@ -184,21 +184,61 @@ const allMenuListItems = ref([
   //   visible: true,
   // },
   {
+    id: 'statusHistory',
+    label: 'Status History',
+    icon: 'pi pi-cog',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:SHOW-HISTORY']),
+  },
+  {
     id: 'applyPayment',
     label: 'Apply Payment',
     icon: 'pi pi-cog',
     command: ($event: any) => openModalApplyPayment($event),
     disabled: true,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
+  },
+  {
+    id: 'changeAgency',
+    label: 'Change Agency',
+    icon: 'pi pi-cog',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
+  },
+  {
+    id: 'shareFiles',
+    label: 'Share Files',
+    icon: 'pi pi-cog',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
+  },
+  {
+    id: 'addTask',
+    label: 'Add Task',
+    icon: 'pi pi-cog',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
+  },
+  {
+    id: 'importTransaction',
+    label: 'Import Transaction',
+    icon: 'pi pi-cog',
+    command: ($event: any) => {},
+    disabled: true,
     visible: true,
   },
-  // {
-  //   id: 'navigateToInvoice',
-  //   label: 'Navigate to Invoice',
-  //   icon: 'pi pi-cog',
-  //   command: ($event: any) => navigateToInvoice($event),
-  //   disabled: true,
-  //   visible: true,
-  // },
+  {
+    id: 'document',
+    label: 'Document',
+    icon: 'pi pi-cog',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:DOCUMENT']),
+  },
 ])
 
 // -------------------------------------------------------------------------------------------------------
@@ -1174,7 +1214,7 @@ async function onExpandRowApplyPayment(event: any) {
 }
 
 function onRowContextMenu(event: any) {
-  if (event && event.data && (event.data.notIdentified !== '' || event.data.notApplied !== null) && event.data.notApplied > 0) {
+  if (event && event.data && (event.data.notApplied !== '' || event.data.notApplied !== null) && event.data.notApplied > 0 && (event.data.paymentStatus && event.data.paymentStatus.code !== 'CAN')) {
     objItemSelectedForRightClickApplyPayment.value = event.data
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
