@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,9 +20,12 @@ import java.util.logging.Logger;
 public class ProducerReplicateManageInvoiceService {
 
     private final KafkaTemplate<String, Object> producer;
+    private final IManageBookingService manageBookingService;
 
-    public ProducerReplicateManageInvoiceService(KafkaTemplate<String, Object> producer) {
+    public ProducerReplicateManageInvoiceService(KafkaTemplate<String, Object> producer,
+                                                IManageBookingService manageBookingService) {
         this.producer = producer;
+        this.manageBookingService = manageBookingService;
     }
 
     @Async
@@ -30,6 +34,7 @@ public class ProducerReplicateManageInvoiceService {
             List<ManageBookingKafka> bookingKafkas = new ArrayList<>();
             if (entity.getBookings() != null) {
                 for (ManageBookingDto booking : entity.getBookings()) {
+                    ManageBookingDto bookingDto = this.manageBookingService.findById(booking.getId());
                     bookingKafkas.add(new ManageBookingKafka(
                             booking.getId(),
                             booking.getBookingId(),
@@ -45,7 +50,7 @@ public class ProducerReplicateManageInvoiceService {
                             booking.getAdults(),
                             booking.getChildren(),
                             entity.getId(),
-                            booking.getParent() != null ? booking.getParent().getId() : null
+                            bookingDto.getParent() != null ? bookingDto.getParent().getId() : null
                     ));
                 }
             }
