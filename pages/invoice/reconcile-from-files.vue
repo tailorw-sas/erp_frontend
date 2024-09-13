@@ -10,6 +10,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { ENUM_INVOICE_IMPORT_TYPE } from '~/utils/Enums'
 
 const toast = useToast()
+const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
@@ -21,11 +22,9 @@ const haveErrorImportStatus = ref(false)
 const openSuccessDialog = ref(false)
 const messageDialog = ref('')
 const importModel = ref({
- 
-  attachFile: null,
-  employee: '',
-})
-
+    attachFile: [] as File[], // Almacena los archivos seleccionados
+    employee: ''
+});
 const attachUpload = ref()
 
 const confApi = reactive({
@@ -38,14 +37,28 @@ const confInvoiceApi = reactive({
     uriApi: 'manage-invoice',
 })
 
+const fileNames = computed(() => {
+    return importModel.value.attachFile.map(file => file.name).join(', ');
+});
 // VARIABLES -----------------------------------------------------------------------------------------
 async function onChangeAttachFile(event: any) {
-  if (event.target.files && event.target.files.length > 0) {
-    attachFile.value = event.target.files[0]
-    importModel.value.attachFile = attachFile.value.name
-    event.target.value = ''
-    await activeImport()
-  }
+    if (event.target.files && event.target.files.length > 0) {
+        const files: File[] = Array.from(event.target.files);
+        const pdfFiles = files.filter(file => file.type === 'application/pdf');
+
+        if (pdfFiles.length > 0) {
+            importModel.value.attachFile = pdfFiles; // Almacena objetos File
+            pdfFiles.forEach(file => {
+                console.log(`Archivo PDF seleccionado: ${file.name}`);
+            });
+        } else {
+            importModel.value.attachFile = []; // Limpia si no hay PDFs
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Please select only PDF files.', life: 10000 });
+        }
+
+        event.target.value = ''; // Limpia el input
+        await activeImport();
+    }
 }
 
 async function activeImport() {
@@ -94,7 +107,7 @@ const columnsExpandable: IColumn[] = [
 const options = ref({
     tableName: 'Invoice',
     moduleApi: 'invoicing',
-    uriApi: 'manage-booking/import',
+    uriApi: 'manage-invoice',
     loading: false,
     showDelete: false,
     showFilters: true,
@@ -150,7 +163,7 @@ async function getErrorList() {
                     rowError += `- ${err.message} \n`
                 }
                 rowExpandable.push({ ...iterator.row })
-                newListItems.push({ ...iterator.row, id: iterator.id, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, rowExpandable, loadingEdit: false, loadingDelete: false })
+                newListItems.push({ ...iterator.row, id: iterator.id, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
                 existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
             }
         }
@@ -176,52 +189,77 @@ async function onChangeFile(event: any) {
 }
 
 async function importFile() {
-    loadingSaveAll.value = true
-    options.value.loading = true
-    let successOperation = true
-    uploadComplete.value = true
-    try {
-        if (!inputFile.value) {
-            toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
-            return
-        }
-        const uuid = uuidv4()
-        idItem.value = uuid
-        const base64String: any = await fileToBase64(inputFile.value)
-        const base64 = base64String.split('base64,')[1]
+    loadingSaveAll.value = true;
+    options.value.loading = true;
+    let successOperation = true;
+    uploadComplete.value = true;
 
-        const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('importProcessId', uuid)
-        formData.append('importType', ENUM_INVOICE_IMPORT_TYPE.NO_VIRTUAL)
-        await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
-    }
-    catch (error: any) {
-        successOperation = false
-        uploadComplete.value = false
-        options.value.loading = false
-        messageDialog.value = error.data.data.error.errorMessage
-        openSuccessDialog.value = true
-        // toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    try {
+        // Verifica que se hayan seleccionado archivos
+        const selectedFiles = importModel.value.attachFile; // Usa el modelo correcto
+        console.log('Archivos seleccionados:', selectedFiles);
+        
+        if (!selectedFiles || selectedFiles.length === 0) {
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one file', life: 10000 });
+            return;
+        }
+
+        // Filtrar archivos inválidos
+        const invalidFiles = selectedFiles.filter(fileInput => {
+            return !/^\d+\.pdf$/.test(fileInput.name) || fileInput.type !== 'application/pdf';
+        });
+
+        if (invalidFiles.length > 0) {
+            const errorMessages = invalidFiles.map(file => `Error en archivo: ${file.name} - Debe ser un PDF y su nombre debe ser solo números.`);
+            toast.add({ severity: 'error', summary: 'Error', detail: errorMessages.join(', '), life: 10000 });
+            return;
+        }
+
+        const uuid = uuidv4();
+        idItem.value = uuid;
+        const formData = new FormData();
+
+        // Procesa cada archivo en el array de archivos
+        for (const fileInput of selectedFiles) {
+            console.log('Procesando archivo:', fileInput.name);
+            const base64String: any = await fileToBase64(fileInput);
+            const base64 = base64String.split('base64,')[1];
+            const file = await base64ToFile(base64, fileInput.name, fileInput.type);
+
+            // Agrega cada archivo al FormData
+            formData.append('files[]', file);
+        }
+
+        // Agrega información adicional al FormData
+        formData.append('importProcessId', uuid);
+        formData.append('employeeId', userData?.value?.user?.userId || '');
+        formData.append('employee', userData?.value?.user?.name || '');
+
+        // Envía los datos al servicio
+        await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData);
+
+    } catch (error: any) {
+        successOperation = false;
+        uploadComplete.value = false;
+        options.value.loading = false;
+        messageDialog.value = error.data?.data?.error?.errorMessage || 'Error desconocido';
+        openSuccessDialog.value = true;
     }
 
     if (successOperation) {
-        await validateStatusImport()
+        await validateStatusImport();
         if (!haveErrorImportStatus.value) {
-            await getErrorList()
+            await getErrorList();
             if (listItems.value.length === 0) {
-                // toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 10000 })
-                options.value.loading = false
-                messageDialog.value = 'The file was imported successfully'
-                openSuccessDialog.value = true
-                // await clearForm()
+                options.value.loading = false;
+                messageDialog.value = 'The files were imported successfully';
+                openSuccessDialog.value = true;
             }
         }
-        // clearForm()
     }
-    loadingSaveAll.value = false
-    options.value.loading = false
+
+    loadingSaveAll.value = false;
+    options.value.loading = false;
 }
 
 async function validateStatusImport() {
@@ -309,7 +347,7 @@ onMounted(async () => {
                                     <div style="flex: 1; max-width: 500px; min-width: 0;">
                                         <div class="p-inputgroup w-full">
                                             <InputText
-                        ref="attachUpload" v-model="importModel.attachFile" placeholder="Choose file"
+                        ref="attachUpload"    v-model="fileNames"  placeholder="Choose file"
                         class="w-full" show-clear aria-describedby="inputtext-help"
                       />
                                     
@@ -321,7 +359,7 @@ onMounted(async () => {
                                         <small id="username-help" style="color: #808080;">Select a file of type
                                             PDF</small>
                                             <input
-                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf"
+                      ref="attachUpload" type="file" style="display: none;" webkitdirectory  multiple
                       @change="onChangeAttachFile($event)"
                     >
                                     </div>
