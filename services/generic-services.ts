@@ -165,6 +165,19 @@ export const GenericService = {
     })
   },
 
+  async importReconcileFile(MODULE_NAME: string, URI_API: string, formData: FormData) {
+    const { $api } = useNuxtApp()
+    // const formData = new FormData()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+
+    return $api(url, {
+      method: 'POST',
+      body: formData
+
+    })
+  },
+
   async createInvoiceType(MODULE_NAME: string, URI_API: string, payload: any) {
     const { $api } = useNuxtApp()
     const serverUrl = useRequestURL()
