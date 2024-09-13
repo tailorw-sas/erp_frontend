@@ -1,4 +1,0 @@
-archivo de prueba
-ll
-l
-dockerfilee
