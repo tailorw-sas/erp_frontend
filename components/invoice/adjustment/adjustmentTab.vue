@@ -5,12 +5,10 @@ import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import AdjustmentDialog from './AdjustmentDialog.vue'
-import getUrlByImage from '~/composables/files'
-import { ModulesService } from '~/services/modules-services'
 import { GenericService } from '~/services/generic-services'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { Container } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 
@@ -118,13 +116,21 @@ const Fields: Array<Container> = [
       {
         field: 'amount',
         header: 'Amount',
-        dataType: 'number',
+        dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
         validation: z.number({ invalid_type_error: 'The Amount field is required' }).refine((value: number) => {
+          // eslint-disable-next-line style/max-statements-per-line
           if (!value) { return false }
           return true
         }, { message: 'The Amount field cannot be 0' })
+          .refine((value: number) => {
+            const decimalPart = value.toString().split('.')[1] // Obtén la parte decimal
+            // Permitir hasta 2 dígitos decimales, incluyendo casos como 16.000000
+            return !decimalPart || decimalPart.length <= 2
+          }, {
+            message: 'The Amount field must have up to two decimal places',
+          })
       },
       {
         field: 'date',
@@ -592,9 +598,9 @@ async function getTransactionTypeList(query = '') {
         sortType: ENUM_SHORT_TYPE.DESC
       }
 
-    transactionTypeList.value = []
     const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
     const { data: dataList } = response
+    transactionTypeList.value = []
     for (const iterator of dataList) {
       transactionTypeList.value = [...transactionTypeList.value, {
         id: iterator.id,
@@ -721,7 +727,7 @@ onMounted(() => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-            <Column :footer="totalAmount" footer-style="font-weight: 700" />
+            <Column :footer="Number.parseFloat(totalAmount.toFixed(2))" footer-style="font-weight: 700" />
 
             <Column :colspan="6" />
           </Row>
