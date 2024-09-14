@@ -29,6 +29,7 @@ const isAdmin = (data.value?.user as any)?.isAdmin === true
 const menu = ref()
 let selectedInvoice = ref('')
 const menu_import = ref()
+const menu_send = ref()
 const menu_reconcile = ref()
 const toast = useToast()
 const entryCode = ref('')
@@ -483,6 +484,24 @@ const itemsMenuImport = ref([
   {
     label: 'Booking From File (Virtual Hotels)',
     command: () => navigateTo('invoice/import-virtual'),
+    disabled: computedShowMenuItemImportBookingFromVirtual
+  }
+])
+
+const itemsMenuSend = ref([
+  {
+    label: 'By Ftp',
+    command: () => navigateTo(`invoice/sendInvoice?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
+    disabled: computedShowMenuItemImportBookingFromFile
+  },
+  {
+    label: 'By Email',
+    command: () => navigateTo(`invoice/sendInvoice?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } }),
+    disabled: computedShowMenuItemImportBookingFromVirtual
+  },
+  {
+    label: 'By Bavel',
+    command: () => navigateTo(`invoice/sendInvoice?type=${ENUM_INVOICE_SEND_TYPE.BAVEL}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromVirtual
   }
 ])
@@ -1232,6 +1251,10 @@ function toggleImport(event) {
   menu_import.value.toggle(event)
 }
 
+function toggleSend(event) {
+  menu_send.value.toggle(event)
+}
+
 function setMenuOptions() {
   invoiceContextMenuItems.value = [...invoiceAllContextMenuItems.value.filter((item: any) => item?.default).map((item) => ({ ...item }))]
 }
@@ -1438,8 +1461,21 @@ const legend = ref(
         </PopupNavigationMenu>
 
 
-        <Button class="ml-2" icon="pi pi-envelope" label="Send" />
-        <!-- <Button
+        <!-- <Button class="ml-2" icon="pi pi-envelope" label="Send"  @click="() => navigateTo(`invoice/sendInvoice`, { open: { target: '_blank' } })" /> -->
+          <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-IMPORT']))"
+          v-tooltip.left="'Send'" class="ml-2" label="Send" icon="pi pi-envelope" severity="primary"
+          aria-haspopup="true" aria-controls="overlay_menu_send" @click="toggleSend">
+
+        </Button>
+        <Menu id="overlay_menu_send" ref="menu_send" class="ml-2" :model="itemsMenuSend" :popup="true" />
+        <PopupNavigationMenu v-if="false" :items="itemsMenuSend" icon="pi pi-plus" label="Send">
+          <template #item="props">
+            <button style="border: none; width: 100%;">
+              {{ props.props.label }}
+            </button>
+          </template>
+        </PopupNavigationMenu>
+          <!-- <Button
           class="ml-2" icon="pi pi-paperclip" :disabled="!attachmentInvoice" label="Document" @click="() => {
             attachmentDialogOpen = true
           }"

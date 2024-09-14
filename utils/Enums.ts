@@ -18,8 +18,6 @@ export enum ENUM_SHORT_TYPE {
   ASC = 'ASC',
 }
 
-
-
 export const ENUM_INVOICE_TYPE = [
   { id: 'CREDIT', name: 'Credit', code: 'CRE' },
   { id: 'INCOME', name: 'Income', code: 'INC' },
@@ -81,11 +79,11 @@ export enum InvoiceStatus {
 }
 
 export const OBJ_INVOICE_STATUS_NAME = {
-  [InvoiceStatus.PROCECSED]: "PROCESSED",
-  [InvoiceStatus.RECONCILED]: "RECONCILED",
-  [InvoiceStatus.SENT]: "SENT",
-  [InvoiceStatus.CANCELED]: "CANCELED",
-  [InvoiceStatus.PENDING]: "PENDING",
+  [InvoiceStatus.PROCECSED]: 'PROCESSED',
+  [InvoiceStatus.RECONCILED]: 'RECONCILED',
+  [InvoiceStatus.SENT]: 'SENT',
+  [InvoiceStatus.CANCELED]: 'CANCELED',
+  [InvoiceStatus.PENDING]: 'PENDING',
 }
 
 export const OBJ_INVOICE_TITLE: any = {
@@ -346,4 +344,10 @@ export enum ENUM_PAYMENT_IMPORT_TYPE {
   EXPENSE = 'EXPENSE',
   ANTI = 'ANTI',
   DETAIL = 'DETAIL'
+}
+
+export enum ENUM_INVOICE_SEND_TYPE {
+  EMAIL = 'EML',
+  FTP = 'FTP',
+  BAVEL = 'BVL',
 }
