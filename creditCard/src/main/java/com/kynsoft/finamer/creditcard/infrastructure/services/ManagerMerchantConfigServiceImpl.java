@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.settings.infrastructure.services;
+package com.kynsoft.finamer.creditcard.infrastructure.services;
 
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
@@ -7,22 +7,24 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerMerchantConfigResponse;
-import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigResponseDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
-import com.kynsoft.finamer.settings.domain.services.IManageMerchantConfigService;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManagerMerchant;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManagerMerchantConfig;
-import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagerMerchantConfigWriteDataJpaRepository;
-import com.kynsoft.finamer.settings.infrastructure.repository.query.ManagerMerchantConfigReadJpaRepository;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManagerMerchantConfigResponse;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigResponseDto;
+import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
+import com.kynsoft.finamer.creditcard.infrastructure.identity.ManagerMerchantConfig;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManagerMerchantConfigWriteDataJpaRepository;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManagerMerchantConfigReadJpaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -61,7 +63,7 @@ public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigSe
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_CURRENCY_NOT_FOUND, new ErrorField("id", "Manager Merchant Currency not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_CONFIG_NOT_FOUND, new ErrorField("id", "Manager Merchant Currency not found.")));
     }
 
     @Override
@@ -70,7 +72,7 @@ public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigSe
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregateWithDate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_CURRENCY_NOT_FOUND, new ErrorField("id", "Manager Merchant Currency not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_CONFIG_NOT_FOUND, new ErrorField("id", "Manager Merchant Currency not found.")));
     }
 
     @Override
@@ -99,8 +101,5 @@ public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigSe
     @Override
     public Long countByManagerMerchantANDManagerCurrencyIdNotId(UUID id, UUID managerMerchant) {
         return this.repositoryQuery.countByManagerMerchantConfigNotId(id, managerMerchant);
-    }
-    public  List<ManagerMerchantConfigDto> findAllToReplicate(){
-        return repositoryQuery.findAll().stream().map(ManagerMerchantConfig::toAggregate).toList();
     }
 }

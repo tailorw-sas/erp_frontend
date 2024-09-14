@@ -1,9 +1,10 @@
-package com.kynsoft.finamer.settings.application.command.manageMerchant.update;
+package com.kynsoft.finamer.creditcard.application.command.manageMerchant.update;
 
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import java.util.UUID;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.UUID;
 
 @Getter
 @Setter

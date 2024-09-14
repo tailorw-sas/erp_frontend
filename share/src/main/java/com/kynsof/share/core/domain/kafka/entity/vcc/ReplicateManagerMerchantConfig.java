@@ -1,19 +1,17 @@
-package com.kynsof.share.core.domain.kafka.entity.update;
+package com.kynsof.share.core.domain.kafka.entity.vcc;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UpdateManageMerchantConfigKafka {
+public class ReplicateManagerMerchantConfig {
     private UUID id;
-    private UUID manageMerchantDto;
+    private UUID manageMerchant;
     private String url;
     private String altUrl;
     private String successUrl;
@@ -25,5 +23,5 @@ public class UpdateManageMerchantConfigKafka {
     private String institutionCode;
     private String merchantNumber;
     private String merchantTerminal;
-}
 
+}

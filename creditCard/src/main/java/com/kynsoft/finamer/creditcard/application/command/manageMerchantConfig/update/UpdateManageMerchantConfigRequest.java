@@ -1,19 +1,14 @@
-package com.kynsof.share.core.domain.kafka.entity.update;
+package com.kynsoft.finamer.creditcard.application.command.manageMerchantConfig.update;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class UpdateManageMerchantConfigKafka {
-    private UUID id;
-    private UUID manageMerchantDto;
+public class UpdateManageMerchantConfigRequest {
+
+    private UUID manageMerchant;
     private String url;
     private String altUrl;
     private String successUrl;
@@ -21,9 +16,8 @@ public class UpdateManageMerchantConfigKafka {
     private String declinedUrl;
     private String merchantType;
     private String name;
-    private String method;
+    private Method method;
     private String institutionCode;
     private String merchantNumber;
     private String merchantTerminal;
 }
-

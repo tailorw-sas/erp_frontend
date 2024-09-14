@@ -1,35 +1,31 @@
-package com.kynsoft.finamer.settings.application.command.manageMerchant.update;
+package com.kynsoft.finamer.creditcard.application.command.manageMerchant.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageMerchantKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.settings.domain.dto.ManagerB2BPartnerDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import com.kynsoft.finamer.settings.domain.services.IManagerB2BPartnerService;
-import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
+import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
+import com.kynsoft.finamer.creditcard.domain.services.IManagerB2BPartnerService;
+import com.kynsoft.finamer.creditcard.infrastructure.identity.ManagerB2BPartnerDto;
+import org.springframework.stereotype.Component;
+
 import java.util.UUID;
 import java.util.function.Consumer;
-
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchant.ProducerUpdateManageMerchantService;
-import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateManagerMerchantCommandHandler implements ICommandHandler<UpdateManagerMerchantCommand> {
 
-    private final IManagerMerchantService service;
+    private final IManageMerchantService service;
     private final IManagerB2BPartnerService serviceB2BPartner;
 
-    private final ProducerUpdateManageMerchantService producerService;
 
-    public UpdateManagerMerchantCommandHandler(IManagerMerchantService service,
-                                               IManagerB2BPartnerService serviceB2BPartner, ProducerUpdateManageMerchantService producerService) {
+    public UpdateManagerMerchantCommandHandler(IManageMerchantService service,
+                                               IManagerB2BPartnerService serviceB2BPartner) {
         this.service = service;
         this.serviceB2BPartner = serviceB2BPartner;
-        this.producerService = producerService;
     }
 
     @Override
@@ -37,7 +33,7 @@ public class UpdateManagerMerchantCommandHandler implements ICommandHandler<Upda
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manager Merchant ID cannot be null."));
 
-        ManagerMerchantDto test = this.service.findById(command.getId());
+        ManageMerchantDto test = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
 
@@ -48,9 +44,9 @@ public class UpdateManagerMerchantCommandHandler implements ICommandHandler<Upda
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
         this.updateB2BPartner(test::setB2bPartner, command.getB2bPartner(), test.getB2bPartner().getId(), update::setUpdate);
 
-
+        if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerService.update(new UpdateManageMerchantKafka(test.getId(), test.getCode(), test.getDescription(),test.getB2bPartner().getId(),test.getDefaultm(),test.getStatus().name()));
+        }
 
     }
 

@@ -22,7 +22,7 @@ public class ProducerUpdateManagerMerchantConfigService {
         try {
             this.producer.send("finamer-update-manage-merchant-config", entity);
         } catch (Exception ex) {
-            Logger.getLogger(ProducerUpdateManagerMerchantConfigService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProducerUpdateManagerMerchantConfigService.class.getName()).log(Level.SEVERE, "Error producer topic ", ex);
         }
     }
 }
