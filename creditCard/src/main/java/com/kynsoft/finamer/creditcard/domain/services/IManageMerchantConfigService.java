@@ -1,9 +1,9 @@
-package com.kynsoft.finamer.settings.domain.services;
+package com.kynsoft.finamer.creditcard.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigResponseDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigResponseDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -18,5 +18,4 @@ public interface IManageMerchantConfigService {
     Long countByManagerMerchantANDManagerCurrencyIdNotId(UUID id, UUID managerMerchant);
     void delete(ManagerMerchantConfigDto dto);
     void update(ManagerMerchantConfigDto dto);
-    List<ManagerMerchantConfigDto> findAllToReplicate();
 }

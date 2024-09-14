@@ -1,6 +1,8 @@
 package com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantConfig;
 
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManagerMerchantConfigKafka;
 import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageMerchantKafka;
+import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManagerMerchantConfig;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,7 @@ public class ProducerReplicateManageMerchantConfigService {
     }
 
     @Async
-    public void create(ReplicateManageMerchantKafka entity) {
+    public void create(ReplicateManagerMerchantConfigKafka entity) {
 
         try {
             this.producer.send("finamer-replicate-manage-merchant-config", entity);
