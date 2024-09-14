@@ -3,14 +3,11 @@ package com.kynsoft.finamer.settings.application.command.managerMerchantConfig.c
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManagerMerchantConfigKafka;
-import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageMerchantKafka;
-import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManagerMerchantConfig;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
 import com.kynsoft.finamer.settings.domain.services.IManageMerchantConfigService;
 import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchant.ProducerReplicateManageMerchantService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantConfig.ProducerReplicateManageMerchantConfigService;
 import org.springframework.stereotype.Component;
 
@@ -49,7 +46,7 @@ public class CreateManageMerchantConfigCommandHandler implements ICommandHandler
                 command.getMerchantNumber(),
                 command.getMerchantTerminal()
         ));
-        this.producerReplicateManageMerchantConfigService.create(new ReplicateManagerMerchantConfigKafka(command.getId(), command.getManageMerchant(), command.getUrl(), command.getSuccessUrl(),command.getErrorUrl(),command.getDeclinedUrl(),
+        this.producerReplicateManageMerchantConfigService.create(new ReplicateManagerMerchantConfigKafka(command.getId(), command.getManageMerchant(), command.getUrl(), command.getAltUrl(), command.getSuccessUrl(),command.getErrorUrl(),command.getDeclinedUrl(),
                 command.getMerchantType(),command.getName(),command.getMethod().name(), command.getInstitutionCode(), command.getMerchantNumber(), command.getMerchantTerminal()));
     }
 }

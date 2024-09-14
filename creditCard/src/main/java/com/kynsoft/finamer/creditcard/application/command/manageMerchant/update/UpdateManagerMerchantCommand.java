@@ -1,8 +1,8 @@
-package com.kynsoft.finamer.settings.application.command.manageMerchant.update;
+package com.kynsoft.finamer.creditcard.application.command.manageMerchant.update;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,9 +19,9 @@ public class UpdateManagerMerchantCommand implements ICommand {
     private Boolean defaultm;
     private Status status;
 
-    public UpdateManagerMerchantCommand(UUID id,String code, String description, UUID b2bPartner, Boolean defaultm, Status status) {
+    public UpdateManagerMerchantCommand(UUID id, String code, String description, UUID b2bPartner, Boolean defaultm, Status status) {
         this.id = id;
-        this.code=code;
+        this.code = code;
         this.description = description;
         this.b2bPartner = b2bPartner;
         this.defaultm = defaultm;

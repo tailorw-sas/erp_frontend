@@ -23,21 +23,4 @@ public class ReplicateManagerMerchantConfigKafka {
     private String institutionCode;
     private String merchantNumber;
     private String merchantTerminal;
-
-
-    public ReplicateManagerMerchantConfigKafka(UUID id, UUID manageMerchant, String url, String successUrl, String errorUrl, String declinedUrl, String merchantType, String name, String method, String institutionCode, String merchantNumber, String merchantTerminal) {
-        this.id = id;
-        this.manageMerchant = manageMerchant;
-        this.url = url;
-        this.successUrl = successUrl;
-        this.errorUrl = errorUrl;
-        this.declinedUrl = declinedUrl;
-        this.merchantType = merchantType;
-        this.name = name;
-        this.method=method;
-        this.institutionCode=institutionCode;
-        this.merchantNumber = merchantNumber;
-        this.merchantTerminal = merchantTerminal;
-
-    }
 }

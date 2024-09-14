@@ -55,12 +55,12 @@ public class ManageMerchant implements Serializable {
         this.description = dto.getDescription();
         this.b2bPartner = new ManageB2BPartner(dto.getB2bPartner());
         this.defaultm = dto.getDefaultm();
-        this.status = Status.valueOf(dto.getStatus());
+        this.status = (dto.getStatus());
     }
 
     public ManageMerchantDto toAggregate() {
         return new ManageMerchantDto(id, code, description,
-                b2bPartner != null ? b2bPartner.toAggregate() : null, defaultm, status.name());
+                b2bPartner != null ? b2bPartner.toAggregate() : null, defaultm, status);
     }
 
 }

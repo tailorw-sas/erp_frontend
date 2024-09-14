@@ -2,6 +2,7 @@ package com.kynsoft.finamer.creditcard.application.command.manageMerchant.create
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerB2BPartnerService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManagerB2BPartnerDto;
@@ -28,7 +29,7 @@ public class CreateManageMerchantCommandHandler implements ICommandHandler<Creat
                 command.getDescription(),
                 managerB2BPartnerDto,
                 command.getDefaultm(),
-                command.getStatus()
+                Status.valueOf(command.getStatus())
         ));
     }
 }

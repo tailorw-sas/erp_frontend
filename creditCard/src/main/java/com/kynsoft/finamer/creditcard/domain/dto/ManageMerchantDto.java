@@ -19,6 +19,5 @@ public class ManageMerchantDto {
     private String description;
     private ManagerB2BPartnerDto b2bPartner;
     private Boolean defaultm;
-    private String status;
-
+    private Status status;
 }

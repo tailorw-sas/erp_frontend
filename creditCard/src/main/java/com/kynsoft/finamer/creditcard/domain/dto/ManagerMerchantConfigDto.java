@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.creditcard.domain.dto;
 
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,4 +25,5 @@ public class ManagerMerchantConfigDto {
     private String institutionCode;
     private String merchantNumber;
     private String merchantTerminal;
+
 }
