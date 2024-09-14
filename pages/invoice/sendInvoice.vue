@@ -10,8 +10,8 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
-const senttype = ref('');
-const toast = useToast()
+const senttype = ref('')
+const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const route = useRoute()
 const startOfMonth = ref<any>(null)
@@ -33,6 +33,7 @@ const filterToSearch = ref<IData>({
   to: new Date(),
 })
 
+const clickedItem = ref<string[]>([])
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 
@@ -49,6 +50,10 @@ const confAgencyApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
 })
+const confSendApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/send',
+})
 
 // VARIABLES -----------------------------------------------------------------------------------------
 
@@ -61,16 +66,14 @@ const ENUM_FILTER = [
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Invoice Id', type: 'text' },
   { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
-  { field: 'manageAgencyCode', header: 'Invoice No', type: 'text' },
+  { field: 'manageinvoiceCode', header: 'Invoice No', type: 'text' },
   { field: 'manageAgencyCode', header: 'Agency CD', type: 'text' },
-  { field: 'bookingDate', header: 'Agency', type: 'text' },
-  
+  { field: 'manageAgencyName', header: 'Agency', type: 'text' },
 
- 
   { field: 'fullName', header: 'Generation Date', type: 'date' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-  { field: 'impstatus', header: 'Sent Status', type: 'slot-text' },
-  { field: 'status', header: 'Status', type: 'text' },
+  { field: 'impstatus', header: 'Sent Status', type: 'slot-text', sortable: false },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -80,16 +83,34 @@ const options = ref({
   tableName: 'Send invoices',
   moduleApi: 'invoicing',
   uriApi: 'send',
+  selectionMode: 'multiple',
   loading: false,
   showDelete: false,
-  selectionMode: 'multiple',
   showFilters: true,
-  expandableRows: false,
-  messageToDelete: 'Do you want to save the change?'
+  actionsAsMenu: false,
+  showEdit: false,
+  showAcctions: false,
+  messageToDelete: 'Do you want to save the change?',
+  showTitleBar: false
 })
 
+const type = route.query.type || ''
+
 const payload = ref<IQueryRequest>({
-  filter: [],
+  filter: [
+    {
+      key: 'invoiceStatus',
+      operator: 'IN',
+      value: ['RECONCILED'],
+      logicalOperation: 'AND'
+    },
+    {
+      key: 'agency.sentB2BPartner.code',
+      operator: 'EQUALS',
+      value: type.toString(),
+      logicalOperation: 'AND'
+    }
+  ],
   query: '',
   pageSize: 10,
   page: 0,
@@ -109,16 +130,15 @@ const pagination = ref<IPagination>({
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
-async function getErrorList() {
+async function getList() {
   try {
     payload.value = { ...payload.value, query: idItem.value }
-    let rowError = ''
     listItems.value = []
+    clickedItem.value = []
     const newListItems = []
-    const response = await GenericService.importSearch(confApi.moduleApi, confApi.uriApi, payload.value)
-
-    const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
-
+    const response = await GenericService.search(confApi.moduleApi, confApi.uriApi, payload.value)
+    const { data: dataList, page, size, totalElements, totalPages } = response
+    console.log('dataList', dataList)
     pagination.value.page = page
     pagination.value.limit = size
     pagination.value.totalElements = totalElements
@@ -127,15 +147,29 @@ async function getErrorList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      rowError = ''
-      const rowExpandable = []
-      // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        for (const err of iterator.errorFields) {
-          rowError += `- ${err.message} \n`
+        let invoiceNumber
+        if (iterator?.invoiceNumber?.split('-')?.length === 3) {
+          invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
         }
-        rowExpandable.push({ ...iterator.row })
-        newListItems.push({ ...iterator.row, id: iterator.id, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, rowExpandable, loadingEdit: false, loadingDelete: false })
+        else {
+          invoiceNumber = iterator?.invoiceNumber
+        }
+        newListItems.push({
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          invoiceDate: new Date(iterator?.invoiceDate),
+          agencyCd: iterator?.agency?.code,
+          manageHotelCode: iterator?.hotel?.code,
+          manageinvoiceCode: invoiceNumber.replace('OLD', 'CRE'),
+          manageAgencyCode: iterator?.agency?.code,
+          manageAgencyName: iterator?.agency?.name,
+          dueAmount: iterator?.dueAmount || 0,
+          invoiceNumber: invoiceNumber.replace('OLD', 'CRE'),
+          status: iterator?.status,
+          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` }
+        })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -274,94 +308,94 @@ async function getAgency(query: string = '') {
     }
 
     const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
-    console.log(response, 'Respuesta de la API');
+    console.log(response, 'Respuesta de la API')
     const { data: dataList } = response
     agencyList.value = [allDefaultItem]
     for (const iterator of dataList) {
       // Asegúrate de que sentB2BPartner sea una lista
-      const b2bPartners = iterator.sentB2BPartner || [];
-      const firstB2BPartner = b2bPartners.length > 0 ? b2bPartners[0].code : null;
+      const b2bPartners = iterator.sentB2BPartner || []
+      const firstB2BPartner = b2bPartners.length > 0 ? b2bPartners[0].code : null
 
       agencyList.value.push({
         id: iterator.id,
         name: iterator.name,
         code: iterator.code,
         b2bPartner: b2bPartners// Guarda solo el código del primer b2bPartner
-      });
+      })
     }
 
-    return agencyList.value; 
-  } 
+    return agencyList.value
+  }
   catch (error) {
     console.error('Error loading hotel list:', error)
-    return [];
+    return []
   }
 }
 
-async function getTypeInvoiceSent(selectedInvoiceId:any) {
+async function getTypeInvoiceSent(selectedInvoiceId: any) {
   try {
     // Paso 1: Obtener la factura usando su ID
-    const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, selectedInvoiceId);
+    const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, selectedInvoiceId)
 
     if (response) {
       // Paso 2: Suponiendo que el campo 'agency' está presente en la respuesta
-      const agency = response.agency;
-      console.log(agency, 'Agencia');
+      const agency = response.agency
 
       if (!agency) {
-        console.error('No se encontró la agencia en la factura');
-        senttype.value = 'No agency found';
-        return;
+        console.error('Agency not found')
+        senttype.value = 'Agency not found'
+        return
       }
 
       // Paso 3: Obtener el código de la agencia
-      const agencyCode = agency.code; // O cualquier otro identificador que uses para buscar la agencia
+      const agencyCode = agency.code // O cualquier otro identificador que uses para buscar la agencia
 
       // Llamar a getAgencyList para obtener la lista de agencias
-      const agencyList = await getAgency(); // Obtener todas las agencias
+      const agencyList = await getAgency() // Obtener todas las agencias
 
       // Buscar el campo sentB2BPartner en la lista de agencias
-      const foundAgency = agencyList.find(item => item.code === agencyCode);
-console.log(foundAgency,'Encontrar agencia')
-if (foundAgency) {
-        const b2bPartner = foundAgency.b2bPartner; // Accede al b2bPartner
-        const b2bPartnerTypeCode = b2bPartner ? b2bPartner.b2BPartnerType.code : null; // Obtener el código del tipo
+      const foundAgency = agencyList.find(item => item.code === agencyCode)
+      if (foundAgency) {
+        const b2bPartner = foundAgency.b2bPartner // Accede al b2bPartner
+        const b2bPartnerTypeCode = b2bPartner ? b2bPartner.b2BPartnerType.code : null // Obtener el código del tipo
 
-        console.log(b2bPartnerTypeCode, 'tipo de envío');
         // Determinar el texto a mostrar según el valor de b2bPartnerCode
         if (b2bPartnerTypeCode) {
           switch (b2bPartnerTypeCode) {
             case 'FTP':
-              senttype.value = 'Invoice to Send by FTP';
-              break;
+              senttype.value = 'Invoice to Send by FTP'
+              break
             case 'EML':
-              senttype.value = 'Send by Email';
-              break;
+              senttype.value = 'Send by Email'
+              break
             case 'BVL':
-              senttype.value = 'Send by Babel';
-              break;
+              senttype.value = 'Send by Babel'
+              break
             default:
-              senttype.value = 'Invoices to Send';
-              break;
+              senttype.value = 'Invoices to Send'
+              break
           }
-        } else {
-          console.error('No se encontró el método de envío (b2bPartner)');
-          senttype.value = 'No sending method found';
         }
-      } else {
-        console.error('Agencia no encontrada en la lista');
-        senttype.value = 'Invoices to Send';
+        else {
+          console.error('No se encontró el método de envío (b2bPartner)')
+          senttype.value = 'No sending method found'
+        }
       }
-    } else {
-      console.error('No se encontró la respuesta para el ID de la factura');
-      senttype.value = 'Invoice not found';
+      else {
+        console.error('Agencia no encontrada en la lista')
+        senttype.value = 'Invoices to Send'
+      }
     }
-  } catch (error) {
-    console.error('Error retrieving invoice type:', error);
-    senttype.value = 'Error retrieving sending method';
+    else {
+      console.error('No se encontró la respuesta para el ID de la factura')
+      senttype.value = 'Invoice not found'
+    }
+  }
+  catch (error) {
+    console.error('Error retrieving invoice type:', error)
+    senttype.value = 'Error retrieving sending method'
   }
 }
-
 
 async function clearForm() {
   await goToList()
@@ -369,20 +403,20 @@ async function clearForm() {
 
 async function resetListItems() {
   payload.value.page = 0
-  getErrorList()
+  getList()
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...parseFilter || []]
-  getErrorList()
+  getList()
 }
 
 function onSortField(event: any) {
   if (event) {
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
-    getErrorList()
+    getList()
   }
 }
 
@@ -474,6 +508,65 @@ async function goToList() {
   await navigateTo('/invoice')
 }
 
+function getStatusBadgeBackgroundColor(code: string) {
+  switch (code) {
+    case 'PROCECSED': return '#FF8D00'
+    case 'RECONCILED': return '#005FB7'
+    case 'SENT': return '#006400'
+    case 'CANCELED': return '#F90303'
+    case 'PENDING': return '#686868'
+
+    default:
+      return '#686868'
+  }
+}
+
+function getStatusName(code: string) {
+  switch (code) {
+    case 'PROCECSED': return 'Processed'
+
+    case 'RECONCILED': return 'Reconciled'
+    case 'SENT': return 'Sent'
+    case 'CANCELED': return 'Canceled'
+    case 'PENDING': return 'Pending'
+
+    default:
+      return ''
+  }
+}
+
+async function onMultipleSelect(data: any) {
+  clickedItem.value = []
+  clickedItem.value = data
+}
+
+async function send() {
+  loadingSaveAll.value = true
+  try {
+    if (!clickedItem.value) {
+      throw new Error('No invoice selected')
+    }
+    const payload = {
+      invoice: clickedItem.value,
+      employee: userData?.value?.user?.userId
+    }
+
+    await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload)
+    if (clickedItem.value.length === listItems.value.length) {
+      navigateTo('/invoice')
+    }
+    else {
+      clickedItem.value = []
+      await getList()
+    }
+  }
+  catch (error) {
+    console.log(error)
+  }
+
+  loadingSaveAll.value = false // Opcional: Puedes manejar el estado de carga aquí
+}
+
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criteria && filterToSearch.value.search)
   return false
@@ -483,15 +576,15 @@ watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 
-  getErrorList()
+  getList()
 })
 async function loadInvoiceType() {
-  await getTypeInvoiceSent(route.query.selected);
+  await getTypeInvoiceSent(route.query.selected)
 }
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-  loadInvoiceType();
-  // getErrorList()
+  // loadInvoiceType()
+  await getList()
 })
 </script>
 
@@ -580,8 +673,6 @@ onMounted(async () => {
                     </div>
                   </div>
                 </div>
-
-              
               </div>
               <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex w-full">
@@ -605,31 +696,29 @@ onMounted(async () => {
                           </IconField>
                         </div>
                       </div>
-
-                    
                     </div>
                   </div>
                 </div>
               </div>
               <div class="col-12 md:col-1 mt-6 w-auto">
-                  <div class="flex justify-content-end">
-                    <Checkbox
-                      v-model="filterAllDateRange"
-                      binary
-                      class="mr-2"
-                      @change="() => {
-                        console.log(filterAllDateRange);
+                <div class="flex justify-content-end">
+                  <Checkbox
+                    v-model="filterAllDateRange"
+                    binary
+                    class="mr-2"
+                    @change="() => {
+                      console.log(filterAllDateRange);
 
-                        if (!filterAllDateRange) {
-                          filterToSearch.from = startOfMonth
-                          filterToSearch.to = endOfMonth
-                        }
-                      }"
-                    />
-                    <label for="" class="mr-2 mt-1 font-bold">Re-Send</label>
-                  </div>
+                      if (!filterAllDateRange) {
+                        filterToSearch.from = startOfMonth
+                        filterToSearch.to = endOfMonth
+                      }
+                    }"
+                  />
+                  <label for="" class="mr-2 mt-1 font-bold">Re-Send</label>
                 </div>
-              
+              </div>
+
               <div class="flex align-items-center ">
                 <Button
                   v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search" :disabled="disabledSearch"
@@ -651,6 +740,7 @@ onMounted(async () => {
         :options="options"
         :pagination="pagination"
         @on-confirm-create="clearForm"
+        @update:clicked-item="onMultipleSelect($event)"
         @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems"
@@ -662,19 +752,16 @@ onMounted(async () => {
           </div>
         </template>
 
-        <!-- <template #datatable-footer>
-          <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
-            <Row>
-              <Column footer="Totals:" :colspan="6" footer-style="text-align:right; font-weight: 700" />
-
-              <Column :colspan="8" />
-            </Row>
-          </ColumnGroup>
-        </template> -->
+        <template #column-status="{ data }">
+          <Badge
+            :value="getStatusName(data?.status)"
+            :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
+          />
+        </template>
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="clearForm" />
+        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="send" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>
