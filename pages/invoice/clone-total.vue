@@ -351,6 +351,10 @@ function handleAttachmentDialogOpen() {
   attachmentDialogOpen.value = true
 }
 
+const existsAttachmentTypeInv = computed(() => {
+  return attachmentList.value.some(attachment => attachment?.type?.code === 'INV')
+})
+
 function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
@@ -1212,6 +1216,29 @@ function updateRoomRate(roomRate: any) {
   calcBookingHotelAmount(roomRate)
 }
 
+function disabledButtonSave() {
+  let result = false
+  if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
+    result = true
+  }
+  else {
+    const listIds = roomRateList.value.map((roomRate: any) => roomRate.id)
+    if (listIds.length === 0) {
+      result = true
+    }
+    else {
+      // recorrer la lista de ids y ver si todos los ids existen en la lista de adjustments y la propiedad a verificar se llama roomRate
+      for (let i = 0; i < listIds.length; i++) {
+        if (!adjustmentList.value.some((adjustment: any) => adjustment.roomRate === listIds[i])) {
+          result = true
+          break
+        }
+      }
+    }
+  }
+  return result
+}
+
 function addAdjustment(adjustment: any) {
   calcRoomRateInvoiceAmount(adjustment)
   adjustmentList.value = [...adjustmentList.value, { ...adjustment, transaction: { ...adjustment?.transactionType, name: `${adjustment?.transactionType?.code || ''}-${adjustment?.transactionType?.name || ''}` }, date: dayjs(adjustment?.date).startOf('day').toISOString() }]
@@ -1397,7 +1424,7 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-                  :disabled="bookingList.length === 0 || attachmentList.length === 0" @click="() => {
+                  :disabled="false" @click="() => {
                     saveItem(props.item.fieldValues)
                   }"
                 />
