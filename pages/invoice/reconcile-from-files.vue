@@ -222,7 +222,7 @@ async function importFile() {
     const formData = new FormData()
 
     // Procesa cada archivo en el array de archivos
-    const base64Array = []
+   /* const base64Array = []
     for (const fileInput of selectedFiles) {
       const base64String: any = await fileToBase64(fileInput)
       const base64 = base64String.split('base64,')[1]
@@ -235,7 +235,10 @@ async function importFile() {
     base64Array.forEach((file, index) => {
       formData.append('files[]', file)
     })
-
+*/
+for (const fileInput of selectedFiles) {
+  formData.append('files', fileInput)
+}
     // Agrega información adicional al FormData
     formData.append('importProcessId', uuid)
     formData.append('employeeId', userData?.value?.user?.userId)
