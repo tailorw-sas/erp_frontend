@@ -90,19 +90,6 @@ const columns: IColumn[] = [
   { field: 'status', header: 'Status', type: 'bool', },
 ]
 
-const columnsExpandable: IColumn[] = [
-  { field: 'firstName', header: 'First Name', type: 'text' },
-  { field: 'lastName', header: 'Last Name', type: 'text' },
-  { field: 'checkIn', header: 'Check In', type: 'date' },
-  { field: 'checkOut', header: 'Check Out', type: 'date' },
-  { field: 'nights', header: 'Nights', type: 'text' },
-  { field: 'adults', header: 'Adults', type: 'text' },
-  { field: 'children', header: 'Children', type: 'text' },
-  { field: 'roomType', header: 'Room Type', type: 'text' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-]
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -145,7 +132,7 @@ async function getErrorList() {
     let rowError = ''
     listItems.value = []
     const newListItems = []
-    const response = await GenericService.importSearch(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, payload.value)
+    const response = await GenericService.importSearch(confInvoiceApi.moduleApi,confInvoiceApi.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
 
@@ -173,7 +160,7 @@ async function getErrorList() {
     listItems.value = [...listItems.value, ...newListItems]
   }
   catch (error) {
-    console.error('Error loading file:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 5000 })
   }
 }
 
@@ -191,38 +178,49 @@ async function onChangeFile(event: any) {
 }
 
 async function importFile() {
-  loadingSaveAll.value = true
-  options.value.loading = true
-  let successOperation = true
-  uploadComplete.value = true
-  // Verifica que se hayan seleccionado archivos
+  loadingSaveAll.value = true;
+  options.value.loading = true;
+  let successOperation = true;
+  uploadComplete.value = true;
+
   try {
-    // Verifica que se hayan seleccionado archivos
-    const selectedFiles = importModel.value.attachFile // Usa el modelo correcto
-    console.log('Archivos seleccionados:', selectedFiles)
+    const selectedFiles = importModel.value.attachFile; // Usa el modelo correcto
+    console.log('Archivos seleccionados:', selectedFiles);
 
     if (!selectedFiles || selectedFiles.length === 0) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one file', life: 10000 })
-      return
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one file', life: 10000 });
+      return;
     }
 
-    // Filtrar archivos inválidos
-    const invalidFiles = selectedFiles.filter((fileInput) => {
-      return !/^\d+\.pdf$/.test(fileInput.name) || fileInput.type !== 'application/pdf'
-    })
+    // Filtrar archivos inválidos (nombres que no comienzan con números)
+    const invalidFiles = selectedFiles.filter(fileInput => {
+      return !/^\d/.test(fileInput.name); // Verifica que el nombre comience con un número
+    });
 
     if (invalidFiles.length > 0) {
-      const errorMessages = invalidFiles.map(file => `Error en archivo: ${file.name} - Debe ser un PDF y su nombre debe ser solo números.`)
-      toast.add({ severity: 'error', summary: 'Error', detail: errorMessages.join(', '), life: 10000 })
-      return
+      const errorMessages = invalidFiles.map(file => `Error en archivo: ${file.name} - El nombre debe comenzar con un número.`);
+      
+      // Agregar errores a la lista para mostrar en la tabla
+      listItems.value.push(...invalidFiles);
+      
+      // Log para verificar que se están añadiendo errores
+      console.log('Errores añadidos a la lista:', invalidFiles);
+      
+      // Mostrar mensaje de error
+    
+      //return; // Detener el flujo si hay archivos inválidos
     }
 
-    const uuid = uuidv4()
-    idItem.value = uuid
-    const formData = new FormData()
+    const uuid = uuidv4();
+    idItem.value = uuid;
+    const formData = new FormData();
 
-    // Procesa cada archivo en el array de archivos
-   /* const base64Array = []
+    // Agregar archivos válidos al FormData
+    for (const fileInput of selectedFiles) {
+      formData.append('files', fileInput);
+    }
+
+ /*   const base64Array = []
     for (const fileInput of selectedFiles) {
       const base64String: any = await fileToBase64(fileInput)
       const base64 = base64String.split('base64,')[1]
@@ -234,43 +232,41 @@ async function importFile() {
     }
     base64Array.forEach((file, index) => {
       formData.append('files[]', file)
-    })
-*/
-for (const fileInput of selectedFiles) {
-  formData.append('files', fileInput)
-}
+    })*/
+
     // Agrega información adicional al FormData
-    formData.append('importProcessId', uuid)
-    formData.append('employeeId', userData?.value?.user?.userId)
-    formData.append('employee', userData?.value?.user?.name)
+    formData.append('importProcessId', uuid);
+    formData.append('employeeId', userData?.value?.user?.userId);
+    formData.append('employee', userData?.value?.user?.name);
+
     // Envía los datos al servicio
-    await GenericService.importReconcileFile(confApi.moduleApi, confApi.uriApi, formData)
-  }
-  catch (error: any) {
-    successOperation = false
-    uploadComplete.value = false
-    options.value.loading = false
-    messageDialog.value = error.data?.data?.error?.errorMessage || 'Error desconocido'
-    console.log(' aqui se detiene ')
-    openSuccessDialog.value = true
+    await GenericService.importReconcileFile(confApi.moduleApi, confApi.uriApi, formData);
+  } catch (error: any) {
+    successOperation = false;
+    uploadComplete.value = false;
+    options.value.loading = false;
+
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 });
+    console.log('Aquí se detiene');
   }
 
   if (successOperation) {
-    console.log(' nunca entro ')
-    await validateStatusImport()
-    console.log('entre')
+    console.log('Operación exitosa');
+    await validateStatusImport(); // Validar el estado después de la importación
+
     if (!haveErrorImportStatus.value) {
-      await getErrorList()
+      await getErrorList();
+      console.log(getErrorList,'lista de error')
       if (listItems.value.length === 0) {
-        options.value.loading = false
-        messageDialog.value = 'The files were imported successfully'
-        openSuccessDialog.value = true
+        options.value.loading = false;
+        navigateTo('/invoice');
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was uploaded successfully!`, life: 0 });
       }
     }
   }
 
-  loadingSaveAll.value = false
-  options.value.loading = false
+  loadingSaveAll.value = false;
+  options.value.loading = false;
 }
 
 async function validateStatusImport() {
@@ -283,7 +279,9 @@ async function validateStatusImport() {
       try {
         const response = await GenericService.getById(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, idItem.value, 'import-status')
         status = response.status
+        console.log(status,'Estado de importacion')
       }
+
       catch (error: any) {
         console.error('Error occurred:', error) // Agregar registro de error
         toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 20000 })
@@ -393,35 +391,8 @@ onMounted(async () => {
         @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
-            <span style="color: red;">{{ data.impSta }}</span>
-          </div>
-        </template>
-
-        <template #expansion="slotProps">
-          <div class="p-0 m-0">
-            <DataTable :value="slotProps.data.rowExpandable" striped-rows>
-              <Column
-                v-for="column of columnsExpandable" :key="column.field" :field="column.field"
-                :header="column.header" :sortable="column?.sortable"
-              />
-              <template #empty>
-                <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                  <span
-                    v-if="!options?.loading"
-                    class="flex flex-column align-items-center justify-content-center"
-                  >
-                    <div class="row">
-                      <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
-                    </div>
-
-                  </span>
-                  <span v-else class="flex flex-column align-items-center justify-content-center">
-                    <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-                  </span>
-                </div>
-              </template>
-            </DataTable>
+          <div id="fieldError">
+            <span v-tooltip.bottom="data.impSta" style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
       </DynamicTable>
