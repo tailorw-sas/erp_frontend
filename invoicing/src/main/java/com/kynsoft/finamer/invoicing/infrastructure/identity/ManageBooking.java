@@ -142,7 +142,7 @@ public class ManageBooking {
                 hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, dueAmount, roomNumber, couponNumber, adults,
                 children,
                 rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
-                invoice != null ? invoice.toAggregate() : null, ratePlan != null ? ratePlan.toAggregate() : null,
+                invoice != null ? invoice.toAggregateSample() : null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
                 roomCategory != null ? roomCategory.toAggregate() : null,
                 roomRates != null ? roomRates.stream().map(b -> {
