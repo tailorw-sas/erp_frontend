@@ -7,7 +7,6 @@ import { v4 } from 'uuid'
 import dayjs from 'dayjs'
 import type { Container } from '~/components/form/EditFormV2WithContainer'
 import { GenericService } from '~/services/generic-services'
-
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTotalTabView.vue'
@@ -74,6 +73,11 @@ const confhotelListApi = reactive({
   uriApi: 'manage-hotel',
 })
 
+const confClonationApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/total-clone-invoice',
+})
+
 const confagencyListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
@@ -93,7 +97,7 @@ const confAdjustmentsApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-adjustment',
 })
-
+/*
 const CreditFields = ref<FieldDefinitionType[]>([
   {
     field: 'invoiceId',
@@ -176,7 +180,7 @@ const CreditFields = ref<FieldDefinitionType[]>([
   },
 
 ])
-
+*/
 const Fields = ref<FieldDefinitionType[]>([
 
   {
@@ -451,7 +455,7 @@ function clearForm() {
 
   formReload.value++
 }
-
+/*
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
@@ -559,7 +563,7 @@ async function createItem(item: { [key: string]: any }) {
     return response
   }
 }
-
+*/
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
@@ -589,39 +593,63 @@ async function deleteItem(id: string) {
   }
 }
 
+
+
+
 async function saveItem(item: { [key: string]: any }) {
-  if (!item?.hotel?.id) {
-    hotelError.value = true
-  }
-  if (!item?.agency?.id) {
-    agencyError.value = true
-  }
-
-  if (hotelError.value || agencyError.value) {
-    return null
-  }
-
-  if (invoiceAmountError.value) { return null }
   loadingSaveAll.value = true
   let successOperation = true
+  let itemDetails = null
 
   try {
-    const response: any = await createItem(item)
-    idItemCreated.value = response.cloned
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
-    if (route.query.type === InvoiceType.CREDIT) { return navigateTo({ path: `/invoice` }) }
-    navigateTo({ path: `/invoice/edit/${response?.id}` })
+     await createClonation(item)
+
+    // Imprimir la respuesta en la consola
+
+   /* if (response) {
+      // Llamar a getItemById para actualizar los campos invoiceId e invoiceNo
+      idItemCreated.value = response
+      itemDetails = await getItemById(response)
+
+      // Actualizar los campos del item con los detalles obtenidos
+      const invoiceNo = itemDetails.invoiceNo
+      toast.add({
+        severity: 'info',
+        summary: 'Confirmed',
+        detail: `The clonation invoice ${invoiceNo} was created successfully`,
+        life: 10000
+      })
+    }
+    else {
+      throw new Error('Response object or ID is undefined')
+    }*/
   }
   catch (error: any) {
     successOperation = false
-    toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 })
+    console.log('fallo el crear',error)
+ /*   toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error?.data?.data?.error?.errorMessage || error?.message,
+      life: 10000
+    })*/
+  }
+  finally {
+    loadingSaveAll.value = false
+
+    if (successOperation) {
+             console.log('Item creado con exito')
+        //  await getItemById(itemDetails.cloned)
+
+        // Obtener los detalles del elemento recién creado
+      }
+
+      // clearForm();
+    }
+   // await new Promise(resolve => setTimeout(resolve, 5000))
+   // navigateTo('/invoice')
   }
 
-  loadingSaveAll.value = false
-  if (successOperation) {
-    clearForm()
-  }
-}
 const goToList = async () => await navigateTo('/invoice')
 
 
@@ -802,7 +830,73 @@ function requireConfirmationToDelete(event: any) {
 }
 
 function toggleForceUpdate() {
-  forceUpdate.value = !forceUpdate.value
+forceUpdate.value = !forceUpdate.value
+}
+
+async function getAttachments(globalSelectedInvoicing: any) {
+  try {
+    const attachments = await getAttachmentList(globalSelectedInvoicing)
+    return attachments
+  }
+  catch (error) {
+    console.error('Error al buscar los attachments asociados a la factura:', error)
+    return [] // Devolver una lista de adjuntos vacía en caso de error
+  }
+}
+async function createClonation(item: { [key: string]: any }) {
+  try {
+    loadingSaveAll.value = true;
+
+    // Crear el payload inicial
+    const payload: { [key: string]: any } = { ...item };
+    delete payload.invoiceId; 
+    delete payload.invoiceNumber; 
+    delete payload.isManual; 
+    delete payload.status; 
+    delete payload.invoiceType; 
+    delete payload.invoiceAmount; 
+    delete payload.invoiceDate;
+    
+    payload.employeeName = userData?.value?.user?.name;
+    payload.invoiceToClone = globalSelectedInvoicing; // ID del invoice
+    payload.agency = item.agency.id; // Asegúrate de que item.agency exista
+    payload.employeeId = userData?.value?.user?.userId;
+    payload.hotel = item.hotel.id; // Asegúrate de que item.hotel exista
+    payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString();
+
+    // Obtener los attachments asociados al invoice
+    const attachments = await getAttachments(globalSelectedInvoicing);
+    payload.attachments = attachments.map(att => ({
+      attachmentId: att.attachmentId,
+      filename: att.filename,
+      file: att.file,
+      remark: att.remark,
+      type: att.type.id,
+      resourceType: 'INV-Invoice',
+      employeeName: userData?.value?.user?.name,
+      employeeId: userData?.value?.user?.userId,
+    }));
+
+    // Obtener bookings asociados al invoice
+    const bookings = await findBookingByInvoiceId();
+    payload.bookings = bookings; // Asegurarse de que bookings sea un array
+
+    // Imprimir el payload en la consola
+    console.log('Payload:', payload);
+    
+    // Llamada al servicio genérico para enviar el payload al servidor
+    const response = await GenericService.create(confClonationApi.moduleApi, confClonationApi.uriApi, payload);
+
+    // Imprimir la respuesta en la consola
+    console.log('Response:', response);
+    
+    return response;
+  } catch (error: any) {
+    console.error('Error en createClonation:', error?.data?.data?.error?.errorMessage ); // Imprimir el error en la consola
+    toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 });
+  } finally {
+    loadingSaveAll.value = false;
+  }
 }
 
 function openRoomRateDialog(booking?: any) {
@@ -862,7 +956,7 @@ function sortRoomRate(event: any) {
     })
   }
 }
-
+/*
 function addBooking(booking: any) {
   bookingList.value = [...bookingList.value, {
     ...booking,
@@ -900,7 +994,7 @@ function addBooking(booking: any) {
 
   calcInvoiceAmount()
 }
-
+*/
 async function getInvoiceAgency(id) {
   try {
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
@@ -1013,15 +1107,28 @@ async function getBookingList(clearFilter: boolean = false) {
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
     }
+    return bookingList.value;
   }
+  
   catch (error) {
     console.error(error)
+    return [];
   }
-  finally {
-    // Options.value.loading = false
+ 
+}
+async function findBookingByInvoiceId() {
+  console.log('ID desde find booking:', globalSelectedInvoicing);
+  try {
+    // Obtener el listado completo de bookings
+    const bookings = await getBookingList(); 
+    console.log(bookings,'que lista aqui')
+  
+    return bookings; // Retornar solo los bookings asociados
+  } catch (error) {
+    console.error('Error al buscar el booking asociado a la factura:', error);
+    return []; // Retornar un array vacío en caso de error
   }
 }
-
 
 async function getAttachmentList(globalSelectedInvoicing: any) {
   try {
@@ -1069,7 +1176,7 @@ async function getAttachmentList(globalSelectedInvoicing: any) {
         ...item?.type,
         name: `${item?.type?.code}-${item?.type?.name}`
       },
-      paymenResourceType: 'INV-Invoice',
+     
       resource: globalSelectedInvoicing
     }))
 
@@ -1171,7 +1278,7 @@ function updateBooking(booking: any) {
 
   calcInvoiceAmount()
 }
-
+/*
 function addRoomRate(rate: any) {
   const booking = bookingList.value.find((b => b?.id === rate?.booking))
 
@@ -1215,7 +1322,7 @@ function updateRoomRate(roomRate: any) {
   }
   calcBookingHotelAmount(roomRate)
 }
-
+*/
 function disabledButtonSave() {
   let result = false
   if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
@@ -1312,14 +1419,7 @@ onMounted(async () => {
           }"
         />
       </template>
-      <template #field-dueDate="{ item: data, onUpdate }">
-        <Calendar
-          v-if="!loadingSaveAll" v-model="data.dueDate" date-format="yy-mm-dd" :max-date="new Date()"
-          @update:model-value="($event) => {
-            onUpdate('dueDate', $event)
-          }"
-        />
-      </template>
+    
       <template #field-invoiceAmount="{ onUpdate, item: data }">
         <InputText
           v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
@@ -1425,6 +1525,7 @@ onMounted(async () => {
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
                   :disabled="false" @click="() => {
+                 
                     saveItem(props.item.fieldValues)
                   }"
                 />
