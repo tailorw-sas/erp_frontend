@@ -1235,6 +1235,9 @@ async function getListPaymentDetailTypeDeposit() {
 function closeModalApplyPayment() {
   objItemSelectedForRightClickApplyPayment.value = {}
   openDialogApplyPayment.value = false
+  disabledBtnApplyPayment.value = true
+  idInvoicesSelectedToApplyPayment.value = []
+  paymentDetailsTypeDepositSelected.value = []
 }
 
 async function openModalApplyPayment() {
@@ -1357,22 +1360,30 @@ async function changeValueByCheckApplyPaymentBalance(valueOfCheckbox: boolean) {
 async function saveApplyPayment() {
   try {
     loadingSaveApplyPayment.value = true
+
     const payload = {
       payment: objItemSelectedForRightClickApplyPayment.value.id || '',
-      invoices: [...idInvoicesSelectedToApplyPayment.value],
+      invoices: [...idInvoicesSelectedToApplyPayment.value], // este ya es un array de ids
+      deposits: [...paymentDetailsTypeDepositSelected.value.map(item => item.id)], // Convertir a ids[]
       applyDeposit: paymentDetailsTypeDepositSelected.value.length > 0,
-      deposits: [...paymentDetailsTypeDepositSelected.value],
+      applyPaymentBalance: checkApplyPayment.value
     }
+
     const response = await GenericService.create('payment', 'payment/apply-payment', payload)
 
     if (response) {
       loadingSaveApplyPayment.value = false
       openDialogApplyPayment.value = false
+      disabledBtnApplyPayment.value = true
+      objItemSelectedForRightClickApplyPayment.value = {}
+      idInvoicesSelectedToApplyPayment.value = []
+      paymentDetailsTypeDepositSelected.value = []
     }
   }
   catch (error) {
     objItemSelectedForRightClickApplyPayment.value = {}
     idInvoicesSelectedToApplyPayment.value = []
+    paymentDetailsTypeDepositSelected.value = []
     loadingSaveApplyPayment.value = false
   }
 }
@@ -1504,7 +1515,6 @@ function handleAcctions(itemId: any) {
           itemMenuObj.btnDisabled = false
           itemMenuObj.btnOnClick = () => {
             openDialogPrint()
-            console.log('print enabled')
           }
         }
       }
@@ -1512,9 +1522,7 @@ function handleAcctions(itemId: any) {
         const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
         if (itemMenuObj) {
           itemMenuObj.btnDisabled = true
-          itemMenuObj.btnOnClick = () => {
-            console.log('print disabled')
-          }
+          itemMenuObj.btnOnClick = () => {}
         }
       }
     }
@@ -2092,18 +2100,7 @@ onMounted(async () => {
             </template>
 
             <template #expansion="{ data: item }">
-              <!-- <pre>{{ item.bookingsList }}</pre> -->
               <div class="p-0 m-0">
-                <!-- <DynamicTable
-                  class="card p-0"
-                  :parent-component-loading="item.loadingBookings"
-                  :data="item.bookingsList"
-                  :columns="columnsExpandTable"
-                  :options="applyPaymentBookingOptions"
-                  :pagination="applyPaymentBookingPagination"
-                  @on-change-pagination="applyPaymentBookingOnChangePage = $event"
-                /> -->
-
                 <DataTable :value="item.bookings" striped-rows>
                   <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
                   <template #empty>
@@ -2147,7 +2144,14 @@ onMounted(async () => {
             </label>
           </div>
           <div>
-            <Button v-tooltip.top="'Apply Payment'" class="w-3rem mx-1" icon="pi pi-check" :disabled="disabledBtnApplyPayment" :loading="loadingSaveApplyPayment" @click="saveApplyPayment" />
+            <Button
+              v-tooltip.top="'Apply Payment'"
+              class="w-3rem mx-1"
+              icon="pi pi-check"
+              :disabled="disabledBtnApplyPayment || (paymentAmmountSelected <= 0 || paymentAmmountSelected === null || paymentAmmountSelected === undefined)"
+              :loading="loadingSaveApplyPayment"
+              @click="saveApplyPayment"
+            />
             <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
           </div>
         </div>
