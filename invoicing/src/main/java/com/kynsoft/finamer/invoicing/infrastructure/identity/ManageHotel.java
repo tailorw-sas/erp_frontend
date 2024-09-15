@@ -66,6 +66,18 @@ public class ManageHotel implements Serializable {
 
     private Boolean autoApplyCredit;
 
+    private String babelCode;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "country_id")
+    private ManageCountry manageCountry;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "city_state_id")
+    private ManageCityState manageCityState;
+
+    private String address;
+
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -74,15 +86,24 @@ public class ManageHotel implements Serializable {
         this.manageTradingCompanies = dto.getManageTradingCompanies() != null
                 ? new ManageTradingCompanies(dto.getManageTradingCompanies())
                 : null;
-        this.isVirtual=dto.isVirtual();
+        this.isVirtual = dto.isVirtual();
         this.status = dto.getStatus();
-        this.requiresFlatRate=dto.isRequiresFlatRate();
+        this.requiresFlatRate = dto.isRequiresFlatRate();
         this.autoApplyCredit = dto.getAutoApplyCredit();
+        this.babelCode = dto.getBabelCode();
+        this.address = dto.getAddress();
+        this.manageCityState = dto.getManageCityState() != null ? new ManageCityState(dto.getManageCityState()) : null;
+        this.manageCountry = dto.getManageCountry() != null ? new ManageCountry(dto.getManageCountry()) : null;
     }
 
     public ManageHotelDto toAggregate() {
         return new ManageHotelDto(
                 id, code, name, manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null, null,
-                isVirtual != null ? isVirtual : false, status,requiresFlatRate, autoApplyCredit);
+                isVirtual != null ? isVirtual : false, status, requiresFlatRate, autoApplyCredit,
+                address,
+                babelCode,
+                manageCountry != null ? manageCountry.toAggregate() : null,
+                manageCityState != null ? manageCityState.toAggregate() : null
+        );
     }
 }
