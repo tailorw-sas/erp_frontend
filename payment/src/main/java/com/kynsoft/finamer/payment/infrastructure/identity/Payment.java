@@ -31,7 +31,7 @@ public class Payment implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(columnDefinition="serial", name = "payment_gen_id")
+    @Column(columnDefinition = "serial", name = "payment_gen_id")
     @Generated(event = EventType.INSERT)
     private Long paymentId;
 
@@ -77,8 +77,9 @@ public class Payment implements Serializable {
     private List<MasterPaymentAttachment> attachments;
 
     /**
-     * Para obtener la informacion de los invoice, hay que navegar por los detalles
-     * del Payment, los booking asociados a el cuando se aplica el pago, son quienes proporcionan la invoice.
+     * Para obtener la informacion de los invoice, hay que navegar por los
+     * detalles del Payment, los booking asociados a el cuando se aplica el
+     * pago, son quienes proporcionan la invoice.
      */
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "payment")
     private List<PaymentDetail> paymentDetails;
@@ -132,74 +133,75 @@ public class Payment implements Serializable {
         this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
     }
 
-    public PaymentDto toAggregate(){
+    public PaymentDto toAggregate() {
         return new PaymentDto(
-                id, 
+                id,
                 paymentId,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
-                reference, 
-                transactionDate, 
+                reference,
+                transactionDate,
                 paymentStatus != null ? paymentStatus.toAggregate() : null,
                 client != null ? client.toAggregate() : null,
                 agency != null ? agency.toAggregate() : null,
                 hotel != null ? hotel.toAggregate() : null,
-                bankAccount!= null ? bankAccount.toAggregate() : null,
+                bankAccount != null ? bankAccount.toAggregate() : null,
                 attachmentStatus != null ? attachmentStatus.toAggregate() : null,
-                paymentAmount, 
-                paymentBalance, 
-                depositAmount, 
-                depositBalance, 
-                otherDeductions, 
-                identified, 
+                paymentAmount,
+                paymentBalance,
+                depositAmount,
+                depositBalance,
+                otherDeductions,
+                identified,
                 notIdentified,
                 notApplied,
                 applied,
                 remark,
-                invoice != null ? invoice.toAggregateSample() : null,
+                invoice != null ? invoice.toAggregate() : null,
                 attachments != null ? attachments.stream().map(b -> {
-                    return b.toAggregateSimple();
-                }).collect(Collectors.toList()) : null,
+                            return b.toAggregateSimple();
+                        }).collect(Collectors.toList()) : null,
                 createdAt
         );
     }
 
     /**
      * Con este metodo se puede obtener un Payment y sus Detalles.
-     * @return 
+     *
+     * @return
      */
     public PaymentDto toAggregateWihtDetails() {
         return new PaymentDto(
-                id, 
+                id,
                 paymentId,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
-                reference, 
-                transactionDate, 
+                reference,
+                transactionDate,
                 paymentStatus != null ? paymentStatus.toAggregate() : null,
                 client != null ? client.toAggregate() : null,
                 agency != null ? agency.toAggregate() : null,
                 hotel != null ? hotel.toAggregate() : null,
-                bankAccount!= null ? bankAccount.toAggregate() : null,
+                bankAccount != null ? bankAccount.toAggregate() : null,
                 attachmentStatus != null ? attachmentStatus.toAggregate() : null,
-                paymentAmount, 
-                paymentBalance, 
-                depositAmount, 
-                depositBalance, 
-                otherDeductions, 
-                identified, 
+                paymentAmount,
+                paymentBalance,
+                depositAmount,
+                depositBalance,
+                otherDeductions,
+                identified,
                 notIdentified,
                 notApplied,
                 applied,
                 remark,
                 invoice != null ? invoice.toAggregateSample() : null,
                 attachments != null ? attachments.stream().map(b -> {
-                    return b.toAggregateSimple();
-                }).collect(Collectors.toList()) : null,
+                            return b.toAggregateSimple();
+                        }).collect(Collectors.toList()) : null,
                 createdAt,
                 paymentDetails != null ? paymentDetails.stream().map(b -> {
-                    return b.toAggregateSimpleNotPayment();
-                }).collect(Collectors.toList()) : null
+                            return b.toAggregateSimpleNotPayment();
+                        }).collect(Collectors.toList()) : null
         );
     }
 
