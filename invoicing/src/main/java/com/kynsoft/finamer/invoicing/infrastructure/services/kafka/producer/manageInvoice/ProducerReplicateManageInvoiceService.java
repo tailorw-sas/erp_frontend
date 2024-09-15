@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,9 +20,12 @@ import java.util.logging.Logger;
 public class ProducerReplicateManageInvoiceService {
 
     private final KafkaTemplate<String, Object> producer;
+    private final IManageBookingService manageBookingService;
 
-    public ProducerReplicateManageInvoiceService(KafkaTemplate<String, Object> producer) {
+    public ProducerReplicateManageInvoiceService(KafkaTemplate<String, Object> producer,
+                                                IManageBookingService manageBookingService) {
         this.producer = producer;
+        this.manageBookingService = manageBookingService;
     }
 
     @Async

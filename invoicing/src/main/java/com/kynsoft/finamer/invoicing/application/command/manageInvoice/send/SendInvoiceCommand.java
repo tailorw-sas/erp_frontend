@@ -16,11 +16,11 @@ import java.util.stream.Collectors;
 @Setter
 @AllArgsConstructor
 public class SendInvoiceCommand implements ICommand {
-    private final UUID invoice;
+    private final List<UUID> invoice;
     private final String employee;
     private boolean result;
 
-    public SendInvoiceCommand(UUID invoice, String employee) {
+    public SendInvoiceCommand(List<UUID>  invoice, String employee) {
         this.invoice = invoice;
         this.employee = employee;
     }

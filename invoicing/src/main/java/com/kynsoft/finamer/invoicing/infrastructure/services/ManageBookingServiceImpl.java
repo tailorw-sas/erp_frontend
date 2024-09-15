@@ -39,12 +39,10 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
     }
+
     @Override
-    public void calculateInvoiceAmount(ManageBookingDto dto){
+    public void calculateInvoiceAmount(ManageBookingDto dto) {
         Double InvoiceAmount = 0.00;
-
-
-        
 
         if (dto.getRoomRates() != null) {
 
@@ -62,11 +60,8 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
-    public void calculateHotelAmount(ManageBookingDto dto){
+    public void calculateHotelAmount(ManageBookingDto dto) {
         Double HotelAmount = 0.00;
-
-
-
 
         if (dto.getRoomRates() != null) {
 
@@ -137,7 +132,6 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         return repositoryQuery.existsByHotelBookingNumber(bookingHotelNumber);
     }
 
-
     @Override
     public ManageBookingDto findById(UUID id) {
         Optional<ManageBooking> optionalEntity = repositoryQuery.findById(id);
@@ -176,6 +170,18 @@ public class ManageBookingServiceImpl implements IManageBookingService {
                 }
             }
         }
+    }
+
+    @Override
+    public List<ManageBookingDto> findAllToReplicate() {
+        List<ManageBooking> objects = this.repositoryQuery.findAll();
+        List<ManageBookingDto> objectDtos = new ArrayList<>();
+
+        for (ManageBooking object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
     }
 
 }

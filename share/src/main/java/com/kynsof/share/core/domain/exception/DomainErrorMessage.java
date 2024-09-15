@@ -305,7 +305,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_PAYMENT_STATUS_TO_APPLIED(1084, Series.DOMAIN_ERROR,"Another item already exists with applied."),
     MANAGER_MERCHANT_CONFIG_MUST_BY_UNIQUE(1085, Series.DOMAIN_ERROR,"Data entered overlaps with others, please check."),
     MANAGE_PAYMENT_RESOURCE_TYPE_CHECK_INVOICE(1086, Series.DOMAIN_ERROR,"Data entered overlaps with others, please check."),
-    ATTACHMENT_TYPE_CHECK_INV_DEFAULT(1087, Series.DOMAIN_ERROR, "Only one invoice default attachment type is allowed.");
+    ATTACHMENT_TYPE_CHECK_INV_DEFAULT(1087, Series.DOMAIN_ERROR, "Only one invoice default attachment type is allowed."),
+    MANAGER_MERCHANT_CONFIG_NOT_FOUND(687, Series.DOMAIN_ERROR, "Manager Merchant Config not found.");
 
     private static final DomainErrorMessage[] VALUES;
 

@@ -2,9 +2,7 @@ package com.kynsoft.finamer.settings.application.command.replicate.objects;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.*;
-import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageLanguageKafka;
-import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageTransactionStatusKafka;
-import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageVCCTransactionTypeKafka;
+import com.kynsof.share.core.domain.kafka.entity.vcc.*;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.services.*;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerReplicateManageAgencyService;
@@ -22,6 +20,8 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceTransactionType.ProducerReplicateManageInvoiceTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceType.ProducerReplicateManageInvoiceTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageLanguage.ProducerReplicateManageLanguageService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchant.ProducerReplicateManageMerchantService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantConfig.ProducerReplicateManageMerchantConfigService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentAttachmentStatus.ProducerReplicateManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentSource.ProducerReplicateManagePaymentSourceService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentStatus.ProducerReplicateManagePaymentStatusService;
@@ -67,6 +67,10 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
 
     private final IManageB2BPartnerTypeService manageB2BPartnerTypeService;
 
+    private final IManageMerchantConfigService manageMerchantConfigService;
+    private final IManagerMerchantService iManagerMerchantService;
+    private final ProducerReplicateManageMerchantConfigService producerReplicateManageMerchantConfigService;
+
     private final IManageCityStateService manageCityStateService;
 
     private final IManagerCountryService managerCountryService;
@@ -85,6 +89,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
 
     private final ProducerReplicateB2BPartnerService producerReplicateB2BPartnerService;
     private final ProducerReplicateB2BPartnerTypeService producerReplicateB2BPartnerTypeService;
+    private final ProducerReplicateManageMerchantService producerReplicateManageMerchantService;
 
     private final ProducerReplicateManageCityStateService producerReplicateManageCityStateService;
 
@@ -120,13 +125,13 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          IManagerLanguageService managerLanguageService,
                                          IManageVCCTransactionTypeService manageVCCTransactionTypeService,
                                          IManageTransactionStatusService manageTransactionStatusService,
-                                         IManageB2BPartnerTypeService manageB2BPartnerTypeService,
+                                         IManageB2BPartnerTypeService manageB2BPartnerTypeService, IManageMerchantConfigService manageMerchantConfigService, IManagerMerchantService iManagerMerchantService, ProducerReplicateManageMerchantConfigService producerReplicateManageMerchantConfigService,
                                          IManageCityStateService manageCityStateService, IManagerCountryService managerCountryService,
                                          ProducerReplicateManageLanguageService replicateManageLanguageService,
                                          ProducerReplicateManageVCCTransactionTypeService replicateManageVCCTransactionTypeService,
                                          ProducerReplicateManageTransactionStatusService replicateManageTransactionStatusService,
                                          ProducerReplicateB2BPartnerService producerReplicateB2BPartnerService,
-                                         ProducerReplicateB2BPartnerTypeService producerReplicateB2BPartnerTypeService,
+                                         ProducerReplicateB2BPartnerTypeService producerReplicateB2BPartnerTypeService, ProducerReplicateManageMerchantService producerReplicateManageMerchantService,
                                          ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
                                          ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService) {
         this.tradingCompaniesService = tradingCompaniesService;
@@ -163,6 +168,9 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.manageAgencyTypeService = manageAgencyTypeService;
         this.replicateManageAgencyTypeService = replicateManageAgencyTypeService;
         this.manageB2BPartnerTypeService = manageB2BPartnerTypeService;
+        this.manageMerchantConfigService = manageMerchantConfigService;
+        this.iManagerMerchantService = iManagerMerchantService;
+        this.producerReplicateManageMerchantConfigService = producerReplicateManageMerchantConfigService;
         this.manageCityStateService = manageCityStateService;
         this.managerCountryService = managerCountryService;
         this.replicateManageLanguageService = replicateManageLanguageService;
@@ -170,6 +178,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.replicateManageTransactionStatusService = replicateManageTransactionStatusService;
         this.producerReplicateB2BPartnerService = producerReplicateB2BPartnerService;
         this.producerReplicateB2BPartnerTypeService = producerReplicateB2BPartnerTypeService;
+        this.producerReplicateManageMerchantService = producerReplicateManageMerchantService;
         this.producerReplicateManageCityStateService = producerReplicateManageCityStateService;
         this.producerReplicateManageCountryService = producerReplicateManageCountryService;
         this.producerReplicateManageTradingCompanyService = producerReplicateManageTradingCompanyService;
@@ -225,13 +234,15 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 Objects.nonNull(agencyDto.getSentB2BPartner())?agencyDto.getSentB2BPartner().getId():null,
                                 Objects.nonNull(agencyDto.getCityState())?agencyDto.getCityState().getId():null,
                                 Objects.nonNull(agencyDto.getCountry())?agencyDto.getCountry().getId():null,
-                                agencyDto.getMailingAddress()
+                                agencyDto.getMailingAddress(),
+                                agencyDto.getZipCode(),
+                                agencyDto.getCity()
                         ));
                     }
                 }
                 case MANAGE_BANK_ACCOUNT -> {//
                     for (ManageBankAccountDto bankAccountDto : this.manageBankAccountService.findAllToReplicate()) {
-                        this.replicateManageBankAccount.create(new ReplicateManageBankAccountKafka(bankAccountDto.getId(), bankAccountDto.getAccountNumber(), bankAccountDto.getStatus().name(), bankAccountDto.getManageBank().getName(),bankAccountDto.getManageHotel().getId()));
+                        this.replicateManageBankAccount.create(new ReplicateManageBankAccountKafka(bankAccountDto.getId(), bankAccountDto.getAccountNumber(), bankAccountDto.getStatus().name(), bankAccountDto.getManageBank().getName(), bankAccountDto.getManageHotel().getId()));
                     }
                 }
                 case MANAGE_EMPLOYEE -> {//
@@ -300,12 +311,16 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 hotelDto.getRequiresFlatRate(),
                                 hotelDto.getIsVirtual(),
                                 hotelDto.getApplyByTradingCompany(),
-                                hotelDto.getAutoApplyCredit()
+                                hotelDto.getAutoApplyCredit(),
+                                hotelDto.getBabelCode(),
+                                hotelDto.getAddress(),
+                                hotelDto.getManageCityState().getId(),
+                                hotelDto.getManageCountry().getId()
                         ));
                     }
                 }
                 case MANAGE_B2B_PARTNER -> {
-                    for (ManagerB2BPartnerDto managerB2BPartnerDto:this.managerB2BPartnerService.findAllToReplicate()){
+                    for (ManagerB2BPartnerDto managerB2BPartnerDto : this.managerB2BPartnerService.findAllToReplicate()) {
                         this.producerReplicateB2BPartnerService.create(ReplicateB2BPartnerKafka.builder()
                                 .id(managerB2BPartnerDto.getId())
                                 .code(managerB2BPartnerDto.getCode())
@@ -316,8 +331,39 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 .build());
                     }
                 }
+                case MANAGE_MERCHANT -> {
+                    for (ManagerMerchantDto managerMerchantDto : this.iManagerMerchantService.findAllToReplicate()) {
+                        this.producerReplicateManageMerchantService.create(ReplicateManageMerchantKafka.builder()
+                                .id(managerMerchantDto.getId())
+                                .code(managerMerchantDto.getCode())
+                                .description(managerMerchantDto.getDescription())
+                                .b2bPartner(managerMerchantDto.getB2bPartner().getId())
+                                .defaultm(managerMerchantDto.getDefaultm())
+                                .status(managerMerchantDto.getStatus().name())
+                                .build());
+                    }
+                }
+                case MANAGE_MERCHANT_CONFIG -> {
+                    for (ManagerMerchantConfigDto managerMerchantConfigDto : this.manageMerchantConfigService.findAllToReplicate()) {
+                        this.producerReplicateManageMerchantConfigService.create(ReplicateManagerMerchantConfigKafka.builder()
+                                .method(managerMerchantConfigDto.getMethod().name())
+                                .name(managerMerchantConfigDto.getName())
+                                .declinedUrl(managerMerchantConfigDto.getDeclinedUrl())
+                                .altUrl(managerMerchantConfigDto.getAltUrl())
+                                .url(managerMerchantConfigDto.getUrl())
+                                .errorUrl(managerMerchantConfigDto.getErrorUrl())
+                                .institutionCode(managerMerchantConfigDto.getInstitutionCode())
+                                .merchantType(managerMerchantConfigDto.getMerchantType())
+                                .successUrl(managerMerchantConfigDto.getSuccessUrl())
+                                .merchantNumber(managerMerchantConfigDto.getMerchantNumber())
+                                .merchantTerminal(managerMerchantConfigDto.getMerchantTerminal())
+                                .manageMerchant(managerMerchantConfigDto.getManagerMerchantDto().getId())
+                                .id(managerMerchantConfigDto.getId())
+                                .build());
+                    }
+                }
                 case MANAGE_COUNTRY -> {
-                    for (ManagerCountryDto managerCountryDto : this.managerCountryService.findAllToReplicate()){
+                    for (ManagerCountryDto managerCountryDto : this.managerCountryService.findAllToReplicate()) {
                         this.producerReplicateManageCountryService.create(ReplicateManageCountryKafka.builder()
                                 .id(managerCountryDto.getId())
                                 .status(managerCountryDto.getStatus().name())
@@ -329,7 +375,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                     }
                 }
                 case MANAGE_CITY_STATE -> {
-                    for (ManageCityStateDto manageCityStateDto:this.manageCityStateService.findAllToReplicate()){
+                    for (ManageCityStateDto manageCityStateDto : this.manageCityStateService.findAllToReplicate()) {
                         producerReplicateManageCityStateService.create(ReplicateManageCityStateKafka.builder()
                                 .id(manageCityStateDto.getId())
                                 .code(manageCityStateDto.getCode())
@@ -342,7 +388,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                     }
                 }
                 case MANAGE_B2B_PARTNER_TYPE -> {
-                    for(ManageB2BPartnerTypeDto manageB2BPartnerTypeDto:this.manageB2BPartnerTypeService.findAllToReplicate()){
+                    for (ManageB2BPartnerTypeDto manageB2BPartnerTypeDto : this.manageB2BPartnerTypeService.findAllToReplicate()) {
                         producerReplicateB2BPartnerTypeService.create(ReplicateB2BPartnerTypeKafka.builder()
                                 .id(manageB2BPartnerTypeDto.getId())
                                 .code(manageB2BPartnerTypeDto.getCode())
@@ -354,10 +400,10 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                     }
                 }
                 case MANAGE_TRADING_COMPANY -> {
-                    for (ManageTradingCompaniesDto manageTradingCompaniesDto:this.tradingCompaniesService.findAll()){
+                    for (ManageTradingCompaniesDto manageTradingCompaniesDto : this.tradingCompaniesService.findAll()) {
                         producerReplicateManageTradingCompanyService.create(new ReplicateManageTradingCompanyKafka(manageTradingCompaniesDto.getId(),
-                                manageTradingCompaniesDto.getCode(),manageTradingCompaniesDto.getIsApplyInvoice(),
-                                manageTradingCompaniesDto.getCif(),manageTradingCompaniesDto.getAddress(),manageTradingCompaniesDto.getCompany()));
+                                manageTradingCompaniesDto.getCode(), manageTradingCompaniesDto.getIsApplyInvoice(),
+                                manageTradingCompaniesDto.getCif(), manageTradingCompaniesDto.getAddress(), manageTradingCompaniesDto.getCompany()));
                     }
                 }
                 default -> System.out.println("Número inválido. Por favor, intenta de nuevo con un número del 1 al 7.");

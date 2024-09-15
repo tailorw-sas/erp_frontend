@@ -58,7 +58,7 @@ public class ConsumerUpdateManageInvoiceService {
                     objKafka.getId(), 
                     objKafka.getInvoiceId(), 
                     objKafka.getInvoiceNo(), 
-                    objKafka.getInvoiceNumber(), 
+                    deleteHotelInfo(objKafka.getInvoiceNumber()), 
                     EInvoiceType.valueOf(objKafka.getInvoiceType()),
                     objKafka.getInvoiceAmount(), 
                     bookingDtos,
@@ -68,6 +68,10 @@ public class ConsumerUpdateManageInvoiceService {
 //        } catch (Exception ex) {
 //            Logger.getLogger(ConsumerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
 //        }
+    }
+
+    private String deleteHotelInfo(String input) {
+        return input.replaceAll("-(.*?)-", "-");
     }
 
 }

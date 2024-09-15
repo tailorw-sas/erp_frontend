@@ -21,7 +21,7 @@ public class ConsumerReplicateManageMerchantService {
     @KafkaListener(topics = "finamer-replicate-manage-merchant", groupId = "vcc-entity-replica")
     public void listen(ReplicateManageMerchantKafka entity) {
         try {
-            CreateManageMerchantCommand command = new CreateManageMerchantCommand(entity.getId(), entity.getCode());
+            CreateManageMerchantCommand command = new CreateManageMerchantCommand(entity.getId(), entity.getCode(),entity.getDescription(),entity.getB2bPartner(),entity.getDefaultm(), entity.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageMerchant.ConsumerReplicateManageMerchantService.class.getName()).log(Level.SEVERE, null, ex);

@@ -44,6 +44,6 @@ public class CreateManagerMerchantCommandHandler implements ICommandHandler<Crea
                 command.getDefaultm(),
                 command.getStatus()
         ));
-        this.producerReplicateManageMerchantService.create(new ReplicateManageMerchantKafka(command.getId(), command.getCode()));
+        this.producerReplicateManageMerchantService.create(new ReplicateManageMerchantKafka(command.getId(), command.getCode(), command.getDescription(), command.getB2bPartner(),command.getDefaultm(),command.getStatus().name()));
     }
 }

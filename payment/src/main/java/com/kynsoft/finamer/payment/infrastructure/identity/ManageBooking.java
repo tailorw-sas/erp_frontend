@@ -74,7 +74,7 @@ public class ManageBooking {
                 couponNumber,
                 adults,
                 children,
-                invoice != null ? invoice.toAggregateSample() : null,
+                invoice != null ? invoice.toAggregate() : null,
                 parent != null ? parent.toAggregateSimple() : null
         );
     }

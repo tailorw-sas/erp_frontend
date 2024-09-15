@@ -42,15 +42,15 @@ public class UpdateManagerMerchantCommandHandler implements ICommandHandler<Upda
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setCode, command.getCode(), test.getCode(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(test::setDefaultm, command.getDefaultm(), test.getDefaultm(), update::setUpdate);
 
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
         this.updateB2BPartner(test::setB2bPartner, command.getB2bPartner(), test.getB2bPartner().getId(), update::setUpdate);
 
-        if (update.getUpdate() > 0) {
+
             this.service.update(test);
-            this.producerService.update(new UpdateManageMerchantKafka(test.getId(), test.getCode()));
-        }
+            this.producerService.update(new UpdateManageMerchantKafka(test.getId(), test.getCode(), test.getDescription(),test.getB2bPartner().getId(),test.getDefaultm(),test.getStatus().name()));
 
     }
 

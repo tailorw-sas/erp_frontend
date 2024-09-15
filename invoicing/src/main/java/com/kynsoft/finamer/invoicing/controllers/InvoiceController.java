@@ -7,7 +7,6 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.attachmentStatusHistory.create.CreateAttachmentStatusHistoryCommand;
 import com.kynsoft.finamer.invoicing.application.command.invoiceStatusHistory.create.CreateInvoiceStatusHistoryCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentMessage;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.calculateInvoiceAmount.CalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceRequest;
@@ -25,9 +24,12 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialCl
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceRequest;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceMessage;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone_old.TotalCloneInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone_old.TotalCloneInvoiceMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone_old.TotalCloneInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceRequest;
@@ -43,7 +45,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/manage-invoice")
@@ -105,6 +106,17 @@ public class InvoiceController {
         for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
             this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
         }
+
+        return ResponseEntity.ok(message);
+
+    }
+
+    @PostMapping("total-clone-invoice")
+    public ResponseEntity<?> totalClone(@RequestBody TotalCloneRequest request) {
+
+        TotalCloneCommand command = TotalCloneCommand.fromRequest(request);
+
+        TotalCloneMessage message = this.mediator.send(command);
 
         return ResponseEntity.ok(message);
 
