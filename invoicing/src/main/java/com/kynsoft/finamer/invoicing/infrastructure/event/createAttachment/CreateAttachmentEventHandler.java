@@ -79,15 +79,15 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
 
         GetSearchManageAttachmentTypeResponse attachmentTypeResponse =  (GetSearchManageAttachmentTypeResponse)attachmentType.getData().get(0);
 
-        ResponseEntity<String> response = restTemplate.postForEntity(UPLOAD_FILE_URL, this.createBody(event), String.class);
+      //  ResponseEntity<String> response = restTemplate.postForEntity(UPLOAD_FILE_URL, this.createBody(event), String.class);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            ApiResponse apiResponse = objectMapper.readValue(response.getBody(), ApiResponse.class);
-            LinkedHashMap<String,String> saveFileS3Message = (LinkedHashMap) apiResponse.getData();
+//        try {
+           // ApiResponse apiResponse = objectMapper.readValue(response.getBody(), ApiResponse.class);
+           // LinkedHashMap<String,String> saveFileS3Message = (LinkedHashMap) apiResponse.getData();
             CreateAttachmentCommand createAttachmentCommand =
                         new CreateAttachmentCommand(event.getFileName(),
-                                saveFileS3Message.get("url"),
+                                "http://google.com",
                                 event.getRemarks(),
                                 attachmentTypeResponse.getId(),
                                 event.getInvoiceId(),
@@ -96,9 +96,9 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
                                 resourceTypeResponse.getId());
                 mediator.send(createAttachmentCommand);
 
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
     private HttpEntity<MultiValueMap<String, Object>> createBody(CreateAttachmentEvent event){
