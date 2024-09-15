@@ -14,6 +14,7 @@ const senttype = ref('')
 const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const route = useRoute()
+const toast = useToast()
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
 const filterAllDateRange = ref(false)
@@ -70,7 +71,7 @@ const columns: IColumn[] = [
   { field: 'manageAgencyCode', header: 'Agency CD', type: 'text' },
   { field: 'manageAgencyName', header: 'Agency', type: 'text' },
 
-  { field: 'fullName', header: 'Generation Date', type: 'date' },
+  { field: 'invoiceDate', header: 'Generation Date', type: 'date' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
   { field: 'impstatus', header: 'Sent Status', type: 'slot-text', sortable: false },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
@@ -138,7 +139,6 @@ async function getList() {
     const newListItems = []
     const response = await GenericService.search(confApi.moduleApi, confApi.uriApi, payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
-    console.log('dataList', dataList)
     pagination.value.page = page
     pagination.value.limit = size
     pagination.value.totalElements = totalElements
@@ -159,7 +159,7 @@ async function getList() {
           ...iterator,
           loadingEdit: false,
           loadingDelete: false,
-          invoiceDate: new Date(iterator?.invoiceDate),
+          invoiceDate: dayjs(iterator?.invoiceDate).format('YYYY-MM-DD'),
           agencyCd: iterator?.agency?.code,
           manageHotelCode: iterator?.hotel?.code,
           manageinvoiceCode: invoiceNumber.replace('OLD', 'CRE'),
@@ -268,132 +268,6 @@ async function getAgencyList(query: string = '') {
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
-  }
-}
-
-async function getAgency(query: string = '') {
-  try {
-    const payload = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        },
-        {
-          key: 'autoReconcile',
-          operator: 'EQUALS',
-          value: true,
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 20,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
-    const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
-    console.log(response, 'Respuesta de la API')
-    const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
-    for (const iterator of dataList) {
-      // Asegúrate de que sentB2BPartner sea una lista
-      const b2bPartners = iterator.sentB2BPartner || []
-      const firstB2BPartner = b2bPartners.length > 0 ? b2bPartners[0].code : null
-
-      agencyList.value.push({
-        id: iterator.id,
-        name: iterator.name,
-        code: iterator.code,
-        b2bPartner: b2bPartners// Guarda solo el código del primer b2bPartner
-      })
-    }
-
-    return agencyList.value
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-    return []
-  }
-}
-
-async function getTypeInvoiceSent(selectedInvoiceId: any) {
-  try {
-    // Paso 1: Obtener la factura usando su ID
-    const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, selectedInvoiceId)
-
-    if (response) {
-      // Paso 2: Suponiendo que el campo 'agency' está presente en la respuesta
-      const agency = response.agency
-
-      if (!agency) {
-        console.error('Agency not found')
-        senttype.value = 'Agency not found'
-        return
-      }
-
-      // Paso 3: Obtener el código de la agencia
-      const agencyCode = agency.code // O cualquier otro identificador que uses para buscar la agencia
-
-      // Llamar a getAgencyList para obtener la lista de agencias
-      const agencyList = await getAgency() // Obtener todas las agencias
-
-      // Buscar el campo sentB2BPartner en la lista de agencias
-      const foundAgency = agencyList.find(item => item.code === agencyCode)
-      if (foundAgency) {
-        const b2bPartner = foundAgency.b2bPartner // Accede al b2bPartner
-        const b2bPartnerTypeCode = b2bPartner ? b2bPartner.b2BPartnerType.code : null // Obtener el código del tipo
-
-        // Determinar el texto a mostrar según el valor de b2bPartnerCode
-        if (b2bPartnerTypeCode) {
-          switch (b2bPartnerTypeCode) {
-            case 'FTP':
-              senttype.value = 'Invoice to Send by FTP'
-              break
-            case 'EML':
-              senttype.value = 'Send by Email'
-              break
-            case 'BVL':
-              senttype.value = 'Send by Babel'
-              break
-            default:
-              senttype.value = 'Invoices to Send'
-              break
-          }
-        }
-        else {
-          console.error('No se encontró el método de envío (b2bPartner)')
-          senttype.value = 'No sending method found'
-        }
-      }
-      else {
-        console.error('Agencia no encontrada en la lista')
-        senttype.value = 'Invoices to Send'
-      }
-    }
-    else {
-      console.error('No se encontró la respuesta para el ID de la factura')
-      senttype.value = 'Invoice not found'
-    }
-  }
-  catch (error) {
-    console.error('Error retrieving invoice type:', error)
-    senttype.value = 'Error retrieving sending method'
   }
 }
 
@@ -542,9 +416,12 @@ async function onMultipleSelect(data: any) {
 
 async function send() {
   loadingSaveAll.value = true
+  options.value.loading = true
+  let completed = false
   try {
     if (!clickedItem.value) {
-      throw new Error('No invoice selected')
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one item', life: 10000 })
+      return
     }
     const payload = {
       invoice: clickedItem.value,
@@ -552,16 +429,23 @@ async function send() {
     }
 
     await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload)
-    if (clickedItem.value.length === listItems.value.length) {
-      navigateTo('/invoice')
-    }
-    else {
-      clickedItem.value = []
-      await getList()
-    }
+    completed = true
   }
   catch (error) {
-    console.log(error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not send invoices', life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+    if (completed) {
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoices sent successfully', life: 10000 })
+      if (clickedItem.value.length === listItems.value.length) {
+        navigateTo('/invoice')
+      }
+      else {
+        clickedItem.value = []
+        await getList()
+      }
+    }
   }
 
   loadingSaveAll.value = false // Opcional: Puedes manejar el estado de carga aquí
@@ -578,9 +462,7 @@ watch(payloadOnChangePage, (newValue) => {
 
   getList()
 })
-async function loadInvoiceType() {
-  await getTypeInvoiceSent(route.query.selected)
-}
+
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   // loadInvoiceType()
