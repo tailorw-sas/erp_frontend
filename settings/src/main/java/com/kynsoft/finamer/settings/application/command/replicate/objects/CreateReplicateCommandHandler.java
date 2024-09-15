@@ -231,10 +231,12 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 agencyDto.getAgencyType().getId(),
                                 agencyDto.getCif(),
                                 agencyDto.getAddress(),
-                                Objects.nonNull(agencyDto.getSentB2BPartner()) ? agencyDto.getSentB2BPartner().getId() : null,
-                                Objects.nonNull(agencyDto.getCityState()) ? agencyDto.getCityState().getId() : null,
-                                Objects.nonNull(agencyDto.getCountry()) ? agencyDto.getCountry().getId() : null,
-                                agencyDto.getMailingAddress()
+                                Objects.nonNull(agencyDto.getSentB2BPartner())?agencyDto.getSentB2BPartner().getId():null,
+                                Objects.nonNull(agencyDto.getCityState())?agencyDto.getCityState().getId():null,
+                                Objects.nonNull(agencyDto.getCountry())?agencyDto.getCountry().getId():null,
+                                agencyDto.getMailingAddress(),
+                                agencyDto.getZipCode(),
+                                agencyDto.getCity()
                         ));
                     }
                 }
@@ -309,7 +311,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 hotelDto.getRequiresFlatRate(),
                                 hotelDto.getIsVirtual(),
                                 hotelDto.getApplyByTradingCompany(),
-                                hotelDto.getAutoApplyCredit()
+                                hotelDto.getAutoApplyCredit(),
+                                hotelDto.getBabelCode(),
+                                hotelDto.getAddress(),
+                                hotelDto.getManageCityState().getId(),
+                                hotelDto.getManageCountry().getId()
                         ));
                     }
                 }

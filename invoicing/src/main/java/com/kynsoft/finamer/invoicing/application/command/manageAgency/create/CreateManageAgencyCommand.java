@@ -24,10 +24,12 @@ public class CreateManageAgencyCommand implements ICommand {
     private UUID cityState;
     private UUID country;
     private String mailingAddress;
+    private String zipCode;
+    private String city;
 
     public CreateManageAgencyCommand(UUID id, String code, String name, UUID client, EGenerationType generationType,
                                      String status, String cif, String address, UUID sentB2BPartner, UUID cityState, UUID country,
-                                     String mailingAddress) {
+                                     String mailingAddress, String zipCode, String city) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -40,6 +42,8 @@ public class CreateManageAgencyCommand implements ICommand {
         this.cityState = cityState;
         this.country = country;
         this.mailingAddress = mailingAddress;
+        this.zipCode = zipCode;
+        this.city = city;
     }
 
 

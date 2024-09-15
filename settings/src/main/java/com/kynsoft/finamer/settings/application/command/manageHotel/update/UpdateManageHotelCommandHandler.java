@@ -97,7 +97,11 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
                     command.getIsVirtual(),
                     command.getRequiresFlatRate(),
                     command.getApplyByTradingCompany(),
-                    command.getAutoApplyCredit()
+                    command.getAutoApplyCredit(),
+                    command.getBabelCode(),
+                    command.getAddress(),
+                    command.getManageCityState(),
+                    command.getManageCountry()
             ));
         }
     }
