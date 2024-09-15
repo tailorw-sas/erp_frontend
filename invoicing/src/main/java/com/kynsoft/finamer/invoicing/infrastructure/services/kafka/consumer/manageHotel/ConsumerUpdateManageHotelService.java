@@ -29,7 +29,11 @@ public class ConsumerUpdateManageHotelService {
                     objKafka.getStatus(), 
                     objKafka.getIsVirtual(),
                     objKafka.isRequiresFlatRate(),
-                    objKafka.getAutoApplyCredit()
+                    objKafka.getAutoApplyCredit(),
+                    objKafka.getManageCityState(),
+                    objKafka.getManageCountry(),
+                    objKafka.getBabelCode(),
+                    objKafka.getAddress()
             );
             mediator.send(command);
         } catch (Exception ex) {
