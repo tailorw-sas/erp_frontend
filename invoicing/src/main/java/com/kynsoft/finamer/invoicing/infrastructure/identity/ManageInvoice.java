@@ -187,11 +187,9 @@ public class ManageInvoice {
         return new ManageInvoiceDto(id, invoiceId,
                 invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
-                autoRec, bookings != null ? bookings.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, attachments != null ? attachments.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null,
+                autoRec,
+                bookings != null ? bookings.stream().map(ManageBooking::toAggregate).collect(Collectors.toList()) : null,
+                attachments != null ? attachments.stream().map(ManageAttachment::toAggregateSample).collect(Collectors.toList()) : null,
                 reSend,
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
