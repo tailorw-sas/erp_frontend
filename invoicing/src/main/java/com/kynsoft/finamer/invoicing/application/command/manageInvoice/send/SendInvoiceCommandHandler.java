@@ -9,9 +9,12 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.InvoiceXmlService;
+import jakarta.xml.bind.JAXBException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Component
@@ -20,17 +23,23 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
     private final IManageInvoiceService service;
     private final MailService mailService;
+    private final IManageEmployeeService manageEmployeeService;
+    private final InvoiceXmlService invoiceXmlService;
 
-    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService) {
+    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService, IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService) {
         this.service = service;
         this.mailService = mailService;
+        this.manageEmployeeService = manageEmployeeService;
+        this.invoiceXmlService = invoiceXmlService;
     }
 
     @Override
     @Transactional
     public void handle(SendInvoiceCommand command) {
+        ManageEmployeeDto manageEmployeeDto = manageEmployeeService.findById(UUID.fromString(command.getEmployee()));
         // Obtener la lista de facturas por sus IDs
         List<ManageInvoiceDto> invoices = this.service.findByIds(command.getInvoice());
+
         // Agrupar facturas por agencia
         Map<ManageAgencyDto, List<ManageInvoiceDto>> invoicesByAgency = new HashMap<>();
         for (ManageInvoiceDto invoice : invoices) {
@@ -47,7 +56,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             List<ManageInvoiceDto> agencyInvoices = entry.getValue();
 
             // Enviar correo a la agencia con todas sus facturas adjuntas
-            sendEmail(command, agency, agencyInvoices);
+            sendEmail(command, agency, agencyInvoices, manageEmployeeDto);
 
             // Actualizar el estado de cada factura a SENT
             for (ManageInvoiceDto invoice : agencyInvoices) {
@@ -57,7 +66,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         }
     }
 
-    private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices) {
+    private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto) {
         if (agency.getMailingAddress() != null) {
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
             request.setSubject("INVOICES for " + agency.getName());
@@ -74,6 +83,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             // Recipients
             List<MailJetRecipient> recipients = new ArrayList<>();
             recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
+            recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName()+ " " + employeeDto.getLastName()));
             recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
             //TODO send email employee
             request.setRecipientEmail(recipients);
@@ -81,9 +91,23 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             // Adjuntar todas las facturas de la agencia
             List<MailJetAttachment> attachments = new ArrayList<>();
             for (ManageInvoiceDto invoice : invoices) {
-                String nameFile = invoice.getInvoiceNumber() + ".pdf";
-                MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, "JVBERi0xLjQKJdP0zOEKMSAwIG9iago8PA..."); // PDF content base64
-                attachments.add(attachment);
+                try {
+                    var resultXML = invoiceXmlService.generateInvoiceXml(invoice);
+                    // Convertir el XML a Base64 para adjuntar
+                    String base64Xml = Base64.getEncoder().encodeToString(resultXML.getBytes(StandardCharsets.UTF_8));
+
+                    // Crear el adjunto con el XML
+                    String nameFileXml = invoice.getInvoiceNumber() + ".xml"; // Cambiar la extensión a .xml
+                    MailJetAttachment attachmentXML = new MailJetAttachment("application/xml", nameFileXml, base64Xml);
+                    attachments.add(attachmentXML);
+
+                    String nameFile = invoice.getInvoiceNumber() + ".pdf";
+                    MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, "JVBERi0xLjQKJdP0zOEKMSAwIG9iago8PA..."); // PDF content base64
+                    attachments.add(attachment);
+                } catch (JAXBException e) {
+                    throw new RuntimeException(e);
+                }
+
             }
             request.setMailJetAttachments(attachments);
 
