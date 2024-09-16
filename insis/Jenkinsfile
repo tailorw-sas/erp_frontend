@@ -11,8 +11,8 @@ pipeline {
 
     environment {
         SISTEMA = 'ERP'
-		GITHUB_REPO = 'erp_backend'
-		GIT_TOKEN = "${env.GITHUB_TOKEN}"
+        GITHUB_REPO = 'erp_backend'
+        GIT_TOKEN = "${env.GITHUB_TOKEN}"
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-insis:version'
         SRC = 'insis'
@@ -121,7 +121,7 @@ pipeline {
         failure {
             script {
                 def notificator = new NotificadorEmail(this)
-                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR)
+                notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER)
             }
         }
     }
