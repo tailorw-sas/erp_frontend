@@ -1233,9 +1233,14 @@ onMounted(async () => {
       :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid pt-3"
       @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
     >
+      <!-- ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`, -->
       <template #field-invoiceDate="{ item: data, onUpdate }">
         <Calendar
-          v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
+          v-if="!loadingSaveAll"
+          v-model="data.invoiceDate"
+          date-format="yy-mm-dd"
+          :max-date="new Date()"
+          :disabled="route.query.type === InvoiceType.CREDIT"
           @update:model-value="($event) => {
             onUpdate('invoiceDate', $event)
           }"
