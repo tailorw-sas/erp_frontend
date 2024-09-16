@@ -8,7 +8,7 @@ import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionType
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -38,7 +38,7 @@ public class CreatePaymentDetailTypeCashCommandHandler implements ICommandHandle
                 null,
                 null,
                 null,
-                OffsetDateTime.of(command.getInvoiceDate(), ZoneOffset.UTC),
+                OffsetDateTime.now(ZoneId.of("UTC")),
                 null,
                 null,
                 null,
