@@ -23,6 +23,7 @@ public class ApplyPaymentCommand implements ICommand {
     public ApplyPaymentCommand(UUID payment, boolean applyDeposit, boolean applyPaymentBalance, List<UUID> invoices, List<UUID> deposits, final IMediator mediator) {
         this.payment = payment;
         this.applyDeposit = applyDeposit;
+        this.applyPaymentBalance = applyPaymentBalance;
         this.invoices = invoices;
         this.deposits = deposits;
         this.mediator = mediator;
