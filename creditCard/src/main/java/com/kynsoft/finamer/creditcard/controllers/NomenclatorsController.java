@@ -10,6 +10,7 @@ import com.kynsoft.finamer.creditcard.application.query.manageCreditCardType.sea
 import com.kynsoft.finamer.creditcard.application.query.manageHotel.search.GetSearchManageHotelQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageLanguage.search.GetSearchManageLanguageQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageMerchantCommission.search.GetSearchManageMerchantCommissionQuery;
+import com.kynsoft.finamer.creditcard.application.query.manageMerchantConfig.search.GetSearchManageMerchantConfigQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageMerchantHotelEnrolle.findHotelsByMerchant.FindHotelsByMerchantQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageMerchantHotelEnrolle.search.GetSearchManageMerchantHotelEnrolleQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageTransactionStatus.search.GetSearchManageTransactionStatusQuery;
@@ -134,6 +135,16 @@ public class NomenclatorsController {
         Pageable pageable = PageableUtil.createPageable(request);
 
         FindHotelsByMerchantQuery query = new FindHotelsByMerchantQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/merchant-config")
+    public ResponseEntity<?> merchantConfig(@RequestBody SearchRequest request){
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchManageMerchantConfigQuery query = new GetSearchManageMerchantConfigQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
