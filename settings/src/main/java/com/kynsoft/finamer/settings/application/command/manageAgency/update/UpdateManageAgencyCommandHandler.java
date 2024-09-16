@@ -65,7 +65,8 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
                     Objects.nonNull(dto.getCountry())?dto.getCountry().getId():null,
                     dto.getMailingAddress(),
                     dto.getZipCode(),
-                    dto.getCity()
+                    dto.getCity(),
+                    dto.getCreditDay()
             ));
         }
     }

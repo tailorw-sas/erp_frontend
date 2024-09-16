@@ -57,13 +57,13 @@ public class InvoiceXmlService {
         // Mapear Supplier
         Supplier supplier = new Supplier();
         supplier.setCompany(dto.getHotel().getName());
-        supplier.setCIF(dto.getHotel().getCode());//BavelCode
-//        supplier.setAddress(dto.getHotel().getAddress());
-//        supplier.setCity(dto.getHotel().getCityState() != null ? dto.getHotel().getCityState().getName() : "");
-//        supplier.setPostalCode(dto.getHotel().getPostalCode());
-//        supplier.setProvince(dto.getHotel().getProvince());
-//        supplier.setCountry(dto.getHotel().getCountry() != null ? dto.getHotel().getCountry().getCode() : "");
-//        supplier.setEmail(dto.getHotel().getManageTradingCompanies().getEmail());
+        supplier.setCIF(dto.getHotel().getBabelCode());//BavelCode
+        supplier.setAddress(dto.getHotel().getAddress());
+       supplier.setCity(dto.getHotel().getManageCityState().getName() != null ? dto.getHotel().getManageCityState().getName() : "");
+       // supplier.setPostalCode(dto.getHotel().ge());//Codigo Postal
+        supplier.setProvince(dto.getHotel().getManageCityState().getName() != null ? dto.getHotel().getManageCityState().getName() : "");
+        supplier.setCountry(dto.getHotel().getManageCountry() != null ? dto.getHotel().getManageCountry().getName() : "");
+       supplier.setEmail(dto.getHotel().getManageTradingCompanies().getAddress() != null ? dto.getHotel().getManageTradingCompanies().getAddress() : "");
 
         // Mapear Client
         Client client = new Client();
@@ -71,8 +71,8 @@ public class InvoiceXmlService {
         client.setCIF(dto.getAgency().getCif());
         client.setAddress(dto.getAgency().getAddress());
         client.setCity(dto.getAgency().getCityState() != null ? dto.getAgency().getCityState().getName() : "");
-//        client.setPostalCode(dto.getAgency().getPostalCode());
-//        client.setProvince(dto.getAgency().getProvince());
+        client.setPostalCode(dto.getAgency().getZipCode() != null ? dto.getAgency().getZipCode() : "");
+         client.setProvince(dto.getAgency().getCityState().getName() != null ? dto.getAgency().getCityState().getName() : "");
         client.setCountry(dto.getAgency().getCountry() != null ? dto.getAgency().getCountry().getCode() : "");
         client.setEmail(dto.getAgency().getMailingAddress());
         client.setSupplierClientID(dto.getAgency().getCode());
@@ -80,27 +80,27 @@ public class InvoiceXmlService {
         // Mapear ProductList desde Bookings
         List<Product> products = dto.getBookings().stream().map(this::mapBookingToProduct).collect(Collectors.toList());
 
-        // Mapear TaxSummary
-        TaxSummary taxSummary = new TaxSummary();
-        taxSummary.setType("IVA");
-        taxSummary.setRate(21.0); // Ajusta la tasa de IVA según sea necesario
-        taxSummary.setBase(dto.getInvoiceAmount());
-        taxSummary.setAmount(dto.getInvoiceAmount() * 0.21);
+//        // Mapear TaxSummary
+//        TaxSummary taxSummary = new TaxSummary();
+//        taxSummary.setType("IVA");
+//        taxSummary.setRate(21.0); // Ajusta la tasa de IVA según sea necesario
+//        taxSummary.setBase(dto.getInvoiceAmount());
+//        taxSummary.setAmount(dto.getInvoiceAmount() * 0.21);
 
         // Mapear TotalSummary
         TotalSummary totalSummary = new TotalSummary();
         totalSummary.setGrossAmount(dto.getInvoiceAmount());
         totalSummary.setDiscounts(0.0); // Ajustar si hay descuentos
         totalSummary.setSubTotal(dto.getInvoiceAmount());
-        totalSummary.setTax(taxSummary.getAmount());
-        totalSummary.setTotal(dto.getInvoiceAmount() + taxSummary.getAmount());
+       // totalSummary.setTax(taxSummary.getAmount());
+        totalSummary.setTotal(dto.getInvoiceAmount());
 
         // Asignar los datos mapeados a la clase principal InvoiceXml
         invoiceXml.setGeneralData(generalData);
         invoiceXml.setSupplier(supplier);
         invoiceXml.setClient(client);
         invoiceXml.setProductList(products);
-        invoiceXml.setTaxSummary(taxSummary);
+      //  invoiceXml.setTaxSummary(taxSummary);
         invoiceXml.setTotalSummary(totalSummary);
 
         return invoiceXml;

@@ -236,7 +236,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 Objects.nonNull(agencyDto.getCountry())?agencyDto.getCountry().getId():null,
                                 agencyDto.getMailingAddress(),
                                 agencyDto.getZipCode(),
-                                agencyDto.getCity()
+                                agencyDto.getCity(),
+                                agencyDto.getCreditDay()
                         ));
                     }
                 }
