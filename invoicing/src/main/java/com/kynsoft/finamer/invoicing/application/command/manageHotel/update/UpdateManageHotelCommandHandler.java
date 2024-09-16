@@ -54,6 +54,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
         dto.setManageCountry(countryService.findById(command.getCountry()));
         dto.setAddress(command.getAddress());
         dto.setBabelCode(command.getBabelCode());
+        dto.setCity(command.getCity());
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setVirtual, command.getIsVirtual(), dto.isVirtual(), update::setUpdate);

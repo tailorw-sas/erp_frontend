@@ -33,7 +33,8 @@ public class ConsumerUpdateManageHotelService {
                     objKafka.getManageCityState(),
                     objKafka.getManageCountry(),
                     objKafka.getBabelCode(),
-                    objKafka.getAddress()
+                    objKafka.getAddress(),
+                    objKafka.getCity()
             );
             mediator.send(command);
         } catch (Exception ex) {
