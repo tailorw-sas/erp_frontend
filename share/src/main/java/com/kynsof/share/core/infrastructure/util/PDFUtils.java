@@ -44,4 +44,9 @@ public static ByteArrayOutputStream mergePDF(List<InputStream> pdfToMerge) throw
     outputStream.close();
     return outputStream;
 }
+
+public static byte[] mergePDFtoByte(List<InputStream> pdfToMerge) throws DocumentException, IOException {
+    ByteArrayOutputStream outputStream = mergePDF(pdfToMerge);
+    return outputStream.toByteArray();
+}
 }
