@@ -84,6 +84,7 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 command.getIsVirtual(),
                 command.getApplyByTradingCompany(),
                 command.getAutoApplyCredit(),
+                command.getCity(),
                 command.getBabelCode(),
                 command.getAddress(),
                 cityStateDto.getId(),

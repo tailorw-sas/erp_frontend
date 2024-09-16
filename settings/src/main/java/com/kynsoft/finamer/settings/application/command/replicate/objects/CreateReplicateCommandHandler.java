@@ -312,6 +312,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 hotelDto.getIsVirtual(),
                                 hotelDto.getApplyByTradingCompany(),
                                 hotelDto.getAutoApplyCredit(),
+                                hotelDto.getCity(),
                                 hotelDto.getBabelCode(),
                                 hotelDto.getAddress(),
                                 hotelDto.getManageCityState().getId(),

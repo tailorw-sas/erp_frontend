@@ -98,6 +98,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
                     command.getRequiresFlatRate(),
                     command.getApplyByTradingCompany(),
                     command.getAutoApplyCredit(),
+                    command.getCity(),
                     command.getBabelCode(),
                     command.getAddress(),
                     command.getManageCityState(),
