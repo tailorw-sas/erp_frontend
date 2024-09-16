@@ -114,6 +114,9 @@ pipeline {
                     //sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
                 }
+		script {
+			 error("Terminar pipeline debido a un error obligatorio")
+		}
             }
         }
     }
