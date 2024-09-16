@@ -88,9 +88,11 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             ManageBookingDto bookingToClone = this.bookingService.findById(bookingRequest.getId());
             List<ManageRoomRateDto> roomRateDtoList = bookingToClone.getRoomRates();
 
-            //cambiando el id de los room rates para poder guardarlos
+            //cambiando los ids de los room rates para poder guardarlos
+            //no me llevo los adjustments
             for (ManageRoomRateDto roomRateDto : roomRateDtoList){
                 roomRateDto.setId(UUID.randomUUID());
+                roomRateDto.setAdjustments(new LinkedList<>());
             }
 
             //obtener los nomencladores si vienen en el request

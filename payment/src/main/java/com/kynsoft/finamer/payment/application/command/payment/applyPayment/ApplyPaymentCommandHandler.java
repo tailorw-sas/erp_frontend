@@ -49,8 +49,10 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         for (ManageInvoiceDto manageInvoiceDto : invoiceQueue) {
             List<ManageBookingDto> bookingDtos = getSortedBookings(manageInvoiceDto);
             for (ManageBookingDto bookingDto : bookingDtos) {
+                //TODO: almaceno el valor de Balance del Booking porque puede que no llegue a cero cuando el Payment Balance si lo haga. Y todavia
+                //tenga valor el notApplied
                 double amountBalance = bookingDto.getAmountBalance();
-                if (notApplied > 0 && paymentBalance > 0) {
+                if (notApplied > 0 && paymentBalance > 0 && command.isApplyPaymentBalance()) {
                     double amountToApply = Math.min(notApplied, amountBalance);
                     CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true));
                     command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId()));
@@ -58,7 +60,8 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                     paymentBalance = paymentBalance - amountToApply;
                     amountBalance = amountBalance - amountToApply;
                 }
-                if (notApplied > 0 && command.isApplyDeposit() && paymentBalance == 0 && amountBalance > 0) {
+                if ((notApplied > 0 && command.isApplyDeposit() && paymentBalance == 0 && amountBalance > 0) || 
+                    (notApplied > 0 && command.isApplyDeposit() && !command.isApplyPaymentBalance())) {
                     if (command.getDeposits() != null && !command.getDeposits().isEmpty()) {
                         for (UUID deposit : command.getDeposits()) {
                             PaymentDetailDto paymentDetailTypeDeposit = this.paymentDetailService.findById(deposit);
