@@ -1098,8 +1098,9 @@ async function getListPaymentDetail() {
         iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
         iterator.fullName = iterator.manageBooking?.fullName
         iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
-        iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
-        iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+
+        iterator.bookingId = iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' ? iterator?.manageBooking.parentResponse?.bookingId : iterator.manageBooking?.bookingId?.toString()
+        iterator.invoiceNumber = iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' ? iterator?.manageBooking.invoice?.parent?.invoiceNumber : iterator.manageBooking?.invoice?.invoiceNumber?.toString()
       }
 
       // Verificar si el ID ya existe en la lista

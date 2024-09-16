@@ -1378,6 +1378,8 @@ async function saveApplyPayment() {
       objItemSelectedForRightClickApplyPayment.value = {}
       idInvoicesSelectedToApplyPayment.value = []
       paymentDetailsTypeDepositSelected.value = []
+      toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
+      getList()
     }
   }
   catch (error) {
