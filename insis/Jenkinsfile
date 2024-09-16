@@ -114,9 +114,6 @@ pipeline {
                     //sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
                 }
-		script {
-			 error("Terminar pipeline debido a un error obligatorio")
-		}
             }
         }
     }
@@ -125,8 +122,7 @@ pipeline {
         success {
             script {
                 def notificator = new NotificadorEmail(this)
-                //notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
-                notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER, env.WORKSPACE)
+                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
             }
         }
         failure {
