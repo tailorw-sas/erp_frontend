@@ -129,7 +129,7 @@ pipeline {
         failure {
             script {
                 def notificator = new NotificadorEmail(this)
-                notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER)
+                notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER, env.WORKSPACE)
             }
         }
     }
