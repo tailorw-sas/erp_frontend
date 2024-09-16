@@ -1,9 +1,6 @@
 package com.kynsof.share.core.domain.kafka.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,4 +44,5 @@ public class ReplicateManageAgencyKafka implements Serializable {
     private String mailingAddress;
     private String zipCode;
     private String city;
+    private Integer creditDay;
 }

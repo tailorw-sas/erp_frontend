@@ -77,6 +77,7 @@ public class ManageAgency {
     private String mailingAddress;
     private String zipCode;
     private String city;
+    private Integer creditDay;
 
     public ManageAgency(ManageAgencyDto dto) {
         this.id = dto.getId();
@@ -93,6 +94,7 @@ public class ManageAgency {
         this.mailingAddress = dto.getMailingAddress();
         this.zipCode = dto.getZipCode();
         this.city = dto.getCity();
+        this.creditDay = dto.getCreditDay();
     }
 
     public ManageAgencyDto toAggregate() {
@@ -103,7 +105,8 @@ public class ManageAgency {
                 Objects.nonNull(country)?country.toAggregate():null,
                 mailingAddress,
                 zipCode,
-                city
+                city,
+                creditDay
         );
     }
 
@@ -115,7 +118,8 @@ public class ManageAgency {
                 Objects.nonNull(country)?country.toAggregate():null,
                 mailingAddress,
                 zipCode,
-                city
+                city,
+                creditDay
         );
     }
 }

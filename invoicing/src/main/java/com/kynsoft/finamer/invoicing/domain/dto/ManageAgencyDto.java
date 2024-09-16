@@ -28,5 +28,6 @@ public class ManageAgencyDto {
     private String mailingAddress;
     private String zipCode;
     private String city;
+    private Integer creditDay;
 
 }
