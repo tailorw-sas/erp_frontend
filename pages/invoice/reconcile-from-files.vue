@@ -76,18 +76,19 @@ const idItem = ref('')
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'id', header: 'Id', type: 'text' },
-  { field: 'type', header: 'Type', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'text' },
-  { field: 'manageAgencyCode', header: 'Agency Cd', type: 'text' },
-  { field: 'agency', header: 'Agency', type: 'text' },
-  { field: 'invoiceNumber', header: 'Invoice No', type: 'text' },
-  { field: 'generationDate', header: 'Generation Date', type: 'date' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-  { field: 'size', header: 'Att Size', type: 'text' },
-  { field: 'impSta', header: 'Import Status', type: 'slot-text', frozen: true, showFilter: false },
+  // { field: 'id', header: 'Id', type: 'text' },
+  // { field: 'type', header: 'Type', type: 'text' },
+  // { field: 'hotel', header: 'Hotel', type: 'text' },
+  // { field: 'manageAgencyCode', header: 'Agency Cd', type: 'text' },
+  // { field: 'agency', header: 'Agency', type: 'text' },
+  // { field: 'invoiceNumber', header: 'Invoice No', type: 'text' },
+  // { field: 'generationDate', header: 'Generation Date', type: 'date' },
+  // { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  // { field: 'size', header: 'Att Size', type: 'text' },
+  { field: 'fieldName', header: 'fileName', type: 'text' },
+  { field: 'message', header: 'Import Status', type: 'slot-text', frozen: true, showFilter: false },
 
-  { field: 'status', header: 'Status', type: 'bool', },
+  // { field: 'status', header: 'Status', type: 'bool', },
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -129,12 +130,11 @@ const pagination = ref<IPagination>({
 async function getErrorList() {
   try {
     payload.value = { ...payload.value, query: idItem.value }
-    let rowError = ''
     listItems.value = []
     const newListItems = []
-    const response = await GenericService.importSearch(confInvoiceApi.moduleApi,confInvoiceApi.uriApi, payload.value)
+    const response = await GenericService.importSearch(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, payload.value)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
+    const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -144,15 +144,15 @@ async function getErrorList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      rowError = ''
-      const rowExpandable = []
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        for (const err of iterator.errorFields) {
-          rowError += `- ${err.message} \n`
-        }
-        rowExpandable.push({ ...iterator.row })
-        newListItems.push({ ...iterator.row, id: iterator.id, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        newListItems.push(
+          {
+            ...iterator,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -160,7 +160,9 @@ async function getErrorList() {
     listItems.value = [...listItems.value, ...newListItems]
   }
   catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 5000 })
+    console.log(error)
+
+    // toast.add({ severity: 'error', summary: 'Error', detail: error.data.error.errorMessage, life: 5000 })
   }
 }
 
@@ -178,49 +180,48 @@ async function onChangeFile(event: any) {
 }
 
 async function importFile() {
-  loadingSaveAll.value = true;
-  options.value.loading = true;
-  let successOperation = true;
-  uploadComplete.value = true;
+  loadingSaveAll.value = true
+  options.value.loading = true
+  let successOperation = true
+  uploadComplete.value = true
 
   try {
-    const selectedFiles = importModel.value.attachFile; // Usa el modelo correcto
-    console.log('Archivos seleccionados:', selectedFiles);
+    const selectedFiles = importModel.value.attachFile // Usa el modelo correcto
 
     if (!selectedFiles || selectedFiles.length === 0) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one file', life: 10000 });
-      return;
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one file', life: 10000 })
+      return
     }
 
     // Filtrar archivos inválidos (nombres que no comienzan con números)
-    const invalidFiles = selectedFiles.filter(fileInput => {
-      return !/^\d/.test(fileInput.name); // Verifica que el nombre comience con un número
-    });
+    // const invalidFiles = selectedFiles.filter((fileInput) => {
+    //   return !/^\d/.test(fileInput.name) // Verifica que el nombre comience con un número
+    // })
 
-    if (invalidFiles.length > 0) {
-      const errorMessages = invalidFiles.map(file => `Error en archivo: ${file.name} - El nombre debe comenzar con un número.`);
-      
-      // Agregar errores a la lista para mostrar en la tabla
-      listItems.value.push(...invalidFiles);
-      
-      // Log para verificar que se están añadiendo errores
-      console.log('Errores añadidos a la lista:', invalidFiles);
-      
-      // Mostrar mensaje de error
-    
-      //return; // Detener el flujo si hay archivos inválidos
-    }
+    // if (invalidFiles.length > 0) {
+    //   const errorMessages = invalidFiles.map(file => `Error en archivo: ${file.name} - El nombre debe comenzar con un número.`)
 
-    const uuid = uuidv4();
-    idItem.value = uuid;
-    const formData = new FormData();
+    //   // Agregar errores a la lista para mostrar en la tabla
+    //   listItems.value.push(...invalidFiles)
+
+    //   // Log para verificar que se están añadiendo errores
+    //   console.log('Errores añadidos a la lista:', invalidFiles)
+
+    //   // Mostrar mensaje de error
+
+    //   // return; // Detener el flujo si hay archivos inválidos
+    // }
+
+    const uuid = uuidv4()
+    idItem.value = uuid
+    const formData = new FormData()
 
     // Agregar archivos válidos al FormData
     for (const fileInput of selectedFiles) {
-      formData.append('files', fileInput);
+      formData.append('files', fileInput)
     }
 
- /*   const base64Array = []
+    /*   const base64Array = []
     for (const fileInput of selectedFiles) {
       const base64String: any = await fileToBase64(fileInput)
       const base64 = base64String.split('base64,')[1]
@@ -232,54 +233,50 @@ async function importFile() {
     }
     base64Array.forEach((file, index) => {
       formData.append('files[]', file)
-    })*/
+    }) */
 
     // Agrega información adicional al FormData
-    formData.append('importProcessId', uuid);
-    formData.append('employeeId', userData?.value?.user?.userId);
-    formData.append('employee', userData?.value?.user?.name);
+    formData.append('importProcessId', uuid)
+    formData.append('employeeId', userData?.value?.user?.userId)
+    formData.append('employee', userData?.value?.user?.name)
 
     // Envía los datos al servicio
-    await GenericService.importReconcileFile(confApi.moduleApi, confApi.uriApi, formData);
-  } catch (error: any) {
-    successOperation = false;
-    uploadComplete.value = false;
-    options.value.loading = false;
+    await GenericService.importReconcileFile(confApi.moduleApi, confApi.uriApi, formData)
+  }
+  catch (error: any) {
+    successOperation = false
+    uploadComplete.value = false
+    options.value.loading = false
 
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 });
-    console.log('Aquí se detiene');
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
 
   if (successOperation) {
-    console.log('Operación exitosa');
-    await validateStatusImport(); // Validar el estado después de la importación
+    await validateStatusImport() // Validar el estado después de la importación
 
     if (!haveErrorImportStatus.value) {
-      await getErrorList();
-      console.log(getErrorList,'lista de error')
+      await getErrorList()
       if (listItems.value.length === 0) {
-        options.value.loading = false;
-        navigateTo('/invoice');
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was uploaded successfully!`, life: 0 });
+        options.value.loading = false
+        navigateTo('/invoice')
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was uploaded successfully!`, life: 0 })
       }
     }
   }
 
-  loadingSaveAll.value = false;
-  options.value.loading = false;
+  loadingSaveAll.value = false
+  options.value.loading = false
 }
 
 async function validateStatusImport() {
   options.value.loading = true
-  console.log('Starting status validation...') // Agregar registro al inicio
-
   return new Promise<void>((resolve) => {
     let status = 'RUNNING'
     const intervalID = setInterval(async () => {
       try {
         const response = await GenericService.getById(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, idItem.value, 'import-status')
+
         status = response.status
-        console.log(status,'Estado de importacion')
       }
 
       catch (error: any) {
@@ -293,7 +290,6 @@ async function validateStatusImport() {
       }
 
       if (status === 'FINISHED') {
-        console.log('Import process finished.') // Agregar registro de finalización
         clearInterval(intervalID)
         options.value.loading = false
         resolve() // Resuelve la promesa cuando el estado es FINISHED
@@ -390,9 +386,9 @@ onMounted(async () => {
         @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
       >
-        <template #column-impSta="{ data }">
+        <template #column-message="{ data }">
           <div id="fieldError">
-            <span v-tooltip.bottom="data.impSta" style="color: red;">{{ data.impSta }}</span>
+            <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
           </div>
         </template>
       </DynamicTable>
