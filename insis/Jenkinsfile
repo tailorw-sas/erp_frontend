@@ -29,6 +29,7 @@ pipeline {
         PR_ID = "${env.CHANGE_ID}"
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
+	DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
     }
     
     triggers {
@@ -71,11 +72,17 @@ pipeline {
                     def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
                     env.SERVER_K3S_CREDENTIALS = k3sCredentials
 
-                    def prInfo = pullrequests.getPullRequestInfoByGitCommit(env.SISTEMA, env.GITHUB_REPO, env.GIT_COMMIT, env.GIT_TOKEN)
-                    env.PR_TITLE = prInfo.title
-                    env.PR_AUTHOR = prInfo.author
-                    env.EMAIL_AUTHOR = prInfo.authorEmail
-					
+                    if (!params.FORCE_BUILD){
+			    def prInfo = pullrequests.getPullRequestInfoByGitCommit(env.SISTEMA, env.GITHUB_REPO, env.GIT_COMMIT, env.GIT_TOKEN)
+			    env.PR_TITLE = prInfo.title
+			    env.PR_AUTHOR = prInfo.author
+			    env.EMAIL_AUTHOR = prInfo.authorEmail
+		    }else{
+			    env.PR_TITLE = 'MANUAL EXECUTION'
+			    env.PR_AUTHOR = 'Jenkins Admin'
+			    env.EMAIL_AUTHOR = env.DEFAULT_EMAIL
+		    }
+                    
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
                         env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
@@ -115,7 +122,8 @@ pipeline {
         success {
             script {
                 def notificator = new NotificadorEmail(this)
-                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
+                //notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
+                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER)
             }
         }
         failure {
