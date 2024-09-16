@@ -67,6 +67,7 @@ public class ManageHotel implements Serializable {
     private Boolean autoApplyCredit;
 
     private String babelCode;
+    private String city;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id")
@@ -94,6 +95,7 @@ public class ManageHotel implements Serializable {
         this.address = dto.getAddress();
         this.manageCityState = dto.getManageCityState() != null ? new ManageCityState(dto.getManageCityState()) : null;
         this.manageCountry = dto.getManageCountry() != null ? new ManageCountry(dto.getManageCountry()) : null;
+        this.city = dto.getCity();
     }
 
     public ManageHotelDto toAggregate() {
@@ -103,7 +105,8 @@ public class ManageHotel implements Serializable {
                 address,
                 babelCode,
                 manageCountry != null ? manageCountry.toAggregate() : null,
-                manageCityState != null ? manageCityState.toAggregate() : null
+                manageCityState != null ? manageCityState.toAggregate() : null,
+                city
         );
     }
 }
