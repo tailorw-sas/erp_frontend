@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,15 +19,17 @@ public class CreatePaymentDetailTypeApplyDepositCommand implements ICommand {
     private PaymentDetailDto parentDetailDto;
     private UUID id;
     private boolean applyPayment;
+    private LocalDateTime invoiceDate;
 
     private PaymentDetailDto newDetailDto;
 
-    public CreatePaymentDetailTypeApplyDepositCommand(PaymentDto payment, double amount, PaymentDetailDto parentDetailDto, boolean applyPayment) {
+    public CreatePaymentDetailTypeApplyDepositCommand(PaymentDto payment, double amount, PaymentDetailDto parentDetailDto, boolean applyPayment, LocalDateTime invoiceDate) {
         this.payment = payment;
         this.amount = amount;
         this.parentDetailDto = parentDetailDto;
         this.id = UUID.randomUUID();
         this.applyPayment = applyPayment;
+        this.invoiceDate = invoiceDate;
     }
 
     @Override

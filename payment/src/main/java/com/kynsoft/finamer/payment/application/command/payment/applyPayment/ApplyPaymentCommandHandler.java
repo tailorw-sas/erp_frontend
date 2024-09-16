@@ -54,7 +54,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                 double amountBalance = bookingDto.getAmountBalance();
                 if (notApplied > 0 && paymentBalance > 0 && command.isApplyPaymentBalance()) {
                     double amountToApply = Math.min(notApplied, amountBalance);
-                    CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true));
+                    CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true, manageInvoiceDto.getInvoiceDate()));
                     command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId()));
                     notApplied = notApplied - amountToApply;
                     paymentBalance = paymentBalance - amountToApply;
@@ -68,7 +68,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                             double depositAmount = paymentDetailTypeDeposit.getAmount() * -1;
 
                             double amountToApply = Math.min(depositAmount, Math.min(notApplied, bookingDto.getAmountBalance()));
-                            CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply, paymentDetailTypeDeposit, true));
+                            CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate()));
                             command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId()));
 
                             notApplied = notApplied - amountToApply;

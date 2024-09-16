@@ -75,7 +75,8 @@ public class ConsumerReplicateManageInvoiceService {
                     objKafka.getInvoiceAmount(),
                     bookingDtos,
                     objKafka.getHasAttachment(), //!= null ? objKafka.getHasAttachment() : false
-                    objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null
+                    objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null,
+                    objKafka.getInvoiceDate()
             );
 
             this.service.create(invoiceDto);
