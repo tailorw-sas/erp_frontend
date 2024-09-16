@@ -85,7 +85,7 @@ const columns: IColumn[] = [
   // { field: 'generationDate', header: 'Generation Date', type: 'date' },
   // { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
   // { field: 'size', header: 'Att Size', type: 'text' },
-  { field: 'fieldName', header: 'fileName', type: 'text' },
+  { field: 'fieldName', header: 'File Name', type: 'text' },
   { field: 'message', header: 'Import Status', type: 'slot-text', frozen: true, showFilter: false },
 
   // { field: 'status', header: 'Status', type: 'bool', },
@@ -102,7 +102,7 @@ const options = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
-  expandableRows: true,
+  expandableRows: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -382,9 +382,15 @@ onMounted(async () => {
         </Accordion>
       </div>
       <DynamicTable
-        :data="listItems" :columns="columns" :options="options" :pagination="pagination"
-        @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
+        :data="listItems"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-confirm-create="clearForm"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter"
+        @on-list-item="resetListItems"
+        @on-sort-field="onSortField"
       >
         <template #column-message="{ data }">
           <div id="fieldError">
