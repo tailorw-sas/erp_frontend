@@ -13,6 +13,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.mana
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -317,10 +318,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             //TODO setear el objeto ManageInvoiceStatus segun la parametrización a partir de el codigo EInvoiceStatus.RECONCILED
             invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getReconciled()) : null;
         }
-
+        LocalDate dueDate = command.getInvoiceCommand().getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
                 invoiceNumber,
-                command.getInvoiceCommand().getInvoiceDate(), command.getInvoiceCommand().getDueDate(),
+                command.getInvoiceCommand().getInvoiceDate(), dueDate,
                 true,
                 command.getInvoiceCommand().getInvoiceAmount(),
                 command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
