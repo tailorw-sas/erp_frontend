@@ -2088,51 +2088,52 @@ async function paymentPrint(event: any) {
   try {
     loadingPrintDetail.value = true
     let nameOfPdf = ''
-    const payloadTemp = {
-      paymentId: route?.query?.id ? route?.query?.id.toString() : '',
-      paymentType: '',
+    let paymentTypeArray: string[] = []
+    const payloadTemp: { paymentId: string[], paymentType: string[] } = {
+      paymentId: route?.query?.id?.toString() ? [route?.query?.id?.toString()] : [],
+      paymentType: [],
     }
     // En caso de que solo este marcado el paymentAndDetails
     if (
       event && event.paymentAndDetails
       && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
     ) {
-      payloadTemp.paymentType = 'PAYMENT_DETAILS'
-      nameOfPdf = `payment-details-${dayjs().format('YYYY-MM-DD')}.pdf`
+      paymentTypeArray = [...paymentTypeArray, 'PAYMENT_DETAILS']
+      // nameOfPdf = `payment-details-${dayjs().format('YYYY-MM-DD')}.pdf`
     }
 
     if (
       event && event.paymentAndDetails && event.paymentSupport === true
       && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.allPaymentsSupport === false)
     ) {
-      payloadTemp.paymentType = 'PAYMENT_SUPPORT'
-      nameOfPdf = `payment-support-${dayjs().format('YYYY-MM-DD')}.pdf`
+      paymentTypeArray = [...paymentTypeArray, 'PAYMENT_SUPPORT']
+      // nameOfPdf = `payment-support-${dayjs().format('YYYY-MM-DD')}.pdf`
     }
 
     if (
       event && event.paymentAndDetails && event.allPaymentsSupport === true
       && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
     ) {
-      payloadTemp.paymentType = 'ALL_SUPPORT'
-      nameOfPdf = `payment-all-support-${dayjs().format('YYYY-MM-DD')}.pdf`
+      paymentTypeArray = [...paymentTypeArray, 'ALL_SUPPORT']
+      // nameOfPdf = `payment-all-support-${dayjs().format('YYYY-MM-DD')}.pdf`
     }
 
     if (
       event && event.paymentAndDetails && event.invoiceRelated === true
       && (event.allPaymentsSupport === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
     ) {
-      payloadTemp.paymentType = 'INVOICE_RELATED'
-      nameOfPdf = `payment-invoice-related-${dayjs().format('YYYY-MM-DD')}.pdf`
+      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED']
+      // nameOfPdf = `payment-invoice-related-${dayjs().format('YYYY-MM-DD')}.pdf`
     }
 
     if (
       event && event.paymentAndDetails && event.invoiceRelatedWithSupport === true
       && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.paymentSupport === false)
     ) {
-      payloadTemp.paymentType = 'INVOICE_RELATED_SUPPORT'
-      nameOfPdf = `payment-invoice-related-support-${dayjs().format('YYYY-MM-DD')}.pdf`
+      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED_WITH_SUPPORT']
     }
-
+    nameOfPdf = `payment-${item.value?.paymentId}-${dayjs().format('YYYY-MM-DD')}.pdf`
+    payloadTemp.paymentType = paymentTypeArray
     const response: any = await GenericService.create(confApiPaymentDetailPrint.moduleApi, confApiPaymentDetailPrint.uriApi, payloadTemp)
 
     const url = window.URL.createObjectURL(new Blob([response]))
