@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.domain.dto;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,4 +25,5 @@ public class ManageInvoiceDto {
     private List<ManageBookingDto> bookings;
     private Boolean hasAttachment;
     private ManageInvoiceDto parent;
+    private LocalDateTime invoiceDate;
 }

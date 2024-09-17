@@ -121,6 +121,7 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
             );
             applicationEventPublisher.publishEvent(createAttachmentEvent);
         } catch (Exception e) {
+            e.printStackTrace();
             processError("Can't create attachment for "+attachment.getName(), request.getImportProcessId());
         }
 

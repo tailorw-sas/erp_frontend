@@ -18,7 +18,7 @@ public class ConsumerUpdateManageAgencyService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-update-manage-client", groupId = "invoicing-entity-replica")
+    @KafkaListener(topics = "finamer-update-manage-agency", groupId = "invoicing-entity-replica")
     public void listen(UpdateManageAgencyKafka objKafka) {
         try {
             UpdateManageAgencyCommand command = new UpdateManageAgencyCommand(objKafka.getId(), objKafka.getName(),
@@ -26,7 +26,7 @@ public class ConsumerUpdateManageAgencyService {
                     objKafka.getAddress(),objKafka.getSentB2BPartner(),
                     objKafka.getCityState(),objKafka.getCountry(), objKafka.getMailingAddress(),
                     objKafka.getZipCode(),
-                    objKafka.getCity()
+                    objKafka.getCity(), objKafka.getCreditDay(), objKafka.getAutoReconcile()
             );
             mediator.send(command);
         } catch (Exception ex) {

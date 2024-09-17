@@ -173,8 +173,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         //calculando dueDate
         ManageAgencyDto agencyDto = this.agencyService.findById(parentInvoice.getAgency().getId());
         //TODO: replicar el campo creditDay de Agency para calcular dueDate
-        //LocalDate dueDate = command.getInvoiceDate().toLocalDate().plusDays(5L);
-        LocalDate dueDate = command.getInvoiceDate().toLocalDate();
+        LocalDate dueDate = command.getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
+//        LocalDate dueDate = command.getInvoiceDate().toLocalDate();
 
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
                 UUID.randomUUID(),

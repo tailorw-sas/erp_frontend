@@ -1,5 +1,6 @@
 package com.kynsof.share.core.domain.kafka.entity;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,4 +28,5 @@ public class ManageInvoiceKafka {
     private List<ManageBookingKafka> bookings;
     private List<AttachmentKafka> attachments;
     private Boolean hasAttachment;
+    private LocalDateTime invoiceDate;
 }

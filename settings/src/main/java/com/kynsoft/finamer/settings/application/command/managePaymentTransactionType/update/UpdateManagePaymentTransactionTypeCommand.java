@@ -30,12 +30,14 @@ public class UpdateManagePaymentTransactionTypeCommand implements ICommand {
     private Boolean antiToIncome;
     private Boolean incomeDefault;
     private Boolean paymentInvoice;
+    private Boolean debit;
 
     public UpdateManagePaymentTransactionTypeCommand(UUID id, Status status, 
             String name, String description,  Boolean cash, Boolean agencyRateAmount, 
             Boolean negative, Boolean policyCredit, Boolean remarkRequired, 
             Integer minNumberOfCharacter, String defaultRemark, Boolean deposit, Boolean applyDeposit,
-            Boolean defaults, Boolean antiToIncome, Boolean incomeDefault, Boolean paymentInvoice) {
+            Boolean defaults, Boolean antiToIncome, Boolean incomeDefault, Boolean paymentInvoice,
+            Boolean debit) {
         this.id = id;
         this.status = status;
         this.name = name;
@@ -53,6 +55,7 @@ public class UpdateManagePaymentTransactionTypeCommand implements ICommand {
         this.antiToIncome = antiToIncome;
         this.incomeDefault = incomeDefault;
         this.paymentInvoice = paymentInvoice;
+        this.debit = debit;
     }
 
     public static UpdateManagePaymentTransactionTypeCommand fromRequest(UpdateManagePaymentTransactionTypeRequest request, UUID id) {
@@ -70,7 +73,8 @@ public class UpdateManagePaymentTransactionTypeCommand implements ICommand {
                 request.getDefaults(),
                 request.getAntiToIncome(),
                 request.getIncomeDefault(),
-                request.getPaymentInvoice()
+                request.getPaymentInvoice(),
+                request.getDebit()
         );
     }
 

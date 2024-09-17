@@ -26,4 +26,5 @@ public class ManageHotelDto {
     private String babelCode;
     private ManagerCountryDto manageCountry;
     private ManageCityStateDto manageCityState;
+    private String city;
 }

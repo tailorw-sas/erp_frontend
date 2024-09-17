@@ -44,6 +44,8 @@ public class ManagePaymentTransactionType implements Serializable {
     private Boolean antiToIncome;
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean paymentInvoice;
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean debit;
 
     private Integer minNumberOfCharacter;
     private String defaultRemark;
@@ -80,6 +82,7 @@ public class ManagePaymentTransactionType implements Serializable {
         this.antiToIncome = dto.getAntiToIncome();
         this.incomeDefault = dto.getIncomeDefault();
         this.paymentInvoice = dto.getPaymentInvoice();
+        this.debit = dto.getDebit();
     }
 
     public ManagePaymentTransactionTypeDto toAggregate(){
@@ -95,7 +98,8 @@ public class ManagePaymentTransactionType implements Serializable {
                 defaults,
                 antiToIncome,
                 incomeDefault,
-                paymentInvoice
+                paymentInvoice,
+                debit
         );
     }
 

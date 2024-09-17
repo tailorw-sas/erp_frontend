@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.identity;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ public class ManageInvoice {
     private Long invoiceNo;
     private String invoiceNumber;
     private Double invoiceAmount;
+    private LocalDateTime invoiceDate;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean hasAttachment;
@@ -54,6 +56,7 @@ public class ManageInvoice {
         this.invoiceNo = dto.getInvoiceNo();
         this.hasAttachment = dto.getHasAttachment();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
+        this.invoiceDate = dto.getInvoiceDate();
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -66,7 +69,8 @@ public class ManageInvoice {
                 invoiceAmount,
                 null,
                 hasAttachment,
-                null
+                null,
+                invoiceDate
         );
     }
 
@@ -82,7 +86,8 @@ public class ManageInvoice {
                             return b.toAggregateSimple();
                         }).collect(Collectors.toList()) : null,
                 hasAttachment,
-                parent != null ? parent.toAggregateSample() : null
+                parent != null ? parent.toAggregateSample() : null,
+                invoiceDate
         );
     }
 

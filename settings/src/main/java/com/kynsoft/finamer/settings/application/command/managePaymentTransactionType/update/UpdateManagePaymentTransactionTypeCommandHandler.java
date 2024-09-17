@@ -53,6 +53,7 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setAntiToIncome, command.getAntiToIncome(), dto.getAntiToIncome(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setPaymentInvoice, command.getPaymentInvoice(), dto.getPaymentInvoice(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setDebit, command.getDebit(), dto.getDebit(), update::setUpdate);
 //        if (UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate)) {
 //            RulesChecker.checkRule(new ManagePaymentTransactionTypeDefaultMustBeUniqueRule(service, command.getId()));
 //        }
@@ -76,7 +77,8 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
                     dto.getMinNumberOfCharacter(),
                     command.getDefaultRemark(),
                     command.getDefaults(),
-                    command.getPaymentInvoice()
+                    command.getPaymentInvoice(),
+                    command.getDebit()
             ));
         }
     }

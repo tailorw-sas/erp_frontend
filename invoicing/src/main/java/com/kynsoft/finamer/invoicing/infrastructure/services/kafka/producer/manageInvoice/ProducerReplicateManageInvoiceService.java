@@ -40,6 +40,7 @@ public class ProducerReplicateManageInvoiceService {
                             booking.getHotelBookingNumber(),
                             booking.getCheckIn(),
                             booking.getCheckOut(),
+                            
                             booking.getFullName(),
                             booking.getFirstName(),
                             booking.getLastName(),
@@ -81,7 +82,8 @@ public class ProducerReplicateManageInvoiceService {
                     entity.getInvoiceAmount(),
                     bookingKafkas,
                     attachmentKafkas,
-                    !entity.getAttachments().isEmpty()
+                    !entity.getAttachments().isEmpty(),
+                    entity.getInvoiceDate()
             ));
         } catch (Exception ex) {
             Logger.getLogger(ProducerReplicateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
