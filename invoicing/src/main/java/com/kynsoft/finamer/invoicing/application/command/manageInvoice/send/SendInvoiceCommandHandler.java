@@ -32,14 +32,14 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final MailService mailService;
     private final IManageEmployeeService manageEmployeeService;
     private final InvoiceXmlService invoiceXmlService;
-    private final IMediator mediator;
+    private final ServiceLocator<IMediator> serviceLocator;
 
-    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService, IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,ServiceLocator<IMediator> serviceLocator) {
+    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService, IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService, ServiceLocator<IMediator> serviceLocator, ServiceLocator<IMediator> serviceLocator1) {
         this.service = service;
         this.mailService = mailService;
         this.manageEmployeeService = manageEmployeeService;
         this.invoiceXmlService = invoiceXmlService;
-        mediator=serviceLocator.getBean(IMediator.class);
+        this.serviceLocator = serviceLocator1;
     }
 
     @Override
@@ -92,7 +92,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             // Recipients
             List<MailJetRecipient> recipients = new ArrayList<>();
             recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
-            recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName()+ " " + employeeDto.getLastName()));
+            recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName() + " " + employeeDto.getLastName()));
             recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
             recipients.add(new MailJetRecipient("enrique.muguercia2016@gmail.com", "Enrique Basto"));
             //TODO send email employee
@@ -109,11 +109,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                     String nameFileXml = invoice.getInvoiceNumber() + ".xml"; // Cambiar la extensión a .xml
                     MailJetAttachment attachmentXML = new MailJetAttachment("application/xml", nameFileXml, base64Xml);
                     attachments.add(attachmentXML);
-
-                    String nameFile = invoice.getInvoiceNumber() + ".pdf";
-                    MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, "JVBERi0xLjQKJdP0zOEKMSAwIG9iago8PA..."); // PDF content base64
-                    attachments.add(attachment);
-
                     Optional<ByteArrayOutputStream> invoiceBooking = getInvoicesBooking(invoice.getId().toString());
                     if (invoiceBooking.isPresent()) {
                         String nameFile = invoice.getInvoiceNumber() + ".pdf";
@@ -121,19 +116,20 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                         if (pdfContent.isPresent()) {
                             MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, Arrays.toString(pdfContent.get())); // PDF content base64
                             attachments.add(attachment);
+                        }
+                    }
                 } catch (JAXBException e) {
                     throw new RuntimeException(e);
                 }
 
             }
-            if (!attachments.isEmpty()) {
-                request.setMailJetAttachments(attachments);
-                try {
-                    mailService.sendMail(request);
-                    command.setResult(true);
-                } catch (Exception e) {
-                    command.setResult(false);
-                }
+
+            request.setMailJetAttachments(attachments);
+            try {
+                mailService.sendMail(request);
+                command.setResult(true);
+            } catch (Exception e) {
+                command.setResult(false);
             }
         }
     }
@@ -142,7 +138,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds) {
         InvoiceReportRequest invoiceReportRequest = new InvoiceReportRequest(new String[]{invoiceIds}, new String[]{EInvoiceReportType.INVOICE_AND_BOOKING.name()});
         InvoiceReportQuery query = new InvoiceReportQuery(invoiceReportRequest);
-        InvoiceReportResponse response = mediator.send(query);
+        IMediator mediator = serviceLocator.getBean(IMediator.class);
+        InvoiceReportResponse response =mediator.send(query);
         return Optional.of(response.getFile());
     }
 
