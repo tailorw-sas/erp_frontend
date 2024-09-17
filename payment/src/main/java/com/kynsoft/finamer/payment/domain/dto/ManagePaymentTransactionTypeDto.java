@@ -25,4 +25,5 @@ public class ManagePaymentTransactionTypeDto {
     private String defaultRemark;
     private boolean defaults;
     private Boolean paymentInvoice;
+    private Boolean debit;
 }
