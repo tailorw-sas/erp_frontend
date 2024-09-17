@@ -600,6 +600,8 @@ async function getList() {
 
     const existingIds = new Set(listItems.value.map(item => item.id))
     const arrayNumero = []
+    const valores = ['#ff002b', '#00b816', '#616161']
+
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
         iterator.agencyType = iterator.agency.agencyTypeResponse
@@ -656,7 +658,7 @@ async function getList() {
 
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false }) // color: valores[Math.floor(Math.random() * valores.length)]
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -2011,8 +2013,10 @@ onMounted(async () => {
           :icon="column.icon"
           class="p-button-rounded p-button-text w-2rem h-2rem"
           aria-label="Submit"
-          style="color: #616161;"
+          :style="{ color: data.color }"
         />
+        <!-- style="color: #616161;" -->
+        <!-- :style="{ 'background-color': '#00b816' }" -->
       </template>
 
       <template #column-paymentStatus="{ data, column }">

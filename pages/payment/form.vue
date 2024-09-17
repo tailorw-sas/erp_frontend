@@ -1103,13 +1103,17 @@ async function getListPaymentDetail() {
           iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
           iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
         }
-
-        if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && !iterator?.transactionType?.cash) {
-          iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
-          iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
-          iterator.bookingId = iterator?.manageBooking.parentResponse?.bookingId
-          iterator.invoiceNumber = iterator?.manageBooking.invoice?.parent?.invoiceNumber
+        else {
+          iterator.bookingId = iterator.manageBooking?.bookingId
+          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber
         }
+
+        // if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && !iterator?.transactionType?.cash) {
+        //   iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
+        //   iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
+        //   iterator.bookingId = iterator?.manageBooking.parentResponse?.bookingId
+        //   iterator.invoiceNumber = iterator?.manageBooking.invoice?.parent?.invoiceNumber
+        // }
       }
 
       // Verificar si el ID ya existe en la lista
