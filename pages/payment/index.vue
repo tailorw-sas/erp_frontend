@@ -1535,24 +1535,20 @@ function handleAcctions(itemId: any) {
     idPaymentSelectedForPrint.value = itemId[0]
     paymentSelectedForPrintList.value = itemId
 
-    const objPayment = listItems.value.find(item => item.id === itemId[0])
-
-    if (objPayment && objPayment.id) {
-      if (objPayment.hasDetailTypeDeposit) {
-        const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
-        if (itemMenuObj) {
-          itemMenuObj.btnDisabled = false
-          itemMenuObj.btnOnClick = () => {
-            openDialogPrint()
-          }
+    if (paymentSelectedForPrintList.value && paymentSelectedForPrintList.value.length > 0) {
+      const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
+      if (itemMenuObj) {
+        itemMenuObj.btnDisabled = false
+        itemMenuObj.btnOnClick = () => {
+          openDialogPrint()
         }
       }
-      else {
-        const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
-        if (itemMenuObj) {
-          itemMenuObj.btnDisabled = true
-          itemMenuObj.btnOnClick = () => {}
-        }
+    }
+    else {
+      const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
+      if (itemMenuObj) {
+        itemMenuObj.btnDisabled = true
+        itemMenuObj.btnOnClick = () => {}
       }
     }
   }
