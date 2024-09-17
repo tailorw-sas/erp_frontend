@@ -25,4 +25,6 @@ public interface IManageAdjustmentService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<ManageAdjustmentDto> findByIds(List<UUID> ids);
+
+    void deleteByIds(List<UUID> ids);
 }
