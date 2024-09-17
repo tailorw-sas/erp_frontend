@@ -128,7 +128,7 @@ const applyPaymentPayload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'bookingId',
+  sortBy: 'dueAmount',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
