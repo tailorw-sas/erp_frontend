@@ -1071,7 +1071,10 @@ onMounted(async () => {
       :selected-invoice-obj="item" :is-creation-dialog="false" />
   </div>
   <div v-if="exportAttachmentsDialogOpen">
-    <PrintInvoiceDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }"
-      :open-dialog="exportAttachmentsDialogOpen" :invoice="item" />
+    <PrintInvoiceDialog 
+      :close-dialog="() => { exportAttachmentsDialogOpen = false }"
+      :open-dialog="exportAttachmentsDialogOpen" 
+      :invoice="item"
+    />
   </div>
 </template>

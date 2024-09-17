@@ -71,13 +71,17 @@ const options = ref({
   showTitleBar: false
 })
 
-async function paymentPrint() {
+async function invoicePrint() {
   try {
     loading.value = true
     let nameOfPdf = ''
+    const arrayInvoiceType: string[] = []
+    if (invoiceSupport.value) { arrayInvoiceType.push('INVOICE_SUPPORT') }
+    if (invoiceAndBookings.value) { arrayInvoiceType.push('INVOICE_AND_BOOKING') }
+
     const payloadTemp = {
-      invoiceId: props.invoice.id || '',
-      invoiceType: invoiceSupport.value ? 'INVOICE_SUPPORT' : 'INVOICE_AND_BOOKING',
+      invoiceId: [props.invoice.id],
+      invoiceType: arrayInvoiceType
     }
     // En caso de que solo este marcado el paymentAndDetails
 
@@ -203,7 +207,7 @@ onMounted(() => {
         <Button
           v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loading"
           @click="() => {
-            paymentPrint()
+            invoicePrint()
             // handleDownload()
           }"
         />

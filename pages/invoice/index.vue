@@ -1745,12 +1745,21 @@ const legend = ref(
           </AccordionTab>
         </Accordion>
       </div>
-      <ExpandableTable :data="listItems" :columns="columns" :options="options" :pagination="pagination"
-        @on-confirm-create="clearForm" @open-edit-dialog="openEditDialog($event)"
-        @on-change-pagination="payloadOnChangePage = $event" @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems" @on-sort-field="onSortField" @update:double-clicked="getItemById"
+      <ExpandableTable 
+        :data="listItems" 
+        :columns="columns" 
+        :options="options" 
+        :pagination="pagination"
+        @on-confirm-create="clearForm" 
+        @open-edit-dialog="openEditDialog($event)"
+        @on-change-pagination="payloadOnChangePage = $event" 
+        @on-change-filter="parseDataTableFilter"
+        @on-list-item="resetListItems" 
+        @on-sort-field="onSortField" 
+        @update:double-clicked="getItemById"
         @on-expand-field="($event) => { expandedInvoice = $event }"
-        @on-select-field="($event) => { attachmentInvoice = $event }" @on-row-right-click="onRowRightClick">
+        @on-select-field="($event) => { attachmentInvoice = $event }" 
+        @on-row-right-click="onRowRightClick">
         <template #column-invoiceDate="{ item: data }">
           {{ dayjs(data).format('DD-MM-YYYY') }}
         </template>
@@ -1885,17 +1894,29 @@ const legend = ref(
   </div>
 
   <div v-if="exportDialogOpen">
-    <ExportDialog :total="pagination.totalElements" :close-dialog="() => { exportDialogOpen = false }"
-      :open-dialog="exportDialogOpen" :payload="payload" />
+    <ExportDialog 
+      :total="pagination.totalElements" 
+      :close-dialog="() => { exportDialogOpen = false }"
+      :open-dialog="exportDialogOpen" 
+      :payload="payload"
+    />
   </div>
   <div v-if="exportPdfDialogOpen">
-    <ExportToPdfDialog :close-dialog="() => { exportPdfDialogOpen = false }" :open-dialog="exportPdfDialogOpen"
-      :payload="payload" :invoices="listItems" :total-amount="totalInvoiceAmount"
+    <ExportToPdfDialog 
+      :close-dialog="() => { exportPdfDialogOpen = false }" 
+      :open-dialog="exportPdfDialogOpen"
+      :payload="payload" 
+      :invoices="listItems" 
+      :total-amount="totalInvoiceAmount"
       :total-due-amount="totalInvoiceAmount" />
   </div>
   <div v-if="exportAttachmentsDialogOpen">
-    <ExportAttachmentsDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }"
-      :open-dialog="exportAttachmentsDialogOpen" :payload="payload" :invoice="attachmentInvoice" />
+    <ExportAttachmentsDialog 
+      :close-dialog="() => { exportAttachmentsDialogOpen = false }"
+      :open-dialog="exportAttachmentsDialogOpen" 
+      :payload="payload" 
+      :invoice="attachmentInvoice"
+    />
   </div>
 </template>
 
