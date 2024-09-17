@@ -23,4 +23,6 @@ public interface IManageContactService {
     Long countByCodeAndManageHotelIdAndNotId(String code, UUID manageHotelId, UUID id);
 
     Long countByEmailAndManageHotelIdAndNotId(String email, UUID manageHotelId, UUID id);
+
+    List<ManageContactDto> findAllToReplicate();
 }

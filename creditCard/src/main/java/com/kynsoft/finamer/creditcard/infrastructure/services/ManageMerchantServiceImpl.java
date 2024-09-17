@@ -13,6 +13,7 @@ import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageMerchant;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageMerchantWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageMerchantReadDataJPARepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class ManageMerchantServiceImpl implements IManageMerchantService {
 
@@ -59,6 +61,7 @@ public class ManageMerchantServiceImpl implements IManageMerchantService {
     public ManageMerchantDto findById(UUID id) {
         Optional<ManageMerchant> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
+
             return userSystem.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_MERCHANT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_MERCHANT_NOT_FOUND.getReasonPhrase())));

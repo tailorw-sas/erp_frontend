@@ -6,6 +6,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class PaymentReportRequest {
-    private String paymentId;
-    private String paymentType;
+    private String [] paymentId;
+    private String [] paymentType;
 }

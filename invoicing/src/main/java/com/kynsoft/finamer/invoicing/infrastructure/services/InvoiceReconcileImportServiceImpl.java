@@ -27,9 +27,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -65,11 +67,11 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
                         .status(EProcessStatus.RUNNING)
                         .importProcessId(request.getImportProcessId()).build()
         );
-        storageService.loadAll(request.getImportProcessId())
-                .parallel()
-                .map(Path::toFile)
-                .filter(file -> this.isAttachmentValid(file, request.getImportProcessId()))
-                .forEach(attachmentFile -> createInvoiceAttachment(attachmentFile, request));
+        List<File> attachmentList =this.loadImportedAttachment(request.getImportProcessId());
+        boolean isAllAttachmentValid=attachmentList.stream().allMatch(attachment->this.isAttachmentValid(attachment,request.getImportProcessId()));
+        if (isAllAttachmentValid){
+            attachmentList.forEach(attachment->createInvoiceAttachment(attachment,request));
+        }
         this.cleanImportationResource(request.getImportProcessId());
         this.createImportProcessStatusEvent(
                 InvoiceReconcileImportProcessStatusDto.builder()
@@ -83,13 +85,23 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
         applicationEventPublisher.publishEvent(createImportStatusEvent);
     }
 
+    private List<File> loadImportedAttachment(String importProcessId){
+        return storageService.loadAll(importProcessId)
+                .map(Path::toFile)
+                .filter(File::isFile)
+                .toList();
+    }
     private boolean isAttachmentValid(File file, String importProcessId) {
         try {
-            return invoiceService.existManageInvoiceByInvoiceId(Long.parseLong(getInvoiceIdFromFileName(file)));
+             if(!invoiceService.existManageInvoiceByInvoiceId(Long.parseLong(getInvoiceIdFromFileName(file)))){
+                 this.processError("The invoice with id "+ getInvoiceIdFromFileName(file) + " doesn't exist" , importProcessId);
+                 return false;
+             }
         } catch (Exception e) {
             this.processError("File name is not valid " + getInvoiceIdFromFileName(file), importProcessId);
             return false;
         }
+        return true;
     }
 
     private String getInvoiceIdFromFileName(File file) {
@@ -97,7 +109,7 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
     }
 
     private void createInvoiceAttachment(File attachment, InvoiceReconcileImportRequest request) {
-        try (InputStream inputStream = storageService.loadAsResource(attachment.getName(), request.getImportProcessId())) {
+        try (InputStream inputStream = new FileInputStream(attachment)) {
             ManageInvoiceDto manageInvoiceDto = invoiceService.findByInvoiceId(Long.parseLong(getInvoiceIdFromFileName(attachment)));
             CreateAttachmentEvent createAttachmentEvent = new CreateAttachmentEvent(this,
                     manageInvoiceDto.getId(),
@@ -109,14 +121,8 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
             );
             applicationEventPublisher.publishEvent(createAttachmentEvent);
         } catch (Exception e) {
-            this.createImportProcessStatusEvent(
-                    InvoiceReconcileImportProcessStatusDto.builder()
-                            .status(EProcessStatus.FINISHED)
-                            .hasError(true)
-                            .exceptionMessage("The attachment could not be created")
-                            .importProcessId(request.getImportProcessId()).build()
-            );
-
+            e.printStackTrace();
+            processError("Can't create attachment for "+attachment.getName(), request.getImportProcessId());
         }
 
 

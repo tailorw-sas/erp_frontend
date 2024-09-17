@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.settings.domain.dto;
 
+import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerMerchantConfigResponse;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

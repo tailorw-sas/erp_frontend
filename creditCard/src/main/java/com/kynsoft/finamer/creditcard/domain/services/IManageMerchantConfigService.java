@@ -18,4 +18,5 @@ public interface IManageMerchantConfigService {
     Long countByManagerMerchantANDManagerCurrencyIdNotId(UUID id, UUID managerMerchant);
     void delete(ManagerMerchantConfigDto dto);
     void update(ManagerMerchantConfigDto dto);
+    ManagerMerchantConfigDto findByMerchantID(UUID id);
 }

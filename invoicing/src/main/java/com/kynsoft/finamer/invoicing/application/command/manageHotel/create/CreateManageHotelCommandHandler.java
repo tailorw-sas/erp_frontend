@@ -54,7 +54,8 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 command.getAddress(),
                 command.getBabelCode(),
                 countryDto,
-                cityStateDto
+                cityStateDto,
+                command.getCity()
         ));
     }
 }

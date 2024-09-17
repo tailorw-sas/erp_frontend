@@ -117,4 +117,17 @@ public class ManageContactServiceImpl implements IManageContactService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManageContactDto> findAllToReplicate() {
+        List<ManageContact> objects = this.repositoryQuery.findAll();
+        List<ManageContactDto> objectDtos = new ArrayList<>();
+
+        for (ManageContact object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

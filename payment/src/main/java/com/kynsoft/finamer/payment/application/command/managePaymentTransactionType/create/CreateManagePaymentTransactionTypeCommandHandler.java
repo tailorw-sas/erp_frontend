@@ -28,7 +28,8 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
                 command.getMinNumberOfCharacter(),
                 command.getDefaultRemark(),
                 command.isDefaults(),
-                command.getPaymentInvoice()
+                command.getPaymentInvoice(),
+                command.getDebit()
         ));
     }
 }
