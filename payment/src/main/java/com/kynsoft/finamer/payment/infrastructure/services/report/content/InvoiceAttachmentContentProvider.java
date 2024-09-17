@@ -24,7 +24,7 @@ public class InvoiceAttachmentContentProvider extends AbstractReportContentProvi
 
     @Override
     public Optional<byte[]> getContent(Map<String, Object> parameters) {
-        String invoiceId = (String) parameters.getOrDefault("invoiceRelatedId", "");
+        String invoiceId = (String) parameters.getOrDefault("invoiceId", "");
         Assert.notNull(invoiceId, "El id del invoice es obligatorio");
         try {
             return getInvoiceAndBookingAndSupportReportContent(invoiceId);
@@ -37,11 +37,9 @@ public class InvoiceAttachmentContentProvider extends AbstractReportContentProvi
 
     private Optional<byte[]> getInvoiceAndBookingAndSupportReportContent(String invoiceId) throws IOException {
         InvoiceRequest invoiceRequest = new InvoiceRequest();
-        invoiceRequest.setInvoiceId(invoiceId);
-        invoiceRequest.setInvoiceType("INVOICE_SUPPORT");
-        ResponseEntity<byte[]> response =
-                restTemplate.postForEntity(INVOICE_SERVICE_URL + "/api/manage-invoice/report",
-                        invoiceRequest, byte[].class);
+        invoiceRequest.setInvoiceId(new String[]{invoiceId});
+        invoiceRequest.setInvoiceType(new String[]{"INVOICE_SUPPORT"});
+        ResponseEntity<byte[]> response = restTemplate.postForEntity(INVOICE_SERVICE_URL,invoiceRequest, byte[].class);
         if (response.getStatusCode().is2xxSuccessful()){
             return Optional.ofNullable(response.getBody());
         }
