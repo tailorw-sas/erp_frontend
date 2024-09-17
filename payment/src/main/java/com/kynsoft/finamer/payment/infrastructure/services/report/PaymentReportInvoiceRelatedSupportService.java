@@ -45,18 +45,17 @@ public class PaymentReportInvoiceRelatedSupportService implements IPaymentReport
             });
             if (!contentToMerge.isEmpty()) {
                 return Optional.of(PDFUtils.mergePDFtoByte(contentToMerge));
-            } else {
-                return Optional.of(ReportUtil.defaultPdfContent());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return Optional.empty();
     }
 
 
     private Optional<byte[]> getInvoiceRelatedAttachmentContent(String invoiceId) {
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("invoiceRelatedId", invoiceId);
+        parameters.put("invoiceId", invoiceId);
         AbstractReportContentProvider contentProvider = reportContentProviderFactory
                 .getReportContentProvider(EPaymentContentProvider.INVOICE_ATTACHMENT_CONTENT);
         return contentProvider.getContent(parameters);
