@@ -668,8 +668,8 @@ async function saveItem(item: { [key: string]: any }) {
       await getItem(itemDetails.clonedInvoice);
     }
   }
-   // await new Promise(resolve => setTimeout(resolve, 5000));
- //navigateTo('/invoice');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+ navigateTo('/invoice');
   }
 
 
