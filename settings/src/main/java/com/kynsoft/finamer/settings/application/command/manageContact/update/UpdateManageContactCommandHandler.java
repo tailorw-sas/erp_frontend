@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageContact.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ManageContactKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -11,6 +12,7 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.manageContact.ManageContactEmailMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageContactService;
 import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageContact.ProducerReplicateManageContactService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -23,9 +25,12 @@ public class UpdateManageContactCommandHandler implements ICommandHandler<Update
 
     private final IManageHotelService hotelService;
 
-    public UpdateManageContactCommandHandler(IManageContactService service, IManageHotelService hotelService) {
+    private final ProducerReplicateManageContactService producerReplicateManageContactService;
+
+    public UpdateManageContactCommandHandler(IManageContactService service, IManageHotelService hotelService, ProducerReplicateManageContactService producerReplicateManageContactService) {
         this.service = service;
         this.hotelService = hotelService;
+        this.producerReplicateManageContactService = producerReplicateManageContactService;
     }
 
     @Override
@@ -47,6 +52,16 @@ public class UpdateManageContactCommandHandler implements ICommandHandler<Update
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producerReplicateManageContactService.create(new ManageContactKafka(
+                dto.getId(), 
+                dto.getCode(), 
+                dto.getDescription(), 
+                dto.getName(), 
+                dto.getManageHotel().getId(), 
+                dto.getEmail(), 
+                dto.getPhone(), 
+                dto.getPosition()
+        ));
         }
     }
 
