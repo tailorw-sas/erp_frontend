@@ -184,6 +184,7 @@ async function importFile() {
   options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
+  let count = 0;
 
   try {
     const selectedFiles = importModel.value.attachFile // Usa el modelo correcto
@@ -242,6 +243,7 @@ async function importFile() {
 
     // Envía los datos al servicio
     await GenericService.importReconcileFile(confApi.moduleApi, confApi.uriApi, formData)
+    count = selectedFiles.length;
   }
   catch (error: any) {
     successOperation = false
@@ -256,11 +258,12 @@ async function importFile() {
 
     if (!haveErrorImportStatus.value) {
       await getErrorList()
-      if (listItems.value.length === 0) {
+     if (listItems.value.length === 0) {
         options.value.loading = false
         navigateTo('/invoice')
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was uploaded successfully!`, life: 0 })
-      }
+        const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`;
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 0 });
+           }
     }
   }
 
