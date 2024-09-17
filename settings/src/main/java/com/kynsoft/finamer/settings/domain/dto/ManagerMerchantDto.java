@@ -21,6 +21,5 @@ public class ManagerMerchantDto {
     private ManagerB2BPartnerDto b2bPartner;
     private Boolean defaultm;
     private Status status;
-    private ManagerMerchantConfigResponse managerMerchantConfig;
 
 }
