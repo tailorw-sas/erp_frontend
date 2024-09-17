@@ -596,8 +596,10 @@ async function getRoomRateClonationList(idItemCreated: any) {
 
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
+
         //hotelAmount: 0,
-        invoiceAmount: iterator?.invoiceAmount || 0,
+        roomRateId: iterator?.roomRateId,
+        invoiceAmount: iterator?.invoiceAmount,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         loadingEdit: false,
         loadingDelete: false,
@@ -635,11 +637,12 @@ async function saveItem(item: { [key: string]: any }) {
 
   try {
     const response: any = await createClonation(item);
-
+    console.log('response clonado total', response)
     if (response && response.clonedInvoice) {
+
       idItemCreated.value = response.clonedInvoice;
       itemDetails = await getItem(response.clonedInvoice);
-
+      console.log(itemDetails, 'a ver que hay aqui')
       const invoiceNo = response.clonedInvoiceNo;
       toast.add({
         severity: 'info',
@@ -647,8 +650,6 @@ async function saveItem(item: { [key: string]: any }) {
         detail: `The clonation invoice ${invoiceNo} was created successfully`,
         life: 10000
       });
-    } else {
-      throw new Error('Response object or ID is undefined');
     }
   } catch (error: any) {
     successOperation = false;
@@ -662,14 +663,16 @@ async function saveItem(item: { [key: string]: any }) {
   } finally {
     loadingSaveAll.value = false;
     if (successOperation) {
-    if (itemDetails && itemDetails.clonedInvoice) {
-      await getBookingClonationList(idItemCreated.value);
-      await getRoomRateClonationList(idItemCreated.value);
-      await getItem(itemDetails.clonedInvoice);
+      if (itemDetails && itemDetails.clonedInvoice) {
+        await getBookingClonationList(idItemCreated.value);
+        await getRoomRateClonationList(idItemCreated.value);
+        await getItem(itemDetails.clonedInvoice);
+
+      }
+
     }
-  }
     await new Promise(resolve => setTimeout(resolve, 5000));
- navigateTo('/invoice');
+    navigateTo('/invoice');
   }
 
 
@@ -720,12 +723,11 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
         roomRateId: '',
         //   invoiceAmount: iterator?.invoiceAmount || 0,
         // hotelAmount: 0,
-        // invoiceAmount: 0,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         loadingEdit: false,
         loadingDelete: false,
         fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
-        bookingId: iterator.booking.bookingId,
+        // bookingId: iterator.booking.bookingId,
         roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
@@ -983,45 +985,7 @@ function sortRoomRate(event: any) {
     })
   }
 }
-/*
-function addBooking(booking: any) {
-  bookingList.value = [...bookingList.value, {
-    ...booking,
-    checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
-    checkOut: dayjs(booking?.checkOut).startOf('day').toISOString(),
-    nights: dayjs(booking?.checkOut).endOf('day').diff(dayjs(booking?.checkIn).startOf('day'), 'day', false),
-    roomType: { ...booking?.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-    ratePlan: { ...booking?.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-  }]
 
-  console.log(booking)
-  roomRateList.value = [...roomRateList.value, {
-    checkIn: dayjs(booking?.checkIn).toISOString(),
-    checkOut: dayjs(booking?.checkOut).toISOString(),
-    invoiceAmount: String(booking?.invoiceAmount),
-    roomNumber: booking?.roomNumber,
-    adults: booking?.adults,
-    children: booking?.children,
-    rateAdult: booking?.rateAdult,
-    rateChild: booking?.rateChild,
-    hotelAmount: String(booking?.hotelAmount),
-    remark: booking?.description,
-    booking: booking?.id,
-    nights: dayjs(booking?.checkOut).diff(dayjs(booking?.checkIn), 'day', false),
-    roomType: { ...booking.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-    nightType: { ...booking.nightType, name: `${booking?.nightType?.code || ''}-${booking?.nightType?.name || ''}` },
-    ratePlan: { ...booking.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-    fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
-    firstName: booking?.firstName,
-    lastName: booking?.lastName,
-    id: v4()
-  }]
-
-  console.log(roomRateList)
-
-  calcInvoiceAmount()
-}
-*/
 async function getInvoiceAgency(id) {
   try {
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
@@ -1063,7 +1027,7 @@ async function getItemById(id: any) {
         //  item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
-        item.value.invoiceAmount = response.invoiceAmount
+        // item.value.invoiceAmount = 0
         item.value.hotel = response.hotel
         item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
         item.value.agency = response.agency
@@ -1071,10 +1035,7 @@ async function getItemById(id: any) {
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
         //  item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
 
-        if (route.query.type === InvoiceType.CREDIT) {
-          item.value.originalAmount = response.invoiceAmount
-          item.value.invoiceDate = new Date()
-        }
+
         await getInvoiceAgency(response.agency?.id)
       }
 
@@ -1103,11 +1064,11 @@ async function getItem(id: any) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
         console.log('aqui se muestra el invoiceId', item.value.invoiceId)
-       // const invoiceNumber = `${response?.clonedInvoiceNo?.split('-')[0]}-${response?.clonedInvoiceNo?.split('-')[2]}`
+        // const invoiceNumber = `${response?.clonedInvoiceNo?.split('-')[0]}-${response?.clonedInvoiceNo?.split('-')[2]}`
 
-        item.value.invoiceNumber =response.invoiceNumber
+        item.value.invoiceNumber = response.invoiceNumber
         console.log('aqui se muestra el invoiceNumber', item.value.invoiceNo)
-    
+
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
@@ -1118,8 +1079,8 @@ async function getItem(id: any) {
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
         //  item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
 
-
         await getInvoiceAgency(response.agency?.id)
+
       }
 
       formReload.value += 1
@@ -1164,7 +1125,7 @@ async function getBookingList(clearFilter: boolean = false) {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      const id = v4()
+      //const id = v4()
       bookingList.value = [...bookingList.value, {
         ...iterator,
         // id,
@@ -1175,10 +1136,16 @@ async function getBookingList(clearFilter: boolean = false) {
         //  invoiceAmount: 0,
         //  originalAmount: iterator?.invoiceAmount,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        nightType: iterator.nightType ? iterator.nightType.id : null,
+        ratePlan: iterator.ratePlan ? iterator.ratePlan.id : null,
+        roomType: iterator.roomType ? iterator.roomType.id : null,
+        roomCategory: iterator.roomCategory ? iterator.roomCategory.id : null,
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
     }
+    console.log(bookingList.value, 'lista de bookings')
     return bookingList.value
+
   }
 
   catch (error) {
@@ -1348,50 +1315,7 @@ function updateBooking(booking: any) {
 
   calcInvoiceAmount()
 }
-/*
-function addRoomRate(rate: any) {
-  const booking = bookingList.value.find((b => b?.id === rate?.booking))
 
-  roomRateList.value = [...roomRateList.value, {
-    ...rate,
-    nights: dayjs(rate?.checkOut).endOf('day').diff(dayjs(rate?.checkIn).startOf('day'), 'day', false),
-    roomType: { ...booking.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-    nightType: { ...booking.nightType, name: `${booking?.nightType?.code || ''}-${booking?.nightType?.name || ''}` },
-    ratePlan: { ...booking.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-    fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
-    checkIn: dayjs(rate?.checkIn).startOf('day').toISOString(),
-    checkOut: dayjs(rate?.checkOut).startOf('day').toISOString(),
-    adults: booking?.adults,
-    children: booking?.children,
-    rateChild: booking?.rateChild,
-    rateAdult: booking?.rateAdult
-
-  }]
-  calcBookingInvoiceAmount(rate)
-  calcBookingHotelAmount(rate)
-}
-
-function updateRoomRate(roomRate: any) {
-  console.log(roomRate)
-  const index = roomRateList.value.findIndex(item => item.id === roomRate.id)
-
-  const booking = bookingList.value.find((b => b?.id === roomRateList.value[index]?.booking))
-
-  roomRateList.value[index] = {
-    ...roomRate,
-    booking: roomRateList.value[index]?.booking,
-    roomType: { ...booking.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-    nightType: { ...booking.nightType, name: `${booking?.nightType?.code || ''}-${booking?.nightType?.name || ''}` },
-    ratePlan: { ...booking.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-    fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
-    firstName: booking?.firstName,
-    lastName: booking?.lastName,
-    checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
-    checkOut: dayjs(booking?.checkOut).startOf('day').toISOString(),
-  }
-  calcBookingHotelAmount(roomRate)
-}
-*/
 function disabledButtonSave() {
   let result = false
   if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
@@ -1460,12 +1384,12 @@ onMounted(async () => {
   globalSelectedInvoicing = selectedInvoicing.value
   item.value.invoiceType = ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
 
-  // if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
+
   await getItemById(route.query.selected)
   await getBookingList()
   await getRoomRateList(globalSelectedInvoicing)
   await getAdjustmentList()
-  calcInvoiceAmount()
+  // calcInvoiceAmount()
   // }
 })
 </script>
@@ -1562,8 +1486,7 @@ onMounted(async () => {
             :selected-booking="selectedBooking" :open-adjustment-dialog="openAdjustmentDialog"
             :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
             :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
-            :add-room-rate="addRoomRate" :update-room-rate="updateRoomRate" :is-creation-dialog="true"
-            :selected-invoice="selectedInvoice as any" :booking-list="bookingList" :add-booking="addBooking"
+            :is-creation-dialog="true" :selected-invoice="selectedInvoice as any" :booking-list="bookingList"
             :update-booking="updateBooking" :adjustment-list="ListItems" :add-adjustment="addAdjustment"
             :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
 
