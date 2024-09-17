@@ -385,7 +385,7 @@ const loadingSaveApplyPayment = ref(false)
 const invoiceSelectedListForApplyPayment = ref<any[]>([])
 const applyPaymentListOfInvoice = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceNo', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
@@ -475,7 +475,7 @@ const applyPaymentPayload = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'createdAt',
+  sortBy: 'dueAmount',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
@@ -1020,10 +1020,10 @@ async function applyPaymentGetList() {
       }
     }
 
-    const objFilter = applyPaymentPayload.value.filter.find(item => item.key === ' ')
+    const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
 
-    if (objFilter) {
-      objFilter.value = 0
+    if (objFilterDueAmount) {
+      objFilterDueAmount.value = 0
     }
     else {
       applyPaymentPayload.value.filter.push({
@@ -1577,6 +1577,12 @@ watch(payloadOnChangePage, (newValue) => {
   getList()
 })
 
+watch(applyPaymentOnChangePage, (newValue) => {
+  applyPaymentPayload.value.page = newValue?.page ? newValue?.page : 0
+  applyPaymentPayload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  applyPaymentGetList()
+})
+
 watch(filterToSearch, (newValue) => {
   if (newValue.status.length > 1 && newValue.status.find((item: { id: string, name: string, status?: string }) => item.id === 'All')) {
     filterToSearch.value.status = newValue.status.filter((item: { id: string, name: string, status?: string }) => item.id !== 'All')
@@ -2035,7 +2041,7 @@ onMounted(async () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold;" />
+            <Column footer="Totals:" :colspan="options.selectionMode === 'multiple' ? 10 : 9" footer-style="text-align:right; font-weight: bold;" />
             <Column :footer="formatNumber(Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
             <Column :footer="formatNumber(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
             <Column :footer="formatNumber(Math.round((subTotals.applied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
