@@ -1,8 +1,8 @@
-package com.kynsoft.finamer.settings.domain.services;
+package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.settings.domain.dto.ManageContactDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageContactDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -19,10 +19,4 @@ public interface IManageContactService {
     ManageContactDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
-
-    Long countByCodeAndManageHotelIdAndNotId(String code, UUID manageHotelId, UUID id);
-
-    Long countByEmailAndManageHotelIdAndNotId(String email, UUID manageHotelId, UUID id);
-
-    List<ManageContactDto> findAllToReplicate();
 }

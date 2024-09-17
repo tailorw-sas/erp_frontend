@@ -13,6 +13,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageBankAccount.ProducerReplicateManageBankAccount;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCityState.ProducerReplicateManageCityStateService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageClient.ProducerReplicateManageClientService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageContact.ProducerReplicateManageContactService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCountry.ProducerReplicateManageCountryService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageEmployee.ProducerReplicateManageEmployeeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageHotel.ProducerReplicateManageHotelService;
@@ -74,7 +75,9 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final IManageCityStateService manageCityStateService;
 
     private final IManagerCountryService managerCountryService;
+    private final IManageContactService manageContactService;
 
+    private final ProducerReplicateManageContactService producerReplicateManageContactService;
     private final ProducerReplicateManageAgencyService replicateManageAgencyService;
     private final ProducerReplicateManageBankAccount replicateManageBankAccount;
     private final ProducerReplicateManageEmployeeService replicateManageEmployeeService;
@@ -133,7 +136,9 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateB2BPartnerService producerReplicateB2BPartnerService,
                                          ProducerReplicateB2BPartnerTypeService producerReplicateB2BPartnerTypeService, ProducerReplicateManageMerchantService producerReplicateManageMerchantService,
                                          ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
-                                         ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService) {
+                                         ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService,
+                                         IManageContactService manageContactService,
+                                         ProducerReplicateManageContactService producerReplicateManageContactService) {
         this.tradingCompaniesService = tradingCompaniesService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerLanguageService = managerLanguageService;
@@ -182,6 +187,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.producerReplicateManageCityStateService = producerReplicateManageCityStateService;
         this.producerReplicateManageCountryService = producerReplicateManageCountryService;
         this.producerReplicateManageTradingCompanyService = producerReplicateManageTradingCompanyService;
+        this.manageContactService = manageContactService;
+        this.producerReplicateManageContactService = producerReplicateManageContactService;
     }
 
     @Override
@@ -191,6 +198,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 case MANAGE_TRANSACTION_STATUS -> {
                     for (ManageTransactionStatusDto transactionStatusDto : this.manageTransactionStatusService.findAllToReplicate()) {
                         this.replicateManageTransactionStatusService.create(new ReplicateManageTransactionStatusKafka(transactionStatusDto.getId(), transactionStatusDto.getCode(), transactionStatusDto.getName()));
+                    }
+                }
+                case MANAGE_CONTACT -> {
+                    for (ManageContactDto manageContactDto : this.manageContactService.findAllToReplicate()) {
+                        this.producerReplicateManageContactService.create(new ManageContactKafka(manageContactDto.getId(), manageContactDto.getCode(), manageContactDto.getDescription(), manageContactDto.getName(), manageContactDto.getManageHotel().getId(), manageContactDto.getEmail(), manageContactDto.getPhone(), manageContactDto.getPosition()));
                     }
                 }
                 case MANAGE_VCC_TRANSACTION_TYPE -> {

@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.settings.infrastructure.services;
+package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
@@ -7,19 +7,16 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import com.kynsoft.finamer.settings.application.query.objectResponse.ManageContactResponse;
-import com.kynsoft.finamer.settings.domain.dto.ManageContactDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import com.kynsoft.finamer.settings.domain.services.IManageContactService;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManageContact;
-import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageContactWriteDataJPARepository;
-import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageContactReadDataJPARepository;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageContactResponse;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageContactDto;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageContact;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageContactWriteDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageContactReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,8 +47,6 @@ public class ManageContactServiceImpl implements IManageContactService {
     public void update(ManageContactDto dto) {
         ManageContact entity = new ManageContact(dto);
 
-        entity.setUpdatedAt(LocalDateTime.now());
-
         repositoryCommand.save(entity);
     }
 
@@ -77,36 +72,11 @@ public class ManageContactServiceImpl implements IManageContactService {
 
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<ManageContact> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageContact> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
-    }
-
-    @Override
-    public Long countByCodeAndManageHotelIdAndNotId(String code, UUID manageHotelId, UUID id) {
-        return repositoryQuery.countByCodeAndManageHotelIdAndNotId(code, manageHotelId, id);
-    }
-
-    @Override
-    public Long countByEmailAndManageHotelIdAndNotId(String email, UUID manageHotelId, UUID id) {
-        return repositoryQuery.countByEmailAndManageHotelIdAndNotId(email, manageHotelId, id);
-    }
-
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
-        for (FilterCriteria filter : filterCriteria) {
-
-            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
-                try {
-                    Status enumValue = Status.valueOf((String) filter.getValue());
-                    filter.setValue(enumValue);
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
-                }
-            }
-        }
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageContact> data) {
@@ -117,17 +87,4 @@ public class ManageContactServiceImpl implements IManageContactService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
-
-    @Override
-    public List<ManageContactDto> findAllToReplicate() {
-        List<ManageContact> objects = this.repositoryQuery.findAll();
-        List<ManageContactDto> objectDtos = new ArrayList<>();
-
-        for (ManageContact object : objects) {
-            objectDtos.add(object.toAggregate());
-        }
-
-        return objectDtos;
-    }
-
 }
