@@ -21,6 +21,8 @@ public class ManageAgencyResponse implements IResponse {
     private String name;
     private ManageClientResponse client;
     private EGenerationType generationType;
+    private Integer creditDay;
+    private Boolean autoReconcile;
 
     public ManageAgencyResponse(ManageAgencyDto dto) {
         this.id = dto.getId();
@@ -28,6 +30,8 @@ public class ManageAgencyResponse implements IResponse {
         this.name = dto.getName();
         this.client = dto.getClient() != null ? new ManageClientResponse(dto.getClient()) : null;
         this.generationType = dto.getGenerationType() != null ? dto.getGenerationType() : null;
+        this.creditDay = dto.getCreditDay();
+        this.autoReconcile = dto.getAutoReconcile();
     }
 
 }
