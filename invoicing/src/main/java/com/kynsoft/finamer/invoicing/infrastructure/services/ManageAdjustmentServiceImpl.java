@@ -100,6 +100,15 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
         return repositoryQuery.findAllById(ids).stream().map(ManageAdjustment::toAggregate).toList();
     }
 
+    @Override
+    public void deleteByIds(List<UUID> ids) {
+        try {
+            this.repositoryCommand.deleteAllById(ids);
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

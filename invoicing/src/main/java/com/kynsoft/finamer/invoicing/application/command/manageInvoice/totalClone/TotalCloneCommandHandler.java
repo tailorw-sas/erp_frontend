@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneCommand> {
@@ -32,8 +33,9 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IManageRoomCategoryService roomCategoryService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
+    private final IManageAdjustmentService adjustmentService;
 
-    public TotalCloneCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IParameterizationService parameterizationService, IManageInvoiceStatusService invoiceStatusService, IInvoiceCloseOperationService closeOperationService, ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+    public TotalCloneCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IParameterizationService parameterizationService, IManageInvoiceStatusService invoiceStatusService, IInvoiceCloseOperationService closeOperationService, ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService, IManageAdjustmentService adjustmentService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -49,6 +51,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.roomCategoryService = roomCategoryService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.adjustmentService = adjustmentService;
     }
 
 
@@ -196,7 +199,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
         ManageInvoiceDto created = this.invoiceService.create(clonedInvoice);
         command.setClonedInvoiceId(created.getInvoiceId());
-        command.setClonedInvoiceNo(created.getInvoiceNumber());
+        command.setClonedInvoiceNo(this.deleteHotelInfo(created.getInvoiceNumber()));
 
         this.setInvoiceToCloneAmounts(invoiceToClone, command.getEmployeeName());
 
@@ -248,6 +251,13 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
         for (ManageBookingDto bookingDto : invoiceDto.getBookings()){
             for (ManageRoomRateDto roomRateDto : bookingDto.getRoomRates()){
+                //obteniendo los ids de los adjustment en caso de que existan y eliminándolos
+                this.adjustmentService.deleteByIds(
+                        roomRateDto.getAdjustments() != null
+                                ? roomRateDto.getAdjustments().stream().map(ManageAdjustmentDto::getId).collect(Collectors.toList())
+                                : new LinkedList<>()
+                );
+
                 List<ManageAdjustmentDto> adjustmentDtoList = new LinkedList<>();
                 ManageAdjustmentDto adjustmentDto = new ManageAdjustmentDto(
                         UUID.randomUUID(),
@@ -267,5 +277,9 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             this.bookingService.calculateInvoiceAmount(bookingDto);
         }
         this.invoiceService.calculateInvoiceAmount(invoiceDto);
+    }
+
+    private String deleteHotelInfo(String input) {
+        return input.replaceAll("-(.*?)-", "-");
     }
 }
