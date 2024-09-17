@@ -24,4 +24,5 @@ public class UpdateManagePaymentTransactionTypeRequest {
     private Boolean antiToIncome;
     private Boolean incomeDefault;
     private Boolean paymentInvoice;
+    private Boolean debit;
 }

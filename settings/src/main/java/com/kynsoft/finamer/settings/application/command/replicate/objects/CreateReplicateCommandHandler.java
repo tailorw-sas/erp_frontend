@@ -307,7 +307,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 paymentTransactionTypeDto.getMinNumberOfCharacter(),
                                 paymentTransactionTypeDto.getDefaultRemark(),
                                 paymentTransactionTypeDto.getDefaults(),
-                                paymentTransactionTypeDto.getPaymentInvoice()
+                                paymentTransactionTypeDto.getPaymentInvoice(),
+                                paymentTransactionTypeDto.getDebit()
                         ));
                     }
                 }
