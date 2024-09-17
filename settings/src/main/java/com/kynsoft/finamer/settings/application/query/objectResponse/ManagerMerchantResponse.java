@@ -3,6 +3,7 @@ package com.kynsoft.finamer.settings.application.query.objectResponse;
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.infrastructure.identity.ManagerMerchantConfig;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,7 @@ public class ManagerMerchantResponse implements IResponse {
     private ManagerB2BPartnerResponse b2bPartner;
     private Boolean defaultm;
     private Status status;
+    private ManagerMerchantConfigResponse merchantConfig;
 
     public ManagerMerchantResponse(ManagerMerchantDto dto) {
         this.id = dto.getId();
@@ -30,6 +32,7 @@ public class ManagerMerchantResponse implements IResponse {
         this.b2bPartner = new ManagerB2BPartnerResponse(dto.getB2bPartner());
         this.defaultm = dto.getDefaultm();
         this.status = dto.getStatus();
+        this.merchantConfig = dto.getManagerMerchantConfig();
     }
 
 }
