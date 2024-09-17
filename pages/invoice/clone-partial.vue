@@ -814,6 +814,7 @@ async function createPartialClonation(item: { [key: string]: any }) {
             id: adjustment.id,
             amount: adjustment.amount,
             transaction: adjustment.transaction,
+            date:adjustment.date,
             employee: adjustment.employee
           }
         })
