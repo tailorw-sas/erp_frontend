@@ -360,6 +360,7 @@ const options = ref({
   actionsAsMenu: true,
   messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
 })
+// selectionMode: 'multiple',
 const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
@@ -1525,8 +1526,9 @@ async function closeDialogPrint() {
 }
 
 function handleAcctions(itemId: any) {
-  if (itemId) {
-    idPaymentSelectedForPrint.value = itemId
+  console.log('handleAcctions', itemId)
+  if (itemId.length > 0) {
+    idPaymentSelectedForPrint.value = itemId[0]
     const objPayment = listItems.value.find(item => item.id === itemId)
     if (objPayment && objPayment.id) {
       if (objPayment.hasDetailTypeDeposit) {
