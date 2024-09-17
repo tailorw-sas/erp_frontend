@@ -2139,7 +2139,7 @@ async function paymentPrint(event: any) {
     const url = window.URL.createObjectURL(new Blob([response]))
     const a = document.createElement('a')
     a.href = url
-    a.download = nameOfPdf // Nombre del archivo que se descargará
+    a.download = nameOfPdf
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(url)

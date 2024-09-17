@@ -45,6 +45,7 @@ const paymentBalance = ref(0)
 
 // PRINT
 const idPaymentSelectedForPrint = ref('')
+const paymentSelectedForPrintList = ref<any[]>([])
 const openPrint = ref(false)
 const loadingPrintDetail = ref(false)
 const loadingSaveAll = ref(false)
@@ -358,6 +359,7 @@ const options = ref({
   uriApi: 'payment',
   loading: false,
   actionsAsMenu: true,
+  selectionMode: 'multiple',
   messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
 })
 // selectionMode: 'multiple',
@@ -1272,6 +1274,7 @@ async function onExpandRowApplyPayment(event: any) {
 }
 
 function onRowContextMenu(event: any) {
+  console.log(event)
   idPaymentSelectedForPrint.value = event?.data?.id || ''
   if (event && event.data && (event.data.notApplied !== '' || event.data.notApplied !== null) && event.data.notApplied.replace(/,/g, '') > 0 && (event.data.paymentStatus && event.data.paymentStatus.code !== 'CAN')) {
     objItemSelectedForRightClickApplyPayment.value = event.data
@@ -1521,15 +1524,19 @@ async function openDialogPrint() {
 
 async function closeDialogPrint() {
   idPaymentSelectedForPrint.value = ''
+  paymentSelectedForPrintList.value = []
   itemPrint.value = JSON.parse(JSON.stringify(itemTempPrint.value))
   openPrint.value = false
 }
 
 function handleAcctions(itemId: any) {
   console.log('handleAcctions', itemId)
-  if (itemId.length > 0) {
+  if (itemId && itemId.length > 0) {
     idPaymentSelectedForPrint.value = itemId[0]
-    const objPayment = listItems.value.find(item => item.id === itemId)
+    paymentSelectedForPrintList.value = itemId
+
+    const objPayment = listItems.value.find(item => item.id === itemId[0])
+
     if (objPayment && objPayment.id) {
       if (objPayment.hasDetailTypeDeposit) {
         const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
@@ -1551,6 +1558,7 @@ function handleAcctions(itemId: any) {
   }
   else {
     idPaymentSelectedForPrint.value = ''
+    paymentSelectedForPrintList.value = []
   }
 }
 // -------------------------------------------------------------------------------------------------------
@@ -2211,6 +2219,7 @@ onMounted(async () => {
       </template>
       <template #default>
         <div class="p-fluid pt-3">
+          <pre>{{ paymentSelectedForPrintList }}</pre>
           <EditFormV2
             :key="formReload"
             class="mt-3"
@@ -2238,6 +2247,7 @@ onMounted(async () => {
                 Payment Support
               </label>
             </template>
+
             <template #field-allPaymentsSupport="{ item: data, onUpdate }">
               <Checkbox
                 id="allPaymentsSupport"
@@ -2271,6 +2281,7 @@ onMounted(async () => {
                 Invoice Related
               </label>
             </template>
+
             <template #field-invoiceRelatedWithSupport="{ item: data, onUpdate }">
               <Checkbox
                 id="invoiceRelatedWithSupport"

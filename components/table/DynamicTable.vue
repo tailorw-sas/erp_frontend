@@ -506,11 +506,11 @@ getOptionsList()
 
   <BlockUI :blocked="options?.loading || parentComponentLoading">
     <div class="card p-0">
+      <!-- v-model:contextMenuSelection="clickedItem" Esto estaba puesto para el conten menu del click derecho, se quito porque no hace falta y daba conflicto -->
       <DataTable
         v-model:filters="filters1"
         v-model:selection="clickedItem"
         v-model:expandedRows="expandedRows"
-        v-model:contextMenuSelection="clickedItem"
         context-menu
         :meta-key-selection="metaKey"
         :selection-mode="options?.selectionMode ?? 'single'"
