@@ -504,7 +504,7 @@ async function deleteItem(id: string) {
   }
 }
 
-async function getBookingClonationList(idItemCreated: any) {
+async function getBookingClonationList() {
   try {
     const Payload: any = ({
       filter: [{
@@ -542,6 +542,7 @@ async function getBookingClonationList(idItemCreated: any) {
         //  bookingId:'',
         //hotelAmount: 0,
         //  dueAmount:0,
+        bookingId:iterator.bookingId,
         agency: iterator?.invoice?.agency,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
@@ -552,11 +553,11 @@ async function getBookingClonationList(idItemCreated: any) {
     console.error(error)
   }
   finally {
-    // Options.value.loading = false
+     Options.value.loading = false
   }
 }
 
-async function getRoomRateClonationList(idItemCreated: any) {
+async function getRoomRateClonationList() {
   try {
     const Payload = {
       filter: [
@@ -624,6 +625,7 @@ async function getRoomRateClonationList(idItemCreated: any) {
       idItemToLoadFirstTime.value = roomRateList.value[0].id
     }
   }
+
   catch (error) {
     console.error(error)
   }
@@ -633,16 +635,15 @@ async function getRoomRateClonationList(idItemCreated: any) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true;
   let successOperation = true;
-  let itemDetails: any = ''; // Inicializar itemDetails como un objeto vacío en lugar de null
-
+ 
   try {
     const response: any = await createClonation(item);
     console.log('response clonado total', response)
     if (response && response.clonedInvoice) {
 
       idItemCreated.value = response.clonedInvoice;
-      itemDetails = await getItem(response.clonedInvoice);
-      console.log(itemDetails, 'a ver que hay aqui')
+     
+     
       const invoiceNo = response.clonedInvoiceNo;
       toast.add({
         severity: 'info',
@@ -663,16 +664,24 @@ async function saveItem(item: { [key: string]: any }) {
   } finally {
     loadingSaveAll.value = false;
     if (successOperation) {
-      if (itemDetails && itemDetails.clonedInvoice) {
-        await getBookingClonationList(idItemCreated.value);
-        await getRoomRateClonationList(idItemCreated.value);
-        await getItem(itemDetails.clonedInvoice);
+      console.log('entra aqui')
+    // if(itemDetails && itemDetails.clonedInvoice) {
+        await getBookingClonationList();
+        console.log('entra aqui')
+        console.log(getBookingClonationList(),'listado del booking clonado')
+        await getRoomRateClonationList();
+        console.log(getRoomRateClonationList(),'listado del roomrate clonado')
+  
+      
+        await getItem(idItemCreated.value);
+        calcInvoiceAmount()
+        console.log(getItem(idItemCreated.value),'listado del get desp de clonar')
 
-      }
+     // }
 
     }
     await new Promise(resolve => setTimeout(resolve, 5000));
-    navigateTo('/invoice');
+   navigateTo('/invoice');
   }
 
 
@@ -1067,7 +1076,7 @@ async function getItem(id: any) {
         // const invoiceNumber = `${response?.clonedInvoiceNo?.split('-')[0]}-${response?.clonedInvoiceNo?.split('-')[2]}`
 
         item.value.invoiceNumber = response.invoiceNumber
-        console.log('aqui se muestra el invoiceNumber', item.value.invoiceNo)
+        console.log('aqui se muestra el invoiceNumber', item.value.invoiceNumber)
 
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
@@ -1079,7 +1088,7 @@ async function getItem(id: any) {
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
         //  item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
 
-        await getInvoiceAgency(response.agency?.id)
+      //  await getInvoiceAgency(response.agency?.id)
 
       }
 
