@@ -205,32 +205,29 @@ function clearForm() {
 
 async function handleMerchantRedirect(item: any) {
   const data = {
+    merchantId: item.merchant.id,
     orderNumber: `${item.id}`,
     amount: `${item.amount}00`,
-    approvedUrl: `vcc-management/transaction-result?status=success`,
-    declinedUrl: `vcc-management/transaction-result?status=declined`,
-    cancelUrl: `vcc-management/transaction-result?status=cancelled`,
-    merchantId: '39038540035',
-    merchantName: item.merchant.name ?? '',
-    merchantType: 'ECommerce',
-    currencyCode: '$',
-    itbis: '000'
+    transactionId: `${item.id}`
   }
-  const response = await fetch('/api/redirect-to-merchant', {
+  const response: any = await fetch('/api/redirect-to-merchant', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   })
+  console.log(response)
+  if (response.status === 200) {
+    const jsonResponse = await response.json()
+    const htmlBody = jsonResponse.body
 
-  if (response.ok) {
     const newTab = window.open('', '_blank')
-    newTab?.document.write(await response.text())
+    newTab?.document.write(await htmlBody)
     newTab?.document.close()
   }
   else {
-    console.error('Error al redirigir al merchant')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Error on merchant redirect', life: 10000 })
   }
 }
 
