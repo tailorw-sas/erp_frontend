@@ -55,6 +55,19 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
   {
+    field: 'merchantNumber',
+    header: 'Merchant Number',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The name field is required').regex(/^\d+$/, 'Only numeric characters allowed')
+  },
+  {
+    field: 'merchantTerminal',
+    header: 'Merchant Terminal',
+    dataType: 'text',
+    class: 'field col-12',
+  },
+  {
     field: 'url',
     header: 'Url',
     dataType: 'text',
@@ -113,6 +126,8 @@ const fields: Array<FieldDefinitionType> = [
 
 const item = ref<GenericObject>({
   manageMerchant: null,
+  merchantNumber: '',
+  merchantTerminal: '',
   url: '',
   altUrl: '',
   successUrl: '',
@@ -126,6 +141,8 @@ const item = ref<GenericObject>({
 
 const itemTemp = ref<GenericObject>({
   manageMerchant: null,
+  merchantNumber: '',
+  merchantTerminal: '',
   url: '',
   altUrl: '',
   successUrl: '',
@@ -325,6 +342,8 @@ async function getItemById(id: string) {
         item.value.merchantType = response.merchantType
         item.value.method = MethodEnumList.value.find((i: any) => i.id === response.method)
         item.value.institutionCode = response.institutionCode
+        item.value.merchantNumber = response.merchantNumber ?? ''
+        item.value.merchantTerminal = response.merchantTerminal ?? ''
         const objMerchant = {
           id: response.manageMerchant.id,
           name: `${response.manageMerchant.code} ${response.manageMerchant.description ? `- ${response.manageMerchant.description}` : ''}`,
