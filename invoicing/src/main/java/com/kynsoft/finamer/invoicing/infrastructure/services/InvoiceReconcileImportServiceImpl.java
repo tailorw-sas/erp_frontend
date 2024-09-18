@@ -68,7 +68,13 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
                         .importProcessId(request.getImportProcessId()).build()
         );
         List<File> attachmentList =this.loadImportedAttachment(request.getImportProcessId());
-        boolean isAllAttachmentValid=attachmentList.stream().allMatch(attachment->this.isAttachmentValid(attachment,request.getImportProcessId()));
+        boolean isAllAttachmentValid =true;
+        for (File file : attachmentList) {
+           if(!this.isAttachmentValid(file,request.getImportProcessId()))
+           {
+               isAllAttachmentValid=false;
+           }
+        }
         if (isAllAttachmentValid){
             attachmentList.forEach(attachment->createInvoiceAttachment(attachment,request));
         }
@@ -94,11 +100,11 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
     private boolean isAttachmentValid(File file, String importProcessId) {
         try {
              if(!invoiceService.existManageInvoiceByInvoiceId(Long.parseLong(getInvoiceIdFromFileName(file)))){
-                 this.processError("The invoice with id "+ getInvoiceIdFromFileName(file) + " doesn't exist" , importProcessId);
+                 this.processError("The invoice with id "+ getInvoiceIdFromFileName(file) + " doesn't exist" , importProcessId,file.getName());
                  return false;
              }
         } catch (Exception e) {
-            this.processError("File name is not valid " + getInvoiceIdFromFileName(file), importProcessId);
+            this.processError("File name is not valid " + getInvoiceIdFromFileName(file), importProcessId,file.getName());
             return false;
         }
         return true;
@@ -122,15 +128,15 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
             applicationEventPublisher.publishEvent(createAttachmentEvent);
         } catch (Exception e) {
             e.printStackTrace();
-            processError("Can't create attachment for "+attachment.getName(), request.getImportProcessId());
+            processError("Can't create attachment for "+attachment.getName(), request.getImportProcessId(),attachment.getName());
         }
 
 
     }
 
-    private void processError(String message, String importProcessId) {
+    private void processError(String message, String importProcessId,String filename) {
         log.error(message);
-        InvoiceReconcileImportError error = new InvoiceReconcileImportError(null, importProcessId, message);
+        InvoiceReconcileImportError error = new InvoiceReconcileImportError(null, importProcessId, message,filename);
         CreateImportErrorEvent createImportErrorEvent = new CreateImportErrorEvent(this, error);
         applicationEventPublisher.publishEvent(createImportErrorEvent);
     }

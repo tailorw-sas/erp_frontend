@@ -36,12 +36,15 @@ public class PaymentReportQueryHandler implements IQueryHandler<PaymentReportQue
         List<EPaymentReportType> invoiceReportTypes = getPaymentTypeFromRequest(paymentReportRequest);
         Map<EPaymentReportType,IPaymentReport> services = getServiceByPaymentType(invoiceReportTypes);
         try {
-            ByteArrayOutputStream reportContent = getReportContent(services, Arrays.asList(paymentReportRequest.getPaymentId()));
-            return ReportUtil.createPaymentReportResponse(reportContent.toByteArray(),paymentReportRequest.getPaymentId().length>0?
-                    "invoicing-report.pdf":paymentReportRequest.getPaymentId()[0]+".pdf");
+            Optional<ByteArrayOutputStream> reportContent = getReportContent(services, Arrays.asList(paymentReportRequest.getPaymentId()));
+            if (reportContent.isPresent()) {
+                return ReportUtil.createPaymentReportResponse(reportContent.get().toByteArray(), paymentReportRequest.getPaymentId().length > 0 ?
+                        "invoicing-report.pdf" : paymentReportRequest.getPaymentId()[0] + ".pdf");
+            }
         } catch (DocumentException | IOException e) {
             throw new RuntimeException(e);
         }
+        return null;
     }
 
     private List<EPaymentReportType> getPaymentTypeFromRequest(PaymentReportRequest paymentReportRequest){
@@ -57,7 +60,7 @@ public class PaymentReportQueryHandler implements IQueryHandler<PaymentReportQue
         return services;
     }
 
-    private ByteArrayOutputStream getReportContent(Map<EPaymentReportType,IPaymentReport> reportService, List<String> paymentIds) throws DocumentException, IOException {
+    private Optional<ByteArrayOutputStream> getReportContent(Map<EPaymentReportType,IPaymentReport> reportService, List<String> paymentIds) throws DocumentException, IOException {
         Map<EPaymentReportType, Optional<byte[]>> reportContent = new HashMap<>();
         List<byte[]> result= new ArrayList<>();
         for (String paymentId : paymentIds) {
@@ -70,18 +73,22 @@ public class PaymentReportQueryHandler implements IQueryHandler<PaymentReportQue
                     .map(content->new ByteArrayInputStream(content.get()))
                     .map(InputStream.class::cast)
                     .toList();
-            result.add(PDFUtils.mergePDFtoByte(finalContent));
+            if (!finalContent.isEmpty()) {
+                result.add(PDFUtils.mergePDFtoByte(finalContent));
+            }
         }
-        return PDFUtils.mergePDF(result.stream().map(ByteArrayInputStream::new).map(InputStream.class::cast).toList());
+        if (!result.isEmpty())
+            return Optional.of(PDFUtils.mergePDF(result.stream().map(ByteArrayInputStream::new).map(InputStream.class::cast).toList()));
+        return Optional.empty();
     }
 
 
     private List<Optional<byte[]>> getOrderReportContent(Map<EPaymentReportType,Optional<byte[]>> content){
         List<Optional<byte[]>> orderedContent = new LinkedList<>();
         orderedContent.add(content.getOrDefault(EPaymentReportType.PAYMENT_DETAILS,Optional.empty()));
+        orderedContent.add(content.getOrDefault(EPaymentReportType.INVOICE_RELATED,Optional.empty()));
         orderedContent.add(content.getOrDefault(EPaymentReportType.PAYMENT_SUPPORT,Optional.empty()));
         orderedContent.add(content.getOrDefault(EPaymentReportType.ALL_SUPPORT,Optional.empty()));
-        orderedContent.add(content.getOrDefault(EPaymentReportType.INVOICE_RELATED,Optional.empty()));
         orderedContent.add(content.getOrDefault(EPaymentReportType.INVOICE_RELATED_SUPPORT,Optional.empty()));
         return orderedContent;
     }
