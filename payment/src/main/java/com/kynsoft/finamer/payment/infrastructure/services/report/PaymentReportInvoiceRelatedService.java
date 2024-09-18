@@ -45,12 +45,11 @@ public class PaymentReportInvoiceRelatedService implements IPaymentReport {
             });
             if (!contentToMerge.isEmpty()) {
                 return Optional.of(PDFUtils.mergePDFtoByte(contentToMerge));
-            } else {
-                return Optional.of(ReportUtil.defaultPdfContent());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return Optional.empty();
 
     }
 

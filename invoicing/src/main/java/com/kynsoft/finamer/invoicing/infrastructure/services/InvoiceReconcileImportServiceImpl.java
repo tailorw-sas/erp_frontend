@@ -7,6 +7,8 @@ import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processs
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.InvoiceReconcileImportErrorRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileImportProcessStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.event.createAttachment.CreateAttachmentEvent;
 import com.kynsoft.finamer.invoicing.domain.event.importError.CreateImportErrorEvent;
@@ -98,16 +100,33 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
                 .toList();
     }
     private boolean isAttachmentValid(File file, String importProcessId) {
+        String invoiceId = getInvoiceIdFromFileName(file);
+
         try {
-             if(!invoiceService.existManageInvoiceByInvoiceId(Long.parseLong(getInvoiceIdFromFileName(file)))){
-                 this.processError("The invoice with id "+ getInvoiceIdFromFileName(file) + " doesn't exist" , importProcessId,file.getName());
-                 return false;
-             }
+            if (!isInvoiceExist(invoiceId)) {
+                processError("The invoice with id " + invoiceId + " doesn't exist", importProcessId, file.getName());
+                return false;
+            }
+
+            if (!isInvoiceReconciled(invoiceId)) {
+                processError("The invoice with id " + invoiceId + " is not PROCESSED status", importProcessId, file.getName());
+                return false;
+            }
         } catch (Exception e) {
-            this.processError("File name is not valid " + getInvoiceIdFromFileName(file), importProcessId,file.getName());
+            processError("File name is not valid: " + invoiceId, importProcessId, file.getName());
             return false;
         }
+
         return true;
+    }
+
+    private boolean isInvoiceExist(String invoiceId) {
+        return invoiceService.existManageInvoiceByInvoiceId(Long.parseLong(invoiceId));
+    }
+
+    private boolean isInvoiceReconciled(String invoiceId) {
+        ManageInvoiceDto invoiceDto = invoiceService.findByInvoiceId(Long.parseLong(invoiceId));
+        return EInvoiceStatus.PROCECSED.name().equals(invoiceDto.getManageInvoiceStatus().getName().toUpperCase());
     }
 
     private String getInvoiceIdFromFileName(File file) {
