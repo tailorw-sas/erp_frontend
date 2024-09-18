@@ -2106,7 +2106,7 @@ async function paymentPrint(event: any) {
       paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED']
     }
     if (event && event.invoiceRelatedWithSupport) {
-      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED_WITH_SUPPORT']
+      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED_SUPPORT']
     }
 
     nameOfPdf = `payment-${item.value?.paymentId}-${dayjs().format('YYYY-MM-DD')}.pdf`
@@ -2644,6 +2644,7 @@ onMounted(async () => {
         </template>
       </EditFormV2>
     </div>
+    <!-- <pre>{{ item }}</pre> -->
     <DynamicTable
       :data="paymentDetailsList"
       :columns="columns"
@@ -2683,7 +2684,7 @@ onMounted(async () => {
         </Button>
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DEPOSIT-TRANSFER']">
-        <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
+        <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === '' || item.paymentBalance <= 0" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SPLIT-ANTI']">
         <Button v-tooltip.top="'Split ANTI'" class="w-3rem ml-1" :disabled="!enableSplitAction" @click="openDialogPaymentDetailsByAction(idItemDetail, 'split-deposit')">
@@ -2699,7 +2700,8 @@ onMounted(async () => {
         </Button>
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:PRINT-DETAIL']">
-        <Button v-tooltip.top="'Print'" class="w-3rem ml-1" :disabled="!paymentDetailsList || paymentDetailsList.length === 0" icon="pi pi-print" @click="openPrint = true" />
+        <Button v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" @click="openPrint = true" />
+        <!-- :disabled="!paymentDetailsList || paymentDetailsList.length === 0" -->
       </IfCan>
       <!-- <Button v-tooltip.top="'Payment to Print'" class="w-3rem ml-1" disabled icon="pi pi-print" @click="openPrint = true" /> -->
       <IfCan :perms="['PAYMENT-MANAGEMENT:ATTACHMENT']">
