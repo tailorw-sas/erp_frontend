@@ -1,14 +1,13 @@
 package com.kynsoft.finamer.payment.infrastructure.services.report;
 
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
-import com.kynsoft.finamer.payment.application.query.report.PaymentReportResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentContentProvider;
-import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentReportType;
 import com.kynsoft.finamer.payment.domain.services.IPaymentReport;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.ReportContentProviderFactory;
+import com.kynsoft.finamer.payment.infrastructure.services.report.util.ReportUtil;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -36,36 +35,24 @@ public class PaymentReportPaymentSupportService implements IPaymentReport {
     }
 
     @Override
-    public PaymentReportResponse generateReport(EPaymentReportType reportType, UUID paymentId) {
+    public Optional<byte[]> generateReport(UUID paymentId) {
         try {
             PaymentDto paymentDto = paymentService.findById(paymentId);
-            Optional<byte[]> paymentDetails = this.getPaymentDetailsReportContent(paymentDto.getId().toString());
             Optional<byte[]> paymentAllSupport = this.getPaymentSupportContent(paymentDto.getId().toString());
             List<InputStream> contentToMerge = new LinkedList<>();
-            paymentDetails.ifPresent(content -> {
-                contentToMerge.add(new ByteArrayInputStream(content));
-            });
             paymentAllSupport.ifPresent(content -> {
                 contentToMerge.add(new ByteArrayInputStream(content));
             });
             if (!contentToMerge.isEmpty()) {
-                ByteArrayOutputStream result = PDFUtils.mergePDF(contentToMerge);
-                return createPaymentReportResponse(result.toByteArray(), paymentId + ".pdf");
+                return Optional.of(PDFUtils.mergePDFtoByte(contentToMerge));
             } else {
-                return createPaymentReportResponse(null, paymentId + ".pdf");
+                return Optional.of(ReportUtil.defaultPdfContent());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Optional<byte[]> getPaymentDetailsReportContent(String paymentId) {
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("paymentId", paymentId);
-        AbstractReportContentProvider contentProvider = reportContentProviderFactory
-                .getReportContentProvider(EPaymentContentProvider.PAYMENT_DETAILS_REPORT_CONTENT);
-        return contentProvider.getContent(parameters);
-    }
 
     private Optional<byte[]> getPaymentSupportContent(String paymentId) {
         Map<String, Object> parameters = new HashMap<>();

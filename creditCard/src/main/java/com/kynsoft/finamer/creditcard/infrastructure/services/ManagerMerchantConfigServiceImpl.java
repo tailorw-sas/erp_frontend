@@ -65,6 +65,14 @@ public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigSe
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_CONFIG_NOT_FOUND, new ErrorField("id", "Manager Merchant Currency not found.")));
     }
+    @Override
+    public ManagerMerchantConfigDto findByMerchantID(UUID id) {
+        Optional<ManagerMerchantConfig> userSystem = this.repositoryQuery.findByManageMerchant_Id(id);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_MERCHANT_CONFIG_NOT_FOUND, new ErrorField("id", "Manager Merchant Currency not found.")));
+    }
 
     @Override
     public ManagerMerchantConfigResponseDto findByIdWithDate(UUID id) {

@@ -68,7 +68,8 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
                 command.getMailingAddress(),
                 command.getZipCode(),
                 command.getCity(),
-                command.getCreditDay()
+                command.getCreditDay(),
+                command.getAutoReconcile()
         ));
     }
 }

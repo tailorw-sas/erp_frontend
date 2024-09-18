@@ -40,4 +40,5 @@ public class UpdateManageAgencyKafka implements Serializable {
     private String zipCode;
     private String city;
     private Integer creditDay;
+    private Boolean autoReconcile;
 }
