@@ -667,22 +667,20 @@ async function saveItem(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
     if (successOperation) {
-      console.log('entra aqui')
       // if(itemDetails && itemDetails.clonedInvoice) {
       await getBookingClonationList()
-      console.log('entra aqui')
-      console.log(getBookingClonationList(), 'listado del booking clonado')
+      // console.log(getBookingClonationList(), 'listado del booking clonado')
       await getRoomRateClonationList()
-      console.log(getRoomRateClonationList(), 'listado del roomrate clonado')
+      // console.log(getRoomRateClonationList(), 'listado del roomrate clonado')
 
       await getItem(idItemCreated.value)
       calcInvoiceAmount()
-      console.log(getItem(idItemCreated.value), 'listado del get desp de clonar')
+      // console.log(getItem(idItemCreated.value), 'listado del get desp de clonar')
 
       // }
     }
     await new Promise(resolve => setTimeout(resolve, 5000))
-    navigateTo('/invoice')
+    // navigateTo('/invoice')
   }
 }
 
@@ -1151,7 +1149,6 @@ async function getBookingList(clearFilter: boolean = false) {
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
     }
-    console.log(bookingList.value, 'lista de bookings')
     return bookingList.value
   }
 
@@ -1161,12 +1158,9 @@ async function getBookingList(clearFilter: boolean = false) {
   }
 }
 async function findBookingByInvoiceId() {
-  console.log('ID desde find booking:', globalSelectedInvoicing)
   try {
     // Obtener el listado completo de bookings
     const bookings = await getBookingList()
-    console.log(bookings, 'que lista aqui')
-
     return bookings // Retornar solo los bookings asociados
   }
   catch (error) {

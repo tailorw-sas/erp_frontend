@@ -1004,8 +1004,9 @@ async function getBookingList(clearFilter: boolean = false) {
     totalInvoiceAmount.value = 0
     totalHotelAmount.value = 0
     totalOriginalAmount.value = 0
-
+    
     for (const iterator of dataList) {
+      console.log('Si entro a este total', iterator);
       ListItems.value = [...ListItems.value, {
         ...iterator,
         roomType: { ...iterator?.roomType, name: iterator?.roomType?.code ? `${iterator?.roomType?.code || ""}-${iterator?.roomType?.name || ""}` : "" },
@@ -1018,6 +1019,8 @@ async function getBookingList(clearFilter: boolean = false) {
         originalAmount: iterator?.invoiceAmount
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
+        console.log('Si entro a este total', iterator.invoiceAmount);
+        
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
       }
 
@@ -1382,17 +1385,28 @@ watch(() => props.invoiceAgency?.bookingCouponFormat, () => {
 })
 
 watch(() => props.listItems, () => {
-  if (props.isCreationDialog) {
-    totalHotelAmount.value = 0
-    totalInvoiceAmount.value = 0
-    totalOriginalAmount.value = 0
-    props?.listItems?.forEach((listItem: any) => {
-      totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
-      totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
-      totalOriginalAmount.value += listItem?.originalAmount ? Number(listItem?.originalAmount) : 0
-    })
-  }
+  totalHotelAmount.value = 0
+  totalInvoiceAmount.value = 0
+  totalOriginalAmount.value = 0
+  props?.listItems?.forEach((listItem: any) => {
+    totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
+    totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
+    totalOriginalAmount.value += listItem?.originalAmount ? Number(listItem?.originalAmount) : 0
+  })
 }, { deep: true })
+
+// watch(() => props.listItems, () => {
+//   if (props.isCreationDialog) {
+//     totalHotelAmount.value = 0
+//     totalInvoiceAmount.value = 0
+//     totalOriginalAmount.value = 0
+//     props?.listItems?.forEach((listItem: any) => {
+//       totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
+//       totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
+//       totalOriginalAmount.value += listItem?.originalAmount ? Number(listItem?.originalAmount) : 0
+//     })
+//   }
+// }, { deep: true })
 
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
@@ -1533,11 +1547,20 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns" :options="Options"
-      :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-sort-field="OnSortField" @on-row-right-click="onRowRightClick"
-      @on-table-cell-edit-complete="onCellEditComplete" @on-row-double-click="($event) => {
+    <DynamicTable 
+      :data="isCreationDialog ? listItems as any : ListItems" 
+      :columns="finalColumns" 
+      :options="Options"
+      :pagination="Pagination" 
+      @on-confirm-create="ClearForm" 
+      @open-edit-dialog="OpenEditDialog($event)"
+      @on-change-pagination="PayloadOnChangePage = $event" 
+      @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems" 
+      @on-sort-field="OnSortField" 
+      @on-row-right-click="onRowRightClick"
+      @on-table-cell-edit-complete="onCellEditComplete" 
+      @on-row-double-click="($event) => {
 
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
         if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
