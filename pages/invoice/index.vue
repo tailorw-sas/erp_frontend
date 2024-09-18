@@ -288,6 +288,71 @@ const exportPdfDialogOpen = ref(false)
 const exportAttachmentsDialogOpen = ref(false)
 const exportBlob = ref<any>(null)
 
+// PRINT
+const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
+const loadingSavePrint = ref(false)
+const openDialogPrint = ref(false)
+const groupByClient = ref(false)
+const invoiceSupport = ref(false)
+const invoiceAndBookings = ref(true)
+const invoiceIdsListToPrint = ref<string[]>([])
+
+function savePrint() {
+  loadingSavePrint.value = true
+  setTimeout(() => {
+    loadingSavePrint.value = false
+  }, 3000)
+}
+
+
+async function invoicePrint() {
+  try {
+    loadingSavePrint.value = true
+    let nameOfPdf = ''
+    const arrayInvoiceType: string[] = []
+    if (invoiceSupport.value) { arrayInvoiceType.push('INVOICE_SUPPORT') }
+    if (invoiceAndBookings.value) { arrayInvoiceType.push('INVOICE_AND_BOOKING') }
+
+    const payloadTemp = {
+      invoiceId: [...invoiceIdsListToPrint.value],
+      invoiceType: arrayInvoiceType
+    }
+    // En caso de que solo este marcado el paymentAndDetails
+
+    nameOfPdf = invoiceSupport.value ? `invoice-support-${dayjs().format('YYYY-MM-DD')}.pdf` : `invoice-and-bookings-${dayjs().format('YYYY-MM-DD')}.pdf`
+
+    const response: any = await GenericService.create('invoicing', 'manage-invoice/report', payloadTemp)
+
+    const url = window.URL.createObjectURL(new Blob([response]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = nameOfPdf // Nombre del archivo que se descargará
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    loadingSavePrint.value = false
+  }
+  catch (error) {
+    loadingSavePrint.value = false
+  }
+  finally {
+    loadingSavePrint.value = false
+    openDialogPrint.value = false
+  }
+
+  // generateStyledPDF()
+}
+
+function closeModalPrint() {
+  openDialogPrint.value = false
+}
+
+function openDialogToPrint() {
+  openDialogPrint.value = true
+}
+
+
 ////
 
 async function TypeInvoicetoSend() {
@@ -547,6 +612,20 @@ const options = ref({
   actionsAsMenu: false,
   showEdit: false,
   showAcctions: false,
+  messageToDelete: 'Do you want to save the change?',
+  showTitleBar: false
+})
+const optionsToPrint = ref({
+  tableName: 'Invoice',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  showEdit: false,
+  showAcctions: false,
+  selectionMode: 'multiple' as 'multiple' | 'single',
   messageToDelete: 'Do you want to save the change?',
   showTitleBar: false
 })
@@ -1482,7 +1561,7 @@ const legend = ref(
         /> -->
         <!-- <Button class="ml-2" icon="pi pi-file-plus" label="Process" /> -->
         <!--  <Button class="ml-2" icon="pi pi-cog" label="Adjustment" disabled /> -->
-        <Button class="ml-2" icon="pi pi-print" label="Print" :disabled="listItems.length === 0" @click="exportToPdf" />
+        <Button class="ml-2" icon="pi pi-print" label="Print" :disabled="listItems.length === 0" @click="openDialogToPrint" />
         <Button class="ml-2" icon="pi pi-download" label="Export" :disabled="listItems.length === 0"
           @click="() => exportList()" />
         <!-- <Button class="ml-2" icon="pi pi-times" label="Exit" @click="() => { navigateTo('/') }" /> -->
@@ -1918,6 +1997,110 @@ const legend = ref(
       :invoice="attachmentInvoice"
     />
   </div>
+
+  <Dialog
+      v-model:visible="openDialogPrint"
+      modal
+      class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border"
+      :style="{ width: '60%' }"
+      :pt="{
+        root: {
+          class: 'custom-dialog-history',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+        // mask: {
+        //   style: 'backdrop-filter: blur(5px)',
+        // },
+      }"
+      @hide="closeModalPrint()"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Invoice to Print
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-3">
+          <DynamicTable
+            class="card p-0"
+            :data="listItems"
+            :columns="columns"
+            :options="optionsToPrint"
+            :pagination="pagination"
+            @on-change-pagination="payloadOnChangePage = $event"
+            @update:clicked-item="invoiceIdsListToPrint = $event"
+            >
+            <!-- @update:clicked-item="invoiceSelectedListForApplyPayment = $event" -->
+            <template #column-status="{ data: item }">
+              <Badge
+                :value="getStatusName(item?.status)"
+                :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+              />
+            </template>
+          </DynamicTable>
+        </div>
+        <div class="flex justify-content-between">
+          <div class="flex align-items-center">
+            <div>
+              <Checkbox
+                id="invoiceAndBookings"
+                v-model="invoiceAndBookings"
+                :binary="true"
+                disabled
+                @update:model-value="($event) => {
+                  // changeValueByCheckApplyPaymentBalance($event);
+                }"
+              />
+              <label for="checkApplyPayment" class="ml-2 font-bold">
+                Invoice And Bookings
+              </label>
+            </div>
+            <div class="mx-4">
+              <Checkbox
+                id="invoiceSupport"
+                v-model="invoiceSupport"
+                :binary="true"
+                @update:model-value="($event) => {
+                  // changeValueByCheckApplyPaymentBalance($event);
+                }"
+              />
+              <label for="checkApplyPayment" class="ml-2 font-bold">
+                Invoice Support
+              </label>
+            </div>
+            <div>
+              <Checkbox
+                id="groupByClient"
+                v-model="groupByClient"
+                :binary="true"
+                @update:model-value="($event) => {
+                  // changeValueByCheckApplyPaymentBalance($event);
+                }"
+              />
+              <label for="checkApplyPayment" class="ml-2 font-bold">
+                Group By Client
+              </label>
+            </div>
+          </div>
+          <div>
+            <Button
+              v-tooltip.top="'Apply Payment'"
+              class="w-3rem mx-1"
+              icon="pi pi-check"
+              :disabled="false"
+              :loading="loadingSavePrint"
+              @click="invoicePrint()"
+            />
+            <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalPrint()" />
+          </div>
+        </div>
+      </template>
+    </Dialog>
 </template>
 
 
