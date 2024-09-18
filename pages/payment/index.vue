@@ -1443,62 +1443,41 @@ function havePermissionMenu() {
     }
   }
 }
-
+// paymentSelectedForPrintList
 async function paymentPrint(event: any) {
   try {
     loadingPrintDetail.value = true
     let nameOfPdf = ''
-    const payloadTemp = {
-      paymentId: idPaymentSelectedForPrint.value ? idPaymentSelectedForPrint.value.toString() : '',
-      paymentType: '',
+    let paymentTypeArray: string[] = []
+    const payloadTemp: { paymentId: string[], paymentType: string[] } = {
+      paymentId: paymentSelectedForPrintList.value,
+      paymentType: [],
     }
     // En caso de que solo este marcado el paymentAndDetails
-    if (
-      event && event.paymentAndDetails
-      && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
-    ) {
-      payloadTemp.paymentType = 'PAYMENT_DETAILS'
-      nameOfPdf = `payment-details-${dayjs().format('YYYY-MM-DD')}.pdf`
+    if (event && event.paymentAndDetails) {
+      paymentTypeArray = [...paymentTypeArray, 'PAYMENT_DETAILS']
+    }
+    if (event && event.paymentSupport) {
+      paymentTypeArray = [...paymentTypeArray, 'PAYMENT_SUPPORT']
+    }
+    if (event && event.allPaymentsSupport) {
+      paymentTypeArray = [...paymentTypeArray, 'ALL_SUPPORT']
+    }
+    if (event && event.invoiceRelated) {
+      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED']
+    }
+    if (event && event.invoiceRelatedWithSupport) {
+      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED_WITH_SUPPORT']
     }
 
-    if (
-      event && event.paymentAndDetails && event.paymentSupport === true
-      && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.allPaymentsSupport === false)
-    ) {
-      payloadTemp.paymentType = 'PAYMENT_SUPPORT'
-      nameOfPdf = `payment-support-${dayjs().format('YYYY-MM-DD')}.pdf`
-    }
-
-    if (
-      event && event.paymentAndDetails && event.allPaymentsSupport === true
-      && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
-    ) {
-      payloadTemp.paymentType = 'ALL_SUPPORT'
-      nameOfPdf = `payment-all-support-${dayjs().format('YYYY-MM-DD')}.pdf`
-    }
-
-    if (
-      event && event.paymentAndDetails && event.invoiceRelated === true
-      && (event.allPaymentsSupport === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
-    ) {
-      payloadTemp.paymentType = 'INVOICE_RELATED'
-      nameOfPdf = `payment-invoice-related-${dayjs().format('YYYY-MM-DD')}.pdf`
-    }
-
-    if (
-      event && event.paymentAndDetails && event.invoiceRelatedWithSupport === true
-      && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.paymentSupport === false)
-    ) {
-      payloadTemp.paymentType = 'INVOICE_RELATED_SUPPORT'
-      nameOfPdf = `payment-invoice-related-support-${dayjs().format('YYYY-MM-DD')}.pdf`
-    }
-
+    nameOfPdf = `payment-list-${dayjs().format('YYYY-MM-DD')}.pdf`
+    payloadTemp.paymentType = paymentTypeArray
     const response: any = await GenericService.create(confApiPaymentDetailPrint.moduleApi, confApiPaymentDetailPrint.uriApi, payloadTemp)
 
     const url = window.URL.createObjectURL(new Blob([response]))
     const a = document.createElement('a')
     a.href = url
-    a.download = nameOfPdf // Nombre del archivo que se descargará
+    a.download = nameOfPdf
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(url)
@@ -1513,8 +1492,6 @@ async function paymentPrint(event: any) {
     loadingPrintDetail.value = false
     openPrint.value = false
   }
-
-  // generateStyledPDF()
 }
 
 async function openDialogPrint() {
@@ -1534,27 +1511,22 @@ function handleAcctions(itemId: any) {
   if (itemId && itemId.length > 0) {
     idPaymentSelectedForPrint.value = itemId[0]
     paymentSelectedForPrintList.value = itemId
-
-    if (paymentSelectedForPrintList.value && paymentSelectedForPrintList.value.length > 0) {
-      const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
-      if (itemMenuObj) {
-        itemMenuObj.btnDisabled = false
-        itemMenuObj.btnOnClick = () => {
-          openDialogPrint()
-        }
-      }
-    }
-    else {
-      const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
-      if (itemMenuObj) {
-        itemMenuObj.btnDisabled = true
-        itemMenuObj.btnOnClick = () => {}
+    const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
+    if (itemMenuObj) {
+      itemMenuObj.btnDisabled = false
+      itemMenuObj.btnOnClick = () => {
+        openDialogPrint()
       }
     }
   }
   else {
     idPaymentSelectedForPrint.value = ''
     paymentSelectedForPrintList.value = []
+    const itemMenuObj = itemMenuList.value.find(item => item.id === 'print')
+    if (itemMenuObj) {
+      itemMenuObj.btnDisabled = true
+      itemMenuObj.btnOnClick = () => {}
+    }
   }
 }
 // -------------------------------------------------------------------------------------------------------
@@ -2221,7 +2193,6 @@ onMounted(async () => {
       </template>
       <template #default>
         <div class="p-fluid pt-3">
-          <pre>{{ paymentSelectedForPrintList }}</pre>
           <EditFormV2
             :key="formReload"
             class="mt-3"

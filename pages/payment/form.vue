@@ -2132,8 +2132,6 @@ async function paymentPrint(event: any) {
     loadingPrintDetail.value = false
     openPrint.value = false
   }
-
-  // generateStyledPDF()
 }
 
 async function closeDialogPrint() {
