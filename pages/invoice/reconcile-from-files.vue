@@ -85,7 +85,7 @@ const columns: IColumn[] = [
   // { field: 'generationDate', header: 'Generation Date', type: 'date' },
   // { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
   // { field: 'size', header: 'Att Size', type: 'text' },
-  { field: 'fieldName', header: 'File Name', type: 'text' },
+  { field: 'filename', header: 'File Name', type: 'text' },
   { field: 'message', header: 'Import Status', type: 'slot-text', frozen: true, showFilter: false },
 
   // { field: 'status', header: 'Status', type: 'bool', },
