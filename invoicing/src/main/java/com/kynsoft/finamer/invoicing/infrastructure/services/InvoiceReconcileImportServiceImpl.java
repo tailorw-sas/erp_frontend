@@ -68,7 +68,13 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
                         .importProcessId(request.getImportProcessId()).build()
         );
         List<File> attachmentList =this.loadImportedAttachment(request.getImportProcessId());
-        boolean isAllAttachmentValid=attachmentList.stream().allMatch(attachment->this.isAttachmentValid(attachment,request.getImportProcessId()));
+        boolean isAllAttachmentValid =true;
+        for (File file : attachmentList) {
+           if(!this.isAttachmentValid(file,request.getImportProcessId()))
+           {
+               isAllAttachmentValid=false;
+           }
+        }
         if (isAllAttachmentValid){
             attachmentList.forEach(attachment->createInvoiceAttachment(attachment,request));
         }
