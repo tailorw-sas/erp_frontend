@@ -25,7 +25,7 @@ public class ManageMerchantResponse implements IResponse {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.description = dto.getDescription();
-        this.b2bPartner = new ManagerB2BPartnerResponse(dto.getB2bPartner());
+        this.b2bPartner = dto.getB2bPartner() != null ? new ManagerB2BPartnerResponse(dto.getB2bPartner()) : null;
         this.defaultm = dto.getDefaultm();
         this.status = dto.getStatus();
     }
