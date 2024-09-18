@@ -20,7 +20,7 @@ public class ConsumerReplicateB2BPartnerTypeService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-replicate-b2b-partner-type", groupId = "invoicing-entity-replica")
+    @KafkaListener(topics = "finamer-replicate-b2b-partner-type", groupId = "vcc-entity-replica")
     public void listen(ReplicateB2BPartnerTypeKafka objKafka) {
         try {
             CreateManageB2BPartnerTypeCommand command =new CreateManageB2BPartnerTypeCommand(objKafka.getId(),objKafka.getCode(),

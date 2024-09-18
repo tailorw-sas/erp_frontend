@@ -27,7 +27,7 @@ public class CreatePaymentDetailTypeDepositCommandHandler implements ICommandHan
                 Status.ACTIVE,
                 command.getPayment(),
                 this.paymentTransactionTypeService.findByDeposit(),
-                command.getPayment().getPaymentAmount(),
+                command.getPayment().getPaymentAmount() * -1,
                 command.getPayment().getRemark(),
                 null,
                 null,
