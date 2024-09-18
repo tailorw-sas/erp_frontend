@@ -266,7 +266,9 @@ async function save(item: { [key: string]: any }) {
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
     item.id = response.id
-    handleMerchantRedirect(item)
+    if (payload.methodType === 'POST') {
+      handleMerchantRedirect(item)
+    }
     onClose(false)
   }
   catch (error: any) {
