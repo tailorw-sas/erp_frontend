@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
+import { v4 } from 'uuid'
 import AttachmentHistoryTotal from './AttachmentHistoryTotal.vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
-import { v4 } from 'uuid'
+
 const props = defineProps({
 
   header: {
@@ -47,6 +48,10 @@ const props = defineProps({
   selectedInvoiceObj: {
     type: Object,
     required: true
+  },
+  isSaveInTotalClone: {
+    type: Boolean,
+    required: false
   }
 })
 
@@ -54,8 +59,8 @@ const { data: userData } = useAuth()
 
 const invoice = ref<any>(props.selectedInvoiceObj)
 const defaultAttachmentType = ref<any>(null)
-  const resourceTypeList = ref<any[]>([])
-    const resourceTypeSelected = ref<any>(null)
+const resourceTypeList = ref<any[]>([])
+const resourceTypeSelected = ref<any>(null)
 const route = useRoute()
 
 const filterToSearch = ref({
@@ -240,10 +245,9 @@ function OnSortField(event: any) {
 async function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
-  await getInvoiceSupportAttachment() 
+  await getInvoiceSupportAttachment()
   formReload.value++
 }
-
 
 async function getList() {
   try {
@@ -262,10 +266,19 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator,attachmentId:'', loadingEdit: false, loadingDelete: false, type: {
-        ...iterator?.type,
-        name: `${iterator?.type?.code}-${iterator?.type?.name}`
-      } }]
+      ListItems.value = [
+        ...ListItems.value,
+        {
+          ...iterator,
+          attachmentId: props.isSaveInTotalClone ? iterator?.attachmentId : '',
+          loadingEdit: false,
+          loadingDelete: false,
+          type: {
+            ...iterator?.type,
+            name: `${iterator?.type?.code}-${iterator?.type?.name}`
+          }
+        }
+      ]
     }
 
     if (ListItems.value.length > 0) {
@@ -366,7 +379,6 @@ async function getAttachmentTypeList(query = '') {
   }
 }
 
-
 async function getResourceTypeList(query = '') {
   try {
     const payload
@@ -409,7 +421,6 @@ async function getResourceTypeList(query = '') {
     console.error('Error loading resource type list:', error)
   }
 }
-
 
 function searchAndFilter() {
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
@@ -473,7 +484,6 @@ async function deleteItem(id: string) {
   }
 }
 
-
 async function saveItem(item: { [key: string]: any }) {
   if (!item?.type?.id) {
     return typeError.value = true
@@ -484,7 +494,6 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       if (props.isCreationDialog) {
-       
         await props.updateItem(item)
         clearForm()
         return loadingSaveAll.value = false
@@ -538,55 +547,52 @@ function requireConfirmationToDelete(event: any) {
   })
 }
 
-
 async function getItemById(id: string) {
+  console.log(id)
+  if (id) {
+    idItem.value = id
+    loadingSaveAll.value = true
 
-console.log(id);
-if (id) {
-  idItem.value = id
-  loadingSaveAll.value = true
+    console.log(props.isCreationDialog)
 
-  console.log(props.isCreationDialog);
+    if (props.isCreationDialog) {
+      const data = props.listItems?.find((attachment: any) => attachment?.id === id) as any
 
-  if (props.isCreationDialog) {
-    const data = props.listItems?.find((attachment: any) => attachment?.id === id) as any
+      console.log(data)
 
-    console.log(data);
+      item.value = { ...data }
 
-    item.value = { ...data }
-
-    formReload.value += 1
-    return loadingSaveAll.value = false
-  }
-
-  try {
-    const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-
-    if (response) {
-      item.value.id = response.id
-      item.value.type = { ...response.type, fullName: `${response?.type?.code}-${response?.type?.name}` }
-      item.value.filename = response.filename
-      item.value.file = response.file
-      item.value.remark = response.remark
-      item.value.invoice = response.invoice
-      item.value.resource = response.invoice.invoiceId
-      item.value.resourceType = `${`${OBJ_ENUM_INVOICE_TYPE_CODE[response.invoice.invoiceType] || ""}-${OBJ_ENUM_INVOICE[response.invoice.invoiceType] || ""}`}`
-      selectedAttachment.value = response.attachmentId
+      formReload.value += 1
+      return loadingSaveAll.value = false
     }
 
-    formReload.value += 1
-  }
-  catch (error) {
-    if (error) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+    try {
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+
+      if (response) {
+        item.value.id = response.id
+        item.value.type = { ...response.type, fullName: `${response?.type?.code}-${response?.type?.name}` }
+        item.value.filename = response.filename
+        item.value.file = response.file
+        item.value.remark = response.remark
+        item.value.invoice = response.invoice
+        item.value.resource = response.invoice.invoiceId
+        item.value.resourceType = `${`${OBJ_ENUM_INVOICE_TYPE_CODE[response.invoice.invoiceType] || ''}-${OBJ_ENUM_INVOICE[response.invoice.invoiceType] || ''}`}`
+        selectedAttachment.value = response.attachmentId
+      }
+
+      formReload.value += 1
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+      }
+    }
+    finally {
+      loadingSaveAll.value = false
     }
   }
-  finally {
-    loadingSaveAll.value = false
-  }
 }
-}
-
 
 const $primevue = usePrimeVue()
 
@@ -658,7 +664,6 @@ watch(PayloadOnChangePage, (newValue) => {
   getList()
 })
 
-
 onMounted(async () => {
   await getResourceTypeList()
   await getInvoiceSupportAttachment()
@@ -725,7 +730,7 @@ onMounted(async () => {
               :show-actions="true" :loading-save="loadingSaveAll" class=" w-full " @cancel="clearForm"
               @delete="requireConfirmationToDelete($event)" @submit="saveItem(item)"
             >
-            <template #field-resourceType="{ item: data, onUpdate }">
+              <template #field-resourceType="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
                   v-if="!loadingSaveAll"
                   id="autocomplete"
@@ -831,9 +836,9 @@ onMounted(async () => {
                 <IfCan :perms="idItem ? ['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'] : ['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
                   <Button
                     v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-                  
+
                     :disabled="!props.item?.fieldValues?.file || idItem !== '' || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
-        
+
                     @click="saveItem(props.item.fieldValues)"
                   />
                 </IfCan>
