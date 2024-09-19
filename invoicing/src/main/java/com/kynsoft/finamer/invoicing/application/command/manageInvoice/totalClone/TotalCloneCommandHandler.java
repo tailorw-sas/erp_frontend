@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneCommand> {
@@ -251,13 +250,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
         for (ManageBookingDto bookingDto : invoiceDto.getBookings()){
             for (ManageRoomRateDto roomRateDto : bookingDto.getRoomRates()){
-                //obteniendo los ids de los adjustment en caso de que existan y eliminándolos
-                this.adjustmentService.deleteByIds(
-                        roomRateDto.getAdjustments() != null
-                                ? roomRateDto.getAdjustments().stream().map(ManageAdjustmentDto::getId).collect(Collectors.toList())
-                                : new LinkedList<>()
-                );
-
                 List<ManageAdjustmentDto> adjustmentDtoList = new LinkedList<>();
                 ManageAdjustmentDto adjustmentDto = new ManageAdjustmentDto(
                         UUID.randomUUID(),

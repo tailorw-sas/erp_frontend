@@ -21,6 +21,8 @@ public interface IPaymentDetailService {
 
     boolean existByGenId(int id);
 
+    List<PaymentDetailDto> findByPaymentId(UUID paymentId);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<UUID> bulk(List<PaymentDetailDto> toSave);

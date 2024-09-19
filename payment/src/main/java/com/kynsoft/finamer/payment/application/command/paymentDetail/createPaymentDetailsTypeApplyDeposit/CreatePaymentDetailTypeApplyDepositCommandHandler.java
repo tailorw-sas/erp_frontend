@@ -35,7 +35,7 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
                 Status.ACTIVE,
                 command.getPayment(),
                 this.paymentTransactionTypeService.findByApplyDeposit(),
-                command.getAmount(),
+                command.getAmount() * -1,
                 command.getPayment().getRemark(),
                 null,
                 null,
