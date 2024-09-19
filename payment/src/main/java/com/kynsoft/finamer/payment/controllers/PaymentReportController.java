@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -32,6 +33,6 @@ public class PaymentReportController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename="+ paymentReportResponse.getFileName());
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE);
-        return ResponseEntity.ok().headers(headers).body(file.toByteArray());
+        return ResponseEntity.ok().headers(headers).body(Objects.nonNull(file)?file.toByteArray():null);
     }
 }

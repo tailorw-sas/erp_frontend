@@ -17,7 +17,7 @@ public class ConsumerUpdateB2BPartnerTypeService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-update-manage-client", groupId = "invoicing-entity-replica")
+    @KafkaListener(topics = "finamer-update-manage-client", groupId = "vcc-entity-replica")
     public void listen(UpdateManageAgencyKafka objKafka) {
         try {
 //            UpdateManageAgencyCommand command = new UpdateManageAgencyCommand(objKafka.getId(), objKafka.getName(),
