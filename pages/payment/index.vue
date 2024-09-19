@@ -1034,19 +1034,19 @@ async function applyPaymentGetList() {
       })
     }
 
-    // const objFilterForStatus = applyPaymentPayload.value.filter.find(item => item.key === 'status')
+    const objFilterForStatus = applyPaymentPayload.value.filter.find(item => item.key === 'invoiceStatus')
 
-    // if (objFilterForStatus) {
-    //   objFilterForStatus.value = 'PROCECSED'
-    // }
-    // else {
-    //   applyPaymentPayload.value.filter.push({
-    //     key: 'status',
-    //     operator: 'NOT_EQUALS',
-    //     value: 'PROCECSED',
-    //     logicalOperation: 'AND'
-    //   })
-    // }
+    if (objFilterForStatus) {
+      objFilterForStatus.value = 'PROCECSED'
+    }
+    else {
+      applyPaymentPayload.value.filter.push({
+        key: 'invoiceStatus',
+        operator: 'NOT_EQUALS',
+        value: 'PROCECSED',
+        logicalOperation: 'AND'
+      })
+    }
 
     const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
@@ -1060,24 +1060,24 @@ async function applyPaymentGetList() {
     const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (iterator.status !== 'PROCECSED') {
-        for (const booking of iterator.bookings) {
-          booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-          booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-        }
-        // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-        // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-        // iterator.bookingBalance = iterator.dueAmount?.toString()
-        // iterator.paymentStatus = iterator.status
-
-        iterator.bookingsList = []
-
-        // Verificar si el ID ya existe en la lista
-        if (!existingIds.has(iterator.id)) {
-          newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
-          existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-        }
+      for (const booking of iterator.bookings) {
+        booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+        booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
       }
+      // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+      // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+      // iterator.bookingBalance = iterator.dueAmount?.toString()
+      // iterator.paymentStatus = iterator.status
+
+      iterator.bookingsList = []
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+      // if (iterator.status !== 'PROCECSED') {
+      // }
     }
 
     applyPaymentListOfInvoice.value = [...applyPaymentListOfInvoice.value, ...newListItems]
