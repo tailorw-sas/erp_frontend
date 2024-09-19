@@ -252,8 +252,8 @@ const allMenuListItems = ref([
   {
     id: 'importTransaction',
     label: 'Import Transaction',
-    icon: 'pi pi-cog',
-    iconSvg: 'M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z',
+    icon: 'pi pi-file-import',
+    iconSvg: '',
     command: ($event: any) => {},
     disabled: true,
     visible: true,
@@ -661,7 +661,7 @@ async function getList() {
 
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false }) // color: valores[Math.floor(Math.random() * valores.length)]
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, color: '#616161' }) // color: valores[Math.floor(Math.random() * valores.length)]
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
