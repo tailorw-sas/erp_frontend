@@ -2652,11 +2652,11 @@ onMounted(async () => {
       :pagination="pagination"
       @on-change-pagination="payloadOnChangePage = $event"
       @update:clicked-item="rowSelected($event)"
-      @on-row-double-click="openDialogPaymentDetailsByAction($event, 'new-detail')"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
       @on-row-right-click="onRowContextMenu($event)"
     >
+      <!-- @on-row-double-click="openDialogPaymentDetailsByAction($event, 'new-detail')" -->
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
