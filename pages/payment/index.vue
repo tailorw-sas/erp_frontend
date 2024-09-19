@@ -2099,10 +2099,7 @@ onMounted(async () => {
           >
             <!-- @update:clicked-item="invoiceSelectedListForApplyPayment = $event" -->
             <template #column-status="{ data: item }">
-              <Badge
-                :value="getStatusName(item?.status)"
-                :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
-              />
+              <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
             </template>
 
             <template #expansion="{ data: item }">
