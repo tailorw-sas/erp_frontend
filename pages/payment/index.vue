@@ -399,12 +399,12 @@ const applyPaymentColumns = ref<IColumn[]>([
 const columnsExpandTable: IColumn[] = [
   { field: 'bookingId', header: 'Id', width: '120px', type: 'text', sortable: false },
   { field: 'fullName', header: 'Full Name', width: '200px', type: 'text', sortable: false },
-  { field: 'reservationNumber', header: 'Reservation No', width: '120px', type: 'text', sortable: false },
+  { field: 'reservationNumber', header: 'Reservation No.', width: '120px', type: 'text', sortable: false },
   // { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
-  { field: 'couponCode', header: 'Coupon No', width: '120px', type: 'text', sortable: false },
+  { field: 'couponCode', header: 'Coupon No.', width: '120px', type: 'text', sortable: false },
   // { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
-  { field: 'checkIn', header: 'Check-In', width: '120px', type: 'text', sortable: false },
-  { field: 'checkOut', header: 'Check-Out', width: '120px', type: 'text', sortable: false },
+  { field: 'checkIn', header: 'Check In', width: '120px', type: 'text', sortable: false },
+  { field: 'checkOut', header: 'Check Out', width: '120px', type: 'text', sortable: false },
   { field: 'nights', header: 'Nights', width: '100px', type: 'text', sortable: false },
   { field: 'invoiceAmount', header: 'Booking Amount', width: '100px', type: 'text', sortable: false },
   { field: 'dueAmount', header: 'Booking Balance', width: '100px', type: 'text', sortable: false },
@@ -1991,14 +1991,16 @@ onMounted(async () => {
       @on-row-double-click="goToFormInNewTab($event)"
       @on-row-right-click="onRowContextMenu($event)"
     >
-      <template #column-icon="{ data, column }">
-        <Button
-          v-if="data.hasAttachment"
-          :icon="column.icon"
-          class="p-button-rounded p-button-text w-2rem h-2rem"
-          aria-label="Submit"
-          :style="{ color: data.color }"
-        />
+      <template #column-icon="{ data: objData, column }">
+        <div class="flex align-items-center justify-content-center p-0 m-0">
+          <Button
+            v-if="objData.hasAttachment"
+            :icon="column.icon"
+            class="p-button-rounded p-button-text w-2rem h-2rem"
+            aria-label="Submit"
+            :style="{ color: objData.color }"
+          />
+        </div>
         <!-- style="color: #616161;" -->
         <!-- :style="{ 'background-color': '#00b816' }" -->
       </template>
@@ -2047,7 +2049,7 @@ onMounted(async () => {
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
-            Apply Payment Details
+            Select Invoice
           </h5>
         </div>
       </template>

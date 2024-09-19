@@ -269,13 +269,13 @@ const objApis = ref({
 const columns: IColumn[] = [
   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
   { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
-  { field: 'invoiceNumber', header: 'Invoice No', tooltip: 'Invoice No', width: '100px', type: 'text' },
+  { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '100px', type: 'text' },
   { field: 'transactionDate', header: 'Transaction Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
-  { field: 'reservationNumber', header: 'Reservation No', tooltip: 'Reservation', width: 'auto', type: 'text' },
-  { field: 'couponNumber', header: 'Coupon No', tooltip: 'Coupon No', width: 'auto', type: 'text' },
+  { field: 'reservationNumber', header: 'Reservation No.', tooltip: 'Reservation', width: 'auto', type: 'text' },
+  { field: 'couponNumber', header: 'Coupon No.', tooltip: 'Coupon No', width: 'auto', type: 'text' },
   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
@@ -1134,8 +1134,27 @@ async function getListPaymentDetail() {
 }
 
 function disabledDeleteForPaymentWithChildren(id: string): boolean {
+  console.log(id)
   const item = paymentDetailsList.value.find(item => item.id === id)
-  return item && item.children && item.children.length > 0
+  if (!item) {
+    return true
+  }
+  else if (item.children && item.children.length > 0) {
+    return true
+  }
+  else {
+    return false
+  }
+}
+
+function disableBtnDelete(idDetail: string) {
+  if (idDetail === null || idDetail === undefined || idDetail === '') {
+    console.log('ID DETAIL', idDetail)
+    return true
+  }
+  // else if (disabledDeleteForPaymentWithChildren(idDetail)) {
+  //   return true
+  // }
 }
 
 function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolean {
@@ -2724,7 +2743,7 @@ onMounted(async () => {
         <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
-        <Button v-if="false" v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="idItemDetail === null || idItemDetail === undefined || idItemDetail === '' || disabledDeleteForPaymentWithChildren(idItemDetail)" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
+        <Button v-if="false" v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="disableBtnDelete(idItemDetail)" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
       </IfCan>
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
