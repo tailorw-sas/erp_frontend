@@ -16,6 +16,7 @@ import { statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import getUrlByImage from '~/composables/files'
 import { v4 } from 'uuid'
+import { ENUM_INVOICE_STATUS } from '~/utils/Enums'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 
@@ -602,7 +603,7 @@ const columns: IColumn[] = [
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
   // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
   // { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'local-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
