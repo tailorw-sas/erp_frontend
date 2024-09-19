@@ -23,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -82,6 +84,12 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     @Override
     public boolean existByGenId(int id) {
         return repositoryQuery.existsByPaymentDetailId(id);
+    }
+
+    @Override
+    public List<PaymentDetailDto> findByPaymentId(UUID paymentId) {
+        Optional<List<PaymentDetail>> result= repositoryQuery.findAllByPayment(paymentId);
+        return result.map(paymentDetails -> paymentDetails.stream().map(PaymentDetail::toAggregate).toList()).orElse(Collections.EMPTY_LIST);
     }
 
     @Override
