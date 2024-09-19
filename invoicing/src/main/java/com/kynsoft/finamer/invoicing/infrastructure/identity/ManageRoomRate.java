@@ -50,7 +50,7 @@ public class ManageRoomRate {
     @Column(nullable = true)
     private Boolean deleted = false;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "roomRate")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "roomRate", orphanRemoval = true)
     private List<ManageAdjustment> adjustments;
 
     @CreationTimestamp
