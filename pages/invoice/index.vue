@@ -220,7 +220,7 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Clone',
     icon: 'pi pi-copy',
-    command: () => doubleFactor(selectedInvoice),
+    command: () => doubleFactor(),
     default: true,
    // disabled: computedShowClone,
     showItem: false,
@@ -573,9 +573,25 @@ const itemsMenuSend = ref([
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
+
+const columnstoPrint: IColumn[] = [
+  { field: 'invoiceId', header: 'Id', type: 'text' },
+  { field: 'invoiceType', header: 'Type', type:'text' },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
+  { field: 'agencyCd', header: 'Agency CD', type: 'text' },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
+  { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
+  { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
+  { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
+  { field: 'hasAttachments', header: 'Attachment', type: 'bool' },
+  { field: 'aging', header: 'Aging', type: 'text' },
+   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+]
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text' },
-  // { field: 'invoiceType', header: 'Type', type: 'select' },
+   //{ field: 'invoiceType', header: 'Type', type: 'select' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
@@ -616,7 +632,7 @@ const options = ref({
   showTitleBar: false
 })
 const optionsToPrint = ref({
-  tableName: 'Invoice',
+  tableName: 'Invoice to Print',
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice',
   loading: false,
@@ -2024,12 +2040,12 @@ const legend = ref(
           </h5>
         </div>
       </template>
-      <template #default>
+
         <div class="p-fluid pt-3">
           <DynamicTable
             class="card p-0"
             :data="listItems"
-            :columns="columns"
+            :columns="columnstoPrint"
             :options="optionsToPrint"
             :pagination="pagination"
             @on-change-pagination="payloadOnChangePage = $event"
@@ -2056,7 +2072,7 @@ const legend = ref(
                   // changeValueByCheckApplyPaymentBalance($event);
                 }"
               />
-              <label for="checkApplyPayment" class="ml-2 font-bold">
+              <label for="invoiceAndBookings" class="ml-2 font-bold">
                 Invoice And Bookings
               </label>
             </div>
@@ -2069,7 +2085,7 @@ const legend = ref(
                   // changeValueByCheckApplyPaymentBalance($event);
                 }"
               />
-              <label for="checkApplyPayment" class="ml-2 font-bold">
+              <label for="invoiceSupport" class="ml-2 font-bold">
                 Invoice Support
               </label>
             </div>
@@ -2082,16 +2098,16 @@ const legend = ref(
                   // changeValueByCheckApplyPaymentBalance($event);
                 }"
               />
-              <label for="checkApplyPayment" class="ml-2 font-bold">
+              <label for="groupbyClient" class="ml-2 font-bold">
                 Group By Client
               </label>
             </div>
           </div>
           <div>
             <Button
-              v-tooltip.top="'Apply Payment'"
+              v-tooltip.top="'Print'"
               class="w-3rem mx-1"
-              icon="pi pi-check"
+              icon="pi pi-print"
               :disabled="false"
               :loading="loadingSavePrint"
               @click="invoicePrint()"
@@ -2099,7 +2115,7 @@ const legend = ref(
             <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalPrint()" />
           </div>
         </div>
-      </template>
+    
     </Dialog>
 </template>
 
