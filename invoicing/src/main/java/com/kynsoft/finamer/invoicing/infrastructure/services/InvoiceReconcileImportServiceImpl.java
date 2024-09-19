@@ -8,7 +8,6 @@ import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcil
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileImportProcessStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.event.createAttachment.CreateAttachmentEvent;
 import com.kynsoft.finamer.invoicing.domain.event.importError.CreateImportErrorEvent;
@@ -30,7 +29,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
@@ -108,7 +106,7 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
                 return false;
             }
 
-            if (!isInvoiceReconciled(invoiceId)) {
+            if (!isInvoiceInProcessStatus(invoiceId)) {
                 processError("The invoice with id " + invoiceId + " is not PROCESSED status", importProcessId, file.getName());
                 return false;
             }
@@ -124,9 +122,9 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
         return invoiceService.existManageInvoiceByInvoiceId(Long.parseLong(invoiceId));
     }
 
-    private boolean isInvoiceReconciled(String invoiceId) {
+    private boolean isInvoiceInProcessStatus(String invoiceId) {
         ManageInvoiceDto invoiceDto = invoiceService.findByInvoiceId(Long.parseLong(invoiceId));
-        return EInvoiceStatus.PROCECSED.name().equals(invoiceDto.getManageInvoiceStatus().getName().toUpperCase());
+        return EInvoiceStatus.PROCESSED.name().equals(invoiceDto.getManageInvoiceStatus().getName().toUpperCase());
     }
 
     private String getInvoiceIdFromFileName(File file) {
