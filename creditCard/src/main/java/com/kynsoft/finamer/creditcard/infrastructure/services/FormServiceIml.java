@@ -22,7 +22,7 @@ public class FormServiceIml implements IFormService {
         try {
             // Extraer los parámetros del objeto PaymentRequest
             //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
-            String merchantId = response.getId().toString(); //Campo merchantNumber de Merchant Config
+            String merchantId = response.getMerchantConfigResponse().getMerchantNumber(); //Campo merchantNumber de Merchant Config
             String merchantName = response.getMerchantConfigResponse().getName(); //Campo name de Merchant Config
             String merchantType = response.getMerchantConfigResponse().getMerchantType(); //Campo merchantType de Merchant Config
             String currencyCode = "$"; //Valor $ por ahora
@@ -49,7 +49,7 @@ public class FormServiceIml implements IFormService {
                     "<head></head>" +
                     "<body>" +
                     "<form action=\"" + response.getMerchantConfigResponse().getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
-                    "<input type=\"hidden\" name=\"MerchantId\" value=\"" + response.getId() + "\">" +
+                    "<input type=\"hidden\" name=\"MerchantId\" value=\"" + response.getMerchantConfigResponse().getMerchantNumber() + "\">" +
                     "<input type=\"hidden\" name=\"MerchantName\" value=\"" + response.getMerchantConfigResponse().getName() + "\">" +
                     "<input type=\"hidden\" name=\"MerchantType\" value=\"" + response.getMerchantConfigResponse().getMerchantType() + "\">" +
                     "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
