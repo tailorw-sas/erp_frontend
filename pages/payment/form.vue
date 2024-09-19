@@ -867,7 +867,7 @@ async function createItem(item: { [key: string]: any }) {
     if (response && response.payment) {
       // paymentId
       idItem.value = response.payment.id
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment id ${response.payment.paymentId} was created successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment Id ${response.payment.paymentId} was created successfully`, life: 10000 })
       goToForm(idItem.value)
     }
     else {
