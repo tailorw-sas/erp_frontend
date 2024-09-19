@@ -38,6 +38,8 @@ const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 const loadingPrintDetail = ref(false)
 
+const disabledBtnDelete = ref(true)
+
 const forceSave = ref(false)
 const submitEvent = new Event('')
 const paymentSourceList = ref<any[]>([])
@@ -1094,7 +1096,7 @@ async function getListPaymentDetail() {
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
         iterator.adults = iterator.manageBooking?.adults?.toString()
-        iterator.children = iterator.manageBooking?.children?.toString()
+        iterator.childrens = iterator.manageBooking?.children?.toString()
         iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
         iterator.fullName = iterator.manageBooking?.fullName
         iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
@@ -1131,30 +1133,6 @@ async function getListPaymentDetail() {
     options.value.loading = false
     subTotals.value = { ...count }
   }
-}
-
-function disabledDeleteForPaymentWithChildren(id: string): boolean {
-  console.log(id)
-  const item = paymentDetailsList.value.find(item => item.id === id)
-  if (!item) {
-    return true
-  }
-  else if (item.children && item.children.length > 0) {
-    return true
-  }
-  else {
-    return false
-  }
-}
-
-function disableBtnDelete(idDetail: string) {
-  if (idDetail === null || idDetail === undefined || idDetail === '') {
-    console.log('ID DETAIL', idDetail)
-    return true
-  }
-  // else if (disabledDeleteForPaymentWithChildren(idDetail)) {
-  //   return true
-  // }
 }
 
 function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolean {
@@ -1686,18 +1664,64 @@ function updateAttachment(attachment: any) {
   attachmentList.value[index] = attachment
 }
 
+function disabledDeleteForPaymentWithChildren(id: string): boolean {
+  const item = paymentDetailsList.value.find(item => item.id === id)
+  if (!item) {
+    return true
+  }
+  else if (item.children && item.children.length > 0) {
+    return true
+  }
+  else {
+    return false
+  }
+}
+
+function haveApplayPamentWithTransactionTypeCheckOrApplyDeposit(id: string): boolean {
+  const item = paymentDetailsList.value.find(item => item.id === id)
+  if (!item) {
+    return false
+  }
+  else if ((item.transactionType?.cash || item.transactionType.applyDeposit) && item.applyPayment === false) {
+    return false
+  }
+  else if ((item.transactionType?.cash || item.transactionType.applyDeposit) && item.applyPayment === true) {
+    return true
+  }
+  else {
+    return false
+  }
+}
+
+function disableBtnDelete(idDetail: string): boolean {
+  // const item = paymentDetailsList.value.find(item => item.id === idDetail)
+  // console.log(item)
+
+  const haveApplyDeposit = disabledDeleteForPaymentWithChildren(idDetail)
+  const haveApplayPamentWithTransactionCheckOrApplyDeposit = haveApplayPamentWithTransactionTypeCheckOrApplyDeposit(idDetail)
+
+  if (haveApplyDeposit || haveApplayPamentWithTransactionCheckOrApplyDeposit) {
+    return true
+  }
+  else {
+    return false
+  }
+}
+
 async function rowSelected(rowData: any) {
   if (rowData !== null && rowData !== undefined && rowData !== '') {
     idItemDetail.value = rowData
     idPaymentDetail.value = rowData
 
     enableSplitAction.value = hasDepositTransaction(rowData, paymentDetailsList.value)
+    disabledBtnDelete.value = disableBtnDelete(rowData)
   }
   else {
     idItemDetail.value = ''
     isSplitAction.value = false
     actionOfModal.value = 'new-detail'
     enableSplitAction.value = false
+    disabledBtnDelete.value = true
   }
 }
 
@@ -2743,7 +2767,7 @@ onMounted(async () => {
         <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
-        <Button v-if="false" v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="disableBtnDelete(idItemDetail)" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
+        <Button v-if="false" v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
       </IfCan>
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>

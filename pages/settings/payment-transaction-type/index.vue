@@ -98,6 +98,13 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.boolean()
   },
   {
+    field: 'debit',
+    header: 'Debit',
+    dataType: 'check',
+    class: 'field col-12',
+    validation: z.boolean()
+  },
+  {
     field: 'applyDeposit',
     header: 'Apply Deposit',
     dataType: 'check',
@@ -173,6 +180,7 @@ const item = ref<GenericObject>({
   collected: false,
   status: true,
   cash: false,
+  debit: false,
   agencyRateAmount: false,
   negative: false,
   policyCredit: false,
@@ -193,6 +201,7 @@ const itemTemp = ref<GenericObject>({
   collected: false,
   status: true,
   cash: false,
+  debit: false,
   agencyRateAmount: false,
   negative: false,
   policyCredit: false,
@@ -361,6 +370,7 @@ async function getItemById(id: string) {
         item.value.incomeDefault = response.incomeDefault
         item.value.antiToIncome = response.antiToIncome
         item.value.paymentInvoice = response.paymentInvoice
+        item.value.debit = response.debit
         updateFieldProperty(fields, 'minNumberOfCharacter', 'disabled', !response.remarkRequired)
       }
       fields[0].disabled = true
