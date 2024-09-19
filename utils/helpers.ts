@@ -286,11 +286,11 @@ export function convertirAFechav2(fecha: string | null): string | null {
     return null
   }
 
-  if (/^\d{8}$/.test(fecha)) {
-    // Formato YYYYMMDD
-    return fecha
-  }
-  else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(fecha) || /^\d{1,2}\/\d{1,2}\/\d{2}$/.test(fecha)) {
+  // if (/^\d{8}$/.test(fecha)) {
+  //   // Formato YYYYMMDD
+  //   return fecha
+  // }
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(fecha)) { // || /^\d{1,2}\/\d{1,2}\/\d{2}$/.test(fecha)
     // Formato DD/MM/YYYY
     const [dia, mes, anio] = fecha.split('/').map(Number)
     return `${anio}${mes.toString().padStart(2, '0')}${dia.toString().padStart(2, '0')}`
