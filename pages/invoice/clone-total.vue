@@ -1435,7 +1435,7 @@ onMounted(async () => {
   await getBookingList()
   await getRoomRateList(globalSelectedInvoicing)
   await getAdjustmentList()
-  // calcInvoiceAmount()
+   calcInvoiceAmount()
   // }
 })
 </script>
