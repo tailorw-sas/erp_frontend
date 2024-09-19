@@ -2700,7 +2700,7 @@ onMounted(async () => {
         </Button>
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:PRINT-DETAIL']">
-        <Button v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" @click="openPrint = true" />
+        <Button v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openPrint = true" />
         <!-- :disabled="!paymentDetailsList || paymentDetailsList.length === 0" -->
       </IfCan>
       <!-- <Button v-tooltip.top="'Payment to Print'" class="w-3rem ml-1" disabled icon="pi pi-print" @click="openPrint = true" /> -->
