@@ -22,10 +22,43 @@ const Options = ref({
   actionsAsMenu: false,
 
 })
+
+const totalInvoiceAmount = ref<number>(0)
+const totalHotelAmount = ref<number>(0)
+const totalOriginalAmount = ref<number>(0)
+
+const objBookingsTotals = ref<{ totalHotelAmount: number, totalInvoiceAmount: number, totalDueAmount: number }>({
+  totalHotelAmount: 0,
+  totalInvoiceAmount: 0,
+  totalDueAmount: 0
+})
+
+const objBookingsTotalsTemp = {
+  totalHotelAmount: 0,
+  totalInvoiceAmount: 0,
+  totalDueAmount: 0
+}
+
+const objRoomRateTotals = ref<{ totalHotelAmount: number, totalInvoiceAmount: number }>({
+  totalHotelAmount: 0,
+  totalInvoiceAmount: 0,
+})
+
+const objRoomRateTotalsTemp = {
+  totalHotelAmount: 0,
+  totalInvoiceAmount: 0,
+}
+
+const objAdjustmentTotals = ref<{ totalAmount: number }>({
+  totalAmount: 0,
+})
+
+const objAdjustmentTotalsTemp = {
+  totalAmount: 0,
+}
+
 const adjustmentList = ref<any[]>([])
 const toast = useToast()
-const totalHotelAmount = ref(0)
-const totalInvoiceAmount = ref(0)
 const idItemToLoadFirstTime = ref('')
 const selectedInvoicing = ref<any>('')
 let globalSelectedInvoicing = ''
@@ -721,8 +754,7 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
     Pagination.value.totalPages = totalPages
 
     let countRR = 0
-    totalInvoiceAmount.value = 0
-    totalHotelAmount.value = 0
+    objRoomRateTotals.value = JSON.parse(JSON.stringify(objRoomRateTotalsTemp))
 
     for (const iterator of dataList) {
       countRR++
@@ -744,11 +776,11 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
-        totalInvoiceAmount.value += Number(iterator.invoiceAmount)
+        objRoomRateTotals.value.totalInvoiceAmount += Number(iterator.invoiceAmount)
       }
 
       if (typeof +iterator.hotelAmount === 'number') {
-        totalHotelAmount.value += Number(iterator.hotelAmount)
+        objRoomRateTotals.value.totalHotelAmount += Number(iterator.hotelAmount)
       }
     }
 
@@ -792,6 +824,8 @@ async function getAdjustmentList() {
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
+    objAdjustmentTotals.value = JSON.parse(JSON.stringify(objAdjustmentTotalsTemp))
+
     Pagination.value.page = page
     Pagination.value.limit = size
     Pagination.value.totalElements = totalElements
@@ -815,7 +849,7 @@ async function getAdjustmentList() {
       }]
 
       if (typeof +iterator?.amount === 'number') {
-        totalAmount.value += Number(iterator?.amount)
+        objAdjustmentTotals.value.totalAmount += Number(iterator?.amount)
       }
     }
     if (ListItems.value.length > 0) {
@@ -1125,6 +1159,8 @@ async function getBookingList(clearFilter: boolean = false) {
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
+    objBookingsTotals.value = JSON.parse(JSON.stringify(objBookingsTotalsTemp))
+
     Pagination.value.page = page
     Pagination.value.limit = size
     Pagination.value.totalElements = totalElements
@@ -1148,6 +1184,16 @@ async function getBookingList(clearFilter: boolean = false) {
         roomCategory: iterator.roomCategory ? iterator.roomCategory.id : null,
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
+
+      if (typeof +iterator.invoiceAmount === 'number') {
+        objBookingsTotals.value.totalInvoiceAmount += Number(iterator.invoiceAmount)
+      }
+      if (typeof +iterator.originalAmount === 'number') {
+        objBookingsTotals.value.totalDueAmount += Number(iterator.dueAmount)
+      }
+      if (typeof +iterator.hotelAmount === 'number') {
+        objBookingsTotals.value.totalHotelAmount += Number(iterator.hotelAmount)
+      }
     }
     return bookingList.value
   }
@@ -1501,9 +1547,13 @@ onMounted(async () => {
             :selected-booking="selectedBooking" :open-adjustment-dialog="openAdjustmentDialog"
             :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
             :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
-            :is-creation-dialog="true" :selected-invoice="selectedInvoice as any" :booking-list="bookingList"
+            :is-creation-dialog="true" :selected-invoice="selectedInvoice" :booking-list="bookingList"
             :update-booking="updateBooking" :adjustment-list="ListItems" :add-adjustment="addAdjustment"
-            :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
+            :update-adjustment="updateAdjustment" :active="active"
+            :bookings-total-obj="objBookingsTotals"
+            :room-rate-total-obj="objRoomRateTotals"
+            :adjustment-total-obj="objAdjustmentTotals"
+            :set-active="($event) => {
 
               active = $event
             }"

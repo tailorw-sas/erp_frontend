@@ -92,7 +92,18 @@ const props = defineProps({
   refetchInvoice: { type: Function, default: () => { } },
   getInvoiceAgency: { type: Function, default: () => { } },
   sortBooking: Function as any,
-  nightTypeRequired: Boolean
+  nightTypeRequired: Boolean,
+  bookingsTotalObj: {
+    type: Object,
+    required: false,
+    default: () => {
+      return {
+        totalHotelAmount: 0,
+        totalInvoiceAmount: 0,
+        totalDueAmount: 0
+      }
+    }
+  }
 })
 
 const toast = useToast()
@@ -1384,16 +1395,22 @@ watch(() => props.invoiceAgency?.bookingCouponFormat, () => {
   couponNumberValidation.value = props.invoiceAgency?.bookingCouponFormat
 })
 
-watch(() => props.listItems, () => {
-  totalHotelAmount.value = 0
-  totalInvoiceAmount.value = 0
-  totalOriginalAmount.value = 0
-  props?.listItems?.forEach((listItem: any) => {
-    totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
-    totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
-    totalOriginalAmount.value += listItem?.originalAmount ? Number(listItem?.originalAmount) : 0
-  })
-}, { deep: true })
+// watch(() => props.listItems, () => {
+//   console.log('Entro a watch list items');
+  
+//   if (props.listItems && props?.listItems?.length > 0) {
+//     totalHotelAmount.value = 0
+//     totalInvoiceAmount.value = 0
+//     totalOriginalAmount.value = 0
+//     props?.listItems?.forEach((listItem: any) => {    
+//       totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
+//       totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
+//       totalOriginalAmount.value += listItem?.dueAmount ? Number(listItem?.dueAmount) : 0
+//     })
+//     console.log(totalHotelAmount.value, totalInvoiceAmount.value, totalOriginalAmount.value);
+//   }
+  
+// }, { deep: true })
 
 // watch(() => props.listItems, () => {
 //   if (props.isCreationDialog) {
@@ -1565,7 +1582,6 @@ onMounted(() => {
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
         if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
 
-
           return;
         }
 
@@ -1576,27 +1592,33 @@ onMounted(() => {
         if (!props.isDetailView) {
           openEditBooking($event)
         }
-
-
-
       }">
-
-
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:"
+            <Column 
+              footer="Totals:"
               :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 10"
-              footer-style="text-align:right; font-weight: 700" />
-            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalHotelAmount" footer-style="font-weight: 700" />
-            <Column v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalOriginalAmount" footer-style="font-weight: 700" />
-            <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
-            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+              footer-style="text-align:right; font-weight: 700"
+            />
+            
+            <Column 
+              v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="props.bookingsTotalObj.totalHotelAmount"
+              footer-style="font-weight: 700" 
+            />
 
-
+            <Column 
+              v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="props.bookingsTotalObj.totalDueAmount" 
+              footer-style="font-weight: 700"
+            />
+            <Column 
+              :footer="props.bookingsTotalObj.totalInvoiceAmount"
+              footer-style="font-weight: 700"
+            />
+            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="props.bookingsTotalObj.totalInvoiceAmount" footer-style="font-weight: 700" />
           </Row>
         </ColumnGroup>
       </template>

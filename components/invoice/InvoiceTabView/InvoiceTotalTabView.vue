@@ -111,7 +111,37 @@ const props = defineProps({
   invoiceObjAmount: { type: Number, required: true },
   nightTypeRequired: Boolean,
   requiresFlatRate: Boolean,
-
+  bookingsTotalObj: {
+    type: Object,
+    required: false,
+    default: () => {
+      return {
+        totalHotelAmount: 0,
+        totalInvoiceAmount: 0,
+        totalDueAmount: 0
+      }
+    }
+  },
+  roomRateTotalObj: {
+    type: Object,
+    required: false,
+    default: () => {
+      return {
+        totalHotelAmount: 0,
+        totalInvoiceAmount: 0,
+      }
+    }
+  },
+  adjustmentTotalObj: {
+    type: Object,
+    required: false,
+    default: () => {
+      return {
+        totalHotelAmount: 0,
+        totalInvoiceAmount: 0,
+      }
+    }
+  }
 })
 
 const activeTab = ref(props.active)
@@ -124,8 +154,6 @@ const toast = useToast()
 
 const selectedBooking = ref<string>('')
 const bookingObj = ref<any>(null)
-
-
 
 const selectedRoomRate = ref<string>('')
 
@@ -264,8 +292,6 @@ function openRoomRateDialog(booking?: any) {
   if (booking?.id) {
     selectedBooking.value = booking?.id
     bookingObj.value = booking
-
-   
   }
 
   roomRateDialogOpen.value = true
@@ -321,14 +347,27 @@ onMounted(async () => {
             </div>
           </template>
           <BookingTotalTab
-          :refetch-invoice="refetchInvoice"
-          :get-invoice-agency="getInvoiceAgency"
-            :is-dialog-open="isDialogOpen" :close-dialog="() => closeDialog()"
-            :open-dialog="openDialog" :open-room-rate-dialog="openRoomRateDialog" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :sort-booking="sortBooking" :selected-invoice="selectedInvoice as any"
-            :add-item="addBooking" :update-item="updateBooking" :list-items="bookingList"
+            :refetch-invoice="refetchInvoice"
+            :get-invoice-agency="getInvoiceAgency"
+            :is-dialog-open="isDialogOpen"
+            :close-dialog="() => closeDialog()"
+            :open-dialog="openDialog"
+            :open-room-rate-dialog="openRoomRateDialog"
+            :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate"
+            :sort-booking="sortBooking"
+            :selected-invoice="selectedInvoice"
+            :add-item="addBooking"
+            :update-item="updateBooking"
+            :list-items="bookingList"
             :night-type-required="nightTypeRequired"
-            :is-creation-dialog="isCreationDialog" :invoice-obj="invoiceObj" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-detail-view="isDetailView" :show-totals="showTotals"
+            :is-creation-dialog="isCreationDialog"
+            :invoice-obj="invoiceObj"
+            :invoice-agency="invoiceAgency"
+            :invoice-hotel="invoiceHotel"
+            :is-detail-view="isDetailView"
+            :show-totals="showTotals"
+            :bookings-total-obj="bookingsTotalObj"
           />
         </TabPanel>
         <TabPanel v-if="showTabs">
@@ -345,13 +384,27 @@ onMounted(async () => {
             </div>
           </template>
           <RoomRateTotalTab
-          :booking-obj="bookingObj"
-          :refetch-invoice="refetchInvoice" :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
-            :is-dialog-open="roomRateDialogOpen" :close-dialog="() => { roomRateDialogOpen = false }"
-            :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
-            :open-adjustment-dialog="openAdjustmentDialog" :sort-room-rate="sortRoomRate" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :list-items="roomRateList" :add-item="addRoomRate" :invoice-obj="invoiceObj"
-            :update-item="updateRoomRate" :is-creation-dialog="isCreationDialog" :is-detail-view="isDetailView" :selected-invoice="selectedInvoice as any" :show-totals="showTotals"
+            :booking-obj="bookingObj"
+            :refetch-invoice="refetchInvoice"
+            :requires-flat-rate="requiresFlatRate"
+            :get-invoice-hotel="getInvoiceHotel"
+            :is-dialog-open="roomRateDialogOpen"
+            :close-dialog="() => { roomRateDialogOpen = false }"
+            :open-dialog="handleDialogOpen"
+            :selected-booking="selectedBooking"
+            :open-adjustment-dialog="openAdjustmentDialog"
+            :sort-room-rate="sortRoomRate"
+            :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate"
+            :list-items="roomRateList"
+            :add-item="addRoomRate"
+            :invoice-obj="invoiceObj"
+            :update-item="updateRoomRate"
+            :is-creation-dialog="isCreationDialog"
+            :is-detail-view="isDetailView"
+            :selected-invoice="selectedInvoice"
+            :show-totals="showTotals"
+            :room-rate-total-obj="roomRateTotalObj"
           />
         </TabPanel>
         <TabPanel v-if="showTabs">
@@ -371,14 +424,23 @@ onMounted(async () => {
             :invoice-obj="invoiceObj"
             :invoice-obj-amount="invoiceObjAmount"
             :is-dialog-open="adjustmentDialogOpen"
+            :open-dialog="handleDialogOpen"
+            :refetch-invoice="refetchInvoice"
+            :selected-room-rate="selectedRoomRate"
+            :sort-adjustment="sortAdjustment"
+            :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate"
+            :list-items="adjustmentList"
+            :add-item="addAdjustment"
+            :update-item="updateAdjustment"
+            :is-creation-dialog="isCreationDialog"
+            :selected-invoice="selectedInvoice"
+            :is-detail-view="isDetailView"
+            :show-totals="showTotals"
+            :adjustment-total-obj="adjustmentTotalObj"
             :close-dialog="() => {
-
               adjustmentDialogOpen = false;
-
-            }" :open-dialog="handleDialogOpen" :refetch-invoice="refetchInvoice"
-            :selected-room-rate="selectedRoomRate" :sort-adjustment="sortAdjustment" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :list-items="adjustmentList" :add-item="addAdjustment"
-            :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any" :is-detail-view="isDetailView" :show-totals="showTotals"
+            }"
           />
         </TabPanel>
       </TabView>
