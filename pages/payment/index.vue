@@ -189,8 +189,8 @@ const allMenuListItems = ref([
     label: 'Status History',
     icon: 'pi pi-cog',
     iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
-    command: ($event: any) => {},
-    disabled: true,
+    command: ($event: any) => openDialogStatusHistory($event),
+    disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:SHOW-HISTORY']),
   },
   {
@@ -503,6 +503,73 @@ const applyPaymentBookingPagination = ref<IPagination>({
   search: ''
 })
 const applyPaymentBookingOnChangePage = ref<PageState>()
+
+const openDialogHistory = ref(false)
+const historyList = ref<any[]>([])
+const historyColumns = ref<IColumn[]>([
+  { field: 'paymentHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'date', width: '120px' },
+  { field: 'employee', header: 'Employee', type: 'select', width: '150px', localItems: [] },
+  { field: 'description', header: 'Description', type: 'text', width: '200px' },
+  { field: 'paymentStatus', header: 'Status', type: 'text', width: '60px', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' } },
+])
+
+const historyOptions = ref({
+  tableName: 'Payment Attachment',
+  moduleApi: 'payment',
+  uriApi: 'payment-attachment-status-history',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+const payloadHistory = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: 'ASC'
+})
+const historyPagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+const histotyPayloadOnChangePage = ref<PageState>()
+
+interface DataListItemEmployee {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+}
+
+interface ListItemEmployee {
+  id: string
+  name: string
+  status: boolean | string
+}
+
+function mapFunctionEmployee(data: DataListItemEmployee): ListItemEmployee {
+  return {
+    id: data.id,
+    name: `${data.firstName} ${data.lastName}`,
+    status: 'Active'
+  }
+}
+
+async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  employeeList.value = await getDataList<DataListItemEmployee, ListItemEmployee>(moduleApi, uriApi, filter, queryObj, mapFunctionEmployee)
+  const columnEmployee = historyColumns.value.find(item => item.field === 'employee')
+  if (columnEmployee) {
+    columnEmployee.localItems = [...JSON.parse(JSON.stringify(employeeList.value))]
+  }
+}
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -1528,6 +1595,102 @@ function handleAcctions(itemId: any) {
     }
   }
 }
+
+async function historyGetList() {
+  if (historyOptions.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    historyOptions.value.loading = true
+    historyList.value = []
+    const newListItems = []
+    const objFilter = payloadHistory.value.filter.find(item => item.key === 'payment.id')
+
+    if (objFilter) {
+      objFilter.value = idPaymentSelectedForPrint.value.toString() || ''
+    }
+    else {
+      payloadHistory.value.filter.push({
+        key: 'payment.id',
+        operator: 'EQUALS',
+        value: idPaymentSelectedForPrint.value || '',
+        logicalOperation: 'AND'
+      })
+    }
+
+    const response = await GenericService.search(historyOptions.value.moduleApi, historyOptions.value.uriApi, payloadHistory.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    historyPagination.value.page = page
+    historyPagination.value.limit = size
+    historyPagination.value.totalElements = totalElements
+    historyPagination.value.totalPages = totalPages
+
+    const existingIds = new Set(historyList.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      iterator.paymentId = iterator.payment?.paymentId.toString()
+      iterator.paymentStatus = iterator.status
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
+        if (iterator.employee.firstName && iterator.employee.lastName) {
+          iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
+        }
+      }
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    historyList.value = [...historyList.value, ...newListItems]
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    historyOptions.value.loading = false
+  }
+}
+
+async function openDialogStatusHistory(event = null) {
+  openDialogHistory.value = true
+  await historyGetList()
+}
+
+function historyOnSortField(event: any) {
+  if (event) {
+    if (event.sortField === 'attachmentType') {
+      event.sortField = 'attachmentType.name'
+    }
+    if (event.sortField === 'resourceType') {
+      event.sortField = 'resourceType.name'
+    }
+    payloadHistory.value.sortBy = event.sortField
+    payloadHistory.value.sortType = event.sortOrder
+    historyParseDataTableFilter(event.filter)
+  }
+}
+
+async function historyParseDataTableFilter(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, historyColumns.value)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'paymentStatus') {
+        parseFilter[i].key = 'status'
+      }
+      if (parseFilter[i]?.key === 'employee') {
+        parseFilter[i].key = 'employee.id'
+      }
+    }
+  }
+  payloadHistory.value.filter = [...parseFilter || []]
+  historyGetList()
+}
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -1584,6 +1747,19 @@ onMounted(async () => {
   }
   await getStatusList(objApis.value.status.moduleApi, objApis.value.status.uriApi, objQueryToSearch)
   filterToSearch.value.status = statusItemsList.value.filter((item: { id: string, name: string, status?: string }) => item.name === 'Applied' || item.name === 'Confirmed')
+
+  const filterForEmployee: FilterCriteria[] = [
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+    },
+  ]
+  await getEmployeeList('settings', 'manage-employee', {
+    query: '',
+    keys: ['name', 'code'],
+  }, filterForEmployee)
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -2158,6 +2334,48 @@ onMounted(async () => {
             />
             <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
           </div>
+        </div>
+      </template>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="openDialogHistory"
+      modal
+      class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border"
+      :style="{ width: '60%' }"
+      :pt="{
+        root: {
+          class: 'custom-dialog-history',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+        // mask: {
+        //   style: 'backdrop-filter: blur(5px)',
+        // },
+      }"
+      @hide="openDialogHistory = false"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Payment Status History
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-3">
+          <DynamicTable
+            class="card p-0"
+            :data="historyList"
+            :columns="historyColumns"
+            :options="historyOptions"
+            :pagination="historyPagination"
+            @on-change-pagination="histotyPayloadOnChangePage = $event"
+            @on-change-filter="historyParseDataTableFilter"
+            @on-sort-field="historyOnSortField"
+          />
         </div>
       </template>
     </Dialog>
