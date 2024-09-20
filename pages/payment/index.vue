@@ -1467,7 +1467,7 @@ async function paymentPrint(event: any) {
       paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED']
     }
     if (event && event.invoiceRelatedWithSupport) {
-      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED_WITH_SUPPORT']
+      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED_SUPPORT']
     }
 
     nameOfPdf = `payment-list-${dayjs().format('YYYY-MM-DD')}.pdf`
