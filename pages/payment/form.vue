@@ -2307,7 +2307,6 @@ function onRowContextMenu(event: any) {
       }
     }
   }
-  console.log(event.data?.transactionDate)
 
   // Validacion para el undo application
   const dateOfItem = dayjs(event.data?.transactionDate)
