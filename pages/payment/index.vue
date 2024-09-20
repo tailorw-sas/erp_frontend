@@ -1507,7 +1507,6 @@ async function closeDialogPrint() {
 }
 
 function handleAcctions(itemId: any) {
-  console.log('handleAcctions', itemId)
   if (itemId && itemId.length > 0) {
     idPaymentSelectedForPrint.value = itemId[0]
     paymentSelectedForPrintList.value = itemId

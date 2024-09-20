@@ -80,6 +80,7 @@ const allMenuListItems = ref([
     id: 'applayDeposit',
     label: 'Apply Deposit',
     icon: 'pi pi-dollar',
+    iconSvg: '',
     command: ($event: any) => openModalWithContentMenu($event),
     disabled: true,
     visible: true,
@@ -88,7 +89,26 @@ const allMenuListItems = ref([
     id: 'applyPayment',
     label: 'Apply Payment',
     icon: 'pi pi-cog',
+    iconSvg: '',
     command: ($event: any) => openModalApplyPayment($event),
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'undoApplication',
+    label: 'Undo Application',
+    icon: 'pi pi-undo',
+    iconSvg: '',
+    command: ($event: any) => navigateToInvoice($event),
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'reverseTransaction',
+    label: 'Reverse Transaction',
+    icon: 'pi pi-undo',
+    iconSvg: '',
+    command: ($event: any) => {},
     disabled: true,
     visible: true,
   },
@@ -96,7 +116,26 @@ const allMenuListItems = ref([
     id: 'navigateToInvoice',
     label: 'Navigate to Invoice',
     icon: 'pi pi-cog',
+    iconSvg: '',
     command: ($event: any) => navigateToInvoice($event),
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'printAsCreditNote',
+    label: 'Print as Credit Note',
+    icon: 'pi pi-print',
+    iconSvg: '',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'task',
+    label: 'Task',
+    icon: '',
+    iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
+    command: ($event: any) => {},
     disabled: true,
     visible: true,
   },
@@ -2268,6 +2307,51 @@ function onRowContextMenu(event: any) {
       }
     }
   }
+  console.log(event.data?.transactionDate)
+
+  // Validacion para el undo application
+  const dateOfItem = dayjs(event.data?.transactionDate)
+  const currentDate = dayjs().format('YYYY-MM-DD')
+  if (event && event.data && event.data.applyPayment === true && dateOfItem.isSame(currentDate)) {
+    // objItemSelectedForRightClickUndoApplication.value = event.data
+    const menuItemUndoApplication = allMenuListItems.value.find(item => item.id === 'undoApplication')
+    if (menuItemUndoApplication) {
+      menuItemUndoApplication.disabled = false
+      menuItemUndoApplication.visible = true
+    }
+  }
+  else {
+    // objItemSelectedForRightClickUndoApplication.value = {}
+    const menuItemUndoApplication = allMenuListItems.value.find(item => item.id === 'undoApplication')
+    if (menuItemUndoApplication) {
+      menuItemUndoApplication.disabled = true
+      menuItemUndoApplication.visible = true
+    }
+  }
+  // if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:UNDO-APPLICATION']))) {
+  // }
+
+  // Validacion para el undo application
+  const dateOfItemForReverse = dayjs(event.data?.transactionDate)
+  const currentDateForReverse = dayjs().format('YYYY-MM-DD')
+  if (event && event.data && event.data.applyPayment === true && dateOfItemForReverse.isBefore(currentDateForReverse)) {
+    // objItemSelectedForRightClickUndoApplication.value = event.data
+    const menuItemReverseTransaction = allMenuListItems.value.find(item => item.id === 'reverseTransaction')
+    if (menuItemReverseTransaction) {
+      menuItemReverseTransaction.disabled = false
+      menuItemReverseTransaction.visible = true
+    }
+  }
+  else {
+    // objItemSelectedForRightClickUndoApplication.value = {}
+    const menuItemReverseTransaction = allMenuListItems.value.find(item => item.id === 'reverseTransaction')
+    if (menuItemReverseTransaction) {
+      menuItemReverseTransaction.disabled = true
+      menuItemReverseTransaction.visible = false
+    }
+  }
+  // if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:UNDO-APPLICATION']))) {
+  // }
 
   // Mostrar menu contextual si hay items visibles
   const allHidden = allMenuListItems.value.every(item => !item.visible)
@@ -3007,7 +3091,18 @@ onMounted(async () => {
       </template>
     </Dialog>
 
-    <ContextMenu ref="contextMenu" :model="allMenuListItems" />
+    <ContextMenu ref="contextMenu" :model="allMenuListItems">
+      <template #itemicon="{ item }">
+        <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#8d8faa">
+            <path :d="item.iconSvg" />
+          </svg>
+        </div>
+        <div v-else class="w-2rem flex justify-content-center align-items-center">
+          <i v-if="item.icon" :class="item.icon" />
+        </div>
+      </template>
+    </ContextMenu>
   </div>
 </template>
 
