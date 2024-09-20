@@ -355,7 +355,9 @@ function openDialogToPrint() {
   openDialogPrint.value = true
   getPrintList()
 }
-
+function Print() {
+  navigateTo('/invoice/print',{ open: { target: '_blank' } })
+}
 
 ////
 
@@ -1669,7 +1671,7 @@ const legend = ref(
         /> -->
         <!-- <Button class="ml-2" icon="pi pi-file-plus" label="Process" /> -->
         <!--  <Button class="ml-2" icon="pi pi-cog" label="Adjustment" disabled /> -->
-        <Button class="ml-2" icon="pi pi-print" label="Print" :disabled="listItems.length === 0" @click="openDialogToPrint" />
+        <Button class="ml-2" icon="pi pi-print" label="Print" :disabled="listItems.length === 0" @click="Print()" />
         <Button class="ml-2" icon="pi pi-download" label="Export" :disabled="listItems.length === 0"
           @click="() => exportList()" />
         <!-- <Button class="ml-2" icon="pi pi-times" label="Exit" @click="() => { navigateTo('/') }" /> -->
