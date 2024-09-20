@@ -2311,6 +2311,8 @@ function onRowContextMenu(event: any) {
   // Validacion para el undo application
   const dateOfItem = dayjs(event.data?.transactionDate)
   const currentDate = dayjs().format('YYYY-MM-DD')
+  console.log(dateOfItem.isSame(currentDate))
+
   if (event && event.data && event.data.applyPayment === true && dateOfItem.isSame(currentDate)) {
     // objItemSelectedForRightClickUndoApplication.value = event.data
     const menuItemUndoApplication = allMenuListItems.value.find(item => item.id === 'undoApplication')
