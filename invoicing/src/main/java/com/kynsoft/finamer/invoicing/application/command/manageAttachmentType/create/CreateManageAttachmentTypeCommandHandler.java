@@ -26,10 +26,11 @@ public class CreateManageAttachmentTypeCommandHandler implements ICommandHandler
         service.create(new ManageAttachmentTypeDto(
                 command.getId(),
                 command.getCode(),
-
                 command.getName(),
                 Status.valueOf(command.getStatus()),
-                command.getDefaults()));
+                command.getDefaults(),
+                command.isAttachInvDefault()
+        ));
 
     }
 }

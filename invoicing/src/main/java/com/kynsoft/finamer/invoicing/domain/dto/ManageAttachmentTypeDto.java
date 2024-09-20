@@ -16,8 +16,8 @@ public class ManageAttachmentTypeDto {
 
     private UUID id;
     private String code;
-
     private String name;
     private Status status;
     private Boolean defaults;
+    private boolean attachInvDefault;
 }
