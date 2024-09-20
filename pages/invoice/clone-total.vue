@@ -1508,6 +1508,7 @@ onMounted(async () => {
             </div>
           </template>
         </DebouncedAutoCompleteComponent>
+        <Skeleton v-else height="2rem" class="mb-2" />
         <span v-if="agencyError" class="error-message p-error text-xs">The agency field is required</span>
       </template>
       <template #field-hotel="{ item: data, onUpdate }">
@@ -1525,7 +1526,9 @@ onMounted(async () => {
               {{ value?.fullName }}
             </div>
           </template>
+       
         </DebouncedAutoCompleteComponent>
+        <Skeleton v-else height="2rem" class="mb-2" />
       </template>
       <template #field-status="{ item: data, onUpdate }">
         <Dropdown
