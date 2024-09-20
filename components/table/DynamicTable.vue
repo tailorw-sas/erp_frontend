@@ -619,7 +619,7 @@ getOptionsList()
               </span>
             </span>
             <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
-              {{ data[column.field] !== null ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}
+              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : '' }}
             </span>
             <span v-else-if="column.type === 'datetime'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
               {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}
