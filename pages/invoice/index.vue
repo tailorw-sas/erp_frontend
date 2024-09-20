@@ -37,6 +37,7 @@ const entryCode = ref('')
 const randomCode = ref(generateRandomCode());
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
+const listPrintItems = ref<any[]>([])
 const formReload = ref(0)
 const invoiceTypeList = ref<any[]>()
 
@@ -45,7 +46,7 @@ const totalDueAmount = ref(0)
 const totalAmount = ref(0)
 const totalHotelAmount = ref(0)
 const bookingDialogOpen = ref<boolean>(false)
-
+const idItemDetail = ref('')
 const loadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
@@ -306,6 +307,7 @@ function savePrint() {
 }
 
 
+
 async function invoicePrint() {
   try {
     loadingSavePrint.value = true
@@ -351,6 +353,7 @@ function closeModalPrint() {
 
 function openDialogToPrint() {
   openDialogPrint.value = true
+  getPrintList()
 }
 
 
@@ -647,6 +650,7 @@ const optionsToPrint = ref({
   showTitleBar: false
 })
 const payloadOnChangePage = ref<PageState>()
+const payloadPrintOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
@@ -655,7 +659,15 @@ const payload = ref<IQueryRequest>({
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
 })
+
 const pagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+const paginationPrint = ref<IPagination>({
   page: 0,
   limit: 50,
   totalElements: 0,
@@ -774,7 +786,9 @@ async function getList() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
+    return listItems
   }
+  
   catch (error) {
     console.error(error)
   }
@@ -783,6 +797,82 @@ async function getList() {
   }
 }
 
+async function getPrintList() {
+  try {
+   const payloadPrint = {
+    filter: [{
+        key: 'invoiceStatus',
+        operator: 'IN', // Cambia a 'IN' para incluir varios valores
+        value: ['RECONCILED', 'SENT'] // Lista de estados
+      }],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    };
+
+    idItemToLoadFirstTime.value = '';
+    optionsToPrint.value.loading = true;
+    listPrintItems.value = [];
+    const newListItems = [];
+
+    totalInvoiceAmount.value = 0;
+    totalDueAmount.value = 0;
+
+    const response = await GenericService.search(optionsToPrint.value.moduleApi, optionsToPrint.value.uriApi, payloadPrint);
+
+    const { data: dataList, page, size, totalElements, totalPages } = response;
+    
+    paginationPrint.value.page = page;
+    paginationPrint.value.limit = size;
+    paginationPrint.value.totalElements = totalElements;
+    paginationPrint.value.totalPages = totalPages;
+
+    const existingIds = new Set(listPrintItems.value.map(item => item.id));
+
+    for (const iterator of dataList) {
+      let invoiceNumber;
+      if (iterator?.invoiceNumber?.split('-')?.length === 3) {
+        invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`;
+      } else {
+        invoiceNumber = iterator?.invoiceNumber;
+      }
+      newListItems.push({
+        ...iterator,
+        loadingEdit: false,
+        loadingDelete: false,
+        invoiceDate: new Date(iterator?.invoiceDate),
+        agencyCd: iterator?.agency?.code,
+        dueAmount: iterator?.dueAmount || 0,
+        invoiceNumber: invoiceNumber.replace("OLD", "CRE"),
+        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
+      });
+      existingIds.add(iterator.id);
+
+      totalInvoiceAmount.value += iterator.invoiceAmount;
+      totalDueAmount.value += iterator.dueAmount ? Number(iterator.dueAmount) : 0;
+    }
+
+    listPrintItems.value = newListItems;
+
+
+    console.log(paginationPrint.value.totalElements, 'Total de elementos');
+
+    // Actualizar los totales en la interfaz de usuario
+    // Puedes hacer esto si los elementos se actualizan en tiempo real en la interfaz
+
+    // Aquí puedes manejar la lógica de la paginación, como actualizar los botones de página, etc.
+    // Por ejemplo, puedes llamar a una función para renderizar los botones de paginación
+
+  } catch (error) {
+    console.error(error);
+  } finally {
+    optionsToPrint.value.loading = false;
+  }
+}
+
+console.log(listItems,'ver que trae aqui')
 const openEditDialog = async (item: any, type: string) => await navigateTo({ path: `invoice/edit/${item}`, query: { type: type } }, { open: { target: '_blank' } })
 
 async function resetListItems() {
@@ -1470,6 +1560,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
   getList()
+  
 })
 
 const legend = ref(
@@ -2045,12 +2136,12 @@ const legend = ref(
         <div class="p-fluid pt-3">
           <DynamicTable
             class="card p-0"
-            :data="listItems"
+            :data="listPrintItems"
             :columns="columnstoPrint"
             :options="optionsToPrint"
-            :pagination="pagination"
-            @on-change-pagination="payloadOnChangePage = $event"
-            @update:clicked-item="invoiceIdsListToPrint = $event"
+            :pagination="paginationPrint"
+            @on-change-pagination="payloadPrintOnChangePage = $event"
+            @update:clicked-item="invoiceIdsListToPrint=$event"
             >
             <!-- @update:clicked-item="invoiceSelectedListForApplyPayment = $event" -->
             <template #column-status="{ data: item }">
