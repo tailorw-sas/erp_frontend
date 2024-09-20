@@ -44,6 +44,7 @@ const paymentAmmountSelected = ref(0)
 const paymentBalance = ref(0)
 
 // PRINT
+const isPrintByRightClick = ref(false)
 const idPaymentSelectedForPrint = ref('')
 const paymentSelectedForPrintList = ref<any[]>([])
 const openPrint = ref(false)
@@ -506,6 +507,7 @@ const applyPaymentBookingOnChangePage = ref<PageState>()
 
 const openDialogHistory = ref(false)
 const historyList = ref<any[]>([])
+const employeeList = ref<any[]>([])
 const historyColumns = ref<IColumn[]>([
   { field: 'paymentHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -1341,8 +1343,8 @@ async function onExpandRowApplyPayment(event: any) {
 }
 
 function onRowContextMenu(event: any) {
-  console.log(event)
   idPaymentSelectedForPrint.value = event?.data?.id || ''
+  isPrintByRightClick.value = true
   if (event && event.data && (event.data.notApplied !== '' || event.data.notApplied !== null) && event.data.notApplied.replace(/,/g, '') > 0 && (event.data.paymentStatus && event.data.paymentStatus.code !== 'CAN')) {
     objItemSelectedForRightClickApplyPayment.value = event.data
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
@@ -1517,7 +1519,7 @@ async function paymentPrint(event: any) {
     let nameOfPdf = ''
     let paymentTypeArray: string[] = []
     const payloadTemp: { paymentId: string[], paymentType: string[] } = {
-      paymentId: paymentSelectedForPrintList.value,
+      paymentId: isPrintByRightClick.value ? [idPaymentSelectedForPrint.value] : paymentSelectedForPrintList.value,
       paymentType: [],
     }
     // En caso de que solo este marcado el paymentAndDetails
@@ -1571,6 +1573,7 @@ async function closeDialogPrint() {
   paymentSelectedForPrintList.value = []
   itemPrint.value = JSON.parse(JSON.stringify(itemTempPrint.value))
   openPrint.value = false
+  isPrintByRightClick.value = false
 }
 
 function handleAcctions(itemId: any) {
@@ -1581,6 +1584,7 @@ function handleAcctions(itemId: any) {
     if (itemMenuObj) {
       itemMenuObj.btnDisabled = false
       itemMenuObj.btnOnClick = () => {
+        isPrintByRightClick.value = false
         openDialogPrint()
       }
     }
@@ -2398,7 +2402,7 @@ onMounted(async () => {
         //   style: 'backdrop-filter: blur(5px)',
         // },
       }"
-      @hide="openPrint = false"
+      @hide="closeDialogPrint()"
     >
       <template #header>
         <div class="flex justify-content-between">
