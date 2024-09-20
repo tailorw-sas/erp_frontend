@@ -2324,7 +2324,7 @@ function onRowContextMenu(event: any) {
     const menuItemUndoApplication = allMenuListItems.value.find(item => item.id === 'undoApplication')
     if (menuItemUndoApplication) {
       menuItemUndoApplication.disabled = true
-      menuItemUndoApplication.visible = true
+      menuItemUndoApplication.visible = false
     }
   }
   // if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:UNDO-APPLICATION']))) {
