@@ -52,7 +52,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                 //TODO: almaceno el valor de Balance del Booking porque puede que no llegue a cero cuando el Payment Balance si lo haga. Y todavia
                 //tenga valor el notApplied
                 double amountBalance = bookingDto.getAmountBalance();
-                if (notApplied > 0 && paymentBalance > 0 && command.isApplyPaymentBalance()) {
+                if (notApplied > 0 && paymentBalance > 0 && command.isApplyPaymentBalance() && amountBalance > 0) {
                     double amountToApply = Math.min(notApplied, amountBalance);
                     CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true, manageInvoiceDto.getInvoiceDate()));
                     command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId()));
@@ -60,14 +60,15 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                     paymentBalance = paymentBalance - amountToApply;
                     amountBalance = amountBalance - amountToApply;
                 }
-                if ((notApplied > 0 && command.isApplyDeposit() && paymentBalance == 0 && amountBalance > 0) || 
-                    (notApplied > 0 && command.isApplyDeposit() && !command.isApplyPaymentBalance())) {
+                if (((notApplied > 0 || notApplied == 0) && command.isApplyDeposit() && paymentBalance == 0 && amountBalance > 0) || //Aqui aplica para cuando dentro del flujo se usa payment balance y deposit.
+                    ((notApplied > 0 || notApplied == 0) && command.isApplyDeposit() && !command.isApplyPaymentBalance() && amountBalance > 0)) {//TODO: este aplica para cuando se quiere aplicar solo a los deposit
                     if (command.getDeposits() != null && !command.getDeposits().isEmpty()) {
                         for (UUID deposit : command.getDeposits()) {
                             PaymentDetailDto paymentDetailTypeDeposit = this.paymentDetailService.findById(deposit);
                             double depositAmount = paymentDetailTypeDeposit.getAmount() * -1;
 
-                            double amountToApply = Math.min(depositAmount, Math.min(notApplied, bookingDto.getAmountBalance()));
+                            //double amountToApply = Math.min(depositAmount, Math.min(notApplied, bookingDto.getAmountBalance()));
+                            double amountToApply = Math.min(depositAmount,bookingDto.getAmountBalance());
                             CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply * -1, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate()));
                             command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId()));
 
