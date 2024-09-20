@@ -52,23 +52,18 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
     @Override
     public void onApplicationEvent(CreateAttachmentEvent event) {
         FilterCriteria filterDefault = new FilterCriteria();
-        filterDefault.setKey("defaults");
-        filterDefault.setValue(true);
+        filterDefault.setKey("code");
+        filterDefault.setValue("INV");
         filterDefault.setOperator(SearchOperation.EQUALS);
         filterDefault.setLogicalOperation(LogicalOperation.AND);
 
-        FilterCriteria statusActive = new FilterCriteria();
-        statusActive.setKey("status");
-        statusActive.setValue(Status.ACTIVE);
-        statusActive.setOperator(SearchOperation.EQUALS);
-
         FilterCriteria codeFilter = new FilterCriteria();
-        codeFilter.setKey("code");
-        codeFilter.setValue("INV");
+        codeFilter.setKey("attachInvDefault");
+        codeFilter.setValue(true);
         codeFilter.setOperator(SearchOperation.EQUALS);
 
-        GetSearchResourceTypeQuery resourceTypeQuery = new GetSearchResourceTypeQuery(Pageable.unpaged(), List.of(codeFilter), "");
-        GetSearchAttachmentTypeQuery attachmentTypeQuery = new GetSearchAttachmentTypeQuery(Pageable.unpaged(), List.of(filterDefault,statusActive), "");
+        GetSearchResourceTypeQuery resourceTypeQuery = new GetSearchResourceTypeQuery(Pageable.unpaged(),List.of(filterDefault), "");
+        GetSearchAttachmentTypeQuery attachmentTypeQuery = new GetSearchAttachmentTypeQuery(Pageable.unpaged(), List.of(codeFilter), "");
         PaginatedResponse resourceType = mediator.send(resourceTypeQuery);
         PaginatedResponse attachmentType = mediator.send(attachmentTypeQuery);
 
