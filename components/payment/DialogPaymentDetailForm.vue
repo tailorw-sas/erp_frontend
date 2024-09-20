@@ -15,7 +15,7 @@ const props = defineProps({
     default: 'new-detail'
   }
 })
-const emit = defineEmits(['update:visible', 'save', 'applyPayment'])
+const emit = defineEmits(['update:visible', 'save', 'applyPayment', 'update:amount'])
 const confirm = useConfirm()
 const onOffDialog = ref(props.visible)
 const transactionTypeList = ref<any[]>([])
@@ -444,6 +444,10 @@ watch(() => props.item, async (newValue) => {
     // newValue.transactionType.status = 'ACTIVE'
     item.value = { ...newValue }
   }
+})
+
+watch(() => amountLocalTemp.value, async (newValue) => {
+  emit('update:amount', newValue)
 })
 
 onMounted(async () => {

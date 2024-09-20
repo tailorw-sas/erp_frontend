@@ -33,6 +33,7 @@ const formReload = ref(0)
 const formReloadAgency = ref(0)
 const refPaymentDetailForm = ref(0)
 const dialogPaymentDetailFormReload = ref(0)
+const amountOfDetailItem = ref(0) // Temp
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
@@ -2086,7 +2087,7 @@ async function applyPaymentParseDataTableFilter(payloadFilter: any) {
   //   }
   // }
   applyPaymentPayload.value.filter = [...parseFilter || []]
-  applyPaymentGetList()
+  applyPaymentGetList(amountOfDetailItem.value)
 }
 
 async function historyParseDataTableFilter(payloadFilter: any) {
@@ -2437,7 +2438,7 @@ watch(() => route?.query?.id, async (newValue) => {
 watch(applyPaymentOnChangePage, (newValue) => {
   applyPaymentPayload.value.page = newValue?.page ? newValue?.page : 0
   applyPaymentPayload.value.pageSize = newValue?.rows ? newValue.rows : 10
-  applyPaymentGetList()
+  applyPaymentGetList(amountOfDetailItem.value)
 })
 
 onMounted(async () => {
@@ -2869,6 +2870,7 @@ onMounted(async () => {
         @apply-payment="openModalApplyPayment($event)"
         @update:visible="onCloseDialog($event)"
         @save="saveAndReload($event)"
+        @update:amount="amountOfDetailItem = $event"
       />
     </div>
     <div v-if="attachmentDialogOpen">
@@ -2957,7 +2959,7 @@ onMounted(async () => {
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
-            Apply Payment Details
+            Apply Payment11 Details
           </h5>
         </div>
       </template>
