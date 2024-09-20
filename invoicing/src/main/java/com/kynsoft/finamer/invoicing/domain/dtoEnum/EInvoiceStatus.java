@@ -5,4 +5,6 @@ public enum EInvoiceStatus {
     RECONCILED,
     SENT, CANCELED,
     PENDING,
+    PROCESSED
+
 }
