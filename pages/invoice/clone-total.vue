@@ -156,7 +156,7 @@ const Fields = ref<FieldDefinitionType[]>([
     dataType: 'select',
     class: 'field col-12 md:col-3 mb-5  required',
 
-    disabled: true
+   disabled: true
   },
   {
     field: 'invoiceType',
@@ -236,8 +236,8 @@ const item = ref<GenericObject>({
   invoiceNumber: '',
   invoiceDate: new Date(),
   isManual: true,
-  invoiceAmount: '0.00',
 
+  invoiceAmount: '0.00',
   status: route.query.type === InvoiceType.CREDIT ? ENUM_INVOICE_STATUS[5] : ENUM_INVOICE_STATUS[2],
   invoiceType: route.query.type === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === route.query.type)),
 })
@@ -667,6 +667,16 @@ async function getRoomRateClonationList() {
 }
 
 async function saveItem(item: { [key: string]: any }) {
+  if (!item?.hotel?.id) {
+    hotelError.value = true
+  }
+  if (!item?.agency?.id) {
+    agencyError.value = true
+  }
+
+
+
+  if (invoiceAmountError.value) { return null }
   loadingSaveAll.value = true
   let successOperation = true
 
@@ -700,20 +710,16 @@ async function saveItem(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
     if (successOperation) {
-      // if(itemDetails && itemDetails.clonedInvoice) {
-      await getBookingClonationList()
-      // console.log(getBookingClonationList(), 'listado del booking clonado')
-      await getRoomRateClonationList()
-      // console.log(getRoomRateClonationList(), 'listado del roomrate clonado')
-
+          await getBookingClonationList()
+        await getRoomRateClonationList()
+   
       await getItem(idItemCreated.value)
       calcInvoiceAmount()
-      // console.log(getItem(idItemCreated.value), 'listado del get desp de clonar')
 
-      // }
     }
+   
     await new Promise(resolve => setTimeout(resolve, 5000))
-    // navigateTo('/invoice')
+     navigateTo('/invoice')
   }
 }
 
@@ -1118,7 +1124,7 @@ async function getItem(id: any) {
         item.value.agency = response.agency
         item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
-        //  item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
+        item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
 
         //  await getInvoiceAgency(response.agency?.id)
       }
@@ -1487,7 +1493,7 @@ onMounted(async () => {
       <template #field-agency="{ item: data, onUpdate }">
         <DebouncedAutoCompleteComponent
           v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :model="data.agency" :disabled="String(route.query.type) as any === InvoiceType.CREDIT"
+          :model="data.agency" :disabled="false"
           :suggestions="agencyList" @change="($event) => {
             agencyError = false
             onUpdate('agency', $event)
@@ -1507,7 +1513,7 @@ onMounted(async () => {
       <template #field-hotel="{ item: data, onUpdate }">
         <DebouncedAutoCompleteComponent
           v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :disabled="invoiceStatus !== InvoiceStatus.PROCECSED" :model="data.hotel" :suggestions="hotelList" @change="($event) => {
+          :disabled="true" :model="data.hotel" :suggestions="hotelList" @change="($event) => {
             onUpdate('hotel', $event)
           }" @load="($event) => getHotelList($event)"
         >
