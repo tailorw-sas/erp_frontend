@@ -28,7 +28,7 @@ public class ConsumerUpdateManageAttachmentType {
             // ReplicateAttachmentTypeKafka objKafka = objectMapper.treeToValue(rootNode,
             // ReplicateAttachmentTypeKafka.class);
             UpdateManageAttachmentTypeCommand command = new UpdateManageAttachmentTypeCommand(objKafka.getId(),
-                    objKafka.getName(), objKafka.getStatus(), objKafka.getDefaults());
+                    objKafka.getName(), objKafka.getStatus(), objKafka.getDefaults(),objKafka.isAttachInvDefault());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageAttachmentType.class.getName()).log(Level.SEVERE, null, ex);
