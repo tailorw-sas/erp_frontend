@@ -8,6 +8,7 @@ import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
+import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
@@ -20,16 +21,18 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
     private final IManageBookingService manageBookingService;
     private final IPaymentService paymentService;
     private final ProducerUpdateBookingService producerUpdateBookingService;
-
+    private final IManagePaymentStatusService statusService;
 
     public ApplyPaymentDetailCommandHandler(IPaymentDetailService paymentDetailService, 
                                             IManageBookingService manageBookingService,
                                             IPaymentService paymentService,
-                                            ProducerUpdateBookingService producerUpdateBookingService) {
+                                            ProducerUpdateBookingService producerUpdateBookingService,
+                                            IManagePaymentStatusService statusService) {
         this.paymentDetailService = paymentDetailService;
         this.manageBookingService = manageBookingService;
         this.paymentService = paymentService;
         this.producerUpdateBookingService = producerUpdateBookingService;
+        this.statusService = statusService;
     }
 
     @Override
@@ -46,10 +49,16 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         this.paymentDetailService.update(paymentDetailDto);
 
         try {
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance()));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount()));
+            //this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance()));
         } catch (Exception e) {
         }
+
         PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
+        if (paymentDto.getNotApplied() == 0) {
+            paymentDto.setPaymentStatus(this.statusService.findByApplied());
+            this.paymentService.update(paymentDto);
+        }
         command.setPaymentResponse(paymentDto);
     }
 
