@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.upd
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 
@@ -28,14 +29,22 @@ public class ConsumerUpdateBookingService {
         try {
 
             ManageBookingDto bookingDto = this.bookingService.findById(objKafka.getId());
-            Double minus = bookingDto.getDueAmount() - objKafka.getAmountBalance();
-            bookingDto.setDueAmount(objKafka.getAmountBalance());
+            bookingDto.setDueAmount(bookingDto.getDueAmount() - objKafka.getAmountBalance());
             this.bookingService.update(bookingDto);
 
             ManageInvoiceDto invoiceDto = bookingDto.getInvoice();
-            invoiceDto.setDueAmount(invoiceDto.getDueAmount() - minus);
+            invoiceDto.setDueAmount(invoiceDto.getDueAmount() - objKafka.getAmountBalance());
             this.invoiceService.update(invoiceDto);
 
+            if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
+                ManageBookingDto bookingParent = bookingDto.getParent();
+                bookingParent.setDueAmount(bookingParent.getDueAmount() + objKafka.getAmountBalance());
+                this.bookingService.update(bookingParent);
+
+                ManageInvoiceDto parent = this.invoiceService.findById(invoiceDto.getParent().getId());
+                parent.setDueAmount(parent.getDueAmount() + objKafka.getAmountBalance());
+                this.invoiceService.update(parent);
+            }
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateBookingService.class.getName()).log(Level.SEVERE, null, ex);
         }
