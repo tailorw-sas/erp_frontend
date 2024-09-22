@@ -15,4 +15,5 @@ public class PaymentDetailDto {
 
     private UUID id;
     private Long paymentDetailId;
+    private PaymentDto payment;
 }

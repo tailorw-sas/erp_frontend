@@ -22,16 +22,22 @@ public class PaymentDetail implements Serializable {
     private UUID id;
     private Long paymentDetailId;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "payment_id")
+    private Payment payment;
+
     public PaymentDetail(PaymentDetailDto dto) {
         this.id = dto.getId();
         this.paymentDetailId = dto.getPaymentDetailId();
+        this.payment = dto.getPayment() != null ? new Payment(dto.getPayment()) : null;
     }
 
     public PaymentDetailDto toAggregate() {
 
         return new PaymentDetailDto(
                 id,
-                paymentDetailId
+                paymentDetailId,
+                payment.toAggregate()
         );
     }
 }
