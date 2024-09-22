@@ -2,6 +2,8 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayme
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
@@ -49,12 +51,17 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         this.manageBookingService.update(bookingDto);
         this.paymentDetailService.update(paymentDetailDto);
 
+        PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
         try {
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount()));
+            ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
+                    paymentDto.getId(),
+                    paymentDto.getPaymentId(),
+                    new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
+                    ));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka));
         } catch (Exception e) {
         }
 
-        PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
         if (paymentDto.getNotApplied() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
             paymentDto.setPaymentStatus(this.statusService.findByApplied());
             this.paymentService.update(paymentDto);
