@@ -26,10 +26,15 @@ public class PaymentDetail implements Serializable {
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_booking_id")
+    private ManageBooking manageBooking;
+
     public PaymentDetail(PaymentDetailDto dto) {
         this.id = dto.getId();
         this.paymentDetailId = dto.getPaymentDetailId();
         this.payment = dto.getPayment() != null ? new Payment(dto.getPayment()) : null;
+        this.manageBooking = dto.getManageBooking() != null ? new ManageBooking(dto.getManageBooking()) : null;
     }
 
     public PaymentDetailDto toAggregate() {
@@ -37,7 +42,8 @@ public class PaymentDetail implements Serializable {
         return new PaymentDetailDto(
                 id,
                 paymentDetailId,
-                payment.toAggregate()
+                payment.toAggregate(),
+                manageBooking.toAggregate()
         );
     }
 }

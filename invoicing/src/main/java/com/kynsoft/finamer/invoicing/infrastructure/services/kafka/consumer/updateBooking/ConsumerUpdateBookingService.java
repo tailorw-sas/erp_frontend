@@ -48,7 +48,7 @@ public class ConsumerUpdateBookingService {
 
             PaymentDto payment = new PaymentDto(objKafka.getPaymentKafka().getId(), objKafka.getPaymentKafka().getPaymentId());
             this.paymentService.create(payment);
-            this.detailService.create(new PaymentDetailDto(objKafka.getPaymentKafka().getDetails().getId(), objKafka.getPaymentKafka().getDetails().getPaymentDetailId(), payment));
+            this.detailService.create(new PaymentDetailDto(objKafka.getPaymentKafka().getDetails().getId(), objKafka.getPaymentKafka().getDetails().getPaymentDetailId(), payment, bookingDto));
 
             if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 ManageBookingDto bookingParent = bookingDto.getParent();
