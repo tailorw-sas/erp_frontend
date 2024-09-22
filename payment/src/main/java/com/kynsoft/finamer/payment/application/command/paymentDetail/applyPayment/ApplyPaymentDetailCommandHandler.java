@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
@@ -50,16 +51,15 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
 
         try {
             this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount()));
-            //this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance()));
         } catch (Exception e) {
         }
 
         PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
-        if (paymentDto.getNotApplied() == 0) {
+        if (paymentDto.getNotApplied() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
             paymentDto.setPaymentStatus(this.statusService.findByApplied());
             this.paymentService.update(paymentDto);
         }
-        command.setPaymentResponse(paymentDto);
+        command.setPaymentResponse(paymentDto);        
     }
 
 }
