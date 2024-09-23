@@ -149,7 +149,11 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
         for (ManageInvoiceSimpleProjection entity : data.getContent()) {
             try {
-                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity, false, false);
+                Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
+                        && (entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
+                        || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
+
+                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity, false, isCloseOperation);
 //                InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(response.getHotel().getId());
 //                if (response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
 //                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())) {
