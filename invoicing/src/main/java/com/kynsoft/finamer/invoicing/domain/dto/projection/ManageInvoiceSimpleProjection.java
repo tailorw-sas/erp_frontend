@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.domain.dto.projection;
 
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -20,4 +21,5 @@ public interface ManageInvoiceSimpleProjection {
     EInvoiceStatus getInvoiceStatus();
     String getStatus();
     ManageInvoiceStatusProjection getManageInvoiceStatus();
+    LocalDate getCreatedAt();
 }
