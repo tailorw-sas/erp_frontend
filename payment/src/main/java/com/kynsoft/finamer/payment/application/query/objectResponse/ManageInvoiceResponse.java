@@ -3,13 +3,11 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
-import java.util.ArrayList;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -24,7 +22,7 @@ public class ManageInvoiceResponse implements IResponse {
     private String invoiceNumber;
     private EInvoiceType invoiceType;
     private Double invoiceAmount;
-    private List<ManageBookingResponse> bookings = new ArrayList<>();
+    //private List<ManageBookingResponse> bookings = new ArrayList<>();
     private ManageInvoiceResponse parent;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
@@ -34,11 +32,11 @@ public class ManageInvoiceResponse implements IResponse {
         this.invoiceNumber = deleteHotelInfo(dto.getInvoiceNumber());
         this.invoiceType = dto.getInvoiceType();
         this.invoiceAmount = dto.getInvoiceAmount();
-        if (dto.getBookings() != null) {
-            for (ManageBookingDto booking : dto.getBookings()) {
-                this.bookings.add(new ManageBookingResponse(booking));
-            }
-        }
+//        if (dto.getBookings() != null) {
+//            for (ManageBookingDto booking : dto.getBookings()) {
+//                this.bookings.add(new ManageBookingResponse(booking));
+//            }
+//        }
         this.parent = dto.getParent() != null ? new ManageInvoiceResponse(dto.getParent()) : null;
     }
 
