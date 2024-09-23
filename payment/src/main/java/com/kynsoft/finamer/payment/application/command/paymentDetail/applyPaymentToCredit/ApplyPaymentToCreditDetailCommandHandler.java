@@ -2,6 +2,8 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayme
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
@@ -21,11 +23,10 @@ public class ApplyPaymentToCreditDetailCommandHandler implements ICommandHandler
     private final IPaymentService paymentService;
     private final ProducerUpdateBookingService producerUpdateBookingService;
 
-
-    public ApplyPaymentToCreditDetailCommandHandler(IPaymentDetailService paymentDetailService, 
-                                            IManageBookingService manageBookingService,
-                                            IPaymentService paymentService,
-                                            ProducerUpdateBookingService producerUpdateBookingService) {
+    public ApplyPaymentToCreditDetailCommandHandler(IPaymentDetailService paymentDetailService,
+            IManageBookingService manageBookingService,
+            IPaymentService paymentService,
+            ProducerUpdateBookingService producerUpdateBookingService) {
         this.paymentDetailService = paymentDetailService;
         this.manageBookingService = manageBookingService;
         this.paymentService = paymentService;
@@ -47,11 +48,16 @@ public class ApplyPaymentToCreditDetailCommandHandler implements ICommandHandler
         this.paymentDetailService.update(paymentDetailDto);
 
         try {
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), 0.0));
+            PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
+            ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
+                    paymentDto.getId(),
+                    paymentDto.getPaymentId(),
+                    new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
+                    ));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), 0.0, paymentKafka));
+            command.setPaymentResponse(paymentDto);
         } catch (Exception e) {
         }
-        PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
-        command.setPaymentResponse(paymentDto);
     }
 
 }

@@ -1,8 +1,8 @@
-package com.kynsoft.finamer.payment.domain.services;
+package com.kynsoft.finamer.invoicing.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.invoicing.domain.dto.PaymentDetailDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -17,13 +17,5 @@ public interface IPaymentDetailService {
 
     PaymentDetailDto findById(UUID id);
 
-    PaymentDetailDto findByGenId(int id);
-
-    boolean existByGenId(int id);
-
-    List<PaymentDetailDto> findByPaymentId(UUID paymentId);
-
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
-
-    List<UUID> bulk(List<PaymentDetailDto> toSave);
 }

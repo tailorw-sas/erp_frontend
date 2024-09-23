@@ -25,7 +25,7 @@ public class ConsumerReplicateManageAttachmentService {
 
             CreateManageAttachmentTypeCommand command = new CreateManageAttachmentTypeCommand(objKafka.getId(),
                     objKafka.getCode(),
-                    objKafka.getName(), objKafka.getStatus(), objKafka.getDefaults());
+                    objKafka.getName(), objKafka.getStatus(), objKafka.getDefaults(), objKafka.isAttachInvDefault());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageAttachmentService.class.getName()).log(Level.SEVERE, null, ex);

@@ -32,14 +32,12 @@ public class InvoiceReportInvoiceSupportService implements IInvoiceReport {
             Optional<byte[]> invoiceSupport = getInvoiceSupport(invoiceId);
             invoiceSupport.ifPresent(content -> contentToMerge.add(new ByteArrayInputStream(content)));
             if (!contentToMerge.isEmpty()) {
-                ;
                 return Optional.of(PDFUtils.mergePDFtoByte(contentToMerge));
-            } else {
-                return Optional.of(ReportUtil.defaultPdfContent());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return Optional.empty();
     }
 
     private Optional<byte[]> getInvoiceSupport(String invoiceId) {

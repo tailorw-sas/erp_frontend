@@ -71,7 +71,7 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
 
     private void calculate(PaymentDto paymentDto, PaymentDetailDto newDetailDto) {
         paymentDto.setDepositBalance(paymentDto.getDepositBalance() - newDetailDto.getAmount());
-        paymentDto.setNotApplied(paymentDto.getNotApplied() - newDetailDto.getAmount());
+        paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
         paymentDto.setIdentified(paymentDto.getIdentified() + newDetailDto.getAmount());
         paymentDto.setNotIdentified(paymentDto.getPaymentAmount() - paymentDto.getIdentified());
 

@@ -38,7 +38,7 @@ public class InvoiceAttachmentContentProvider extends AbstractReportContentProvi
     private Optional<byte[]> getInvoiceAndBookingAndSupportReportContent(String invoiceId) throws IOException {
         InvoiceRequest invoiceRequest = new InvoiceRequest();
         invoiceRequest.setInvoiceId(new String[]{invoiceId});
-        invoiceRequest.setInvoiceType(new String[]{"INVOICE_SUPPORT"});
+        invoiceRequest.setInvoiceType(new String[]{"INVOICE_AND_BOOKING","INVOICE_SUPPORT"});
         ResponseEntity<byte[]> response = restTemplate.postForEntity(INVOICE_SERVICE_URL,invoiceRequest, byte[].class);
         if (response.getStatusCode().is2xxSuccessful()){
             return Optional.ofNullable(response.getBody());

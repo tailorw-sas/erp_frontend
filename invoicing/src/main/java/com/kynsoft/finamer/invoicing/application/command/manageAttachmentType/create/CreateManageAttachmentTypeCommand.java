@@ -21,6 +21,7 @@ public class CreateManageAttachmentTypeCommand implements ICommand {
     private String name;
     private String status;
     private Boolean defaults;
+    private boolean attachInvDefault;
 
     
 

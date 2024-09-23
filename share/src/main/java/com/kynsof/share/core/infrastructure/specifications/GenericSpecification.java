@@ -31,8 +31,6 @@ public class GenericSpecification<T> implements Specification<T> {
         } else {
             path = root.get(criteria.getKey());
         }
-
-        // Verificar si el valor es un UUID y convertirlo a UUID si es necesario.
         Object value = criteria.getValue();
 
         if (value instanceof String && isValidUUID((String) value)) {
@@ -42,7 +40,6 @@ public class GenericSpecification<T> implements Specification<T> {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        // Intentar convertir el valor a LocalDate o LocalDateTime si es necesario.
         try {
             value = LocalDate.parse(value.toString(), dateFormatter);
         } catch (DateTimeParseException ignored) {
@@ -90,37 +87,11 @@ public class GenericSpecification<T> implements Specification<T> {
                 } else if (value instanceof LocalDateTime) {
                     yield builder.greaterThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
                 } else if (value instanceof Double) {
-                    System.err.println("########################################");
-                    System.err.println("########################################");
-                    System.err.println("########################################");
-                    System.err.println("Value: " + value);
-                    System.err.println("########################################");
-                    System.err.println("########################################");
-                    System.err.println("########################################");
                     yield builder.greaterThanOrEqualTo(path.as(Double.class), (Double) value);
                 } else {
                     yield builder.greaterThanOrEqualTo(path.as(String.class), value.toString());
                 }
             }
-
-//            case GREATER_THAN_OR_EQUAL_TO -> {
-//                if (value instanceof LocalDate) {
-//                    yield builder.greaterThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
-//                } else if (value instanceof LocalDateTime) {
-//                    yield builder.greaterThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
-//                } else {
-//                    yield builder.greaterThanOrEqualTo(path.as(String.class), value.toString());
-//                }
-//            }
-//            case LESS_THAN_OR_EQUAL_TO -> {
-//                if (value instanceof LocalDate) {
-//                    yield builder.lessThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
-//                } else if (value instanceof LocalDateTime) {
-//                    yield builder.lessThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
-//                } else {
-//                    yield builder.lessThanOrEqualTo(path.as(String.class), value.toString());
-//                }
-//            }
             case LESS_THAN_OR_EQUAL_TO -> {
                 if (value instanceof LocalDate) {
                     yield builder.lessThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
