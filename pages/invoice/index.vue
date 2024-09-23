@@ -1471,7 +1471,7 @@ function onRowRightClick(event: any) {
   if (event.data?.invoiceType === InvoiceType.INVOICE) {
     // Mostrar Clone solo si es de tipo Invoice y esta como showClone el status en el nomenclador Invoice Status
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status) &&
-      event.data?.manageInvoiceStatus?.showClone) {
+      event.data?.invoiceStatus?.showClone) {
       findMenuItemByLabelSetShow('Clone', invoiceContextMenuItems.value, true)
     }
 
