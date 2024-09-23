@@ -97,6 +97,9 @@ public class ManageBooking {
     @ManyToOne(fetch = FetchType.EAGER)
     private ManageBooking parent;
 
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "manageBooking")
+    private List<PaymentDetail> paymentDetails;
+
     public ManageBooking(ManageBookingDto dto) {
         this.id = dto.getId();
         this.hotelCreationDate = dto.getHotelCreationDate();
