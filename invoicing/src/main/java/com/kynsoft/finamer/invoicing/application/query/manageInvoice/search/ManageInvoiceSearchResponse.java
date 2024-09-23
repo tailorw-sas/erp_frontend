@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.application.query.manageInvoice.search;
 
-import com.kynsoft.finamer.invoicing.domain.dto.projection.ManageInvoiceSimpleProjection;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
@@ -21,7 +20,7 @@ public class ManageInvoiceSearchResponse {
     private Double dueAmount;
     private LocalDateTime invoiceDate;
     private ManageInvoiceHotelResponse hotel;
-    private  ManageInvoiceAgencyResponse agency;
+    private ManageInvoiceAgencyResponse agency;
     private ManageInvoiceStatusResponse invoiceStatus;
     private Boolean hasAttachments;
     private EInvoiceStatus status;
