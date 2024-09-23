@@ -29,7 +29,7 @@ public class InvoiceCloseOperation implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)  // Define la relación uno a uno
+    @OneToOne(optional = false)  // Define la relación uno a uno
     @JoinColumn(name = "hotel_id", nullable = false, unique = true)  // Hace la relación obligatoria
     private ManageHotel hotel;
 
