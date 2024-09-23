@@ -8,4 +8,5 @@ import lombok.Getter;
 public class InvoiceReportRequest {
     private String [] invoiceId;
     private String [] invoiceType;
+    private boolean groupByClient;
 }

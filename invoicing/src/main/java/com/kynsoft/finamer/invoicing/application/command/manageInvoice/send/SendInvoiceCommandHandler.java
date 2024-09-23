@@ -10,7 +10,7 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.utils.ServiceLocator;
 import com.kynsoft.finamer.invoicing.application.query.report.InvoiceReportQuery;
 import com.kynsoft.finamer.invoicing.application.query.report.InvoiceReportRequest;
-import com.kynsoft.finamer.invoicing.application.query.report.InvoiceReportResponse;
+import com.kynsoft.finamer.invoicing.application.query.report.InvoiceMergeReportResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -136,10 +136,10 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
 
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds) {
-        InvoiceReportRequest invoiceReportRequest = new InvoiceReportRequest(new String[]{invoiceIds}, new String[]{EInvoiceReportType.INVOICE_AND_BOOKING.name()});
+        InvoiceReportRequest invoiceReportRequest = new InvoiceReportRequest(new String[]{invoiceIds}, new String[]{EInvoiceReportType.INVOICE_AND_BOOKING.name()},false);
         InvoiceReportQuery query = new InvoiceReportQuery(invoiceReportRequest);
         IMediator mediator = serviceLocator.getBean(IMediator.class);
-        InvoiceReportResponse response =mediator.send(query);
+        InvoiceMergeReportResponse response =mediator.send(query);
         return Optional.of(response.getFile());
     }
 

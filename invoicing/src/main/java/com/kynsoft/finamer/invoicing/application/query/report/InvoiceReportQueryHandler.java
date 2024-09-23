@@ -3,15 +3,17 @@ package com.kynsoft.finamer.invoicing.application.query.report;
 import com.itextpdf.text.DocumentException;
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageClientDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReport;
+import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.util.ReportUtil;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.core.Link;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -26,24 +28,36 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQuery, InvoiceReportResponse> {
-    private final InvoiceReportProviderFactory invoiceReportProviderFactory;
+public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQuery, InvoiceZipReportResponse> {
 
-    public InvoiceReportQueryHandler(InvoiceReportProviderFactory invoiceReportProviderFactory) {
+    private final InvoiceReportProviderFactory invoiceReportProviderFactory;
+    private final IManageInvoiceService manageInvoiceService;
+
+    public InvoiceReportQueryHandler(InvoiceReportProviderFactory invoiceReportProviderFactory, IManageInvoiceService manageInvoiceService) {
         this.invoiceReportProviderFactory = invoiceReportProviderFactory;
+        this.manageInvoiceService = manageInvoiceService;
     }
 
+
     @Override
-    public InvoiceReportResponse handle(InvoiceReportQuery query) {
+    public InvoiceZipReportResponse handle(InvoiceReportQuery query) {
         InvoiceReportRequest invoiceReportRequest = query.getInvoiceReportRequest();
         List<EInvoiceReportType> invoiceReportTypes = getInvoiceTypeFromRequest(invoiceReportRequest);
         Map<EInvoiceReportType, IInvoiceReport> services = getServiceByInvoiceType(invoiceReportTypes);
         try {
-           Optional<ByteArrayOutputStream> reportContent = getReportContent(services, Arrays.asList(invoiceReportRequest.getInvoiceId()));
-           if (reportContent.isPresent()) {
-               return ReportUtil.createPaymentReportResponse(reportContent.get().toByteArray(), invoiceReportRequest.getInvoiceId().length > 0 ?
-                       "invoicing-report.pdf" : invoiceReportRequest.getInvoiceId()[0] + ".pdf");
-           }
+            Optional<Map<String, byte[]>> reportContent;
+            if (invoiceReportRequest.isGroupByClient()) {
+                reportContent = getReportContentGroupedByClient(services, Arrays.asList(invoiceReportRequest.getInvoiceId()));
+                if (reportContent.isPresent()) {
+                    return ReportUtil.createCompressResponse(reportContent.get());
+                }
+            } else {
+                reportContent = getReportContent(services, Arrays.asList(invoiceReportRequest.getInvoiceId()));
+                if (reportContent.isPresent()) {
+                    return ReportUtil.createCompressResponse(reportContent.get());
+                }
+            }
+
         } catch (DocumentException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -64,28 +78,61 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
         return services;
     }
 
-    private Optional<ByteArrayOutputStream> getReportContent(Map<EInvoiceReportType, IInvoiceReport> reportService, List<String> invoicesIds) throws DocumentException, IOException {
-        Map<EInvoiceReportType, Optional<byte[]>> reportContent = new HashMap<>();
-        List<byte[]> result = new ArrayList<>();
-        for (String invoicesId : invoicesIds) {
-            for (Map.Entry<EInvoiceReportType, IInvoiceReport> entry : reportService.entrySet()) {
-                reportContent.put(entry.getKey(), entry.getValue().generateReport(invoicesId));
-            }
-            List<Optional<byte[]>> orderedContent = getOrderReportContent(reportContent);
-            List<InputStream> finalContent = orderedContent.stream()
+    private Optional<Map<String, byte[]>> getReportContent(Map<EInvoiceReportType, IInvoiceReport> reportService, List<String> invoicesIds) throws DocumentException, IOException {
+        Map<String, byte[]> result = new HashMap<>();
+
+        for (String invoiceId : invoicesIds) {
+            Map<EInvoiceReportType, Optional<byte[]>> reportContent = reportService.entrySet().stream()
+                    .filter(entry -> Objects.nonNull(entry.getValue()))
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> entry.getValue().generateReport(invoiceId)
+                    ));
+
+            List<InputStream> finalContent = getOrderReportContent(reportContent).stream()
                     .filter(Optional::isPresent)
                     .map(content -> new ByteArrayInputStream(content.get()))
                     .map(InputStream.class::cast)
                     .toList();
             if (!finalContent.isEmpty()) {
-                result.add(PDFUtils.mergePDFtoByte(finalContent));
+                result.put(invoiceId, PDFUtils.mergePDFtoByte(finalContent));
             }
         }
-        if (!result.isEmpty())
-            return Optional.of(PDFUtils.mergePDF(result.stream().map(ByteArrayInputStream::new).map(InputStream.class::cast).toList()));
-        return Optional.empty();
+
+        // Retornar el mapa de resultados si no está vacío
+        return result.isEmpty() ? Optional.empty() : Optional.of(result);
     }
 
+    private Optional<Map<String, byte[]>> getReportContentGroupedByClient(Map<EInvoiceReportType, IInvoiceReport> reportService, List<String> invoicesIds) throws DocumentException, IOException {
+        Map<String, byte[]> result = new HashMap<>();
+        Map<String, List<String>> invoicesGrouped = getInvoiceGroupedByClient(invoicesIds);
+
+        for (Map.Entry<String, List<String>> entry : invoicesGrouped.entrySet()) {
+            Map<EInvoiceReportType, Optional<byte[]>> reportContent = this.groupPdfContentByReportType(entry.getValue(), reportService);
+            result.put(entry.getKey(), PDFUtils.mergePDFtoByte(getOrderReportContent(reportContent)
+                    .stream()
+                    .filter(Optional::isPresent)
+                    .map(bytes -> new ByteArrayInputStream(bytes.get()))
+                    .map(InputStream.class::cast).toList()));
+        }
+
+        // Retornar el mapa de resultados si no está vacío
+        return result.isEmpty() ? Optional.empty() : Optional.of(result);
+    }
+
+    private Map<EInvoiceReportType, Optional<byte[]>> groupPdfContentByReportType(List<String> invoicesIds, Map<EInvoiceReportType, IInvoiceReport> reportService) throws DocumentException, IOException {
+        Map<EInvoiceReportType, Optional<byte[]>> content = new HashMap<>();
+        for (Map.Entry<EInvoiceReportType, IInvoiceReport> entry : reportService.entrySet()) {
+            if (Objects.nonNull(entry.getValue())) {
+                List<Optional<byte[]>> reportContent = invoicesIds.stream().map(invoicesId -> entry.getValue().generateReport(invoicesId)).toList();
+                content.put(entry.getKey(), Optional.of(PDFUtils.mergePDFtoByte(reportContent.stream()
+                        .filter(Optional::isPresent)
+                        .map(bytes -> new ByteArrayInputStream(bytes.get()))
+                        .map(InputStream.class::cast).toList())));
+            }
+        }
+        return content;
+    }
 
     private List<Optional<byte[]>> getOrderReportContent(Map<EInvoiceReportType, Optional<byte[]>> content) {
         List<Optional<byte[]>> orderedContent = new LinkedList<>();
@@ -93,4 +140,19 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
         orderedContent.add(content.getOrDefault(EInvoiceReportType.INVOICE_SUPPORT, Optional.empty()));
         return orderedContent;
     }
+
+    private Map<String, List<String>> getInvoiceGroupedByClient(List<String> invoiceIds) {
+        Map<String, List<String>> invoiceClientMap = new HashMap<>();
+        invoiceIds.forEach(invoiceId -> {
+            ManageInvoiceDto manageInvoiceDto = manageInvoiceService.findById(UUID.fromString(invoiceId));
+            ManageAgencyDto manageAgencyDto = manageInvoiceDto.getAgency();
+            ManageClientDto manageClientDto = manageAgencyDto.getClient();
+            if (Objects.nonNull(manageClientDto)) {
+                invoiceClientMap.computeIfAbsent(manageClientDto.getId().toString(), k -> new ArrayList<>()).add(invoiceId);
+            }
+        });
+        return invoiceClientMap;
+    }
+
+
 }
