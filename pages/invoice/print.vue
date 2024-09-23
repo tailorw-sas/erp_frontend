@@ -75,7 +75,7 @@ const ENUM_FILTER = [
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text' },
-  { field: 'invoiceType', header: 'Type', type:'text' },
+  { field: 'invoiceType', header: 'Type', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
@@ -125,11 +125,10 @@ const pagination = ref<IPagination>({
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
-
 async function getPrintList() {
   try {
-   const payloadPrint = {
-    filter: [{
+    const payloadPrint = {
+      filter: [{
         key: 'invoiceStatus',
         operator: 'IN', // Cambia a 'IN' para incluir varios valores
         value: ['RECONCILED', 'SENT'] // Lista de estados
@@ -139,33 +138,34 @@ async function getPrintList() {
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
-    };
+    }
 
-    idItemToLoadFirstTime.value = '';
-    options.value.loading = true;
-    listPrintItems.value = [];
-    const newListItems = [];
+    idItemToLoadFirstTime.value = ''
+    options.value.loading = true
+    listPrintItems.value = []
+    const newListItems = []
 
-    totalInvoiceAmount.value = 0;
-    totalDueAmount.value = 0;
+    totalInvoiceAmount.value = 0
+    totalDueAmount.value = 0
 
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payloadPrint);
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payloadPrint)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response;
-    
-    pagination.value.page = page;
-    pagination.value.limit = size;
-    pagination.value.totalElements = totalElements;
-    pagination.value.totalPages = totalPages;
+    const { data: dataList, page, size, totalElements, totalPages } = response
 
-    const existingIds = new Set(listPrintItems.value.map(item => item.id));
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    const existingIds = new Set(listPrintItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      let invoiceNumber;
+      let invoiceNumber
       if (iterator?.invoiceNumber?.split('-')?.length === 3) {
-        invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`;
-      } else {
-        invoiceNumber = iterator?.invoiceNumber;
+        invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
+      }
+      else {
+        invoiceNumber = iterator?.invoiceNumber
       }
       newListItems.push({
         ...iterator,
@@ -174,33 +174,32 @@ async function getPrintList() {
         invoiceDate: new Date(iterator?.invoiceDate),
         agencyCd: iterator?.agency?.code,
         dueAmount: iterator?.dueAmount || 0,
-        invoiceNumber: invoiceNumber.replace("OLD", "CRE"),
-        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
-      });
-      existingIds.add(iterator.id);
+        invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
+        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` }
+      })
+      existingIds.add(iterator.id)
 
-      totalInvoiceAmount.value += iterator.invoiceAmount;
-      totalDueAmount.value += iterator.dueAmount ? Number(iterator.dueAmount) : 0;
+      totalInvoiceAmount.value += iterator.invoiceAmount
+      totalDueAmount.value += iterator.dueAmount ? Number(iterator.dueAmount) : 0
     }
 
-    listPrintItems.value = newListItems;
+    listPrintItems.value = newListItems
 
-
-    console.log(pagination.value.totalElements, 'Total de elementos');
+    console.log(pagination.value.totalElements, 'Total de elementos')
 
     // Actualizar los totales en la interfaz de usuario
     // Puedes hacer esto si los elementos se actualizan en tiempo real en la interfaz
 
     // Aquí puedes manejar la lógica de la paginación, como actualizar los botones de página, etc.
     // Por ejemplo, puedes llamar a una función para renderizar los botones de paginación
-
-  } catch (error) {
-    console.error(error);
-  } finally {
-    options.value.loading = false;
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    options.value.loading = false
   }
 }
-
 
 async function getHotelList(query: string = '') {
   try {
@@ -435,106 +434,103 @@ const disabledSearch = computed(() => {
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
-
-  
 })
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
-   getPrintList()
+  getPrintList()
 })
 </script>
+
 <template>
-   <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+  <div class="font-bold text-lg px-4 bg-primary custom-card-header">
     Invoice to Print
   </div>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-2">
-     
       <div class="p-fluid pt-3">
-      <DynamicTable
-        class="card p-0 "
-        :data="listPrintItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-      >
-      <template #column-status="{ data: item }">
-              <Badge
-                :value="getStatusName(item?.status)"
-                :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
-              />
-            </template>
+        <DynamicTable
+          class="card p-0 "
+          :data="listPrintItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-confirm-create="clearForm"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+        >
+          <template #column-status="{ data: item }">
+            <Badge
+              :value="getStatusName(item?.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+            />
+          </template>
 
-         <template #datatable-footer>
-          <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
-            <Row>
-              <Column footer="Total" :colspan="9" footer-style="text-align:right; font-weight: 700" />
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
+              <Row>
+                <Column footer="Total" :colspan="9" footer-style="text-align:right; font-weight: 700" />
 
-              <Column :colspan="8" />
-            </Row>
-          </ColumnGroup>
-        </template> 
-   
-      </DynamicTable>
-    </div>
-    <div class="flex justify-content-between">
-          <div class="flex align-items-center">
-            <div class="ml-2">
-              <Checkbox
-                id="invoiceAndBookings"
-                 v-model="invoiceAndBookings"
-                :binary="true"
-                disabled
-                @update:model-value="($event) => {
-                  // changeValueByCheckApplyPaymentBalance($event);
-                }"
-              />
-              <label for="invoiceAndBookings" class="ml-2 font-bold">
-                Invoice And Bookings
-              </label>
-            </div>
-            <div class="mx-4">
-              <Checkbox
-                id="invoiceSupport"
-                v-model="invoiceSupport"
-                :binary="true"
-                @update:model-value="($event) => {
-                  // changeValueByCheckApplyPaymentBalance($event);
-                }"
-              />
-              <label for="invoiceSupport" class="ml-2 font-bold">
-                Invoice Supports
-              </label>
-            </div>
-            <div>
-              <Checkbox
-                id="groupByClient"
-                v-model="groupByClient"
-                :binary="true"
-                @update:model-value="($event) => {
-                  // changeValueByCheckApplyPaymentBalance($event);
-                }"
-              />
-              <label for="groupbyClient" class="ml-2 font-bold">
-                Group By Client
-              </label>
-            </div>
+                <Column :colspan="8" />
+              </Row>
+            </ColumnGroup>
+          </template>
+        </DynamicTable>
+      </div>
+      <div class="flex justify-content-between">
+        <div class="flex align-items-center">
+          <div class="ml-2">
+            <Checkbox
+              id="invoiceAndBookings"
+              v-model="invoiceAndBookings"
+              :binary="true"
+              disabled
+              @update:model-value="($event) => {
+                // changeValueByCheckApplyPaymentBalance($event);
+              }"
+            />
+            <label for="invoiceAndBookings" class="ml-2 font-bold">
+              Invoice And Bookings
+            </label>
           </div>
-              
-      <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" @click="clearForm" />
-        <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+          <div class="mx-4">
+            <Checkbox
+              id="invoiceSupport"
+              v-model="invoiceSupport"
+              :binary="true"
+              @update:model-value="($event) => {
+                // changeValueByCheckApplyPaymentBalance($event);
+              }"
+            />
+            <label for="invoiceSupport" class="ml-2 font-bold">
+              Invoice Supports
+            </label>
+          </div>
+          <div>
+            <Checkbox
+              id="groupByClient"
+              v-model="groupByClient"
+              :binary="true"
+              @update:model-value="($event) => {
+                // changeValueByCheckApplyPaymentBalance($event);
+              }"
+            />
+            <label for="groupbyClient" class="ml-2 font-bold">
+              Group By Client
+            </label>
+          </div>
+        </div>
+
+        <div class="flex align-items-end justify-content-end">
+          <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" @click="clearForm" />
+          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+        </div>
       </div>
     </div>
   </div>
-</div>
 </template>
 
 <style lang="scss">
