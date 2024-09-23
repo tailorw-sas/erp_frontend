@@ -5,6 +5,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -25,4 +26,5 @@ public interface ManageInvoiceSimpleProjection {
     LocalDate getCreatedAt();
     EInvoiceType getInvoiceType();
     String getInvoiceNumber();
+    List<ManageAttachmentSimpleProjection> getAttachments();
 }
