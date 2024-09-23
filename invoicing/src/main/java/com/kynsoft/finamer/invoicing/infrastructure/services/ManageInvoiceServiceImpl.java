@@ -98,7 +98,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageInvoiceSimpleProjection> data = repositoryQuery.findAllSimple(specifications, pageable);
+        Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
         //getPaginatedResponseTest(example);
         //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
 
@@ -145,9 +145,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManageInvoiceSimpleProjection> data) {
+    private PaginatedResponse getPaginatedResponse(Page<ManageInvoice> data) {
         List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
-        for (ManageInvoiceSimpleProjection entity : data.getContent()) {
+        for (ManageInvoice entity : data.getContent()) {
             try {
                 Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
                         && (entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
