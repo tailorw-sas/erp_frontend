@@ -24,4 +24,5 @@ public interface ManageInvoiceSimpleProjection {
     ManageInvoiceStatusProjection getManageInvoiceStatus();
     LocalDate getCreatedAt();
     EInvoiceType getInvoiceType();
+    String getInvoiceNumber();
 }

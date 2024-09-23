@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.application.query.manageInvoice.search;
 
-import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageAgencyResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.projection.ManageInvoiceSimpleProjection;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -27,6 +26,7 @@ public class ManageInvoiceSearchResponse {
     private EInvoiceStatus status;
     private Boolean isInCloseOperation;
     private EInvoiceType invoiceType;
+    private String invoiceNumber;
 
     public ManageInvoiceSearchResponse(ManageInvoiceSimpleProjection projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
         this.id = projection.getId();
@@ -43,5 +43,10 @@ public class ManageInvoiceSearchResponse {
         this.status = projection.getInvoiceStatus();
         this.isInCloseOperation = isInCloseOperation;
         this.invoiceType = projection.getInvoiceType();
+        this.invoiceNumber = deleteHotelInfo(projection.getInvoiceNumber());
+    }
+
+    private String deleteHotelInfo(String input) {
+        return input.replaceAll("-(.*?)-", "-");
     }
 }
