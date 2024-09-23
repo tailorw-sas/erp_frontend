@@ -149,7 +149,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         for (ManageInvoiceSimpleProjection entity : data.getContent()) {
             try {
                 Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
-                        && (entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
+                        && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
                         || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
                 Boolean isHasAttachments = entity.getAttachments() != null && !entity.getAttachments().isEmpty();
                 ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity, isHasAttachments, isCloseOperation);
