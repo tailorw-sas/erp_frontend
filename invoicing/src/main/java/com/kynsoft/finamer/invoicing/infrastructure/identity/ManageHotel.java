@@ -1,13 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -78,6 +72,9 @@ public class ManageHotel implements Serializable {
     private ManageCityState manageCityState;
 
     private String address;
+
+    @OneToOne(mappedBy = "hotel", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private InvoiceCloseOperation closeOperation;  // Relación uno a uno con InvoiceCloseOperation
 
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
