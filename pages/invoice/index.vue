@@ -783,7 +783,7 @@ async function getList() {
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
           dueAmount: iterator?.dueAmount || 0, 
-          // invoiceNumber: invoiceNumber.replace("OLD", "CRE"),
+          invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
 
 
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
@@ -1460,6 +1460,7 @@ function findMenuItemByLabelSetShow(label: string, list: any[], showItem: boolea
 }
 
 function onRowRightClick(event: any) {
+
   selectedInvoice = event.data.id
   setMenuOptions()
 
