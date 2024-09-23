@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.application.query.manageInvoice.search;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageAgencyResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.projection.ManageInvoiceSimpleProjection;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +26,7 @@ public class ManageInvoiceSearchResponse {
     private Boolean hasAttachments;
     private EInvoiceStatus status;
     private Boolean isInCloseOperation;
+    private EInvoiceType invoiceType;
 
     public ManageInvoiceSearchResponse(ManageInvoiceSimpleProjection projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
         this.id = projection.getId();
@@ -40,5 +42,6 @@ public class ManageInvoiceSearchResponse {
         this.hasAttachments = isHasAttachments;
         this.status = projection.getInvoiceStatus();
         this.isInCloseOperation = isInCloseOperation;
+        this.invoiceType = projection.getInvoiceType();
     }
 }
