@@ -12,7 +12,7 @@ public class PageableUtil {
             Sort.Order order = new Sort.Order(
                     request.getSortType().equals(SortTypeEnum.ASC) ? Sort.Direction.ASC : Sort.Direction.DESC,
                     request.getSortBy()
-            ).ignoreCase();
+            );
             sort = Sort.by(order);
         }
         return PageRequest.of(request.getPage(), request.getPageSize(), sort);
