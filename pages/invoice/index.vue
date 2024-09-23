@@ -755,6 +755,8 @@ async function getList() {
     totalDueAmount.value = 0
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    console.log(response.data);
+    
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -775,7 +777,13 @@ async function getList() {
           invoiceNumber = iterator?.invoiceNumber
         }
         newListItems.push({
-          ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate), agencyCd: iterator?.agency?.code, dueAmount: iterator?.dueAmount || 0, invoiceNumber: invoiceNumber.replace("OLD", "CRE"),
+          ...iterator, 
+          loadingEdit: false, 
+          loadingDelete: false, 
+          invoiceDate: new Date(iterator?.invoiceDate), 
+          agencyCd: iterator?.agency?.code, 
+          dueAmount: iterator?.dueAmount || 0, 
+          // invoiceNumber: invoiceNumber.replace("OLD", "CRE"),
 
 
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
@@ -891,9 +899,6 @@ function searchAndFilter() {
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.DESC
   }
-
-
-
 
   if (!filterToSearch.value.search) {
     if (filterToSearch.value.includeInvoicePaid) {
@@ -1459,7 +1464,6 @@ function onRowRightClick(event: any) {
   setMenuOptions()
 
   if (event.data?.invoiceType !== InvoiceType.INVOICE || ![InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)) {
-    console.log('event');
     invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.label !== 'New Credit')]
   }
 
