@@ -2958,7 +2958,7 @@ onMounted(async () => {
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
-            Apply Payment11 Details
+            Apply Payment Details
           </h5>
         </div>
       </template>
