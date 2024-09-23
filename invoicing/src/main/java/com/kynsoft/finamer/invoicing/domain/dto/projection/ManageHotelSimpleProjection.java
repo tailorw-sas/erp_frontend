@@ -6,4 +6,5 @@ public interface ManageHotelSimpleProjection {
     UUID getId();
     String getCode();
     String getName();
+    InvoiceCloseOperationProjection getCloseOperation();
 }
