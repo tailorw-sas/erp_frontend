@@ -23,6 +23,7 @@
         <module>payment</module>
         <module>invoicing</module>
         <module>insis</module>
+        <module>creditCard</module>
     </modules>
     <build>
     </build>
