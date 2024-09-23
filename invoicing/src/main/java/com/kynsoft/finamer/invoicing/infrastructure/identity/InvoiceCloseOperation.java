@@ -29,8 +29,8 @@ public class InvoiceCloseOperation implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "hotel_id")
+    @OneToOne(optional = false)  // Define la relación uno a uno
+    @JoinColumn(name = "hotel_id", nullable = false, unique = true)  // Hace la relación obligatoria
     private ManageHotel hotel;
 
     private LocalDate beginDate;

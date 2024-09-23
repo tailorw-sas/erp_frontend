@@ -14,7 +14,6 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.projection.ManageInvoiceSimpleProjection;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceStatus;
@@ -98,7 +97,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageInvoiceSimpleProjection> data = repositoryQuery.findAllSimple(specifications, pageable);
+        Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
         //getPaginatedResponseTest(example);
         //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
 
@@ -145,11 +144,15 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManageInvoiceSimpleProjection> data) {
+    private PaginatedResponse getPaginatedResponse(Page<ManageInvoice> data) {
         List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
-        for (ManageInvoiceSimpleProjection entity : data.getContent()) {
+        for (ManageInvoice entity : data.getContent()) {
             try {
-                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity, false, false);
+                Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
+                        && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
+                        || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
+                Boolean isHasAttachments = entity.getAttachments() != null && !entity.getAttachments().isEmpty();
+                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity, isHasAttachments, isCloseOperation);
 //                InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(response.getHotel().getId());
 //                if (response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
 //                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())) {
