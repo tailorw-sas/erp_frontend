@@ -73,7 +73,7 @@ public class ManageHotel implements Serializable {
 
     private String address;
 
-    @OneToOne(mappedBy = "hotel", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "hotel", cascade = CascadeType.REMOVE)
     private InvoiceCloseOperation closeOperation;  // Relación uno a uno con InvoiceCloseOperation
 
     public ManageHotel(ManageHotelDto dto) {
