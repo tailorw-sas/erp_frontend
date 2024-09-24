@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.payment.application.query.objectResponse;
+package com.kynsoft.finamer.payment.application.query.objectResponse.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsof.share.utils.ScaleAmount;
@@ -18,20 +18,20 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class PaymentResponse implements IResponse {
+public class PaymentSearchResponse implements IResponse {
 
     private UUID id;
     private OffsetDateTime createdAt;
     private Long paymentId;
-    private ManagePaymentSourceResponse paymentSource;
+    private ManagePaymentSourceSearchResponse paymentSource;
     private String reference;
     private LocalDate transactionDate;
-    private ManagePaymentStatusResponse paymentStatus;
-    private ManageClientResponse client;
-    private ManageAgencyResponse agency;
-    private ManageHotelResponse hotel;
-    private ManageBankAccountResponse bankAccount;
-    private ManagePaymentAttachmentStatusResponse attachmentStatus;
+    private ManagePaymentStatusSearchResponse paymentStatus;
+    private ManageClientSearchResponse client;
+    private ManageAgencySearchResponse agency;
+    private ManageHotelSearchResponse hotel;
+    private ManageBankAccountSearchResponse bankAccount;
+    private ManagePaymentAttachmentStatusSearchResponse attachmentStatus;
 
     private Double paymentAmount;
     private Double paymentBalance;
@@ -45,21 +45,20 @@ public class PaymentResponse implements IResponse {
     private String remark;
     private Boolean hasAttachment;
     private boolean hasDetailTypeDeposit = false;
-//    private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
 
-    public PaymentResponse(PaymentDto dto) {
+    public PaymentSearchResponse(PaymentDto dto) {
         this.id = dto.getId();
         this.createdAt = dto.getCreatedAt();
         this.paymentId = dto.getPaymentId();
-        this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSourceResponse(dto.getPaymentSource()) : null;
+        this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSourceSearchResponse(dto.getPaymentSource()) : null;
         this.reference = dto.getReference();
         this.transactionDate = dto.getTransactionDate();
-        this.paymentStatus = dto.getPaymentStatus() != null ? new ManagePaymentStatusResponse(dto.getPaymentStatus()) : null;
-        this.client = dto.getClient() != null ? new ManageClientResponse(dto.getClient()) : null;
-        this.agency = dto.getAgency() != null ? new ManageAgencyResponse(dto.getAgency()) : null;
-        this.hotel = dto.getHotel() != null ? new ManageHotelResponse(dto.getHotel()) : null;
-        this.bankAccount = dto.getBankAccount() != null ? new ManageBankAccountResponse(dto.getBankAccount()) : null;
-        this.attachmentStatus = dto.getAttachmentStatus() != null ? new ManagePaymentAttachmentStatusResponse(dto.getAttachmentStatus()) : null;
+        this.paymentStatus = dto.getPaymentStatus() != null ? new ManagePaymentStatusSearchResponse(dto.getPaymentStatus()) : null;
+        this.client = dto.getClient() != null ? new ManageClientSearchResponse(dto.getClient()) : null;
+        this.agency = dto.getAgency() != null ? new ManageAgencySearchResponse(dto.getAgency()) : null;
+        this.hotel = dto.getHotel() != null ? new ManageHotelSearchResponse(dto.getHotel()) : null;
+        this.bankAccount = dto.getBankAccount() != null ? new ManageBankAccountSearchResponse(dto.getBankAccount()) : null;
+        this.attachmentStatus = dto.getAttachmentStatus() != null ? new ManagePaymentAttachmentStatusSearchResponse(dto.getAttachmentStatus()) : null;
         this.paymentAmount = ScaleAmount.scaleAmount(dto.getPaymentAmount());
         this.paymentBalance = ScaleAmount.scaleAmount(dto.getPaymentBalance());
         this.depositAmount = ScaleAmount.scaleAmount(dto.getDepositAmount());
@@ -70,11 +69,6 @@ public class PaymentResponse implements IResponse {
         this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
         this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
         this.remark = dto.getRemark();
-//        if (dto.getAttachments() != null) {
-//            for (MasterPaymentAttachmentDto attachment : dto.getAttachments()) {
-//                attachments.add(new MasterPaymentAttachmentResponse(attachment));
-//            }
-//        }
 
         this.hasAttachment = !dto.getAttachments().isEmpty();
         if (dto.getInvoice() != null) {
