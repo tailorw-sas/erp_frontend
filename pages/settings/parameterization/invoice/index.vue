@@ -17,7 +17,6 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
-const navigateListItems = ref<any[]>([])
 const formReload = ref(0)
 
 const loadingSaveAll = ref(false)
@@ -69,6 +68,34 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 required',
     validation: z.string().trim().min(1, 'The code field is required')
   },
+  {
+    field: 'typeInvoice',
+    header: 'Default Invoice Type Code',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The code field is required')
+  },
+  {
+    field: 'typeIncome',
+    header: 'Default Income Type Code',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The code field is required')
+  },
+  {
+    field: 'typeCredit',
+    header: 'Default Credit Type Code',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The code field is required')
+  },
+  {
+    field: 'typeOldCredit',
+    header: 'Default Old Credit Type Code',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The code field is required')
+  },
 ]
 
 const item = ref<GenericObject>({
@@ -79,6 +106,10 @@ const item = ref<GenericObject>({
   processed: '',
   canceled: '',
   pending: '',
+  typeInvoice: '',
+  typeIncome: '',
+  typeCredit: '',
+  typeOldCredit: '',
 })
 
 const itemTemp = ref<GenericObject>({
@@ -89,6 +120,10 @@ const itemTemp = ref<GenericObject>({
   processed: '',
   canceled: '',
   pending: '',
+  typeInvoice: '',
+  typeIncome: '',
+  typeCredit: '',
+  typeOldCredit: '',
 })
 
 // -------------------------------------------------------------------------------------------------------
@@ -107,6 +142,10 @@ const columns: IColumn[] = [
   { field: 'processed', header: 'Processed', type: 'text' },
   { field: 'canceled', header: 'Canceled', type: 'text' },
   { field: 'pending', header: 'Pending', type: 'text' },
+  { field: 'typeInvoice', header: 'Invoice Type', type: 'text' },
+  { field: 'typeIncome', header: 'Income Type', type: 'text' },
+  { field: 'typeCredit', header: 'Credit Type', type: 'text' },
+  { field: 'typeOldCredit', header: 'Old Credit Type', type: 'text' },
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -176,52 +215,6 @@ async function getList() {
   }
 }
 
-async function getForSelectNavigateList(id: string = '') {
-  try {
-    navigateListItems.value = []
-    const payload = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: id,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: id,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'code',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload)
-    const { data: dataList } = response
-
-    navigateListItems.value = dataList
-      .filter((item: any) => item.id !== id)
-      .map((item: any) => ({
-        id: item.id,
-        name: `${item.code} - ${item.name}`,
-        status: item.status
-      }))
-  }
-  catch (error) {
-    console.error(error)
-  }
-}
-
 async function resetListItems() {
   payload.value.page = 0
   getList()
@@ -234,12 +227,7 @@ async function getItemById(id: string) {
     try {
       const response = await GenericService.get(confApi.moduleApi, confApi.uriApi)
       if (response) {
-        item.value.id = response.id
-        item.value.sent = response.sent
-        item.value.reconciled = response.reconciled
-        item.value.processed = response.processed
-        item.value.canceled = response.canceled
-        item.value.pending = response.pending
+        item.value = response
       }
       formReload.value += 1
     }
@@ -259,7 +247,6 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
-    payload.navigate = payload.navigate.map((p: any) => p.id)
     delete payload.event
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
@@ -407,23 +394,6 @@ onMounted(() => {
             @cancel="clearForm"
             @submit="requireConfirmationToSave($event)"
           >
-            <template #field-navigate="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :multiple="true"
-                :model="data.navigate"
-                :suggestions="[...navigateListItems]"
-                @change="($event) => {
-                  onUpdate('navigate', $event)
-                }"
-                @load="($event) => getForSelectNavigateList($event)"
-              />
-
-              <Skeleton v-else height="2rem" class="mb-2" />
-            </template>
             <template #form-footer="props">
               <div class="flex justify-content-end">
                 <IfCan :perms="idItem ? ['INVOICE-STATUS:EDIT'] : ['INVOICE-STATUS:CREATE']">
