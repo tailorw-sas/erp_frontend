@@ -164,6 +164,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         //creando los type
         //TODO: crear parametrizacion para guardar el ManageInvoiceType
         EInvoiceType invoiceType = EInvoiceType.CREDIT;
+        ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.CREDIT);
 
         //creando los status
         EInvoiceStatus invoiceStatus = EInvoiceStatus.SENT;
@@ -195,7 +196,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 attachments,
                 false,
                 null,
-                null,
+                invoiceTypeDto,
                 manageInvoiceStatus,
                 null,
                 false,
