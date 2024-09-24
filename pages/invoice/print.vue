@@ -464,7 +464,7 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
               <Row>
-                <Column footer="Totales" :colspan="9" footer-style="text-align:right; font-weight: 700" />
+                <Column footer="Totals" :colspan="9" footer-style="text-align:right; font-weight: 700" />
 
                 <Column :colspan="8" :footer="totalInvoiceAmount" />
               </Row>
