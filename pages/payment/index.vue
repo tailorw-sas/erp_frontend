@@ -562,6 +562,7 @@ const histotyPayloadOnChangePage = ref<PageState>()
 const applyPaymentListOfInvoiceOtherDeduction = ref<any[]>([])
 const transactionTypeList = ref<any[]>([])
 const transactionType = ref<GenericObject>({})
+const fieldRemark = ref('')
 
 const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -2712,7 +2713,7 @@ onMounted(async () => {
             <div class="mr-2">
               <label for="autocomplete" class="font-semibold"> Transaction Type </label>
             </div>
-            <div>
+            <div class="mr-4">
               <DebouncedAutoCompleteComponent
                 id="autocomplete"
                 class="w-29rem"
@@ -2763,6 +2764,14 @@ onMounted(async () => {
                   await getTransactionTypeList(objApis.transactionType.moduleApi, objApis.transactionType.uriApi, objQueryToSearch, filter, sortObj)
                 }"
               />
+            </div>
+            <div class="flex align-items-center">
+              <div class="mr-2">
+                <label for="autocomplete" class="font-semibold"> Remark </label>
+              </div>
+              <div class="w-30rem">
+                <InputText v-model="fieldRemark" show-clear />
+              </div>
             </div>
           </div>
 
