@@ -42,7 +42,8 @@ public class ConsumerUpdateBookingService {
             bookingDto.setDueAmount(bookingDto.getDueAmount() - objKafka.getAmountBalance());
             this.bookingService.update(bookingDto);
 
-            ManageInvoiceDto invoiceDto = bookingDto.getInvoice();
+//            ManageInvoiceDto invoiceDto = bookingDto.getInvoice();
+            ManageInvoiceDto invoiceDto = this.invoiceService.findById(bookingDto.getInvoice().getId());
             invoiceDto.setDueAmount(invoiceDto.getDueAmount() - objKafka.getAmountBalance());
             this.invoiceService.update(invoiceDto);
 

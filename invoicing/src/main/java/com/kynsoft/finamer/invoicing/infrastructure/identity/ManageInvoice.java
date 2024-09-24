@@ -194,7 +194,7 @@ public class ManageInvoice {
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregate() : null, credits);
+                parent != null ? parent.toAggregateSample() : null, credits);
     }
 
     @PostLoad
