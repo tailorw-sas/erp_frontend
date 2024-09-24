@@ -47,6 +47,47 @@ const invoiceAmmountSelected = ref(0)
 const paymentAmmountSelected = ref(0)
 const paymentBalance = ref(0)
 
+// CHange Agency
+const idPaymentSelectedForPrintChangeAgency = ref('')
+const objClientFormChangeAgency = ref<GenericObject>({})
+const listClientFormChangeAgency = ref<any[]>([])
+const openDialogChangeAgency = ref(false)
+const listAgencyByClient = ref<any[]>([])
+
+const columnsChangeAgency = ref<IColumn[]>([
+  { field: 'code', header: 'Code', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'name', header: 'Name', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'description', header: 'Description', type: 'text', width: '90px', sortable: false, showFilter: false },
+])
+const optionsOfTableChangeAgency = ref({
+  tableName: 'Change Agency',
+  moduleApi: 'settings',
+  uriApi: 'manage-agency',
+  expandableRows: false,
+  loading: false,
+  showDelete: false,
+  showFilters: false,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+
+const payloadChangeAgency = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'dueAmount',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+const paginationChangeAgency = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+const payloadOnChangePageChangeAgency = ref<PageState>()
+
 // PRINT
 const isPrintByRightClick = ref(false)
 const idPaymentSelectedForPrint = ref('')
@@ -240,10 +281,10 @@ const allMenuListItems = ref([
   {
     id: 'changeAgency',
     label: 'Change Agency',
-    icon: '',
+    icon: 'pi pi-arrow-right-arrow-left',
     iconSvg: '',
-    command: ($event: any) => {},
-    disabled: true,
+    command: ($event: any) => openModalApplyChangeAgency($event),
+    disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
   },
   {
@@ -996,19 +1037,24 @@ interface DataListItem {
   name: string
   code: string
   status: string
+  description?: string
 }
 
 interface ListItem {
   id: string
   name: string
   status: boolean | string
+  code?: string
+  description?: string
 }
 
 function mapFunction(data: DataListItem): ListItem {
   return {
     id: data.id,
     name: `${data.name}`,
-    status: data.status
+    status: data.status,
+    code: data.code,
+    description: data.description
   }
 }
 
@@ -1041,6 +1087,43 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   statusItemsList.value = [allDefaultItem]
   statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   statusItemsList.value = [...statusItemsList.value, ...statusTemp]
+}
+
+async function getAgencyByClient() {
+  if (optionsOfTableChangeAgency.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    optionsOfTableChangeAgency.value.loading = true
+    const filter: FilterCriteria[] = [
+      {
+        key: 'client.id',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: objClientFormChangeAgency.value?.id,
+      },
+      {
+        key: 'status',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+      },
+    ]
+    const objQueryToSearch = {
+      query: '',
+      keys: ['name', 'code'],
+    }
+    listAgencyByClient.value = []
+    listAgencyByClient.value = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
+  }
+  catch (error) {
+    optionsOfTableChangeAgency.value.loading = false
+    console.log(error)
+  }
+  finally {
+    optionsOfTableChangeAgency.value.loading = false
+  }
 }
 
 async function applyPaymentGetList() {
@@ -1597,13 +1680,30 @@ async function openModalApplyPaymentOtherDeduction() {
   applyPaymentGetListForOtherDeductions()
 }
 
+async function openModalApplyChangeAgency() {
+  openDialogChangeAgency.value = true
+  getAgencyByClient()
+}
+
+function closeModalChangeAgency() {
+  openDialogChangeAgency.value = false
+  listAgencyByClient.value = []
+  objClientFormChangeAgency.value = {}
+}
+
 async function onExpandRowApplyPayment(event: any) {
   await applyPaymentBookingGetList(event)
 }
 
 function onRowContextMenu(event: any) {
+  console.log(event)
+
   idPaymentSelectedForPrint.value = event?.data?.id || ''
   isPrintByRightClick.value = true
+  idPaymentSelectedForPrintChangeAgency.value = event?.data?.id || ''
+  objClientFormChangeAgency.value = event?.data?.client
+  listClientFormChangeAgency.value = event?.data?.client ? [event?.data?.client] : []
+
   if (event && event.data) {
     objItemSelectedForRightClickApplyPaymentOtherDeduction.value = event.data
   }
@@ -1653,6 +1753,27 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
   catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
   }
+}
+
+async function onRowDoubleClickInDataTableForChangeAgency(event: any) {
+  console.log(event)
+
+  // try {
+  //   const payloadToApplyPayment: GenericObject = {
+  //     payment: objItemSelectedForRightClickApplyPayment.value.id || '',
+  //     invoices: []
+  //   }
+
+  //   const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
+
+  //   if (response) {
+  //     openDialogApplyPayment.value = false
+  //     toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
+  //   }
+  // }
+  // catch (error) {
+  //   toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
+  // }
 }
 
 async function addAmmountsToApplyPayment(event: any) {
@@ -2542,6 +2663,82 @@ onMounted(async () => {
         </ColumnGroup>
       </template>
     </DynamicTable>
+    <!-- Dialog change agency -->
+    <Dialog
+      v-model:visible="openDialogChangeAgency"
+      modal
+      class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border"
+      :style="{ width: '60%' }"
+      :pt="{
+        root: {
+          class: 'custom-dialog-history',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+      }"
+      @hide="closeModalChangeAgency()"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Change Agency
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-3">
+          <!-- // Label -->
+          <div class="w-full flex align-items-center mb-3">
+            <div class="mr-2">
+              <label for="autocomplete" class="font-semibold"> Client: </label>
+            </div>
+            <div class="mr-4">
+              <DebouncedAutoCompleteComponent
+                id="autocomplete"
+                class="w-29rem"
+                field="name"
+                item-value="id"
+                disabled
+                :model="objClientFormChangeAgency"
+                :suggestions="[...listClientFormChangeAgency]"
+                @change="($event) => {
+                  objClientFormChangeAgency = $event
+                }"
+                @load="async($event) => {}"
+              />
+            </div>
+          </div>
+
+          <DynamicTable
+            class="card p-0"
+            :data="listAgencyByClient"
+            :columns="columnsChangeAgency"
+            :options="optionsOfTableChangeAgency"
+            :pagination="paginationChangeAgency"
+            @on-change-pagination="payloadOnChangePage = $event"
+            @on-row-double-click="onRowDoubleClickInDataTableForChangeAgency"
+          />
+        </div>
+        <div class="flex justify-content-end">
+          <div>
+            <!-- idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0 -->
+            <Button
+              v-if="false"
+              v-tooltip.top="'Apply Payment'"
+              class="w-3rem mx-1"
+              icon="pi pi-check"
+              :disabled="Object.keys(transactionType).length === 0 || idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0"
+              :loading="loadingSaveApplyPayment"
+              @click="saveApplyPayment"
+            />
+            <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPaymentOtherDeductions()" />
+          </div>
+        </div>
+      </template>
+    </Dialog>
+
     <!-- Dialog Apply Payment -->
     <Dialog
       v-model:visible="openDialogApplyPayment"
