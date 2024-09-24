@@ -2492,7 +2492,6 @@ onMounted(async () => {
         Payment
       </div>
     </div>
-
     <DynamicTable
       :data="listItems"
       :columns="columns"
