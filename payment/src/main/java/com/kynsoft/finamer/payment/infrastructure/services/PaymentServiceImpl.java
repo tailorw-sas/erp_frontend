@@ -9,7 +9,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.redis.CacheConfig;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentResponse;
-import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentSearchResponse;
+import com.kynsoft.finamer.payment.application.query.objectResponse.search.PaymentSearchResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;

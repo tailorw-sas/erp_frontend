@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.payment.application.query.objectResponse;
+package com.kynsoft.finamer.payment.application.query.objectResponse.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageBankAccountDto;
