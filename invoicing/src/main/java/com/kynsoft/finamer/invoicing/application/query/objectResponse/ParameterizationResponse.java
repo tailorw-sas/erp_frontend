@@ -23,6 +23,11 @@ public class ParameterizationResponse implements IResponse {
     private String canceled;
     private String pending;
 
+    private String typeInvoice;
+    private String typeIncome;
+    private String typeCredit;
+    private String typeOldCredit;
+
     public ParameterizationResponse(ParameterizationDto dto){
         this.id = dto.getId();
         this.isActive = dto.getIsActive();
@@ -31,5 +36,10 @@ public class ParameterizationResponse implements IResponse {
         this.processed = dto.getProcessed();
         this.canceled = dto.getCanceled();
         this.pending = dto.getPending();
+
+        this.typeInvoice = dto.getTypeInvoice();
+        this.typeIncome = dto.getTypeIncome();
+        this.typeCredit = dto.getTypeCredit();
+        this.typeOldCredit = dto.getTypeOldCredit();
     }
 }
