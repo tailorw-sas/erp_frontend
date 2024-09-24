@@ -960,7 +960,7 @@ function searchAndFilter() {
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
         payload.value.filter = [...payload.value.filter, {
-          key: 'invoiceType',
+          key: 'manageInvoiceType.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND'
