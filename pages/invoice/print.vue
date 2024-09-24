@@ -198,11 +198,6 @@ async function getPrintList() {
     options.value.loading = false
   }
 }
-interface Payload {
-  invoiceId: number[] // o el tipo que corresponda
-  invoiceType: string[]
-  groupByClient: boolean
-}
 
 async function savePrint() {
   options.value.loading = true
@@ -223,8 +218,7 @@ async function savePrint() {
       payloadTemp.invoiceType.push('INVOICE_SUPPORT')
     }
 
-    nameOfPdf = `invoice-list-${dayjs().format('YYYY-MM-DD')}.pdf`
-    console.log(payloadTemp)
+    nameOfPdf = `invoice-list-${dayjs().format('YYYY-MM-DD')}.zip`
 
     const response: any = await GenericService.create(confApiPrint.moduleApi, confApiPrint.uriApi, payloadTemp)
 
