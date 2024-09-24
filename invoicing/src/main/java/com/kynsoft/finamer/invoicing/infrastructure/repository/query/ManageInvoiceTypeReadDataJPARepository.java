@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -20,4 +21,7 @@ public interface ManageInvoiceTypeReadDataJPARepository extends JpaRepository<Ma
 
     @Query("SELECT COUNT(b) FROM ManageInvoiceType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageInvoiceType b WHERE b.code = :code AND b.deleted = false")
+    Optional<ManageInvoiceType> findByCode(String code);
 }

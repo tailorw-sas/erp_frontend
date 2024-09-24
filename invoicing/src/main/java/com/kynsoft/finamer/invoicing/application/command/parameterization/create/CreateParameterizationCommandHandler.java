@@ -24,14 +24,18 @@ public class CreateParameterizationCommandHandler implements ICommandHandler<Cre
             this.service.create(new ParameterizationDto(
                     command.getId(), true, command.getSent(),
                     command.getReconciled(), command.getProcessed(),
-                    command.getCanceled(), command.getPending()
+                    command.getCanceled(), command.getPending(),
+                    command.getTypeInvoice(), command.getTypeIncome(),
+                    command.getTypeCredit(), command.getTypeOldCredit()
             ));
         } else {
             this.service.delete(actual);
             this.service.create(new ParameterizationDto(
                     command.getId(), true, command.getSent(),
                     command.getReconciled(), command.getProcessed(),
-                    command.getCanceled(), command.getPending()
+                    command.getCanceled(), command.getPending(),
+                    command.getTypeInvoice(), command.getTypeIncome(),
+                    command.getTypeCredit(), command.getTypeOldCredit()
             ));
         }
     }

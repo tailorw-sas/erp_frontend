@@ -20,4 +20,9 @@ public class ParameterizationDto {
     private String processed;
     private String canceled;
     private String pending;
+
+    private String typeInvoice;
+    private String typeIncome;
+    private String typeCredit;
+    private String typeOldCredit;
 }
