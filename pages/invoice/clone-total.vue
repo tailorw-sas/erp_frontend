@@ -1074,7 +1074,7 @@ async function getItemById(id: any) {
         //  const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
         //  item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
-        item.value.invoiceDate = new Date(response.invoiceDate)
+       // item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
         // item.value.invoiceAmount = 0
         item.value.hotel = response.hotel
