@@ -18,6 +18,7 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.masterPaymentAttachment.MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.payment.CheckIfTransactionDateIsWithInRangeCloseOperationRule;
@@ -149,7 +150,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 command.getRemark(),
                 null,
                 null,
-                null
+                null,
+                EAttachment.NONE
         );
 
         command.setPayment(this.paymentService.create(paymentDto));

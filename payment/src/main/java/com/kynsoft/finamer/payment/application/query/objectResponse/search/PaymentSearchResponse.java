@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -45,6 +46,7 @@ public class PaymentSearchResponse implements IResponse {
     private String remark;
     private Boolean hasAttachment;
     private boolean hasDetailTypeDeposit = false;
+    private EAttachment eAttachment;
 
     public PaymentSearchResponse(PaymentDto dto) {
         this.id = dto.getId();
@@ -69,8 +71,9 @@ public class PaymentSearchResponse implements IResponse {
         this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
         this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
         this.remark = dto.getRemark();
+        this.eAttachment = dto.getEAttachment();
 
-        this.hasAttachment = !dto.getAttachments().isEmpty();
+        this.hasAttachment = dto.getAttachments() != null;
         if (dto.getInvoice() != null) {
             if (dto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 this.hasAttachment = dto.getInvoice().getHasAttachment();

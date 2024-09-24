@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.identity;
 
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -37,6 +38,10 @@ public class Payment implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    //@Column(columnDefinition = "EAttachment DEFAULT NONE")
+    @Enumerated(EnumType.STRING)
+    private EAttachment eAttachment;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "payment_source_id")
@@ -131,6 +136,7 @@ public class Payment implements Serializable {
         this.applied = ScaleAmount.scaleAmount(dto.getApplied());
         this.remark = dto.getRemark();
         this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.eAttachment = dto.getEAttachment();
     }
 
     public PaymentDto toAggregate() {
@@ -161,7 +167,8 @@ public class Payment implements Serializable {
                 attachments != null ? attachments.stream().map(b -> {
                             return b.toAggregateSimple();
                         }).collect(Collectors.toList()) : null,
-                createdAt
+                createdAt,
+                eAttachment != null ? eAttachment : EAttachment.NONE
         );
     }
 
@@ -201,7 +208,8 @@ public class Payment implements Serializable {
                 createdAt,
                 paymentDetails != null ? paymentDetails.stream().map(b -> {
                             return b.toAggregateSimpleNotPayment();
-                        }).collect(Collectors.toList()) : null
+                        }).collect(Collectors.toList()) : null,
+                eAttachment != null ? eAttachment : EAttachment.NONE
         );
     }
 
