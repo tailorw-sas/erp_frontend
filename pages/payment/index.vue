@@ -1845,7 +1845,7 @@ async function openDialogPrint() {
 
 async function closeDialogPrint() {
   idPaymentSelectedForPrint.value = ''
-  paymentSelectedForPrintList.value = []
+  // paymentSelectedForPrintList.value = []
   itemPrint.value = JSON.parse(JSON.stringify(itemTempPrint.value))
   openPrint.value = false
   isPrintByRightClick.value = false
@@ -2444,12 +2444,12 @@ onMounted(async () => {
                   </div>
                   <div class="flex align-items-center justify-content-between pl-6">
                     <div class="flex align-items-center">
-                      <label for="payApplied" class="mr-2 font-bold"> Pay Applied</label>
                       <TriStateCheckbox
                         id="payApplied"
                         v-model="filterToSearch.payApplied"
                         :binary="true"
                       />
+                      <label for="payApplied" class="ml-2 font-bold"> Pay Applied</label>
                     </div>
 
                     <!-- <div class="flex align-items-center ml-2">
