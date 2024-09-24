@@ -319,6 +319,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getReconciled()) : null;
         }
         LocalDate dueDate = command.getInvoiceCommand().getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
+        ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(command.getInvoiceCommand().getInvoiceType());
+
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
                 invoiceNumber,
                 command.getInvoiceCommand().getInvoiceDate(), dueDate,
@@ -326,7 +328,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 command.getInvoiceCommand().getInvoiceAmount(),
                 command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
                 command.getInvoiceCommand().getInvoiceType(), status,
-                false, bookings, attachmentDtos, null, null, null, invoiceStatus, null,  false,
+                false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null,  false,
                 null, 0.0);
 
         ManageInvoiceDto created = service.create(invoiceDto);

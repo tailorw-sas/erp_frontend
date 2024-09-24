@@ -1,9 +1,8 @@
 package com.kynsoft.finamer.invoicing.application.query.manageInvoice.search;
 
-import com.kynsoft.finamer.invoicing.domain.dto.projection.ManageInvoiceSimpleProjection;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,15 +20,16 @@ public class ManageInvoiceSearchResponse {
     private Double dueAmount;
     private LocalDateTime invoiceDate;
     private ManageInvoiceHotelResponse hotel;
-    private  ManageInvoiceAgencyResponse agency;
+    private ManageInvoiceAgencyResponse agency;
     private ManageInvoiceStatusResponse invoiceStatus;
     private Boolean hasAttachments;
     private EInvoiceStatus status;
     private Boolean isInCloseOperation;
     private EInvoiceType invoiceType;
     private String invoiceNumber;
+    private ManageInvoiceTypeResponse manageInvoiceType;
 
-    public ManageInvoiceSearchResponse(ManageInvoice projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
+    public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
         this.id = projection.getId();
         this.invoiceId = projection.getInvoiceId();
         this.isManual = projection.getIsManual();
@@ -39,12 +39,13 @@ public class ManageInvoiceSearchResponse {
         this.invoiceDate = projection.getInvoiceDate();
         this.hotel = new ManageInvoiceHotelResponse(projection.getHotel());
         this.agency = new ManageInvoiceAgencyResponse(projection.getAgency());
-        this.invoiceStatus = new ManageInvoiceStatusResponse(projection.getManageInvoiceStatus());
+        this.invoiceStatus = projection.getManageInvoiceStatus() != null ? new ManageInvoiceStatusResponse(projection.getManageInvoiceStatus()) : null;
         this.hasAttachments = isHasAttachments;
-        this.status = projection.getInvoiceStatus();
+        this.status = projection.getStatus();
         this.isInCloseOperation = isInCloseOperation;
         this.invoiceType = projection.getInvoiceType();
         this.invoiceNumber = deleteHotelInfo(projection.getInvoiceNumber());
+        this.manageInvoiceType = projection.getManageInvoiceType() != null ? new ManageInvoiceTypeResponse(projection.getManageInvoiceType()) : null;
     }
 
     private String deleteHotelInfo(String input) {

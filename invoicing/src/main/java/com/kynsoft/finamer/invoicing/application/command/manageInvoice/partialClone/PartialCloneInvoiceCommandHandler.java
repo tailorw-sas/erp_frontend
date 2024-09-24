@@ -174,7 +174,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 invoiceToClone.getInvoiceAmount(),
                 invoiceToClone.getInvoiceAmount(), invoiceToClone.getHotel(), invoiceToClone.getAgency(),
                 invoiceToClone.getInvoiceType(), status,
-                false, bookingDtos, attachmentDtos, null, null, null, invoiceStatus, null, true, invoiceToClone, 0.00);
+                false, bookingDtos, attachmentDtos, null, null, invoiceToClone.getManageInvoiceType(), invoiceStatus, null, true, invoiceToClone, 0.00);
 
         ManageInvoiceDto created = service.create(invoiceDto);
 

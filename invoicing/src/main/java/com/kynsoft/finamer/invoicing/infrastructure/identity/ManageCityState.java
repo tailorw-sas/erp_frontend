@@ -68,4 +68,10 @@ public class ManageCityState implements Serializable {
                 country != null ? country.toAggregate() : null);
     }
 
+    public ManageCityStateDto toAggregateSimple() {
+        return new ManageCityStateDto(
+                id, code, name, description, status,
+                null);
+    }
+
 }

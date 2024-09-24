@@ -39,6 +39,14 @@ public class Parameterization implements Serializable {
 
     private String pending;
 
+    private String typeInvoice;
+
+    private String typeIncome;
+
+    private String typeCredit;
+
+    private String typeOldCredit;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,11 +59,16 @@ public class Parameterization implements Serializable {
         this.processed = dto.getProcessed();
         this.canceled = dto.getCanceled();
         this.pending = dto.getPending();
+        this.typeInvoice = dto.getTypeInvoice();
+        this.typeIncome = dto.getTypeIncome();
+        this.typeCredit = dto.getTypeCredit();
+        this.typeOldCredit = dto.getTypeOldCredit();
     }
 
     public ParameterizationDto toAggregate(){
         return new ParameterizationDto(
-                id, isActive, sent, reconciled, processed, canceled, pending
+                id, isActive, sent, reconciled, processed, canceled, pending,
+                typeInvoice, typeIncome, typeCredit, typeOldCredit
         );
     }
 

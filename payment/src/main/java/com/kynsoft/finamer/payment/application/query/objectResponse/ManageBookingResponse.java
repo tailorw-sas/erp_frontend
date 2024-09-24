@@ -17,8 +17,8 @@ public class ManageBookingResponse implements IResponse {
     private UUID id;
     private Long bookingId;
     private String reservationNumber;
-    private LocalDateTime checkIn;
-    private LocalDateTime checkOut;
+    //private LocalDateTime checkIn;
+    //private LocalDateTime checkOut;
 
     private String fullName;
     private String firstName;
@@ -36,8 +36,8 @@ public class ManageBookingResponse implements IResponse {
         this.id = dto.getId();
         this.bookingId = dto.getBookingId();
         this.reservationNumber = dto.getReservationNumber();
-        this.checkIn = dto.getCheckIn();
-        this.checkOut = dto.getCheckOut();
+        //this.checkIn = dto.getCheckIn();
+        //this.checkOut = dto.getCheckOut();
         this.fullName = dto.getFullName();
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();

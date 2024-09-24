@@ -15,7 +15,6 @@ import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.Mana
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dto.projection.ManageInvoiceSimpleProjection;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
@@ -152,7 +151,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                         && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
                         || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
                 Boolean isHasAttachments = entity.getAttachments() != null && !entity.getAttachments().isEmpty();
-                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity, isHasAttachments, isCloseOperation);
+                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSample(), isHasAttachments, isCloseOperation);
 //                InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(response.getHotel().getId());
 //                if (response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
 //                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())) {
@@ -160,6 +159,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 //                }
               responseList.add(response);
             } catch (Exception e) {
+                System.err.print(e.getMessage());
 //                ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
 //                response.setIsInCloseOperation(false);
 //                responseList.add(response);

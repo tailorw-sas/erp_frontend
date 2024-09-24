@@ -57,7 +57,7 @@ public class ManageInvoice {
     private ManageInvoice parent;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "invoice_id")
+    @JoinColumn(name = "invoice_type_id")
     private ManageInvoiceType manageInvoiceType;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -179,7 +179,7 @@ public class ManageInvoice {
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregate() : null, credits);
+                null, credits);
 
     }
 
@@ -194,7 +194,7 @@ public class ManageInvoice {
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregate() : null, credits);
+                parent != null ? parent.toAggregateSample() : null, credits);
     }
 
     @PostLoad
