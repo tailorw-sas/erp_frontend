@@ -27,9 +27,6 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.Send
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneRequest;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone_old.TotalCloneInvoiceCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone_old.TotalCloneInvoiceMessage;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone_old.TotalCloneInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceRequest;
@@ -89,23 +86,6 @@ public class InvoiceController {
 //        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
 //            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
 //        }
-
-        return ResponseEntity.ok(message);
-
-    }
-
-    @PostMapping("total-clone")
-    public ResponseEntity<TotalCloneInvoiceMessage> totalCloneInvoice(@RequestBody TotalCloneInvoiceRequest request) {
-
-        TotalCloneInvoiceCommand command = TotalCloneInvoiceCommand.fromRequest(request);
-
-        TotalCloneInvoiceMessage message = this.mediator.send(command);
-
-        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
-
-        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
-            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
-        }
 
         return ResponseEntity.ok(message);
 
