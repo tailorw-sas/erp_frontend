@@ -297,17 +297,17 @@ const allMenuListItems = ref([
 
 const ENUM_FILTER = [
   { id: 'paymentId', name: 'Payment Id', disabled: false },
-  { id: 'reference', name: 'Reference No', disabled: false },
+  { id: 'reference', name: 'Reference No.', disabled: false },
   { id: 'paymentAmount', name: 'P. Amount', disabled: false },
   { id: 'remark', name: 'Remark' },
   { id: 'paymentDetails.paymentDetailId', name: 'Detail Id', disabled: false },
   { id: 'paymentDetails.amount', name: 'Detail Amount', disabled: false },
   { id: 'paymentDetails.remark', name: 'Detail Remark', disabled: false },
-  { id: 'paymentDetails.manageBooking.invoice.invoiceNumber', name: 'Invoice No', disabled: false },
+  { id: 'paymentDetails.manageBooking.invoice.invoiceNumber', name: 'Invoice No.', disabled: false },
   { id: 'paymentDetails.manageBooking.bookingId', name: 'Booking Id', disabled: false },
   { id: 'paymentDetails.manageBooking.fullName', name: 'Full Name', disabled: false },
-  { id: 'paymentDetails.manageBooking.reservationNumber', name: 'Reservation No', disabled: false },
-  { id: 'paymentDetails.manageBooking.couponNumber', name: 'Coupon No', disabled: false },
+  { id: 'paymentDetails.manageBooking.reservationNumber', name: 'Reservation No.', disabled: false },
+  { id: 'paymentDetails.manageBooking.couponNumber', name: 'Coupon No.', disabled: false },
 ]
 
 const ENUM_FILTER_TYPE = [
@@ -404,7 +404,7 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: false, showFilter: false },
@@ -567,8 +567,8 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'reservationNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'reservationNumber', header: 'Reservation No.', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -2707,56 +2707,64 @@ onMounted(async () => {
       </template>
       <template #default>
         <div class="p-fluid pt-3">
-          <DebouncedAutoCompleteComponent
-            id="autocomplete"
-            class="mb-3 w-29rem"
-            field="name"
-            item-value="id"
-            :model="transactionType"
-            :suggestions="[...transactionTypeList]"
-            @change="($event) => {
-              transactionType = $event
-            }"
-            @load="async($event) => {
-              const objQueryToSearch = {
-                query: $event,
-                keys: ['name', 'code'],
-              }
-              const filter: FilterCriteria[] = []
-              const sortObj = {
-                sortBy: '',
-                // sortType: ENUM_SHORT_TYPE.DESC,
-              }
-              filter.push(
-                {
-                  key: 'cash',
-                  logicalOperation: 'AND',
-                  operator: 'EQUALS',
-                  value: false,
-                },
-                {
-                  key: 'deposit',
-                  logicalOperation: 'AND',
-                  operator: 'EQUALS',
-                  value: false,
-                },
-                {
-                  key: 'debit',
-                  logicalOperation: 'AND',
-                  operator: 'EQUALS',
-                  value: false,
-                },
-                {
-                  key: 'status',
-                  logicalOperation: 'AND',
-                  operator: 'EQUALS',
-                  value: 'ACTIVE',
-                },
-              )
+          <!-- // Label -->
+          <div class="w-full flex align-items-center mb-3">
+            <div class="mr-2">
+              <label for="autocomplete" class="font-semibold"> Transaction Type </label>
+            </div>
+            <div>
+              <DebouncedAutoCompleteComponent
+                id="autocomplete"
+                class="w-29rem"
+                field="name"
+                item-value="id"
+                :model="transactionType"
+                :suggestions="[...transactionTypeList]"
+                @change="($event) => {
+                  transactionType = $event
+                }"
+                @load="async($event) => {
+                  const objQueryToSearch = {
+                    query: $event,
+                    keys: ['name', 'code'],
+                  }
+                  const filter: FilterCriteria[] = []
+                  const sortObj = {
+                    sortBy: '',
+                    // sortType: ENUM_SHORT_TYPE.DESC,
+                  }
+                  filter.push(
+                    {
+                      key: 'cash',
+                      logicalOperation: 'AND',
+                      operator: 'EQUALS',
+                      value: false,
+                    },
+                    {
+                      key: 'deposit',
+                      logicalOperation: 'AND',
+                      operator: 'EQUALS',
+                      value: false,
+                    },
+                    {
+                      key: 'debit',
+                      logicalOperation: 'AND',
+                      operator: 'EQUALS',
+                      value: false,
+                    },
+                    {
+                      key: 'status',
+                      logicalOperation: 'AND',
+                      operator: 'EQUALS',
+                      value: 'ACTIVE',
+                    },
+                  )
 
-              await getTransactionTypeList(objApis.transactionType.moduleApi, objApis.transactionType.uriApi, objQueryToSearch, filter, sortObj)
-            }"
-          />
+                  await getTransactionTypeList(objApis.transactionType.moduleApi, objApis.transactionType.uriApi, objQueryToSearch, filter, sortObj)
+                }"
+              />
+            </div>
+          </div>
 
           <DynamicTable
             class="card p-0"
