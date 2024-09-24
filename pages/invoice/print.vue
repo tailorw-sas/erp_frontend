@@ -12,9 +12,10 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 
 const toast = useToast()
 const listItems = ref<any[]>([])
+const totalInvoiceAmount = ref(0);
 const idItemToLoadFirstTime = ref('')
 const listPrintItems = ref<any[]>([])
-const totalInvoiceAmount = ref(0)
+
 const totalDueAmount = ref(0)
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
@@ -96,6 +97,7 @@ const options = ref({
   tableName: 'Invoice to Print',
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice',
+  actionsAsMenu: false,
   loading: false,
   showDelete: false,
   selectionMode: 'multiple' as 'multiple' | 'single',
@@ -105,13 +107,18 @@ const options = ref({
 })
 
 const payload = ref<IQueryRequest>({
-  filter: [],
-  query: '',
-  pageSize: 10,
-  page: 0,
-  // sortBy: 'name',
-  // sortType: ENUM_SHORT_TYPE.ASC
-})
+    filter: [{
+        key: 'invoiceStatus',
+        operator: 'IN', // Cambia a 'IN' para incluir varios valores
+        value: ['RECONCILED', 'SENT'], 
+        logicalOperation: 'OR' 
+    }],
+    query: '',
+    pageSize: 10,
+    page: 0,
+    sortBy: 'invoiceId',
+    sortType: ENUM_SHORT_TYPE.DESC
+});
 
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
@@ -127,19 +134,7 @@ const pagination = ref<IPagination>({
 
 async function getPrintList() {
   try {
-    const payloadPrint = {
-      filter: [{
-        key: 'invoiceStatus',
-        operator: 'IN', // Cambia a 'IN' para incluir varios valores
-        value: ['RECONCILED', 'SENT'] // Lista de estados
-      }],
-      query: '',
-      pageSize: 10,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
+ 
     idItemToLoadFirstTime.value = ''
     options.value.loading = true
     listPrintItems.value = []
@@ -148,7 +143,7 @@ async function getPrintList() {
     totalInvoiceAmount.value = 0
     totalDueAmount.value = 0
 
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payloadPrint)
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -173,6 +168,7 @@ async function getPrintList() {
         loadingDelete: false,
       //  invoiceDate: new Date(iterator?.invoiceDate),
         agencyCd: iterator?.agency?.code,
+        aging:0,
         dueAmount: iterator?.dueAmount || 0,
         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
         hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` }
@@ -185,13 +181,7 @@ async function getPrintList() {
 
     listPrintItems.value = newListItems
 
-    console.log(pagination.value.totalElements, 'Total de elementos')
 
-    // Actualizar los totales en la interfaz de usuario
-    // Puedes hacer esto si los elementos se actualizan en tiempo real en la interfaz
-
-    // Aquí puedes manejar la lógica de la paginación, como actualizar los botones de página, etc.
-    // Por ejemplo, puedes llamar a una función para renderizar los botones de paginación
   }
   catch (error) {
     console.error(error)
@@ -231,7 +221,7 @@ async function getHotelList(query: string = '') {
       sortType: ENUM_SHORT_TYPE.DESC
     }
 
-    const response = await GenericService.search(confHotelApi.moduleApi, confHotelApi.uriApi, payload)
+    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
     hotelList.value = [allDefaultItem]
     for (const iterator of dataList) {
@@ -297,7 +287,7 @@ async function clearForm() {
 
 async function resetListItems() {
   payload.value.page = 0
-  getErrorList()
+  getPrintList()
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -434,7 +424,9 @@ const disabledSearch = computed(() => {
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getPrintList()
 })
+
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
@@ -461,7 +453,7 @@ onMounted(async () => {
           @on-change-filter="parseDataTableFilter"
           @on-list-item="resetListItems"
           @on-sort-field="onSortField"
-        >
+       >
           <template #column-status="{ data: item }">
             <Badge
               :value="getStatusName(item?.status)"
@@ -472,9 +464,9 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
               <Row>
-                <Column footer="Total" :colspan="9" footer-style="text-align:right; font-weight: 700" />
+                <Column footer="Totales" :colspan="9" footer-style="text-align:right; font-weight: 700" />
 
-                <Column :colspan="8" />
+                <Column :colspan="8" :footer="totalInvoiceAmount" />
               </Row>
             </ColumnGroup>
           </template>
