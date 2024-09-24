@@ -64,7 +64,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
         //vienen todos los attachments juntos, lo del padre y los nuevos
-        //TODO: incluir en el request de los attachments el employeeName y employeeId
         for (TotalCloneAttachmentRequest attachmentRequest: command.getAttachments()) {
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     attachmentRequest.getType());
@@ -161,9 +160,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             invoiceNumber += "-" + hotelDto.getCode();
         }
 
-        //TODO: replicar el campo creditDay de Agency para calcular dueDate
-        //LocalDate dueDate = command.getInvoiceDate().toLocalDate().plusDays(5L);
-        LocalDate dueDate = command.getInvoiceDate().toLocalDate();
+        LocalDate dueDate = command.getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
+//        LocalDate dueDate = command.getInvoiceDate().toLocalDate();
 
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
         ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
@@ -188,7 +186,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 attachmentDtos,
                 false, //TODO: de donde sale esto?
                 null,
-                null, //TODO: parametrizacion para cargar esto
+                invoiceToClone.getManageInvoiceType(),
                 invoiceStatus,
                 null,
                 true,

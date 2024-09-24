@@ -102,7 +102,7 @@ public class ManageHotel implements Serializable {
                 address,
                 babelCode,
                 manageCountry != null ? manageCountry.toAggregate() : null,
-                manageCityState != null ? manageCityState.toAggregate() : null,
+                manageCityState != null ? manageCityState.toAggregateSimple() : null,
                 city
         );
     }
