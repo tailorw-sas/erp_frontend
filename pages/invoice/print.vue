@@ -171,7 +171,7 @@ async function getPrintList() {
         ...iterator,
         loadingEdit: false,
         loadingDelete: false,
-        invoiceDate: new Date(iterator?.invoiceDate),
+      //  invoiceDate: new Date(iterator?.invoiceDate),
         agencyCd: iterator?.agency?.code,
         dueAmount: iterator?.dueAmount || 0,
         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
