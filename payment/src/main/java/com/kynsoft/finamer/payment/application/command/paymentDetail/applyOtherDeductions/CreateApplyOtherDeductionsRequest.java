@@ -10,7 +10,6 @@ import java.util.UUID;
 @Setter
 public class CreateApplyOtherDeductionsRequest {
 
-    private UUID employee;
     private UUID payment;
     private UUID transactionType;
     private String remark;
