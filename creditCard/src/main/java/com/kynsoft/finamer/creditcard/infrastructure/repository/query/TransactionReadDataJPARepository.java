@@ -19,7 +19,7 @@ public interface TransactionReadDataJPARepository extends JpaRepository<Transact
 
     Page<Transaction> findAll(Specification specification, Pageable pageable);
     Optional<Transaction> findByTransactionUuid(UUID uuid);
-
+   /* Page<TransactionSearchResponse> findAll(Specification specification, Pageable pageable);*/
     @Query("SELECT COUNT(r) FROM Transaction r WHERE r.reservationNumber = :reservationNumber AND r.hotel.id = :hotel")
     Long countByReservationNumberAndManageHotelIdAndNotId(@Param("reservationNumber") String reservationNumber, @Param("hotel") UUID hotel);
 
