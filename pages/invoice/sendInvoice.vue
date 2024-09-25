@@ -97,27 +97,16 @@ const options = ref({
 
 const type = route.query.type || ''
 sendType.value = type === ENUM_INVOICE_SEND_TYPE.FTP
-  ? 'Invoice to Send to FTP'
-  : ENUM_INVOICE_SEND_TYPE.EMAIL
-    ? 'Invoice to Send to Email'
-    : ENUM_INVOICE_SEND_TYPE.BAVEL
-      ? 'Invoice to Send to BAVEL'
+  ? 'Invoice to Send by FTP'
+  : type === ENUM_INVOICE_SEND_TYPE.EMAIL
+    ? 'Invoice to Send by Email'
+    : type === ENUM_INVOICE_SEND_TYPE.BAVEL
+      ? 'Invoice to Send by Bavel'
       : ''
 
 const payload = ref<IQueryRequest>({
   filter: [
-    {
-      key: 'invoiceStatus',
-      operator: 'IN',
-      value: ['RECONCILED'],
-      logicalOperation: 'AND'
-    },
-    {
-      key: 'agency.sentB2BPartner.code',
-      operator: 'EQUALS',
-      value: type.toString(),
-      logicalOperation: 'AND'
-    }
+
   ],
   query: '',
   pageSize: 10,
@@ -140,7 +129,20 @@ const pagination = ref<IPagination>({
 
 async function getList() {
   try {
-    payload.value = { ...payload.value, query: idItem.value }
+    // payload.value = { ...payload.value, query: idItem.value }
+    const staticPayload = [{
+      key: 'invoiceStatus',
+      operator: 'IN',
+      value: ['RECONCILED'],
+      logicalOperation: 'AND'
+    }, {
+      key: 'agency.sentB2BPartner.code',
+      operator: 'EQUALS',
+      value: type.toString(),
+      logicalOperation: 'AND'
+    }]
+    payload.value.filter = [...payload.value.filter, ...staticPayload]
+
     listItems.value = []
     clickedItem.value = []
     const newListItems = []
@@ -168,7 +170,7 @@ async function getList() {
           loadingDelete: false,
           invoiceDate: dayjs(iterator?.invoiceDate).format('YYYY-MM-DD'),
           agencyCd: iterator?.agency?.code,
-          manageHotelCode: iterator?.hotel?.code,
+          manageHotelCode: `${iterator?.hotel?.code}-${iterator?.hotel?.name}`,
           manageinvoiceCode: invoiceNumber.replace('OLD', 'CRE'),
           manageAgencyCode: iterator?.agency?.code,
           manageAgencyName: iterator?.agency?.name,
@@ -289,6 +291,22 @@ async function resetListItems() {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'manageAgencyCode') {
+        parseFilter[i].key = 'agency.code'
+      }
+      if (parseFilter[i]?.key === 'manageAgencyName') {
+        parseFilter[i].key = 'agency.name'
+      }
+      if (parseFilter[i]?.key === 'manageHotelCode') {
+        parseFilter[i].key = 'hotel.code'
+      }
+      if (parseFilter[i]?.key === 'manageinvoiceCode') {
+        parseFilter[i].key = 'invoiceNumber'
+      }
+    }
+  }
   payload.value.filter = [...parseFilter || []]
   getList()
 }
@@ -311,7 +329,8 @@ function searchAndFilter() {
     sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    newPayload.filter = [{
+    // newPayload.filter = [{
+    payload.value.filter = [...payload.value.filter, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'EQUALS',
       value: filterToSearch.value.search,
@@ -323,8 +342,8 @@ function searchAndFilter() {
     newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
     // Date
     if (filterToSearch.value.from) {
-      newPayload.filter = [...newPayload.filter, {
-        key: 'checkIn',
+      payload.value.filter = [...payload.value.filter, {
+        key: 'invoiceDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -332,8 +351,8 @@ function searchAndFilter() {
       }]
     }
     if (filterToSearch.value.to) {
-      newPayload.filter = [...newPayload.filter, {
-        key: 'checkIn',
+      payload.value.filter = [...payload.value.filter, {
+        key: 'invoiceDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -344,7 +363,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        payload.value.filter = [...payload.value.filter, {
           key: 'agency.id',
           operator: 'IN',
           value: itemIds,
@@ -357,7 +376,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        payload.value.filter = [...payload.value.filter, {
           key: 'hotel.id',
           operator: 'IN',
           value: itemIds,
@@ -367,7 +386,7 @@ function searchAndFilter() {
       }
     }
   }
-  payload.value = newPayload
+  // payload.value = { ...payload.value, ...newPayload }
   getList()
 }
 
@@ -642,7 +661,7 @@ onMounted(async () => {
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="send" />
+        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="listItems.length === 0 || clickedItem.length === 0" @click="send" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>
