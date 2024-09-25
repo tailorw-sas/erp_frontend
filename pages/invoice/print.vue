@@ -17,8 +17,7 @@ const idItemToLoadFirstTime = ref('')
 const listPrintItems = ref<any[]>([])
 
 const totalDueAmount = ref(0)
-const startOfMonth = ref<any>(null)
-const endOfMonth = ref<any>(null)
+
 const filterAllDateRange = ref(false)
 const loadingSearch = ref(false)
 
@@ -42,15 +41,12 @@ const filterToSearch = ref<IData>({
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 
-const confApi = reactive({
+const confApiPrint = reactive({
   moduleApi: 'invoicing',
-  uriApi: 'manage-booking/import',
+  uriApi: 'manage-invoice/external-report',
 })
 
-const confHotelApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-hotel',
-})
+
 const confAgencyApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
@@ -111,7 +107,7 @@ const payload = ref<IQueryRequest>({
         key: 'invoiceStatus',
         operator: 'IN', // Cambia a 'IN' para incluir varios valores
         value: ['RECONCILED', 'SENT'], 
-        logicalOperation: 'OR' 
+        logicalOperation: 'AND' 
     }],
     query: '',
     pageSize: 10,
@@ -128,9 +124,14 @@ const pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+const selectedElements = ref<string[]>([])
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+async function onMultipleSelect(data: any) {
+  selectedElements.value = data
+  console.log(selectedElements.value,'que muetsra aqui')
+}
 
 async function getPrintList() {
   try {
@@ -188,6 +189,58 @@ async function getPrintList() {
   }
   finally {
     options.value.loading = false
+  }
+}
+interface Payload {
+  invoiceId: number[]; // o el tipo que corresponda
+  invoiceType: string[];
+  groupByClient: boolean;
+}
+
+async function savePrint(event:any) {
+  const currentList = [...listPrintItems.value]
+
+  options.value.loading = true;
+  
+  try {
+    let nameOfPdf = '';
+    let invoiceTypeArray = [];
+    const payloadTemp:any = {
+      invoiceId: [], invoiceType: [],
+      groupByClient: false
+    };
+
+    const selectedInvoices = currentList.filter(item => selectedElements.value.includes(item.id));
+    payloadTemp.invoiceId = selectedInvoices.map(e => e.id);
+
+    invoiceTypeArray.push('INVOICE_AND_BOOKING');
+
+    if (event && event.invoiceSupport) {
+      invoiceTypeArray.push('INVOICE_SUPPORT');
+    }
+
+    payloadTemp.groupByClient = event && event.groupByClient ? true : false;
+
+    nameOfPdf = `invoice-list-${dayjs().format('YYYY-MM-DD')}.pdf`
+  
+    
+
+    payloadTemp.invoiceType = invoiceTypeArray;
+
+    const response:any = await GenericService.create(confApiPrint.moduleApi, confApiPrint.uriApi, payloadTemp);
+    
+    const url = window.URL.createObjectURL(new Blob([response]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nameOfPdf;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error:any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Transaction was failed', life: 3000 });
+  } finally {
+    options.value.loading = false;
   }
 }
 
@@ -255,12 +308,50 @@ async function getAgencyList(query: string = '') {
           value: 'ACTIVE',
           logicalOperation: 'AND'
         },
+      
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
+    const { data: dataList } = response
+    agencyList.value = [allDefaultItem]
+    for (const iterator of dataList) {
+      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+}
+
+async function getAgency(query: string = '') {
+  try {
+    const payload = {
+      filter: [
         {
-          key: 'autoReconcile',
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'selectedInvoice.id',
           operator: 'EQUALS',
-          value: true,
+          value: 'ACTIVE',
           logicalOperation: 'AND'
-        }
+        },
+      
       ],
       query: '',
       pageSize: 20,
@@ -453,6 +544,7 @@ onMounted(async () => {
           @on-change-filter="parseDataTableFilter"
           @on-list-item="resetListItems"
           @on-sort-field="onSortField"
+         @update:clicked-item="onMultipleSelect($event)"
        >
           <template #column-status="{ data: item }">
             <Badge
@@ -464,9 +556,10 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
               <Row>
-                <Column footer="Totals" :colspan="9" footer-style="text-align:right; font-weight: 700" />
+                <Column footer="Totals" :colspan="9"   footer-style="text-align:right; font-weight: 700" />
 
                 <Column :colspan="8" :footer="totalInvoiceAmount" />
+          
               </Row>
             </ColumnGroup>
           </template>
@@ -480,9 +573,7 @@ onMounted(async () => {
               v-model="invoiceAndBookings"
               :binary="true"
               disabled
-              @update:model-value="($event) => {
-                // changeValueByCheckApplyPaymentBalance($event);
-              }"
+             @update:model-value="($event) => savePrint({ ...eventData, invoiceAndBookings: $event })"
             />
             <label for="invoiceAndBookings" class="ml-2 font-bold">
               Invoice And Bookings
@@ -493,9 +584,7 @@ onMounted(async () => {
               id="invoiceSupport"
               v-model="invoiceSupport"
               :binary="true"
-              @update:model-value="($event) => {
-                // changeValueByCheckApplyPaymentBalance($event);
-              }"
+              @update:model-value="($event) => savePrint({ ...eventData, invoiceSupport: $event })"
             />
             <label for="invoiceSupport" class="ml-2 font-bold">
               Invoice Supports
@@ -506,9 +595,7 @@ onMounted(async () => {
               id="groupByClient"
               v-model="groupByClient"
               :binary="true"
-              @update:model-value="($event) => {
-                // changeValueByCheckApplyPaymentBalance($event);
-              }"
+              @update:model-value="($event) => savePrint({ ...eventData, groupByClient: $event })"
             />
             <label for="groupbyClient" class="ml-2 font-bold">
               Group By Client
@@ -517,7 +604,7 @@ onMounted(async () => {
         </div>
 
         <div class="flex align-items-end justify-content-end">
-          <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" @click="clearForm" />
+          <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" @click="savePrint" />
           <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
         </div>
       </div>
