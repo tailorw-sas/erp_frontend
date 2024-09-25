@@ -61,7 +61,7 @@ const confSendApi = reactive({
 //
 const idItem = ref('')
 const ENUM_FILTER = [
-  { id: 'id', name: 'InvoiceId' },
+  { id: 'id', name: 'Invoice Id' },
 ]
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
