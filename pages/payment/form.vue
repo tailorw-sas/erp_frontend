@@ -1097,6 +1097,7 @@ async function getListPaymentDetail() {
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1704,43 +1705,12 @@ function updateAttachment(attachment: any) {
   attachmentList.value[index] = attachment
 }
 
-function disabledDeleteForPaymentWithChildren(id: string): boolean {
-  const item = paymentDetailsList.value.find(item => item.id === id)
-  if (!item) {
-    return true
-  }
-  else if (item.children && item.children.length > 0) {
-    return true
-  }
-  else {
-    return false
-  }
-}
-
-function haveApplayPamentWithTransactionTypeCheckOrApplyDeposit(id: string): boolean {
-  const item = paymentDetailsList.value.find(item => item.id === id)
-  if (!item) {
-    return false
-  }
-  else if ((item.transactionType?.cash || item.transactionType.applyDeposit) && item.applyPayment === false) {
-    return false
-  }
-  else if ((item.transactionType?.cash || item.transactionType.applyDeposit) && item.applyPayment === true) {
-    return true
-  }
-  else {
-    return false
-  }
-}
-
 function disableBtnDelete(idDetail: string): boolean {
-  // const item = paymentDetailsList.value.find(item => item.id === idDetail)
-  // console.log(item)
-
-  const haveApplyDeposit = disabledDeleteForPaymentWithChildren(idDetail)
-  const haveApplayPamentWithTransactionCheckOrApplyDeposit = haveApplayPamentWithTransactionTypeCheckOrApplyDeposit(idDetail)
-
-  if (haveApplyDeposit || haveApplayPamentWithTransactionCheckOrApplyDeposit) {
+  const item = paymentDetailsList.value.find(item => item.id === idDetail)
+  if (!item) {
+    return false
+  }
+  else if (item.hasApplyDeposit || item.applyPayment) {
     return true
   }
   else {
@@ -1755,6 +1725,8 @@ async function rowSelected(rowData: any) {
 
     enableSplitAction.value = hasDepositTransaction(rowData, paymentDetailsList.value)
     disabledBtnDelete.value = disableBtnDelete(rowData)
+
+    // Variables que puedo usar para deshabilitar el boton eliminar: hasApplyDeposit, applyPayment
   }
   else {
     idItemDetail.value = ''

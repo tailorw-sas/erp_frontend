@@ -1703,19 +1703,21 @@ async function applyPaymentGetListForOtherDeductions() {
       })
     }
 
-    // const objFilterForStatus = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoiceStatus')
+    const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
 
-    // if (objFilterForStatus) {
-    //   objFilterForStatus.value = 'PROCECSED'
-    // }
-    // else {
-    //   applyPaymentPayloadOtherDeduction.value.filter.push({
-    //     key: 'invoiceStatus',
-    //     operator: 'NOT_EQUALS',
-    //     value: 'PROCECSED',
-    //     logicalOperation: 'AND'
-    //   })
-    // }
+    if (objFilterForPayment) {
+      objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
+    }
+    else {
+      applyPaymentPayloadOtherDeduction.value.filter.push(
+        {
+          key: 'paymentDetails.payment.id',
+          operator: 'EQUALS',
+          value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
+          logicalOperation: 'AND'
+        }
+      )
+    }
 
     const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
 
