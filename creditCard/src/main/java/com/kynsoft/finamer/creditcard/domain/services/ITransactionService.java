@@ -14,6 +14,8 @@ public interface ITransactionService {
 
     void update(TransactionDto dto);
 
+    TransactionDto findByUuid(UUID uuid);
+
     void delete(TransactionDto dto);
 
     TransactionDto findById(Long id);

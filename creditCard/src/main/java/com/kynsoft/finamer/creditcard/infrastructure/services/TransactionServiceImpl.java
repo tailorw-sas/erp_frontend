@@ -70,6 +70,14 @@ public class TransactionServiceImpl implements ITransactionService {
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
     }
+    @Override
+    public TransactionDto findByUuid(UUID uuid) {
+        Optional<Transaction> entity = this.repositoryQuery.findByTransactionUuid(uuid);
+        if (entity.isPresent()) {
+            return entity.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
+    }
 
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {

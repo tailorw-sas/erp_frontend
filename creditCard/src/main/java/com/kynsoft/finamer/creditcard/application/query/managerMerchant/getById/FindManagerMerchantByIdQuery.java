@@ -9,9 +9,11 @@ import java.util.UUID;
 public class FindManagerMerchantByIdQuery  implements IQuery {
 
     private final UUID id;
+    private final UUID transactionUuid;
 
-    public FindManagerMerchantByIdQuery(UUID id) {
+    public FindManagerMerchantByIdQuery(UUID id, UUID transactionUuid) {
         this.id = id;
+        this.transactionUuid = transactionUuid;
     }
 
 }

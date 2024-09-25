@@ -3,6 +3,7 @@ package com.kynsoft.finamer.creditcard.application.query.objectResponse;
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import lombok.*;
 
@@ -20,6 +21,7 @@ public class ManageMerchantResponse implements IResponse {
     private Boolean defaultm;
     private Status status;
     private ManagerMerchantConfigDto merchantConfigResponse;
+    private TransactionDto transactionDtoResponse;
 
     public ManageMerchantResponse(ManageMerchantDto dto) {
         this.id = dto.getId();
