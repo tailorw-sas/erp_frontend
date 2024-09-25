@@ -55,6 +55,7 @@ const paymentSelectedForAttachment = ref<GenericObject>({})
 // CHange Agency
 const idPaymentSelectedForPrintChangeAgency = ref('')
 const objClientFormChangeAgency = ref<GenericObject>({})
+const currentAgencyForChangeAgency = ref<GenericObject>({})
 const listClientFormChangeAgency = ref<any[]>([])
 const openDialogChangeAgency = ref(false)
 const listAgencyByClient = ref<any[]>([])
@@ -1154,43 +1155,6 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   statusItemsList.value = [...statusItemsList.value, ...statusTemp]
 }
 
-async function getAgencyByClient2() {
-  if (optionsOfTableChangeAgency.value.loading) {
-    // Si ya hay una solicitud en proceso, no hacer nada.
-    return
-  }
-  try {
-    optionsOfTableChangeAgency.value.loading = true
-    const filter: FilterCriteria[] = [
-      {
-        key: 'client.id',
-        logicalOperation: 'AND',
-        operator: 'EQUALS',
-        value: objClientFormChangeAgency.value?.id,
-      },
-      {
-        key: 'status',
-        logicalOperation: 'AND',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-      },
-    ]
-    const objQueryToSearch = {
-      query: '',
-      keys: ['name', 'code'],
-    }
-    listAgencyByClient.value = []
-    listAgencyByClient.value = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
-  }
-  catch (error) {
-    optionsOfTableChangeAgency.value.loading = false
-    console.log(error)
-  }
-  finally {
-    optionsOfTableChangeAgency.value.loading = false
-  }
-}
-
 async function getAgencyByClient() {
   if (optionsOfTableChangeAgency.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -1202,6 +1166,12 @@ async function getAgencyByClient() {
     const newListItems = []
 
     const filter: FilterCriteria[] = [
+      {
+        key: 'id',
+        logicalOperation: 'AND',
+        operator: 'NOT_EQUALS',
+        value: currentAgencyForChangeAgency.value?.id,
+      },
       {
         key: 'client.id',
         logicalOperation: 'AND',
@@ -1835,6 +1805,7 @@ function onRowContextMenu(event: any) {
   isPrintByRightClick.value = true
   idPaymentSelectedForPrintChangeAgency.value = event?.data?.id || ''
   objClientFormChangeAgency.value = event?.data?.client
+  currentAgencyForChangeAgency.value = event?.data?.agency
   listClientFormChangeAgency.value = event?.data?.client ? [event?.data?.client] : []
 
   if (event && event.data) {
@@ -1947,21 +1918,21 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
 }
 
 async function onRowDoubleClickInDataTableForChangeAgency(event: any) {
-  console.log(event)
+  // console.log(event)
 
   try {
     const payloadToApplyPayment: GenericObject = {
       payment: objItemSelectedForRightClickApplyPayment.value.id || '',
-      invoices: [],
-      transactionType: transactionType.value?.id
+      agency: event?.id,
+
     }
 
-    const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
+    // const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
 
-    if (response) {
-      openDialogApplyPayment.value = false
-      toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
-    }
+    // if (response) {
+    //   openDialogApplyPayment.value = false
+    //   toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
+    // }
   }
   catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
@@ -2066,6 +2037,30 @@ async function saveApplyPayment() {
     objItemSelectedForRightClickApplyPayment.value = {}
     idInvoicesSelectedToApplyPayment.value = []
     paymentDetailsTypeDepositSelected.value = []
+    loadingSaveApplyPayment.value = false
+  }
+}
+
+async function saveApplyPaymentOtherDeduction() {
+  if (loadingSaveApplyPayment.value === true) { return }
+  try {
+    loadingSaveApplyPayment.value = true
+    const payload = {
+      payment: objItemSelectedForRightClickApplyPayment.value.id || '',
+      booking: [...idInvoicesSelectedToApplyPaymentForOtherDeduction.value], // este ya es un array de ids
+      transactionType: transactionType.value?.id || '',
+      remark: fieldRemark.value ? fieldRemark.value : transactionType.value.defaultRemark
+    }
+
+    await GenericService.create('payment', 'payment/apply-other-deductions', payload)
+    toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment Other Deduction has been applied successfully', life: 3000 })
+    getList()
+  }
+  catch (error) {
+    loadingSaveApplyPayment.value = false
+    console.log(error)
+  }
+  finally {
     loadingSaveApplyPayment.value = false
   }
 }
@@ -2896,24 +2891,30 @@ onMounted(async () => {
       <template #default>
         <div class="p-fluid pt-3">
           <!-- // Label -->
-          <div class="w-full flex align-items-center mb-3">
-            <div class="mr-2">
-              <label for="autocomplete" class="font-semibold"> Client: </label>
+          <div class="flex justify-content-between">
+            <div class="flex align-items-center mb-3">
+              <div class="mr-2">
+                <label for="autocomplete" class="font-semibold"> Client: </label>
+              </div>
+              <div class="mr-4">
+                <DebouncedAutoCompleteComponent
+                  id="autocomplete"
+                  class="w-29rem"
+                  field="name"
+                  item-value="id"
+                  disabled
+                  :model="objClientFormChangeAgency"
+                  :suggestions="[...listClientFormChangeAgency]"
+                  @change="($event) => {
+                    objClientFormChangeAgency = $event
+                  }"
+                  @load="async($event) => {}"
+                />
+              </div>
             </div>
-            <div class="mr-4">
-              <DebouncedAutoCompleteComponent
-                id="autocomplete"
-                class="w-29rem"
-                field="name"
-                item-value="id"
-                disabled
-                :model="objClientFormChangeAgency"
-                :suggestions="[...listClientFormChangeAgency]"
-                @change="($event) => {
-                  objClientFormChangeAgency = $event
-                }"
-                @load="async($event) => {}"
-              />
+            <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
+              <strong class="mr-2 w-auto">Current Agency:</strong>
+              <span class="w-auto text-white font-semibold">{{ currentAgencyForChangeAgency.code }} - {{ currentAgencyForChangeAgency.name }}</span>
             </div>
           </div>
 
@@ -3241,7 +3242,7 @@ onMounted(async () => {
               icon="pi pi-check"
               :disabled="Object.keys(transactionType).length === 0 || idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0"
               :loading="loadingSaveApplyPayment"
-              @click="saveApplyPayment"
+              @click="saveApplyPaymentOtherDeduction"
             />
             <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPaymentOtherDeductions()" />
           </div>
