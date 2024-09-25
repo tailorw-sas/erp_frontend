@@ -319,7 +319,7 @@ const allMenuListItems = ref([
     label: 'Payment Without Attachment',
     icon: '',
     iconSvg: '',
-    command: ($event: any) => {},
+    command: ($event: any) => checkAttachment('ATTACHMENT_WITH_ERROR'),
     disabled: true,
     visible: true,
   },
@@ -328,7 +328,7 @@ const allMenuListItems = ref([
     label: 'Payment With Attachment',
     icon: '',
     iconSvg: '',
-    command: ($event: any) => {},
+    command: ($event: any) => checkAttachment('ATTACHMENT_WITHOUT_ERROR'),
     disabled: true,
     visible: true,
   },
@@ -680,6 +680,20 @@ async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { qu
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
+async function checkAttachment(code: string) {
+  const payload = {
+    payment: idPaymentSelectedForPrint.value || '',
+    status: code
+  }
+  try {
+    await GenericService.create('payment', 'payment/change-attachment-status', payload)
+    await getList()
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
     case 'PROCECSED': return '#FF8D00'
@@ -777,6 +791,18 @@ async function getList() {
     const arrayNumero = []
     const valores = ['#ff002b', '#00b816', '#616161']
 
+    interface ListColor {
+      NONE: string
+      ATTACHMENT_WITH_ERROR: string
+      ATTACHMENT_WITHOUT_ERROR: string
+    }
+
+    const listColor: ListColor = {
+      NONE: '#616161',
+      ATTACHMENT_WITH_ERROR: '#ff002b',
+      ATTACHMENT_WITHOUT_ERROR: '#00b816',
+    }
+
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
         iterator.agencyType = iterator.agency.agencyTypeResponse
@@ -833,7 +859,14 @@ async function getList() {
 
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, color: '#616161' }) // color: valores[Math.floor(Math.random() * valores.length)]
+        newListItems.push(
+          {
+            ...iterator,
+            loadingEdit: false,
+            loadingDelete: false,
+            color: listColor[iterator.eattachment as keyof ListColor]
+          }
+        ) // color: valores[Math.floor(Math.random() * valores.length)]
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -1724,6 +1757,31 @@ function onRowContextMenu(event: any) {
     if (menuItemApplayPayment) {
       menuItemApplayPayment.disabled = true
       menuItemApplayPayment.visible = false
+    }
+  }
+
+  if (event && event.data && event.data.hasAttachment) {
+    const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
+    if (menuItemPaymentWithAttachment) {
+      menuItemPaymentWithAttachment.disabled = false
+      menuItemPaymentWithAttachment.visible = true
+    }
+    const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
+    if (menuItemPaymentWithOutAttachment) {
+      menuItemPaymentWithOutAttachment.disabled = false
+      menuItemPaymentWithOutAttachment.visible = true
+    }
+  }
+  else {
+    const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
+    if (menuItemPaymentWithAttachment) {
+      menuItemPaymentWithAttachment.disabled = true
+      menuItemPaymentWithAttachment.visible = true
+    }
+    const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
+    if (menuItemPaymentWithOutAttachment) {
+      menuItemPaymentWithOutAttachment.disabled = true
+      menuItemPaymentWithOutAttachment.visible = true
     }
   }
 
