@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
-import { z } from 'zod'
+import { string, z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
@@ -261,7 +261,14 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Re-Send',
     icon: 'pi pi-send',
-    command: () => { TypeInvoicetoSend() },
+    command: () => { SendInvoiceByType() },
+    default: true,
+    showItem: false,
+  },
+  {
+    label: 'Send',
+    icon: 'pi pi-send',
+    command: () => { SendInvoiceByType() },
     default: true,
     showItem: false,
   },
@@ -361,36 +368,43 @@ function Print() {
 
 ////
 
-async function TypeInvoicetoSend() {
+async function SendInvoiceByType() {
+  loadingSaveAll.value = true
+  options.value.loading = true
+  let completed = false
   try {
-    // Llama a la función send y espera su resultado
-    await createSend(); // Asegúrate de que send() retorne una promesa
+    if (!selectedInvoice) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one item', life: 10000 })
+      return
+    }
+    const invoiceItem = []
+    invoiceItem.push(selectedInvoice)
+    const payload = {
+      invoice: invoiceItem,
+      employee: userData?.value?.user?.userId
+    }
 
-    // Si la petición es exitosa, navega a la nueva ruta
-    navigateTo(`invoice/sendInvoice?type=${InvoiceType.CREDIT}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
-  } catch (error:any) {
-    // Manejo de errores: muestra un mensaje de error
-    console.error('Error al enviar:', error.data.data.error.errorMessage);
-   alert('Hubo un error al enviar la factura. Por favor, inténtelo de nuevo.');
- }
+    await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload)
+    completed = true
+  }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not send invoice', life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+    if (completed) {
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoice sent successfully', life: 10000 })
+        await getList()
+      }
+  }
+
+  loadingSaveAll.value = false
 }
 
 
 
 async function createSend() {
-  loadingSaveAll.value = true;
-
-  // Crear un payload con solo los campos necesarios
-  const payload = {
-    invoice: selectedInvoice,
-    employee: userData?.value?.user?.userId
-  };
-
-  console.log(payload,'Esto es lo que envio')
-  // Enviar el payload a la API
-  await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload);
-
-  loadingSaveAll.value = false; // Opcional: Puedes manejar el estado de carga aquí
+   // Opcional: Puedes manejar el estado de carga aquí
 }
 
 
@@ -791,6 +805,7 @@ async function getList() {
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
 
+      
       totalInvoiceAmount.value += iterator.invoiceAmount
       totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
@@ -859,7 +874,7 @@ async function getPrintList() {
         hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
       });
       existingIds.add(iterator.id);
-
+    
       totalInvoiceAmount.value += iterator.invoiceAmount;
       totalDueAmount.value += iterator.dueAmount ? Number(iterator.dueAmount) : 0;
     }
@@ -1513,6 +1528,11 @@ function onRowRightClick(event: any) {
   // Resend
   if (event?.data?.status === InvoiceStatus.SENT) {
     findMenuItemByLabelSetShow('Re-Send', invoiceContextMenuItems.value, true)
+  }
+
+  // Resend
+  if (event?.data?.status === InvoiceStatus.RECONCILED) {
+    findMenuItemByLabelSetShow('Send', invoiceContextMenuItems.value, true)
   }
 
   // From Invoice

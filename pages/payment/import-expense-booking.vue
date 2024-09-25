@@ -51,7 +51,7 @@ const columns: IColumn[] = [
   { field: 'InvoiceNo', header: 'Invoice No', type: 'text' },
   { field: 'FullName', header: 'Full Name', type: 'text' },
   { field: 'ReservationNo', header: 'Reservation No', type: 'text' },
-  { field: 'cuponNo', header: 'Cupon No', type: 'text' },
+  { field: 'couponNo', header: 'Coupon No', type: 'text' },
   { field: 'checkIn', header: 'Check In', type: 'text' },
   { field: 'checkOut', header: 'Check Out', type: 'text' },
   { field: 'adults', header: 'Adults', type: 'text' },
@@ -342,7 +342,7 @@ onMounted(async () => {
             <div class="grid p-0 m-0" style="margin: 0 auto;">
               <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Hotel: <span class="p-error">*</span></label>
+                  <label class="w-4rem pt-3">Hotel: <span class="p-error">*</span></label>
                   <div class="w-full">
                     <Dropdown
                       v-model="importModel.hotel"
