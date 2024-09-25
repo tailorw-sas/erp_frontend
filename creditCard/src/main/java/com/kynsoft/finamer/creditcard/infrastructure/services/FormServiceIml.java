@@ -18,7 +18,7 @@ public class FormServiceIml implements IFormService {
     private String privateKey;
 
     @Override
-    public ResponseEntity<String> redirectToBlueMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto, String tokenService) {
+    public ResponseEntity<String> redirectToBlueMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto) {
         try {
             // Extraer los parámetros del objeto PaymentRequest
             //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
@@ -54,7 +54,7 @@ public class FormServiceIml implements IFormService {
                     "<input type=\"hidden\" name=\"MerchantType\" value=\"" + response.getMerchantConfigResponse().getMerchantType() + "\">" +
                     "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
                     "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
-                    "<input type=\"hidden\" name=\"Amount\" value=\"" + response.getTransactionDtoResponse().getAmount() + "\">" +
+                    "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
                     "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
                     "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + response.getMerchantConfigResponse().getSuccessUrl() + "\">" +
                     "<input type=\"hidden\" name=\"DeclinedUrl\" value=\"" + response.getMerchantConfigResponse().getDeclinedUrl() + "\">" +
@@ -66,7 +66,6 @@ public class FormServiceIml implements IFormService {
                     "<input type=\"hidden\" name=\"CustomField2Label\" value=\"" + customField2Label + "\">" +
                     "<input type=\"hidden\" name=\"CustomField2Value\" value=\"" + customField2Value + "\">" +
                     "<input type=\"hidden\" name=\"AuthHash\" value=\"" + authHash + "\">" +
-                    "<input type=\"hidden\" name=\"Token\" value=\"" + tokenService + "\">" +
 
                     "</form>" +
                     "<script>document.getElementById('paymentForm').submit();</script>" +
@@ -101,7 +100,7 @@ public class FormServiceIml implements IFormService {
         }
     }
 
-    public ResponseEntity<String> redirectToCardNetMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto,String tokenService) {
+    public ResponseEntity<String> redirectToCardNetMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto) {
         try {
             // Paso 1: Enviar los datos para generar la sesión
             //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
@@ -117,12 +116,11 @@ public class FormServiceIml implements IFormService {
             requestData.put("ReturnUrl", response.getMerchantConfigResponse().getSuccessUrl()); //Campo successUrl de Merchant Config
             requestData.put("CancelUrl", response.getMerchantConfigResponse().getErrorUrl()); //Campo errorUrl de Merchant Config
             requestData.put("PageLanguaje", "ENG"); //Se envia por ahora ENG
-            requestData.put("TransactionId", String.valueOf(requestDto.getTransactionUuid())); //Viene en el request
+            requestData.put("TransactionId", String.valueOf(requestDto.getTransactionId())); //Viene en el request
             requestData.put("OrdenId", requestDto.getOrderNumber()); //Viene en el request
             requestData.put("MerchantName", response.getMerchantConfigResponse().getName()); //Campo name de Merchant Config
             requestData.put("IpClient", ""); // Campo ip del b2b partner del merchant
             requestData.put("Amount", requestDto.getAmount()); //Viene en el request
-            requestData.put("Token", tokenService);
 
             // Enviar la solicitud POST y obtener la respuesta
             RestTemplate restTemplate = new RestTemplate();
@@ -146,7 +144,6 @@ public class FormServiceIml implements IFormService {
                     "<input type=\"hidden\" name=\"SESSION\" value=\"" + sessionData.getSession() + "\"/>" +
                     "<input type=\"hidden\" name=\"ReturnUrl\" value=\"" + response.getMerchantConfigResponse().getSuccessUrl() + "\"/>" +
                     "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + response.getMerchantConfigResponse().getErrorUrl() + "\"/>" +
-                    "<input type=\"hidden\" name=\"Token\" value=\"" + tokenService + "\"/>" +
                     "</form>" +
                     "<script>document.getElementById('paymentForm').submit();</script>" +
                     "</body>" +
