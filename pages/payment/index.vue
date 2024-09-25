@@ -1829,7 +1829,7 @@ async function onExpandRowApplyPayment(event: any) {
 }
 
 function onRowContextMenu(event: any) {
-  console.log(event)
+  // console.log(event)
 
   idPaymentSelectedForPrint.value = event?.data?.id || ''
   isPrintByRightClick.value = true
@@ -1900,6 +1900,21 @@ function onRowContextMenu(event: any) {
     if (menuItemChangeAgency) {
       menuItemChangeAgency.disabled = true
       menuItemChangeAgency.visible = true
+    }
+  }
+
+  if (event && event.data && (event.data.paymentStatus.code !== 'CAN' || event.data.paymentStatus.name !== 'Cancelled')) {
+    const menuItemOtherDeduction = allMenuListItems.value.find(item => item.id === 'applyPaymentOtherDeduction')
+    if (menuItemOtherDeduction) {
+      menuItemOtherDeduction.disabled = false
+      menuItemOtherDeduction.visible = true
+    }
+  }
+  else {
+    const menuItemOtherDeduction = allMenuListItems.value.find(item => item.id === 'applyPaymentOtherDeduction')
+    if (menuItemOtherDeduction) {
+      menuItemOtherDeduction.disabled = true
+      menuItemOtherDeduction.visible = true
     }
   }
 
