@@ -52,7 +52,7 @@ public class ConsumerUpdateBookingService {
             this.detailService.create(new PaymentDetailDto(objKafka.getPaymentKafka().getDetails().getId(), objKafka.getPaymentKafka().getDetails().getPaymentDetailId(), payment, bookingDto));
 
             if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
-                ManageBookingDto bookingParent = bookingDto.getParent();
+                ManageBookingDto bookingParent = this.bookingService.findById(bookingDto.getParent().getId());
                 bookingParent.setDueAmount(bookingParent.getDueAmount() + objKafka.getAmountBalance());
                 this.bookingService.update(bookingParent);
 
