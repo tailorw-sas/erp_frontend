@@ -29,7 +29,7 @@ function disableBackNavigation() {
 }
 
 onMounted(() => {
-  disableBackNavigation()
+  // disableBackNavigation()
 
   const status = route.query.status || 'error'
 
