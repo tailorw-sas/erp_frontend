@@ -10,7 +10,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
-const senttype = ref('')
+const sendType = ref('')
 const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const route = useRoute()
@@ -28,8 +28,8 @@ const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
   allFromAndTo: false,
-  agency: [allDefaultItem],
-  hotel: [allDefaultItem],
+  agency: [],
+  hotel: [],
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
@@ -96,6 +96,13 @@ const options = ref({
 })
 
 const type = route.query.type || ''
+sendType.value = type === ENUM_INVOICE_SEND_TYPE.FTP
+  ? 'Invoice to Send to FTP'
+  : ENUM_INVOICE_SEND_TYPE.EMAIL
+    ? 'Invoice to Send to Email'
+    : ENUM_INVOICE_SEND_TYPE.BAVEL
+      ? 'Invoice to Send to BAVEL'
+      : ''
 
 const payload = ref<IQueryRequest>({
   filter: [
@@ -213,7 +220,7 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confHotelApi.moduleApi, confHotelApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -261,7 +268,7 @@ async function getAgencyList(query: string = '') {
 
     const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
     const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
+    agencyList.value = []
     for (const iterator of dataList) {
       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -369,8 +376,8 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criteria: null,
     search: '',
-    agency: [allDefaultItem],
-    hotel: [allDefaultItem],
+    agency: [],
+    hotel: [],
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
@@ -479,7 +486,7 @@ onMounted(async () => {
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
-                  {{ senttype }}
+                  {{ sendType }}
                 </div>
               </div>
             </template>
@@ -493,14 +500,11 @@ onMounted(async () => {
                       <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
                         :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.agency" :suggestions="agencyList"
-                        @load="($event) => getAgencyList($event)" @change="($event) => {
-                          if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
-                          }
+                        item-value="id" :model="filterToSearch.agency"
+                        :suggestions="agencyList"
+                        @load="($event) => getAgencyList($event)"
+                        @change="($event) => {
+                          filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
                         }"
                       >
                         <template #option="props">
@@ -517,12 +521,7 @@ onMounted(async () => {
                         :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
                         @load="($event) => getHotelList($event)" @change="($event) => {
-                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                          }
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                         }"
                       >
                         <template #option="props">
