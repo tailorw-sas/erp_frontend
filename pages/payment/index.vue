@@ -1887,7 +1887,7 @@ function onRowContextMenu(event: any) {
     }
   }
 
-  if (event && event.data && event.data.applyPayment) {
+  if (event && event.data && event.data.applyPayment === false) {
     const menuItemChangeAgency = allMenuListItems.value.find(item => item.id === 'changeAgency')
     if (menuItemChangeAgency) {
       menuItemChangeAgency.disabled = false
@@ -1949,22 +1949,23 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
 async function onRowDoubleClickInDataTableForChangeAgency(event: any) {
   console.log(event)
 
-  // try {
-  //   const payloadToApplyPayment: GenericObject = {
-  //     payment: objItemSelectedForRightClickApplyPayment.value.id || '',
-  //     invoices: []
-  //   }
+  try {
+    const payloadToApplyPayment: GenericObject = {
+      payment: objItemSelectedForRightClickApplyPayment.value.id || '',
+      invoices: [],
+      transactionType: transactionType.value?.id
+    }
 
-  //   const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
+    const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
 
-  //   if (response) {
-  //     openDialogApplyPayment.value = false
-  //     toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
-  //   }
-  // }
-  // catch (error) {
-  //   toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
-  // }
+    if (response) {
+      openDialogApplyPayment.value = false
+      toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
+    }
+  }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
+  }
 }
 
 async function addAmmountsToApplyPayment(event: any) {
