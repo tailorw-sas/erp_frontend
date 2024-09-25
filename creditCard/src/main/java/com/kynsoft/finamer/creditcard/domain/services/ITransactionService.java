@@ -22,6 +22,8 @@ public interface ITransactionService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    /*PaginatedResponse searchData(Pageable pageable, List<FilterCriteria> filterCriteria);*/
+
     Long countByReservationNumberAndManageHotelIdAndNotId(String reservationNumber, UUID hotel);
 
     boolean compareParentTransactionAmount(Long parentId, Double amount);
