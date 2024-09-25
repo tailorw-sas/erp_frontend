@@ -49,7 +49,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND, new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override
