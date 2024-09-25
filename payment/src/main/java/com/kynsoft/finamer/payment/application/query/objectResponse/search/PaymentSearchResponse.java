@@ -47,6 +47,7 @@ public class PaymentSearchResponse implements IResponse {
     private Boolean hasAttachment;
     private boolean hasDetailTypeDeposit = false;
     private EAttachment eAttachment;
+    private boolean applyPayment;
 
     public PaymentSearchResponse(PaymentDto dto) {
         this.id = dto.getId();
@@ -72,6 +73,7 @@ public class PaymentSearchResponse implements IResponse {
         this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
         this.remark = dto.getRemark();
         this.eAttachment = dto.getEAttachment();
+        this.applyPayment = dto.isApplyPayment();
 
         this.hasAttachment = dto.getAttachments() != null;
         if (dto.getInvoice() != null) {

@@ -48,6 +48,7 @@ public class PaymentDto {
 
     private List<PaymentDetailDto> paymentDetails;
     private EAttachment eAttachment;
+    private boolean applyPayment;
 
     public PaymentDto(UUID id, long paymentId, Status status, ManagePaymentSourceDto paymentSource, String reference, LocalDate transactionDate, ManagePaymentStatusDto paymentStatus, ManageClientDto client, ManageAgencyDto agency, ManageHotelDto hotel, ManageBankAccountDto bankAccount, ManagePaymentAttachmentStatusDto attachmentStatus, double paymentAmount, double paymentBalance, double depositAmount, double depositBalance, double otherDeductions, double identified, double notIdentified, Double notApplied, Double applied, String remark, ManageInvoiceDto invoice, List<MasterPaymentAttachmentDto> attachments, OffsetDateTime createdAt, EAttachment eAttachment) {
         this.id = id;
