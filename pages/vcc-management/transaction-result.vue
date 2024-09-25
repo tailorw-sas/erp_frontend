@@ -19,7 +19,18 @@ const showDetails = ref(false)
 const route = useRoute()
 const router = useRouter()
 
+function disableBackNavigation() {
+  history.pushState(null, document.title, location.href)
+  history.back()
+  history.forward()
+  window.onpopstate = function () {
+    history.go(1)
+  }
+}
+
 onMounted(() => {
+  disableBackNavigation()
+
   const status = route.query.status || 'error'
 
   transactionStatus.value = String(status) // Asignar el estado recibido a transactionStatus
@@ -50,8 +61,10 @@ function toggleDetails() {
     <Card v-if="isLoading" class="loading-card card-bg-color">
       <template #content>
         <div class="loading-container">
-          <ProgressSpinner style="width: 50px; height: 50px;" strokeWidth="4" animationDuration=".5s" />
-          <p class="loading-text">Processing your transaction, please wait...</p>
+          <ProgressSpinner style="width: 50px; height: 50px;" stroke-width="4" animation-duration=".5s" />
+          <p class="loading-text">
+            Processing your transaction, please wait...
+          </p>
         </div>
       </template>
     </Card>
