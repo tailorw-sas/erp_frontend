@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.creditcard.infrastructure.repository.query;
 
-import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionSearchResponse;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

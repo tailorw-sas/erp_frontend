@@ -2,7 +2,6 @@ package com.kynsoft.finamer.creditcard.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
