@@ -56,7 +56,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     disabled: true,
     class: 'field col-12',
-    validation: z.string().trim().min(1, 'The reference field is required'),
+    // validation: z.string().trim().min(1, 'The reference field is required'),
   },
   {
     field: 'grossAmount',
