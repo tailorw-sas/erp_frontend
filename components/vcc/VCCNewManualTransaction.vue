@@ -220,7 +220,7 @@ async function handleMerchantRedirect(item: any) {
   console.log(response)
   if (response.status === 200) {
     const jsonResponse = await response.json()
-    const htmlBody = jsonResponse.body
+    const htmlBody = jsonResponse.result
 
     const newTab = window.open('', '_blank')
     newTab?.document.write(await htmlBody)
