@@ -406,7 +406,7 @@ onMounted(async () => {
         @on-cell-edit-complete="saveItem"
       />
       <div class="flex justify-content-end">
-        <Button class="ml-2" icon="pi pi-times" label="Cancel" severity="secondary" @click="() => { navigateTo('/') }" />
+        <Button class="ml-2" icon="pi pi-times"  severity="secondary" @click="() => { navigateTo('/') }" />
       </div>
     </div>
   </div>
