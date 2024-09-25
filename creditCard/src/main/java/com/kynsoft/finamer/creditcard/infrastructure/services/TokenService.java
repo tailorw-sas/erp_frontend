@@ -17,7 +17,7 @@ public class TokenService {
 
     public ResponseEntity<String> generateToken(PaymentRequestDto requestDto) {
         return ResponseEntity.ok(Jwts.builder()
-                .claim("transactionId", requestDto.getTransactionUuid())
+                .claim("transactionId", requestDto.getTransactionId())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7)) // 24 hora * 7
                 .signWith(secretKey)
