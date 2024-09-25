@@ -70,6 +70,9 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             // Actualizar el estado de cada factura a SENT
             for (ManageInvoiceDto invoice : agencyInvoices) {
                 invoice.setStatus(EInvoiceStatus.SENT);
+                if (!invoice.getStatus().equals(EInvoiceStatus.SENT)) {
+                    invoice.setReSend(true);
+                }
                 this.service.update(invoice);
             }
         }
@@ -95,6 +98,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName() + " " + employeeDto.getLastName()));
             recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
             recipients.add(new MailJetRecipient("enrique.muguercia2016@gmail.com", "Enrique Basto"));
+            recipients.add(new MailJetRecipient("reimardelgado@gmail.com", "Enrique Basto"));
             //TODO send email employee
             request.setRecipientEmail(recipients);
             // Adjuntar todas las facturas de la agencia
