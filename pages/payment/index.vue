@@ -2745,9 +2745,17 @@ onMounted(async () => {
 
             <!-- fifth filter -->
             <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
-              <div class="grid align-items-center justify-content-center">
+              <div class="flex align-items-center h-full">
+                <TriStateCheckbox
+                  id="payApplied"
+                  v-model="filterToSearch.payApplied"
+                  :binary="true"
+                />
+                <label for="payApplied" class="ml-2 font-bold"> Pay Applied</label>
+              </div>
+              <div v-if="false" class="grid align-items-center justify-content-center">
                 <div class="col-12">
-                  <div class="flex align-items-center mb-2">
+                  <div v-if="false" class="flex align-items-center mb-2">
                     <label for="" class="mr-2 font-bold"> Type</label>
                     <div class="w-full">
                       <Dropdown
