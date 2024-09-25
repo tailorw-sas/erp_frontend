@@ -55,9 +55,9 @@ const openDialogChangeAgency = ref(false)
 const listAgencyByClient = ref<any[]>([])
 
 const columnsChangeAgency = ref<IColumn[]>([
-  { field: 'code', header: 'Code', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'name', header: 'Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'description', header: 'Description', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'code', header: 'Code', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'name', header: 'Name', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'description', header: 'Description', type: 'text', width: '90px', sortable: true, showFilter: true },
 ])
 const optionsOfTableChangeAgency = ref({
   tableName: 'Change Agency',
@@ -66,7 +66,7 @@ const optionsOfTableChangeAgency = ref({
   expandableRows: false,
   loading: false,
   showDelete: false,
-  showFilters: false,
+  showFilters: true,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
 })
@@ -76,7 +76,7 @@ const payloadChangeAgency = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'dueAmount',
+  sortBy: 'name',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const paginationChangeAgency = ref<IPagination>({
@@ -284,7 +284,7 @@ const allMenuListItems = ref([
     icon: 'pi pi-arrow-right-arrow-left',
     iconSvg: '',
     command: ($event: any) => openModalApplyChangeAgency($event),
-    disabled: false,
+    disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
   },
   {
@@ -1065,6 +1065,21 @@ function onSortField(event: any) {
   }
 }
 
+async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
+  payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
+  getAgencyByClient()
+}
+
+function onSortFieldForChangeAgency(event: any) {
+  if (event) {
+    payloadChangeAgency.value.sortBy = event.sortField
+    payloadChangeAgency.value.sortType = event.sortOrder
+    parseDataTableFilterForChangeAgency(event.filter)
+  }
+}
+
 interface DataListItem {
   id: string
   name: string
@@ -1122,7 +1137,7 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   statusItemsList.value = [...statusItemsList.value, ...statusTemp]
 }
 
-async function getAgencyByClient() {
+async function getAgencyByClient2() {
   if (optionsOfTableChangeAgency.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -1153,6 +1168,72 @@ async function getAgencyByClient() {
   catch (error) {
     optionsOfTableChangeAgency.value.loading = false
     console.log(error)
+  }
+  finally {
+    optionsOfTableChangeAgency.value.loading = false
+  }
+}
+
+async function getAgencyByClient() {
+  if (optionsOfTableChangeAgency.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    optionsOfTableChangeAgency.value.loading = true
+    listAgencyByClient.value = []
+    const newListItems = []
+
+    const filter: FilterCriteria[] = [
+      {
+        key: 'client.id',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: objClientFormChangeAgency.value?.id,
+      },
+      {
+        key: 'status',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+      },
+    ]
+    payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...filter]
+
+    const response = await GenericService.search(optionsOfTableChangeAgency.value.moduleApi, optionsOfTableChangeAgency.value.uriApi, payloadChangeAgency.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    paginationChangeAgency.value.page = page
+    paginationChangeAgency.value.limit = size
+    paginationChangeAgency.value.totalElements = totalElements
+    paginationChangeAgency.value.totalPages = totalPages
+
+    const existingIds = new Set(listAgencyByClient.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.status = statusToBoolean(iterator.status)
+      }
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({
+          id: iterator.id,
+          name: `${iterator.name}`,
+          code: `${iterator.code}`,
+          description: `${iterator.description}`,
+          status: statusToBoolean(iterator.status)
+        })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    listAgencyByClient.value = [...listAgencyByClient.value, ...newListItems]
+  }
+  catch (error) {
+    optionsOfTableChangeAgency.value.loading = false
+    console.error(error)
   }
   finally {
     optionsOfTableChangeAgency.value.loading = false
@@ -1785,6 +1866,22 @@ function onRowContextMenu(event: any) {
     }
   }
 
+  if (event && event.data && event.data.applied && event.data.applied.replace(/,/g, '') <= 0) {
+    const menuItemChangeAgency = allMenuListItems.value.find(item => item.id === 'changeAgency')
+    if (menuItemChangeAgency) {
+      menuItemChangeAgency.disabled = false
+      menuItemChangeAgency.visible = true
+    }
+  }
+  else {
+    objItemSelectedForRightClickApplyPayment.value = {}
+    const menuItemChangeAgency = allMenuListItems.value.find(item => item.id === 'changeAgency')
+    if (menuItemChangeAgency) {
+      menuItemChangeAgency.disabled = true
+      menuItemChangeAgency.visible = true
+    }
+  }
+
   const allHidden = allMenuListItems.value.every(item => !item.visible)
   if (!allHidden) {
     contextMenu.value.show(event.originalEvent)
@@ -2229,6 +2326,12 @@ watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
   getList()
+})
+
+watch(payloadOnChangePageChangeAgency, (newValue) => {
+  payloadChangeAgency.value.page = newValue?.page ? newValue?.page : 0
+  payloadChangeAgency.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getAgencyByClient()
 })
 
 watch(applyPaymentOnChangePage, (newValue) => {
@@ -2775,7 +2878,9 @@ onMounted(async () => {
             :columns="columnsChangeAgency"
             :options="optionsOfTableChangeAgency"
             :pagination="paginationChangeAgency"
-            @on-change-pagination="payloadOnChangePage = $event"
+            @on-sort-field="onSortFieldForChangeAgency"
+            @on-change-filter="parseDataTableFilterForChangeAgency"
+            @on-change-pagination="payloadOnChangePageChangeAgency = $event"
             @on-row-double-click="onRowDoubleClickInDataTableForChangeAgency"
           />
         </div>
@@ -2791,7 +2896,7 @@ onMounted(async () => {
               :loading="loadingSaveApplyPayment"
               @click="saveApplyPayment"
             />
-            <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPaymentOtherDeductions()" />
+            <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalChangeAgency()" />
           </div>
         </div>
       </template>
