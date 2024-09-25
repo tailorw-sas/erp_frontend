@@ -2852,7 +2852,7 @@ onMounted(async () => {
         <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
-        <Button v-if="false" v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
+        <Button v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
       </IfCan>
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
