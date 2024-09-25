@@ -26,7 +26,7 @@ public class PaymentDetailResponse implements IResponse {
     private UUID paymentId;
     private Long paymentDetailId;
     private Long parentId;
-    private ManagePaymentTransactionTypeSearchResponse transactionType;
+    private ManagePaymentTransactionTypeResponse transactionType;
     private Double amount;
     private String remark;
     private List<PaymentDetailResponse> children = new ArrayList<>();
@@ -51,7 +51,7 @@ public class PaymentDetailResponse implements IResponse {
         this.id = dto.getId();
         this.status = dto.getStatus();
         this.paymentId = dto.getPayment().getId();
-        this.transactionType = dto.getTransactionType() != null ? new ManagePaymentTransactionTypeSearchResponse(dto.getTransactionType()) : null;
+        this.transactionType = dto.getTransactionType() != null ? new ManagePaymentTransactionTypeResponse(dto.getTransactionType()) : null;
         this.amount = dto.getAmount();
         this.remark = dto.getRemark();
         //this.children = dto.getChildren() != null ? dto.getChildren().stream().map(PaymentDetailResponse::new).toList() : null;
