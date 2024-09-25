@@ -1866,7 +1866,7 @@ function onRowContextMenu(event: any) {
     }
   }
 
-  if (event && event.data && event.data.applied && event.data.applied.replace(/,/g, '') <= 0) {
+  if (event && event.data && event.data.applyPayment) {
     const menuItemChangeAgency = allMenuListItems.value.find(item => item.id === 'changeAgency')
     if (menuItemChangeAgency) {
       menuItemChangeAgency.disabled = false
