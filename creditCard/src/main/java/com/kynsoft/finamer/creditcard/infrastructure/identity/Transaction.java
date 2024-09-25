@@ -12,6 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,7 +25,8 @@ public class Transaction implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    @Column(name = "transaction_uuid")
+    private UUID transactionUuid;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_merchant_id")
     private ManageMerchant merchant;
@@ -125,13 +127,14 @@ public class Transaction implements Serializable {
 
     private TransactionDto toAggregateParent() {
         return new TransactionDto(
-                id, checkIn, reservationNumber, referenceNumber,
+                id,transactionUuid, checkIn, reservationNumber, referenceNumber,
                 createdAt.toLocalDate());
     }
 
     public TransactionDto toAggregate(){
         return new TransactionDto(
                 id,
+                transactionUuid,
                 merchant != null ? merchant.toAggregate() : null,
                 methodType,
                 hotel != null ? hotel.toAggregate() : null,

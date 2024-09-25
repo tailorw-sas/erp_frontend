@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 public class TransactionDto {
 
     private Long id;
+    private UUID transactionUuid;
     private ManageMerchantDto merchant;
     private MethodType methodType;
     private ManageHotelDto hotel;
@@ -41,10 +43,11 @@ public class TransactionDto {
     private Boolean permitRefund;
 
     public TransactionDto(
-            Long id, LocalDate checkIn, String reservationNumber,
+            Long id, UUID transactionUuid, LocalDate checkIn, String reservationNumber,
             String referenceNumber, LocalDate transactionDate) {
 
         this.id = id;
+        this.transactionUuid = transactionUuid;
         this.checkIn = checkIn;
         this.reservationNumber = reservationNumber;
         this.referenceNumber = referenceNumber;
@@ -52,7 +55,7 @@ public class TransactionDto {
     }
 
     public TransactionDto(
-            ManageMerchantDto merchant, MethodType methodType, ManageHotelDto hotel,
+            UUID transactionUuid, ManageMerchantDto merchant, MethodType methodType, ManageHotelDto hotel,
             ManageAgencyDto agency, ManageLanguageDto language, Double amount,
             LocalDate checkIn, String reservationNumber, String referenceNumber,
             String hotelContactEmail, String guestName, String email, String enrolleCode,
@@ -60,6 +63,7 @@ public class TransactionDto {
             ManageTransactionStatusDto status, TransactionDto parent,
             ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount, Boolean permitRefund) {
+        this.transactionUuid = transactionUuid;
         this.merchant = merchant;
         this.methodType = methodType;
         this.hotel = hotel;
@@ -85,11 +89,12 @@ public class TransactionDto {
     }
 
     public TransactionDto(
-            ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
+            UUID transactionUuid, ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
             String reservationNumber, String referenceNumber, ManageTransactionStatusDto status,
             Double commission, LocalDate checkIn, Double netAmount,
-            LocalDate transactionDate, Boolean permitRefund){
+            LocalDate transactionDate, Boolean permitRefund) {
+        this.transactionUuid = transactionUuid;
         this.agency = agency;
         this.transactionCategory = transactionCategory;
         this.transactionSubCategory = transactionSubCategory;

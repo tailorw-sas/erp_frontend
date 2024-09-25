@@ -13,6 +13,7 @@ import java.util.UUID;
 public class CreateAdjustmentTransactionCommand implements ICommand {
 
     private Long id;
+    private UUID transactionUuid;
     private UUID agency;
     private UUID transactionCategory;
     private UUID transactionSubCategory;
@@ -24,6 +25,7 @@ public class CreateAdjustmentTransactionCommand implements ICommand {
     public CreateAdjustmentTransactionCommand(UUID agency, UUID transactionCategory,
                                               UUID transactionSubCategory, Double amount,
                                               String reservationNumber, String referenceNumber) {
+        this.transactionUuid = UUID.randomUUID();
         this.agency = agency;
         this.transactionCategory = transactionCategory;
         this.transactionSubCategory = transactionSubCategory;

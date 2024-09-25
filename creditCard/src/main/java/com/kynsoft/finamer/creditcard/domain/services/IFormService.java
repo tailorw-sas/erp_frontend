@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface IFormService {
 
-    ResponseEntity<String> redirectToBlueMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto);
+    ResponseEntity<String> redirectToBlueMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto, String tokenService);
 
-    ResponseEntity<String> redirectToCardNetMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto);
+    ResponseEntity<String> redirectToCardNetMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto, String tokenService);
 }
