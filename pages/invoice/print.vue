@@ -63,6 +63,11 @@ const confAgencyApi = reactive({
   uriApi: 'manage-agency',
 })
 
+const confinvoiceApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-invoice-type',
+})
+
 const confhotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
@@ -83,7 +88,7 @@ const ENUM_FILTER = [
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text' },
-  { field: 'invoiceType', header: 'Type', type: 'text' },
+  { field: 'manageInvoiceType', header: 'Type', type: 'select',objApi:confinvoiceApi },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
@@ -121,7 +126,7 @@ const payload = ref<IQueryRequest>({
     logicalOperation: 'AND'
   }],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'invoiceId',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -181,7 +186,8 @@ async function getPrintList() {
         aging: 0,
         dueAmount: iterator?.dueAmount || 0,
         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
-        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` }
+        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
+        manageInvoiceType: { ...iterator?.manageInvoiceType, name: `${iterator?.manageInvoiceType?.code || ''}-${iterator?.manageInvoiceType?.name || ''}` }
       })
       existingIds.add(iterator.id)
 
@@ -326,48 +332,6 @@ async function getAgencyList(query: string = '') {
   }
 }
 
-async function getAgency(query: string = '') {
-  try {
-    const payload = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'selectedInvoice.id',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        },
-
-      ],
-      query: '',
-      pageSize: 20,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
-    const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
-    const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
-    for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
 
 async function clearForm() {
   await goToList()
@@ -554,7 +518,10 @@ onMounted(async () => {
               <Row>
                 <Column footer="Totals" :colspan="9" footer-style="text-align:right; font-weight: 700" />
 
-                <Column :colspan="8" :footer="totalInvoiceAmount" />
+                <Column :colspan="1"  :footer="`$${totalInvoiceAmount}`"footer-style="text-align:right; font-weight: 700" />
+                <Column :colspan="1"  :footer="`$${totalDueAmount}`" footer-style="text-align:right; font-weight: 700" />
+                <Column :colspan="3"  footer-style="text-align:right; font-weight: 700" />
+    
               </Row>
             </ColumnGroup>
           </template>
