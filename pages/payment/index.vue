@@ -40,7 +40,8 @@ const paymentDetailsTypeDepositSelected = ref<any[]>([])
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
 
-const checkApplyPayment = ref(true)
+const checkApplyPayment = ref(false)
+const loadAllInvoices = ref(false)
 const idInvoicesSelectedToApplyPayment = ref<string[]>([])
 const idInvoicesSelectedToApplyPaymentForOtherDeduction = ref<string[]>([])
 const invoiceAmmountSelected = ref(0)
@@ -1690,20 +1691,25 @@ async function applyPaymentGetListForOtherDeductions() {
       })
     }
 
-    const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
-
-    if (objFilterForPayment) {
-      objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
+    if (loadAllInvoices.value) {
+      applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
     }
     else {
-      applyPaymentPayloadOtherDeduction.value.filter.push(
-        {
-          key: 'paymentDetails.payment.id',
-          operator: 'EQUALS',
-          value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
-          logicalOperation: 'AND'
-        }
-      )
+      const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
+
+      if (objFilterForPayment) {
+        objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
+      }
+      else {
+        applyPaymentPayloadOtherDeduction.value.filter.push(
+          {
+            key: 'paymentDetails.payment.id',
+            operator: 'EQUALS',
+            value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
+            logicalOperation: 'AND'
+          }
+        )
+      }
     }
 
     const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
@@ -3224,10 +3230,10 @@ onMounted(async () => {
           <div class="flex align-items-center">
             <Checkbox
               id="checkApplyPayment"
-              v-model="checkApplyPayment"
+              v-model="loadAllInvoices"
               :binary="true"
               @update:model-value="($event) => {
-                changeValueByCheckApplyPaymentBalance($event);
+                applyPaymentGetListForOtherDeductions();
               }"
             />
             <label for="checkApplyPayment" class="ml-2 font-bold">
