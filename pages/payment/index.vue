@@ -47,6 +47,11 @@ const invoiceAmmountSelected = ref(0)
 const paymentAmmountSelected = ref(0)
 const paymentBalance = ref(0)
 
+// Attachments
+const attachmentDialogOpen = ref<boolean>(false)
+const attachmentList = ref<any[]>([])
+const paymentSelectedForAttachment = ref<GenericObject>({})
+
 // CHange Agency
 const idPaymentSelectedForPrintChangeAgency = ref('')
 const objClientFormChangeAgency = ref<GenericObject>({})
@@ -263,8 +268,8 @@ const allMenuListItems = ref([
     label: 'Document',
     icon: 'pi pi-file-word',
     iconSvg: '',
-    command: ($event: any) => {},
-    disabled: true,
+    command: ($event: any) => handleAttachmentDialogOpen($event),
+    disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:DOCUMENT']),
   },
   {
@@ -679,6 +684,18 @@ async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { qu
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+function handleAttachmentDialogOpen() {
+  attachmentDialogOpen.value = true
+}
+
+function addAttachment(attachment: any) {
+  attachmentList.value = [...attachmentList.value, attachment]
+}
+
+function updateAttachment(attachment: any) {
+  const index = attachmentList.value.findIndex(item => item.id === attachment.id)
+  attachmentList.value[index] = attachment
+}
 
 async function checkAttachment(code: string) {
   const payload = {
@@ -1821,9 +1838,11 @@ function onRowContextMenu(event: any) {
   listClientFormChangeAgency.value = event?.data?.client ? [event?.data?.client] : []
 
   if (event && event.data) {
+    paymentSelectedForAttachment.value = event.data
     objItemSelectedForRightClickApplyPaymentOtherDeduction.value = event.data
   }
   else {
+    paymentSelectedForAttachment.value = {}
     objItemSelectedForRightClickApplyPaymentOtherDeduction.value = {}
   }
   objItemSelectedForRightClickApplyPayment.value = event.data
@@ -3073,7 +3092,7 @@ onMounted(async () => {
           <!-- // Label -->
           <div class="w-full flex align-items-center mb-3">
             <div class="mr-2">
-              <label for="autocomplete" class="font-semibold"> Transaction Type </label>
+              <label for="autocomplete" class="font-semibold"> Transaction </label>
             </div>
             <div class="mr-4">
               <DebouncedAutoCompleteComponent
@@ -3364,6 +3383,22 @@ onMounted(async () => {
       </template>
     </Dialog>
   </div>
+
+  <div v-if="attachmentDialogOpen">
+    <PaymentAttachmentDialog
+      is-create-or-edit-payment="edit"
+      :add-item="addAttachment"
+      :close-dialog="() => { attachmentDialogOpen = false }"
+      :is-creation-dialog="true"
+      header="Manage Payment Attachment"
+      :list-items="attachmentList"
+      :open-dialog="attachmentDialogOpen"
+      :update-item="updateAttachment"
+      :selected-payment="paymentSelectedForAttachment"
+      @update:list-items="attachmentList = $event"
+    />
+  </div>
+
   <ContextMenu ref="contextMenu" :model="allMenuListItems">
     <template #itemicon="{ item }">
       <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
