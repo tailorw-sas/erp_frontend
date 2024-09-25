@@ -9,6 +9,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReport;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
+import com.kynsoft.finamer.invoicing.domain.services.IManagerClientService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.util.ReportUtil;
 import org.springframework.stereotype.Component;
@@ -33,9 +34,14 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
     private final InvoiceReportProviderFactory invoiceReportProviderFactory;
     private final IManageInvoiceService manageInvoiceService;
 
-    public InvoiceReportQueryHandler(InvoiceReportProviderFactory invoiceReportProviderFactory, IManageInvoiceService manageInvoiceService) {
+    private final IManagerClientService managerClientService;
+
+    public InvoiceReportQueryHandler(InvoiceReportProviderFactory invoiceReportProviderFactory,
+                                     IManageInvoiceService manageInvoiceService,
+                                     IManagerClientService managerClientService) {
         this.invoiceReportProviderFactory = invoiceReportProviderFactory;
         this.manageInvoiceService = manageInvoiceService;
+        this.managerClientService = managerClientService;
     }
 
 
@@ -95,7 +101,7 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
                     .map(InputStream.class::cast)
                     .toList();
             if (!finalContent.isEmpty()) {
-                result.put(invoiceId, PDFUtils.mergePDFtoByte(finalContent));
+                result.put(resolveInvoiceNumber(invoiceId), PDFUtils.mergePDFtoByte(finalContent));
             }
         }
 
@@ -109,7 +115,7 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
 
         for (Map.Entry<String, List<String>> entry : invoicesGrouped.entrySet()) {
             Map<EInvoiceReportType, Optional<byte[]>> reportContent = this.groupPdfContentByReportType(entry.getValue(), reportService);
-            result.put(entry.getKey(), PDFUtils.mergePDFtoByte(getOrderReportContent(reportContent)
+            result.put(resolveClientName(entry.getKey()), PDFUtils.mergePDFtoByte(getOrderReportContent(reportContent)
                     .stream()
                     .filter(Optional::isPresent)
                     .map(bytes -> new ByteArrayInputStream(bytes.get()))
@@ -129,6 +135,7 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
                         .filter(Optional::isPresent)
                         .map(bytes -> new ByteArrayInputStream(bytes.get()))
                         .map(InputStream.class::cast).toList())));
+
             }
         }
         return content;
@@ -154,5 +161,12 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
         return invoiceClientMap;
     }
 
-
+    private String resolveInvoiceNumber(String invoiceId){
+       ManageInvoiceDto manageInvoiceDto = manageInvoiceService.findById(UUID.fromString(invoiceId));
+       return manageInvoiceDto.getInvoiceNumber();
+    }
+    private String resolveClientName(String clientId){
+        ManageClientDto manageClientDto = managerClientService.findById(UUID.fromString(clientId));
+        return manageClientDto.getName();
+    }
 }
