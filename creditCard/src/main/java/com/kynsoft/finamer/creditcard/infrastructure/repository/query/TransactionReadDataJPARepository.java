@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.repository.query;
 
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionSearchResponse;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,7 @@ public interface TransactionReadDataJPARepository extends JpaRepository<Transact
 
     Page<Transaction> findAll(Specification specification, Pageable pageable);
     Optional<Transaction> findByTransactionUuid(UUID uuid);
-
+   /* Page<TransactionSearchResponse> findAll(Specification specification, Pageable pageable);*/
     @Query("SELECT COUNT(r) FROM Transaction r WHERE r.reservationNumber = :reservationNumber AND r.hotel.id = :hotel")
     Long countByReservationNumberAndManageHotelIdAndNotId(@Param("reservationNumber") String reservationNumber, @Param("hotel") UUID hotel);
 
