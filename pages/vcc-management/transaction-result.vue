@@ -90,7 +90,7 @@ function toggleDetails() {
               The transaction was cancelled.
             </p>
           </div>
-          <ButtonGroup v-if="transactionStatus === 'success'">
+          <ButtonGroup v-if="transactionStatus === 'success' || transactionStatus === 'declined'">
             <Button label="Details" icon="pi pi-chevron-down" style="margin-right: 2px;" @click="toggleDetails" />
             <Button label="Go to Home" @click="goHome" />
           </ButtonGroup>
@@ -108,6 +108,7 @@ function toggleDetails() {
               <p><strong>Authorization Code:</strong> {{ route.query.AuthorizationCode }}</p>
               <p><strong>Date and Time:</strong> {{ dateTime }}</p>
               <p><strong>Merchant Response:</strong> {{ route.query.ResponseMessage }} ({{ route.query.IsoCode }})</p>
+              <p v-if="transactionStatus === 'declined' || transactionStatus === 'cancelled'"><strong>Error Description:</strong> {{ route.query.ErrorDescription }}</p>
               <p><strong>Reference Number:</strong> {{ route.query.RRN }}</p>
               <p><strong>Card Number:</strong> {{ route.query.CardNumber }}</p>
             </template>
