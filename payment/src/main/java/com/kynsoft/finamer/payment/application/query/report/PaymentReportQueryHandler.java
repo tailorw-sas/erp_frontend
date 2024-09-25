@@ -87,9 +87,9 @@ public class PaymentReportQueryHandler implements IQueryHandler<PaymentReportQue
         List<Optional<byte[]>> orderedContent = new LinkedList<>();
         orderedContent.add(content.getOrDefault(EPaymentReportType.PAYMENT_DETAILS,Optional.empty()));
         orderedContent.add(content.getOrDefault(EPaymentReportType.INVOICE_RELATED,Optional.empty()));
+        orderedContent.add(content.getOrDefault(EPaymentReportType.INVOICE_RELATED_SUPPORT,Optional.empty()));
         orderedContent.add(content.getOrDefault(EPaymentReportType.PAYMENT_SUPPORT,Optional.empty()));
         orderedContent.add(content.getOrDefault(EPaymentReportType.ALL_SUPPORT,Optional.empty()));
-        orderedContent.add(content.getOrDefault(EPaymentReportType.INVOICE_RELATED_SUPPORT,Optional.empty()));
         return orderedContent;
     }
 }
