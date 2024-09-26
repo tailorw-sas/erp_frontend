@@ -45,7 +45,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 // RulesChecker.checkRule(new
                 // ValidateObjectNotNullRule<>(command.getTransactionType(), "transactionType",
                 // "Manage Invoice Transaction Type ID cannot be null."));
-                RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getIncome(), "income",
+                        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getIncome(), "income",
                                 "Income ID cannot be null."));
 
                 ManageInvoiceDto incomeDto = this.service.findById(command.getIncome());
