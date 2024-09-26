@@ -1488,6 +1488,7 @@ onMounted(() => {
 
     finalColumns.value = [
 
+    { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
       { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
 
@@ -1578,7 +1579,7 @@ onMounted(() => {
           <Row>
             <Column 
               footer="Totals:"
-              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 10"
+              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 7 : 10"
               footer-style="text-align:right; font-weight: 700"
             />
             <Column 
@@ -1600,7 +1601,7 @@ onMounted(() => {
               :footer="Number.parseFloat(totalDueAmount.toFixed(2))"
               footer-style="font-weight: 700" 
             />
-
+          
           </Row>
         </ColumnGroup>
       </template>
