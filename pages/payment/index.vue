@@ -1165,6 +1165,7 @@ async function getAgencyByClient() {
     optionsOfTableChangeAgency.value.loading = true
     listAgencyByClient.value = []
     const newListItems = []
+    payloadChangeAgency.value.filter = []
 
     const filter: FilterCriteria[] = [
       {
@@ -1186,6 +1187,7 @@ async function getAgencyByClient() {
         value: 'ACTIVE',
       },
     ]
+
     payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...filter]
 
     const response = await GenericService.search(optionsOfTableChangeAgency.value.moduleApi, optionsOfTableChangeAgency.value.uriApi, payloadChangeAgency.value)
