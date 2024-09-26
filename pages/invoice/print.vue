@@ -244,7 +244,7 @@ async function savePrint() {
     toast.add({
       severity:'info',
       summary: 'Confirmed',
-      detail: `The process was executed successfully, ${totalFiles} records printed. Total executed time: ${totalTime} seconds.`,
+      detail: `The process was executed successfully, records printed  ${totalFiles}`,
       life: 5000 // Duración del toast en milisegundos
     });
   }
