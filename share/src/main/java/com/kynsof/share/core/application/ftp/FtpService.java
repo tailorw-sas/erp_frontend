@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 public class FtpService {
-
     @Value("${ftp.api.url:http://localhost:8097/api/ftp}")
     private String ftpApiUrl;
 
