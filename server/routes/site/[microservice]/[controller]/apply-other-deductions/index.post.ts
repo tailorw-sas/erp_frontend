@@ -11,6 +11,8 @@ export default defineEventHandler(async (event): Promise<any> => {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token?.access_token}`,
   }
+  console.log(body)
+  console.log('Si entro aqui.')
 
   const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}/apply-other-deductions`, {
     method: 'POST',
