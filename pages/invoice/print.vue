@@ -207,7 +207,7 @@ async function getPrintList() {
 
 async function savePrint() {
   options.value.loading = true
-
+  const startTime = Date.now(); // Captura el tiempo de inicio
   try {
     let nameOfPdf = ''
     const payloadTemp: any = {
@@ -236,6 +236,17 @@ async function savePrint() {
     a.click()
     window.URL.revokeObjectURL(url)
     document.body.removeChild(a)
+    const endTime = Date.now(); // Captura el tiempo de fin
+    const totalTime = ((endTime - startTime) / 1000).toFixed(2); // Tiempo total en segundos
+    const totalFiles = selectedElements.value.length; // Total de archivos descargados
+
+    // Mostrar el mensaje en el toast
+    toast.add({
+      severity:'info',
+      summary: 'Confirmed',
+      detail: `The process was executed successfully, ${totalFiles} records printed. Total executed time: ${totalTime} seconds.`,
+      life: 5000 // Duración del toast en milisegundos
+    });
   }
   catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Transaction was failed', life: 3000 })
@@ -572,7 +583,7 @@ onMounted(async () => {
         </div>
 
         <div class="flex align-items-end justify-content-end">
-          <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" @click="savePrint" />
+          <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" @click="savePrint"  :disabled="selectedElements.length === 0" />
           <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
         </div>
       </div>
