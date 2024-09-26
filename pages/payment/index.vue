@@ -621,7 +621,7 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
 ])
 
 const applyPaymentOptionsOtherDeduction = ref({
@@ -1174,12 +1174,12 @@ async function getAgencyByClient() {
         operator: 'NOT_EQUALS',
         value: currentAgencyForChangeAgency.value?.id,
       },
-      {
-        key: 'client.id',
-        logicalOperation: 'AND',
-        operator: 'EQUALS',
-        value: objClientFormChangeAgency.value?.id,
-      },
+      // {
+      //   key: 'client.id',
+      //   logicalOperation: 'AND',
+      //   operator: 'EQUALS',
+      //   value: objClientFormChangeAgency.value?.id,
+      // },
       {
         key: 'status',
         logicalOperation: 'AND',
@@ -1213,7 +1213,8 @@ async function getAgencyByClient() {
           name: `${iterator.name}`,
           code: `${iterator.code}`,
           description: `${iterator.description}`,
-          status: statusToBoolean(iterator.status)
+          status: statusToBoolean(iterator.status),
+          client: iterator.client?.id
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
@@ -1936,7 +1937,7 @@ async function onRowDoubleClickInDataTableForChangeAgency(event: any) {
       remark: objItemSelectedForRightClickApplyPayment.value.remark,
       paymentSource: objItemSelectedForRightClickApplyPayment.value.paymentSource?.id || '',
       paymentStatus: objItemSelectedForRightClickApplyPayment.value.paymentStatus?.id || '',
-      client: objItemSelectedForRightClickApplyPayment.value.client?.id || '',
+      client: event.client || '',
       agency: event?.id,
       hotel: objItemSelectedForRightClickApplyPayment.value.hotel?.id || '',
       bankAccount: objItemSelectedForRightClickApplyPayment.value.bankAccount?.id || '',
@@ -1989,6 +1990,10 @@ async function selectRowsOfInvoiceOfOtherDeduction(event: any) {
   }
 
   disabledBtnApplyPaymentOtherDeduction.value = false
+}
+
+async function onCellEditCompleteApplyPaymentOtherDeduction(event: any) {
+  console.log(event)
 }
 
 function sumAmountOfPaymentDetailTypeDeposit(transactions: any[]) {
@@ -3203,7 +3208,6 @@ onMounted(async () => {
               </div>
             </div>
           </div>
-
           <DynamicTable
             class="card p-0"
             :data="applyPaymentListOfInvoiceOtherDeduction"
@@ -3213,6 +3217,7 @@ onMounted(async () => {
             @on-change-pagination="applyPaymentOnChangePageOtherDeduction = $event"
             @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
             @update:clicked-item="selectRowsOfInvoiceOfOtherDeduction($event)"
+            @on-table-cell-edit-complete="onCellEditCompleteApplyPaymentOtherDeduction($event)"
           >
             <!-- @update:clicked-item="invoiceSelectedListForApplyPayment = $event" -->
             <template #column-status="{ data: item }">
