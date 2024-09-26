@@ -75,7 +75,7 @@ public class PaymentSearchResponse implements IResponse {
         this.eAttachment = dto.getEAttachment();
         this.applyPayment = dto.isApplyPayment();
 
-        this.hasAttachment = dto.getAttachments() != null;
+        this.hasAttachment = !dto.getAttachments().isEmpty();
         if (dto.getInvoice() != null) {
             if (dto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 this.hasAttachment = dto.getInvoice().getHasAttachment();
