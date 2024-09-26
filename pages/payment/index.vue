@@ -621,7 +621,7 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
+  { field: 'dueAmount', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
 ])
 
 const applyPaymentOptionsOtherDeduction = ref({
@@ -1988,12 +1988,29 @@ async function selectRowsOfInvoiceOfOtherDeduction(event: any) {
     disabledBtnApplyPaymentOtherDeduction.value = true
     return
   }
-
+  // Filtramos los objetos cuyos IDs coincidan con los del array 'selectedIds'
+  applyPaymentListOfInvoiceOtherDeduction.value = applyPaymentListOfInvoiceOtherDeduction.value
+    .filter(item => selectedIds.includes(item.id)) // Solo los que tengan un id que coincida
+    .reduce((total, item) => {
+      // Verificamos si invoiceAmount es un número válido
+      if (typeof item.dueAmount === 'number' && !Number.isNaN(item.dueAmount)) {
+        return total + item.dueAmount
+      }
+      else {
+        return total // Si no es válido, simplemente lo ignoramos
+      }
+    }, 0) // 0 es el valor inicial
   disabledBtnApplyPaymentOtherDeduction.value = false
 }
 
 async function onCellEditCompleteApplyPaymentOtherDeduction(event: any) {
-  console.log(event)
+  const { data, newValue, field } = event
+  data[field] = newValue
+  // if (event.data && event.data.id) {
+  //   console.log(event)
+
+  //   applyPaymentListOfInvoiceOtherDeduction.value.find((item: any) => item.id === event.data.id).dueAmount = event.newValue
+  // }
 }
 
 function sumAmountOfPaymentDetailTypeDeposit(transactions: any[]) {
@@ -3247,6 +3264,9 @@ onMounted(async () => {
               </div>
             </template> -->
           </DynamicTable>
+          <pre>
+            {{ idInvoicesSelectedToApplyPaymentForOtherDeduction }}
+          </pre>
         </div>
         <div class="flex justify-content-between">
           <div class="flex align-items-center">
@@ -3441,7 +3461,10 @@ onMounted(async () => {
     <PaymentAttachmentDialog
       is-create-or-edit-payment="edit"
       :add-item="addAttachment"
-      :close-dialog="() => { attachmentDialogOpen = false }"
+      :close-dialog="() => {
+        attachmentDialogOpen = false
+        getList()
+      }"
       :is-creation-dialog="true"
       header="Manage Payment Attachment"
       :list-items="attachmentList"
