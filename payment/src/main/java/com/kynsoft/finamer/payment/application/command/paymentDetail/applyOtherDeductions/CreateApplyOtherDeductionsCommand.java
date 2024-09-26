@@ -18,12 +18,12 @@ public class CreateApplyOtherDeductionsCommand implements ICommand {
     private UUID transactionType;
     private String remark;
 
-    private List<UUID> booking;
+    private List<CreateApplyOtherDeductionsBookingRequest> booking;
 
     private PaymentDto paymentResponse;
     private final IMediator mediator;
 
-    public CreateApplyOtherDeductionsCommand(UUID payment, UUID transactionType, String remark, List<UUID> booking, IMediator mediator) {
+    public CreateApplyOtherDeductionsCommand(UUID payment, UUID transactionType, String remark, List<CreateApplyOtherDeductionsBookingRequest> booking, IMediator mediator) {
         this.payment = payment;
         this.transactionType = transactionType;
         this.remark = remark;
