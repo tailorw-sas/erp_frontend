@@ -173,14 +173,14 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             for (ManageInvoiceDto invoice : invoices) {
                 try {
                     request.setSubject("INVOICES for " + agency.getName()+"-"+invoice.getInvoiceNo());
-                    var resultXML = invoiceXmlService.generateInvoiceXml(invoice);
+                   // var resultXML = invoiceXmlService.generateInvoiceXml(invoice);
                     // Convertir el XML a Base64 para adjuntar
-                    String base64Xml = Base64.getEncoder().encodeToString(resultXML.getBytes(StandardCharsets.UTF_8));
+                   // String base64Xml = Base64.getEncoder().encodeToString(resultXML.getBytes(StandardCharsets.UTF_8));
                     List<MailJetAttachment> attachments = new ArrayList<>();
                     // Crear el adjunto con el XML
                     String nameFileXml = invoice.getInvoiceNumber() + ".xml"; // Cambiar la extensión a .xml
-                    MailJetAttachment attachmentXML = new MailJetAttachment("application/xml", nameFileXml, base64Xml);
-                    attachments.add(attachmentXML);
+                   // MailJetAttachment attachmentXML = new MailJetAttachment("application/xml", nameFileXml, base64Xml);
+                 //   attachments.add(attachmentXML);
                     Optional<ByteArrayOutputStream> invoiceBooking = getInvoicesBooking(invoice.getId().toString());
                     if (invoiceBooking.isPresent()) {
                         String nameFile = invoice.getInvoiceNumber() + ".pdf";
@@ -197,7 +197,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                     } catch (Exception e) {
                         command.setResult(false);
                     }
-                } catch (JAXBException | DocumentException | IOException e) {
+                } catch (DocumentException | IOException e) {
                     throw new RuntimeException(e);
                 }
 
