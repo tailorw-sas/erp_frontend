@@ -3154,7 +3154,7 @@ onMounted(async () => {
         <div class="p-fluid pt-3">
           <!-- // Label -->
           <div class="grid">
-            <div class="col-12 md:col-3">
+            <div class="col-12 md:col-4 w-auto">
               <div class="flex align-items-center">
                 <div class="mr-2">
                   <label for="autocomplete" class="font-semibold"> Transaction </label>
@@ -3212,7 +3212,7 @@ onMounted(async () => {
                 </div>
               </div>
             </div>
-            <div class="col-12 md:col-3">
+            <div class="col-12 md:col-8 w-auto">
               <div class="flex align-items-center">
                 <div class="mr-2">
                   <label for="autocomplete" class="font-semibold"> Remark </label>
