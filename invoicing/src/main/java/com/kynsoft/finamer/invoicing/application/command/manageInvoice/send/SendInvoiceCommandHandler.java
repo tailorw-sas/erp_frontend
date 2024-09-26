@@ -33,13 +33,17 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final IManageEmployeeService manageEmployeeService;
     private final InvoiceXmlService invoiceXmlService;
     private final ServiceLocator<IMediator> serviceLocator;
+    private final IParameterizationService parameterizationService;
+    private final IManageInvoiceStatusService manageInvoiceStatusService;
 
-    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService, IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService, ServiceLocator<IMediator> serviceLocator, ServiceLocator<IMediator> serviceLocator1) {
+    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService, IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService, ServiceLocator<IMediator> serviceLocator, ServiceLocator<IMediator> serviceLocator1, IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService) {
         this.service = service;
         this.mailService = mailService;
         this.manageEmployeeService = manageEmployeeService;
         this.invoiceXmlService = invoiceXmlService;
         this.serviceLocator = serviceLocator1;
+        this.parameterizationService = parameterizationService;
+        this.manageInvoiceStatusService = manageInvoiceStatusService;
     }
 
     @Override
@@ -59,6 +63,9 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             invoicesByAgency.computeIfAbsent(invoice.getAgency(), k -> new ArrayList<>()).add(invoice);
         }
 
+        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
+        ManageInvoiceStatusDto manageInvoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getSent()) : null;
+
         // Enviar correos agrupados por agencia
         for (Map.Entry<ManageAgencyDto, List<ManageInvoiceDto>> entry : invoicesByAgency.entrySet()) {
             ManageAgencyDto agency = entry.getKey();
@@ -70,6 +77,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             // Actualizar el estado de cada factura a SENT
             for (ManageInvoiceDto invoice : agencyInvoices) {
                 invoice.setStatus(EInvoiceStatus.SENT);
+                invoice.setManageInvoiceStatus(manageInvoiceStatus);
                 if (!invoice.getStatus().equals(EInvoiceStatus.SENT)) {
                     invoice.setReSend(true);
                 }
