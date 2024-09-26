@@ -24,11 +24,8 @@ import jakarta.xml.bind.JAXBException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,16 +85,16 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         for (Map.Entry<ManageAgencyDto, List<ManageInvoiceDto>> entry : invoicesByAgency.entrySet()) {
             ManageAgencyDto agency = entry.getKey();
             List<ManageInvoiceDto> agencyInvoices = entry.getValue();
-//            EMAIL = 'EML',
-//                    FTP = 'FTP',
-//                    BAVEL = 'BVL',
-            // Enviar correo a la agencia con todas sus facturas adjuntas
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
                 sendEmail(command, agency, agencyInvoices, manageEmployeeDto);
             }
 
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
-                sendEmail(command, agency, agencyInvoices, manageEmployeeDto);
+                try {
+                    sendFtp(agency, agencyInvoices);
+                } catch (DocumentException | IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
@@ -118,8 +115,9 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 }
                 this.service.update(invoice);
             }
-            command.setResult(true);
+
         }
+        command.setResult(true);
     }
 
     private void sendFtp(ManageAgencyDto agency, List<ManageInvoiceDto> invoices) throws DocumentException, IOException {
@@ -180,16 +178,16 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                     // Crear el adjunto con el XML
                     String nameFileXml = invoice.getInvoiceNumber() + ".xml"; // Cambiar la extensión a .xml
                    // MailJetAttachment attachmentXML = new MailJetAttachment("application/xml", nameFileXml, base64Xml);
-                 //   attachments.add(attachmentXML);
+                  //   attachments.add(attachmentXML);
                     Optional<ByteArrayOutputStream> invoiceBooking = getInvoicesBooking(invoice.getId().toString());
-                    if (invoiceBooking.isPresent()) {
-                        String nameFile = invoice.getInvoiceNumber() + ".pdf";
-                        Optional<byte[]> pdfContent = convertBookingToBase64(invoiceBooking.get());
-                        if (pdfContent.isPresent()) {
-                            MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, Arrays.toString(pdfContent.get())); // PDF content base64
-                            attachments.add(attachment);
-                        }
-                    }
+                    String nameFile = invoice.getInvoiceNumber() + ".pdf";
+                    byte[] pdfBytes = invoiceBooking.get().toByteArray();
+
+                    // Codificar los bytes en Base64
+                    String base64EncodedPDF = Base64.getEncoder().encodeToString(pdfBytes);
+
+                    MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, base64EncodedPDF);
+                    attachments.add(attachment);
                     request.setMailJetAttachments(attachments);
                     try {
                         mailService.sendMail(request);
