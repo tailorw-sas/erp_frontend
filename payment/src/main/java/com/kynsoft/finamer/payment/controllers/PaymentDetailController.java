@@ -4,6 +4,9 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailRequest;
@@ -61,6 +64,14 @@ public class PaymentDetailController {
     public ResponseEntity<CreatePaymentDetailApplyDepositMessage> createApplyDeposit(@RequestBody CreatePaymentDetailApplyDepositRequest request) {
         CreatePaymentDetailApplyDepositCommand createCommand = CreatePaymentDetailApplyDepositCommand.fromRequest(request, mediator);
         CreatePaymentDetailApplyDepositMessage response = mediator.send(createCommand);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/apply-other-deductions")
+    public ResponseEntity<CreateApplyOtherDeductionsMessage> createApplyDeposit(@RequestBody CreateApplyOtherDeductionsRequest request) {
+        CreateApplyOtherDeductionsCommand createCommand = CreateApplyOtherDeductionsCommand.fromRequest(request, mediator);
+        CreateApplyOtherDeductionsMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);
     }

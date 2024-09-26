@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsof.share.utils.ScaleAmount;
+import com.kynsoft.finamer.payment.application.query.objectResponse.search.ManagePaymentTransactionTypeSearchResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import java.time.OffsetDateTime;

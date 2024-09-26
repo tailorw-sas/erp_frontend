@@ -66,6 +66,7 @@ public class FormServiceIml implements IFormService {
                     "<input type=\"hidden\" name=\"CustomField2Label\" value=\"" + customField2Label + "\">" +
                     "<input type=\"hidden\" name=\"CustomField2Value\" value=\"" + customField2Value + "\">" +
                     "<input type=\"hidden\" name=\"AuthHash\" value=\"" + authHash + "\">" +
+
                     "</form>" +
                     "<script>document.getElementById('paymentForm').submit();</script>" +
                     "</body>" +

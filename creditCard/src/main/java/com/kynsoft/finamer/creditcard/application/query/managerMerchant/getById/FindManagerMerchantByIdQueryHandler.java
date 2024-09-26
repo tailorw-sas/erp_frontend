@@ -9,7 +9,7 @@ import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FindManagerMerchantByIdQueryHandler implements IQueryHandler<FindManagerMerchantByIdQuery, ManageMerchantResponse>  {
+public class FindManagerMerchantByIdQueryHandler implements IQueryHandler<FindManagerMerchantByIdQuery, ManageMerchantResponse> {
 
     private final IManageMerchantService service;
     private final IManageMerchantConfigService configService;
@@ -23,7 +23,7 @@ public class FindManagerMerchantByIdQueryHandler implements IQueryHandler<FindMa
     public ManageMerchantResponse handle(FindManagerMerchantByIdQuery query) {
         ManageMerchantDto response = service.findById(query.getId());
         ManagerMerchantConfigDto merchantConfigDto = configService.findByMerchantID(response.getId());
-        ManageMerchantResponse manageMerchantResponse= new ManageMerchantResponse(response);
+        ManageMerchantResponse manageMerchantResponse = new ManageMerchantResponse(response);
         manageMerchantResponse.setMerchantConfigResponse(merchantConfigDto);
         return manageMerchantResponse;
     }

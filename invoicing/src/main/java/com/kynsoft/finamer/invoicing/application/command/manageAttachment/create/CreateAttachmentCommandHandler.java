@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoiceStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -22,18 +23,20 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
     private final IManageInvoiceService manageInvoiceService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
+    private final IManageInvoiceStatusService invoiceStatusService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
     public CreateAttachmentCommandHandler(IManageAttachmentService attachmentService,
-            IManageAttachmentTypeService attachmentTypeService, IManageInvoiceService manageInvoiceService,
-            IManageResourceTypeService resourceTypeService,
-            IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IInvoiceStatusHistoryService invoiceStatusHistoryService) {
+                                          IManageAttachmentTypeService attachmentTypeService, IManageInvoiceService manageInvoiceService,
+                                          IManageResourceTypeService resourceTypeService,
+                                          IAttachmentStatusHistoryService attachmentStatusHistoryService, IManageInvoiceStatusService invoiceStatusService,
+                                          IInvoiceStatusHistoryService invoiceStatusHistoryService) {
         this.attachmentService = attachmentService;
         this.attachmentTypeService = attachmentTypeService;
         this.manageInvoiceService = manageInvoiceService;
         this.resourceTypeService = resourceTypeService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.invoiceStatusService = invoiceStatusService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
     }
 
@@ -74,14 +77,15 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
 
         if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCECSED)) {
             invoiceDto.setStatus(EInvoiceStatus.RECONCILED);
+            ManageInvoiceStatusDto invoiceStatus = invoiceStatusService.findByCode(EInvoiceStatus.RECONCILED.getCode());
+            invoiceDto.setManageInvoiceStatus(invoiceStatus);
             this.manageInvoiceService.update(invoiceDto);
-
             this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
         }
     }
 
     private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, String fileName, Long attachmentId,
-            String employee, UUID employeeId) {
+                                               String employee, UUID employeeId) {
 
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
         attachmentStatusHistoryDto.setId(UUID.randomUUID());

@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.domain.dto;
 
+import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,8 +47,10 @@ public class PaymentDto {
     private OffsetDateTime createdAt;
 
     private List<PaymentDetailDto> paymentDetails;
+    private EAttachment eAttachment;
+    private boolean applyPayment;
 
-    public PaymentDto(UUID id, long paymentId, Status status, ManagePaymentSourceDto paymentSource, String reference, LocalDate transactionDate, ManagePaymentStatusDto paymentStatus, ManageClientDto client, ManageAgencyDto agency, ManageHotelDto hotel, ManageBankAccountDto bankAccount, ManagePaymentAttachmentStatusDto attachmentStatus, double paymentAmount, double paymentBalance, double depositAmount, double depositBalance, double otherDeductions, double identified, double notIdentified, Double notApplied, Double applied, String remark, ManageInvoiceDto invoice, List<MasterPaymentAttachmentDto> attachments, OffsetDateTime createdAt) {
+    public PaymentDto(UUID id, long paymentId, Status status, ManagePaymentSourceDto paymentSource, String reference, LocalDate transactionDate, ManagePaymentStatusDto paymentStatus, ManageClientDto client, ManageAgencyDto agency, ManageHotelDto hotel, ManageBankAccountDto bankAccount, ManagePaymentAttachmentStatusDto attachmentStatus, double paymentAmount, double paymentBalance, double depositAmount, double depositBalance, double otherDeductions, double identified, double notIdentified, Double notApplied, Double applied, String remark, ManageInvoiceDto invoice, List<MasterPaymentAttachmentDto> attachments, OffsetDateTime createdAt, EAttachment eAttachment) {
         this.id = id;
         this.paymentId = paymentId;
         this.status = status;
@@ -73,6 +76,7 @@ public class PaymentDto {
         this.invoice = invoice;
         this.attachments = attachments;
         this.createdAt = createdAt;
+        this.eAttachment = eAttachment;
     }
     
 }

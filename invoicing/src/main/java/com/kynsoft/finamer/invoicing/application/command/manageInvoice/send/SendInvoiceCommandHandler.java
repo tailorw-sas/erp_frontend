@@ -10,7 +10,7 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.utils.ServiceLocator;
 import com.kynsoft.finamer.invoicing.application.query.report.InvoiceReportQuery;
 import com.kynsoft.finamer.invoicing.application.query.report.InvoiceReportRequest;
-import com.kynsoft.finamer.invoicing.application.query.report.InvoiceReportResponse;
+import com.kynsoft.finamer.invoicing.application.query.report.InvoiceMergeReportResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -33,17 +33,13 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final IManageEmployeeService manageEmployeeService;
     private final InvoiceXmlService invoiceXmlService;
     private final ServiceLocator<IMediator> serviceLocator;
-    private final IParameterizationService parameterizationService;
-    private final IManageInvoiceStatusService manageInvoiceStatusService;
 
-    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService, IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService, ServiceLocator<IMediator> serviceLocator, ServiceLocator<IMediator> serviceLocator1, IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService) {
+    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService, IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService, ServiceLocator<IMediator> serviceLocator, ServiceLocator<IMediator> serviceLocator1) {
         this.service = service;
         this.mailService = mailService;
         this.manageEmployeeService = manageEmployeeService;
         this.invoiceXmlService = invoiceXmlService;
         this.serviceLocator = serviceLocator1;
-        this.parameterizationService = parameterizationService;
-        this.manageInvoiceStatusService = manageInvoiceStatusService;
     }
 
     @Override
@@ -63,9 +59,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             invoicesByAgency.computeIfAbsent(invoice.getAgency(), k -> new ArrayList<>()).add(invoice);
         }
 
-        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceStatusDto manageInvoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getSent()) : null;
-
         // Enviar correos agrupados por agencia
         for (Map.Entry<ManageAgencyDto, List<ManageInvoiceDto>> entry : invoicesByAgency.entrySet()) {
             ManageAgencyDto agency = entry.getKey();
@@ -77,7 +70,9 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             // Actualizar el estado de cada factura a SENT
             for (ManageInvoiceDto invoice : agencyInvoices) {
                 invoice.setStatus(EInvoiceStatus.SENT);
-                invoice.setManageInvoiceStatus(manageInvoiceStatus);
+                if (!invoice.getStatus().equals(EInvoiceStatus.SENT)) {
+                    invoice.setReSend(true);
+                }
                 this.service.update(invoice);
             }
         }
@@ -103,6 +98,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName() + " " + employeeDto.getLastName()));
             recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
             recipients.add(new MailJetRecipient("enrique.muguercia2016@gmail.com", "Enrique Basto"));
+            recipients.add(new MailJetRecipient("reimardelgado@gmail.com", "Enrique Basto"));
             //TODO send email employee
             request.setRecipientEmail(recipients);
             // Adjuntar todas las facturas de la agencia
@@ -144,10 +140,10 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
 
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds) {
-        InvoiceReportRequest invoiceReportRequest = new InvoiceReportRequest(new String[]{invoiceIds}, new String[]{EInvoiceReportType.INVOICE_AND_BOOKING.name()});
+        InvoiceReportRequest invoiceReportRequest = new InvoiceReportRequest(new String[]{invoiceIds}, new String[]{EInvoiceReportType.INVOICE_AND_BOOKING.name()},false);
         InvoiceReportQuery query = new InvoiceReportQuery(invoiceReportRequest);
         IMediator mediator = serviceLocator.getBean(IMediator.class);
-        InvoiceReportResponse response =mediator.send(query);
+        InvoiceMergeReportResponse response =mediator.send(query);
         return Optional.of(response.getFile());
     }
 

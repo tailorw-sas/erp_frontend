@@ -13,5 +13,5 @@ public class PaymentRequestDto {
     private UUID merchantId;
     private String amount;
     private String orderNumber;
-    private int transactionId;
+    private long transactionId;
 }

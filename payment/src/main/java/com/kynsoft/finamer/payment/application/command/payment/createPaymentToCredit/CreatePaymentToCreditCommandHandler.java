@@ -25,6 +25,7 @@ import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.payment.domain.services.IManageClientService;
@@ -128,7 +129,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
-                null
+                null,
+                EAttachment.NONE
         );
 
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
@@ -192,7 +194,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
-                null
+                null,
+                EAttachment.NONE
         );
 
         PaymentDto paymentSave = this.paymentService.create(paymentDto);

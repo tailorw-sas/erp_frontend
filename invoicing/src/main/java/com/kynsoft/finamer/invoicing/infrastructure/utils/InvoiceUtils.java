@@ -14,4 +14,22 @@ public class InvoiceUtils {
         return manageInvoice.getBookings().stream().filter(manageBookingDto -> Objects.nonNull(manageBookingDto.getInvoiceAmount()))
                 .mapToDouble(ManageBookingDto::getInvoiceAmount).sum();
     }
+    public static String getInvoiceNumberPrefix(String invoiceNumber) {
+        if (invoiceNumber != null) {
+            int firstIndex = invoiceNumber.indexOf("-");
+            int lastIndex = invoiceNumber.lastIndexOf("-");
+
+            if (firstIndex != -1 && lastIndex != -1 && firstIndex != lastIndex) {
+                String beginInvoiceNumber = invoiceNumber.substring(0, firstIndex);
+                String lastInvoiceNumber = invoiceNumber.substring(lastIndex + 1);
+
+                return beginInvoiceNumber + "-" + lastInvoiceNumber;
+
+            } else {
+                return invoiceNumber;
+            }
+
+        }
+        return "";
+    }
 }

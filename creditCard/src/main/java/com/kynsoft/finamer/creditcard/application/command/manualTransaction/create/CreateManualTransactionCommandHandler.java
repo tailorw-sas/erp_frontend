@@ -95,6 +95,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         double netAmount = command.getAmount() - commission;
 
         Long id = this.service.create(new TransactionDto(
+                command.getTransactionUuid(),
                 merchantDto,
                 command.getMethodType(),
                 hotelDto,

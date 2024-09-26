@@ -4,6 +4,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -139,33 +140,7 @@ public class ManageInvoice {
                 : null;
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
-
-        if (dto.getInvoiceNumber() != null) {
-            int firstIndex = dto.getInvoiceNumber().indexOf("-");
-            int lastIndex = dto.getInvoiceNumber().lastIndexOf("-");
-
-            if (firstIndex != -1 && lastIndex != -1 && firstIndex != lastIndex) {
-                String beginInvoiceNumber = dto.getInvoiceNumber().substring(0, firstIndex);
-                String lastInvoiceNumber = dto.getInvoiceNumber().substring(lastIndex + 1,
-                        dto.getInvoiceNumber().length());
-
-                invoiceNumberPrefix = beginInvoiceNumber + "-" + lastInvoiceNumber;
-
-            } else {
-                invoiceNumberPrefix = dto.getInvoiceNumber();
-            }
-
-            if (lastIndex != -1) {
-                try {
-
-                    this.invoiceNo = Long.parseLong(dto.getInvoiceNumber().substring(lastIndex + 1));
-
-                } catch (NumberFormatException e) {
-                    invoiceNo = invoiceId;
-                }
-            }
-        }
-
+        this.invoiceNumberPrefix= InvoiceUtils.getInvoiceNumberPrefix(dto.getInvoiceNumber());
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();

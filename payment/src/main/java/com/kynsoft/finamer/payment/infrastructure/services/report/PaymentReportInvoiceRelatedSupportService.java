@@ -11,11 +11,9 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentReport;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.ReportContentProviderFactory;
-import com.kynsoft.finamer.payment.infrastructure.services.report.util.ReportUtil;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -46,7 +44,7 @@ public class PaymentReportInvoiceRelatedSupportService implements IPaymentReport
             PaymentDto paymentDto = paymentService.findById(paymentId);
             List<InputStream> contentToMerge = new LinkedList<>();
             this.getInvoiceRelate(paymentDto).forEach(invoiceId-> {
-                Optional<byte[]> invoiceRelatedAttachment = this.getInvoiceRelatedAttachmentContent(invoiceId.toString());
+                Optional<byte[]> invoiceRelatedAttachment = this.getInvoiceRelatedWithAttachmentContent(invoiceId.toString());
                 invoiceRelatedAttachment.ifPresent(content -> contentToMerge.add(new ByteArrayInputStream(content)));
             });
 
@@ -60,7 +58,7 @@ public class PaymentReportInvoiceRelatedSupportService implements IPaymentReport
     }
 
 
-    private Optional<byte[]> getInvoiceRelatedAttachmentContent(String invoiceId) {
+    private Optional<byte[]> getInvoiceRelatedWithAttachmentContent(String invoiceId) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("invoiceId", invoiceId);
         AbstractReportContentProvider contentProvider = reportContentProviderFactory

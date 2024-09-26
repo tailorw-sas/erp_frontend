@@ -15,6 +15,6 @@ public class InvoiceReportProviderFactory {
     }
 
     public IInvoiceReport getInvoiceReportService(EInvoiceReportType paymentReportType){
-        return paymentReportServices.get(paymentReportType.name());
+        return paymentReportServices.getOrDefault(paymentReportType.name(),null);
     }
 }

@@ -19,7 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public class PaymentAllAttachmentContentProvider extends AbstractReportContentProvider {
+public class  PaymentAllAttachmentContentProvider extends AbstractReportContentProvider {
     private final Logger logger = LoggerFactory.getLogger(PaymentAllAttachmentContentProvider.class);
     private final IMasterPaymentAttachmentService masterPaymentAttachmentService;
 
