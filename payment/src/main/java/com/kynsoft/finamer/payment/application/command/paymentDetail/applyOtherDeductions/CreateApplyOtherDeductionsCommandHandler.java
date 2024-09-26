@@ -8,6 +8,7 @@ import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule;
 import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckBookingListRule;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
@@ -42,10 +43,16 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
         ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.paymentTransactionTypeService.findById(command.getTransactionType());
         PaymentDto paymentDto = this.paymentService.findById(command.getPayment());
 
-        for (UUID uuid : command.getBooking()) {
-            ManageBookingDto bookingDto = this.manageBookingService.findById(uuid);
+        for (CreateApplyOtherDeductionsBookingRequest bookingRequest : command.getBooking()) {
+            ManageBookingDto bookingDto = this.manageBookingService.findById(bookingRequest.getBookingId());
 
-            paymentDto.setOtherDeductions(paymentDto.getOtherDeductions() + bookingDto.getAmountBalance());
+            RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule(bookingRequest.getBookingBalance(), bookingDto.getAmountBalance()));
+            paymentDto.setOtherDeductions(paymentDto.getOtherDeductions() + bookingRequest.getBookingBalance());
+
+            String remark = command.getRemark();
+            if (command.getRemark().isBlank() || command.getRemark().isEmpty()) {
+                remark = paymentTransactionTypeDto.getDefaultRemark();
+            }
 
             //Deposit Amount and Deposit Balance
             PaymentDetailDto newDetailDto = new PaymentDetailDto(
@@ -53,8 +60,8 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
                     Status.ACTIVE,
                     paymentDto,
                     paymentTransactionTypeDto,
-                    bookingDto.getAmountBalance(),
-                    command.getRemark(),
+                    bookingRequest.getBookingBalance(),
+                    remark,
                     null,
                     null,
                     null,

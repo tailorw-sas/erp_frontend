@@ -14,5 +14,5 @@ public class CreateApplyOtherDeductionsRequest {
     private UUID transactionType;
     private String remark;
 
-    private List<UUID> booking;
+    private List<CreateApplyOtherDeductionsBookingRequest> booking;
 }
