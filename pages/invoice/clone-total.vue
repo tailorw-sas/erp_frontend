@@ -12,7 +12,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTotalTabView.vue'
 
 const bookingEdited = ref(false);
-const bookingEdit:any = ref([]);
+const bookingEdit: any = ref([]);
 const idItemCreated = ref('')
 const Options = ref({
   tableName: 'Invoice',
@@ -958,10 +958,11 @@ async function createClonation(item: { [key: string]: any }) {
 
     // Obtener bookings asociados al invoice
     const bookings = await findBookingByInvoiceId()
-   // payload.bookings = bookings // Asegurarse de que bookings sea un array
+   const bookingsEdit = await filterEditFields(bookingEdit.value)
+    // payload.bookings = bookings // Asegurarse de que bookings sea un array
 
-   if (bookingEdited.value) {
-      payload.bookings = bookingEdit.value; // Usar el array de bookings editados
+    if (bookingEdited.value) {
+      payload.bookings = bookingsEdit // Usar el array de bookings editados
     } else {
       payload.bookings = bookings; // Usar el array original
     }
@@ -1187,7 +1188,7 @@ async function getBookingList(clearFilter: boolean = false) {
         bookingId: '',
         loadingEdit: false,
         loadingDelete: false,
-        // agency: iterator?.invoice?.agency,
+         agency: iterator?.invoice?.agency,
         //  invoiceAmount: 0,
         //  originalAmount: iterator?.invoiceAmount,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
@@ -1264,6 +1265,38 @@ async function findBookingByInvoiceId() {
     return filteredBookings; // Retornar solo los bookings filtrados
   } catch (error) {
     console.error('Error al buscar el booking asociado a la factura:', error);
+    return []; // Retornar un array vacío en caso de error
+  }
+}
+async function filterEditFields(bookingEdit: any[]) {
+  try {
+    // Filtrar solo la información necesaria de los bookings editados
+    const editFields = bookingEdit.map(booking => ({
+      id: booking.id,
+      reservationNumber: booking.reservationNumber,
+      firstName: booking.firstName,
+      lastName: booking.lastName,
+      roomNumber: booking.roomNumber,
+      couponNumber: booking.couponNumber,
+      adults: booking.adults,
+      children: booking.children,
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      fullName: booking.fullName,
+      hotelAmount: booking.hotelAmount,
+      nights: dayjs(booking.checkOut).endOf('day').diff(dayjs(booking.checkIn).startOf('day'), 'day', false),
+      nightType: booking.nightType ? booking.nightType.id : null,
+
+      ratePlan: booking.ratePlan ? booking.ratePlan.id : null,
+      roomType: booking.roomType ? booking.roomType.id : null,
+      roomCategory: booking.roomCategory ? booking.roomCategory.id : null,
+      agency: booking.agency ? booking.agency.id : null
+      // Agrega otros campos que necesites aquí
+    }));
+
+    return editFields; // Retornar solo los fields editados filtrados
+  } catch (error) {
+    console.error('Error al filtrar los campos editados:', error);
     return []; // Retornar un array vacío en caso de error
   }
 }
@@ -1393,9 +1426,13 @@ function updateBooking(booking: any) {
     if (element?.booking === booking?.id) {
       roomRateList.value[i] = {
         ...element,
-        roomType: { ...booking.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-        nightType: { ...booking.nightType, name: `${booking?.nightType?.code || ''}-${booking?.nightType?.name || ''}` },
+     roomType: { ...booking.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
+       nightType: { ...booking.nightType, name: `${booking?.nightType?.code || ''}-${booking?.nightType?.name || ''}` },
         ratePlan: { ...booking.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
+       // roomType: { id: booking.roomType?.id }, // Solo el ID
+       // nightType: { id: booking.nightType?.id }, // Solo el ID
+      //  ratePlan: { id: booking.ratePlan?.id }, // Solo el ID
+     
         fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
         firstName: booking?.firstName,
         lastName: booking?.lastName,
@@ -1409,16 +1446,22 @@ function updateBooking(booking: any) {
     ...booking,
     checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
     checkOut: dayjs(booking?.checkOut).startOf('day').toISOString(),
+  
     roomType: { ...booking?.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
     ratePlan: { ...booking?.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
+  // roomType: { id: booking?.roomType?.id }, // Solo el ID
+  // ratePlan: { id: booking?.ratePlan?.id }, // Solo el ID
+   agency: bookingList.value[index]?.agency,
+   //agency: { id: bookingList.value[index]?.agency?.id },
   }
   bookingList.value[index].nights = dayjs(booking?.checkOut).endOf('day').diff(dayjs(booking?.checkIn).startOf('day'), 'day', false)
-console.log('estoy aqui')
+  console.log('estoy aqui')
 
   // Marcar que se ha editado un booking
   bookingEdited.value = true;
   console.log(bookingEdited.value, 'valor del booleano edit booking')
-  bookingEdit.value.push(booking); // Agregar el booking editado al array
+ bookingEdit.value.push(booking); // Agregar el booking editado al array
+ // bookingEdit.value = [booking]; //
   calcInvoiceAmount()
 }
 
