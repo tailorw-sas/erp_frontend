@@ -11,6 +11,7 @@ import type { GenericObject } from '~/types'
 import AttachmentIncomeHistoryDialog from '~/components/income/attachment/AttachmentIncomeHistoryDialog.vue'
 import { updateFieldProperty } from '~/utils/helpers'
 import { applyFiltersAndSort } from '~/pages/payment/utils/helperFilters'
+import type { FilterCriteria } from '~/composables/list'
 
 const props = defineProps({
 
@@ -83,6 +84,9 @@ const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 
 const loadingSearch = ref(false)
+const loadingDefaultResourceType = ref(false)
+const loadingDefaultAttachmentType = ref(false)
+const hasDefaultAttachment = ref(true)
 
 const idItem = ref('')
 const item = ref<GenericObject>({
@@ -206,6 +210,10 @@ const ListItems = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
 const listItemsLocal = ref<any[]>([...(props.listItems || [])])
 
+const disableAttachmentTypeSelector = computed(() => {
+  return idItem.value !== '' || !hasDefaultAttachment.value
+})
+
 async function ResetListItems() {
   Payload.value.page = 0
 }
@@ -240,10 +248,12 @@ function OnSortField(event: any) {
   }
 }
 
-function clearForm() {
+async function clearForm() {
+  const resourceTypeValue = item.value.resourceType
   item.value = { ...itemTemp.value }
   idItem.value = ''
-
+  item.value.resourceType = resourceTypeValue
+  listDefaultData()
   formReload.value++
 }
 
@@ -288,11 +298,14 @@ async function ParseDataTableFilter(payloadFilter: any) {
   getList()
 }
 
-async function getAttachmentTypeList() {
+async function getAttachmentTypeList(isDefault: boolean = false, filter?: FilterCriteria[]) {
   try {
+    if (isDefault) {
+      loadingDefaultAttachmentType.value = true
+    }
     const payload
       = {
-        filter: [],
+        filter: filter ?? [],
         query: '',
         pageSize: 20,
         page: 0,
@@ -304,18 +317,26 @@ async function getAttachmentTypeList() {
     const { data: dataList } = response
     attachmentTypeList.value = []
     for (const iterator of dataList) {
-      attachmentTypeList.value = [...attachmentTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+      attachmentTypeList.value = [...attachmentTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}`, isDefault: iterator.attachInvDefault }]
     }
   }
   catch (error) {
     console.error('Error loading Attachment Type list:', error)
   }
+  finally {
+    if (isDefault) {
+      loadingDefaultAttachmentType.value = false
+    }
+  }
 }
 
-async function getResourceTypeList() {
+async function getResourceTypeList(isDefault: boolean = false, filter?: FilterCriteria[]) {
   try {
+    if (isDefault) {
+      loadingDefaultResourceType.value = true
+    }
     const payload = {
-      filter: [],
+      filter: filter ?? [],
       query: '',
       pageSize: 20,
       page: 0,
@@ -332,6 +353,64 @@ async function getResourceTypeList() {
   }
   catch (error) {
     console.error('Error loading Attachment Type list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultResourceType.value = false
+    }
+  }
+}
+
+async function loadDefaultResourceType() {
+  if (!item.value.resourceType) { // Listar solo si el resource type esta en null, ya que no cambia
+    const filter: FilterCriteria[] = [
+      {
+        key: 'defaults',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: true,
+      },
+      {
+        key: 'status',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+      },
+    ]
+    await getResourceTypeList(true, filter)
+    item.value.resourceType = resourceTypeList.value.length > 0 ? resourceTypeList.value[0] : null
+    formReload.value++
+  }
+}
+
+async function loadDefaultAttachmentType() {
+  const attachmentFilter: FilterCriteria[] = [
+    {
+      key: 'attachInvDefault',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: true,
+    },
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+    },
+  ]
+  await getAttachmentTypeList(true, attachmentFilter)
+  item.value.type = attachmentTypeList.value.length > 0 ? attachmentTypeList.value[0] : null
+  updateFieldProperty(Fields, 'type', 'disabled', true)
+  formReload.value++
+}
+
+function listDefaultData() {
+  // console.log(item.value)
+  loadDefaultResourceType()
+  // Validar que no exista dicho attachment type por defecto en la lista
+  hasDefaultAttachment.value = listItemsLocal.value.some(item => item.type?.isDefault)
+  if (props.isCreationDialog && !hasDefaultAttachment.value) { // Se debe permitir seleccionar si no es local, no se cargan por defecto en este caso ya que debe existir un Invoice Attachment
+    loadDefaultAttachmentType()
   }
 }
 
@@ -639,6 +718,7 @@ onMounted(() => {
   if (props.isCreationDialog) {
     Pagination.value.totalElements = listItemsLocal.value?.length ?? 0
   }
+  listDefaultData()
 })
 </script>
 
@@ -703,11 +783,11 @@ onMounted(() => {
             >
               <template #field-resourceType="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll"
+                  v-if="!loadingSaveAll && !loadingDefaultResourceType"
                   id="autocomplete"
-                  field="name"
+                  field="fullName"
                   item-value="id"
-                  :disabled="idItem !== ''"
+                  disabled
                   :model="data.resourceType"
                   :suggestions="resourceTypeList"
                   @change="($event) => {
@@ -715,14 +795,14 @@ onMounted(() => {
                   }" @load="($event) => getResourceTypeList()"
                 >
                   <template #option="props">
-                    <span>{{ props.item.name }}</span>
+                    <span>{{ props.item.fullName }}</span>
                   </template>
                 </DebouncedAutoCompleteComponent>
                 <Skeleton v-else height="2rem" class="mb-2" />
               </template>
               <template #field-type="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll" id="autocomplete" field="fullName" :disabled="idItem !== ''"
+                  v-if="!loadingSaveAll" id="autocomplete" field="fullName" :disabled="disableAttachmentTypeSelector"
                   item-value="id" :model="data.type" :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
                   }" @load="($event) => getAttachmentTypeList($event)"
@@ -790,11 +870,7 @@ onMounted(() => {
                   @click="() => attachmentHistoryDialogOpen = true"
                 />
                 <Button
-                  v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="() => {
-                    idItem = ''
-                    item = itemTemp
-                    clearForm()
-                  }"
+                  v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearForm"
                 />
                 <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" :disabled="idItem === ''" @click="requireConfirmationToDelete" />
                 <Button
