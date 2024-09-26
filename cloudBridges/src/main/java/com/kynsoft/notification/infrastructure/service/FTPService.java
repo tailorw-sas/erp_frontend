@@ -4,7 +4,6 @@ import com.kynsoft.notification.domain.service.IFTPService;
 import com.kynsoft.notification.infrastructure.config.FTPConfig;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -13,16 +12,20 @@ import java.io.InputStream;
 @Service
 public class FTPService implements IFTPService {
 
-    @Autowired
-    private FTPConfig ftpConfig;
+    private final FTPConfig ftpConfig;
 
-    public void uploadFile(String remotePath, InputStream inputStream, String fileName) {
+    public FTPService(FTPConfig ftpConfig) {
+        this.ftpConfig = ftpConfig;
+    }
+
+    public void uploadFile(String remotePath, InputStream inputStream, String fileName, String server, String user,
+                           String password, int port) {
         System.out.println("Inicio FTP");
 
         FTPClient ftpClient = new FTPClient();
         try {
-            ftpClient.connect(ftpConfig.getServer(), ftpConfig.getPort());
-            ftpClient.login(ftpConfig.getUser(), ftpConfig.getPassword());
+            ftpClient.connect(server, port);
+            ftpClient.login(user, password);
             System.out.println("Conectado al FTP");
 
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);

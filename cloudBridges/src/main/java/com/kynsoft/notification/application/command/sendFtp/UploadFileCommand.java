@@ -10,9 +10,17 @@ import org.springframework.http.codec.multipart.FilePart;
 @Setter
 public class UploadFileCommand implements ICommand {
     private final FilePart file;
+    private final String server;
+    private final String user;
+    private final String password;
+    private final int port;
 
-    public UploadFileCommand(FilePart file) {
+    public UploadFileCommand(FilePart file, String server, String user, String password, String port) {
         this.file = file;
+        this.server = server;
+        this.user = user;
+        this.password = password;
+        this.port = Integer.parseInt(port);
     }
 
     @Override

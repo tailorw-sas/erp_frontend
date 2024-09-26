@@ -101,44 +101,44 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService;
 
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService,
-                                         IManagerPaymentStatusService paymentStatusService,
-                                         IManagePaymentSourceService paymentSourceService,
-                                         IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                         ProducerReplicateManageInvoiceTypeService replicateManageInvoiceTypeService,
-                                         ProducerReplicateManagePaymentSourceService replicateManagePaymentSourceService,
-                                         ProducerReplicateManagePaymentStatusService replicateManagePaymentStatusService,
-                                         ProducerReplicateManagePaymentTransactionTypeService replicateManagePaymentTransactionTypeService,
-                                         ProducerReplicateManageInvoiceStatusService replicateManageInvoiceStatusService,
-                                         ProducerReplicateManageInvoiceTransactionTypeService replicateManageInvoiceTransactionTypeService,
-                                         IManageInvoiceStatusService invoiceStatusService, IManageTradingCompaniesService tradingCompaniesService, IManageAgencyService manageAgencyService,
-                                         IManageBankAccountService manageBankAccountService, IManageEmployeeService manageEmployeeService,
-                                         IManageHotelService manageHotelService, IManagerClientService managerClientService,
-                                         IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService,
-                                         ProducerReplicateManageAgencyService replicateManageAgencyService,
-                                         ProducerReplicateManageBankAccount replicateManageBankAccount,
-                                         ProducerReplicateManageEmployeeService replicateManageEmployeeService,
-                                         ProducerReplicateManageHotelService replicateManageHotelService,
-                                         ProducerReplicateManageClientService replicateManageClientService,
-                                         ProducerReplicateManagePaymentAttachmentStatusService replicateManagePaymentAttachmentStatusService,
-                                         IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
-                                         ProducerReplicateManageAttachmentTypeService replicateManageAttachmentTypeService,
-                                         IManageAttachmentTypeService attachmentTypeService,
-                                         IManageAgencyTypeService manageAgencyTypeService, IManagerB2BPartnerService managerB2BPartnerService,
-                                         ProducerReplicateManageAgencyTypeService replicateManageAgencyTypeService,
-                                         IManagerLanguageService managerLanguageService,
-                                         IManageVCCTransactionTypeService manageVCCTransactionTypeService,
-                                         IManageTransactionStatusService manageTransactionStatusService,
-                                         IManageB2BPartnerTypeService manageB2BPartnerTypeService, IManageMerchantConfigService manageMerchantConfigService, IManagerMerchantService iManagerMerchantService, ProducerReplicateManageMerchantConfigService producerReplicateManageMerchantConfigService,
-                                         IManageCityStateService manageCityStateService, IManagerCountryService managerCountryService,
-                                         ProducerReplicateManageLanguageService replicateManageLanguageService,
-                                         ProducerReplicateManageVCCTransactionTypeService replicateManageVCCTransactionTypeService,
-                                         ProducerReplicateManageTransactionStatusService replicateManageTransactionStatusService,
-                                         ProducerReplicateB2BPartnerService producerReplicateB2BPartnerService,
-                                         ProducerReplicateB2BPartnerTypeService producerReplicateB2BPartnerTypeService, ProducerReplicateManageMerchantService producerReplicateManageMerchantService,
-                                         ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
-                                         ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService,
-                                         IManageContactService manageContactService,
-                                         ProducerReplicateManageContactService producerReplicateManageContactService) {
+            IManagerPaymentStatusService paymentStatusService,
+            IManagePaymentSourceService paymentSourceService,
+            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+            ProducerReplicateManageInvoiceTypeService replicateManageInvoiceTypeService,
+            ProducerReplicateManagePaymentSourceService replicateManagePaymentSourceService,
+            ProducerReplicateManagePaymentStatusService replicateManagePaymentStatusService,
+            ProducerReplicateManagePaymentTransactionTypeService replicateManagePaymentTransactionTypeService,
+            ProducerReplicateManageInvoiceStatusService replicateManageInvoiceStatusService,
+            ProducerReplicateManageInvoiceTransactionTypeService replicateManageInvoiceTransactionTypeService,
+            IManageInvoiceStatusService invoiceStatusService, IManageTradingCompaniesService tradingCompaniesService, IManageAgencyService manageAgencyService,
+            IManageBankAccountService manageBankAccountService, IManageEmployeeService manageEmployeeService,
+            IManageHotelService manageHotelService, IManagerClientService managerClientService,
+            IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService,
+            ProducerReplicateManageAgencyService replicateManageAgencyService,
+            ProducerReplicateManageBankAccount replicateManageBankAccount,
+            ProducerReplicateManageEmployeeService replicateManageEmployeeService,
+            ProducerReplicateManageHotelService replicateManageHotelService,
+            ProducerReplicateManageClientService replicateManageClientService,
+            ProducerReplicateManagePaymentAttachmentStatusService replicateManagePaymentAttachmentStatusService,
+            IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
+            ProducerReplicateManageAttachmentTypeService replicateManageAttachmentTypeService,
+            IManageAttachmentTypeService attachmentTypeService,
+            IManageAgencyTypeService manageAgencyTypeService, IManagerB2BPartnerService managerB2BPartnerService,
+            ProducerReplicateManageAgencyTypeService replicateManageAgencyTypeService,
+            IManagerLanguageService managerLanguageService,
+            IManageVCCTransactionTypeService manageVCCTransactionTypeService,
+            IManageTransactionStatusService manageTransactionStatusService,
+            IManageB2BPartnerTypeService manageB2BPartnerTypeService, IManageMerchantConfigService manageMerchantConfigService, IManagerMerchantService iManagerMerchantService, ProducerReplicateManageMerchantConfigService producerReplicateManageMerchantConfigService,
+            IManageCityStateService manageCityStateService, IManagerCountryService managerCountryService,
+            ProducerReplicateManageLanguageService replicateManageLanguageService,
+            ProducerReplicateManageVCCTransactionTypeService replicateManageVCCTransactionTypeService,
+            ProducerReplicateManageTransactionStatusService replicateManageTransactionStatusService,
+            ProducerReplicateB2BPartnerService producerReplicateB2BPartnerService,
+            ProducerReplicateB2BPartnerTypeService producerReplicateB2BPartnerTypeService, ProducerReplicateManageMerchantService producerReplicateManageMerchantService,
+            ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
+            ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService,
+            IManageContactService manageContactService,
+            ProducerReplicateManageContactService producerReplicateManageContactService) {
         this.tradingCompaniesService = tradingCompaniesService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerLanguageService = managerLanguageService;
@@ -243,9 +243,9 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 agencyDto.getAgencyType().getId(),
                                 agencyDto.getCif(),
                                 agencyDto.getAddress(),
-                                Objects.nonNull(agencyDto.getSentB2BPartner())?agencyDto.getSentB2BPartner().getId():null,
-                                Objects.nonNull(agencyDto.getCityState())?agencyDto.getCityState().getId():null,
-                                Objects.nonNull(agencyDto.getCountry())?agencyDto.getCountry().getId():null,
+                                Objects.nonNull(agencyDto.getSentB2BPartner()) ? agencyDto.getSentB2BPartner().getId() : null,
+                                Objects.nonNull(agencyDto.getCityState()) ? agencyDto.getCityState().getId() : null,
+                                Objects.nonNull(agencyDto.getCountry()) ? agencyDto.getCountry().getId() : null,
                                 agencyDto.getMailingAddress(),
                                 agencyDto.getZipCode(),
                                 agencyDto.getCity(),
@@ -343,6 +343,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 .b2BPartnerTypeDto(managerB2BPartnerDto.getB2BPartnerTypeDto().getId())
                                 .name(managerB2BPartnerDto.getName())
                                 .description(managerB2BPartnerDto.getDescription())
+                                .password(managerB2BPartnerDto.getPassword())
+                                .ip(managerB2BPartnerDto.getIp())
+                                .token(managerB2BPartnerDto.getToken())
+                                .url(managerB2BPartnerDto.getUrl())
+                                .userName(managerB2BPartnerDto.getUserName())
                                 .status(managerB2BPartnerDto.getStatus().name())
                                 .build());
                     }
@@ -422,7 +427,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 manageTradingCompaniesDto.getCif(), manageTradingCompaniesDto.getAddress(), manageTradingCompaniesDto.getCompany()));
                     }
                 }
-                default -> System.out.println("Número inválido. Por favor, intenta de nuevo con un número del 1 al 7.");
+                default ->
+                    System.out.println("Número inválido. Por favor, intenta de nuevo con un número del 1 al 7.");
             }
         }
     }

@@ -13,6 +13,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoi
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,20 +49,12 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
 
     @Override
     public void delete(ManageInvoiceStatusDto dto) {
-        // ManageInvoiceStatus delete = new ManageInvoiceStatus(dto);
+         ManageInvoiceStatus delete = new ManageInvoiceStatus(dto);
 
-        // delete.setDeleted(Boolean.TRUE);
-        // delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        // delete.setStatus(Status.INACTIVE);
-        // delete.setDeletedAt(LocalDateTime.now());
-        //
-        // repositoryCommand.save(delete);
-        try {
-            this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE,
-                    new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
-        }
+         delete.setDeleted(Boolean.TRUE);
+         delete.setDeletedAt(LocalDateTime.now());
+
+         repositoryCommand.save(delete);
     }
 
     @Override

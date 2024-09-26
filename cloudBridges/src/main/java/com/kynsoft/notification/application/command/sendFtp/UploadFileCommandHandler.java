@@ -27,7 +27,8 @@ public class UploadFileCommandHandler implements ICommandHandler<UploadFileComma
 
                     return Mono.fromRunnable(() -> {
                         try {
-                            ftpService.uploadFile(remotePath, inputStream, command.getFile().filename());
+                            ftpService.uploadFile(remotePath, inputStream, command.getFile().filename(), command.getServer(),
+                                    command.getUser(), command.getPassword(), command.getPort());
                             System.out.println("Archivo subido exitosamente al FTP.");
                         } catch (Exception e) {
                             throw new RuntimeException("Error durante la operación FTP: " + e.getMessage(), e);
