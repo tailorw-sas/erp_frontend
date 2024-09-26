@@ -785,7 +785,7 @@ onMounted(() => {
                 <DebouncedAutoCompleteComponent
                   v-if="!loadingSaveAll && !loadingDefaultResourceType"
                   id="autocomplete"
-                  field="name"
+                  field="fullName"
                   item-value="id"
                   disabled
                   :model="data.resourceType"
@@ -795,7 +795,7 @@ onMounted(() => {
                   }" @load="($event) => getResourceTypeList()"
                 >
                   <template #option="props">
-                    <span>{{ props.item.name }}</span>
+                    <span>{{ props.item.fullName }}</span>
                   </template>
                 </DebouncedAutoCompleteComponent>
                 <Skeleton v-else height="2rem" class="mb-2" />
