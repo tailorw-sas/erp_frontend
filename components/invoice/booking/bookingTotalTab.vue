@@ -1638,7 +1638,7 @@ onMounted(() => {
     <BookingTotalDialog :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen"
       :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
       :require-confirmation-to-save="saveBooking" :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
-      :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" :close-dialog="() => {
+      :header="isCreationDialog || !idItem ? 'Edit Booking' : 'Edit Booking'" :close-dialog="() => {
         ClearForm()
         closeDialog()
       }" container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
