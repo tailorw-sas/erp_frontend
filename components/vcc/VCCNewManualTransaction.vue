@@ -574,6 +574,9 @@ watch(() => props.openDialog, async (newValue) => {
             @change="($event) => {
               onUpdate('merchant', $event)
               item.merchant = $event
+              if (item.hotel) {
+                onUpdate('hotel', null)
+              }
             }"
             @load="($event) => getMerchantList($event)"
           />
@@ -606,6 +609,7 @@ watch(() => props.openDialog, async (newValue) => {
             :disabled="!data.merchant"
             @change="($event) => {
               onUpdate('hotel', $event)
+              item.hotel = $event
             }"
             @load="($event) => getHotelList($event)"
           />
