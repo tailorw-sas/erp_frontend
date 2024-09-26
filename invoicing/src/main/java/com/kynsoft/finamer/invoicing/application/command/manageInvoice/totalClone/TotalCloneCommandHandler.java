@@ -165,7 +165,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
         ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceStatusDto invoiceStatus = parameterization != null ? this.invoiceStatusService.findByCode(parameterization.getProcessed()) : null;
+        ManageInvoiceStatusDto invoiceStatus = parameterization != null ? this.invoiceStatusService.findByCode(parameterization.getReconciled()) : null;
 
         ManageInvoiceDto clonedInvoice = new ManageInvoiceDto(
                 command.getClonedInvoice(),
