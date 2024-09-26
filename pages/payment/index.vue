@@ -2074,7 +2074,7 @@ async function saveApplyPaymentOtherDeduction() {
       .filter(item => idInvoicesSelectedToApplyPaymentForOtherDeduction.value.includes(item.id)).map((item) => {
         return {
           bookingId: item.id,
-          bookingBalance: Number.parseFloat(item.dueAmount.replace(/,/g, ''))
+          bookingBalance: typeof item.dueAmount !== 'number' ? Number.parseFloat(item.dueAmount.replace(/,/g, '')) : item.dueAmount
         }
       })
 
@@ -2086,7 +2086,7 @@ async function saveApplyPaymentOtherDeduction() {
       remark: fieldRemark.value ? fieldRemark.value : transactionType.value.defaultRemark
     }
 
-    await GenericService.create('payment', 'payment/apply-other-deductions', payload)
+    await GenericService.create('payment', 'payment-detail/apply-other-deductions', payload)
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment Other Deduction has been applied successfully', life: 3000 })
     getList()
   }
@@ -3153,71 +3153,77 @@ onMounted(async () => {
       <template #default>
         <div class="p-fluid pt-3">
           <!-- // Label -->
-          <div class="w-full flex align-items-center mb-3">
-            <div class="mr-2">
-              <label for="autocomplete" class="font-semibold"> Transaction </label>
-            </div>
-            <div class="mr-4">
-              <DebouncedAutoCompleteComponent
-                id="autocomplete"
-                class="w-29rem"
-                field="name"
-                item-value="id"
-                :model="transactionType"
-                :suggestions="[...transactionTypeList]"
-                @change="($event) => {
-                  transactionType = $event
-                }"
-                @load="async($event) => {
-                  const objQueryToSearch = {
-                    query: $event,
-                    keys: ['name', 'code'],
-                  }
-                  const filter: FilterCriteria[] = []
-                  const sortObj = {
-                    sortBy: '',
-                    // sortType: ENUM_SHORT_TYPE.DESC,
-                  }
-                  filter.push(
-                    {
-                      key: 'cash',
-                      logicalOperation: 'AND',
-                      operator: 'EQUALS',
-                      value: false,
-                    },
-                    {
-                      key: 'deposit',
-                      logicalOperation: 'AND',
-                      operator: 'EQUALS',
-                      value: false,
-                    },
-                    {
-                      key: 'debit',
-                      logicalOperation: 'AND',
-                      operator: 'EQUALS',
-                      value: false,
-                    },
-                    {
-                      key: 'status',
-                      logicalOperation: 'AND',
-                      operator: 'EQUALS',
-                      value: 'ACTIVE',
-                    },
-                  )
+          <div class="grid">
+            <div class="col-12 md:col-3">
+              <div class="flex align-items-center">
+                <div class="mr-2">
+                  <label for="autocomplete" class="font-semibold"> Transaction </label>
+                </div>
+                <div class="mr-4">
+                  <DebouncedAutoCompleteComponent
+                    id="autocomplete"
+                    field="name"
+                    item-value="id"
+                    :model="transactionType"
+                    :suggestions="[...transactionTypeList]"
+                    @change="($event) => {
+                      transactionType = $event
+                    }"
+                    @load="async($event) => {
+                      const objQueryToSearch = {
+                        query: $event,
+                        keys: ['name', 'code'],
+                      }
+                      const filter: FilterCriteria[] = []
+                      const sortObj = {
+                        sortBy: '',
+                        // sortType: ENUM_SHORT_TYPE.DESC,
+                      }
+                      filter.push(
+                        {
+                          key: 'cash',
+                          logicalOperation: 'AND',
+                          operator: 'EQUALS',
+                          value: false,
+                        },
+                        {
+                          key: 'deposit',
+                          logicalOperation: 'AND',
+                          operator: 'EQUALS',
+                          value: false,
+                        },
+                        {
+                          key: 'debit',
+                          logicalOperation: 'AND',
+                          operator: 'EQUALS',
+                          value: false,
+                        },
+                        {
+                          key: 'status',
+                          logicalOperation: 'AND',
+                          operator: 'EQUALS',
+                          value: 'ACTIVE',
+                        },
+                      )
 
-                  await getTransactionTypeList(objApis.transactionType.moduleApi, objApis.transactionType.uriApi, objQueryToSearch, filter, sortObj)
-                }"
-              />
-            </div>
-            <div class="flex align-items-center">
-              <div class="mr-2">
-                <label for="autocomplete" class="font-semibold"> Remark </label>
+                      await getTransactionTypeList(objApis.transactionType.moduleApi, objApis.transactionType.uriApi, objQueryToSearch, filter, sortObj)
+                    }"
+                  />
+                </div>
               </div>
-              <div class="w-30rem">
-                <InputText v-model="fieldRemark" show-clear />
+            </div>
+            <div class="col-12 md:col-3">
+              <div class="flex align-items-center">
+                <div class="mr-2">
+                  <label for="autocomplete" class="font-semibold"> Remark </label>
+                </div>
+                <div class="w-30rem">
+                  <InputText v-model="fieldRemark" show-clear />
+                </div>
               </div>
             </div>
           </div>
+
           <DynamicTable
             class="card p-0"
             :data="applyPaymentListOfInvoiceOtherDeduction"
