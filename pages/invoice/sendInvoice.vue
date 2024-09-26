@@ -133,7 +133,7 @@ async function getList() {
     const staticPayload = [{
       key: 'invoiceStatus',
       operator: 'IN',
-      value: ['RECONCILED'],
+      value: filterAllDateRange.value ? ['SENT'] : ['RECONCILED'],
       logicalOperation: 'AND'
     }, {
       key: 'agency.sentB2BPartner.b2bPartnerType.code',
