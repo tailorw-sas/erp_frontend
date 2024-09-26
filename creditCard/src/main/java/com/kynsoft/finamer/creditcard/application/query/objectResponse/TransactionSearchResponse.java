@@ -25,7 +25,7 @@ public class TransactionSearchResponse implements IResponse {
     private ManageCreditCardTypeResponse creditCardType;
     private Double commission;
     private ManageTransactionStatusResponse status;
-    private TransactionBasicResponse parent;
+    private TransactionSearchParentResponse parent;
     private Double netAmount;
     private Boolean permitRefund;
 
@@ -43,10 +43,7 @@ public class TransactionSearchResponse implements IResponse {
         this.creditCardType = dto.getCreditCardType() != null ? new ManageCreditCardTypeResponse(dto.getCreditCardType()) : null;
         this.commission = dto.getCommission();
         this.status = dto.getStatus() != null ? new ManageTransactionStatusResponse(dto.getStatus()) :  null;
-        this.parent = dto.getParent() != null ? new TransactionBasicResponse(
-                dto.getParent().getId(), dto.getParent().getTransactionDate(),
-                dto.getParent().getCheckIn()
-        ) : null;
+        this.parent = dto.getParent() != null ? new TransactionSearchParentResponse(dto.getParent().getId()) : null;
         this.netAmount = dto.getNetAmount();
         this.permitRefund = dto.getPermitRefund();
     }
