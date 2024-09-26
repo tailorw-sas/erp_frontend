@@ -61,7 +61,7 @@ const confSendApi = reactive({
 //
 const idItem = ref('')
 const ENUM_FILTER = [
-  { id: 'id', name: 'Invoice Id' },
+  { id: 'invoiceId', name: 'Invoice Id' },
 ]
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
@@ -73,8 +73,8 @@ const columns: IColumn[] = [
 
   { field: 'invoiceDate', header: 'Generation Date', type: 'date' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-  { field: 'impstatus', header: 'Sent Status', type: 'slot-text', sortable: false },
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+  { field: 'impstatus', header: 'Sent Status', type: 'slot-text', sortable: false, showFilter: false },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: false, showFilter: false },
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ async function getList() {
       value: ['RECONCILED'],
       logicalOperation: 'AND'
     }, {
-      key: 'agency.sentB2BPartner.code',
+      key: 'agency.sentB2BPartner.b2bPartnerType.code',
       operator: 'EQUALS',
       value: type.toString(),
       logicalOperation: 'AND'
@@ -254,10 +254,16 @@ async function getAgencyList(query: string = '') {
           value: 'ACTIVE',
           logicalOperation: 'AND'
         },
+        // {
+        //   key: 'autoReconcile',
+        //   operator: 'EQUALS',
+        //   value: true,
+        //   logicalOperation: 'AND'
+        // }
         {
-          key: 'autoReconcile',
+          key: 'sentB2BPartner.b2bPartnerType.code',
           operator: 'EQUALS',
-          value: true,
+          value: type.toString(),
           logicalOperation: 'AND'
         }
       ],
@@ -320,7 +326,7 @@ function onSortField(event: any) {
 }
 
 function searchAndFilter() {
-  const newPayload: IQueryRequest = {
+  payload.value = {
     filter: [],
     query: '',
     pageSize: 50,
@@ -339,7 +345,7 @@ function searchAndFilter() {
     }]
   }
   else {
-    newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
     // Date
     if (filterToSearch.value.from) {
       payload.value.filter = [...payload.value.filter, {
@@ -359,7 +365,7 @@ function searchAndFilter() {
         type: 'filterSearch'
       }]
     }
-    if (filterToSearch.value.merchant?.length > 0) {
+    if (filterToSearch.value.agency?.length > 0) {
       const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
@@ -400,7 +406,7 @@ function clearFilterToSearch() {
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
+  filterToSearch.value.criteria = ENUM_FILTER[0]
   getList()
 }
 
@@ -490,7 +496,7 @@ watch(payloadOnChangePage, (newValue) => {
 })
 
 onMounted(async () => {
-  filterToSearch.value.criterial = ENUM_FILTER[0]
+  filterToSearch.value.criteria = ENUM_FILTER[0]
   // loadInvoiceType()
   await getList()
 })
@@ -582,7 +588,7 @@ onMounted(async () => {
                         <label class="filter-label font-bold" for="">Criteria:</label>
                         <div class="w-full">
                           <Dropdown
-                            v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
+                            v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
                             placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
                           />
                         </div>
