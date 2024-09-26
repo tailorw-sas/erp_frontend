@@ -118,6 +118,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 }
                 this.service.update(invoice);
             }
+            command.setResult(true);
         }
     }
 
@@ -130,7 +131,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 // Convertir ByteArrayOutputStream a InputStream directamente
                 //TODO capturar los datos de conexcion del ftp que viene en el b2B parnet
                 try (InputStream inputStream = new ByteArrayInputStream(invoiceBooking.get().toByteArray())) {
-                    ftpService.sendFile(inputStream, nameFile, "162.55.193.5", "usrftp01", "usuarioftp01*", 21);
+                    ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
+                            agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21);
 
                     System.out.println("Archivo subido exitosamente al FTP.");
                 } catch (Exception e) {
@@ -144,9 +146,9 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     }
 
     private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto) {
-        if (agency.getMailingAddress() != null) {
+
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-            request.setSubject("INVOICES for " + agency.getName());
+
             request.setTemplateId(6285030); // Cambiar en configuración
 
             // Variables para el template de email
@@ -167,13 +169,14 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             //TODO send email employee
             request.setRecipientEmail(recipients);
             // Adjuntar todas las facturas de la agencia
-            List<MailJetAttachment> attachments = new ArrayList<>();
+
             for (ManageInvoiceDto invoice : invoices) {
                 try {
+                    request.setSubject("INVOICES for " + agency.getName()+"-"+invoice.getInvoiceNo());
                     var resultXML = invoiceXmlService.generateInvoiceXml(invoice);
                     // Convertir el XML a Base64 para adjuntar
                     String base64Xml = Base64.getEncoder().encodeToString(resultXML.getBytes(StandardCharsets.UTF_8));
-
+                    List<MailJetAttachment> attachments = new ArrayList<>();
                     // Crear el adjunto con el XML
                     String nameFileXml = invoice.getInvoiceNumber() + ".xml"; // Cambiar la extensión a .xml
                     MailJetAttachment attachmentXML = new MailJetAttachment("application/xml", nameFileXml, base64Xml);
@@ -187,20 +190,21 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                             attachments.add(attachment);
                         }
                     }
+                    request.setMailJetAttachments(attachments);
+                    try {
+                        mailService.sendMail(request);
+                        command.setResult(true);
+                    } catch (Exception e) {
+                        command.setResult(false);
+                    }
                 } catch (JAXBException | DocumentException | IOException e) {
                     throw new RuntimeException(e);
                 }
 
             }
 
-            request.setMailJetAttachments(attachments);
-            try {
-                mailService.sendMail(request);
-                command.setResult(true);
-            } catch (Exception e) {
-                command.setResult(false);
-            }
-        }
+
+
     }
 
 
