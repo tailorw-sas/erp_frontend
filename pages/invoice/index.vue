@@ -407,17 +407,7 @@ async function createSend() {
    // Opcional: Puedes manejar el estado de carga aquí
 }
 
-
-const computedexpandedInvoice = computed(() => {
-  return expandedInvoice.value === ''
-})
-
-
 const computedShowMenuItemInvoice = computed(() => {
-  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CREATE'])))
-})
-
-const computedShowMenuItemReconcile = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CREATE'])))
 })
 
