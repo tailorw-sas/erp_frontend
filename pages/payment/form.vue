@@ -168,7 +168,7 @@ const applyPaymentOptions = ref({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'dueAmount',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -1881,13 +1881,13 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
     const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
 
     if (objFilter) {
-      objFilter.value = validNumber.toString()
+      objFilter.value = Number.parseFloat(validNumber).toFixed(2)
     }
     else {
       applyPaymentPayload.value.filter.push({
         key: 'dueAmount',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
-        value: validNumber.toString(),
+        value: Number.parseFloat(validNumber).toFixed(2),
         logicalOperation: 'AND'
       })
     }

@@ -994,7 +994,7 @@ function searchAndFilter() {
     // Date
     if (filterToSearch.value.from) {
       payload.value.filter = [...payload.value.filter, {
-        key: 'transactionDate',
+        key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -1003,7 +1003,7 @@ function searchAndFilter() {
     }
     if (filterToSearch.value.to) {
       payload.value.filter = [...payload.value.filter, {
-        key: 'transactionDate',
+        key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -1012,15 +1012,15 @@ function searchAndFilter() {
     }
 
     // Pay Apply
-    if (filterToSearch.value.payApplied !== null) {
-      payload.value.filter = [...payload.value.filter, {
-        key: 'payApply',
-        operator: 'EQUAL',
-        value: filterToSearch.value.payApplied,
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      }]
-    }
+    // if (filterToSearch.value.payApplied !== null) {
+    //   payload.value.filter = [...payload.value.filter, {
+    //     key: 'payApply',
+    //     operator: 'EQUAL',
+    //     value: filterToSearch.value.payApplied,
+    //     logicalOperation: 'AND',
+    //     type: 'filterSearch'
+    //   }]
+    // }
 
     // // Detail
     // if (filterToSearch.value.detail !== null) {
@@ -2776,7 +2776,7 @@ onMounted(async () => {
             <!-- fifth filter -->
             <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
               <div class="flex align-items-center h-full">
-                <TriStateCheckbox
+                <Checkbox
                   id="payApplied"
                   v-model="filterToSearch.payApplied"
                   :binary="true"
