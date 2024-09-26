@@ -47,6 +47,11 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
 
             paymentDto.setOtherDeductions(paymentDto.getOtherDeductions() + bookingDto.getAmountBalance());
 
+            String remark = command.getRemark();
+            if (command.getRemark().isBlank() || command.getRemark().isEmpty()) {
+                remark = paymentTransactionTypeDto.getDefaultRemark();
+            }
+
             //Deposit Amount and Deposit Balance
             PaymentDetailDto newDetailDto = new PaymentDetailDto(
                     UUID.randomUUID(),
@@ -54,7 +59,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
                     paymentDto,
                     paymentTransactionTypeDto,
                     bookingDto.getAmountBalance(),
-                    command.getRemark(),
+                    remark,
                     null,
                     null,
                     null,
