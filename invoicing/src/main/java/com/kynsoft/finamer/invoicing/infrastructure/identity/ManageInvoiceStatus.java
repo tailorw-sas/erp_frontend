@@ -33,7 +33,7 @@ public class ManageInvoiceStatus implements Serializable {
 
     private Boolean showClone;
 
-    private Boolean deleted = false;
+    private boolean deleted = false;
 
     @CreationTimestamp
 //    @Column(nullable = false, updatable = false)
