@@ -49,6 +49,7 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
         this.updateStatus(resourceTypeDto::setStatus, command.getStatus(), resourceTypeDto.getStatus(), update::setUpdate);
         this.updateBooleam(resourceTypeDto::setDefaults, command.getDefaults(), resourceTypeDto.getDefaults(), update::setUpdate);
         this.updateBooleam(resourceTypeDto::setInvoice, command.isInvoice(), resourceTypeDto.isInvoice(), update::setUpdate);
+        this.updateBooleam(resourceTypeDto::setInvoiceDefault, command.isInvoiceDefault(), resourceTypeDto.isInvoiceDefault(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(resourceTypeDto);

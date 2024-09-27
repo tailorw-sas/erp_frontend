@@ -19,8 +19,9 @@ public class CreateManageResourceTypeCommand implements ICommand {
     private Status status;
     private Boolean defaults;
     private boolean invoice;
+    private boolean invoiceDefault;
 
-    public CreateManageResourceTypeCommand(String code, String name, String description, Status status, Boolean defaults, boolean invoice) {
+    public CreateManageResourceTypeCommand(String code, String name, String description, Status status, Boolean defaults, boolean invoice, boolean invoiceDefault) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -28,11 +29,12 @@ public class CreateManageResourceTypeCommand implements ICommand {
         this.status = status;
         this.defaults = defaults;
         this.invoice = invoice;
+        this.invoiceDefault = invoiceDefault;
     }
 
     public static CreateManageResourceTypeCommand fromRequest(CreateManageResourceTypeRequest request) {
         return new CreateManageResourceTypeCommand(
-               request.getCode(), request.getName(), request.getDescription(), request.getStatus(), request.getDefaults(), request.isInvoice()
+               request.getCode(), request.getName(), request.getDescription(), request.getStatus(), request.getDefaults(), request.isInvoice(), request.isInvoiceDefault()
         );
     }
 
