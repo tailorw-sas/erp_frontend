@@ -611,6 +611,7 @@ const applyPaymentListOfInvoiceOtherDeduction = ref<any[]>([])
 const transactionTypeList = ref<any[]>([])
 const transactionType = ref<GenericObject>({})
 const fieldRemark = ref('')
+const allInvoiceCheckIsChecked = ref(false)
 
 const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -1774,6 +1775,7 @@ function closeModalApplyPaymentOtherDeductions() {
   objItemSelectedForRightClickApplyPaymentOtherDeduction.value = {}
   openDialogApplyPaymentOtherDeduction.value = false
   disabledBtnApplyPaymentOtherDeduction.value = true
+  allInvoiceCheckIsChecked.value = false
   idInvoicesSelectedToApplyPaymentForOtherDeduction.value = []
 }
 
@@ -1789,6 +1791,8 @@ async function openModalApplyPaymentOtherDeduction() {
   openDialogApplyPaymentOtherDeduction.value = true
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value.paymentBalance
   paymentBalance.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value.paymentBalance
+  transactionType.value = {}
+  fieldRemark.value = ''
   applyPaymentGetListForOtherDeductions()
 }
 
@@ -1993,7 +1997,17 @@ async function selectRowsOfInvoiceOfOtherDeduction(event: any) {
 
 async function onCellEditCompleteApplyPaymentOtherDeduction(event: any) {
   const { data, newValue, field } = event
-  data[field] = newValue
+  switch (field) {
+    case 'dueAmount':
+      if (newValue > 0 && newValue <= data[field]) {
+        data[field] = newValue
+      }
+      else {
+        toast.add({ severity: 'error', summary: 'Error', detail: `The amount must be greater than 0 and less than or equal to ${data[field]}`, life: 4000 })
+      }
+      break
+  }
+  // data[field] = newValue
 }
 
 function sumAmountOfPaymentDetailTypeDeposit(transactions: any[]) {
@@ -2088,6 +2102,7 @@ async function saveApplyPaymentOtherDeduction() {
 
     await GenericService.create('payment', 'payment-detail/apply-other-deductions', payload)
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment Other Deduction has been applied successfully', life: 3000 })
+    closeModalApplyPaymentOtherDeductions()
     getList()
   }
   catch (error) {
@@ -3146,7 +3161,7 @@ onMounted(async () => {
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
-            Select Invoice
+            Select Booking
           </h5>
         </div>
       </template>
@@ -3270,7 +3285,11 @@ onMounted(async () => {
               id="checkApplyPayment"
               v-model="loadAllInvoices"
               :binary="true"
+              :disabled="applyPaymentListOfInvoiceOtherDeduction.length > 0 && allInvoiceCheckIsChecked === false"
               @update:model-value="($event) => {
+                // Este check solo se activa si la lista esta vacia, pero si hace click en el check y se llene la lista (se supone que el check se deshabilite)
+                // la variable allInvoiceCheckIsChecked se usa para controlar eso
+                allInvoiceCheckIsChecked = true
                 applyPaymentGetListForOtherDeductions();
               }"
             />
