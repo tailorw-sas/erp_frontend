@@ -27,7 +27,7 @@ public class CreateManagerB2BPartnerCommand implements ICommand {
 
     public CreateManagerB2BPartnerCommand(UUID id,String code, String description, String name, Status status, String url,
                                           String ip, String userName, String password, String token, UUID ManageB2BPartnerType) {
-        this.id = Objects.nonNull(id)?id:UUID.randomUUID();
+        this.id = id;
         this.code = code;
         this.description = description;
         this.name = name;
@@ -38,22 +38,6 @@ public class CreateManagerB2BPartnerCommand implements ICommand {
         this.password = password;
         this.token = token;
         this.ManageB2BPartnerType = ManageB2BPartnerType;
-    }
-
-    public static CreateManagerB2BPartnerCommand fromRequest(CreateManagerB2BPartnerRequest request) {
-        return new CreateManagerB2BPartnerCommand(
-                null,
-                request.getCode(),
-                request.getDescription(),
-                request.getName(),
-                request.getStatus(),
-                request.getUrl(),
-                request.getIp(),
-                request.getUserName(),
-                request.getPassword(),
-                request.getToken(),
-                request.getB2BPartnerType()
-        );
     }
 
     @Override
