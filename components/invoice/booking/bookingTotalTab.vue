@@ -1225,7 +1225,8 @@ async function deleteBooking(id: string) {
 
 
 async function saveBooking(item: { [key: string]: any }) {
-
+  console.log('asdasdasdasdasd');
+  
   item.hotelBookingNumber = item.hotelBookingNumber.split(" ").filter((a: string) => a !== "").join(" ")
   item.checkIn = dayjs(item.checkIn).startOf('day').toDate()
   item.checkOut = dayjs(item.checkOut).startOf('day').toDate()

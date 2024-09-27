@@ -150,11 +150,10 @@ onMounted(() => {
           <Calendar
             v-if="!loadingSaveAll"
             v-model="data.hotelCreationDate"
-            date-format="yy-mm-dd"
             :max-date="new Date()"
-            @update:model-value="($event) => {
-              onUpdate('hotelCreationDate', $event)
-            }"
+            date-format="yy-mm-dd"
+            placeholder="Select Date"
+            @update:model-value="($event) => onUpdate('hotelCreationDate', $event)"
           />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
@@ -177,7 +176,7 @@ onMounted(() => {
         <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
-            show-clear 
+            show-clear
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
         </template>
