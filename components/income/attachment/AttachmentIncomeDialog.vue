@@ -365,7 +365,7 @@ async function loadDefaultResourceType() {
   if (!item.value.resourceType) { // Listar solo si el resource type esta en null, ya que no cambia
     const filter: FilterCriteria[] = [
       {
-        key: 'defaults',
+        key: 'invoice',
         logicalOperation: 'AND',
         operator: 'EQUALS',
         value: true,
@@ -408,7 +408,10 @@ function listDefaultData() {
   // console.log(item.value)
   loadDefaultResourceType()
   // Validar que no exista dicho attachment type por defecto en la lista
-  hasDefaultAttachment.value = listItemsLocal.value.some(item => item.type?.isDefault)
+  hasDefaultAttachment.value = props.isCreationDialog
+    ? listItemsLocal.value.some(item => item.type?.isDefault)
+    // : ListItems.value.some(item => item.type?.attachInvDefault)
+    : true // Se toma como true, porque ya se debe haber validado previamente que haya un Invoice Support
   if (props.isCreationDialog && !hasDefaultAttachment.value) { // Se debe permitir seleccionar si no es local, no se cargan por defecto en este caso ya que debe existir un Invoice Attachment
     loadDefaultAttachmentType()
   }
@@ -613,7 +616,7 @@ async function getItemById(id: string | null | undefined) {
           item.value.remark = response.remark
           item.value.invoice = response.invoice
           item.value.resource = response.invoice.invoiceId
-          item.value.resourceType = response.paymenResourceType
+          item.value.resourceType = { ...response.paymenResourceType, fullName: `${response?.paymenResourceType?.code} - ${response?.paymenResourceType?.name}` }
           selectedAttachment.value = response.attachmentId
         }
       }
