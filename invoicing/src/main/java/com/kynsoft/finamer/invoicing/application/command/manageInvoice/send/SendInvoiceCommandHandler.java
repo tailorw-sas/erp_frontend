@@ -156,13 +156,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
         request.setTemplateId(6285030); // Cambiar en configuración
 
-        // Variables para el template de email
-//            List<MailJetVar> vars = Arrays.asList(
-//                    new MailJetVar("username", "Niurka"),
-//                    new MailJetVar("otp_token", "5826384")
-//            );
-        List<MailJetVar> vars = new ArrayList<>();
-        request.setMailJetVars(vars);
+
 
         // Recipients
         List<MailJetRecipient> recipients = new ArrayList<>();
@@ -178,7 +172,13 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         for (ManageInvoiceDto invoice : invoices) {
             try {
                 request.setSubject("INVOICES for " + agency.getName() + "-" + invoice.getInvoiceNo());
+                // Variables para el template de email
+                List<MailJetVar> vars = Arrays.asList(
+                        new MailJetVar("invoice_date", new Date().toString()),
+                        new MailJetVar("invoice_amount", invoice.getInvoiceAmount().toString())
+                );
 
+                request.setMailJetVars(vars);
                 List<MailJetAttachment> attachments = new ArrayList<>();
                 // Crear el adjunto con el XML
                 String nameFileXml = invoice.getInvoiceNumber() + ".xml"; // Cambiar la extensión a .xml
