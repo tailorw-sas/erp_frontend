@@ -1,7 +1,6 @@
 package com.kynsof.share.core.domain.kafka.entity;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,7 +12,6 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class ReplicateB2BPartnerKafka implements Serializable {
     private UUID id;
     private String code;
