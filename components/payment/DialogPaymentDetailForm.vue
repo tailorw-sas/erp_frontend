@@ -401,7 +401,6 @@ async function loadDefaultsValues() {
       else if (transactionTypeList.value.length > 1) {
         item.value.transactionType = transactionTypeList.value.find((item: any) => item.default === true)
       }
-
       if (item.value.transactionType && item.value.transactionType.remarkRequired === false) {
         const decimalSchema = z.object(
           {
