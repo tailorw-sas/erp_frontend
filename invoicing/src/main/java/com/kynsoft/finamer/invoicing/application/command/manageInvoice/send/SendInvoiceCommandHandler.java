@@ -151,8 +151,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
         request.setTemplateId(6285030); // Cambiar en configuración
 
-
-
         // Recipients
         List<MailJetRecipient> recipients = new ArrayList<>();
         recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
@@ -160,6 +158,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
         recipients.add(new MailJetRecipient("enrique.muguercia2016@gmail.com", "Enrique Basto"));
         recipients.add(new MailJetRecipient("reimardelgado@gmail.com", "Enrique Basto"));
+        recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
         //TODO send email employee
         request.setRecipientEmail(recipients);
         // Adjuntar todas las facturas de la agencia
