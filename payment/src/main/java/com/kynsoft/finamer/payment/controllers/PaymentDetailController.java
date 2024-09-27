@@ -15,6 +15,9 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.create.Crea
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.delete.DeletePaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.delete.DeletePaymentDetailMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.update.UpdatePaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.update.UpdatePaymentDetailMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.update.UpdatePaymentDetailRequest;
@@ -56,6 +59,14 @@ public class PaymentDetailController {
     public ResponseEntity<ApplyPaymentDetailMessage> applyPayment(@RequestBody ApplyPaymentDetailRequest request) {
         ApplyPaymentDetailCommand createCommand = ApplyPaymentDetailCommand.fromRequest(request);
         ApplyPaymentDetailMessage response = mediator.send(createCommand);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/undo-application")
+    public ResponseEntity<CreateUndoApplicationMessage> applyPayment(@RequestBody CreateUndoApplicationRequest request) {
+        CreateUndoApplicationCommand createCommand = CreateUndoApplicationCommand.fromRequest(request, mediator);
+        CreateUndoApplicationMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);
     }
