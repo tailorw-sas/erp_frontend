@@ -309,7 +309,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGER_MERCHANT_CONFIG_NOT_FOUND(687, Series.DOMAIN_ERROR, "Manager Merchant Config not found."),
     BOOKING_NOT_FOUND(1088, Series.DOMAIN_ERROR, "Payment not found."),
     BOOKING_LIST_CHECK(1089, Series.DOMAIN_ERROR, "Must select at least one booking."),
-    BOOKING_CHECK_AMOUNT_GREATER_THAN_ZERO_STRICTLY(1090, Series.DOMAIN_ERROR,"The amount must be greater than zero and less or equal than Booking Balance.");
+    BOOKING_CHECK_AMOUNT_GREATER_THAN_ZERO_STRICTLY(1090, Series.DOMAIN_ERROR,"The amount must be greater than zero and less or equal than Booking Balance."),
+    UNDO_APPLICATION_CHECK_APPLY_PAYMENT(1091, Series.DOMAIN_ERROR,"The selected payment detail does not have an applied payment.");
 
     private static final DomainErrorMessage[] VALUES;
 
