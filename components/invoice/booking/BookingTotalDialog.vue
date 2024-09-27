@@ -160,7 +160,7 @@ onMounted(() => {
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.invoiceAmount"
-            show-clear :disabled="!!item?.id && route.query.type !== InvoiceType.CREDIT"
+            show-clear 
             @update:model-value="($event) => {
               console.log(invoiceObj)
               let value: any = $event
@@ -320,7 +320,7 @@ onMounted(() => {
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.invoiceAmount"
-            show-clear :disabled="!!item?.id"
+            show-clear :disabled="false"
             @update:model-value="onUpdate('invoiceAmount', $event)"
           />
         </template>
