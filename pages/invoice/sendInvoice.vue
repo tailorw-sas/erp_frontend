@@ -13,13 +13,13 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 const sendType = ref('')
 const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
+const tableRef = ref()
 const route = useRoute()
 const toast = useToast()
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
 const filterAllDateRange = ref(false)
 const loadingSearch = ref(false)
-
 const loadingSaveAll = ref(false)
 
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
@@ -461,6 +461,7 @@ async function send() {
     }
     await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload)
     completed = true
+    tableRef.value?.clearSelectedItems()
   }
   catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Could not send invoices', life: 10000 })
@@ -641,6 +642,7 @@ onMounted(async () => {
       </div>
 
       <DynamicTable
+        ref="tableRef"
         :data="listItems"
         :columns="columns"
         :options="options"
