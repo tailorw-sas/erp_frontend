@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Set POM name
-        run: echo "POM_NAME=pom.xml" >> $GITHUB_ENV
+        run: echo "POM_NAME=pom-$BRANCH_NAME.xml" >> $GITHUB_ENV
               
       - uses: actions/checkout@v4
 
@@ -40,6 +40,6 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Publish package
-        run: cd share && mvn --batch-mode -f pom.xml deploy
+        run: cd share && mvn --batch-mode -f ${POM_NAME} deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
