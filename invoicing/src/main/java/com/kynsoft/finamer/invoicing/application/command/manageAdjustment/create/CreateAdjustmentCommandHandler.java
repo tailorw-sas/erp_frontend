@@ -1,15 +1,15 @@
 package com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create;
 
-import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
+
+import java.util.LinkedList;
+import java.util.List;
 
 @Component
 public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdjustmentCommand> {
@@ -42,22 +42,17 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
     public void handle(CreateAdjustmentCommand command) {
         ManageRoomRateDto roomRateDto = roomRateService.findById(command.getRoomRate());
 
-  
-
         ManageInvoiceTransactionTypeDto transactionTypeDto = command.getTransactionType() != null
                 ? transactionTypeService.findById(command.getTransactionType())
                 : null;
-
-
-                  
 
         ManagePaymentTransactionTypeDto paymnetTransactionTypeDto = command.getPaymentTransactionType() != null
         ? paymentTransactionTypeService.findById(command.getPaymentTransactionType())
         : null;
 
+        List<ManageAdjustmentDto> adjustmentDtoList = roomRateDto.getAdjustments() != null ? roomRateDto.getAdjustments() : new LinkedList<>();
 
-
-        adjustmentService.create(new ManageAdjustmentDto(
+        adjustmentDtoList.add (new ManageAdjustmentDto(
                 command.getId(),
                 null,
                 command.getAmount(),
@@ -65,9 +60,10 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
                 command.getDescription(),
                 transactionTypeDto,
                 paymnetTransactionTypeDto,
-                roomRateDto,
+                null,
                 command.getEmployee()));
 
+        roomRateDto.setAdjustments(adjustmentDtoList);
 
         if (command.getAmount() != null) {
             roomRateDto.setInvoiceAmount(roomRateDto.getInvoiceAmount() != null ? roomRateDto.getInvoiceAmount() + command.getAmount(): command.getAmount());
