@@ -6,7 +6,6 @@ RUN microdnf update \
     && microdnf install --nodocs tar gzip \
     && microdnf clean all \
     && rm -rf /var/cache/yum
-
 # Instalar Maven
 ARG USER_HOME_DIR="/root"
 ARG SHA=deaa39e16b2cf20f8cd7d232a1306344f04020e1f0fb28d35492606f647a60fe729cc40d3cba33e093a17aed41bd161fe1240556d0f1b80e773abd408686217e
