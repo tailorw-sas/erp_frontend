@@ -49,7 +49,7 @@
     <dependencies>
         <dependency>
             <groupId>com.kynsoft.finamer</groupId>
-            <artifactId>share-dev</artifactId>
+            <artifactId>share</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

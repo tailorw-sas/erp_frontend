@@ -16,20 +16,17 @@ public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> 
 
 
     private final MailService mailService;
-    private final ServiceLocator<IMediator> serviceLocator;
     private final ITransactionService transactionService;
 
-    public SendMailCommandHandler(MailService mailService, ITransactionService transactionService, ServiceLocator<IMediator> serviceLocator, ServiceLocator<IMediator> serviceLocator1) {
+    public SendMailCommandHandler(MailService mailService, ITransactionService transactionService) {
 
         this.mailService = mailService;
-        this.serviceLocator = serviceLocator1;
         this.transactionService = transactionService;
     }
 
     @Override
     @Transactional
     public void handle(SendMailCommand command) {
-
         sendEmail(command, command.getTransactionUuid());
     }
 
@@ -38,16 +35,19 @@ public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> 
        TransactionDto transactionDto = transactionService.findByUuid(transactionUuid);
         if (transactionDto.getEmail() != null) {
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-            request.setTemplateId(6285030); // Cambiar en configuración
+            request.setTemplateId(6324713); // Cambiar en configuración
 
             // Variables para el template de email
-            List<MailJetVar> vars = new ArrayList<>();
+            List<MailJetVar> vars = Arrays.asList(
+                    new MailJetVar("payment_link", "https://kynsoft.com/"),
+                    new MailJetVar("invoice_amount", transactionDto.getAmount().toString())
+            );
             request.setMailJetVars(vars);
 
             // Recipients
             List<MailJetRecipient> recipients = new ArrayList<>();
-        //  recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
-        //  recipients.add(new MailJetRecipient("enrique.muguercia2016@gmail.com", "Enrique Basto"));
+            recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
+            recipients.add(new MailJetRecipient("enrique.muguercia2016@gmail.com", "Enrique Basto"));
             recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
             request.setRecipientEmail(recipients);
 

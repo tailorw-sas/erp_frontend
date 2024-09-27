@@ -123,6 +123,7 @@ public class Transaction implements Serializable {
         if(dto.getPermitRefund() != null){
             this.permitRefund = dto.getPermitRefund();
         }
+        transactionUuid= dto.getTransactionUuid();
     }
 
     private TransactionDto toAggregateParent() {
