@@ -2,7 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageB2BPartner.update
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageB2BPartnerKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateB2BPartnerKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -11,11 +11,11 @@ import com.kynsoft.finamer.settings.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageB2BPartnerTypeService;
 import com.kynsoft.finamer.settings.domain.services.IManagerB2BPartnerService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageB2BPartner.ProducerReplicateB2BPartnerService;
 import java.util.UUID;
 
 import java.util.function.Consumer;
 
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageB2BPartner.ProducerUpdateB2BPartnerService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -24,13 +24,13 @@ public class UpdateManagerB2BPartnerCommandHandler implements ICommandHandler<Up
     private final IManagerB2BPartnerService service;
     private final IManageB2BPartnerTypeService b2BPartnerTypeService;
 
-    private final ProducerUpdateB2BPartnerService updateB2BPartnerService;
+    private final ProducerReplicateB2BPartnerService replicateB2BPartnerService;
 
     public UpdateManagerB2BPartnerCommandHandler(IManagerB2BPartnerService service, IManageB2BPartnerTypeService b2BPartnerTypeService,
-                                                 ProducerUpdateB2BPartnerService updateB2BPartnerService) {
+                                                 ProducerReplicateB2BPartnerService replicateB2BPartnerService) {
         this.service = service;
         this.b2BPartnerTypeService = b2BPartnerTypeService;
-        this.updateB2BPartnerService = updateB2BPartnerService;
+        this.replicateB2BPartnerService = replicateB2BPartnerService;
     }
 
     @Override
@@ -57,14 +57,20 @@ public class UpdateManagerB2BPartnerCommandHandler implements ICommandHandler<Up
         if (update.getUpdate() > 0) {
             this.service.update(managerB2BPartnerDto);
         }
-        updateB2BPartnerService.update(UpdateManageB2BPartnerKafka.builder()
-                .id(command.getId())
-               // .code(command.getCode())
-                .name(command.getName())
-                .description(command.getDescription())
-                .status(command.getStatus().name())
-                .b2BPartnerTypeDto(command.getB2BPartnerType())
-                .build());
+
+        replicateB2BPartnerService.create(new ReplicateB2BPartnerKafka(
+                managerB2BPartnerDto.getId(), 
+                managerB2BPartnerDto.getCode(), 
+                managerB2BPartnerDto.getName(), 
+                managerB2BPartnerDto.getDescription(), 
+                managerB2BPartnerDto.getPassword(), 
+                managerB2BPartnerDto.getIp(), 
+                managerB2BPartnerDto.getToken(), 
+                managerB2BPartnerDto.getUrl(), 
+                managerB2BPartnerDto.getUserName(), 
+                managerB2BPartnerDto.getStatus().name(), 
+                managerB2BPartnerDto.getB2BPartnerTypeDto().getId()
+        ));
 
     }
 
