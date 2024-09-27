@@ -2,6 +2,7 @@ package com.kynsof.share.core.infrastructure.services;
 
 import com.kynsof.share.core.domain.service.IReportGenerator;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,14 +21,15 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@Configuration
 public class ReportGeneratorService implements IReportGenerator {
 
     private final RestTemplate restTemplate;
-    private final String reportServiceUrl;
+    @Value("${report.service.url}")
+    private  String reportServiceUrl;
 
-    public ReportGeneratorService(RestTemplate restTemplate, String reportServiceUrl) {
+    public ReportGeneratorService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.reportServiceUrl = reportServiceUrl;
     }
 
     @Override
