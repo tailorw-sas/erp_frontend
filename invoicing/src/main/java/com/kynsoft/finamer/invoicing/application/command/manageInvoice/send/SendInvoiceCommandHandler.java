@@ -116,7 +116,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
                         agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21);
                 updateStatusAgency(invoice, manageInvoiceStatus);
-            } catch (JAXBException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
