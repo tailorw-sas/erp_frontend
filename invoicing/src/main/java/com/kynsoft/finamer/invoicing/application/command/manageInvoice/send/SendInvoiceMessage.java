@@ -10,7 +10,7 @@ import java.util.UUID;
 @Setter
 public class SendInvoiceMessage implements ICommandMessage {
 
-    private final String command = "PARTIAL_CLONE_INVOICE";
+    private final String command = "SEND_INVOICE";
     private boolean result;
 
    

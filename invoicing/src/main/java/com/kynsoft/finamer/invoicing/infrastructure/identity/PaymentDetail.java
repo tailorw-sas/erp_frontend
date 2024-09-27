@@ -17,7 +17,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "payment_detail")
 public class PaymentDetail implements Serializable {
-
     @Id
     private UUID id;
     private Long paymentDetailId;
