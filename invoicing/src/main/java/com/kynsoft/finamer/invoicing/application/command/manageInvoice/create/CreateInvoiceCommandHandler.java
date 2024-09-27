@@ -20,19 +20,17 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
     private final IManageInvoiceTypeService iManageInvoiceTypeService;
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
-    private final IParameterizationService parameterizationService;
 
     public CreateInvoiceCommandHandler(IManageInvoiceService service, IManageAgencyService agencyService,
                                        IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService,
                                        IManageInvoiceStatusService manageInvoiceStatusService,
-                                       ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService) {
+                                       ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.service = service;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.iManageInvoiceTypeService = iManageInvoiceTypeService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
-        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -49,8 +47,8 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
             invoiceNumber += "-" + hotelDto.getCode();
         }
 
-        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceStatusDto manageInvoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getProcessed()) : null;
+
+        ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(command.getInvoiceType());
 
         ManageInvoiceDto invoiceDto = service.create(new ManageInvoiceDto(command.getId(), 0L, 0L,
