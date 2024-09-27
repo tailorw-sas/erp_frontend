@@ -1857,18 +1857,23 @@ async function historyGetList() {
 }
 
 async function applyPaymentGetList(amountComingOfForm: any = null) {
+  console.log('amountComingOfForm', amountComingOfForm)
+
   if (applyPaymentOptions.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
   try {
+    applyPaymentPayload.value.filter = []
     applyPaymentOptions.value.loading = true
     applyPaymentList.value = []
     const newListItems = []
 
-    const validNumber = detailItemForApplyPayment.value?.amount
-      ? detailItemForApplyPayment.value.amount.replace(/,/g, '')
-      : amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : 0
+    // const validNumber = detailItemForApplyPayment.value?.amount
+    //   ? detailItemForApplyPayment.value.amount.replace(/,/g, '')
+    //   : amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : 0
+
+    const validNumber = amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : 0
 
     if (amountComingOfForm) {
       isApplyPaymentFromTheForm.value = true
@@ -2027,6 +2032,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
   }
   finally {
     applyPaymentOptions.value.loading = false
+    detailItemForApplyPayment.value = null
   }
 }
 
@@ -2036,8 +2042,15 @@ async function openDialogStatusHistory() {
 }
 
 async function openModalApplyPayment($event: any) {
+  let amount = 0
+  if ($event.amount) {
+    amount = $event.amount
+  }
+  else {
+    amount = detailItemForApplyPayment.value?.amount
+  }
   openDialogApplyPayment.value = true
-  await applyPaymentGetList($event.amount)
+  await applyPaymentGetList(amount)
 }
 
 async function openDialogImportExcel(idItem: string) {
@@ -2744,7 +2757,6 @@ onMounted(async () => {
         </template>
       </EditFormV2>
     </div>
-    <!-- <pre>{{ item }}</pre> -->
     <DynamicTable
       :data="paymentDetailsList"
       :columns="columns"
