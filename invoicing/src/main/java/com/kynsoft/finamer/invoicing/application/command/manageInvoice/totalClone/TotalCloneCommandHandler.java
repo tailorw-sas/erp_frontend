@@ -22,9 +22,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IManageHotelService hotelService;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageBookingService bookingService;
-    private final IParameterizationService parameterizationService;
     private final IManageInvoiceStatusService invoiceStatusService;
-    private final IInvoiceCloseOperationService closeOperationService;
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
     private final IManageRatePlanService ratePlanService;
     private final IManageNightTypeService nightTypeService;
@@ -32,17 +30,24 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IManageRoomCategoryService roomCategoryService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
-    private final IManageAdjustmentService adjustmentService;
 
-    public TotalCloneCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IParameterizationService parameterizationService, IManageInvoiceStatusService invoiceStatusService, IInvoiceCloseOperationService closeOperationService, ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService, IManageAdjustmentService adjustmentService) {
+    public TotalCloneCommandHandler(IManageInvoiceService invoiceService,
+                                    IManageAgencyService agencyService,
+                                    IManageHotelService hotelService,
+                                    IManageAttachmentTypeService attachmentTypeService,
+                                    IManageBookingService bookingService,
+                                    IManageInvoiceStatusService invoiceStatusService,
+                                    ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+                                    IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
+                                    IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
+                                    IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                    IAttachmentStatusHistoryService attachmentStatusHistoryService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.attachmentTypeService = attachmentTypeService;
         this.bookingService = bookingService;
-        this.parameterizationService = parameterizationService;
         this.invoiceStatusService = invoiceStatusService;
-        this.closeOperationService = closeOperationService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
@@ -50,7 +55,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.roomCategoryService = roomCategoryService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
-        this.adjustmentService = adjustmentService;
     }
 
 
@@ -164,9 +168,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 //        LocalDate dueDate = command.getInvoiceDate().toLocalDate();
 
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
-        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceStatusDto invoiceStatus = parameterization != null ? this.invoiceStatusService.findByCode(parameterization.getReconciled()) : null;
-
+        ManageInvoiceStatusDto invoiceStatus = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
         ManageInvoiceDto clonedInvoice = new ManageInvoiceDto(
                 command.getClonedInvoice(),
                 0L,

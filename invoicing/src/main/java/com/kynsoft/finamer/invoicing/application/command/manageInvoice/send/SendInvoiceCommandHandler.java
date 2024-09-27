@@ -33,14 +33,12 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final MailService mailService;
     private final IManageEmployeeService manageEmployeeService;
     private final InvoiceXmlService invoiceXmlService;
-    private final IParameterizationService parameterizationService;
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final IFtpService ftpService;
     private final InvoiceReportProviderFactory invoiceReportProviderFactory;
 
     public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService,
                                      IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,
-                                     IParameterizationService parameterizationService,
                                      IManageInvoiceStatusService manageInvoiceStatusService,
                                      FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory) {
 
@@ -48,7 +46,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         this.mailService = mailService;
         this.manageEmployeeService = manageEmployeeService;
         this.invoiceXmlService = invoiceXmlService;
-        this.parameterizationService = parameterizationService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.ftpService = ftpService;
         this.invoiceReportProviderFactory = invoiceReportProviderFactory;
@@ -71,9 +68,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             invoicesByAgency.computeIfAbsent(invoice.getAgency(), k -> new ArrayList<>()).add(invoice);
         }
 
-        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceStatusDto manageInvoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getSent()) : null;
-
+       ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         // Enviar correos agrupados por agencia
         for (Map.Entry<ManageAgencyDto, List<ManageInvoiceDto>> entry : invoicesByAgency.entrySet()) {
             ManageAgencyDto agency = entry.getKey();

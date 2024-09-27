@@ -168,9 +168,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
 
         //creando los status
         EInvoiceStatus invoiceStatus = EInvoiceStatus.SENT;
-        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceStatusDto manageInvoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getSent()) : null;
-
+        ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         //calculando dueDate
         ManageAgencyDto agencyDto = this.agencyService.findById(parentInvoice.getAgency().getId());
         //TODO: replicar el campo creditDay de Agency para calcular dueDate
