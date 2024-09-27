@@ -56,5 +56,8 @@ ENV TZ="America/Guayaquil"
 WORKDIR /app
 COPY --from=builder /build/target/invoicing-1.0.0.jar .
 
+# Ensure JAXB implementation is available at runtime
+ENV JAVA_OPTS="-Djavax.xml.bind.JAXBContextFactory=org.glassfish.jaxb.runtime.v2.ContextFactory"
+
 # Set the ENTRYPOINT to run the application with the correct classpath
-ENTRYPOINT ["java", "-jar", "/app/invoicing-1.0.0.jar"]
+ENTRYPOINT ["java", "-Djavax.xml.bind.JAXBContextFactory=org.glassfish.jaxb.runtime.v2.ContextFactory", "-jar", "/app/invoicing-1.0.0.jar"]
