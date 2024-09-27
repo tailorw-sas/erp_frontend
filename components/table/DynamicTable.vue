@@ -477,6 +477,9 @@ watch(() => props.data, async (newValue) => {
   if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
     clickedItem.value = props.data[0]
   }
+  if (newValue.length > 0 && props.options?.selectionMode === 'multiple') {
+    clickedItem.value = []
+  }
 })
 
 onMounted(() => {
