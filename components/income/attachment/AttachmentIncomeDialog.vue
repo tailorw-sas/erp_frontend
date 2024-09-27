@@ -348,7 +348,7 @@ async function getResourceTypeList(isDefault: boolean = false, filter?: FilterCr
     const { data: dataList } = response
     resourceTypeList.value = []
     for (const iterator of dataList) {
-      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status ?? 'ACTIVE', fullName: `${iterator.code} - ${iterator.name}` }]
     }
   }
   catch (error) {
@@ -362,7 +362,8 @@ async function getResourceTypeList(isDefault: boolean = false, filter?: FilterCr
 }
 
 async function loadDefaultResourceType() {
-  if (!item.value.resourceType) { // Listar solo si el resource type esta en null, ya que no cambia
+  if (!item.value.resourceType || !item.value.resourceType.status) {
+    // Listar solo si el resource type esta en null, ya que no cambia. O si viene en null el status
     const filter: FilterCriteria[] = [
       {
         key: 'invoice',
