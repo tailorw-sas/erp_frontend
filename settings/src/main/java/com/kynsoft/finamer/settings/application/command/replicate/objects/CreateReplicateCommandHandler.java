@@ -337,19 +337,19 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_B2B_PARTNER -> {
                     for (ManagerB2BPartnerDto managerB2BPartnerDto : this.managerB2BPartnerService.findAllToReplicate()) {
-                        this.producerReplicateB2BPartnerService.create(ReplicateB2BPartnerKafka.builder()
-                                .id(managerB2BPartnerDto.getId())
-                                .code(managerB2BPartnerDto.getCode())
-                                .b2BPartnerTypeDto(managerB2BPartnerDto.getB2BPartnerTypeDto().getId())
-                                .name(managerB2BPartnerDto.getName())
-                                .description(managerB2BPartnerDto.getDescription())
-                                .password(managerB2BPartnerDto.getPassword())
-                                .ip(managerB2BPartnerDto.getIp())
-                                .token(managerB2BPartnerDto.getToken())
-                                .url(managerB2BPartnerDto.getUrl())
-                                .userName(managerB2BPartnerDto.getUserName())
-                                .status(managerB2BPartnerDto.getStatus().name())
-                                .build());
+                        this.producerReplicateB2BPartnerService.create(new ReplicateB2BPartnerKafka(
+                                managerB2BPartnerDto.getId(),
+                                managerB2BPartnerDto.getCode(),
+                                managerB2BPartnerDto.getName(),
+                                managerB2BPartnerDto.getDescription(),
+                                managerB2BPartnerDto.getPassword(),
+                                managerB2BPartnerDto.getIp(),
+                                managerB2BPartnerDto.getToken(),
+                                managerB2BPartnerDto.getUrl(),
+                                managerB2BPartnerDto.getUserName(),
+                                managerB2BPartnerDto.getStatus().name(),
+                                managerB2BPartnerDto.getB2BPartnerTypeDto().getId()
+                        ));
                     }
                 }
                 case MANAGE_MERCHANT -> {

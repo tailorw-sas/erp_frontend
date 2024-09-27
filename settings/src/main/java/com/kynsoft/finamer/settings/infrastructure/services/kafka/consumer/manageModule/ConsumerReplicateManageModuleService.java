@@ -21,7 +21,7 @@ public class ConsumerReplicateManageModuleService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-module", groupId = "settings-entity-replica")
+    //@KafkaListener(topics = "finamer-module", groupId = "settings-entity-replica")
     public void listen(String event) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
