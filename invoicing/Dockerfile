@@ -19,8 +19,8 @@ RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
     && rm -f /tmp/apache-maven.tar.gz \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
-ENV MAVEN_HOME /usr/share/maven/bin/
-ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+ENV MAVEN_HOME=/usr/share/maven
+ENV MAVEN_CONFIG="$USER_HOME_DIR/.m2"
 
 # Set the working directory to /build
 WORKDIR /build
@@ -30,13 +30,13 @@ COPY . /build
 
 # Setup environment variables for Maven repository
 ARG PACKAGE_TOKEN
-ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
+ENV PACKAGE_TOKEN=${PACKAGE_TOKEN}
 
 COPY rc-settings.xml settings.xml
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN|g" settings.xml
 
 ARG POM_NAME
-ENV POM_NAME ${POM_NAME}
+ENV POM_NAME=${POM_NAME}
 
 # Build the project and download dependencies
 RUN mvn dependency:go-offline -f ${POM_NAME} -s settings.xml
@@ -47,7 +47,7 @@ FROM bellsoft/liberica-openjdk-alpine:17.0.6
 
 EXPOSE 9909
 
-# Configurar Zona Horaria
+# Configure Time Zone
 RUN apk upgrade --no-cache
 RUN apk add --no-cache tzdata
 ENV TZ="America/Guayaquil"
@@ -56,12 +56,5 @@ ENV TZ="America/Guayaquil"
 WORKDIR /app
 COPY --from=builder /build/target/invoicing-1.0.0.jar .
 
-# Copy dependencies to the container
-RUN mkdir -p /app/libs
-COPY --from=builder /build/target/dependency/*.jar /app/libs/
-
-# Configurar el classpath para incluir todas las dependencias
-ENV CLASSPATH="/app/invoicing-1.0.0.jar:/app/libs/*"
-
 # Set the ENTRYPOINT to run the application with the correct classpath
-ENTRYPOINT ["java", "-cp", "/app/invoicing-1.0.0.jar:/app/libs/*", "com.kynsoft.finamer.invoicing.InvoicingApplication"]
+ENTRYPOINT ["java", "-jar", "/app/invoicing-1.0.0.jar"]
