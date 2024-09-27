@@ -65,15 +65,15 @@ const ENUM_FILTER = [
 ]
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text' },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '130px' },
   { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
-  { field: 'manageinvoiceCode', header: 'Invoice No', type: 'text' },
-  { field: 'manageAgencyCode', header: 'Agency CD', type: 'text' },
+  { field: 'manageinvoiceCode', header: 'Invoice No', type: 'text', width: '130px' },
+  { field: 'manageAgencyCode', header: 'Agency CD', type: 'text', width: '150px' },
   { field: 'manageAgencyName', header: 'Agency', type: 'text' },
 
-  { field: 'invoiceDate', header: 'Generation Date', type: 'date' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-  { field: 'impstatus', header: 'Sent Status', type: 'slot-text', sortable: false, showFilter: false },
+  { field: 'invoiceDate', header: 'Generation Date', type: 'date', width: '150px' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '150px' },
+  { field: 'impstatus', header: 'Sent Status', type: 'slot-text', sortable: false, showFilter: false, width: '350px' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: false, showFilter: false },
 ]
 
@@ -459,7 +459,6 @@ async function send() {
       invoice: clickedItem.value,
       employee: userData?.value?.user?.userId
     }
-
     await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload)
     completed = true
   }
@@ -471,6 +470,7 @@ async function send() {
     if (completed) {
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoices sent successfully', life: 10000 })
       if (clickedItem.value.length === listItems.value.length) {
+        clickedItem.value = []
         navigateTo('/invoice')
       }
       else {
@@ -646,7 +646,7 @@ onMounted(async () => {
         :options="options"
         :pagination="pagination"
         @on-confirm-create="clearForm"
-        @update:clicked-item="onMultipleSelect($event)"
+        @update:clicked-item="onMultipleSelect"
         @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems"
