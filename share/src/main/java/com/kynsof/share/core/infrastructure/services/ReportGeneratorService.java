@@ -25,7 +25,7 @@ public class ReportGeneratorService implements IReportGenerator {
     private final RestTemplate restTemplate;
     private final String reportServiceUrl;
 
-    public ReportGeneratorService(RestTemplate restTemplate, @Value("${report.service.url}")String reportServiceUrl) {
+    public ReportGeneratorService(RestTemplate restTemplate, String reportServiceUrl) {
         this.restTemplate = restTemplate;
         this.reportServiceUrl = reportServiceUrl;
     }
