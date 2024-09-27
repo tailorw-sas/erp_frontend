@@ -25,7 +25,7 @@ import java.util.UUID;
 public class ReportGeneratorService implements IReportGenerator {
 
     private final RestTemplate restTemplate;
-    @Value("${report.service.url}")
+    @Value("${report.service.url:http://localhost:8097/api/report}")
     private  String reportServiceUrl;
 
     public ReportGeneratorService(RestTemplate restTemplate) {
