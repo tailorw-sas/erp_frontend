@@ -227,6 +227,8 @@ const formReload = ref(0)
 
 const invoiceAmount = ref(0)
 
+const dueAmount = ref(0)
+
 const idItem = ref('')
 const filterToSearch = ref<IData>({
   criterial: null,
@@ -1277,6 +1279,9 @@ async function filterEditFields(bookingEdit: any[]) {
       firstName: booking.firstName,
       lastName: booking.lastName,
       roomNumber: booking.roomNumber,
+      rateAdult:booking?.rateAdult,
+      rateChild:booking?.rateChild, 
+      folioNumber:booking?.folioNumber,
       couponNumber: booking.couponNumber,
       adults: booking.adults,
       children: booking.children,
@@ -1286,11 +1291,11 @@ async function filterEditFields(bookingEdit: any[]) {
       hotelAmount: booking.hotelAmount,
       nights: dayjs(booking.checkOut).endOf('day').diff(dayjs(booking.checkIn).startOf('day'), 'day', false),
       nightType: booking.nightType ? booking.nightType.id : null,
-
       ratePlan: booking.ratePlan ? booking.ratePlan.id : null,
       roomType: booking.roomType ? booking.roomType.id : null,
       roomCategory: booking.roomCategory ? booking.roomCategory.id : null,
-      agency: booking.agency ? booking.agency.id : null
+      agency: booking.agency ? booking.agency.id : null,
+      
       // Agrega otros campos que necesites aquí
     }));
 
@@ -1413,6 +1418,17 @@ function calcInvoiceAmount() {
 
   bookingList.value.forEach((b) => {
     invoiceAmount.value = Number(invoiceAmount.value) + Number(b?.invoiceAmount)
+    
+  })
+}
+function calcInvoiceAmountUpdate() {
+  invoiceAmount.value = 0
+
+  bookingList.value.forEach((b) => {
+    invoiceAmount.value = Number(invoiceAmount.value) + Number(b?.invoiceAmount)
+    dueAmount.value = Number(invoiceAmount.value) + Number(b?.invoiceAmount)
+    
+    
   })
 }
 
@@ -1429,15 +1445,17 @@ function updateBooking(booking: any) {
      roomType: { ...booking.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
        nightType: { ...booking.nightType, name: `${booking?.nightType?.code || ''}-${booking?.nightType?.name || ''}` },
         ratePlan: { ...booking.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-       // roomType: { id: booking.roomType?.id }, // Solo el ID
-       // nightType: { id: booking.nightType?.id }, // Solo el ID
-      //  ratePlan: { id: booking.ratePlan?.id }, // Solo el ID
-     
+       roomCategory:{ ...booking.roomCategory, name: `${booking?.roomCategory?.code || ''}-${booking?.roomCategory?.name || ''}` },
         fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
         firstName: booking?.firstName,
+        rateAdult:booking?.rateAdult,
+        rateChild:booking?.rateChild,
+        folioNumber:booking?.folioNumber,
         lastName: booking?.lastName,
         hotelAmount: booking?.hotelAmount,
-
+        adults:booking?.adults,
+        children:booking?.children
+      
       }
     }
   }
@@ -1447,11 +1465,10 @@ function updateBooking(booking: any) {
     checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
     checkOut: dayjs(booking?.checkOut).startOf('day').toISOString(),
   
-    roomType: { ...booking?.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-    ratePlan: { ...booking?.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
   // roomType: { id: booking?.roomType?.id }, // Solo el ID
   // ratePlan: { id: booking?.ratePlan?.id }, // Solo el ID
-   agency: bookingList.value[index]?.agency,
+   //agency: bookingList.value[index]?.agency,
+  dueAmount:booking?.invoiceAmount,
    //agency: { id: bookingList.value[index]?.agency?.id },
   }
   bookingList.value[index].nights = dayjs(booking?.checkOut).endOf('day').diff(dayjs(booking?.checkIn).startOf('day'), 'day', false)
@@ -1459,10 +1476,18 @@ function updateBooking(booking: any) {
 
   // Marcar que se ha editado un booking
   bookingEdited.value = true;
+  
+  // Verificar si el booking ya está en bookingEdit
+  const existingEditIndex = bookingEdit.value.findIndex((item: any) => item.id === booking.id);
+  if (existingEditIndex === -1) {
+    bookingEdit.value.push(booking); // Agregar el booking editado al array solo si no está presente
+  } else {
+    bookingEdit.value[existingEditIndex] = booking; // Actualizar el booking existente en el array
+  }
   console.log(bookingEdited.value, 'valor del booleano edit booking')
- bookingEdit.value.push(booking); // Agregar el booking editado al array
+ //bookingEdit.value.push(booking); // Agregar el booking editado al array
  // bookingEdit.value = [booking]; //
-  calcInvoiceAmount()
+  calcInvoiceAmountUpdate()
 }
 
 function disabledButtonSave() {
@@ -1636,7 +1661,7 @@ onMounted(async () => {
             :selected-booking="selectedBooking" :open-adjustment-dialog="openAdjustmentDialog"
             :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
             :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
-            :is-creation-dialog="true" :selected-invoice="selectedInvoice" :booking-list="bookingList"
+            :is-creation-dialog="true" :selected-invoice="selectedInvoice as any" :booking-list="bookingList"
             :update-booking="updateBooking" :adjustment-list="ListItems" :add-adjustment="addAdjustment"
             :update-adjustment="updateAdjustment" :active="active" :bookings-total-obj="objBookingsTotals"
             :room-rate-total-obj="objRoomRateTotals" :adjustment-total-obj="objAdjustmentTotals" :set-active="($event) => {

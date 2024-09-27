@@ -245,7 +245,7 @@ async function savePrint() {
       severity:'info',
       summary: 'Confirmed',
       detail: `The process was executed successfully, records printed  ${totalFiles}`,
-      life: 5000 // Duración del toast en milisegundos
+      life: 0 // Duración del toast en milisegundos
     });
   }
   catch (error: any) {
