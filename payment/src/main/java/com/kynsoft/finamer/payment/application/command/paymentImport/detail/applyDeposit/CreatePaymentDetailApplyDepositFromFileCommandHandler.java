@@ -127,6 +127,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         createIncomeTransactionSuccessKafka.setHotel(paymentDto.getHotel().getId());
         createIncomeTransactionSuccessKafka.setInvoiceDate(LocalDateTime.now());
         createIncomeTransactionSuccessKafka.setIncomeAmount(paymentDetailDto.getAmount());
+        createIncomeTransactionSuccessKafka.setManual(false);
         //createIncomeKafka.setInvoiceStatus();
         createIncomeTransactionSuccessKafka.setStatus(Status.ACTIVE.name());
         createIncomeTransactionSuccessKafka.setTransactionTypeAdjustment(transactionType);

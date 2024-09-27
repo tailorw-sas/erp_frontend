@@ -17,11 +17,14 @@ import org.springframework.stereotype.Component;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,14 +37,10 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
     private final InvoiceReportProviderFactory invoiceReportProviderFactory;
     private final IManageInvoiceService manageInvoiceService;
 
-    private final IManagerClientService managerClientService;
-
     public InvoiceReportQueryHandler(InvoiceReportProviderFactory invoiceReportProviderFactory,
-                                     IManageInvoiceService manageInvoiceService,
-                                     IManagerClientService managerClientService) {
+                                     IManageInvoiceService manageInvoiceService) {
         this.invoiceReportProviderFactory = invoiceReportProviderFactory;
         this.manageInvoiceService = manageInvoiceService;
-        this.managerClientService = managerClientService;
     }
 
 
@@ -101,7 +100,7 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
                     .map(InputStream.class::cast)
                     .toList();
             if (!finalContent.isEmpty()) {
-                result.put(resolveInvoiceNumber(invoiceId), PDFUtils.mergePDFtoByte(finalContent));
+                result.put(resolveSingleFileName(invoiceId), PDFUtils.mergePDFtoByte(finalContent));
             }
         }
 
@@ -111,15 +110,20 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
 
     private Optional<Map<String, byte[]>> getReportContentGroupedByClient(Map<EInvoiceReportType, IInvoiceReport> reportService, List<String> invoicesIds) throws DocumentException, IOException {
         Map<String, byte[]> result = new HashMap<>();
-        Map<String, List<String>> invoicesGrouped = getInvoiceGroupedByClient(invoicesIds);
-
-        for (Map.Entry<String, List<String>> entry : invoicesGrouped.entrySet()) {
-            Map<EInvoiceReportType, Optional<byte[]>> reportContent = this.groupPdfContentByReportType(entry.getValue(), reportService);
-            result.put(resolveClientName(entry.getKey()), PDFUtils.mergePDFtoByte(getOrderReportContent(reportContent)
+        Map<String, List<ManageInvoiceDto>> invoiceGroupedByClient = getInvoiceGroupedByClient(invoicesIds);
+        for (var entry : invoiceGroupedByClient.entrySet()) {
+            List<String> invoiceGroup = entry.getValue()
                     .stream()
-                    .filter(Optional::isPresent)
-                    .map(bytes -> new ByteArrayInputStream(bytes.get()))
-                    .map(InputStream.class::cast).toList()));
+                    .map(ManageInvoiceDto::getId)
+                    .map(UUID::toString).toList();
+            Map<EInvoiceReportType, Optional<byte[]>> reportContent = this.groupPdfContentByReportType(invoiceGroup, reportService);
+            String fileName = entry.getValue().get(0).getId().toString();
+            result.put(resolveGroupedFileName(fileName),
+                    PDFUtils.mergePDFtoByte(getOrderReportContent(reportContent)
+                            .stream()
+                            .filter(Optional::isPresent)
+                            .map(bytes -> new ByteArrayInputStream(bytes.get()))
+                            .map(InputStream.class::cast).toList()));
         }
 
         // Retornar el mapa de resultados si no está vacío
@@ -148,25 +152,31 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
         return orderedContent;
     }
 
-    private Map<String, List<String>> getInvoiceGroupedByClient(List<String> invoiceIds) {
-        Map<String, List<String>> invoiceClientMap = new HashMap<>();
+    private Map<String, List<ManageInvoiceDto>> getInvoiceGroupedByClient(List<String> invoiceIds) {
+        Map<String, List<ManageInvoiceDto>> invoiceClientMap = new HashMap<>();
         invoiceIds.forEach(invoiceId -> {
             ManageInvoiceDto manageInvoiceDto = manageInvoiceService.findById(UUID.fromString(invoiceId));
             ManageAgencyDto manageAgencyDto = manageInvoiceDto.getAgency();
             ManageClientDto manageClientDto = manageAgencyDto.getClient();
             if (Objects.nonNull(manageClientDto)) {
-                invoiceClientMap.computeIfAbsent(manageClientDto.getId().toString(), k -> new ArrayList<>()).add(invoiceId);
+                invoiceClientMap.computeIfAbsent(manageClientDto.getId().toString(), k -> new ArrayList<>()).add(manageInvoiceDto);
             }
         });
         return invoiceClientMap;
     }
 
-    private String resolveInvoiceNumber(String invoiceId){
-       ManageInvoiceDto manageInvoiceDto = manageInvoiceService.findById(UUID.fromString(invoiceId));
-       return manageInvoiceDto.getInvoiceNumber();
+    private String resolveGroupedFileName(String invoiceId) {
+        ManageInvoiceDto manageInvoiceDto = manageInvoiceService.findById(UUID.fromString(invoiceId));
+        String agencyName = manageInvoiceDto.getAgency().getName();
+        String code = manageInvoiceDto.getAgency().getCode();
+        String month = LocalDate.now().getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+        return agencyName + "-" + code + "-" + month;
     }
-    private String resolveClientName(String clientId){
-        ManageClientDto manageClientDto = managerClientService.findById(UUID.fromString(clientId));
-        return manageClientDto.getName();
+
+    private String resolveSingleFileName(String invoiceId) {
+        ManageInvoiceDto manageInvoiceDto = manageInvoiceService.findById(UUID.fromString(invoiceId));
+        String hotelName = manageInvoiceDto.getHotel().getName();
+        String invoiceNumber = manageInvoiceDto.getInvoiceNumber();
+        return hotelName + "-" + invoiceNumber;
     }
 }
