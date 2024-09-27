@@ -91,7 +91,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
                 try {
-                    sendFtp(agency, agencyInvoices);
+                    bavel(agency, agencyInvoices);
                 } catch (DocumentException | IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -118,6 +118,20 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
         }
         command.setResult(true);
+    }
+
+    private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices) throws DocumentException, IOException {
+        for (ManageInvoiceDto invoice : invoices) {
+            try {
+                var xmlContent = invoiceXmlService.generateInvoiceXml(invoice);
+                String nameFile = invoice.getInvoiceNumber() + ".xml";
+                InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8));
+                ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
+                        agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21);
+            } catch (JAXBException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private void sendFtp(ManageAgencyDto agency, List<ManageInvoiceDto> invoices) throws DocumentException, IOException {
@@ -171,9 +185,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             for (ManageInvoiceDto invoice : invoices) {
                 try {
                     request.setSubject("INVOICES for " + agency.getName()+"-"+invoice.getInvoiceNo());
-                   // var resultXML = invoiceXmlService.generateInvoiceXml(invoice);
-                    // Convertir el XML a Base64 para adjuntar
-                   // String base64Xml = Base64.getEncoder().encodeToString(resultXML.getBytes(StandardCharsets.UTF_8));
+
                     List<MailJetAttachment> attachments = new ArrayList<>();
                     // Crear el adjunto con el XML
                     String nameFileXml = invoice.getInvoiceNumber() + ".xml"; // Cambiar la extensión a .xml
