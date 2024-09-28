@@ -4,6 +4,9 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailRequest;
@@ -12,6 +15,9 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.create.Crea
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.delete.DeletePaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.delete.DeletePaymentDetailMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.update.UpdatePaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.update.UpdatePaymentDetailMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.update.UpdatePaymentDetailRequest;
@@ -57,10 +63,26 @@ public class PaymentDetailController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/undo-application")
+    public ResponseEntity<CreateUndoApplicationMessage> applyPayment(@RequestBody CreateUndoApplicationRequest request) {
+        CreateUndoApplicationCommand createCommand = CreateUndoApplicationCommand.fromRequest(request, mediator);
+        CreateUndoApplicationMessage response = mediator.send(createCommand);
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/apply-deposit")
     public ResponseEntity<CreatePaymentDetailApplyDepositMessage> createApplyDeposit(@RequestBody CreatePaymentDetailApplyDepositRequest request) {
         CreatePaymentDetailApplyDepositCommand createCommand = CreatePaymentDetailApplyDepositCommand.fromRequest(request, mediator);
         CreatePaymentDetailApplyDepositMessage response = mediator.send(createCommand);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/apply-other-deductions")
+    public ResponseEntity<CreateApplyOtherDeductionsMessage> createApplyDeposit(@RequestBody CreateApplyOtherDeductionsRequest request) {
+        CreateApplyOtherDeductionsCommand createCommand = CreateApplyOtherDeductionsCommand.fromRequest(request, mediator);
+        CreateApplyOtherDeductionsMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);
     }

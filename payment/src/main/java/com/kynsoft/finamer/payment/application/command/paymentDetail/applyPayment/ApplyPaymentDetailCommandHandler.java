@@ -2,15 +2,21 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayme
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
+import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,16 +26,18 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
     private final IManageBookingService manageBookingService;
     private final IPaymentService paymentService;
     private final ProducerUpdateBookingService producerUpdateBookingService;
+    private final IManagePaymentStatusService statusService;
 
-
-    public ApplyPaymentDetailCommandHandler(IPaymentDetailService paymentDetailService, 
-                                            IManageBookingService manageBookingService,
-                                            IPaymentService paymentService,
-                                            ProducerUpdateBookingService producerUpdateBookingService) {
+    public ApplyPaymentDetailCommandHandler(IPaymentDetailService paymentDetailService,
+            IManageBookingService manageBookingService,
+            IPaymentService paymentService,
+            ProducerUpdateBookingService producerUpdateBookingService,
+            IManagePaymentStatusService statusService) {
         this.paymentDetailService = paymentDetailService;
         this.manageBookingService = manageBookingService;
         this.paymentService = paymentService;
         this.producerUpdateBookingService = producerUpdateBookingService;
+        this.statusService = statusService;
     }
 
     @Override
@@ -42,14 +50,27 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
         paymentDetailDto.setManageBooking(bookingDto);
         paymentDetailDto.setApplayPayment(Boolean.TRUE);
+        paymentDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         this.manageBookingService.update(bookingDto);
         this.paymentDetailService.update(paymentDetailDto);
 
+        PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
         try {
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance()));
+            ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
+                    paymentDto.getId(),
+                    paymentDto.getPaymentId(),
+                    new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
+                    ));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka));
         } catch (Exception e) {
         }
-        PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
+
+        if (paymentDto.getNotApplied() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
+            paymentDto.setPaymentStatus(this.statusService.findByApplied());
+        }
+        paymentDto.setApplyPayment(true);
+        this.paymentService.update(paymentDto);
+
         command.setPaymentResponse(paymentDto);
     }
 

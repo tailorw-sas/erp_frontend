@@ -6,13 +6,17 @@ import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ParameterizationDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceStatusService;
+import com.kynsoft.finamer.invoicing.domain.services.IParameterizationService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoiceStatus;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceStatusWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceStatusReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,10 +30,14 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
     @Autowired
     private final ManageInvoiceStatusReadDataJPARepository repositoryQuery;
 
+    @Autowired
+    private final IParameterizationService parameterizationService;
+
     public ManageInvoiceStatusServiceImpl(ManageInvoiceStatusWriteDataJPARepository repositoryCommand,
-            ManageInvoiceStatusReadDataJPARepository repositoryQuery) {
+                                          ManageInvoiceStatusReadDataJPARepository repositoryQuery, IParameterizationService parameterizationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -48,20 +56,12 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
 
     @Override
     public void delete(ManageInvoiceStatusDto dto) {
-        // ManageInvoiceStatus delete = new ManageInvoiceStatus(dto);
+         ManageInvoiceStatus delete = new ManageInvoiceStatus(dto);
 
-        // delete.setDeleted(Boolean.TRUE);
-        // delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
-        // delete.setStatus(Status.INACTIVE);
-        // delete.setDeletedAt(LocalDateTime.now());
-        //
-        // repositoryCommand.save(delete);
-        try {
-            this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE,
-                    new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
-        }
+         delete.setDeleted(Boolean.TRUE);
+         delete.setDeletedAt(LocalDateTime.now());
+
+         repositoryCommand.save(delete);
     }
 
     @Override
@@ -84,6 +84,23 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
     @Override
     public List<ManageInvoiceStatusDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(ManageInvoiceStatus::toAggregate).toList();
+    }
+
+    @Override
+    public ManageInvoiceStatusDto findByEInvoiceStatus(EInvoiceStatus invoiceStatus) {
+        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
+        ManageInvoiceStatusDto invoiceStatusDto = null;
+        if(parameterization != null){
+            invoiceStatusDto = switch (invoiceStatus){
+                case PROCECSED -> this.findByCode(parameterization.getProcessed());
+                case RECONCILED -> this.findByCode(parameterization.getReconciled());
+                case SENT -> this.findByCode(parameterization.getSent());
+                case CANCELED -> this.findByCode(parameterization.getCanceled());
+                case PENDING -> this.findByCode(parameterization.getPending());
+                case PROCESSED -> this.findByCode(parameterization.getProcessed());
+            };
+        }
+        return invoiceStatusDto;
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.repository.query;
 
+import com.kynsoft.finamer.invoicing.domain.dto.projection.ManageInvoiceSimpleProjection;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,9 @@ public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Manage
         JpaSpecificationExecutor<ManageInvoice> {
 
     Page<ManageInvoice> findAll(Specification specification, Pageable pageable);
+
+    @Query("SELECT m FROM ManageInvoice m")
+    Page<ManageInvoiceSimpleProjection> findAllSimple(Specification<ManageInvoice> specification, Pageable pageable);
 
     @Query("SELECT COUNT(b) FROM ManageInvoice b WHERE b.invoiceNumber LIKE %:invoiceNumber%")
     Long findByInvoiceNumber( @Param("invoiceNumber") String invoiceNumber);

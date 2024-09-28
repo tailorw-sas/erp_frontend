@@ -6,8 +6,11 @@ import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ParameterizationDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTypeService;
+import com.kynsoft.finamer.invoicing.domain.services.IParameterizationService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoiceType;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceTypeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceTypeReadDataJPARepository;
@@ -28,9 +31,13 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
     @Autowired
     private final ManageInvoiceTypeReadDataJPARepository repositoryQuery;
 
-    public ManageInvoiceTypeServiceImpl(ManageInvoiceTypeWriteDataJPARepository repositoryCommand, ManageInvoiceTypeReadDataJPARepository repositoryQuery) {
+    @Autowired
+    private final IParameterizationService parameterizationService;
+
+    public ManageInvoiceTypeServiceImpl(ManageInvoiceTypeWriteDataJPARepository repositoryCommand, ManageInvoiceTypeReadDataJPARepository repositoryQuery, IParameterizationService parameterizationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -54,7 +61,7 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
         ManageInvoiceType delete = new ManageInvoiceType(dto);
 
         delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
+//        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
         delete.setDeletedAt(LocalDateTime.now());
 
         repositoryCommand.save(delete);
@@ -76,6 +83,26 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByEInvoiceType(EInvoiceType invoiceType) {
+        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
+        ManageInvoiceTypeDto invoiceTypeDto = null;
+        if(parameterization != null){
+            invoiceTypeDto = switch (invoiceType) {
+                case CREDIT -> this.findByCode(parameterization.getTypeCredit());
+                case INVOICE -> this.findByCode(parameterization.getTypeInvoice());
+                case INCOME -> this.findByCode(parameterization.getTypeIncome());
+                case OLD_CREDIT -> this.findByCode(parameterization.getTypeOldCredit());
+            };
+        }
+        return invoiceTypeDto;
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByCode(String code) {
+        return this.repositoryQuery.findByCode(code).map(ManageInvoiceType::toAggregate).orElse(null);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

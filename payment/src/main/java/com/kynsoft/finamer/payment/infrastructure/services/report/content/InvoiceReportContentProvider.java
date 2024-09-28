@@ -16,11 +16,11 @@ public class InvoiceReportContentProvider extends AbstractReportContentProvider 
 
     @Override
     public Optional<byte[]> getContent(Map<String, Object> parameters) {
-        return getInvoiceReport();
+        return getInvoiceReport(parameters);
     }
 
-    private Optional<byte[]> getInvoiceReport() {
-        return Optional.of(ReportUtil.defaultPdfContent());
+    private Optional<byte[]> getInvoiceReport(Map<String, Object> parameters) {
+        return Optional.ofNullable(reportGenerator.generateReport(parameters, "inv"));
     }
 
 

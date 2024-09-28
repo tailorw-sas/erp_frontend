@@ -46,15 +46,18 @@ public class CreateManagerB2BPartnerCommandHandler implements ICommandHandler<Cr
                 command.getToken(),
                 b2BPartnerTypeDto
         ));
-        replicateB2BPartnerService.create(ReplicateB2BPartnerKafka.builder()
-                .id(command.getId())
-                .code(command.getCode())
-                .name(command.getName())
-                .description(command.getDescription())
-                .status(command.getStatus().name())
-                .b2BPartnerTypeDto(b2BPartnerTypeDto.getId())
-                .build()
-
-        );
+        replicateB2BPartnerService.create(new ReplicateB2BPartnerKafka(
+                command.getId(), 
+                command.getCode(), 
+                command.getName(), 
+                command.getDescription(), 
+                command.getPassword(), 
+                command.getIp(), 
+                command.getToken(), 
+                command.getUrl(), 
+                command.getUserName(), 
+                command.getStatus().name(), 
+                b2BPartnerTypeDto.getId()
+        ));
     }
 }

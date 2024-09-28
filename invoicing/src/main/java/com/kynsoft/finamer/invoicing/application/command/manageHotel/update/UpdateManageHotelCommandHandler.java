@@ -5,8 +5,10 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageTradingCompaniesDto;
+import com.kynsoft.finamer.invoicing.domain.services.IManageCityStateService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageTradingCompaniesService;
+import com.kynsoft.finamer.invoicing.domain.services.IManagerCountryService;
 
 import org.springframework.stereotype.Component;
 
@@ -17,14 +19,18 @@ import java.util.function.Consumer;
 public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateManageHotelCommand> {
 
     private final IManageHotelService service;
-
     private final IManageTradingCompaniesService tradingCompaniesService;
+    private final IManageCityStateService cityStateService;
+    private final IManagerCountryService countryService;
 
     public UpdateManageHotelCommandHandler(IManageHotelService service,
-            IManageTradingCompaniesService tradingCompaniesService) {
+                                           IManageTradingCompaniesService tradingCompaniesService,
+                                           IManageCityStateService cityStateService,
+                                           IManagerCountryService countryService) {
         this.service = service;
         this.tradingCompaniesService = tradingCompaniesService;
-
+        this.cityStateService = cityStateService;
+        this.countryService = countryService;
     }
 
     @Override
@@ -37,26 +43,32 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(),
                 update::setUpdate);
 
-        if(dto.getManageTradingCompanies() != null) {
+        if (dto.getManageTradingCompanies() != null) {
             updateTradingCompanies(dto::setManageTradingCompanies, command.getTradingCompany(), dto.getManageTradingCompanies().getId(), update::setUpdate);
-        } else if(command.getTradingCompany() != null){
+        } else if (command.getTradingCompany() != null) {
             dto.setManageTradingCompanies(tradingCompaniesService.findById(command.getTradingCompany()));
             update.setUpdate(1);
         }
+
+        dto.setManageCityState(cityStateService.findById(command.getCityState()));
+        dto.setManageCountry(countryService.findById(command.getCountry()));
+        dto.setAddress(command.getAddress());
+        dto.setBabelCode(command.getBabelCode());
+        dto.setCity(command.getCity());
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setVirtual, command.getIsVirtual(), dto.isVirtual(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setRequiresFlatRate, command.isRequiresFlatRate(), dto.isRequiresFlatRate(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setAutoApplyCredit, command.getAutoApplyCredit(), dto.getAutoApplyCredit(), update::setUpdate);
 
-        if (update.getUpdate() > 0) {
-            this.service.update(dto);
-        }
+//        if (update.getUpdate() > 0) {
+        this.service.update(dto);
+//        }
     }
 
     private boolean updateTradingCompanies(Consumer<ManageTradingCompaniesDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
         if (newValue != null) {
-            if(!newValue.equals(oldValue)) {
+            if (!newValue.equals(oldValue)) {
                 ManageTradingCompaniesDto tradingCompaniesDto = tradingCompaniesService.findById(newValue);
                 setter.accept(tradingCompaniesDto);
                 update.accept(1);

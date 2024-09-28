@@ -6,7 +6,6 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicateManageHotelKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.rules.manageHotel.ManageHotelCodeMustBeUniqueRule;
-import com.kynsoft.finamer.settings.domain.rules.manageHotel.ManageHotelCodeSizeRule;
 import com.kynsoft.finamer.settings.domain.rules.manageHotel.ManageHotelNameMustBeNullRule;
 import com.kynsoft.finamer.settings.domain.services.*;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageHotel.ProducerReplicateManageHotelService;
@@ -84,7 +83,12 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 command.getRequiresFlatRate(),
                 command.getIsVirtual(),
                 command.getApplyByTradingCompany(),
-                command.getAutoApplyCredit()
+                command.getAutoApplyCredit(),
+                command.getCity(),
+                command.getBabelCode(),
+                command.getAddress(),
+                cityStateDto.getId(),
+                countryDto.getId()
         ));
     }
 }

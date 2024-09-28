@@ -28,18 +28,24 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
     private final IManageRoomRateService rateService;
-    private final IParameterizationService parameterizationService;
     private final IManageInvoiceStatusService manageInvoiceStatusService;
-    private final IInvoiceCloseOperationService closeOperationService;
     private final IManageBookingService bookingService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
+    private final IManageInvoiceTransactionTypeService transactionTypeService;
+    private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
 
     public PartialCloneInvoiceCommandHandler(
 
             IManageInvoiceService service,
             IManageAttachmentTypeService attachmentTypeService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageRoomRateService rateService, IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService, IInvoiceCloseOperationService closeOperationService, IManageBookingService bookingService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+            IManageRoomRateService rateService, IManageInvoiceStatusService manageInvoiceStatusService,
+            IManageBookingService bookingService,
+            IInvoiceStatusHistoryService invoiceStatusHistoryService,
+            IAttachmentStatusHistoryService attachmentStatusHistoryService,
+            IManageInvoiceTransactionTypeService transactionTypeService,
+            IManagePaymentTransactionTypeService paymentTransactionTypeService) {
 
         this.service = service;
 
@@ -47,12 +53,12 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
         this.rateService = rateService;
-        this.parameterizationService = parameterizationService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
-        this.closeOperationService = closeOperationService;
         this.bookingService = bookingService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.transactionTypeService = transactionTypeService;
+        this.paymentTransactionTypeService = paymentTransactionTypeService;
     }
 
     @Override
@@ -75,7 +81,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 ManageRoomRateDto newRoomRate = roomRate.toAggregate();
 
                 newRoomRate.setBooking(newBooking);
-                newRoomRate.setAdjustments(null);
+                newRoomRate.setAdjustments(new LinkedList<>());
                 newRoomRate.setHotelAmount(0.00);
                 newRoomRate.setInvoiceAmount(0.00);
                 roomRateDtos.add(newRoomRate);
@@ -86,11 +92,28 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
         }
 
-        for (int i = 0; i < command.getRoomRateAdjustments().size(); i++) {
-
+        for (PartialCloneInvoiceAdjustmentRelation adjustmentRequest : command.getRoomRateAdjustments()) {
             for (ManageRoomRateDto roomRate : roomRateDtos) {
-                if (command.getRoomRateAdjustments().get(i).getRoomRate().equals(roomRate.getId())) {
-                    roomRate.setInvoiceAmount(command.getRoomRateAdjustments().get(i).getAdjustment().getAmount());
+                if (adjustmentRequest.getRoomRate().equals(roomRate.getId())) {
+                    Double adjustmentAmount = adjustmentRequest.getAdjustment().getAmount();
+                    roomRate.setInvoiceAmount(roomRate.getInvoiceAmount() + adjustmentAmount);
+                    List<ManageAdjustmentDto> adjustmentDtoList = roomRate.getAdjustments() != null ? roomRate.getAdjustments() : new LinkedList<>();
+                    adjustmentDtoList.add(new ManageAdjustmentDto(
+                            adjustmentRequest.getAdjustment().getId(),
+                            null,
+                            adjustmentAmount,
+                            adjustmentRequest.getAdjustment().getDate(),
+                            adjustmentRequest.getAdjustment().getDescription(),
+                            adjustmentRequest.getAdjustment().getTransactionType() != null
+                                    ? this.transactionTypeService.findById(adjustmentRequest.getAdjustment().getTransactionType())
+                                    : null,
+                            adjustmentRequest.getAdjustment().getPaymentTransactionType() != null
+                                    ? this.paymentTransactionTypeService.findById(adjustmentRequest.getAdjustment().getPaymentTransactionType())
+                                    : null,
+                            null,
+                            adjustmentRequest.getAdjustment().getEmployee()
+                    ));
+                    roomRate.setAdjustments(adjustmentDtoList);
                 }
             }
 
@@ -144,8 +167,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         }
 
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
-        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceStatusDto invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getProcessed()) : null;
+        ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(UUID.randomUUID(), 0L, 0L,
                 invoiceNumber,
                 invoiceToClone.getInvoiceDate(), invoiceToClone.getDueDate(),
@@ -153,7 +175,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 invoiceToClone.getInvoiceAmount(),
                 invoiceToClone.getInvoiceAmount(), invoiceToClone.getHotel(), invoiceToClone.getAgency(),
                 invoiceToClone.getInvoiceType(), status,
-                false, bookingDtos, attachmentDtos, null, null, null, invoiceStatus, null, true, invoiceToClone, 0.00);
+                false, bookingDtos, attachmentDtos, null, null, invoiceToClone.getManageInvoiceType(), invoiceStatus, null, true, invoiceToClone, 0.00);
 
         ManageInvoiceDto created = service.create(invoiceDto);
 

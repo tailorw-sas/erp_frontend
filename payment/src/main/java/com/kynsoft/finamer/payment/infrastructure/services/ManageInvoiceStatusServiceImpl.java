@@ -7,7 +7,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import com.kynsoft.finamer.payment.application.query.objectResponse.ManageInvoiceStatusResponse;
+import com.kynsoft.finamer.payment.application.query.objectResponse.search.ManageInvoiceStatusResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceStatusDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceStatusService;

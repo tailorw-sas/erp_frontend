@@ -13,6 +13,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.mana
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -35,13 +36,11 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageBookingService bookingService;
-    private final IManageRoomRateService rateService;
 
     private final IInvoiceCloseOperationService closeOperationService;
 
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
-    private final IParameterizationService parameterizationService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
@@ -54,9 +53,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                                            IManageInvoiceTypeService iManageInvoiceTypeService,
                                            IManageInvoiceStatusService manageInvoiceStatusService,
                                            IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
-                                           IManageRoomRateService rateService, IInvoiceCloseOperationService closeOperationService,
+                                           IInvoiceCloseOperationService closeOperationService,
                                            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IParameterizationService parameterizationService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
 
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
@@ -70,11 +69,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.attachmentTypeService = attachmentTypeService;
         this.bookingService = bookingService;
-        this.rateService = rateService;
         this.closeOperationService = closeOperationService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
-        this.parameterizationService = parameterizationService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
     }
@@ -303,29 +300,30 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         }
 
         EInvoiceStatus status = EInvoiceStatus.PROCECSED;
-        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceStatusDto invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getProcessed()) : null;
+        ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
         if (command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)
                 || command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
             status = EInvoiceStatus.SENT;
             //TODO setear el objeto ManageInvoiceStatus segun la parametrización a partir de el codigo EInvoiceStatus.SENT
-            invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getSent()) : null;
+            invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         }
 
         if (status.equals(EInvoiceStatus.PROCECSED) && !attachmentDtos.isEmpty()) {
             status = EInvoiceStatus.RECONCILED;
             //TODO setear el objeto ManageInvoiceStatus segun la parametrización a partir de el codigo EInvoiceStatus.RECONCILED
-            invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getReconciled()) : null;
+            invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
         }
+        LocalDate dueDate = command.getInvoiceCommand().getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
+        ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(command.getInvoiceCommand().getInvoiceType());
 
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
                 invoiceNumber,
-                command.getInvoiceCommand().getInvoiceDate(), command.getInvoiceCommand().getDueDate(),
+                command.getInvoiceCommand().getInvoiceDate(), dueDate,
                 true,
                 command.getInvoiceCommand().getInvoiceAmount(),
                 command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
                 command.getInvoiceCommand().getInvoiceType(), status,
-                false, bookings, attachmentDtos, null, null, null, invoiceStatus, null,  false,
+                false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null,  false,
                 null, 0.0);
 
         ManageInvoiceDto created = service.create(invoiceDto);

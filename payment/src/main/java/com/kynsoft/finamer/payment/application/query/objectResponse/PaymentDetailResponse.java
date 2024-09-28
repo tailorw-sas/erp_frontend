@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsof.share.utils.ScaleAmount;
+import com.kynsoft.finamer.payment.application.query.objectResponse.search.ManagePaymentTransactionTypeSearchResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import java.time.OffsetDateTime;
@@ -30,15 +31,15 @@ public class PaymentDetailResponse implements IResponse {
     private String remark;
     private List<PaymentDetailResponse> children = new ArrayList<>();
 
-    private Double bookingId;
-    private String invoiceId;
+    //private Double bookingId;
+    //private String invoiceId;
     private OffsetDateTime transactionDate;
-    private String firstName;
-    private String lastName;
-    private String reservation;
-    private String couponNo;
-    private Integer adults;
-    private Integer childrens;
+    //private String firstName;
+    //private String lastName;
+    //private String reservation;
+    //private String couponNo;
+    //private Integer adults;
+    //private Integer childrens;
     private Double childrenTotalValue = 0.0;
     private OffsetDateTime createdAt;
     private Double applyDepositValue;
@@ -61,15 +62,15 @@ public class PaymentDetailResponse implements IResponse {
                 children.add(new PaymentDetailResponse(paymentDetailDto));
             }
         }
-        this.bookingId = dto.getBookingId();
-        this.invoiceId = dto.getInvoiceId();
+        //this.bookingId = dto.getBookingId();
+        //this.invoiceId = dto.getInvoiceId();
         this.transactionDate = dto.getTransactionDate();
-        this.firstName = dto.getFirstName();
-        this.lastName = dto.getLastName();
-        this.reservation = dto.getReservation();
-        this.couponNo = dto.getCouponNo();
-        this.adults = dto.getAdults();
-        this.childrens = dto.getChildrens();
+        //this.firstName = dto.getFirstName();
+        //this.lastName = dto.getLastName();
+        //this.reservation = dto.getReservation();
+        //this.couponNo = dto.getCouponNo();
+        //this.adults = dto.getAdults();
+        //this.childrens = dto.getChildrens();
         this.createdAt = dto.getCreatedAt();
         this.paymentDetailId = dto.getPaymentDetailId();
         this.parentId = dto.getParentId() != null ? dto.getParentId() : null;

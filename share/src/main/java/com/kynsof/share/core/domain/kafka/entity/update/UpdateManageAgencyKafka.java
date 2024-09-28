@@ -37,4 +37,8 @@ public class UpdateManageAgencyKafka implements Serializable {
     @JsonProperty("country")
     private UUID country;
     private String mailingAddress;
+    private String zipCode;
+    private String city;
+    private Integer creditDay;
+    private Boolean autoReconcile;
 }

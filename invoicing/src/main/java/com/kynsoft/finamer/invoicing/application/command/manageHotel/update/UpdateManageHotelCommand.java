@@ -19,7 +19,13 @@ public class UpdateManageHotelCommand implements ICommand {
     private boolean requiresFlatRate;
     private Boolean autoApplyCredit;
 
-    public UpdateManageHotelCommand(UUID id, String name, UUID tradingCompany, String status, Boolean isVirtual,boolean requiresFlatRate, Boolean autoApplyCredit) {
+    private UUID cityState;
+    private UUID country;
+    private String babelCode;
+    private String address;
+    private String city;
+
+    public UpdateManageHotelCommand(UUID id, String name, UUID tradingCompany, String status, Boolean isVirtual,boolean requiresFlatRate, Boolean autoApplyCredit, UUID cityState, UUID country, String babelCode, String address, String city) {
         this.id = id;
         this.name = name;
         this.tradingCompany = tradingCompany;
@@ -27,6 +33,11 @@ public class UpdateManageHotelCommand implements ICommand {
         this.isVirtual = isVirtual;
         this.requiresFlatRate=requiresFlatRate;
         this.autoApplyCredit = autoApplyCredit;
+        this.cityState = cityState;
+        this.country = country;
+        this.babelCode = babelCode;
+        this.address = address;
+        this.city = city;
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionSearchResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
@@ -70,6 +71,14 @@ public class TransactionServiceImpl implements ITransactionService {
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
     }
+    @Override
+    public TransactionDto findByUuid(UUID uuid) {
+        Optional<Transaction> entity = this.repositoryQuery.findByTransactionUuid(uuid);
+        if (entity.isPresent()) {
+            return entity.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
+    }
 
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
@@ -78,7 +87,7 @@ public class TransactionServiceImpl implements ITransactionService {
         GenericSpecificationsBuilder<Transaction> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<Transaction> data = repositoryQuery.findAll(specifications, pageable);
 
-        return getPaginatedResponse(data);
+        return getPaginatedSearchResponse(data);
     }
 
     @Override
@@ -121,6 +130,15 @@ public class TransactionServiceImpl implements ITransactionService {
         List<TransactionResponse> responseList = new ArrayList<>();
         for (Transaction entity : data.getContent()) {
             responseList.add(new TransactionResponse(entity.toAggregate()));
+        }
+        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    private PaginatedResponse getPaginatedSearchResponse(Page<Transaction> data) {
+        List<TransactionSearchResponse> responseList = new ArrayList<>();
+        for (Transaction entity : data.getContent()) {
+            responseList.add(new TransactionSearchResponse(entity.toAggregate()));
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());

@@ -46,19 +46,21 @@ public class ManageAttachmentType implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
+    @Column(columnDefinition = "boolean default false")
+    private boolean attachInvDefault;
+
     public ManageAttachmentType(ManageAttachmentTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
-
         this.name = dto.getName();
         this.status =dto.getStatus();
-
         this.defaults = dto.getDefaults();
+        this.attachInvDefault=dto.isAttachInvDefault();
     }
 
     public ManageAttachmentTypeDto toAggregate() {
         return new ManageAttachmentTypeDto(
-                id, code, name, status, defaults);
+                id, code, name, status, defaults,attachInvDefault);
     }
 
 }

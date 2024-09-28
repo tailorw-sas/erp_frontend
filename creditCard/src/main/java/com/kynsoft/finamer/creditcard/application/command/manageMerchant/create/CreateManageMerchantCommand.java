@@ -15,6 +15,10 @@ public class CreateManageMerchantCommand implements ICommand {
 
     private UUID id;
     private String code;
+    private String description;
+    private UUID b2bPartner;
+    private Boolean defaultm;
+    private String status;
 
     @Override
     public ICommandMessage getMessage() {

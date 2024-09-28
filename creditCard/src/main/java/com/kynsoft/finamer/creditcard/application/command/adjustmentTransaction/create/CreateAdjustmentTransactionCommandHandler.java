@@ -7,9 +7,7 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
-import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAgencyBookingFormatRule;
 import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAmountRule;
-import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionReservationNumberRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -64,6 +62,7 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
         double netAmount = command.getAmount() - commission;
 
         Long id = this.service.create(new TransactionDto(
+                command.getTransactionUuid(),
                 agencyDto,
                 transactionCategory,
                 transactionSubCategory,

@@ -48,11 +48,18 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
                 update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setAddress, command.getAddress(), dto.getAddress(),
                 update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setZipCode, command.getZipCode(), dto.getZipCode(),
+                update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCity, command.getCity(), dto.getCity(),
+                update::setUpdate);
 
-        UpdateIfNotNull.updateEntity(dto::setClient, command.getClient(), dto.getClient().getId(), update::setUpdate,
+        UpdateIfNotNull.updateEntity(dto::setClient, command.getClient(), dto.getClient() != null ? dto.getClient().getId() : null, update::setUpdate,
                 clientService::findById);
-        UpdateIfNotNull.updateEntity(dto::setSentB2BPartner, command.getSentB2BPartner(), dto.getSentB2BPartner().getId(), update::setUpdate,
+        UpdateIfNotNull.updateEntity(dto::setSentB2BPartner, command.getSentB2BPartner(), dto.getSentB2BPartner() != null ? dto.getSentB2BPartner().getId() : null, update::setUpdate,
                 managerB2BPartnerService::findById);
+        UpdateIfNotNull.updateInteger(dto::setCreditDay, command.getCreditDay(), dto.getCreditDay(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setAutoReconcile, command.getAutoReconcile(), dto.getAutoReconcile(), update::setUpdate);
+
         if (update.getUpdate() > 0) {
             this.service.update(dto);
         }

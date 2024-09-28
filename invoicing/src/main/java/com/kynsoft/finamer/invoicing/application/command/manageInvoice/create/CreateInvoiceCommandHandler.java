@@ -1,9 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
@@ -24,9 +22,9 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     public CreateInvoiceCommandHandler(IManageInvoiceService service, IManageAgencyService agencyService,
-            IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService,
-            IManageInvoiceStatusService manageInvoiceStatusService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
+                                       IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService,
+                                       IManageInvoiceStatusService manageInvoiceStatusService,
+                                       ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.service = service;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -49,11 +47,15 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
             invoiceNumber += "-" + hotelDto.getCode();
         }
 
+
+        ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
+        ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(command.getInvoiceType());
+
         ManageInvoiceDto invoiceDto = service.create(new ManageInvoiceDto(command.getId(), 0L, 0L,
                 invoiceNumber, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),
                 command.getInvoiceAmount(), command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCECSED,
                 false,
-                null, null, null, null, null, null, null,  false,
+                null, null, null, null, invoiceTypeDto, manageInvoiceStatus, null,  false,
                 null, 0.0));
         command.setInvoiceId(invoiceDto.getInvoiceId());
         try {

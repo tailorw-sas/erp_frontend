@@ -24,7 +24,6 @@ public class ManagerMerchantConfigDto {
     private String declinedUrl;
     private String merchantType;
     private String name;
-    @Enumerated(EnumType.STRING)
     private Method method;
     private String institutionCode;
     private String merchantNumber;

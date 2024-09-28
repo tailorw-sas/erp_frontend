@@ -15,20 +15,30 @@ public class CreateManageHotelCommand implements ICommand {
     private String code;
     private String name;
     private UUID manageTradingCompany;
+    private UUID cityState;
+    private UUID country;
     private boolean isVirtual;
     private String status;
     private boolean requiresFlatRate;
     private Boolean autoApplyCredit;
+    private String babelCode;
+    private String address;
+    private String city;
 
-    public CreateManageHotelCommand(UUID id, String code, String name, UUID manageTradingCompany,boolean isVirtual, String status,boolean requiresFlatRate, Boolean autoApplyCredit) {
+    public CreateManageHotelCommand(UUID id, String code, String name, UUID manageTradingCompany, boolean isVirtual, String status, boolean requiresFlatRate, Boolean autoApplyCredit, UUID cityState, UUID country, String babelCode, String address, String city) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.manageTradingCompany = manageTradingCompany;
-        this.isVirtual=isVirtual;
+        this.isVirtual = isVirtual;
         this.status = status;
-        this.requiresFlatRate =requiresFlatRate;
+        this.requiresFlatRate = requiresFlatRate;
         this.autoApplyCredit = autoApplyCredit;
+        this.cityState = cityState;
+        this.country = country;
+        this.babelCode = babelCode;
+        this.address = address;
+        this.city = city;
     }
 
     @Override

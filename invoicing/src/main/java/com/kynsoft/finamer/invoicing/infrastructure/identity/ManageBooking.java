@@ -97,6 +97,9 @@ public class ManageBooking {
     @ManyToOne(fetch = FetchType.EAGER)
     private ManageBooking parent;
 
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "manageBooking")
+    private List<PaymentDetail> paymentDetails;
+
     public ManageBooking(ManageBookingDto dto) {
         this.id = dto.getId();
         this.hotelCreationDate = dto.getHotelCreationDate();
@@ -142,7 +145,7 @@ public class ManageBooking {
                 hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, dueAmount, roomNumber, couponNumber, adults,
                 children,
                 rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
-                invoice != null ? invoice.toAggregate() : null, ratePlan != null ? ratePlan.toAggregate() : null,
+                invoice != null ? invoice.toAggregateSample() : null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
                 roomCategory != null ? roomCategory.toAggregate() : null,
                 roomRates != null ? roomRates.stream().map(b -> {

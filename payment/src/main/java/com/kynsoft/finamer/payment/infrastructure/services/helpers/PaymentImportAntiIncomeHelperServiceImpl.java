@@ -4,11 +4,13 @@ import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
 import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
-import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositCommand;
+import com.kynsof.share.utils.ServiceLocator;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
+import com.kynsoft.finamer.payment.application.command.paymentImport.detail.applyDeposit.CreatePaymentDetailApplyDepositFromFileCommand;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -17,6 +19,7 @@ import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentAntiRowError;
 import com.kynsoft.finamer.payment.domain.services.AbstractPaymentImportHelperService;
+import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
@@ -35,11 +38,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -50,9 +51,10 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     private final IPaymentDetailService paymentDetailService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final IManagePaymentTransactionTypeService transactionTypeService;
-
     private final PaymentImportAntiErrorRepository antiErrorRepository;
     private final PaymentImportErrorRepository paymentImportErrorRepository;
+    private final IManageEmployeeService employeeService;
+    private final ServiceLocator<IMediator> serviceLocator;
 
 
     public PaymentImportAntiIncomeHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
@@ -62,7 +64,9 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                                                     ApplicationEventPublisher applicationEventPublisher,
                                                     IManagePaymentTransactionTypeService transactionTypeService,
                                                     PaymentImportAntiErrorRepository antiErrorRepository,
-                                                    PaymentImportErrorRepository paymentImportErrorRepository) {
+                                                    PaymentImportErrorRepository paymentImportErrorRepository,
+                                                    IManageEmployeeService employeeService,
+                                                    ServiceLocator<IMediator> serviceLocator) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentAntiValidatorFactory = paymentAntiValidatorFactory;
@@ -71,6 +75,8 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         this.transactionTypeService = transactionTypeService;
         this.antiErrorRepository = antiErrorRepository;
         this.paymentImportErrorRepository = paymentImportErrorRepository;
+        this.employeeService = employeeService;
+        this.serviceLocator = serviceLocator;
     }
 
     @Override
@@ -138,6 +144,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                             UUID.fromString(request.getInvoiceTransactionTypeId()),
                             paymentImportCache.getRemarks()
                     );
+
                 });
                 pageable = pageable.next();
             } while (cacheList.hasNext());
@@ -163,12 +170,20 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 
     private void sendToCreateApplyDeposit(UUID paymentDetail, double amount, UUID employee, UUID transactionType,
                                           UUID transactionTypeIdForAdjustment, String remarks) {
-        CreatePaymentDetailApplyDepositCommand createPaymentDetailApplyDepositCommand =
-                new CreatePaymentDetailApplyDepositCommand(Status.ACTIVE, paymentDetail, transactionType, amount, remarks, employee, transactionTypeIdForAdjustment);
+        CreatePaymentDetailApplyDepositFromFileCommand createPaymentDetailApplyDepositCommand =
+                new CreatePaymentDetailApplyDepositFromFileCommand(Status.ACTIVE,
+                        paymentDetail,
+                        transactionType,
+                        amount,
+                        remarks,
+                        employee,
+                        transactionTypeIdForAdjustment);
         ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand);
         applicationEventPublisher.publishEvent(applyDepositEvent);
 
     }
+
+
 
 
     private UUID getDefaultApplyDepositTransactionTypeId() {

@@ -79,7 +79,11 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
                 command.getSentB2BPartner(),
                 command.getCityState(),
                 command.getCountry(),
-                command.getMailingAddress()
+                command.getMailingAddress(),
+                command.getZipCode(),
+                command.getCity(),
+                command.getCreditDay(),
+                command.getAutoReconcile()
         ));
     }
 }

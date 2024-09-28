@@ -20,4 +20,11 @@ public class UpdateManageHotelKafka implements Serializable {
     private boolean requiresFlatRate;
     private Boolean applyByTradingCompany;
     private Boolean autoApplyCredit;
+
+    private String city;
+    private String babelCode;
+    private String address;
+    private UUID manageCityState;
+    private UUID manageCountry;
+
 }

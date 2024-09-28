@@ -10,7 +10,9 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerMerchantConfigResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantConfigResponseDto;
+import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
 import com.kynsoft.finamer.settings.domain.services.IManageMerchantConfigService;
+import com.kynsoft.finamer.settings.infrastructure.identity.ManagerMerchant;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagerMerchantConfig;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagerMerchantConfigWriteDataJpaRepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManagerMerchantConfigReadJpaRepository;
@@ -97,5 +99,8 @@ public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigSe
     @Override
     public Long countByManagerMerchantANDManagerCurrencyIdNotId(UUID id, UUID managerMerchant) {
         return this.repositoryQuery.countByManagerMerchantConfigNotId(id, managerMerchant);
+    }
+    public  List<ManagerMerchantConfigDto> findAllToReplicate(){
+        return repositoryQuery.findAll().stream().map(ManagerMerchantConfig::toAggregate).toList();
     }
 }

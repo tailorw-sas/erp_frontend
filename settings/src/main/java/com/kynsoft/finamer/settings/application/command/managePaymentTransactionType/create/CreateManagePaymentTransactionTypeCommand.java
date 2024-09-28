@@ -31,12 +31,13 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
     private Boolean antiToIncome;
     private Boolean incomeDefault;
     private Boolean paymentInvoice;
+    private Boolean debit;
 
     public CreateManagePaymentTransactionTypeCommand(String code, Status status,
             String name, String description, Boolean cash, Boolean agencyRateAmount,
             Boolean negative, Boolean policyCredit, Boolean remarkRequired,
             Integer minNumberOfCharacter, String defaultRemark, Boolean deposit, Boolean applyDeposit,
-            Boolean defaults, Boolean antiToIncome, Boolean incomeDefault, Boolean paymentInvoice) {
+            Boolean defaults, Boolean antiToIncome, Boolean incomeDefault, Boolean paymentInvoice, Boolean debit) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.status = status;
@@ -55,6 +56,7 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
         this.antiToIncome = antiToIncome;
         this.incomeDefault = incomeDefault;
         this.paymentInvoice = paymentInvoice;
+        this.debit = debit;
     }
 
     public static CreateManagePaymentTransactionTypeCommand fromRequest(CreateManagePaymentTransactionTypeRequest request) {
@@ -64,7 +66,7 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
                 request.getPolicyCredit(), request.getRemarkRequired(), 
                 request.getMinNumberOfCharacter(), request.getDefaultRemark(), request.getDeposit(), 
                 request.getApplyDeposit(), request.getDefaults(), request.getAntiToIncome(),
-                request.getIncomeDefault(), request.getPaymentInvoice());
+                request.getIncomeDefault(), request.getPaymentInvoice(), request.getDebit());
     }
 
     @Override

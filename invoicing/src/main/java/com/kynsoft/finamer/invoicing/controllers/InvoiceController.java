@@ -4,10 +4,6 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.attachmentStatusHistory.create.CreateAttachmentStatusHistoryCommand;
-import com.kynsoft.finamer.invoicing.application.command.invoiceStatusHistory.create.CreateInvoiceStatusHistoryCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentMessage;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.calculateInvoiceAmount.CalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceRequest;
@@ -25,9 +21,9 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialCl
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceRequest;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceMessage;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneInvoiceRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceRequest;
@@ -43,7 +39,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/manage-invoice")
@@ -93,18 +88,12 @@ public class InvoiceController {
 
     }
 
-    @PostMapping("total-clone")
-    public ResponseEntity<TotalCloneInvoiceMessage> totalCloneInvoice(@RequestBody TotalCloneInvoiceRequest request) {
+    @PostMapping("total-clone-invoice")
+    public ResponseEntity<?> totalClone(@RequestBody TotalCloneRequest request) {
 
-        TotalCloneInvoiceCommand command = TotalCloneInvoiceCommand.fromRequest(request);
+        TotalCloneCommand command = TotalCloneCommand.fromRequest(request);
 
-        TotalCloneInvoiceMessage message = this.mediator.send(command);
-
-        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
-
-        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
-            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
-        }
+        TotalCloneMessage message = this.mediator.send(command);
 
         return ResponseEntity.ok(message);
 
@@ -116,15 +105,6 @@ public class InvoiceController {
         PartialCloneInvoiceCommand command = PartialCloneInvoiceCommand.fromRequest(request);
 
         PartialCloneInvoiceMessage message = this.mediator.send(command);
-
-//        this.mediator.send(
-//                new CalculateInvoiceAmountCommand(message.getCloned(), command.getBookings(), command.getRoomRates()));
-
-//        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getCloned(), command.getEmployee()));
-//
-//        for (UUID attacmhment : command.getAttachments()) {
-//            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attacmhment));
-//        }
 
         return ResponseEntity.ok(message);
 

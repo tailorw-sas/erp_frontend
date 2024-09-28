@@ -14,11 +14,15 @@ public interface ITransactionService {
 
     void update(TransactionDto dto);
 
+    TransactionDto findByUuid(UUID uuid);
+
     void delete(TransactionDto dto);
 
     TransactionDto findById(Long id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    /*PaginatedResponse searchData(Pageable pageable, List<FilterCriteria> filterCriteria);*/
 
     Long countByReservationNumberAndManageHotelIdAndNotId(String reservationNumber, UUID hotel);
 

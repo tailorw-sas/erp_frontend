@@ -75,6 +75,10 @@ public class ManageAgency {
     private String status;
 
     private String mailingAddress;
+    private String zipCode;
+    private String city;
+    private Integer creditDay;
+    private Boolean autoReconcile;
 
     public ManageAgency(ManageAgencyDto dto) {
         this.id = dto.getId();
@@ -89,6 +93,10 @@ public class ManageAgency {
         this.cityState= dto.getCityState() != null ? new ManageCityState(dto.getCityState()) : null;
         this.country= dto.getCountry() != null ? new ManageCountry(dto.getCountry()) : null;
         this.mailingAddress = dto.getMailingAddress();
+        this.zipCode = dto.getZipCode();
+        this.city = dto.getCity();
+        this.creditDay = dto.getCreditDay();
+        this.autoReconcile = dto.getAutoReconcile();
     }
 
     public ManageAgencyDto toAggregate() {
@@ -97,7 +105,11 @@ public class ManageAgency {
                 Objects.nonNull(sentB2BPartner)?sentB2BPartner.toAggregate():null,
                 Objects.nonNull(cityState)?cityState.toAggregate():null,
                 Objects.nonNull(country)?country.toAggregate():null,
-                mailingAddress
+                mailingAddress,
+                zipCode,
+                city,
+                creditDay,
+                autoReconcile
         );
     }
 
@@ -107,7 +119,11 @@ public class ManageAgency {
                 Objects.nonNull(sentB2BPartner)?sentB2BPartner.toAggregate():null,
                 Objects.nonNull(cityState)?cityState.toAggregate():null,
                 Objects.nonNull(country)?country.toAggregate():null,
-                mailingAddress
+                mailingAddress,
+                zipCode,
+                city,
+                creditDay,
+                autoReconcile
         );
     }
 }

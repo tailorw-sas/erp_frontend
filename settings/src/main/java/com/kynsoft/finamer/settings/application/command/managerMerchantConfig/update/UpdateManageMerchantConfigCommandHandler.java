@@ -53,10 +53,11 @@ public class UpdateManageMerchantConfigCommandHandler implements ICommandHandler
         this.updateStatus(test::setMethod, command.getMethod(), test.getMethod(), update::setUpdate);
         this.updateManagerMerchant(test::setManagerMerchantDto, command.getManageMerchant(), test.getManagerMerchantDto().getId(), update::setUpdate);
 
-        if (update.getUpdate() > 0) {
             this.configService.update(test);
-            this.producerService.update(new UpdateManageMerchantConfigKafka(test.getId()));
-        }
+            this.producerService.update(new UpdateManageMerchantConfigKafka(test.getId(),test.getManagerMerchantDto().getId(),
+                    test.getUrl(),test.getAltUrl(),test.getSuccessUrl(),test.getErrorUrl(),test.getDeclinedUrl(),test.getMerchantType(),
+                    test.getName(),test.getMethod().name(),test.getInstitutionCode(),test.getMerchantNumber(),test.getMerchantTerminal()));
+
 
     }
 

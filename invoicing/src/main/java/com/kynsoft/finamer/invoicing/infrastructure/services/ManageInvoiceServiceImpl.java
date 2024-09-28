@@ -11,9 +11,9 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanWriter;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
@@ -97,6 +97,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
+        //getPaginatedResponseTest(example);
+        //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -142,25 +144,41 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageInvoice> data) {
-        List<ManageInvoiceResponse> responseList = new ArrayList<>();
+        List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
         for (ManageInvoice entity : data.getContent()) {
             try {
-                ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
-                InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(response.getHotel().getId());
-                if (response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
-                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())) {
-                    response.setIsInCloseOperation(false);
-                }
-                responseList.add(response);
+                Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
+                        && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
+                        || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
+                Boolean isHasAttachments = entity.getAttachments() != null && !entity.getAttachments().isEmpty();
+                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSample(), isHasAttachments, isCloseOperation);
+//                InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(response.getHotel().getId());
+//                if (response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
+//                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())) {
+//                    response.setIsInCloseOperation(false);
+//                }
+              responseList.add(response);
             } catch (Exception e) {
-                ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
-                response.setIsInCloseOperation(false);
-                responseList.add(response);
+                System.err.print(e.getMessage());
+//                ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
+//                response.setIsInCloseOperation(false);
+//                responseList.add(response);
             }
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+//    private PaginatedResponse getPaginatedResponseTest(Page<ManageInvoiceSimpleProjection> data) {
+//        List<ManageInvoiceResponse> responseList = new ArrayList<>();
+//        for (ManageInvoiceSimpleProjection entity : data.getContent()) {
+//            Long valor = entity.getInvoiceNo();
+//            String result =  entity.getHotel().getCode();
+//            String entro = "";
+//        }
+//        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
+//                data.getTotalElements(), data.getSize(), data.getNumber());
+//    }
 
     private PaginatedResponse getPaginatedResponseToPayment(Page<ManageInvoice> data) {
         List<ManageInvoiceToPaymentResponse> responseList = new ArrayList<>();

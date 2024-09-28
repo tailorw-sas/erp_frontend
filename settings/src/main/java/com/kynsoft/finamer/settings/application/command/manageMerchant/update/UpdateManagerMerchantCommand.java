@@ -13,13 +13,15 @@ import java.util.UUID;
 public class UpdateManagerMerchantCommand implements ICommand {
 
     private UUID id;
+    private String code;
     private String description;
     private UUID b2bPartner;
     private Boolean defaultm;
     private Status status;
 
-    public UpdateManagerMerchantCommand(UUID id, String description, UUID b2bPartner, Boolean defaultm, Status status) {
+    public UpdateManagerMerchantCommand(UUID id,String code, String description, UUID b2bPartner, Boolean defaultm, Status status) {
         this.id = id;
+        this.code=code;
         this.description = description;
         this.b2bPartner = b2bPartner;
         this.defaultm = defaultm;
@@ -29,6 +31,7 @@ public class UpdateManagerMerchantCommand implements ICommand {
     public static UpdateManagerMerchantCommand fromRequest(UpdateManagerMerchantRequest request, UUID id) {
         return new UpdateManagerMerchantCommand(
                 id,
+                request.getCode(),
                 request.getDescription(),
                 request.getB2bPartner(), 
                 request.getDefaultm(), 

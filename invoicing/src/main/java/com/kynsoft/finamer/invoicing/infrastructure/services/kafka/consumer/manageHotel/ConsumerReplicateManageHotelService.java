@@ -35,7 +35,12 @@ public class ConsumerReplicateManageHotelService {
                     objKafka.getIsVirtual(), 
                     objKafka.getStatus(),
                     objKafka.isRequiresFlatRate(),
-                    objKafka.getAutoApplyCredit()
+                    objKafka.getAutoApplyCredit(),
+                    objKafka.getManageCityState(),
+                    objKafka.getManageCountry(),
+                    objKafka.getBabelCode(),
+                    objKafka.getAddress(),
+                    objKafka.getCity()
             );
             mediator.send(command);
 

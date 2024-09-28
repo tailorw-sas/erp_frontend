@@ -7,6 +7,7 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -32,8 +33,9 @@ public class FileSystemStorageServiceImpl implements StorageService {
     public void store(Flux<FilePart> files, String importProcessId) {
         Path importPath = getImportLocation(importProcessId);
         this.createDirectory(importPath);
-        files.flatMap(filePart -> {
+        files.publishOn(Schedulers.boundedElastic()).flatMap(filePart -> {
             Path transferPath = Paths.get(importPath.toFile().getAbsolutePath(), filePart.filename());
+            transferPath.toFile().getParentFile().mkdirs();
           return filePart.transferTo(transferPath.toFile());
         }).subscribe();
     }
@@ -42,9 +44,8 @@ public class FileSystemStorageServiceImpl implements StorageService {
     public Stream<Path> loadAll(String importProcessId) {
         try {
             Path importPath = getImportLocation(importProcessId);
-            return Files.walk(importPath, 1)
-                    .filter(path -> !path.equals(importPath))
-                    .map(importPath::relativize);
+            return Files.walk(importPath, 5)
+                    .filter(path -> !path.equals(importPath));
         } catch (IOException e) {
             throw new StorageException("Failed to read stored files", e);
         }

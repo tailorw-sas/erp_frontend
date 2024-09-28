@@ -70,12 +70,13 @@ public class ConsumerReplicateManageInvoiceService {
                     objKafka.getId(),
                     objKafka.getInvoiceId(),
                     objKafka.getInvoiceNo(),
-                    objKafka.getInvoiceNumber(),
+                    deleteHotelInfo(objKafka.getInvoiceNumber()),
                     EInvoiceType.valueOf(objKafka.getInvoiceType()),
                     objKafka.getInvoiceAmount(),
                     bookingDtos,
                     objKafka.getHasAttachment(), //!= null ? objKafka.getHasAttachment() : false
-                    objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null
+                    objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null,
+                    objKafka.getInvoiceDate()
             );
 
             this.service.create(invoiceDto);
@@ -106,6 +107,10 @@ public class ConsumerReplicateManageInvoiceService {
 //        } catch (Exception ex) {
 //            Logger.getLogger(ConsumerReplicateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
 //        }
+    }
+
+    private String deleteHotelInfo(String input) {
+        return input.replaceAll("-(.*?)-", "-");
     }
 
 }

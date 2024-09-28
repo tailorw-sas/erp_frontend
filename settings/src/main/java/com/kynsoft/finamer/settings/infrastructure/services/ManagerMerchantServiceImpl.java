@@ -8,9 +8,11 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManagerMerchantResponse;
+import com.kynsoft.finamer.settings.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
+import com.kynsoft.finamer.settings.infrastructure.identity.ManageB2BPartner;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManagerMerchant;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagerMerchantWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManagerMerchantReadDataJPARepository;
@@ -102,6 +104,10 @@ public class ManagerMerchantServiceImpl implements IManagerMerchantService {
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return this.repositoryQuery.countByCodeAndNotId(code, id);
+    }
+    @Override
+    public List<ManagerMerchantDto> findAllToReplicate() {
+        return repositoryQuery.findAll().stream().map(ManagerMerchant::toAggregate).toList();
     }
 
 }

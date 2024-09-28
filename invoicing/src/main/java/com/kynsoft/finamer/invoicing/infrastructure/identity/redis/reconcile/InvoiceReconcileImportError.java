@@ -14,5 +14,6 @@ public class InvoiceReconcileImportError {
     public String id;
     @Indexed
     public String importProcessId;
-    public String errorFileName;
+    public String message;
+    public String filename;
 }

@@ -21,4 +21,10 @@ public class ReplicateManageHotelKafka implements Serializable {
     private Boolean isVirtual;
     private Boolean applyByTradingCompany;
     private Boolean autoApplyCredit;
+
+    private String city;
+    private String babelCode;
+    private String address;
+    private UUID manageCityState;
+    private UUID manageCountry;
 }

@@ -32,6 +32,7 @@ public class UpdateManageAttachmentTypeCommandHandler implements ICommandHandler
                 update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(Status::valueOf, command.getStatus(), dto.getStatus().name(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setAttachInvDefault, command.isAttachInvDefault(), dto.isAttachInvDefault(), update::setUpdate);
 
 
         if (update.getUpdate() > 0) {

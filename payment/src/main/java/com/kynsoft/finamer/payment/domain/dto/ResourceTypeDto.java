@@ -21,4 +21,5 @@ public class ResourceTypeDto {
     private Status status;
     private Boolean defaults;
     private boolean invoice;
+    private boolean invoiceDefault;
 }

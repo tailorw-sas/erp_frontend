@@ -36,15 +36,14 @@ public class PaymentDetailsNoApplyDepositValidator extends ExcelRuleValidator<Pa
             errorFieldList.add(new ErrorField("Transaction type","Transaction type is inactive"));
             return false;
         }
-        if (transactionTypeDto.getApplyDeposit()){
-            errorFieldList.add(new ErrorField("Transaction type","Transaction type can't be Apply Deposit"));
+        if (transactionTypeDto.getApplyDeposit() && Objects.isNull(obj.getAnti())){
+            errorFieldList.add(new ErrorField("Transaction type","Anti column is mandatory for apply deposit transaction type"));
             return false;
         }
-        if (Objects.nonNull(obj.getAnti()) && !transactionTypeDto.getDeposit()){
-            errorFieldList.add(new ErrorField("Transaction type","Transaction type must be a deposit type"));
+        if (Objects.nonNull(obj.getAnti()) && !transactionTypeDto.getApplyDeposit()){
+            errorFieldList.add(new ErrorField("Transaction type","Transaction type must be a apply deposit"));
             return false;
         }
-
 
         return true;
     }

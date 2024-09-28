@@ -13,6 +13,9 @@ import com.kynsoft.finamer.creditcard.application.command.manualTransaction.crea
 import com.kynsoft.finamer.creditcard.application.command.refundTransaction.create.CreateRefundTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.refundTransaction.create.CreateRefundTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.refundTransaction.create.CreateRefundTransactionRequest;
+import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailCommand;
+import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailMessage;
+import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailRequest;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.getById.FindTransactionByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.GetSearchTransactionQuery;
@@ -20,10 +23,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
-    
+
     private final IMediator mediator;
 
     public TransactionController(IMediator mediator) {
@@ -31,7 +35,7 @@ public class TransactionController {
     }
 
     @PostMapping("/manual")
-    public ResponseEntity<?> createManual(@RequestBody CreateManualTransactionRequest request){
+    public ResponseEntity<?> createManual(@RequestBody CreateManualTransactionRequest request) {
         CreateManualTransactionCommand command = CreateManualTransactionCommand.fromRequest(request);
         CreateManualTransactionMessage response = mediator.send(command);
 
@@ -39,7 +43,7 @@ public class TransactionController {
     }
 
     @PostMapping("/adjustment")
-    public ResponseEntity<?> createAdjustment(@RequestBody CreateAdjustmentTransactionRequest request){
+    public ResponseEntity<?> createAdjustment(@RequestBody CreateAdjustmentTransactionRequest request) {
         CreateAdjustmentTransactionCommand command = CreateAdjustmentTransactionCommand.fromRequest(request);
         CreateAdjustmentTransactionMessage response = mediator.send(command);
 
@@ -47,7 +51,7 @@ public class TransactionController {
     }
 
     @PostMapping("/refund")
-    public ResponseEntity<?> createRefund(@RequestBody CreateRefundTransactionRequest request){
+    public ResponseEntity<?> createRefund(@RequestBody CreateRefundTransactionRequest request) {
         CreateRefundTransactionCommand command = CreateRefundTransactionCommand.fromRequest(request);
         CreateRefundTransactionMessage response = mediator.send(command);
 
@@ -65,10 +69,18 @@ public class TransactionController {
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
-
         GetSearchTransactionQuery query = new GetSearchTransactionQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/send-mail")
+    public ResponseEntity<?> send(@RequestBody SendMailRequest request) {
+        SendMailCommand command = SendMailCommand.fromRequest(request);
+        SendMailMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

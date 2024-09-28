@@ -22,4 +22,9 @@ public class ManageHotelDto {
     private String status;
     private boolean requiresFlatRate;
     private Boolean autoApplyCredit;
+    private String address;
+    private String babelCode;
+    private ManagerCountryDto manageCountry;
+    private ManageCityStateDto manageCityState;
+    private String city;
 }

@@ -7,6 +7,7 @@ import com.kynsoft.finamer.payment.application.command.attachmentStatusHistory.c
 import com.kynsoft.finamer.payment.application.command.payment.create.CreateAttachmentRequest;
 import com.kynsoft.finamer.payment.application.command.paymentAttachmentStatusHistory.create.CreatePaymentAttachmentStatusHistoryCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPaymentToCredit.ApplyPaymentToCreditDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeApplyDeposit.CreatePaymentDetailTypeApplyDepositCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeApplyDeposit.CreatePaymentDetailTypeApplyDepositMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashCommand;
@@ -24,6 +25,7 @@ import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.payment.domain.services.IManageClientService;
@@ -127,7 +129,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
-                null
+                null,
+                EAttachment.NONE
         );
 
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
@@ -191,7 +194,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
-                null
+                null,
+                EAttachment.NONE
         );
 
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
@@ -216,7 +220,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     }
 
     private void createPaymentDetailsToCreditCash(PaymentDto paymentCash, ManageBookingDto booking, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance(), false));
+        CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance(), false, command.getInvoiceDto().getInvoiceDate()));
         command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), booking.getId()));
     }
 
@@ -226,8 +230,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     }
 
     private PaymentDetailDto createPaymentDetailsToCreditApplyDeposit(PaymentDto payment, ManageBookingDto booking, PaymentDetailDto parentDetailDto, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, booking.getAmountBalance(), parentDetailDto, false));
-        command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), booking.getId()));
+        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, booking.getAmountBalance(), parentDetailDto, false, command.getInvoiceDto().getInvoiceDate()));
+        command.getMediator().send(new ApplyPaymentToCreditDetailCommand(message.getNewDetailDto().getId(), booking.getId()));
         return message.getNewDetailDto();
     }
 

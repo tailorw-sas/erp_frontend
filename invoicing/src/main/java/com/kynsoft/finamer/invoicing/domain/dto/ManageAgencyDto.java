@@ -26,5 +26,8 @@ public class ManageAgencyDto {
     private ManageCityStateDto cityState;
     private ManagerCountryDto country;
     private String mailingAddress;
-
+    private String zipCode;
+    private String city;
+    private Integer creditDay;
+    private Boolean autoReconcile;
 }

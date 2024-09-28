@@ -15,13 +15,15 @@ public class ApplyPaymentCommand implements ICommand {
 
     private UUID payment;
     private boolean applyDeposit;
+    private boolean applyPaymentBalance;
     private List<UUID> invoices;
     private List<UUID> deposits;
     private final IMediator mediator;
 
-    public ApplyPaymentCommand(UUID payment, boolean applyDeposit, List<UUID> invoices, List<UUID> deposits, final IMediator mediator) {
+    public ApplyPaymentCommand(UUID payment, boolean applyDeposit, boolean applyPaymentBalance, List<UUID> invoices, List<UUID> deposits, final IMediator mediator) {
         this.payment = payment;
         this.applyDeposit = applyDeposit;
+        this.applyPaymentBalance = applyPaymentBalance;
         this.invoices = invoices;
         this.deposits = deposits;
         this.mediator = mediator;
@@ -31,6 +33,7 @@ public class ApplyPaymentCommand implements ICommand {
         return new ApplyPaymentCommand(
                 request.getPayment(),
                 request.isApplyDeposit(),
+                request.isApplyPaymentBalance(),
                 request.getInvoices(),
                 request.getDeposits(),
                 mediator

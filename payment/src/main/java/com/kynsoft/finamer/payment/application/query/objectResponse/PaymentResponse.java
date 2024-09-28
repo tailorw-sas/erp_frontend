@@ -2,9 +2,9 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsof.share.utils.ScaleAmount;
-import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,8 +13,6 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -46,10 +44,10 @@ public class PaymentResponse implements IResponse {
     private Double notApplied;
     private Double applied;
     private String remark;
-    private ManageInvoiceResponse invoice;
     private Boolean hasAttachment;
     private boolean hasDetailTypeDeposit = false;
-    private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
+    private EAttachment eAttachment;
+//    private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
 
     public PaymentResponse(PaymentDto dto) {
         this.id = dto.getId();
@@ -74,14 +72,14 @@ public class PaymentResponse implements IResponse {
         this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
         this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
         this.remark = dto.getRemark();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoiceResponse(dto.getInvoice()) : null;
-        if (dto.getAttachments() != null) {
-            for (MasterPaymentAttachmentDto attachment : dto.getAttachments()) {
-                attachments.add(new MasterPaymentAttachmentResponse(attachment));
-            }
-        }
+        this.eAttachment = dto.getEAttachment();
+//        if (dto.getAttachments() != null) {
+//            for (MasterPaymentAttachmentDto attachment : dto.getAttachments()) {
+//                attachments.add(new MasterPaymentAttachmentResponse(attachment));
+//            }
+//        }
 
-        this.hasAttachment = !this.attachments.isEmpty();
+        this.hasAttachment = dto.getAttachments() != null;
         if (dto.getInvoice() != null) {
             if (dto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 this.hasAttachment = dto.getInvoice().getHasAttachment();

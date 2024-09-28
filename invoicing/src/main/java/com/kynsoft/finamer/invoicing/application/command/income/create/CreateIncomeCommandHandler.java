@@ -63,11 +63,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
-        ManageInvoiceTypeDto invoiceTypeDto = null;
-        try {
-            invoiceTypeDto = this.invoiceTypeService.findById(command.getInvoiceType());
-        } catch (Exception e) {
-        }
+        ManageInvoiceTypeDto invoiceTypeDto = this.invoiceTypeService.findByEInvoiceType(EInvoiceType.INCOME);
 
         ManageInvoiceStatusDto invoiceStatusDto = null;
         try {

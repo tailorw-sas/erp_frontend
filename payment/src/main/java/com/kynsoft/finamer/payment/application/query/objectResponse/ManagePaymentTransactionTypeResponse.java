@@ -27,6 +27,7 @@ public class ManagePaymentTransactionTypeResponse implements IResponse {
     private String defaultRemark;
     private Boolean defaults;
     private Boolean paymentInvoice;
+    private Boolean debit;
 
     public ManagePaymentTransactionTypeResponse(ManagePaymentTransactionTypeDto dto) {
         this.id = dto.getId();
@@ -41,6 +42,7 @@ public class ManagePaymentTransactionTypeResponse implements IResponse {
         this.defaultRemark = dto.getDefaultRemark();
         this.defaults = dto.isDefaults();
         this.paymentInvoice = dto.getPaymentInvoice();
+        this.debit = dto.getDebit();
     }
 
 }
