@@ -243,6 +243,9 @@ const allMenuListItems = ref([
     label: 'Status History',
     icon: 'pi pi-cog',
     iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
+    viewBox: '0 -960 960 960',
+    width: '19px',
+    height: '19px',
     command: ($event: any) => openDialogStatusHistory($event),
     disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:SHOW-HISTORY']),
@@ -252,6 +255,9 @@ const allMenuListItems = ref([
     label: 'Apply Other Deduction',
     icon: 'pi pi-cog',
     iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
     command: ($event: any) => openModalApplyPaymentOtherDeduction($event),
     disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
@@ -261,6 +267,9 @@ const allMenuListItems = ref([
     label: 'Apply Payment',
     icon: 'pi pi-cog',
     iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
     command: ($event: any) => openModalApplyPayment($event),
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
@@ -270,6 +279,9 @@ const allMenuListItems = ref([
     label: 'Document',
     icon: 'pi pi-file-word',
     iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
     command: ($event: any) => handleAttachmentDialogOpen($event),
     disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:DOCUMENT']),
@@ -279,6 +291,9 @@ const allMenuListItems = ref([
     label: 'Print',
     icon: 'pi pi-print',
     iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
     command: ($event: any) => {
       openDialogPrint()
     },
@@ -290,6 +305,9 @@ const allMenuListItems = ref([
     label: 'Change Agency',
     icon: 'pi pi-arrow-right-arrow-left',
     iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
     command: ($event: any) => openModalApplyChangeAgency($event),
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
@@ -299,6 +317,9 @@ const allMenuListItems = ref([
     label: 'Share Files',
     icon: 'pi pi-share-alt',
     iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
     command: ($event: any) => {},
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
@@ -308,6 +329,9 @@ const allMenuListItems = ref([
     label: 'Add Task',
     icon: 'pi pi-list-check',
     iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
     command: ($event: any) => {},
     disabled: true,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
@@ -317,6 +341,9 @@ const allMenuListItems = ref([
     label: 'Import Transaction',
     icon: 'pi pi-file-import',
     iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
     command: ($event: any) => {},
     disabled: true,
     visible: true,
@@ -325,22 +352,30 @@ const allMenuListItems = ref([
     id: 'paymentWithoutAttachment',
     label: 'Payment Without Attachment',
     icon: '',
-    iconSvg: '',
+    iconSvg: 'M8.5 5.3L7.16 3.96C7.62 2.26 9.15 1 11 1c2.21 0 4 1.79 4 4v6.8l-1.5-1.5V5a2.5 2.5 0 0 0-5 0zM18 6h-1.5v7.3l1.5 1.5zm4.11 15.46l-1.27 1.27l-3.22-3.23c-.81 2.05-2.79 3.5-5.12 3.5C9.46 23 7 20.54 7 17.5V8.89L1.11 3l1.28-1.27zM11.5 15.5c0 .55.45 1 1 1s1-.45 1-1v-.11l-2-2zm4.92 2.81l-1.69-1.69A2.48 2.48 0 0 1 12.5 18a2.5 2.5 0 0 1-2.5-2.5v-3.61l-1.5-1.5v7.11c0 2.21 1.79 4 4 4a4.01 4.01 0 0 0 3.92-3.19M10 6.8l1.5 1.5V6H10z',
+    viewBox: '0 0 24 24',
+    width: '16px',
+    height: '16px',
     command: ($event: any) => checkAttachment('ATTACHMENT_WITH_ERROR'),
     disabled: true,
     visible: true,
   },
+  //   <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+  // 	<path fill="currentColor" d="" />
+  // </svg>
   {
     id: 'paymentWithAttachment',
     label: 'Payment With Attachment',
     icon: '',
-    iconSvg: '',
+    iconSvg: 'M13.5 21.36c.2.48.47.93.79 1.34A5.497 5.497 0 0 1 7 17.5V5c0-2.21 1.79-4 4-4s4 1.79 4 4v9.54c-.97.87-1.65 2.04-1.9 3.38c-.19.05-.39.08-.6.08a2.5 2.5 0 0 1-2.5-2.5V6h1.5v9.5c0 .55.45 1 1 1s1-.45 1-1V5a2.5 2.5 0 0 0-5 0v12.5c0 2.21 1.79 4 4 4c.34 0 .67-.06 1-.14M18 6h-1.5v7.55c.47-.21.97-.37 1.5-.46zm3.34 9.84l-3.59 3.59l-1.59-1.59L15 19l2.75 3l4.75-4.75z',
+    viewBox: '0 0 24 24',
+    width: '16px',
+    height: '16px',
     command: ($event: any) => checkAttachment('ATTACHMENT_WITHOUT_ERROR'),
     disabled: true,
     visible: true,
   },
 ])
-
 // -------------------------------------------------------------------------------------------------------
 
 const ENUM_FILTER = [
@@ -3493,7 +3528,7 @@ onMounted(async () => {
   <ContextMenu ref="contextMenu" :model="allMenuListItems">
     <template #itemicon="{ item }">
       <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#8d8faa">
+        <svg xmlns="http://www.w3.org/2000/svg" :height="item.height" :viewBox="item.viewBox" :width="item.width" fill="#8d8faa">
           <path :d="item.iconSvg" />
         </svg>
       </div>
