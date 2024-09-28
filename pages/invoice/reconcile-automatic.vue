@@ -162,7 +162,8 @@ async function getList() {
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
 
 
-          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
+          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` },
+    
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
@@ -439,7 +440,7 @@ if (!dataList || dataList.value.length === 0) {
       life: 0 // Duración del toast en milisegundos
     });
 }
- await getList();
+
 }
 
 function clearFilterToSearch() {
@@ -620,7 +621,7 @@ onMounted(async () => {
         @on-sort-field="onSortField"
         @update:clicked-item="onMultipleSelect($event)"
       >
-       
+    
         <template #column-status="{ data: item }">
             <Badge
               :value="getStatusName(item?.status)"
