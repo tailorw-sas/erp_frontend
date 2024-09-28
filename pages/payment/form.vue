@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 import { z } from 'zod'
 import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
+import { get } from 'lodash'
 import { formatNumber, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -76,6 +77,7 @@ const contextMenu = ref()
 const objItemSelectedForRightClick = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToInvoice = ref({} as GenericObject)
+const objItemSelectedForRightClickUndoApplication = ref({} as GenericObject)
 const allMenuListItems = ref([
   {
     id: 'applayDeposit',
@@ -100,7 +102,7 @@ const allMenuListItems = ref([
     label: 'Undo Application',
     icon: 'pi pi-undo',
     iconSvg: '',
-    command: ($event: any) => navigateToInvoice($event),
+    command: ($event: any) => undoApplication($event),
     disabled: true,
     visible: true,
   },
@@ -285,6 +287,11 @@ const itemTempPrint = ref<GenericObject>({
 const confApi = reactive({
   moduleApi: 'payment',
   uriApi: 'payment',
+})
+
+const confApiPaymentDetailUndoApplication = reactive({
+  moduleApi: 'payment',
+  uriApi: 'payment-detail/undo-application',
 })
 
 const confApiPaymentDetail = reactive({
@@ -1795,6 +1802,21 @@ async function handleSave(event: any) {
   }
 }
 
+async function undoApplication(event: any) {
+  try {
+    if (objItemSelectedForRightClickUndoApplication.value?.id) {
+      const payload = {
+        paymentDetail: objItemSelectedForRightClickUndoApplication.value?.id || ''
+      }
+      await GenericService.create(confApiPaymentDetailUndoApplication.moduleApi, confApiPaymentDetailUndoApplication.uriApi, payload)
+      getListPaymentDetail()
+    }
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
 async function historyGetList() {
   if (historyOptions.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -1857,8 +1879,6 @@ async function historyGetList() {
 }
 
 async function applyPaymentGetList(amountComingOfForm: any = null) {
-  console.log('amountComingOfForm', amountComingOfForm)
-
   if (applyPaymentOptions.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -1874,13 +1894,6 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
     //   : amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : 0
 
     const validNumber = amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : 0
-
-    if (amountComingOfForm) {
-      isApplyPaymentFromTheForm.value = true
-    }
-    else {
-      isApplyPaymentFromTheForm.value = false
-    }
 
     // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
     const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
@@ -2042,6 +2055,16 @@ async function openDialogStatusHistory() {
 }
 
 async function openModalApplyPayment($event: any) {
+  console.log($event)
+  console.log('originalEvent' in $event)
+  if ('originalEvent' in $event) {
+    isApplyPaymentFromTheForm.value = false
+  }
+  else if ('event' in $event) {
+    isApplyPaymentFromTheForm.value = true
+  }
+
+  // isApplyPaymentFromTheForm
   let amount = 0
   if ($event.amount) {
     amount = $event.amount
@@ -2299,7 +2322,7 @@ function onRowContextMenu(event: any) {
   const currentDate = dayjs().format('YYYY-MM-DD')
 
   if (event && event.data && event.data.applyPayment === true && dateOfItem.isSame(currentDate)) {
-    // objItemSelectedForRightClickUndoApplication.value = event.data
+    objItemSelectedForRightClickUndoApplication.value = event.data
     const menuItemUndoApplication = allMenuListItems.value.find(item => item.id === 'undoApplication')
     if (menuItemUndoApplication) {
       menuItemUndoApplication.disabled = false
@@ -2307,7 +2330,7 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    // objItemSelectedForRightClickUndoApplication.value = {}
+    objItemSelectedForRightClickUndoApplication.value = {}
     const menuItemUndoApplication = allMenuListItems.value.find(item => item.id === 'undoApplication')
     if (menuItemUndoApplication) {
       menuItemUndoApplication.disabled = true
