@@ -479,11 +479,11 @@ const createReconcile = ref([
     command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
    // disabled: computedShowMenuItemReconcile
   },
-  // {
-  //   label: 'Credit',
-  //   command: () => navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${expandedInvoice.value}`),
+   {
+    label: 'Manual',
+     command: () => navigateTo('invoice/reconcile-manual',{open:{target:'blank'}}),
   //   disabled: computedShowMenuItemCredit
-  // },
+   },
   {
     label: 'Reconcile from Files',
     command: () => navigateTo('invoice/reconcile-from-files', { open: { target: '_blank' } }),
