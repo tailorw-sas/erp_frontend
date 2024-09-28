@@ -52,6 +52,8 @@ public class PaymentDetail implements Serializable {
     @JoinColumn(name = "manage_booking_id")
     private ManageBooking manageBooking;
 
+    private Long reverseFrom;
+
     private Double amount;
     private Double applyDepositValue;
     private String remark;
@@ -109,6 +111,7 @@ public class PaymentDetail implements Serializable {
         this.applyDepositValue = dto.getApplyDepositValue() != null ? ScaleAmount.scaleAmount(dto.getApplyDepositValue()) : null;
         this.manageBooking = dto.getManageBooking() != null ? new ManageBooking(dto.getManageBooking()) : null;
         this.applayPayment = dto.getApplayPayment();
+        this.reverseFrom = dto.getReverseFrom();
     }
 
     public PaymentDetailDto toAggregate() {
@@ -135,7 +138,8 @@ public class PaymentDetail implements Serializable {
                 paymentDetailId,
                 parentId,
                 applyDepositValue,
-                applayPayment
+                applayPayment,
+                reverseFrom != null ? reverseFrom : null
         );
     }
 
@@ -163,7 +167,8 @@ public class PaymentDetail implements Serializable {
                 paymentDetailId,
                 parentId,
                 applyDepositValue,
-                applayPayment
+                applayPayment,
+                null
         );
     }
 
@@ -191,7 +196,8 @@ public class PaymentDetail implements Serializable {
                 paymentDetailId,
                 parentId,
                 applyDepositValue,
-                applayPayment
+                applayPayment,
+                reverseFrom != null ? reverseFrom : null
         );
     }
 }
