@@ -22,7 +22,8 @@ public class CreateUndoApplicationCommandHandler implements ICommandHandler<Crea
     public void handle(CreateUndoApplicationCommand command) {
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
         RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplayPayment()));
-
+        //Comprobar que la fecha sea del dia actual
+        //Comprobar que el paymentDetails sea de tipo Apply Deposit o Cash
         ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
         paymentDetailDto.setManageBooking(null);
         this.paymentDetailService.update(paymentDetailDto);

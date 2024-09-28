@@ -22,9 +22,9 @@ public class ConsumerUndoApplicationUpdateBookingService {
 
     private final IPaymentDetailService detailService;
 
-    public ConsumerUndoApplicationUpdateBookingService(IManageBookingService bookingService, 
-                                                       IManageInvoiceService invoiceService, 
-                                                       IPaymentDetailService detailService) {
+    public ConsumerUndoApplicationUpdateBookingService(IManageBookingService bookingService,
+            IManageInvoiceService invoiceService,
+            IPaymentDetailService detailService) {
         this.bookingService = bookingService;
         this.invoiceService = invoiceService;
         this.detailService = detailService;

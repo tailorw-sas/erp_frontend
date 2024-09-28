@@ -15,6 +15,9 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.create.Crea
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.delete.DeletePaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.delete.DeletePaymentDetailMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationRequest;
@@ -67,6 +70,14 @@ public class PaymentDetailController {
     public ResponseEntity<CreateUndoApplicationMessage> applyPayment(@RequestBody CreateUndoApplicationRequest request) {
         CreateUndoApplicationCommand createCommand = CreateUndoApplicationCommand.fromRequest(request, mediator);
         CreateUndoApplicationMessage response = mediator.send(createCommand);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reverse-transaction")
+    public ResponseEntity<CreateReverseTransactionMessage> applyPayment(@RequestBody CreateReverseTransactionRequest request) {
+        CreateReverseTransactionCommand createCommand = CreateReverseTransactionCommand.fromRequest(request, mediator);
+        CreateReverseTransactionMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);
     }
