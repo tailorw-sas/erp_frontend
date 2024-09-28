@@ -24,6 +24,7 @@ const importModel = ref({
 const uploadComplete = ref(false)
 const loadingSaveAll = ref(false)
 const haveErrorImportStatus = ref(false)
+const totalImportedRows = ref(0)
 
 const confApi = reactive({
   moduleApi: 'payment',
@@ -198,7 +199,7 @@ async function importAntiIncome() {
     if (!haveErrorImportStatus.value) {
       await getErrorList()
       if (listItems.value.length === 0) {
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'The file was imported successfully', life: 3000 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 0 })
         options.value.loading = false
         await clearForm()
       }
@@ -216,6 +217,7 @@ async function validateStatusImport() {
       try {
         const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
         status = response.status
+        totalImportedRows.value = response.totalRows ?? 0
       }
       catch (error: any) {
         toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })

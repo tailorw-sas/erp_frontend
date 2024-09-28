@@ -473,6 +473,10 @@ function formatRangeDate(date: string): string {
   return `${startDate} - ${endDate}`
 }
 
+function clearSelectedItems() {
+  clickedItem.value = []
+}
+
 watch(() => props.data, async (newValue) => {
   if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
     clickedItem.value = props.data[0]
@@ -487,6 +491,7 @@ onMounted(() => {
 })
 
 getOptionsList()
+defineExpose({ clearSelectedItems })
 </script>
 
 <template>
@@ -506,11 +511,11 @@ getOptionsList()
 
   <BlockUI :blocked="options?.loading || parentComponentLoading">
     <div class="card p-0">
+      <!-- v-model:contextMenuSelection="clickedItem" Esto estaba puesto para el conten menu del click derecho, se quito porque no hace falta y daba conflicto -->
       <DataTable
         v-model:filters="filters1"
         v-model:selection="clickedItem"
         v-model:expandedRows="expandedRows"
-        v-model:contextMenuSelection="clickedItem"
         context-menu
         :meta-key-selection="metaKey"
         :selection-mode="options?.selectionMode ?? 'single'"
@@ -619,7 +624,7 @@ getOptionsList()
               </span>
             </span>
             <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
-              {{ data[column.field] !== null ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}
+              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : '' }}
             </span>
             <span v-else-if="column.type === 'datetime'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
               {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}

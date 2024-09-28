@@ -1,19 +1,27 @@
 <script setup lang="ts">
-import type { PageState } from 'primevue/paginator'
+import { onMounted, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { v4 as uuidv4 } from 'uuid'
-import { onMounted, ref, watch } from 'vue'
-import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { PageState } from 'primevue/paginator'
+import { filter } from 'lodash'
 import { GenericService } from '~/services/generic-services'
-import { base64ToFile, convertirAFechav2 } from '~/utils/helpers'
+import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
+const { data: userData } = useAuth()
 const toast = useToast()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
+const attachUpload = ref()
 const inputFile = ref()
-const invoiceFile = ref('')
-
+const attachFile = ref()
+const importModel = ref({
+  importFile: '',
+  // totalAmount: 0,
+  hotel: '',
+  attachFile: null,
+  employee: '',
+})
 const uploadComplete = ref(false)
 const loadingSaveAll = ref(false)
 const haveErrorImportStatus = ref(false)
@@ -21,24 +29,35 @@ const totalImportedRows = ref(0)
 
 const confApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment/import',
+  uriApi: 'payment-detail/import',
 })
 
 const confPaymentApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment',
+  uriApi: 'payment-detail',
+})
+
+const hotelList = ref<any[]>([])
+const confHotelApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-hotel',
 })
 // VARIABLES -----------------------------------------------------------------------------------------
 const idItem = ref('')
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
-  { field: 'manageClientCode', header: 'Client', type: 'text' },
-  { field: 'manageAgencyCode', header: 'Agency', type: 'text' },
-  { field: 'bankAccount', header: 'Bank Acc.', type: 'text' },
-  { field: 'amount', header: 'Total Amount', type: 'text' },
-  { field: 'transactionDate', header: 'Trans. Date', type: 'date' },
+  { field: 'bookingId', header: 'Booking Id', type: 'text' },
+  { field: 'InvoiceNo', header: 'Invoice No', type: 'text' },
+  { field: 'FullName', header: 'Full Name', type: 'text' },
+  { field: 'ReservationNo', header: 'Reservation No', type: 'text' },
+  { field: 'couponNo', header: 'Coupon No', type: 'text' },
+  { field: 'checkIn', header: 'Check In', type: 'text' },
+  { field: 'checkOut', header: 'Check Out', type: 'text' },
+  { field: 'adults', header: 'Adults', type: 'text' },
+  { field: 'children', header: 'Children', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'text' },
+  { field: 'trans', header: 'Trans.', type: 'text' },
   { field: 'remarks', header: 'Remark', type: 'text' },
   { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false },
 ]
@@ -46,9 +65,9 @@ const columns: IColumn[] = [
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Payment Import of Bank',
+  tableName: 'Payment Import Expense to booking',
   moduleApi: 'payment',
-  uriApi: 'payment/import',
+  uriApi: 'payment-expense-booking/import',
   loading: false,
   showDelete: false,
   showFilters: true,
@@ -60,7 +79,7 @@ const payload = ref<IQueryRequest>({
   filter: [{
     key: 'importType',
     operator: 'EQUALS',
-    value: ENUM_PAYMENT_IMPORT_TYPE.BANK,
+    value: ENUM_PAYMENT_IMPORT_TYPE.BOOKING,
     logicalOperation: 'AND'
   }],
   query: '',
@@ -85,6 +104,7 @@ const pagination = ref<IPagination>({
 async function getErrorList() {
   try {
     payload.value = { ...payload.value, query: idItem.value }
+
     let rowError = ''
     listItems.value = []
     const newListItems = []
@@ -107,8 +127,8 @@ async function getErrorList() {
           rowError += `- ${err.message} \n`
         }
 
-        const dateTemp = !iterator.row ? null : convertirAFechav2(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, transactionDate: dateTemp, impSta: `Warning row ${iterator.row.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        // const datTemp = new Date(iterator.row.transactionDate)
+        newListItems.push({ ...iterator.row, id: iterator.id, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -127,13 +147,22 @@ async function clearForm() {
 async function onChangeFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     inputFile.value = event.target.files[0]
-    invoiceFile.value = inputFile.value.name
-    uploadComplete.value = false
+    importModel.value.importFile = inputFile.value.name
     event.target.value = ''
+    await activeImport()
   }
 }
 
-async function importFile() {
+async function onChangeAttachFile(event: any) {
+  if (event.target.files && event.target.files.length > 0) {
+    attachFile.value = event.target.files[0]
+    importModel.value.attachFile = attachFile.value.name
+    event.target.value = ''
+    await activeImport()
+  }
+}
+
+async function importExpenseBooking() {
   loadingSaveAll.value = true
   options.value.loading = true
   let successOperation = true
@@ -147,13 +176,22 @@ async function importFile() {
     idItem.value = uuid
     const base64String: any = await fileToBase64(inputFile.value)
     const base64 = base64String.split('base64,')[1]
-
     const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
+
+    const base64String1: any = await fileToBase64(attachFile.value)
+    const base641 = base64String1.split('base64,')[1]
+    const file1 = await base64ToFile(base641, attachFile.value.name, attachFile.value.type)
+
     const formData = new FormData()
     formData.append('file', file)
     formData.append('importProcessId', uuid)
-    formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.BANK)
-    await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
+    formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.BOOKING)
+    // formData.append('totalAmount', importModel.value.totalAmount.toFixed(0).toString())
+    formData.append('hotel', importModel.value.hotel)
+    formData.append('employee', userData?.value?.user?.userId || '')
+    formData.append('attachment', file1)
+
+    // await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
     successOperation = false
@@ -163,9 +201,9 @@ async function importFile() {
   }
 
   if (successOperation) {
-    await validateStatusImport()
+    // await validateStatusImport()
     if (!haveErrorImportStatus.value) {
-      await getErrorList()
+      // await getErrorList()
       if (listItems.value.length === 0) {
         toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 0 })
         options.value.loading = false
@@ -207,7 +245,7 @@ async function validateStatusImport() {
 
 async function resetListItems() {
   payload.value.page = 0
-  await getErrorList()
+  getErrorList()
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -228,6 +266,50 @@ async function goToList() {
   await navigateTo('/payment')
 }
 
+async function getHotelList(query: string = '') {
+  try {
+    let payload = {
+      filter: [{
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      pageSize: 100,
+      page: 0,
+      // sortBy: 'name',
+      // sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    if (query !== '') {
+      payload = {
+        ...payload,
+        filter: [...payload.filter, { key: 'name', operator: 'LIKE', value: query, logicalOperation: 'OR' }]
+      }
+    }
+
+    const response = await GenericService.search(confHotelApi.moduleApi, confHotelApi.uriApi, payload)
+    const { data: dataList } = response
+    hotelList.value = []
+    for (const iterator of dataList) {
+      hotelList.value = [...hotelList.value, { id: iterator.id, code: iterator.code, name: `${iterator.code}- ${iterator.name}`, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading city state list:', error)
+  }
+}
+
+async function activeImport() {
+  if (importModel.value.hotel !== '' && importModel.value.importFile !== '' && importModel.value.attachFile !== null) {
+    uploadComplete.value = false
+  }
+  else {
+    uploadComplete.value = true
+  }
+}
+
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
@@ -237,6 +319,8 @@ watch(payloadOnChangePage, (newValue) => {
 
 onMounted(async () => {
   // getErrorList()
+  uploadComplete.value = true
+  await getHotelList('')
 })
 </script>
 
@@ -251,26 +335,44 @@ onMounted(async () => {
                 class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
               >
                 <div>
-                  Import Payment Of Bank From Excel
+                  Expense to Booking
                 </div>
               </div>
             </template>
             <div class="grid p-0 m-0" style="margin: 0 auto;">
-              <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
+              <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Import Data: </label>
+                  <label class="w-4rem pt-3">Hotel: <span class="p-error">*</span></label>
+                  <div class="w-full">
+                    <Dropdown
+                      v-model="importModel.hotel"
+                      class="w-full" :options="hotelList" option-label="name"
+                      option-value="id" placeholder="Select Hotel" @change="activeImport()"
+                    />
+                  </div>
+                </div>
+              </div>
 
-                  <div class="w-full ">
+              <!-- <div class="col-12 md:col-3 align-items-center my-0 py-0">
+                <div class="flex align-items-center mb-2">
+                  <label class="w-7rem">Total Amount: </label>
+                  <div class="w-full">
+                    <InputNumber v-model="importModel.totalAmount" mode="currency" currency="USD" locale="en-US" class="w-full" />
+                  </div>
+                </div>
+              </div> -->
+
+              <div class="col-12 md:col-4 align-items-center my-0 py-0">
+                <div class="flex align-items-center mb-2">
+                  <label class="w-8rem">Import Data: <span class="p-error">*</span> </label>
+                  <div class="w-full">
                     <div class="p-inputgroup w-full">
                       <InputText
-                        ref="fileUpload" v-model="invoiceFile" placeholder="Choose file" class="w-full"
-                        show-clear aria-describedby="inputtext-help"
+                        ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
+                        class="w-full" show-clear aria-describedby="inputtext-help"
                       />
                       <span class="p-inputgroup-addon p-0 m-0">
-                        <Button
-                          icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0"
-                          @click="fileUpload.click()"
-                        />
+                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
                       </span>
                     </div>
                     <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
@@ -282,18 +384,41 @@ onMounted(async () => {
                   </div>
                 </div>
               </div>
+
+              <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
+                <div class="flex align-items-center mb-2">
+                  <label class="w-7rem">Attach File: <span class="p-error">*</span> </label>
+                  <div class="w-full">
+                    <div class="p-inputgroup w-full">
+                      <InputText
+                        ref="attachUpload" v-model="importModel.attachFile" placeholder="Choose file"
+                        class="w-full" show-clear aria-describedby="inputtext-help"
+                      />
+                      <span class="p-inputgroup-addon p-0 m-0">
+                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="attachUpload.click()" />
+                      </span>
+                    </div>
+                    <small id="username-help" style="color: #808080;">Select a file of type PDF</small>
+                    <input
+                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf"
+                      @change="onChangeAttachFile($event)"
+                    >
+                  </div>
+                </div>
+              </div>
             </div>
-          </AccordionTab>
-        </Accordion>
+          </accordionTab>
+        </accordion>
       </div>
+
       <DynamicTable
         :data="listItems" :columns="columns" :options="options" :pagination="pagination"
         @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
-            <span style="color: red;">{{ data.impSta }}</span>
+          <div id="fieldError">
+            <span v-tooltip.bottom="data.impSta" style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
       </DynamicTable>
@@ -301,7 +426,7 @@ onMounted(async () => {
       <div class="flex align-items-end justify-content-end">
         <Button
           v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete"
-          @click="importFile"
+          @click="importExpenseBooking"
         />
         <Button
           v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
@@ -324,7 +449,6 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
-  max-width: 150px;
-  /* Ajusta el ancho máximo según tus necesidades */
+  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>

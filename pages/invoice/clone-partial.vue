@@ -814,6 +814,7 @@ async function createPartialClonation(item: { [key: string]: any }) {
             id: adjustment.id,
             amount: adjustment.amount,
             transaction: adjustment.transaction,
+            date:adjustment.date,
             employee: adjustment.employee
           }
         })
@@ -837,79 +838,8 @@ async function createPartialClonation(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
   }
-}//
-// Termina la variante 1
-//
-/* Variante 2
-async function createPartialClonation() {
-  try {
-    loadingSaveAll.value = true;
-
-    // const booking: any = findBookingByInvoiceId();
-    const roomRates: any = await findRoomRates();
-    const adjustments: any = await findAdjustments();
-  //  const attachments: any = await getAttachments(selectedInvoice);
-  const attachments = [];
-
-// Agregar los attachments localmente al payload
-for (let i = 0; i < attachmentList.value.length; i++) {
-  const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file);
-  attachments.push({
-    ...attachmentList.value[i],
-    type: attachmentList.value[i]?.type?.id,
-    id: attachmentList.value[i]?.id,
-    resourceType:'INV-Invoice',
-    file: fileurl,
-
-  });
 }
 
-// Asignar los attachments al payload
-
-    const payload: any = {
-      attachments: attachments,
-      employee: userData?.value?.user?.name,
-      invoice: globalSelectedInvoicing,
-      roomRateAdjustments: []
-    };
-
-   if (adjustments && adjustments.length > 0 && roomRates && roomRates.length > 0) {
-      for (let i = 0; i < adjustments.length; i++) {
-        const adjustment = adjustments[i];
-        const roomRate = roomRates[i]; // Asigna el roomRate correspondiente de forma secuencial
-
-        payload.roomRateAdjustments.push({
-          roomRate: roomRate.id,
-          adjustment: {
-            id:adjustment.id,
-            amount: adjustment.amount,
-            transaction: adjustment.transaction,
-            employee: adjustment.employee
-          }
-        });
-      }
-    }
-
-    // Aquí puedes enviar el payload al servidor o realizar cualquier otra acción necesaria
-    console.log('Payload:', payload);
-
-    // Imprime roomRateAdjustments en la consola para verificar
-    console.log('roomRateAdjustments:', payload.roomRateAdjustments);
-
-    // Llamada al servicio genérico para hacer la solicitud HTTP
-    await GenericService.create(confClonationPartialApi.moduleApi, confClonationPartialApi.uriApi, payload);
-    console.log('entra aqui')
-   await getBookingList()
-   await getRoomRateList(globalSelectedInvoicing)
-   console.log('aqui no esta entrando')
-  } catch (error:any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
-  } finally {
-    loadingSaveAll.value = false;
-  }
-}
-
-*/
 
 async function getHotelList(query = '') {
   try {
@@ -1141,6 +1071,30 @@ async function deleteItem(id: string) {
 }
 
 function disabledButtonSave() {
+    let result = false;
+
+    if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
+       
+        const bookingIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.bookingId));
+
+        for (let i = 0; i < roomRateList.value.length; i++) {
+            const roomRate = roomRateList.value[i];
+
+            if (!bookingIdsWithAdjustments.has(roomRate.bookingId)) {
+                result = true; // Deshabilitar el botón si al menos un room rate por booking no tiene ajustes asociados
+                break; // Se encontró un room rate sin ajustes, por lo tanto, se deshabilita el botón
+            }
+        }
+    } else {
+        result = false; // Deshabilitar el botón si no hay ajustes o adjuntos
+    }
+
+  
+    return result;
+}
+
+//Funcion para el cloando total
+/*function disabledButtonSave() {
   let result = false
   if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
     result = true
@@ -1162,6 +1116,8 @@ function disabledButtonSave() {
   }
   return result
 }
+*/
+
 
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
@@ -1305,6 +1261,9 @@ function requireConfirmationToDelete(event: any) {
 function toggleForceUpdate() {
   forceUpdate.value = !forceUpdate.value
 }
+const existsAttachmentTypeInv = computed(() => {
+  return attachmentList.value.some(attachment => attachment?.type?.code === 'INV')
+})
 
 function openRoomRateDialog(booking?: any) {
   active.value = 1

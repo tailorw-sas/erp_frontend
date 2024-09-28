@@ -34,4 +34,14 @@ useHead({
   td.p-frozen-column {
   background-color: #fff !important;
 }
+th .p-column-header-content .p-checkbox.p-component.p-highlight .p-checkbox-box {
+    /* Estilos que quieres aplicar */
+    background-color: --var(--secondary-color);
+    border-color: rgb(255, 255, 255); /* Ejemplo de estilo */
+}
+th .p-column-header-content .p-checkbox.p-component .p-checkbox-box {
+    /* Estilos que quieres aplicar */
+    background-color: --var(--secondary-color);
+    border-color: rgb(255, 255, 255); /* Ejemplo de estilo */
+}
 </style>

@@ -2,10 +2,9 @@
 import { ref, watch } from 'vue'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
-import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import dayjs from 'dayjs'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import { GenericService } from '~/services/generic-services'
 
 import type { GenericObject } from '~/types'
@@ -315,6 +314,16 @@ const bookingApi = {
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
 }
+
+const formattedInvoiceAmount = computed({
+  get() {
+    // return Math.round((invoiceAmount.value + Number.EPSILON) * 100) / 100
+    return Number.parseFloat(invoiceAmount.value.toFixed(2))
+  },
+  set(value: string) {
+    invoiceAmount.value = Number.parseFloat(value)
+  }
+})
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -981,7 +990,7 @@ async function getBookingList(clearFilter: boolean = false) {
     // Options.value.loading = false
   }
 }
-
+/*
 function calcBookingInvoiceAmount(roomRate: any) {
   const bookingIndex = bookingList.value.findIndex(b => b?.id === roomRate?.booking)
 
@@ -993,12 +1002,41 @@ function calcBookingInvoiceAmount(roomRate: any) {
     bookingList.value[bookingIndex].invoiceAmount += Number(roomRate.invoiceAmount)
     // bookingList.value[bookingIndex].dueAmount += Number(roomRate.invoiceAmount)
   })
+  bookingList.value[bookingIndex].invoiceAmount = Number.parseFloat(bookingList.value[bookingIndex].invoiceAmount.toFixed(2))
   calcInvoiceAmount()
 
   // if (bookingIndex > -1) {
   //   bookingList.value[bookingIndex].invoiceAmount = Number(bookingList.value[bookingIndex].invoiceAmount) + Number(roomRate.invoiceAmount)
 
   // }
+}
+*/
+function calcBookingInvoiceAmount(roomRate: any) {
+  // Encuentra el índice del booking asociado al roomRate
+  const bookingIndex = bookingList.value.findIndex(b => b?.id === roomRate?.booking);
+
+
+  // Inicializa el invoiceAmount del booking a 0
+  bookingList.value[bookingIndex].invoiceAmount = 0;
+
+  // Filtra las tarifas de habitación asociadas a esta reserva
+  const roomRates = roomRateList.value.filter((r: any) => r.booking === bookingList.value[bookingIndex]?.id);
+
+  console.log(`Room rates associated with booking ${bookingList.value[bookingIndex].id}:`, roomRates);
+
+  // Suma los invoiceAmounts de las tarifas de habitación
+  roomRates.forEach((r) => {
+    console.log(`Adding room rate invoice amount: ${r.invoiceAmount}`);
+    bookingList.value[bookingIndex].invoiceAmount += Number(r.invoiceAmount);
+  });
+
+  // Redondea el monto total a 2 decimales
+  bookingList.value[bookingIndex].invoiceAmount = Number.parseFloat(bookingList.value[bookingIndex].invoiceAmount.toFixed(2));
+
+  console.log(`Total invoice amount for booking ${bookingList.value[bookingIndex].id}: ${bookingList.value[bookingIndex].invoiceAmount}`);
+
+  // Llama a la función para recalcular el total de la factura
+  calcInvoiceAmount();
 }
 
 function calcBookingHotelAmount(roomRate: any) {
@@ -1017,12 +1055,15 @@ function calcRoomRateInvoiceAmount(newAdjustment: any) {
   const adjustmentIndex = adjustmentList.value.findIndex(rr => rr?.id === newAdjustment?.id)
 
   if (adjustmentIndex > -1) {
-    roomRateList.value[roomRateIndex].invoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) - Number(adjustmentList.value[adjustmentIndex]?.amount)
+    const roomRateInvoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) - Number(adjustmentList.value[adjustmentIndex]?.amount)
+    roomRateList.value[roomRateIndex].invoiceAmount = Number.parseFloat(roomRateInvoiceAmount.toFixed(2))
   }
 
   if (roomRateIndex > -1) {
-    roomRateList.value[roomRateIndex].invoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) + Number(newAdjustment.amount)
-    roomRateList.value[roomRateIndex].dueAmount = Number(roomRateList.value[roomRateIndex].dueAmount) + Number(newAdjustment.amount)
+    const roomRateInvoiceAmount = Number(roomRateList.value[roomRateIndex].invoiceAmount) + Number(newAdjustment.amount)
+    roomRateList.value[roomRateIndex].invoiceAmount = Number.parseFloat(roomRateInvoiceAmount.toFixed(2))
+    const roomRateDueAmount = Number(roomRateList.value[roomRateIndex].dueAmount) + Number(newAdjustment.amount)
+    roomRateList.value[roomRateIndex].dueAmount = Number.parseFloat(roomRateDueAmount.toFixed(2))
     calcBookingInvoiceAmount(roomRateList.value[roomRateIndex])
   }
 }
@@ -1033,8 +1074,9 @@ async function calcInvoiceAmount() {
   bookingList.value.forEach((b) => {
     invoiceAmount.value = Number(invoiceAmount.value) + Number(b?.invoiceAmount)
   })
+  invoiceAmount.value = Number.parseFloat(invoiceAmount.value.toFixed(2))
 }
-
+/*
 async function calcInvoiceAmountInBookingByRoomRate() {
   bookingList.value.forEach((b) => {
     // const roomRates = roomRateList.value.find((roomRate: any) => roomRate.booking === b?.id)
@@ -1050,12 +1092,28 @@ async function calcInvoiceAmountInBookingByRoomRate() {
     }, 0) // 0 es el valor inicial
 
     if (totalInvoiceAmount) {
-      b.invoiceAmount = Number(totalInvoiceAmount) || 0
-      b.dueAmount = Number(totalInvoiceAmount) || 0
+      b.invoiceAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0
+      b.dueAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0
     }
   })
 }
+*/
 
+async function calcInvoiceAmountInBookingByRoomRate() {
+  bookingList.value.forEach((b) => {
+    // Filtra los roomRates asociados a este booking
+    const roomRatesForBooking = roomRateList.value.filter((roomRate: any) => roomRate.booking === b?.id);
+
+    const totalInvoiceAmount = roomRatesForBooking.reduce((total, item) => {
+      const invoiceAmount = Number.parseFloat(item.invoiceAmount);
+      return !Number.isNaN(invoiceAmount) ? total + invoiceAmount : total;
+    }, 0); // 0 es el valor inicial
+
+    // Actualiza el invoiceAmount y dueAmount del booking
+    b.invoiceAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0;
+    b.dueAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0;
+  });
+}
 function updateBooking(booking: any) {
   const index = bookingList.value.findIndex(item => item.id === booking.id)
 
@@ -1109,6 +1167,7 @@ function addRoomRate(rate: any) {
   }]
   calcBookingInvoiceAmount(rate)
   calcBookingHotelAmount(rate)
+  calcInvoiceAmountInBookingByRoomRate()
 // calcInvoiceAmountInBookingByRoomRate()
 }
 
@@ -1218,9 +1277,14 @@ onMounted(async () => {
       :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid pt-3"
       @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
     >
+      <!-- ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`, -->
       <template #field-invoiceDate="{ item: data, onUpdate }">
         <Calendar
-          v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
+          v-if="!loadingSaveAll"
+          v-model="data.invoiceDate"
+          date-format="yy-mm-dd"
+          :max-date="new Date()"
+          :disabled="route.query.type === InvoiceType.CREDIT"
           @update:model-value="($event) => {
             onUpdate('invoiceDate', $event)
           }"
@@ -1228,11 +1292,13 @@ onMounted(async () => {
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
         <InputText
-          v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
+          v-if="!loadingSaveAll"
+          v-model="formattedInvoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
             invoiceAmountError = false
-            onUpdate('invoiceAmount', $event)
+            // onUpdate('invoiceAmount', $event)
           }"
         />
+        <Skeleton v-else height="2rem" class="mb-2" />
         <span v-if="invoiceAmountError" class="error-message p-error text-xs">{{ invoiceAmountErrorMessage }}</span>
       </template>
       <template #field-invoiceType="{ item: data, onUpdate }">
@@ -1285,6 +1351,7 @@ onMounted(async () => {
             </div>
           </template>
         </DebouncedAutoCompleteComponent>
+        <Skeleton v-else height="2rem" class="mb-2" />
         <span v-if="hotelError" class="error-message p-error text-xs">The hotel field is required</span>
       </template>
       <template #field-agency="{ item: data, onUpdate }">
@@ -1305,6 +1372,7 @@ onMounted(async () => {
             </div>
           </template>
         </DebouncedAutoCompleteComponent>
+        <Skeleton v-else height="2rem" class="mb-2" />
         <span v-if="agencyError" class="error-message p-error text-xs">The agency field is required</span>
       </template>
 

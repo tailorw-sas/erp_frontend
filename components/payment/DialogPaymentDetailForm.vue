@@ -15,7 +15,7 @@ const props = defineProps({
     default: 'new-detail'
   }
 })
-const emit = defineEmits(['update:visible', 'save', 'applyPayment'])
+const emit = defineEmits(['update:visible', 'save', 'applyPayment', 'update:amount'])
 const confirm = useConfirm()
 const onOffDialog = ref(props.visible)
 const transactionTypeList = ref<any[]>([])
@@ -401,7 +401,6 @@ async function loadDefaultsValues() {
       else if (transactionTypeList.value.length > 1) {
         item.value.transactionType = transactionTypeList.value.find((item: any) => item.default === true)
       }
-
       if (item.value.transactionType && item.value.transactionType.remarkRequired === false) {
         const decimalSchema = z.object(
           {
@@ -444,6 +443,10 @@ watch(() => props.item, async (newValue) => {
     // newValue.transactionType.status = 'ACTIVE'
     item.value = { ...newValue }
   }
+})
+
+watch(() => amountLocalTemp.value, async (newValue) => {
+  emit('update:amount', newValue)
 })
 
 onMounted(async () => {
@@ -735,7 +738,13 @@ function processValidation($event: any, data: any) {
 
     <template #footer>
       <IfCan :perms="['PAYMENT-MANAGEMENT:APPLY-PAYMENT']">
-        <Button v-if="(action === 'new-detail' || action === 'apply-deposit') && disabledBtnApplyPaymentByTransactionType" v-tooltip.top="'Apply Payment'" link class="w-auto ml-1 sticky" @click="applyPayment($event)">
+        <Button
+          v-if="(action === 'new-detail' || action === 'apply-deposit') && disabledBtnApplyPaymentByTransactionType"
+          v-tooltip.top="'Apply Payment'"
+          link class="w-auto ml-1 sticky"
+          :disabled="Number(amountLocalTemp) === 0 || Number(amountLocalTemp) === 0.00 || Number(amountLocalTemp) <= 0.01"
+          @click="applyPayment($event)"
+        >
           <Button class="ml-1 w-3rem p-button-primary" icon="pi pi-cog" />
           <span class="ml-2 font-bold">
             Apply Payment

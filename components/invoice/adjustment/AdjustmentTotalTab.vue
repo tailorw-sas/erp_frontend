@@ -80,7 +80,16 @@ const props = defineProps({
   },
   sortAdjustment: Function as any,
   refetchInvoice: { type: Function, default: () => { } },
-  invoiceObjAmount: { type: Number, required: true }
+  invoiceObjAmount: { type: Number, required: true },
+  adjustmentTotalObj: {
+    type: Object,
+    required: false,
+    default: () => {
+      return {
+        totalAmount: 0,
+      }
+    }
+  }
 })
 
 const { data } = useAuth()
@@ -121,7 +130,7 @@ const Fields: Array<Container> = [
         dataType: 'number',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.number({ invalid_type_error: "The Amount field is required" }).refine((value: number) => {
+        validation: z.number({ invalid_type_error: 'The Amount field is required' }).refine((value: number) => {
           if (!value) { return false }
           return true
         }, { message: 'The Amount field cannot be 0' })
@@ -155,7 +164,6 @@ const Fields: Array<Container> = [
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-
 
       },
 
@@ -202,7 +210,6 @@ const IncomeAttachmentFields: Array<Container> = [
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-
 
       },
 
@@ -344,17 +351,19 @@ async function getAdjustmentList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
+      let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ''}-${iterator?.transaction?.name || ''}` }
 
-
-      let  transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
-
-      if(iterator?.invoice?.invoiceType === InvoiceType.INCOME){
-        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ""}-${iterator?.paymentTransactionType?.name || ""}` }
+      if (iterator?.invoice?.invoiceType === InvoiceType.INCOME) {
+        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ''}-${iterator?.paymentTransactionType?.name || ''}` }
       }
 
       ListItems.value = [...ListItems.value, {
-        ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date,
-       
+        ...iterator,
+        loadingEdit: false,
+        loadingDelete: false,
+        roomRateId: iterator?.roomRate?.roomRateId,
+        date: iterator?.date,
+
       }]
 
       if (typeof +iterator?.amount === 'number') {
@@ -565,32 +574,32 @@ async function getTransactionTypeList(query = '') {
   try {
     const payload
       = {
-      filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     transactionTypeList.value = []
     const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
@@ -605,8 +614,7 @@ async function getTransactionTypeList(query = '') {
 }
 
 function onRowRightClick(event: any) {
-
-  return;
+  return
 
   if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
     return
@@ -673,13 +681,11 @@ watch(() => props.listItems, () => {
   }
 }, { deep: true })
 
-
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
   Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
   getAdjustmentList()
 })
-
 
 onMounted(() => {
   if (props.selectedInvoice) {
@@ -698,15 +704,20 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="Options"
-      :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-row-right-click="onRowRightClick" @on-sort-field="OnSortField"
-      @on-row-double-click="($event) => {
-
-     
-
-    }">
+    <DynamicTable
+      :data="isCreationDialog ? listItems as any : ListItems"
+      :columns="Columns"
+      :options="Options"
+      :pagination="Pagination"
+      @on-confirm-create="ClearForm"
+      @open-edit-dialog="OpenEditDialog($event)"
+      @on-change-pagination="PayloadOnChangePage = $event"
+      @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems"
+      @on-row-right-click="onRowRightClick"
+      @on-sort-field="OnSortField"
+      @on-row-double-click="($event) => {}"
+    >
       <template v-if="isCreationDialog" #pagination-total="props">
         <span class="font-bold font">
           {{ listItems?.length }}
@@ -717,8 +728,7 @@ onMounted(() => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-            <Column :footer="totalAmount" footer-style="font-weight: 700" />
-
+            <Column :footer="props.adjustmentTotalObj.totalAmount" footer-style="font-weight: 700" />
             <Column :colspan="6" />
           </Row>
         </ColumnGroup>
@@ -728,19 +738,29 @@ onMounted(() => {
   <ContextMenu v-if="!isDetailView" ref="adjustmentContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen">
-    <AdjustmentTotalDialog :invoice-obj="invoiceObj" :invoice-amount="invoiceObjAmount"
-      :fields="route.query.type === InvoiceType.INCOME ? IncomeAttachmentFields : Fields" :item="item"
-      :open-dialog="isDialogOpen" :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
+    <AdjustmentTotalDialog
+      :invoice-obj="invoiceObj"
+      :invoice-amount="invoiceObjAmount"
+      :fields="route.query.type === InvoiceType.INCOME ? IncomeAttachmentFields : Fields"
+      :item="item"
+      :open-dialog="isDialogOpen"
+      :form-reload="formReload"
+      :loading-save-all="loadingSaveAll"
+      :clear-form="ClearForm"
       :require-confirmation-to-save="saveAdjustment"
       :require-confirmation-to-delete="requireConfirmationToDeleteAdjustment"
-      :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'" :id-item="idItem" :close-dialog="() => {
-      ClearForm()
-      idItem = ''
-
-      closeDialog()
-
-    }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
-      content-class="w-full h-fit" :transaction-type-list="transactionTypeList"
-      :get-transaction-type-list="getTransactionTypeList" />
+      :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'"
+      :id-item="idItem"
+      :close-dialog="() => {
+        ClearForm()
+        idItem = ''
+        closeDialog()
+      }"
+      container-class="flex flex-row justify-content-between mx-4 my-2 w-full"
+      class="h-fit p-2 overflow-y-hidden"
+      content-class="w-full h-fit"
+      :transaction-type-list="transactionTypeList"
+      :get-transaction-type-list="getTransactionTypeList"
+    />
   </div>
 </template>

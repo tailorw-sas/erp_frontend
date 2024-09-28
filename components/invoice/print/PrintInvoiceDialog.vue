@@ -199,7 +199,7 @@ async function getPrintObj() {
         from: dayjs(booking?.checkIn).format('DD/MM/YYYY') || '',
         to: dayjs(booking?.checkOut).format('DD/MM/YYYY') || '',
         quantity: booking?.nights || '',
-        plan: booking?.ratePlan?.name || "",
+        plan: booking?.ratePlan?.name || '',
         price: '',
         total: booking?.invoiceAmount
       }
@@ -207,6 +207,42 @@ async function getPrintObj() {
   }
 
   return obj
+}
+
+async function invoicePrint() {
+  try {
+    loading.value = true
+    let nameOfPdf = ''
+    const arrayInvoiceType: string[] = []
+    if (invoiceSupport.value) { arrayInvoiceType.push('INVOICE_SUPPORT') }
+    if (invoiceAndBookings.value) { arrayInvoiceType.push('INVOICE_AND_BOOKING') }
+
+    const payloadTemp = {
+      invoiceId: [props.invoice.id],
+      invoiceType: arrayInvoiceType
+    }
+    // En caso de que solo este marcado el paymentAndDetails
+    nameOfPdf = `${props.invoice?.hotel?.code}-${props.invoice?.invoiceId}.pdf`
+
+    const response: any = await GenericService.create('invoicing', 'manage-invoice/report', payloadTemp)
+
+    const url = window.URL.createObjectURL(new Blob([response]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = nameOfPdf // Nombre del archivo que se descargará
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    loading.value = false
+  }
+  catch (error) {
+    loading.value = false
+  }
+  finally {
+    loading.value = false
+    dialogVisible.value = false
+  }
 }
 
 async function handleDownload() {
@@ -270,14 +306,15 @@ async function handleDownload() {
               <span>Invoice Support</span>
             </div>
           </div>
-
-         
         </div>
       </div>
       <div class=" flex w-full justify-content-end ">
         <Button
-          v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loading" 
-          @click="() => { handleDownload() }"
+          v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loading"
+          @click="() => {
+            invoicePrint()
+            // handleDownload()
+          }"
         />
         <Button
           v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {

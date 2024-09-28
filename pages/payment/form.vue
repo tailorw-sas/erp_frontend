@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 import { z } from 'zod'
 import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
+import { get } from 'lodash'
 import { formatNumber, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -33,10 +34,13 @@ const formReload = ref(0)
 const formReloadAgency = ref(0)
 const refPaymentDetailForm = ref(0)
 const dialogPaymentDetailFormReload = ref(0)
+const amountOfDetailItem = ref(0) // Temp
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 const loadingPrintDetail = ref(false)
+
+const disabledBtnDelete = ref(true)
 
 const forceSave = ref(false)
 const submitEvent = new Event('')
@@ -73,11 +77,13 @@ const contextMenu = ref()
 const objItemSelectedForRightClick = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToInvoice = ref({} as GenericObject)
+const objItemSelectedForRightClickUndoApplication = ref({} as GenericObject)
 const allMenuListItems = ref([
   {
     id: 'applayDeposit',
     label: 'Apply Deposit',
     icon: 'pi pi-dollar',
+    iconSvg: '',
     command: ($event: any) => openModalWithContentMenu($event),
     disabled: true,
     visible: true,
@@ -86,7 +92,26 @@ const allMenuListItems = ref([
     id: 'applyPayment',
     label: 'Apply Payment',
     icon: 'pi pi-cog',
+    iconSvg: '',
     command: ($event: any) => openModalApplyPayment($event),
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'undoApplication',
+    label: 'Undo Application',
+    icon: 'pi pi-undo',
+    iconSvg: '',
+    command: ($event: any) => undoApplication($event),
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'reverseTransaction',
+    label: 'Reverse Transaction',
+    icon: 'pi pi-undo',
+    iconSvg: '',
+    command: ($event: any) => {},
     disabled: true,
     visible: true,
   },
@@ -94,7 +119,26 @@ const allMenuListItems = ref([
     id: 'navigateToInvoice',
     label: 'Navigate to Invoice',
     icon: 'pi pi-cog',
+    iconSvg: '',
     command: ($event: any) => navigateToInvoice($event),
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'printAsCreditNote',
+    label: 'Print as Credit Note',
+    icon: 'pi pi-print',
+    iconSvg: '',
+    command: ($event: any) => {},
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'task',
+    label: 'Task',
+    icon: '',
+    iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
+    command: ($event: any) => {},
     disabled: true,
     visible: true,
   },
@@ -126,9 +170,9 @@ const applyPaymentOptions = ref({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
-  sortBy: 'bookingId',
+  sortBy: 'dueAmount',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
@@ -245,6 +289,11 @@ const confApi = reactive({
   uriApi: 'payment',
 })
 
+const confApiPaymentDetailUndoApplication = reactive({
+  moduleApi: 'payment',
+  uriApi: 'payment-detail/undo-application',
+})
+
 const confApiPaymentDetail = reactive({
   moduleApi: 'payment',
   uriApi: 'payment-detail',
@@ -269,13 +318,13 @@ const objApis = ref({
 const columns: IColumn[] = [
   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
   { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
-  { field: 'invoiceNumber', header: 'Invoice No', tooltip: 'Invoice No', width: '100px', type: 'text' },
+  { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '100px', type: 'text' },
   { field: 'transactionDate', header: 'Transaction Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
-  { field: 'reservationNumber', header: 'Reservation No', tooltip: 'Reservation', width: 'auto', type: 'text' },
-  { field: 'couponNumber', header: 'Coupon No', tooltip: 'Coupon No', width: 'auto', type: 'text' },
+  { field: 'reservationNumber', header: 'Reservation No.', tooltip: 'Reservation', width: 'auto', type: 'text' },
+  { field: 'couponNumber', header: 'Coupon No.', tooltip: 'Coupon No', width: 'auto', type: 'text' },
   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
@@ -284,7 +333,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
-  // { field: 'groupId', header: 'Group Id', width: 'auto', type: 'text' },
+  { field: 'reverseFrom', header: 'Reverse From', width: 'auto', type: 'date' },
   { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
 
 ]
@@ -867,7 +916,7 @@ async function createItem(item: { [key: string]: any }) {
     if (response && response.payment) {
       // paymentId
       idItem.value = response.payment.id
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment id ${response.payment.paymentId} was created successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment Id ${response.payment.paymentId} was created successfully`, life: 10000 })
       goToForm(idItem.value)
     }
     else {
@@ -1055,6 +1104,7 @@ async function getListPaymentDetail() {
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1094,12 +1144,25 @@ async function getListPaymentDetail() {
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
         iterator.adults = iterator.manageBooking?.adults?.toString()
-        iterator.children = iterator.manageBooking?.children?.toString()
+        iterator.childrens = iterator.manageBooking?.children?.toString()
         iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
         iterator.fullName = iterator.manageBooking?.fullName
         iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
-        iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
-        iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+
+        if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && iterator?.transactionType?.cash) {
+          iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
+          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+        }
+        else if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && !iterator?.transactionType?.cash) {
+          iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
+          iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
+          iterator.bookingId = iterator?.manageBooking.parentResponse?.bookingId
+          iterator.invoiceNumber = iterator?.manageBooking.invoice?.parent?.invoiceNumber
+        }
+        else {
+          iterator.bookingId = iterator.manageBooking?.bookingId
+          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber
+        }
       }
 
       // Verificar si el ID ya existe en la lista
@@ -1118,11 +1181,6 @@ async function getListPaymentDetail() {
     options.value.loading = false
     subTotals.value = { ...count }
   }
-}
-
-function disabledDeleteForPaymentWithChildren(id: string): boolean {
-  const item = paymentDetailsList.value.find(item => item.id === id)
-  return item && item.children && item.children.length > 0
 }
 
 function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolean {
@@ -1654,18 +1712,35 @@ function updateAttachment(attachment: any) {
   attachmentList.value[index] = attachment
 }
 
+function disableBtnDelete(idDetail: string): boolean {
+  const item = paymentDetailsList.value.find(item => item.id === idDetail)
+  if (!item) {
+    return false
+  }
+  else if (item.hasApplyDeposit || item.applyPayment) {
+    return true
+  }
+  else {
+    return false
+  }
+}
+
 async function rowSelected(rowData: any) {
   if (rowData !== null && rowData !== undefined && rowData !== '') {
     idItemDetail.value = rowData
     idPaymentDetail.value = rowData
 
     enableSplitAction.value = hasDepositTransaction(rowData, paymentDetailsList.value)
+    disabledBtnDelete.value = disableBtnDelete(rowData)
+
+    // Variables que puedo usar para deshabilitar el boton eliminar: hasApplyDeposit, applyPayment
   }
   else {
     idItemDetail.value = ''
     isSplitAction.value = false
     actionOfModal.value = 'new-detail'
     enableSplitAction.value = false
+    disabledBtnDelete.value = true
   }
 }
 
@@ -1724,6 +1799,21 @@ async function handleSave(event: any) {
   if (event) {
     await saveItem(event)
     forceSave.value = false
+  }
+}
+
+async function undoApplication(event: any) {
+  try {
+    if (objItemSelectedForRightClickUndoApplication.value?.id) {
+      const payload = {
+        paymentDetail: objItemSelectedForRightClickUndoApplication.value?.id || ''
+      }
+      await GenericService.create(confApiPaymentDetailUndoApplication.moduleApi, confApiPaymentDetailUndoApplication.uriApi, payload)
+      getListPaymentDetail()
+    }
+  }
+  catch (error) {
+    console.log(error)
   }
 }
 
@@ -1794,32 +1884,28 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
     return
   }
   try {
+    applyPaymentPayload.value.filter = []
     applyPaymentOptions.value.loading = true
     applyPaymentList.value = []
     const newListItems = []
 
-    const validNumber = detailItemForApplyPayment.value?.amount
-      ? detailItemForApplyPayment.value.amount.replace(/,/g, '')
-      : amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : 0
+    // const validNumber = detailItemForApplyPayment.value?.amount
+    //   ? detailItemForApplyPayment.value.amount.replace(/,/g, '')
+    //   : amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : 0
 
-    if (amountComingOfForm) {
-      isApplyPaymentFromTheForm.value = true
-    }
-    else {
-      isApplyPaymentFromTheForm.value = false
-    }
+    const validNumber = amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : 0
 
     // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
     const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
 
     if (objFilter) {
-      objFilter.value = validNumber.toString()
+      objFilter.value = Number.parseFloat(validNumber).toFixed(2)
     }
     else {
       applyPaymentPayload.value.filter.push({
         key: 'dueAmount',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
-        value: validNumber.toString(),
+        value: Number.parseFloat(validNumber).toFixed(2),
         logicalOperation: 'AND'
       })
     }
@@ -1959,6 +2045,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
   }
   finally {
     applyPaymentOptions.value.loading = false
+    detailItemForApplyPayment.value = null
   }
 }
 
@@ -1968,8 +2055,25 @@ async function openDialogStatusHistory() {
 }
 
 async function openModalApplyPayment($event: any) {
+  console.log($event)
+  console.log('originalEvent' in $event)
+  if ('originalEvent' in $event) {
+    isApplyPaymentFromTheForm.value = false
+  }
+  else if ('event' in $event) {
+    isApplyPaymentFromTheForm.value = true
+  }
+
+  // isApplyPaymentFromTheForm
+  let amount = 0
+  if ($event.amount) {
+    amount = $event.amount
+  }
+  else {
+    amount = detailItemForApplyPayment.value?.amount
+  }
   openDialogApplyPayment.value = true
-  await applyPaymentGetList($event.amount)
+  await applyPaymentGetList(amount)
 }
 
 async function openDialogImportExcel(idItem: string) {
@@ -1991,7 +2095,7 @@ async function applyPaymentParseDataTableFilter(payloadFilter: any) {
   //   }
   // }
   applyPaymentPayload.value.filter = [...parseFilter || []]
-  applyPaymentGetList()
+  applyPaymentGetList(amountOfDetailItem.value)
 }
 
 async function historyParseDataTableFilter(payloadFilter: any) {
@@ -2074,57 +2178,36 @@ async function paymentPrint(event: any) {
   try {
     loadingPrintDetail.value = true
     let nameOfPdf = ''
-    const payloadTemp = {
-      paymentId: route?.query?.id ? route?.query?.id.toString() : '',
-      paymentType: '',
+    let paymentTypeArray: string[] = []
+    const payloadTemp: { paymentId: string[], paymentType: string[] } = {
+      paymentId: route?.query?.id?.toString() ? [route?.query?.id?.toString()] : [],
+      paymentType: [],
     }
     // En caso de que solo este marcado el paymentAndDetails
-    if (
-      event && event.paymentAndDetails
-      && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
-    ) {
-      payloadTemp.paymentType = 'PAYMENT_DETAILS'
-      nameOfPdf = `payment-details-${dayjs().format('YYYY-MM-DD')}.pdf`
+    if (event && event.paymentAndDetails) {
+      paymentTypeArray = [...paymentTypeArray, 'PAYMENT_DETAILS']
+    }
+    if (event && event.paymentSupport) {
+      paymentTypeArray = [...paymentTypeArray, 'PAYMENT_SUPPORT']
+    }
+    if (event && event.allPaymentsSupport) {
+      paymentTypeArray = [...paymentTypeArray, 'ALL_SUPPORT']
+    }
+    if (event && event.invoiceRelated) {
+      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED']
+    }
+    if (event && event.invoiceRelatedWithSupport) {
+      paymentTypeArray = [...paymentTypeArray, 'INVOICE_RELATED_SUPPORT']
     }
 
-    if (
-      event && event.paymentAndDetails && event.paymentSupport === true
-      && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.allPaymentsSupport === false)
-    ) {
-      payloadTemp.paymentType = 'PAYMENT_SUPPORT'
-      nameOfPdf = `payment-support-${dayjs().format('YYYY-MM-DD')}.pdf`
-    }
-
-    if (
-      event && event.paymentAndDetails && event.allPaymentsSupport === true
-      && (event.invoiceRelated === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
-    ) {
-      payloadTemp.paymentType = 'ALL_SUPPORT'
-      nameOfPdf = `payment-all-support-${dayjs().format('YYYY-MM-DD')}.pdf`
-    }
-
-    if (
-      event && event.paymentAndDetails && event.invoiceRelated === true
-      && (event.allPaymentsSupport === false && event.invoiceRelatedWithSupport === false && event.paymentSupport === false)
-    ) {
-      payloadTemp.paymentType = 'INVOICE_RELATED'
-      nameOfPdf = `payment-invoice-related-${dayjs().format('YYYY-MM-DD')}.pdf`
-    }
-
-    if (
-      event && event.paymentAndDetails && event.invoiceRelatedWithSupport === true
-      && (event.allPaymentsSupport === false && event.invoiceRelated === false && event.paymentSupport === false)
-    ) {
-      payloadTemp.paymentType = 'INVOICE_RELATED_SUPPORT'
-      nameOfPdf = `payment-invoice-related-support-${dayjs().format('YYYY-MM-DD')}.pdf`
-    }
-
+    nameOfPdf = `payment-${item.value?.paymentId}-${dayjs().format('YYYY-MM-DD')}.pdf`
+    payloadTemp.paymentType = paymentTypeArray
     const response: any = await GenericService.create(confApiPaymentDetailPrint.moduleApi, confApiPaymentDetailPrint.uriApi, payloadTemp)
 
     const url = window.URL.createObjectURL(new Blob([response]))
     const a = document.createElement('a')
     a.href = url
-    a.download = nameOfPdf // Nombre del archivo que se descargará
+    a.download = nameOfPdf
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(url)
@@ -2139,8 +2222,6 @@ async function paymentPrint(event: any) {
     loadingPrintDetail.value = false
     openPrint.value = false
   }
-
-  // generateStyledPDF()
 }
 
 async function closeDialogPrint() {
@@ -2236,6 +2317,51 @@ function onRowContextMenu(event: any) {
     }
   }
 
+  // Validacion para el undo application
+  const dateOfItem = dayjs(event.data?.transactionDate)
+  const currentDate = dayjs().format('YYYY-MM-DD')
+
+  if (event && event.data && event.data.applyPayment === true && dateOfItem.isSame(currentDate)) {
+    objItemSelectedForRightClickUndoApplication.value = event.data
+    const menuItemUndoApplication = allMenuListItems.value.find(item => item.id === 'undoApplication')
+    if (menuItemUndoApplication) {
+      menuItemUndoApplication.disabled = false
+      menuItemUndoApplication.visible = true
+    }
+  }
+  else {
+    objItemSelectedForRightClickUndoApplication.value = {}
+    const menuItemUndoApplication = allMenuListItems.value.find(item => item.id === 'undoApplication')
+    if (menuItemUndoApplication) {
+      menuItemUndoApplication.disabled = true
+      menuItemUndoApplication.visible = false
+    }
+  }
+  // if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:UNDO-APPLICATION']))) {
+  // }
+
+  // Validacion para el undo application
+  const dateOfItemForReverse = dayjs(event.data?.transactionDate)
+  const currentDateForReverse = dayjs().format('YYYY-MM-DD')
+  if (event && event.data && event.data.applyPayment === true && dateOfItemForReverse.isBefore(currentDateForReverse)) {
+    // objItemSelectedForRightClickUndoApplication.value = event.data
+    const menuItemReverseTransaction = allMenuListItems.value.find(item => item.id === 'reverseTransaction')
+    if (menuItemReverseTransaction) {
+      menuItemReverseTransaction.disabled = false
+      menuItemReverseTransaction.visible = true
+    }
+  }
+  else {
+    // objItemSelectedForRightClickUndoApplication.value = {}
+    const menuItemReverseTransaction = allMenuListItems.value.find(item => item.id === 'reverseTransaction')
+    if (menuItemReverseTransaction) {
+      menuItemReverseTransaction.disabled = true
+      menuItemReverseTransaction.visible = false
+    }
+  }
+  // if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:UNDO-APPLICATION']))) {
+  // }
+
   // Mostrar menu contextual si hay items visibles
   const allHidden = allMenuListItems.value.every(item => !item.visible)
   if (!allHidden) {
@@ -2319,7 +2445,7 @@ watch(() => route?.query?.id, async (newValue) => {
 watch(applyPaymentOnChangePage, (newValue) => {
   applyPaymentPayload.value.page = newValue?.page ? newValue?.page : 0
   applyPaymentPayload.value.pageSize = newValue?.rows ? newValue.rows : 10
-  applyPaymentGetList()
+  applyPaymentGetList(amountOfDetailItem.value)
 })
 
 onMounted(async () => {
@@ -2661,11 +2787,11 @@ onMounted(async () => {
       :pagination="pagination"
       @on-change-pagination="payloadOnChangePage = $event"
       @update:clicked-item="rowSelected($event)"
-      @on-row-double-click="openDialogPaymentDetailsByAction($event, 'new-detail')"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
       @on-row-right-click="onRowContextMenu($event)"
     >
+      <!-- @on-row-double-click="openDialogPaymentDetailsByAction($event, 'new-detail')" -->
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
@@ -2693,7 +2819,7 @@ onMounted(async () => {
         </Button>
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DEPOSIT-TRANSFER']">
-        <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
+        <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === '' || item.paymentBalance <= 0" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SPLIT-ANTI']">
         <Button v-tooltip.top="'Split ANTI'" class="w-3rem ml-1" :disabled="!enableSplitAction" @click="openDialogPaymentDetailsByAction(idItemDetail, 'split-deposit')">
@@ -2709,7 +2835,8 @@ onMounted(async () => {
         </Button>
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:PRINT-DETAIL']">
-        <Button v-tooltip.top="'Print'" class="w-3rem ml-1" :disabled="!paymentDetailsList || paymentDetailsList.length === 0" icon="pi pi-print" @click="openPrint = true" />
+        <Button v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openPrint = true" />
+        <!-- :disabled="!paymentDetailsList || paymentDetailsList.length === 0" -->
       </IfCan>
       <!-- <Button v-tooltip.top="'Payment to Print'" class="w-3rem ml-1" disabled icon="pi pi-print" @click="openPrint = true" /> -->
       <IfCan :perms="['PAYMENT-MANAGEMENT:ATTACHMENT']">
@@ -2732,7 +2859,7 @@ onMounted(async () => {
         <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
-        <Button v-if="false" v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="idItemDetail === null || idItemDetail === undefined || idItemDetail === '' || disabledDeleteForPaymentWithChildren(idItemDetail)" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
+        <Button v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
       </IfCan>
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
@@ -2749,6 +2876,7 @@ onMounted(async () => {
         @apply-payment="openModalApplyPayment($event)"
         @update:visible="onCloseDialog($event)"
         @save="saveAndReload($event)"
+        @update:amount="amountOfDetailItem = $event"
       />
     </div>
     <div v-if="attachmentDialogOpen">
@@ -2972,7 +3100,18 @@ onMounted(async () => {
       </template>
     </Dialog>
 
-    <ContextMenu ref="contextMenu" :model="allMenuListItems" />
+    <ContextMenu ref="contextMenu" :model="allMenuListItems">
+      <template #itemicon="{ item }">
+        <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#8d8faa">
+            <path :d="item.iconSvg" />
+          </svg>
+        </div>
+        <div v-else class="w-2rem flex justify-content-center align-items-center">
+          <i v-if="item.icon" :class="item.icon" />
+        </div>
+      </template>
+    </ContextMenu>
   </div>
 </template>
 

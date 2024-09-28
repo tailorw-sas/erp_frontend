@@ -65,6 +65,13 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 required mb-2',
   },
   {
+    field: 'invoice',
+    header: 'Invoice Default',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 required mb-2',
+  },
+  {
     field: 'status',
     header: 'Active',
     dataType: 'check',
@@ -78,6 +85,7 @@ const item = ref<GenericObject>({
   code: '',
   description: '',
   defaults: false,
+  invoice: false,
   status: true
 })
 
@@ -86,6 +94,7 @@ const itemTemp = ref<GenericObject>({
   code: '',
   description: '',
   defaults: false,
+  invoice: false,
   status: true
 })
 
@@ -228,6 +237,7 @@ async function getItemById(id: string) {
         item.value.name = response.name
         item.value.description = response.description
         item.value.defaults = response.defaults
+        item.value.invoice = response.invoice
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
       }

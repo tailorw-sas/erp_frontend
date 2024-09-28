@@ -84,7 +84,7 @@ const columns: IColumn[] = [
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Reconcile',
+  tableName: 'Reconcile Manual',
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice',
   loading: false,

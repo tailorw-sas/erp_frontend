@@ -92,7 +92,18 @@ const props = defineProps({
   refetchInvoice: { type: Function, default: () => { } },
   getInvoiceAgency: { type: Function, default: () => { } },
   sortBooking: Function as any,
-  nightTypeRequired: Boolean
+  nightTypeRequired: Boolean,
+  bookingsTotalObj: {
+    type: Object,
+    required: false,
+    default: () => {
+      return {
+        totalHotelAmount: 0,
+        totalInvoiceAmount: 0,
+        totalDueAmount: 0
+      }
+    }
+  }
 })
 
 const toast = useToast()
@@ -514,6 +525,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
+
     ...(route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value >= 0, { message: 'The Invoice Amount field must be greater or equals than 0' }) })
   },
 
@@ -1004,8 +1016,9 @@ async function getBookingList(clearFilter: boolean = false) {
     totalInvoiceAmount.value = 0
     totalHotelAmount.value = 0
     totalOriginalAmount.value = 0
-
+    
     for (const iterator of dataList) {
+      console.log('Si entro a este total', iterator);
       ListItems.value = [...ListItems.value, {
         ...iterator,
         roomType: { ...iterator?.roomType, name: iterator?.roomType?.code ? `${iterator?.roomType?.code || ""}-${iterator?.roomType?.name || ""}` : "" },
@@ -1018,6 +1031,8 @@ async function getBookingList(clearFilter: boolean = false) {
         originalAmount: iterator?.invoiceAmount
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
+        console.log('Si entro a este total', iterator.invoiceAmount);
+        
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
       }
 
@@ -1094,6 +1109,7 @@ async function GetItemById(id: string) {
       item.value.hotelCreationDate = dayjs(element.hotelCreationDate).startOf('day').toDate()
       item.value.bookingDate = element.bookingDate ? new Date(element.bookingDate) : new Date()
       item.value.checkIn = new Date(element.checkIn)
+   
       item.value.checkOut = new Date(element.checkOut)
       item.value.hotelBookingNumber = element.hotelBookingNumber
       item.value.fullName = element.fullName
@@ -1209,7 +1225,8 @@ async function deleteBooking(id: string) {
 
 
 async function saveBooking(item: { [key: string]: any }) {
-
+  console.log('asdasdasdasdasd');
+  
   item.hotelBookingNumber = item.hotelBookingNumber.split(" ").filter((a: string) => a !== "").join(" ")
   item.checkIn = dayjs(item.checkIn).startOf('day').toDate()
   item.checkOut = dayjs(item.checkOut).startOf('day').toDate()
@@ -1381,18 +1398,35 @@ watch(() => props.invoiceAgency?.bookingCouponFormat, () => {
   couponNumberValidation.value = props.invoiceAgency?.bookingCouponFormat
 })
 
-watch(() => props.listItems, () => {
-  if (props.isCreationDialog) {
-    totalHotelAmount.value = 0
-    totalInvoiceAmount.value = 0
-    totalOriginalAmount.value = 0
-    props?.listItems?.forEach((listItem: any) => {
-      totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
-      totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
-      totalOriginalAmount.value += listItem?.originalAmount ? Number(listItem?.originalAmount) : 0
-    })
-  }
-}, { deep: true })
+// watch(() => props.listItems, () => {
+//   console.log('Entro a watch list items');
+  
+//   if (props.listItems && props?.listItems?.length > 0) {
+//     totalHotelAmount.value = 0
+//     totalInvoiceAmount.value = 0
+//     totalOriginalAmount.value = 0
+//     props?.listItems?.forEach((listItem: any) => {    
+//       totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
+//       totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
+//       totalOriginalAmount.value += listItem?.dueAmount ? Number(listItem?.dueAmount) : 0
+//     })
+//     console.log(totalHotelAmount.value, totalInvoiceAmount.value, totalOriginalAmount.value);
+//   }
+  
+// }, { deep: true })
+
+// watch(() => props.listItems, () => {
+//   if (props.isCreationDialog) {
+//     totalHotelAmount.value = 0
+//     totalInvoiceAmount.value = 0
+//     totalOriginalAmount.value = 0
+//     props?.listItems?.forEach((listItem: any) => {
+//       totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
+//       totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
+//       totalOriginalAmount.value += listItem?.originalAmount ? Number(listItem?.originalAmount) : 0
+//     })
+//   }
+// }, { deep: true })
 
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
@@ -1533,15 +1567,23 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns" :options="Options"
-      :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-sort-field="OnSortField" @on-row-right-click="onRowRightClick"
-      @on-table-cell-edit-complete="onCellEditComplete" @on-row-double-click="($event) => {
+    <DynamicTable 
+      :data="isCreationDialog ? listItems as any : ListItems" 
+      :columns="finalColumns" 
+      :options="Options"
+      :pagination="Pagination" 
+      @on-confirm-create="ClearForm" 
+      @open-edit-dialog="OpenEditDialog($event)"
+      @on-change-pagination="PayloadOnChangePage = $event" 
+      @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems" 
+      @on-sort-field="OnSortField" 
+      @on-row-right-click="onRowRightClick"
+      @on-table-cell-edit-complete="onCellEditComplete" 
+      @on-row-double-click="($event) => {
 
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
         if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-
 
           return;
         }
@@ -1553,27 +1595,33 @@ onMounted(() => {
         if (!props.isDetailView) {
           openEditBooking($event)
         }
-
-
-
       }">
-
-
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:"
+            <Column 
+              footer="Totals:"
               :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 10"
-              footer-style="text-align:right; font-weight: 700" />
-            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalHotelAmount" footer-style="font-weight: 700" />
-            <Column v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalOriginalAmount" footer-style="font-weight: 700" />
-            <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
-            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+              footer-style="text-align:right; font-weight: 700"
+            />
+            
+            <Column 
+              v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="props.bookingsTotalObj.totalHotelAmount"
+              footer-style="font-weight: 700" 
+            />
 
-
+            <Column 
+              v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="props.bookingsTotalObj.totalDueAmount" 
+              footer-style="font-weight: 700"
+            />
+            <Column 
+              :footer="props.bookingsTotalObj.totalInvoiceAmount"
+              footer-style="font-weight: 700"
+            />
+            <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              :footer="props.bookingsTotalObj.totalInvoiceAmount" footer-style="font-weight: 700" />
           </Row>
         </ColumnGroup>
       </template>
@@ -1593,7 +1641,7 @@ onMounted(() => {
     <BookingTotalDialog :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen"
       :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
       :require-confirmation-to-save="saveBooking" :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
-      :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" :close-dialog="() => {
+      :header="isCreationDialog || !idItem ? 'Edit Booking' : 'Edit Booking'" :close-dialog="() => {
         ClearForm()
         closeDialog()
       }" container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"

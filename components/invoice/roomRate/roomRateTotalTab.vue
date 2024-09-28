@@ -93,6 +93,16 @@ const props = defineProps({
   },
   getInvoiceHotel: { type: Function, default: () => { } },
   requiresFlatRate: Boolean,
+  roomRateTotalObj: {
+    type: Object,
+    required: false,
+    default: () => {
+      return {
+        totalHotelAmount: 0,
+        totalInvoiceAmount: 0,
+      }
+    }
+  }
 
 })
 const route = useRoute()
@@ -165,8 +175,8 @@ const computedShowMenuItemEditRoomRate = computed(() => {
 })
 
 const menuModel = ref([
- // { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
-  //{ label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
+  // { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
+  // { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
 
 ])
 
@@ -826,7 +836,6 @@ watch(PayloadOnChangePage, (newValue) => {
   getRoomRateList()
 })
 
-
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
     getRoomRateList()
@@ -903,11 +912,11 @@ watch(() => props.bookingObj, () => {
       @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME ) {
+        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
           return;
         }
 
-        if( !props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
+        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
           return;
         }
         openEditDialog($event)
@@ -926,8 +935,8 @@ watch(() => props.bookingObj, () => {
               footer="Totals:" :colspan="!isDetailView ? 9 : 10"
               footer-style="text-align:right; font-weight: 700"
             />
-            <Column :footer="totalHotelAmount" footer-style="font-weight: 700" />
-            <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+            <Column :footer="props.roomRateTotalObj.totalHotelAmount" footer-style="font-weight: 700" />
+            <Column :footer="props.roomRateTotalObj.totalInvoiceAmount" footer-style="font-weight: 700" />
           </Row>
         </ColumnGroup>
       </template>

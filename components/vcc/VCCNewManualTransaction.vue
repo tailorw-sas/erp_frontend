@@ -205,32 +205,29 @@ function clearForm() {
 
 async function handleMerchantRedirect(item: any) {
   const data = {
+    merchantId: item.merchant.id,
     orderNumber: `${item.id}`,
     amount: `${item.amount}00`,
-    approvedUrl: `vcc-management/transaction-result?status=success`,
-    declinedUrl: `vcc-management/transaction-result?status=declined`,
-    cancelUrl: `vcc-management/transaction-result?status=cancelled`,
-    merchantId: '39038540035',
-    merchantName: item.merchant.name ?? '',
-    merchantType: 'ECommerce',
-    currencyCode: '$',
-    itbis: '000'
+    transactionId: `${item.id}`
   }
-  const response = await fetch('/api/redirect-to-merchant', {
+  const response: any = await fetch('/api/redirect-to-merchant', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   })
+  console.log(response)
+  if (response.status === 200) {
+    const jsonResponse = await response.json()
+    const htmlBody = jsonResponse.result
 
-  if (response.ok) {
     const newTab = window.open('', '_blank')
-    newTab?.document.write(await response.text())
+    newTab?.document.write(await htmlBody)
     newTab?.document.close()
   }
   else {
-    console.error('Error al redirigir al merchant')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Error on merchant redirect', life: 10000 })
   }
 }
 
@@ -269,7 +266,9 @@ async function save(item: { [key: string]: any }) {
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
     item.id = response.id
-    handleMerchantRedirect(item)
+    if (payload.methodType === 'POST') {
+      handleMerchantRedirect(item)
+    }
     onClose(false)
   }
   catch (error: any) {
@@ -575,6 +574,9 @@ watch(() => props.openDialog, async (newValue) => {
             @change="($event) => {
               onUpdate('merchant', $event)
               item.merchant = $event
+              if (item.hotel) {
+                onUpdate('hotel', null)
+              }
             }"
             @load="($event) => getMerchantList($event)"
           />
@@ -607,6 +609,7 @@ watch(() => props.openDialog, async (newValue) => {
             :disabled="!data.merchant"
             @change="($event) => {
               onUpdate('hotel', $event)
+              item.hotel = $event
             }"
             @load="($event) => getHotelList($event)"
           />

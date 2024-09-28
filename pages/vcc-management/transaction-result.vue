@@ -19,7 +19,18 @@ const showDetails = ref(false)
 const route = useRoute()
 const router = useRouter()
 
+function disableBackNavigation() {
+  history.pushState(null, document.title, location.href)
+  history.back()
+  history.forward()
+  window.onpopstate = function () {
+    history.go(1)
+  }
+}
+
 onMounted(() => {
+  // disableBackNavigation()
+
   const status = route.query.status || 'error'
 
   transactionStatus.value = String(status) // Asignar el estado recibido a transactionStatus
@@ -50,8 +61,10 @@ function toggleDetails() {
     <Card v-if="isLoading" class="loading-card card-bg-color">
       <template #content>
         <div class="loading-container">
-          <ProgressSpinner style="width: 50px; height: 50px;" strokeWidth="4" animationDuration=".5s" />
-          <p class="loading-text">Processing your transaction, please wait...</p>
+          <ProgressSpinner style="width: 50px; height: 50px;" stroke-width="4" animation-duration=".5s" />
+          <p class="loading-text">
+            Processing your transaction, please wait...
+          </p>
         </div>
       </template>
     </Card>
@@ -77,7 +90,7 @@ function toggleDetails() {
               The transaction was cancelled.
             </p>
           </div>
-          <ButtonGroup v-if="transactionStatus === 'success'">
+          <ButtonGroup v-if="transactionStatus === 'success' || transactionStatus === 'declined'">
             <Button label="Details" icon="pi pi-chevron-down" style="margin-right: 2px;" @click="toggleDetails" />
             <Button label="Go to Home" @click="goHome" />
           </ButtonGroup>
@@ -95,6 +108,7 @@ function toggleDetails() {
               <p><strong>Authorization Code:</strong> {{ route.query.AuthorizationCode }}</p>
               <p><strong>Date and Time:</strong> {{ dateTime }}</p>
               <p><strong>Merchant Response:</strong> {{ route.query.ResponseMessage }} ({{ route.query.IsoCode }})</p>
+              <p v-if="transactionStatus === 'declined' || transactionStatus === 'cancelled'"><strong>Error Description:</strong> {{ route.query.ErrorDescription }}</p>
               <p><strong>Reference Number:</strong> {{ route.query.RRN }}</p>
               <p><strong>Card Number:</strong> {{ route.query.CardNumber }}</p>
             </template>

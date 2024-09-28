@@ -11,7 +11,7 @@ export default defineEventHandler(async (event): Promise<any> => {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token?.access_token}`,
   }
-  const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}/report`, {
+  const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}/external-report`, {
     method: 'POST',
     body,
     headers: defaultHeaders

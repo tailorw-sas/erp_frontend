@@ -10,15 +10,16 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
-const senttype = ref('');
-const toast = useToast()
+const sendType = ref('')
+const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
+const tableRef = ref()
 const route = useRoute()
+const toast = useToast()
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
 const filterAllDateRange = ref(false)
 const loadingSearch = ref(false)
-
 const loadingSaveAll = ref(false)
 
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
@@ -27,12 +28,13 @@ const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
   allFromAndTo: false,
-  agency: [allDefaultItem],
-  hotel: [allDefaultItem],
+  agency: [],
+  hotel: [],
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
 
+const clickedItem = ref<string[]>([])
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 
@@ -49,28 +51,30 @@ const confAgencyApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
 })
+const confSendApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/send',
+})
 
 // VARIABLES -----------------------------------------------------------------------------------------
 
 //
 const idItem = ref('')
 const ENUM_FILTER = [
-  { id: 'id', name: 'InvoiceId' },
+  { id: 'invoiceId', name: 'Invoice Id' },
 ]
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text' },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '130px' },
   { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
-  { field: 'manageAgencyCode', header: 'Invoice No', type: 'text' },
-  { field: 'manageAgencyCode', header: 'Agency CD', type: 'text' },
-  { field: 'bookingDate', header: 'Agency', type: 'text' },
-  
+  { field: 'manageinvoiceCode', header: 'Invoice No', type: 'text', width: '130px' },
+  { field: 'manageAgencyCode', header: 'Agency CD', type: 'text', width: '150px' },
+  { field: 'manageAgencyName', header: 'Agency', type: 'text' },
 
- 
-  { field: 'fullName', header: 'Generation Date', type: 'date' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-  { field: 'impstatus', header: 'Sent Status', type: 'slot-text' },
-  { field: 'status', header: 'Status', type: 'text' },
+  { field: 'invoiceDate', header: 'Generation Date', type: 'date', width: '150px' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '150px' },
+  { field: 'impstatus', header: 'Sent Status', type: 'slot-text', sortable: false, showFilter: false, width: '350px' },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: false, showFilter: false },
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -80,16 +84,30 @@ const options = ref({
   tableName: 'Send invoices',
   moduleApi: 'invoicing',
   uriApi: 'send',
+  selectionMode: 'multiple',
   loading: false,
   showDelete: false,
-  selectionMode: 'multiple',
   showFilters: true,
-  expandableRows: false,
-  messageToDelete: 'Do you want to save the change?'
+  actionsAsMenu: false,
+  showEdit: false,
+  showAcctions: false,
+  messageToDelete: 'Do you want to save the change?',
+  showTitleBar: false
 })
 
+const type = route.query.type || ''
+sendType.value = type === ENUM_INVOICE_SEND_TYPE.FTP
+  ? 'Invoice to Send by FTP'
+  : type === ENUM_INVOICE_SEND_TYPE.EMAIL
+    ? 'Invoice to Send by Email'
+    : type === ENUM_INVOICE_SEND_TYPE.BAVEL
+      ? 'Invoice to Send by Bavel'
+      : ''
+
 const payload = ref<IQueryRequest>({
-  filter: [],
+  filter: [
+
+  ],
   query: '',
   pageSize: 10,
   page: 0,
@@ -109,16 +127,27 @@ const pagination = ref<IPagination>({
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
-async function getErrorList() {
+async function getList() {
   try {
-    payload.value = { ...payload.value, query: idItem.value }
-    let rowError = ''
+    // payload.value = { ...payload.value, query: idItem.value }
+    const staticPayload = [{
+      key: 'invoiceStatus',
+      operator: 'IN',
+      value: filterAllDateRange.value ? ['SENT'] : ['RECONCILED'],
+      logicalOperation: 'AND'
+    }, {
+      key: 'agency.sentB2BPartner.b2bPartnerType.code',
+      operator: 'EQUALS',
+      value: type.toString(),
+      logicalOperation: 'AND'
+    }]
+    payload.value.filter = [...payload.value.filter, ...staticPayload]
+
     listItems.value = []
+    clickedItem.value = []
     const newListItems = []
-    const response = await GenericService.importSearch(confApi.moduleApi, confApi.uriApi, payload.value)
-
-    const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
-
+    const response = await GenericService.search(confApi.moduleApi, confApi.uriApi, payload.value)
+    const { data: dataList, page, size, totalElements, totalPages } = response
     pagination.value.page = page
     pagination.value.limit = size
     pagination.value.totalElements = totalElements
@@ -127,15 +156,29 @@ async function getErrorList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      rowError = ''
-      const rowExpandable = []
-      // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        for (const err of iterator.errorFields) {
-          rowError += `- ${err.message} \n`
+        let invoiceNumber
+        if (iterator?.invoiceNumber?.split('-')?.length === 3) {
+          invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
         }
-        rowExpandable.push({ ...iterator.row })
-        newListItems.push({ ...iterator.row, id: iterator.id, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, rowExpandable, loadingEdit: false, loadingDelete: false })
+        else {
+          invoiceNumber = iterator?.invoiceNumber
+        }
+        newListItems.push({
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          invoiceDate: dayjs(iterator?.invoiceDate).format('YYYY-MM-DD'),
+          agencyCd: iterator?.agency?.code,
+          manageHotelCode: `${iterator?.hotel?.code}-${iterator?.hotel?.name}`,
+          manageinvoiceCode: invoiceNumber.replace('OLD', 'CRE'),
+          manageAgencyCode: iterator?.agency?.code,
+          manageAgencyName: iterator?.agency?.name,
+          dueAmount: iterator?.dueAmount || 0,
+          invoiceNumber: invoiceNumber.replace('OLD', 'CRE'),
+          status: iterator?.status,
+          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` }
+        })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -179,7 +222,7 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confHotelApi.moduleApi, confHotelApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -211,10 +254,16 @@ async function getAgencyList(query: string = '') {
           value: 'ACTIVE',
           logicalOperation: 'AND'
         },
+        // {
+        //   key: 'autoReconcile',
+        //   operator: 'EQUALS',
+        //   value: true,
+        //   logicalOperation: 'AND'
+        // }
         {
-          key: 'autoReconcile',
+          key: 'sentB2BPartner.b2bPartnerType.code',
           operator: 'EQUALS',
-          value: true,
+          value: type.toString(),
           logicalOperation: 'AND'
         }
       ],
@@ -227,7 +276,7 @@ async function getAgencyList(query: string = '') {
 
     const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
     const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
+    agencyList.value = []
     for (const iterator of dataList) {
       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -237,157 +286,47 @@ async function getAgencyList(query: string = '') {
   }
 }
 
-async function getAgency(query: string = '') {
-  try {
-    const payload = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        },
-        {
-          key: 'autoReconcile',
-          operator: 'EQUALS',
-          value: true,
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 20,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
-    const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
-    console.log(response, 'Respuesta de la API');
-    const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
-    for (const iterator of dataList) {
-      // Asegúrate de que sentB2BPartner sea una lista
-      const b2bPartners = iterator.sentB2BPartner || [];
-      const firstB2BPartner = b2bPartners.length > 0 ? b2bPartners[0].code : null;
-
-      agencyList.value.push({
-        id: iterator.id,
-        name: iterator.name,
-        code: iterator.code,
-        b2bPartner: b2bPartners// Guarda solo el código del primer b2bPartner
-      });
-    }
-
-    return agencyList.value; 
-  } 
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-    return [];
-  }
-}
-
-async function getTypeInvoiceSent(selectedInvoiceId:any) {
-  try {
-    // Paso 1: Obtener la factura usando su ID
-    const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, selectedInvoiceId);
-
-    if (response) {
-      // Paso 2: Suponiendo que el campo 'agency' está presente en la respuesta
-      const agency = response.agency;
-      console.log(agency, 'Agencia');
-
-      if (!agency) {
-        console.error('No se encontró la agencia en la factura');
-        senttype.value = 'No agency found';
-        return;
-      }
-
-      // Paso 3: Obtener el código de la agencia
-      const agencyCode = agency.code; // O cualquier otro identificador que uses para buscar la agencia
-
-      // Llamar a getAgencyList para obtener la lista de agencias
-      const agencyList = await getAgency(); // Obtener todas las agencias
-
-      // Buscar el campo sentB2BPartner en la lista de agencias
-      const foundAgency = agencyList.find(item => item.code === agencyCode);
-console.log(foundAgency,'Encontrar agencia')
-if (foundAgency) {
-        const b2bPartner = foundAgency.b2bPartner; // Accede al b2bPartner
-        const b2bPartnerTypeCode = b2bPartner ? b2bPartner.b2BPartnerType.code : null; // Obtener el código del tipo
-
-        console.log(b2bPartnerTypeCode, 'tipo de envío');
-        // Determinar el texto a mostrar según el valor de b2bPartnerCode
-        if (b2bPartnerTypeCode) {
-          switch (b2bPartnerTypeCode) {
-            case 'FTP':
-              senttype.value = 'Invoice to Send by FTP';
-              break;
-            case 'EML':
-              senttype.value = 'Send by Email';
-              break;
-            case 'BVL':
-              senttype.value = 'Send by Babel';
-              break;
-            default:
-              senttype.value = 'Invoices to Send';
-              break;
-          }
-        } else {
-          console.error('No se encontró el método de envío (b2bPartner)');
-          senttype.value = 'No sending method found';
-        }
-      } else {
-        console.error('Agencia no encontrada en la lista');
-        senttype.value = 'Invoices to Send';
-      }
-    } else {
-      console.error('No se encontró la respuesta para el ID de la factura');
-      senttype.value = 'Invoice not found';
-    }
-  } catch (error) {
-    console.error('Error retrieving invoice type:', error);
-    senttype.value = 'Error retrieving sending method';
-  }
-}
-
-
 async function clearForm() {
   await goToList()
 }
 
 async function resetListItems() {
   payload.value.page = 0
-  getErrorList()
+  getList()
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'manageAgencyCode') {
+        parseFilter[i].key = 'agency.code'
+      }
+      if (parseFilter[i]?.key === 'manageAgencyName') {
+        parseFilter[i].key = 'agency.name'
+      }
+      if (parseFilter[i]?.key === 'manageHotelCode') {
+        parseFilter[i].key = 'hotel.code'
+      }
+      if (parseFilter[i]?.key === 'manageinvoiceCode') {
+        parseFilter[i].key = 'invoiceNumber'
+      }
+    }
+  }
   payload.value.filter = [...parseFilter || []]
-  getErrorList()
+  getList()
 }
 
 function onSortField(event: any) {
   if (event) {
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
-    getErrorList()
+    getList()
   }
 }
 
 function searchAndFilter() {
-  const newPayload: IQueryRequest = {
+  payload.value = {
     filter: [],
     query: '',
     pageSize: 50,
@@ -396,7 +335,8 @@ function searchAndFilter() {
     sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    newPayload.filter = [{
+    // newPayload.filter = [{
+    payload.value.filter = [...payload.value.filter, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'EQUALS',
       value: filterToSearch.value.search,
@@ -405,11 +345,11 @@ function searchAndFilter() {
     }]
   }
   else {
-    newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
     // Date
     if (filterToSearch.value.from) {
-      newPayload.filter = [...newPayload.filter, {
-        key: 'checkIn',
+      payload.value.filter = [...payload.value.filter, {
+        key: 'invoiceDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -417,19 +357,19 @@ function searchAndFilter() {
       }]
     }
     if (filterToSearch.value.to) {
-      newPayload.filter = [...newPayload.filter, {
-        key: 'checkIn',
+      payload.value.filter = [...payload.value.filter, {
+        key: 'invoiceDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
         type: 'filterSearch'
       }]
     }
-    if (filterToSearch.value.merchant?.length > 0) {
+    if (filterToSearch.value.agency?.length > 0) {
       const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        payload.value.filter = [...payload.value.filter, {
           key: 'agency.id',
           operator: 'IN',
           value: itemIds,
@@ -442,7 +382,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        payload.value.filter = [...payload.value.filter, {
           key: 'hotel.id',
           operator: 'IN',
           value: itemIds,
@@ -452,7 +392,7 @@ function searchAndFilter() {
       }
     }
   }
-  payload.value = newPayload
+  // payload.value = { ...payload.value, ...newPayload }
   getList()
 }
 
@@ -461,17 +401,87 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criteria: null,
     search: '',
-    agency: [allDefaultItem],
-    hotel: [allDefaultItem],
+    agency: [],
+    hotel: [],
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
+  filterToSearch.value.criteria = ENUM_FILTER[0]
   getList()
 }
 
 async function goToList() {
   await navigateTo('/invoice')
+}
+
+function getStatusBadgeBackgroundColor(code: string) {
+  switch (code) {
+    case 'PROCECSED': return '#FF8D00'
+    case 'RECONCILED': return '#005FB7'
+    case 'SENT': return '#006400'
+    case 'CANCELED': return '#F90303'
+    case 'PENDING': return '#686868'
+
+    default:
+      return '#686868'
+  }
+}
+
+function getStatusName(code: string) {
+  switch (code) {
+    case 'PROCECSED': return 'Processed'
+
+    case 'RECONCILED': return 'Reconciled'
+    case 'SENT': return 'Sent'
+    case 'CANCELED': return 'Canceled'
+    case 'PENDING': return 'Pending'
+
+    default:
+      return ''
+  }
+}
+
+async function onMultipleSelect(data: any) {
+  clickedItem.value = []
+  clickedItem.value = data
+}
+
+async function send() {
+  loadingSaveAll.value = true
+  options.value.loading = true
+  let completed = false
+  try {
+    if (!clickedItem.value) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one item', life: 10000 })
+      return
+    }
+    const payload = {
+      invoice: clickedItem.value,
+      employee: userData?.value?.user?.userId
+    }
+    await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload)
+    completed = true
+    tableRef.value?.clearSelectedItems()
+  }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not send invoices', life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+    if (completed) {
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoices sent successfully', life: 10000 })
+      if (clickedItem.value.length === listItems.value.length) {
+        clickedItem.value = []
+        navigateTo('/invoice')
+      }
+      else {
+        clickedItem.value = []
+        await getList()
+      }
+    }
+  }
+
+  loadingSaveAll.value = false // Opcional: Puedes manejar el estado de carga aquí
 }
 
 const disabledSearch = computed(() => {
@@ -483,15 +493,13 @@ watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 
-  getErrorList()
+  getList()
 })
-async function loadInvoiceType() {
-  await getTypeInvoiceSent(route.query.selected);
-}
+
 onMounted(async () => {
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  loadInvoiceType();
-  // getErrorList()
+  filterToSearch.value.criteria = ENUM_FILTER[0]
+  // loadInvoiceType()
+  await getList()
 })
 </script>
 
@@ -504,7 +512,7 @@ onMounted(async () => {
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
-                  {{ senttype }}
+                  {{ sendType }}
                 </div>
               </div>
             </template>
@@ -518,14 +526,11 @@ onMounted(async () => {
                       <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
                         :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.agency" :suggestions="agencyList"
-                        @load="($event) => getAgencyList($event)" @change="($event) => {
-                          if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
-                          }
+                        item-value="id" :model="filterToSearch.agency"
+                        :suggestions="agencyList"
+                        @load="($event) => getAgencyList($event)"
+                        @change="($event) => {
+                          filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
                         }"
                       >
                         <template #option="props">
@@ -542,12 +547,7 @@ onMounted(async () => {
                         :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
                         @load="($event) => getHotelList($event)" @change="($event) => {
-                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                          }
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                         }"
                       >
                         <template #option="props">
@@ -580,8 +580,6 @@ onMounted(async () => {
                     </div>
                   </div>
                 </div>
-
-              
               </div>
               <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex w-full">
@@ -591,7 +589,7 @@ onMounted(async () => {
                         <label class="filter-label font-bold" for="">Criteria:</label>
                         <div class="w-full">
                           <Dropdown
-                            v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
+                            v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
                             placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
                           />
                         </div>
@@ -605,31 +603,29 @@ onMounted(async () => {
                           </IconField>
                         </div>
                       </div>
-
-                    
                     </div>
                   </div>
                 </div>
               </div>
               <div class="col-12 md:col-1 mt-6 w-auto">
-                  <div class="flex justify-content-end">
-                    <Checkbox
-                      v-model="filterAllDateRange"
-                      binary
-                      class="mr-2"
-                      @change="() => {
-                        console.log(filterAllDateRange);
+                <div class="flex justify-content-end">
+                  <Checkbox
+                    v-model="filterAllDateRange"
+                    binary
+                    class="mr-2"
+                    @change="() => {
+                      console.log(filterAllDateRange);
 
-                        if (!filterAllDateRange) {
-                          filterToSearch.from = startOfMonth
-                          filterToSearch.to = endOfMonth
-                        }
-                      }"
-                    />
-                    <label for="" class="mr-2 mt-1 font-bold">Re-Send</label>
-                  </div>
+                      if (!filterAllDateRange) {
+                        filterToSearch.from = startOfMonth
+                        filterToSearch.to = endOfMonth
+                      }
+                    }"
+                  />
+                  <label for="" class="mr-2 mt-1 font-bold">Re-Send</label>
                 </div>
-              
+              </div>
+
               <div class="flex align-items-center ">
                 <Button
                   v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search" :disabled="disabledSearch"
@@ -646,11 +642,13 @@ onMounted(async () => {
       </div>
 
       <DynamicTable
+        ref="tableRef"
         :data="listItems"
         :columns="columns"
         :options="options"
         :pagination="pagination"
         @on-confirm-create="clearForm"
+        @update:clicked-item="onMultipleSelect"
         @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems"
@@ -662,19 +660,16 @@ onMounted(async () => {
           </div>
         </template>
 
-        <!-- <template #datatable-footer>
-          <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
-            <Row>
-              <Column footer="Totals:" :colspan="6" footer-style="text-align:right; font-weight: 700" />
-
-              <Column :colspan="8" />
-            </Row>
-          </ColumnGroup>
-        </template> -->
+        <template #column-status="{ data }">
+          <Badge
+            :value="getStatusName(data?.status)"
+            :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
+          />
+        </template>
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="clearForm" />
+        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="listItems.length === 0 || clickedItem.length === 0" @click="send" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>

@@ -10,6 +10,8 @@ import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import AttachmentIncomeHistoryDialog from '~/components/income/attachment/AttachmentIncomeHistoryDialog.vue'
 import { updateFieldProperty } from '~/utils/helpers'
+import { applyFiltersAndSort } from '~/pages/payment/utils/helperFilters'
+import type { FilterCriteria } from '~/composables/list'
 
 const props = defineProps({
 
@@ -31,8 +33,9 @@ const props = defineProps({
     required: true
   },
   listItems: {
-    type: Array,
-    required: false
+    type: Array<any>,
+    required: false,
+    default: []
   },
   addItem: {
     type: Function as any,
@@ -65,8 +68,6 @@ const filterToSearch = ref({
   search: ''
 })
 
-const typeError = ref(false)
-
 const attachmentTypeList = ref<any[]>([])
 const resourceTypeList = ref<any[]>([])
 const confattachmentTypeListApi = reactive({
@@ -83,6 +84,9 @@ const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 
 const loadingSearch = ref(false)
+const loadingDefaultResourceType = ref(false)
+const loadingDefaultAttachmentType = ref(false)
+const hasDefaultAttachment = ref(true)
 
 const idItem = ref('')
 const item = ref<GenericObject>({
@@ -94,7 +98,7 @@ const item = ref<GenericObject>({
   attachmentId: '',
   resource: invoice.value.incomeId,
   employee: userData?.value?.user?.name,
-  employeeId: userData?.value?.user?.userId,
+  employeeId: userData?.value?.user?.userId ?? '',
   resourceType: null
 })
 
@@ -107,7 +111,7 @@ const itemTemp = ref<GenericObject>({
   attachmentId: '',
   resource: invoice.value.incomeId,
   employee: userData?.value?.user?.name,
-  employeeId: userData?.value?.user?.userId,
+  employeeId: userData?.value?.user?.userId ?? '',
   resourceType: null
 })
 const toast = useToast()
@@ -127,7 +131,8 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
-    disabled: false
+    disabled: false,
+    validation: validateEntityStatus('Resource Type')
   },
   {
     field: 'type',
@@ -135,12 +140,7 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    })
-      .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
+    validation: validateEntityStatus('Attachment Type')
   },
   {
     field: 'file',
@@ -156,6 +156,7 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 required',
     headerClass: 'mb-1',
+    validation: z.string().trim().min(1, 'This is a required field')
   },
   {
     field: 'remark',
@@ -207,23 +208,52 @@ const Payload = ref<IQueryRequest>({
 
 const ListItems = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
+const listItemsLocal = ref<any[]>([...(props.listItems || [])])
+
+const disableAttachmentTypeSelector = computed(() => {
+  return idItem.value !== '' || !hasDefaultAttachment.value
+})
 
 async function ResetListItems() {
   Payload.value.page = 0
 }
 
-function OnSortField(event: any) {
-  if (event && !props.isCreationDialog) {
+async function parseDataTableFilterLocal(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
+  Payload.value.filter = [...parseFilter || []]
+  listItemsLocal.value = [...applyFiltersAndSort(Payload.value, listItemsLocal.value)]
+}
+
+function onSortFieldLocal(event: any) {
+  if (event) {
+    if (event.sortField === 'type') {
+      event.sortField = 'type.name'
+    }
     Payload.value.sortBy = event.sortField
     Payload.value.sortType = event.sortOrder
-    getList()
+    parseDataTableFilterLocal(event.filter)
   }
 }
 
-function clearForm() {
+function OnSortField(event: any) {
+  if (event) {
+    if (!props.isCreationDialog) {
+      Payload.value.sortBy = event.sortField
+      Payload.value.sortType = event.sortOrder
+      getList()
+    }
+    else {
+      onSortFieldLocal(event)
+    }
+  }
+}
+
+async function clearForm() {
+  const resourceTypeValue = item.value.resourceType
   item.value = { ...itemTemp.value }
   idItem.value = ''
-
+  item.value.resourceType = resourceTypeValue
+  listDefaultData()
   formReload.value++
 }
 
@@ -268,11 +298,14 @@ async function ParseDataTableFilter(payloadFilter: any) {
   getList()
 }
 
-async function getAttachmentTypeList() {
+async function getAttachmentTypeList(isDefault: boolean = false, filter?: FilterCriteria[]) {
   try {
+    if (isDefault) {
+      loadingDefaultAttachmentType.value = true
+    }
     const payload
       = {
-        filter: [],
+        filter: filter ?? [],
         query: '',
         pageSize: 20,
         page: 0,
@@ -284,18 +317,26 @@ async function getAttachmentTypeList() {
     const { data: dataList } = response
     attachmentTypeList.value = []
     for (const iterator of dataList) {
-      attachmentTypeList.value = [...attachmentTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+      attachmentTypeList.value = [...attachmentTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}`, isDefault: iterator.attachInvDefault }]
     }
   }
   catch (error) {
     console.error('Error loading Attachment Type list:', error)
   }
+  finally {
+    if (isDefault) {
+      loadingDefaultAttachmentType.value = false
+    }
+  }
 }
 
-async function getResourceTypeList() {
+async function getResourceTypeList(isDefault: boolean = false, filter?: FilterCriteria[]) {
   try {
+    if (isDefault) {
+      loadingDefaultResourceType.value = true
+    }
     const payload = {
-      filter: [],
+      filter: filter ?? [],
       query: '',
       pageSize: 20,
       page: 0,
@@ -307,11 +348,73 @@ async function getResourceTypeList() {
     const { data: dataList } = response
     resourceTypeList.value = []
     for (const iterator of dataList) {
-      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status ?? 'ACTIVE', fullName: `${iterator.code} - ${iterator.name}` }]
     }
   }
   catch (error) {
     console.error('Error loading Attachment Type list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultResourceType.value = false
+    }
+  }
+}
+
+async function loadDefaultResourceType() {
+  if (!item.value.resourceType || !item.value.resourceType.status) {
+    // Listar solo si el resource type esta en null, ya que no cambia. O si viene en null el status
+    const filter: FilterCriteria[] = [
+      {
+        key: 'invoice',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: true,
+      },
+      {
+        key: 'status',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+      },
+    ]
+    await getResourceTypeList(true, filter)
+    item.value.resourceType = resourceTypeList.value.length > 0 ? resourceTypeList.value[0] : null
+    formReload.value++
+  }
+}
+
+async function loadDefaultAttachmentType() {
+  const attachmentFilter: FilterCriteria[] = [
+    {
+      key: 'attachInvDefault',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: true,
+    },
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+    },
+  ]
+  await getAttachmentTypeList(true, attachmentFilter)
+  item.value.type = attachmentTypeList.value.length > 0 ? attachmentTypeList.value[0] : null
+  updateFieldProperty(Fields, 'type', 'disabled', true)
+  formReload.value++
+}
+
+function listDefaultData() {
+  // console.log(item.value)
+  loadDefaultResourceType()
+  // Validar que no exista dicho attachment type por defecto en la lista
+  hasDefaultAttachment.value = props.isCreationDialog
+    ? listItemsLocal.value.some(item => item.type?.isDefault)
+    // : ListItems.value.some(item => item.type?.attachInvDefault)
+    : true // Se toma como true, porque ya se debe haber validado previamente que haya un Invoice Support
+  if (props.isCreationDialog && !hasDefaultAttachment.value) { // Se debe permitir seleccionar si no es local, no se cargan por defecto en este caso ya que debe existir un Invoice Attachment
+    loadDefaultAttachmentType()
   }
 }
 
@@ -349,7 +452,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.invoice = props.selectedInvoice
     payload.file = file
     payload.employee = userData?.value?.user?.name
-    payload.employeeId = userData?.value?.user?.userId
+    payload.employeeId = userData?.value?.user?.userId ?? ''
     delete payload.resourceType
     if (props.isCreationDialog) {
       payload.id = v4()
@@ -373,7 +476,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.type = item.type?.id
   payload.paymentResourceType = item.resourceType?.id
   payload.employee = userData?.value?.user?.name
-  payload.employeeId = userData?.value?.user?.userId
+  payload.employeeId = userData?.value?.user?.userId ?? ''
   delete payload.resourceType
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
@@ -400,9 +503,7 @@ async function deleteItem(id: string) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if (!item?.type?.id) {
-    return typeError.value = true
-  }
+  if (loadingSaveAll.value === true) { return } // Esto es para que no se ejecute dos veces el save
   loadingSaveAll.value = true
   let successOperation = true
 
@@ -444,6 +545,29 @@ async function saveItem(item: { [key: string]: any }) {
   }
 }
 
+function requireConfirmationToSave(item: any) {
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    saveItem(item)
+  }
+  else {
+    const { event } = item
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        saveItem(item)
+      },
+      reject: () => {
+        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+      }
+    })
+  }
+}
+
 function requireConfirmationToDelete(event: any) {
   confirm.require({
     target: event.currentTarget,
@@ -473,8 +597,8 @@ async function getItemById(id: string | null | undefined) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
-      if (props.isCreationDialog && props.listItems) {
-        const data = props.listItems?.find((e: any) => e.id === id) as any
+      if (props.isCreationDialog) {
+        const data = listItemsLocal.value?.find((attachment: any) => attachment?.id === id) as any
         item.value.id = data.id
         item.value.type = { ...data.type, fullName: `${data?.type?.code} - ${data?.type?.name}` }
         item.value.filename = data.filename
@@ -493,7 +617,7 @@ async function getItemById(id: string | null | undefined) {
           item.value.remark = response.remark
           item.value.invoice = response.invoice
           item.value.resource = response.invoice.invoiceId
-          item.value.resourceType = response.paymenResourceType
+          item.value.resourceType = { ...response.paymenResourceType, fullName: `${response?.paymenResourceType?.code} - ${response?.paymenResourceType?.name}` }
           selectedAttachment.value = response.attachmentId
         }
       }
@@ -553,6 +677,15 @@ watch(() => props.selectedInvoiceObj, () => {
   }
 })
 
+watch(() => props.listItems, async (newValue) => {
+  if (newValue) {
+    listItemsLocal.value = [...newValue]
+    if (props.isCreationDialog) {
+      Pagination.value.totalElements = newValue?.length ?? 0
+    }
+  }
+})
+
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
     clearForm()
@@ -573,13 +706,6 @@ watch(() => idItem.value, async (newValue) => {
   }
 })
 
-watch(() => props.listItems, async (newValue) => {
-  // console.log(newValue)
-  if (props.isCreationDialog && props.listItems) {
-    Pagination.value.totalElements = newValue?.length ?? 0
-  }
-})
-
 onMounted(() => {
   const invoice = props.selectedInvoice || props.selectedInvoiceObj?.id
   if (invoice) {
@@ -594,8 +720,9 @@ onMounted(() => {
     getList()
   }
   if (props.isCreationDialog) {
-    Pagination.value.totalElements = props.listItems?.length ?? 0
+    Pagination.value.totalElements = listItemsLocal.value?.length ?? 0
   }
+  listDefaultData()
 })
 </script>
 
@@ -638,11 +765,11 @@ onMounted(() => {
           </AccordionTab>
         </Accordion>
         <DynamicTable
-          :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="options"
-          :pagination="Pagination" @update:clicked-item="getItemById($event)"
+          :data="isCreationDialog ? listItemsLocal : ListItems" :columns="Columns" :options="options"
+          :pagination="Pagination" :is-custom-sorting="!isCreationDialog" @update:clicked-item="getItemById($event)"
           @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
           @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-          @on-list-item="ResetListItems" @on-sort-field="OnSortField" :is-custom-sorting="!isCreationDialog"
+          @on-list-item="ResetListItems" @on-sort-field="OnSortField"
         />
       </div>
       <div class="col-12 order-2 md:order-0 md:col-3 pt-5">
@@ -654,15 +781,17 @@ onMounted(() => {
             <EditFormV2
               :key="formReload" :fields="Fields" :item="item"
               :show-actions="true" :loading-save="loadingSaveAll" @cancel="clearForm"
-              @delete="requireConfirmationToDelete($event)" @submit="saveItem(item)"
+              @delete="requireConfirmationToDelete($event)"
+              @submit="requireConfirmationToSave($event)"
+              @submit-form="requireConfirmationToSave"
             >
               <template #field-resourceType="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll"
+                  v-if="!loadingSaveAll && !loadingDefaultResourceType"
                   id="autocomplete"
-                  field="name"
+                  field="fullName"
                   item-value="id"
-                  :disabled="idItem !== ''"
+                  disabled
                   :model="data.resourceType"
                   :suggestions="resourceTypeList"
                   @change="($event) => {
@@ -670,17 +799,16 @@ onMounted(() => {
                   }" @load="($event) => getResourceTypeList()"
                 >
                   <template #option="props">
-                    <span>{{ props.item.name }}</span>
+                    <span>{{ props.item.fullName }}</span>
                   </template>
                 </DebouncedAutoCompleteComponent>
                 <Skeleton v-else height="2rem" class="mb-2" />
               </template>
               <template #field-type="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll" id="autocomplete" field="fullName" :disabled="idItem !== ''"
+                  v-if="!loadingSaveAll" id="autocomplete" field="fullName" :disabled="disableAttachmentTypeSelector"
                   item-value="id" :model="data.type" :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
-                    typeError = false
                   }" @load="($event) => getAttachmentTypeList($event)"
                 >
                   <template #option="props">
@@ -734,23 +862,19 @@ onMounted(() => {
               <template #form-footer="footProps">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save"
-                  :disabled="idItem !== ''" @click="saveItem(footProps.item.fieldValues)"
+                  :disabled="idItem !== ''" @click="footProps.item.submitForm($event)"
                 />
                 <Button
                   v-tooltip.top="'View File'" class="w-3rem ml-1 sticky" icon="pi pi-eye"
                   :disabled="idItem === ''" @click="downloadFile"
                 />
                 <Button
-                  :disabled="props.isCreationDialog"
-                  v-tooltip.top="'Show History'" class="w-3rem ml-1 sticky" icon="pi pi-book"
+                  v-tooltip.top="'Show History'"
+                  :disabled="props.isCreationDialog" class="w-3rem ml-1 sticky" icon="pi pi-book"
                   @click="() => attachmentHistoryDialogOpen = true"
                 />
                 <Button
-                  v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="() => {
-                    idItem = ''
-                    item = itemTemp
-                    clearForm()
-                  }"
+                  v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearForm"
                 />
                 <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" :disabled="idItem === ''" @click="requireConfirmationToDelete" />
                 <Button
