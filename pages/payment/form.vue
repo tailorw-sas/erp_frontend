@@ -78,6 +78,7 @@ const objItemSelectedForRightClick = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToInvoice = ref({} as GenericObject)
 const objItemSelectedForRightClickUndoApplication = ref({} as GenericObject)
+const objItemSelectedForRightClickReverseTransaction = ref({} as GenericObject)
 const allMenuListItems = ref([
   {
     id: 'applayDeposit',
@@ -111,7 +112,7 @@ const allMenuListItems = ref([
     label: 'Reverse Transaction',
     icon: 'pi pi-undo',
     iconSvg: '',
-    command: ($event: any) => {},
+    command: ($event: any) => reverseTransaction($event),
     disabled: true,
     visible: true,
   },
@@ -292,6 +293,11 @@ const confApi = reactive({
 const confApiPaymentDetailUndoApplication = reactive({
   moduleApi: 'payment',
   uriApi: 'payment-detail/undo-application',
+})
+
+const confApiPaymentDetailReverseTransaction = reactive({
+  moduleApi: 'payment',
+  uriApi: 'payment-detail/reverse-transaction',
 })
 
 const confApiPaymentDetail = reactive({
@@ -1817,6 +1823,21 @@ async function undoApplication(event: any) {
   }
 }
 
+async function reverseTransaction(event: any) {
+  try {
+    if (objItemSelectedForRightClickReverseTransaction.value?.id) {
+      const payload = {
+        paymentDetail: objItemSelectedForRightClickReverseTransaction.value?.id || ''
+      }
+      await GenericService.create(confApiPaymentDetailReverseTransaction.moduleApi, confApiPaymentDetailReverseTransaction.uriApi, payload)
+      getListPaymentDetail()
+    }
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
 async function historyGetList() {
   if (historyOptions.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -2344,7 +2365,7 @@ function onRowContextMenu(event: any) {
   const dateOfItemForReverse = dayjs(event.data?.transactionDate)
   const currentDateForReverse = dayjs().format('YYYY-MM-DD')
   if (event && event.data && event.data.applyPayment === true && dateOfItemForReverse.isBefore(currentDateForReverse)) {
-    // objItemSelectedForRightClickUndoApplication.value = event.data
+    objItemSelectedForRightClickReverseTransaction.value = event.data
     const menuItemReverseTransaction = allMenuListItems.value.find(item => item.id === 'reverseTransaction')
     if (menuItemReverseTransaction) {
       menuItemReverseTransaction.disabled = false
@@ -2352,7 +2373,7 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    // objItemSelectedForRightClickUndoApplication.value = {}
+    objItemSelectedForRightClickReverseTransaction.value = {}
     const menuItemReverseTransaction = allMenuListItems.value.find(item => item.id === 'reverseTransaction')
     if (menuItemReverseTransaction) {
       menuItemReverseTransaction.disabled = true
