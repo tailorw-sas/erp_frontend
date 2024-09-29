@@ -16,11 +16,11 @@ import java.util.UUID;
 public class TotalCloneRequest {
 
     private UUID invoiceToClone;
-    private UUID agency;
-    private UUID hotel;
-    private LocalDateTime invoiceDate;
-    private UUID employeeId;
+//    private UUID agency;
+//    private UUID hotel;
+//    private LocalDateTime invoiceDate;
+//    private UUID employeeId;
     private String employeeName;
-    List<TotalCloneAttachmentRequest> attachments;
-    List<TotalCloneBookingRequest> bookings;
+//    List<TotalCloneAttachmentRequest> attachments;
+//    List<TotalCloneBookingRequest> bookings;
 }

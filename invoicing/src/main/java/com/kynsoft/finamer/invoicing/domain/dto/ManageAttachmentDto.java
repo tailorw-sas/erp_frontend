@@ -25,4 +25,17 @@ public class ManageAttachmentDto {
     private LocalDateTime createdAt;
     private ResourceTypeDto paymentResourceType;
 
+    public ManageAttachmentDto(ManageAttachmentDto dto) {
+        this.id = UUID.randomUUID();
+        this.attachmentId = dto.getAttachmentId();
+        this.filename = dto.getFilename();
+        this.file = dto.getFile();
+        this.remark = dto.getRemark();
+        this.type = dto.getType();
+        this.invoice = dto.getInvoice();
+        this.employee = dto.getEmployee();
+        this.employeeId = dto.getEmployeeId();
+        this.createdAt = dto.getCreatedAt();
+        this.paymentResourceType = dto.getPaymentResourceType();
+    }
 }

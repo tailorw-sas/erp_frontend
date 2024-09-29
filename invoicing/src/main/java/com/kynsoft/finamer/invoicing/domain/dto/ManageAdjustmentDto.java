@@ -24,5 +24,15 @@ public class ManageAdjustmentDto {
     private ManageRoomRateDto roomRate;
     private String employee;
 
-
+    public ManageAdjustmentDto(ManageAdjustmentDto dto) {
+        this.id = UUID.randomUUID();
+        this.adjustmentId = dto.getAdjustmentId();
+        this.amount = dto.getAmount();
+        this.date = dto.getDate();
+        this.description = dto.getDescription();
+        this.transaction = dto.getTransaction();
+        this.paymentTransactionType = dto.getPaymentTransactionType();
+        this.roomRate = dto.getRoomRate();
+        this.employee = dto.getEmployee();
+    }
 }
