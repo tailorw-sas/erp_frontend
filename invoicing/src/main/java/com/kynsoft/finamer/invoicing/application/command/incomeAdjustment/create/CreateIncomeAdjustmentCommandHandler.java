@@ -132,7 +132,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                                 null,
                                 null,
                                 roomRates,
-                                null, null);
+                                null, null, null);
                 this.bookingService.create(bookingDto);
 
                 // this.manageAdjustmentService.create(adjustmentDtos);

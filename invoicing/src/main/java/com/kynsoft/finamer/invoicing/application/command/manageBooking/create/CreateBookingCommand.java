@@ -39,6 +39,7 @@ public class CreateBookingCommand implements ICommand {
         private UUID nightType;
         private UUID roomType;
         private UUID roomCategory;
+        private String contract;
 
         public CreateBookingCommand(UUID id, LocalDateTime hotelCreationDate, LocalDateTime bookingDate,
                         LocalDateTime checkIn, LocalDateTime checkOut, String hotelBookingNumber, String fullName,
@@ -49,7 +50,7 @@ public class CreateBookingCommand implements ICommand {
                         Double rateAdult, Double rateChild, String hotelInvoiceNumber, String folioNumber,
                         Double hotelAmount,
                         String description, UUID invoice, UUID ratePlan, UUID nightType, UUID roomType,
-                        UUID roomCategory) {
+                        UUID roomCategory, String contract) {
                 this.id = id;
                 this.hotelCreationDate = hotelCreationDate;
                 this.bookingDate = bookingDate;
@@ -75,7 +76,7 @@ public class CreateBookingCommand implements ICommand {
                 this.firstName = firstName;
                 this.lastName = lastName;
                 this.roomCategory = roomCategory;
-
+                this.contract = contract;
         }
 
         public static CreateBookingCommand fromRequest(CreateBookingRequest request) {
@@ -114,7 +115,8 @@ public class CreateBookingCommand implements ICommand {
                                                 : null,
                                 request.getRoomCategory() != null && !request.getRoomCategory().isEmpty()
                                                 ? UUID.fromString(request.getRoomCategory())
-                                                : null);
+                                                : null,
+                                request.getContract());
         }
 
         @Override
