@@ -1580,7 +1580,7 @@ onMounted(() => {
           <Row>
             <Column 
               footer="Totals:"
-              :colspan="isDetailView ? 7 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 9"
+              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 7 : 9"
               footer-style="text-align:right; font-weight: 700"
             />
             <Column 
