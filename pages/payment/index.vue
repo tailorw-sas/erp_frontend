@@ -3326,7 +3326,7 @@ onMounted(async () => {
               }"
             />
             <label for="checkApplyPayment" class="ml-2 font-bold">
-              Load All Invoices
+              Load All Bookings
             </label>
           </div>
           <div>
