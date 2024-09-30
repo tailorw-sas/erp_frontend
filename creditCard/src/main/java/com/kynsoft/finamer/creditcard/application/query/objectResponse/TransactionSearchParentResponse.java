@@ -13,7 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class TransactionSearchParentResponse implements IResponse {
 
-    private long parent;
+    private long id;
 
 
 }
