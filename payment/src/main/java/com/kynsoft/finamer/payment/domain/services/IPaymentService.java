@@ -32,6 +32,8 @@ public interface IPaymentService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    PaginatedResponse searchExcelExporter(Pageable pageable, List<FilterCriteria> filterCriteria);
+
     List<PaymentDto> createBulk(List<PaymentDto> dtoList);
 
 }
