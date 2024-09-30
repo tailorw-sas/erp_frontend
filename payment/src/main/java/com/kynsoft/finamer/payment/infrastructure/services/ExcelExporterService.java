@@ -135,7 +135,7 @@ public class ExcelExporterService {
         dataRow.createCell(2).setCellValue(entity.getManageBooking() != null ? entity.getManageBooking().getInvoice().getInvoiceNo().toString() : "");
         dataRow.getCell(2).setCellStyle(style);
 
-        dataRow.createCell(3).setCellValue(entity.getTransactionDate().toString());
+        dataRow.createCell(3).setCellValue(entity.getTransactionDate() != null ? entity.getTransactionDate().toString() : "");
         dataRow.getCell(3).setCellStyle(style);
 
         dataRow.createCell(4).setCellValue(entity.getManageBooking() != null ? entity.getManageBooking().getFirstName() : "");
