@@ -802,7 +802,8 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
 
         const childrenTotalValue = itemDetails.value.childrenTotalValue
 
-        const minValueToApply = (oldAmount - childrenTotalValue - 0.01).toFixed(2)
+        // const minValueToApply = (oldAmount - childrenTotalValue - 0.01).toFixed(2)
+        const minValueToApply = (oldAmount - childrenTotalValue).toFixed(2)
 
         const decimalSchema = z.object(
           {
