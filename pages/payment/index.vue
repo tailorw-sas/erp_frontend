@@ -2177,6 +2177,28 @@ function havePermissionMenu() {
     }
   }
 }
+
+function assingFunctionsToExportMenuInItemMenuList() {
+  const itemsExportToExcel: any = itemMenuList.value.find(item => item.id === 'export')
+  if (itemsExportToExcel) {
+    itemsExportToExcel.menuItems = itemsExportToExcel.menuItems.map((item: any) => {
+      console.log(item)
+
+      if (item.id === 'export-hierarchy') {
+        item.command = function () {
+          console.log('Esto es una prueba')
+        }
+      }
+      else if (item.id === 'export-summary') {
+        item.command = () => {}
+      }
+      else if (item.id === 'visual-setting') {
+        item.command = () => {}
+      }
+      return item
+    })
+  }
+}
 // paymentSelectedForPrintList
 async function paymentPrint(event: any) {
   try {
@@ -2468,6 +2490,7 @@ watch(filterToSearch, (newValue) => {
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(async () => {
   havePermissionMenu()
+  assingFunctionsToExportMenuInItemMenuList()
 
   startOfMonth.value = getMonthStartAndEnd(new Date()).startOfMonth
   endOfMonth.value = getMonthStartAndEnd(new Date()).endOfMonth
