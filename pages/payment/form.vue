@@ -2986,7 +2986,7 @@ onMounted(async () => {
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
-            Apply Payment Details
+            Select Booking
           </h5>
         </div>
       </template>
