@@ -19,6 +19,15 @@ const showDetails = ref(false)
 const route = useRoute()
 const router = useRouter()
 
+// Importante! se deshabilita la autenticacion por conflictos con la redireccion del merchant Cardnet y la variable SESSION que envia en el formData.
+definePageMeta({
+  layout: 'default',
+  auth: {
+    unauthenticatedOnly: false,
+    // navigateAuthenticatedTo: '/',
+  }
+})
+
 function disableBackNavigation() {
   history.pushState(null, document.title, location.href)
   history.back()
@@ -32,7 +41,7 @@ onMounted(() => {
   // disableBackNavigation()
 
   const status = route.query.status || 'error'
-
+  console.log(route)
   transactionStatus.value = String(status) // Asignar el estado recibido a transactionStatus
   orderNumber.value = String(route.query.OrderNumber) || ''
   amount.value = (Number.parseFloat(String(route.query.Amount)) / 100).toFixed(2) || '0.00'
