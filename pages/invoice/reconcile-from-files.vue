@@ -184,7 +184,7 @@ async function importFile() {
   options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
-  let count = 0;
+  let count = 0
 
   try {
     const selectedFiles = importModel.value.attachFile // Usa el modelo correcto
@@ -222,20 +222,6 @@ async function importFile() {
       formData.append('files', fileInput)
     }
 
-    /*   const base64Array = []
-    for (const fileInput of selectedFiles) {
-      const base64String: any = await fileToBase64(fileInput)
-      const base64 = base64String.split('base64,')[1]
-
-      const file = await base64ToFile(base64, fileInput.name, fileInput.type)
-
-      // Agrega cada archivo al FormData
-      base64Array.push(file)
-    }
-    base64Array.forEach((file, index) => {
-      formData.append('files[]', file)
-    }) */
-
     // Agrega información adicional al FormData
     formData.append('importProcessId', uuid)
     formData.append('employeeId', userData?.value?.user?.userId)
@@ -243,7 +229,7 @@ async function importFile() {
 
     // Envía los datos al servicio
     await GenericService.importReconcileFile(confApi.moduleApi, confApi.uriApi, formData)
-    count = selectedFiles.length;
+    count = selectedFiles.length
   }
   catch (error: any) {
     successOperation = false
@@ -258,12 +244,12 @@ async function importFile() {
 
     if (!haveErrorImportStatus.value) {
       await getErrorList()
-     if (listItems.value.length === 0) {
+      if (listItems.value.length === 0) {
         options.value.loading = false
         navigateTo('/invoice')
-        const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`;
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 0 });
-           }
+        const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 0 })
+      }
     }
   }
 

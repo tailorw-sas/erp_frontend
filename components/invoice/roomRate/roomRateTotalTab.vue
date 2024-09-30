@@ -241,22 +241,22 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
 
   },
-  {
-    field: 'rateAdult',
-    header: 'Rate Adult',
-    dataType: 'number',
-    class: 'field col-12 md:col-6',
-    headerClass: 'mb-1',
+  // {
+  //   field: 'rateAdult',
+  //   header: 'Rate Adult',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-6',
+  //   headerClass: 'mb-1',
 
-  },
-  {
-    field: 'rateChild',
-    header: 'Rate Child',
-    dataType: 'number',
-    class: 'field col-12 md:col-6',
-    headerClass: 'mb-1',
+  // },
+  // {
+  //   field: 'rateChild',
+  //   header: 'Rate Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-6',
+  //   headerClass: 'mb-1',
 
-  },
+  // },
 
   {
     field: 'invoiceAmount',
