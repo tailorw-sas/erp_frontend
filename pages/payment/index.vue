@@ -1808,6 +1808,7 @@ function closeModalApplyPaymentOtherDeductions() {
   openDialogApplyPaymentOtherDeduction.value = false
   disabledBtnApplyPaymentOtherDeduction.value = true
   allInvoiceCheckIsChecked.value = false
+  loadAllInvoices.value = false
   idInvoicesSelectedToApplyPaymentForOtherDeduction.value = []
 }
 
@@ -1825,6 +1826,7 @@ async function openModalApplyPaymentOtherDeduction() {
   paymentBalance.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value.paymentBalance
   transactionType.value = {}
   fieldRemark.value = ''
+  loadAllInvoices.value = false
   applyPaymentGetListForOtherDeductions()
 }
 
