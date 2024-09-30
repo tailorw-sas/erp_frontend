@@ -163,7 +163,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     ratePlanDto,
                     nightTypeDto,
                     roomTypeDto,
-                    roomCategoryDto, new LinkedList<>(), null, null));
+                    roomCategoryDto, new LinkedList<>(), null, null,
+                    command.getBookingCommands().get(i).getContract()));
 
         }
 

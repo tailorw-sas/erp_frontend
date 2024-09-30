@@ -53,6 +53,7 @@ public class ManageBookingDto {
     private Long nights;
 
     private ManageBookingDto parent;
+    private String contract;
 
     public ManageBookingDto(ManageBookingDto dto) {
         this.id = UUID.randomUUID();
@@ -85,5 +86,6 @@ public class ManageBookingDto {
         this.roomCategory = dto.getRoomCategory();
         this.roomRates = new ArrayList<>();
         this.nights = dto.getNights();
+        this.contract = dto.getContract();
     }
 }
