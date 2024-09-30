@@ -106,7 +106,7 @@ public class ExcelExporterService {
         dataRow.createCell(8).setCellValue("A.T");
         dataRow.getCell(8).setCellStyle(style);
 
-        dataRow.createCell(9).setCellValue(entity.getBankAccount().getNameOfBank());
+        dataRow.createCell(9).setCellValue(entity.getBankAccount() != null ? entity.getBankAccount().getNameOfBank() : null);
         dataRow.getCell(9).setCellStyle(style);
 
         dataRow.createCell(10).setCellValue(entity.getPaymentAmount());
