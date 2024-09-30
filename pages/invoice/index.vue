@@ -174,7 +174,7 @@ const invoiceContextMenu = ref()
 const invoiceAllContextMenuItems = ref([
   {
     label: 'Change Agency',
-    icon: 'pi pi-pencil',
+    icon: 'pi pi-arrow-right-arrow-left',
     command: () => { },
     default: true,
     showItem: false,
