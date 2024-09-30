@@ -124,9 +124,9 @@ const confclientListApi = reactive({
   uriApi: 'manage-client',
 })
 
-const confClonationPartialApi = reactive({
+const confClonationApi = reactive({
   moduleApi: 'invoicing',
-  uriApi: 'manage-invoice/partial-clone',
+  uriApi: 'manage-invoice/total-clone-invoice',
 })
 
 const confhotelListApi = reactive({
@@ -449,11 +449,47 @@ async function handleApplyClick() {
     handleDialogClose();
   
 }
-function handleTotalApplyClick() {
-  entryCode.value = '';
-  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } }),
-    handleDialogCloseTotal();
+async function createClonation() {
+  try {
+    loadingSaveAll.value = true;
+
+    // Crear el payload con solo los datos necesarios
+    const payload = {
+      invoiceToClone: selectedInvoice, // ID del invoice seleccionado
+      employeeName: userData?.value?.user?.name // ID del empleado autenticado
+    };
+
+    // Realizar la llamada al servicio
+    return await GenericService.create(confClonationApi.moduleApi, confClonationApi.uriApi, payload);
+  } catch (error: any) {
+    console.error('Error en createClonation:', error?.data?.data?.error?.errorMessage);
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: error?.data?.data?.error?.errorMessage || error?.message, 
+      life: 10000 
+    });
+  } finally {
+    loadingSaveAll.value = false;
+  }
 }
+
+async function handleTotalApplyClick() {
+  entryCode.value = '';
+
+  const response: any = await createClonation();
+  
+  if (response && response.clonedInvoice) {
+    const clonedInvoiceId = response.clonedInvoice; // Asegúrate de que el ID esté en esta propiedad
+
+    // Redirigir a la página de edición con el ID del invoice clonado
+    navigateTo({ path: `/invoice/edit/${clonedInvoiceId}` })
+  //navigateTo(`invoice/edit?type=${InvoiceType.INVOICE}&selected=${clonedInvoiceId}`, { open: { target: '_blank' } });
+  }
+
+  handleDialogCloseTotal();
+}
+
 
 const createItems = ref([
   {
