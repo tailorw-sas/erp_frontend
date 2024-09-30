@@ -26,4 +26,6 @@ public interface IPaymentDetailService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<UUID> bulk(List<PaymentDetailDto> toSave);
+
+    PaymentDetailDto findByPaymentDetailId(Long paymentDetailId);
 }

@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.UUID;
-
 @Getter
 @Setter
 @Builder
@@ -17,14 +15,14 @@ public class SendMailCommand implements ICommand {
 
 
     private boolean result;
-    private UUID transactionUuid;
+    private String token;
 
-    public SendMailCommand(UUID transactionUuid) {
-       this.transactionUuid = transactionUuid;
+    public SendMailCommand(String token) {
+       this.token = token;
     }
 
     public static SendMailCommand fromRequest(SendMailRequest request) {
-        return new SendMailCommand(request.getTransactionUuid());
+        return new SendMailCommand(request.getToken());
     }
 
     @Override
