@@ -473,21 +473,35 @@ async function createClonation() {
     loadingSaveAll.value = false;
   }
 }
-
 async function handleTotalApplyClick() {
   entryCode.value = '';
 
-  const response: any = await createClonation();
-  
-  if (response && response.clonedInvoice) {
-    const clonedInvoiceId = response.clonedInvoice; // Asegúrate de que el ID esté en esta propiedad
+  try {
+    const response: any = await createClonation();
 
-    // Redirigir a la página de edición con el ID del invoice clonado
-    navigateTo({ path: `/invoice/edit/${clonedInvoiceId}` })
-  //navigateTo(`invoice/edit?type=${InvoiceType.INVOICE}&selected=${clonedInvoiceId}`, { open: { target: '_blank' } });
+    if (response && response.clonedInvoice) {
+      const clonedInvoiceId = response.clonedInvoice; // Asegúrate de que el ID esté en esta propiedad
+      const clonedInvoiceNo=response.clonedInvoiceNo;
+      toast.add({
+        severity: 'info',
+        summary: 'Confirmed',
+        detail: `The clonation invoice ${clonedInvoiceNo} was created successfully`,
+        life: 10000
+      })
+      // Redirigir a la página de edición con el ID del invoice clonado
+      navigateTo({ path: `/invoice/edit/${clonedInvoiceId}` });
+    }
+  } catch (error: any) {
+    // Mostrar un toast con el mensaje de error
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error in Clonation', 
+      detail: error?.data?.data?.error?.errorMessage || error?.message, 
+      life: 10000 
+    });
+  } finally {
+    handleDialogCloseTotal();
   }
-
-  handleDialogCloseTotal();
 }
 
 
