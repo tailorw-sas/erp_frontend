@@ -2,20 +2,15 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.delete;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckValidateHourForDeleteRule;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePaymentDetailsApplyPaymentRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePaymentDetailsDepositRule;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
-import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -24,32 +19,27 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
     private final IPaymentDetailService service;
     private final IPaymentService paymentService;
 
-    private final IManageEmployeeService manageEmployeeService;
-
-    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
-
     public DeletePaymentDetailCommandHandler(IPaymentDetailService service,
-            IPaymentService paymentService,
-            IManageEmployeeService manageEmployeeService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService) {
+            IPaymentService paymentService) {
         this.service = service;
         this.paymentService = paymentService;
-        this.manageEmployeeService = manageEmployeeService;
-        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
     }
 
     @Override
     public void handle(DeletePaymentDetailCommand command) {
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "id", "Employee ID cannot be null."));
-        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(command.getEmployee());
 
         PaymentDetailDto delete = this.service.findById(command.getId());
 
         PaymentDto update = delete.getPayment();
-        RulesChecker.checkRule(new CheckValidateHourForDeleteRule(delete.getCreatedAt()));
+        //RulesChecker.checkRule(new CheckValidateHourForDeleteRule(delete.getCreatedAt()));
+        if (delete.getTransactionType().getCash() || delete.getTransactionType().getApplyDeposit()) {
+            RulesChecker.checkRule(new CheckDeletePaymentDetailsApplyPaymentRule(delete));
+        }
+        if (delete.getTransactionType().getDeposit()) {
+            RulesChecker.checkRule(new CheckDeletePaymentDetailsDepositRule(delete));
+        }
 
         ConsumerUpdate updatePayment = new ConsumerUpdate();
-        String msg = "";
         //identified and notIdentified
         if (delete.getTransactionType().getCash()) {
             UpdateIfNotNull.updateDouble(update::setIdentified, update.getIdentified() - delete.getAmount(), updatePayment::setUpdate);
@@ -58,14 +48,12 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             UpdateIfNotNull.updateDouble(update::setPaymentBalance, update.getPaymentBalance() + delete.getAmount(), updatePayment::setUpdate);
 
             service.delete(delete);
-            msg = "Deleting Payment Detail with ID: ";
         }
 
         //Other Deductions
         if (!delete.getTransactionType().getCash() && !delete.getTransactionType().getDeposit() && !delete.getTransactionType().getApplyDeposit()) {
             UpdateIfNotNull.updateDouble(update::setOtherDeductions, update.getOtherDeductions() - delete.getAmount(), updatePayment::setUpdate);
             service.delete(delete);
-            msg = "Deleting Payment Detail with ID: ";
         }
 
         //Deposit Amount and Deposit Balance
@@ -75,7 +63,6 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             UpdateIfNotNull.updateDouble(update::setDepositBalance, update.getDepositBalance() + delete.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(update::setPaymentBalance, update.getPaymentBalance() - delete.getAmount(), updatePayment::setUpdate);
             service.delete(delete);
-            msg = "Deleting Deposit Detail with ID: ";
         }
 
         if (delete.getTransactionType().getApplyDeposit()) {
@@ -86,24 +73,9 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             //los valores y poniendo en inactivo el apply deposit que se trata de eliminar.
             delete.setStatus(Status.INACTIVE);
             service.update(delete);
-            msg = "Deleting Apply Deposit Detail with ID: ";
         }
 
         paymentService.update(update);
-//        createPaymentAttachmentStatusHistory(employeeDto, update, delete.getPaymentDetailId(), msg);
     }
-
-    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
-//    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, Long paymentDetail, String msg) {
-//
-//        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
-//        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-//        attachmentStatusHistoryDto.setDescription(msg + paymentDetail);
-//        attachmentStatusHistoryDto.setEmployee(employeeDto);
-//        attachmentStatusHistoryDto.setPayment(payment);
-//        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
-//
-//        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
-//    }
 
 }
