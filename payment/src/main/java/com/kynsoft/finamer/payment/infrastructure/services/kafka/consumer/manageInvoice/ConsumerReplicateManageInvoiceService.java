@@ -98,7 +98,24 @@ public class ConsumerReplicateManageInvoiceService {
                         }
                     }
 
-                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, mediator));
+                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, true, mediator));
+                } else {
+                    List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
+                    if (objKafka.getAttachments() != null) {
+                        for (AttachmentKafka attDto : objKafka.getAttachments()) {
+                            attachmentKafkas.add(new CreateAttachmentRequest(
+                                    Status.ACTIVE,
+                                    attDto.getEmployee(),
+                                    null,
+                                    null,
+                                    attDto.getFileName(),
+                                    "",
+                                    attDto.getPath(),
+                                    attDto.getRemark()
+                            ));
+                        }
+                    }
+                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, false, mediator));
                 }
             }
 //        } catch (Exception ex) {
