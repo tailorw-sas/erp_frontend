@@ -67,7 +67,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
-    validation: z.string().regex(urlRegex, 'This is not a valid URL').nullable().optional()
+    validation: z.string().regex(urlRegex, 'This is not a valid URL').nullable().optional().or(z.literal('')),
   },
   {
     field: 'token',
