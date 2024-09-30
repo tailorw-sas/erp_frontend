@@ -19,9 +19,6 @@ import java.util.List;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 @Service
 public class ConsumerReplicateManageInvoiceService {
 
@@ -83,7 +80,7 @@ public class ConsumerReplicateManageInvoiceService {
 
             if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
-                if (hotelDto.getAutoApplyCredit()) {
+                if (!hotelDto.getAutoApplyCredit()) {
 
                     List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
                     if (objKafka.getAttachments() != null) {
