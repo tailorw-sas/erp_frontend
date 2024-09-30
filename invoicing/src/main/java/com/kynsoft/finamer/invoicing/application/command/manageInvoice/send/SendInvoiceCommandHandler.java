@@ -36,11 +36,12 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final IFtpService ftpService;
     private final InvoiceReportProviderFactory invoiceReportProviderFactory;
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
     public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService,
                                      IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,
                                      IManageInvoiceStatusService manageInvoiceStatusService,
-                                     FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory) {
+                                     FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory, IInvoiceStatusHistoryService invoiceStatusHistoryService) {
 
         this.service = service;
         this.mailService = mailService;
@@ -49,6 +50,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.ftpService = ftpService;
         this.invoiceReportProviderFactory = invoiceReportProviderFactory;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
     }
 
     @Override
@@ -74,12 +76,12 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             ManageAgencyDto agency = entry.getKey();
             List<ManageInvoiceDto> agencyInvoices = entry.getValue();
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
-                sendEmail(command, agency, agencyInvoices, manageEmployeeDto, manageInvoiceStatus);
+                sendEmail(command, agency, agencyInvoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getLastName());
             }
 
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
                 try {
-                    bavel(agency, agencyInvoices, manageInvoiceStatus);
+                    bavel(agency, agencyInvoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
                 } catch (DocumentException | IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -88,7 +90,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
 
                 try {
-                    sendFtp(agency, agencyInvoices, manageInvoiceStatus);
+                    sendFtp(agency, agencyInvoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
                 } catch (DocumentException | IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -98,16 +100,26 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         command.setResult(true);
     }
 
-    private void updateStatusAgency(ManageInvoiceDto invoice, ManageInvoiceStatusDto manageInvoiceStatus) {
+    private void updateStatusAgency(ManageInvoiceDto invoice, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
         invoice.setStatus(EInvoiceStatus.SENT);
         invoice.setManageInvoiceStatus(manageInvoiceStatus);
         if (!invoice.getStatus().equals(EInvoiceStatus.SENT)) {
             invoice.setReSend(true);
         }
         this.service.update(invoice);
+        this.invoiceStatusHistoryService.create(
+                new InvoiceStatusHistoryDto(
+                        UUID.randomUUID(),
+                        invoice,
+                        "The invoice data was inserted.",
+                        null,
+                        employee,
+                        EInvoiceStatus.SENT
+                )
+        );
     }
 
-    private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus) throws DocumentException, IOException {
+    private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) throws DocumentException, IOException {
         for (ManageInvoiceDto invoice : invoices) {
             try {
                 var xmlContent = invoiceXmlService.generateInvoiceXml(invoice);
@@ -115,14 +127,14 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8));
                 ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
                         agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21);
-                updateStatusAgency(invoice, manageInvoiceStatus);
+                updateStatusAgency(invoice, manageInvoiceStatus, employee);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
-    private void sendFtp(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus) throws DocumentException, IOException {
+    private void sendFtp(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) throws DocumentException, IOException {
         for (ManageInvoiceDto invoice : invoices) {
             Optional<ByteArrayOutputStream> invoiceBooking = getInvoicesBooking(invoice.getId().toString());
             if (invoiceBooking.isPresent()) {
@@ -133,7 +145,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 try (InputStream inputStream = new ByteArrayInputStream(invoiceBooking.get().toByteArray())) {
                     ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
                             agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21);
-                    updateStatusAgency(invoice, manageInvoiceStatus);
+                    updateStatusAgency(invoice, manageInvoiceStatus, employee);
                     System.out.println("Archivo subido exitosamente al FTP.");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -145,7 +157,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         }
     }
 
-    private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus) {
+    private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
 
         SendMailJetEMailRequest request = new SendMailJetEMailRequest();
 
@@ -190,7 +202,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 request.setMailJetAttachments(attachments);
                 try {
                     mailService.sendMail(request);
-                    updateStatusAgency(invoice, manageInvoiceStatus);
+                    updateStatusAgency(invoice, manageInvoiceStatus, employee);
                 } catch (Exception ignored) {
                 }
             } catch (DocumentException | IOException e) {
