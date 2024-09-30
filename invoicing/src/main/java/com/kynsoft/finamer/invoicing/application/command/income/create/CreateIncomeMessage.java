@@ -11,10 +11,12 @@ public class CreateIncomeMessage implements ICommandMessage {
 
     private UUID id;
     private Long invoiceId;
+    private String invoiceNumber;
 
-    public CreateIncomeMessage(UUID id, Long invoiceId) {
+    public CreateIncomeMessage(UUID id, Long invoiceId, String invoiceNumber) {
         this.id = id;
         this.invoiceId = invoiceId;
+        this.invoiceNumber = invoiceNumber;
     }
 
 }

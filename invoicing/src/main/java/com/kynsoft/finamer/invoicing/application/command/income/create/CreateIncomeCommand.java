@@ -35,6 +35,7 @@ public class CreateIncomeCommand implements ICommand {
     private String employee;
 
     private List<CreateIncomeAttachmentRequest> attachments;
+    private String invoiceNo;
 
     public CreateIncomeCommand(Status status, LocalDateTime invoiceDate, Boolean manual,
                                UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
@@ -98,6 +99,6 @@ public class CreateIncomeCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new CreateIncomeMessage(id, invoiceId);
+        return new CreateIncomeMessage(id, invoiceId, invoiceNo);
     }
 }
