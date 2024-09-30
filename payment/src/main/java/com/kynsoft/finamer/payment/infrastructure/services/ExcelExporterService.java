@@ -150,11 +150,21 @@ public class ExcelExporterService {
         dataRow.createCell(7).setCellValue(entity.getManageBooking() != null ? entity.getManageBooking().getCouponNumber() : "");
         dataRow.getCell(7).setCellStyle(style);
 
-        dataRow.createCell(8).setCellValue(entity.getManageBooking() != null ? entity.getManageBooking().getAdults().toString() : "");
-        dataRow.getCell(8).setCellStyle(style);
+        if (entity.getManageBooking() != null) {
+            dataRow.createCell(8).setCellValue(entity.getManageBooking().getAdults() != null ? entity.getManageBooking().getAdults().toString() : "");
+            dataRow.getCell(8).setCellStyle(style);
+        } else {
+            dataRow.createCell(8).setCellValue("");
+            dataRow.getCell(8).setCellStyle(style);
+        }
 
-        dataRow.createCell(9).setCellValue(entity.getManageBooking() != null ? entity.getManageBooking().getChildren().toString() : "");
-        dataRow.getCell(9).setCellStyle(style);
+        if (entity.getManageBooking() != null) {
+            dataRow.createCell(9).setCellValue(entity.getManageBooking().getChildren() != null ? entity.getManageBooking().getChildren().toString() : "");
+            dataRow.getCell(9).setCellStyle(style);
+        } else {
+            dataRow.createCell(9).setCellValue("");
+            dataRow.getCell(9).setCellStyle(style);
+        }
 
         dataRow.createCell(10).setCellValue("0.0");
         dataRow.getCell(10).setCellStyle(style);
