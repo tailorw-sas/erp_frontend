@@ -166,7 +166,7 @@ const computedShowMenuItemEditRoomRate = computed(() => {
 
 const menuModel = ref([
   { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value) },
- // { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
+  // { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
 
 ])
 
@@ -231,22 +231,22 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
 
   },
-  {
-    field: 'rateAdult',
-    header: 'Rate Adult',
-    dataType: 'number',
-    class: 'field col-12 md:col-6',
-    headerClass: 'mb-1',
+  // {
+  //   field: 'rateAdult',
+  //   header: 'Rate Adult',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-6',
+  //   headerClass: 'mb-1',
 
-  },
-  {
-    field: 'rateChild',
-    header: 'Rate Child',
-    dataType: 'number',
-    class: 'field col-12 md:col-6',
-    headerClass: 'mb-1',
+  // },
+  // {
+  //   field: 'rateChild',
+  //   header: 'Rate Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-6',
+  //   headerClass: 'mb-1',
 
-  },
+  // },
 
   {
     field: 'invoiceAmount',
@@ -510,9 +510,9 @@ function ClearForm() {
 }
 
 function onRowRightClick(event: any) {
-  if( !props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
-        return;
-      }
+  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+    return
+  }
   selectedRoomRate.value = event.data
   roomRateContextMenu.value.show(event.originalEvent)
 }
@@ -824,7 +824,6 @@ watch(PayloadOnChangePage, (newValue) => {
   getRoomRateList()
 })
 
-
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
     getRoomRateList()
@@ -901,11 +900,11 @@ watch(() => props.bookingObj, () => {
       @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME ) {
+        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
           return;
         }
 
-        if( !props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
+        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
           return;
         }
         openEditDialog($event)

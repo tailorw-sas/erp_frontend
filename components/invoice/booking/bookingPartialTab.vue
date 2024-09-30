@@ -487,24 +487,24 @@ const fieldsV2: Array<FieldDefinitionType> = [
   },
 
 
-  // Rate Adult
-  {
-    field: 'rateAdult',
-    header: 'Rate Adult',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().min(0, 'The Rate Adult field must be greater or equal than 0')
-  },
-  // Rate Child
-  {
-    field: 'rateChild',
-    header: 'Rate Child',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
-  },
+  // // Rate Adult
+  // {
+  //   field: 'rateAdult',
+  //   header: 'Rate Adult',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().min(0, 'The Rate Adult field must be greater or equal than 0')
+  // },
+  // // Rate Child
+  // {
+  //   field: 'rateChild',
+  //   header: 'Rate Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
+  // },
 
 
   // Invoice Amount

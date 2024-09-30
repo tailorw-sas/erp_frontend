@@ -336,8 +336,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-        
-
       },
       {
         field: 'children',
@@ -443,10 +441,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-
   },
-
-
   // Check In
   {
     field: 'checkIn',
@@ -473,7 +468,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     })
   },
 
-  // Adults
+  // //Adults
   {
     field: 'adults',
     header: 'Adult',
@@ -482,43 +477,52 @@ const fieldsV2: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
     validation: z.number().min(1, 'The Adults field must be greater than 0').nullable()
   },
+  // // Contract
+      {
+        field: 'contract',
+        header: 'Contract',
+        dataType: 'text',
+        class: 'field col-12 md:col-3',
+        headerClass: 'mb-1',
+        //validation: z.string().regex(/^[a-z0-9]+$/i, 'No se permiten caracteres especiales').nullable()
+      },
 
-  // Children
-  {
-    field: 'children',
-    header: 'Child',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().nonnegative('The Children field must not be negative').nullable()
+  // // Children
+  // {
+  //   field: 'children',
+  //   header: 'Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().nonnegative('The Children field must not be negative').nullable()
 
-  },
+  // },
 
 
-  // Rate Adult
-  {
-    field: 'rateAdult',
-    header: 'Rate Adult',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().min(0, 'The Rate Adult field must be greater or equal than 0')
-  },
+  // // Rate Adult
+  // {
+  //   field: 'rateAdult',
+  //   header: 'Rate Adult',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().min(0, 'The Rate Adult field must be greater or equal than 0')
+  // },
   // Rate Child
-  {
-    field: 'rateChild',
-    header: 'Rate Child',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
-  },
+  // {
+  //   field: 'rateChild',
+  //   header: 'Rate Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
+  // },
 
 
   // Invoice Amount
   {
     field: 'invoiceAmount',
-    header: 'Invoice Amount',
+    header: 'Booking Amount',
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
@@ -637,7 +641,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     field: 'description',
     header: 'Remark',
     dataType: 'text',
-    class: 'field col-12 md:col-9',
+    class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
   },
 ]
@@ -723,7 +727,7 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  //{ field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
 
   { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -1491,14 +1495,11 @@ onMounted(() => {
     { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
       { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
-
       { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-
       { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-
       { field: 'originalAmount', header: 'Original Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
 
@@ -1579,7 +1580,7 @@ onMounted(() => {
           <Row>
             <Column 
               footer="Totals:"
-              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 7 : 10"
+              :colspan="isDetailView ? 7 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 9"
               footer-style="text-align:right; font-weight: 700"
             />
             <Column 

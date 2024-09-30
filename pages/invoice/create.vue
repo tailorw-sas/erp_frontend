@@ -1013,30 +1013,29 @@ function calcBookingInvoiceAmount(roomRate: any) {
 */
 function calcBookingInvoiceAmount(roomRate: any) {
   // Encuentra el índice del booking asociado al roomRate
-  const bookingIndex = bookingList.value.findIndex(b => b?.id === roomRate?.booking);
-
+  const bookingIndex = bookingList.value.findIndex(b => b?.id === roomRate?.booking)
 
   // Inicializa el invoiceAmount del booking a 0
-  bookingList.value[bookingIndex].invoiceAmount = 0;
+  bookingList.value[bookingIndex].invoiceAmount = 0
 
   // Filtra las tarifas de habitación asociadas a esta reserva
-  const roomRates = roomRateList.value.filter((r: any) => r.booking === bookingList.value[bookingIndex]?.id);
+  const roomRates = roomRateList.value.filter((r: any) => r.booking === bookingList.value[bookingIndex]?.id)
 
-  console.log(`Room rates associated with booking ${bookingList.value[bookingIndex].id}:`, roomRates);
+  console.log(`Room rates associated with booking ${bookingList.value[bookingIndex].id}:`, roomRates)
 
   // Suma los invoiceAmounts de las tarifas de habitación
   roomRates.forEach((r) => {
-    console.log(`Adding room rate invoice amount: ${r.invoiceAmount}`);
-    bookingList.value[bookingIndex].invoiceAmount += Number(r.invoiceAmount);
-  });
+    console.log(`Adding room rate invoice amount: ${r.invoiceAmount}`)
+    bookingList.value[bookingIndex].invoiceAmount += Number(r.invoiceAmount)
+  })
 
   // Redondea el monto total a 2 decimales
-  bookingList.value[bookingIndex].invoiceAmount = Number.parseFloat(bookingList.value[bookingIndex].invoiceAmount.toFixed(2));
+  bookingList.value[bookingIndex].invoiceAmount = Number.parseFloat(bookingList.value[bookingIndex].invoiceAmount.toFixed(2))
 
-  console.log(`Total invoice amount for booking ${bookingList.value[bookingIndex].id}: ${bookingList.value[bookingIndex].invoiceAmount}`);
+  console.log(`Total invoice amount for booking ${bookingList.value[bookingIndex].id}: ${bookingList.value[bookingIndex].invoiceAmount}`)
 
   // Llama a la función para recalcular el total de la factura
-  calcInvoiceAmount();
+  calcInvoiceAmount()
 }
 
 function calcBookingHotelAmount(roomRate: any) {
@@ -1102,17 +1101,17 @@ async function calcInvoiceAmountInBookingByRoomRate() {
 async function calcInvoiceAmountInBookingByRoomRate() {
   bookingList.value.forEach((b) => {
     // Filtra los roomRates asociados a este booking
-    const roomRatesForBooking = roomRateList.value.filter((roomRate: any) => roomRate.booking === b?.id);
+    const roomRatesForBooking = roomRateList.value.filter((roomRate: any) => roomRate.booking === b?.id)
 
     const totalInvoiceAmount = roomRatesForBooking.reduce((total, item) => {
-      const invoiceAmount = Number.parseFloat(item.invoiceAmount);
-      return !Number.isNaN(invoiceAmount) ? total + invoiceAmount : total;
-    }, 0); // 0 es el valor inicial
+      const invoiceAmount = Number.parseFloat(item.invoiceAmount)
+      return !Number.isNaN(invoiceAmount) ? total + invoiceAmount : total
+    }, 0) // 0 es el valor inicial
 
     // Actualiza el invoiceAmount y dueAmount del booking
-    b.invoiceAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0;
-    b.dueAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0;
-  });
+    b.invoiceAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0
+    b.dueAmount = Number.parseFloat(totalInvoiceAmount.toFixed(2)) || 0
+  })
 }
 function updateBooking(booking: any) {
   const index = bookingList.value.findIndex(item => item.id === booking.id)
@@ -1159,9 +1158,9 @@ function addRoomRate(rate: any) {
     fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
     checkIn: dayjs(rate?.checkIn).startOf('day').toISOString(),
     checkOut: dayjs(rate?.checkOut).startOf('day').toISOString(),
-    adults: booking?.adults,
-    children: booking?.children,
-    rateChild: booking?.rateChild,
+    // adults: booking?.adults,
+    // children: booking?.children,
+    // rateChild: booking?.rateChild,
     rateAdult: booking?.rateAdult
 
   }]

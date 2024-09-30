@@ -19,7 +19,7 @@ const importModel = ref({
   importFile: '',
   // totalAmount: 0,
   hotel: '',
-  attachFile: null,
+  attachFile: [] as File[],
   employee: '',
 })
 const uploadComplete = ref(false)
@@ -98,7 +98,9 @@ const pagination = ref<IPagination>({
   search: ''
 })
 // -------------------------------------------------------------------------------------------------------
-
+const fileNames = computed(() => {
+  return importModel.value.attachFile.map(file => file.name).join(', ')
+})
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
 async function getErrorList() {
@@ -155,9 +157,18 @@ async function onChangeFile(event: any) {
 
 async function onChangeAttachFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
-    attachFile.value = event.target.files[0]
-    importModel.value.attachFile = attachFile.value.name
-    event.target.value = ''
+    const files: File[] = Array.from(event.target.files)
+    const pdfFiles = files.filter(file => file.type === 'application/pdf')
+
+    if (pdfFiles.length > 0) {
+      importModel.value.attachFile = pdfFiles // Almacena objetos File
+    }
+    else {
+      importModel.value.attachFile = [] // Limpia si no hay PDFs
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select only PDF files.', life: 10000 })
+    }
+
+    event.target.value = '' // Limpia el input
     await activeImport()
   }
 }
@@ -174,13 +185,17 @@ async function importExpenseBooking() {
     }
     const uuid = uuidv4()
     idItem.value = uuid
-    const base64String: any = await fileToBase64(inputFile.value)
-    const base64 = base64String.split('base64,')[1]
-    const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
+    const file = await inputFile.value
+    // const base64String: any = await fileToBase64(inputFile.value)
+    // const base64 = base64String.split('base64,')[1]
+    // const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
 
-    const base64String1: any = await fileToBase64(attachFile.value)
-    const base641 = base64String1.split('base64,')[1]
-    const file1 = await base64ToFile(base641, attachFile.value.name, attachFile.value.type)
+    const pdfFiles = importModel.value.attachFile // Usa el modelo correcto
+
+    if (!pdfFiles || pdfFiles.length === 0) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one file', life: 10000 })
+      return
+    }
 
     const formData = new FormData()
     formData.append('file', file)
@@ -189,7 +204,9 @@ async function importExpenseBooking() {
     // formData.append('totalAmount', importModel.value.totalAmount.toFixed(0).toString())
     formData.append('hotel', importModel.value.hotel)
     formData.append('employee', userData?.value?.user?.userId || '')
-    formData.append('attachment', file1)
+    for (const fileInput of pdfFiles) {
+      formData.append('attachment', fileInput)
+    }
 
     // await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
@@ -400,7 +417,7 @@ onMounted(async () => {
                     </div>
                     <small id="username-help" style="color: #808080;">Select a file of type PDF</small>
                     <input
-                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf"
+                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf" webkitdirectory multiple
                       @change="onChangeAttachFile($event)"
                     >
                   </div>
