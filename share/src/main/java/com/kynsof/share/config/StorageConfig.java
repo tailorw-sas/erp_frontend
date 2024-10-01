@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.infrastructure.config;
+package com.kynsof.share.config;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

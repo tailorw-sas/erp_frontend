@@ -5,6 +5,7 @@ import com.kynsoft.finamer.payment.domain.services.AbstractPaymentImportHelperSe
 import com.kynsoft.finamer.payment.infrastructure.services.helpers.PaymentImportAntiIncomeHelperServiceImpl;
 import com.kynsoft.finamer.payment.infrastructure.services.helpers.PaymentImportBankHelperServiceImpl;
 import com.kynsoft.finamer.payment.infrastructure.services.helpers.PaymentImportDetailHelperServiceImpl;
+import com.kynsoft.finamer.payment.infrastructure.services.helpers.PaymentImportExpenseBookingHelperServiceImpl;
 import com.kynsoft.finamer.payment.infrastructure.services.helpers.PaymentImportExpenseHelperServiceImpl;
 import org.springframework.stereotype.Component;
 
@@ -19,12 +20,15 @@ public class PaymentImportHelperProvider {
 
     private final PaymentImportExpenseHelperServiceImpl expenseHelperService;
 
+    private final PaymentImportExpenseBookingHelperServiceImpl expenseBookingHelperService;
 
-    public PaymentImportHelperProvider(PaymentImportAntiIncomeHelperServiceImpl antiIncomeHelperService, PaymentImportBankHelperServiceImpl bankHelperService, PaymentImportDetailHelperServiceImpl detailHelperService, PaymentImportExpenseHelperServiceImpl expenseHelperService) {
+
+    public PaymentImportHelperProvider(PaymentImportAntiIncomeHelperServiceImpl antiIncomeHelperService, PaymentImportBankHelperServiceImpl bankHelperService, PaymentImportDetailHelperServiceImpl detailHelperService, PaymentImportExpenseHelperServiceImpl expenseHelperService, PaymentImportExpenseBookingHelperServiceImpl expenseBookingHelperService) {
         this.antiIncomeHelperService = antiIncomeHelperService;
         this.bankHelperService = bankHelperService;
         this.detailHelperService = detailHelperService;
         this.expenseHelperService = expenseHelperService;
+        this.expenseBookingHelperService = expenseBookingHelperService;
     }
 
 
@@ -35,6 +39,7 @@ public class PaymentImportHelperProvider {
             case BANK -> bankHelperService;
             case ANTI -> antiIncomeHelperService;
             case DETAIL -> detailHelperService;
+            case EXPENSE_TO_BOOKING -> expenseBookingHelperService;
         };
     }
 }

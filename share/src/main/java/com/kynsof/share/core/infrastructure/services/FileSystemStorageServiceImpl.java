@@ -1,8 +1,8 @@
-package com.kynsoft.finamer.invoicing.infrastructure.services;
+package com.kynsof.share.core.infrastructure.services;
 
-import com.kynsoft.finamer.invoicing.domain.services.StorageService;
+import com.kynsof.share.config.StorageConfig;
+import com.kynsof.share.core.domain.service.StorageService;
 import com.kynsof.share.core.infrastructure.exceptions.StorageException;
-import com.kynsoft.finamer.invoicing.infrastructure.config.StorageConfig;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
