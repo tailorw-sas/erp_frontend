@@ -81,11 +81,10 @@ const columns: IColumn[] = [
   { field: 'invoiceDate', header: 'Gen.  Date', type: 'date', width: '12%' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '14%' },
   { field: 'reconcilestatus', header: 'Rec Status', type: 'slot-text', width: '15%' },
-  //{ field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', sortable: true , objApi: { moduleApi: 'settings', uriApi: 'manage-invoice-status'}},
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'local-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
-  
-]
+  // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', sortable: true , objApi: { moduleApi: 'settings', uriApi: 'manage-invoice-status'}},
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'local-select', showFilter: false, localItems: ENUM_INVOICE_STATUS, sortable: true },
 
+]
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -127,13 +126,14 @@ async function onMultipleSelect(data: any) {
 }
 async function activeImport() {
   if (
-    importModel.value.importFile !== '' &&
+    importModel.value.importFile !== ''
 
-    listItems.value.length === 0 // Verificar que la longitud de listItems sea mayor que cero
+    && listItems.value.length === 0 // Verificar que la longitud de listItems sea mayor que cero
   ) {
-    uploadComplete.value = false;
-  } else {
-    uploadComplete.value = true;
+    uploadComplete.value = false
+  }
+  else {
+    uploadComplete.value = true
   }
 }
 async function onChangeFile(event: any) {
@@ -155,12 +155,13 @@ async function getList() {
     options.value.loading = true
     listItems.value = []
     const newListItems = []
-
-
-
+    payload.value.filter = [...payload.value.filter, {
+      key: 'invoiceStatus',
+      operator: 'IN',
+      value: ['PROCECSED'],
+      logicalOperation: 'AND'
+    }]
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    console.log(response.data);
-
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -173,32 +174,28 @@ async function getList() {
 
     for (const iterator of dataList) {
       // Verificar si el ID ya existe en la lista
-     // if (!existingIds.has(iterator.id)) {
-        if (!existingIds.has(iterator.id) && iterator.status === 'PROCECSED') {
+      if (!existingIds.has(iterator.id)) {
         let invoiceNumber
         if (iterator?.invoiceNumber?.split('-')?.length === 3) {
           invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
-        } else {
+        }
+        else {
           invoiceNumber = iterator?.invoiceNumber
         }
         newListItems.push({
           ...iterator,
           loadingEdit: false,
           loadingDelete: false,
-          // invoiceDate: new Date(iterator?.invoiceDate), 
+          // invoiceDate: new Date(iterator?.invoiceDate),
           agencyCd: iterator?.agency?.code,
           dueAmount: iterator?.dueAmount || 0,
-          invoiceNumber: invoiceNumber ? invoiceNumber.replace("OLD", "CRE") : '',
+          invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
 
-
-          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` },
+          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
 
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
-
-
-
     }
 
     listItems.value = [...listItems.value, ...newListItems]
@@ -213,7 +210,6 @@ async function getList() {
   }
 }
 
-
 async function getInvoiceList(query: string = '') {
   try {
     const payload = {
@@ -224,14 +220,14 @@ async function getInvoiceList(query: string = '') {
           value: query,
           logicalOperation: 'OR'
         },
-        
+
         {
           key: 'status',
           operator: 'EQUALS',
           value: 'ACTIVE',
           logicalOperation: 'AND'
         },
-    
+
       ],
       query: '',
       pageSize: 20,
@@ -240,9 +236,9 @@ async function getInvoiceList(query: string = '') {
       sortType: ENUM_SHORT_TYPE.DESC
     }
 
-    const response = await GenericService.search('settings','manage-invoice-status', payload)
+    const response = await GenericService.search('settings', 'manage-invoice-status', payload)
     const { data: dataList } = response
-   
+
     for (const iterator of dataList) {
       invList.value = [...invList.value, { id: iterator.id, name: iterator.name }]
     }
@@ -274,7 +270,7 @@ async function getHotelList(query: string = '') {
           value: 'ACTIVE',
           logicalOperation: 'AND'
         },
-    
+
       ],
       query: '',
       pageSize: 20,
@@ -294,7 +290,6 @@ async function getHotelList(query: string = '') {
     console.error('Error loading hotel list:', error)
   }
 }
-
 
 async function getAgencyList(query: string = '') {
   try {
@@ -392,8 +387,6 @@ function onSortField(event: any) {
   }
 }
 
-
-
 async function searchAndFilter() {
   const newPayload: IQueryRequest = {
     filter: [],
@@ -402,11 +395,11 @@ async function searchAndFilter() {
     page: 0,
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.ASC
-  };
+  }
   // Mantener los filtros existentes
   newPayload.filter = [
     ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')
-  ];
+  ]
   // Filtro por el ID de la factura basado en el criterio seleccionado
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     newPayload.filter.push({
@@ -415,9 +408,8 @@ async function searchAndFilter() {
       value: filterToSearch.value.search,
       logicalOperation: 'AND',
       type: 'filterSearch',
-    });
+    })
   }
-
 
   // Filtros de rango de fechas usando 'from' y 'to'
   if (filterToSearch.value.from) {
@@ -427,16 +419,16 @@ async function searchAndFilter() {
       value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
       logicalOperation: 'AND',
       type: 'filterSearch'
-    });
+    })
   }
   if (filterToSearch.value.to) {
     newPayload.filter.push({
       key: 'invoiceDate',
       operator: 'LESS_THAN_OR_EQUAL_TO',
-      value:  dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
+      value: dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
       logicalOperation: 'AND',
       type: 'filterSearch'
-    });
+    })
   }
   // Filtro por invoiceType con valor INVOICE
   newPayload.filter.push({
@@ -445,13 +437,13 @@ async function searchAndFilter() {
     value: 'INVOICE', // Valor específico para el filtro
     logicalOperation: 'AND',
     type: 'filterSearch',
-  });
+  })
 
   // Filtrar agencias que tienen autoReconcile en true
   if (filterToSearch.value.agency?.length > 0) {
     const selectedAgencyIds = filterToSearch.value.agency
       .filter((item: any) => item?.id !== 'All')
-      .map((item: any) => item?.id);
+      .map((item: any) => item?.id)
 
     if (selectedAgencyIds.length > 0) {
       newPayload.filter.push({
@@ -460,7 +452,7 @@ async function searchAndFilter() {
         value: selectedAgencyIds,
         logicalOperation: 'AND',
         type: 'filterSearch'
-      });
+      })
     }
   }
 
@@ -471,13 +463,13 @@ async function searchAndFilter() {
     value: true,
     logicalOperation: 'AND',
     type: 'filterSearch'
-  });
+  })
 
   // Filtros de hoteles
   if (filterToSearch.value.hotel?.length > 0) {
     const selectedHotelIds = filterToSearch.value.hotel
       .filter((item: any) => item?.id !== 'All')
-      .map((item: any) => item?.id);
+      .map((item: any) => item?.id)
 
     if (selectedHotelIds.length > 0) {
       newPayload.filter.push({
@@ -486,7 +478,7 @@ async function searchAndFilter() {
         value: selectedHotelIds,
         logicalOperation: 'AND',
         type: 'filterSearch'
-      });
+      })
     }
   }
 
@@ -496,12 +488,12 @@ async function searchAndFilter() {
     operator: 'IN',
     value: ['PROCECSED'], // Asegúrate de que esté correctamente escrito
     logicalOperation: 'AND'
-  });
+  })
 
-  payload.value = newPayload;
+  payload.value = newPayload
   // Obtener la lista de facturas
   options.value.selectAllItemByDefault = true
-  const dataList = await getList();
+  const dataList = await getList()
 
   // Verificar si no hay resultados
   if (!dataList || dataList.value.length === 0) {
@@ -510,14 +502,13 @@ async function searchAndFilter() {
       summary: 'Confirmed',
       detail: `No invoices available in processed status `,
       life: 0 // Duración del toast en milisegundos
-    });
+    })
   }
-
 }
 
 function clearFilterToSearch() {
   // Limpiar los filtros existentes
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')];
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
 
   // Reiniciar los valores de búsqueda a sus estados iniciales
   filterToSearch.value = {
@@ -527,12 +518,11 @@ function clearFilterToSearch() {
     hotel: [allDefaultItem], // Restablecer a valor predeterminado
     from: null, // Limpiar el campo de fecha 'from'
     to: null, // Limpiar el campo de fecha 'to'
-  
-  };
-  listItems.value = [];
-  importModel.value.importFile=''
-  pagination.value.totalElements = 0
 
+  }
+  listItems.value = []
+  importModel.value.importFile = ''
+  pagination.value.totalElements = 0
 }
 
 const disabledSearch = computed(() => {
@@ -562,7 +552,8 @@ onMounted(async () => {
           <AccordionTab>
             <template #header>
               <div
-                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
+                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
+              >
                 <div>
                   Invoice to Reconcile Automatic
                 </div>
@@ -575,7 +566,8 @@ onMounted(async () => {
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">Agency:</label>
                     <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" :multiple="true"
+                      <DebouncedAutoCompleteComponent
+                        v-if="!loadingSaveAll" id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.agency"
                         :suggestions="agencyList" @load="($event) => getAgencyList($event)" @change="($event) => {
                           if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
@@ -584,7 +576,8 @@ onMounted(async () => {
                           else {
                             filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
                           }
-                        }">
+                        }"
+                      >
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
@@ -594,7 +587,8 @@ onMounted(async () => {
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                     <div class="w-full">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" :multiple="true"
+                      <DebouncedAutoCompleteComponent
+                        v-if="!loadingSaveAll" id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
                         :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => {
                           if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
@@ -603,7 +597,8 @@ onMounted(async () => {
                           else {
                             filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                           }
-                        }">
+                        }"
+                      >
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
@@ -618,20 +613,22 @@ onMounted(async () => {
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">From:</label>
                     <div class="w-full" style=" z-index:5 ">
-                      <Calendar v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :max-date="new Date()" />
+                      <Calendar
+                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                        show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                      />
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2 ml-4">
                     <label class="filter-label font-bold" for="">To:</label>
                     <div class="w-full">
-                      <Calendar v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from" />
+                      <Calendar
+                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
+                      />
                     </div>
                   </div>
                 </div>
-
-
               </div>
               <div class="col-12 md:col-6 lg:col-3 flex pb-0 pr-2">
                 <div class="flex w-full">
@@ -640,8 +637,10 @@ onMounted(async () => {
                       <div class="flex align-items-center gap-2" style=" z-index:5 ">
                         <label class="filter-label font-bold" for="">Criteria:</label>
                         <div class="w-full">
-                          <Dropdown v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
-                            placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear />
+                          <Dropdown
+                            v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
+                            placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
+                          />
                         </div>
                       </div>
                       <div class="flex align-items-center gap-2">
@@ -655,10 +654,14 @@ onMounted(async () => {
                       </div>
                     </div>
                     <div class="flex align-items-center mx-3">
-                      <Button v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
-                        :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter" />
-                      <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
-                        :loading="loadingSearch" @click="clearFilterToSearch" />
+                      <Button
+                        v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
+                        :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
+                      />
+                      <Button
+                        v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                        :loading="loadingSearch" @click="clearFilterToSearch"
+                      />
                     </div>
                   </div>
                 </div>
@@ -667,47 +670,50 @@ onMounted(async () => {
                 <div class="flex w-full">
                   <div class="flex flex-row w-full">
                     <div class="flex flex-column gap-2 w-full">
-
                       <div class="flex align-items-center gap-2 mt-3 ml-2">
                         <label class="filter-label font-bold ml-1 mb-3" for="">Import<span class="p-error">*</span>:
                         </label>
                         <div class="w-full">
-
                           <div class="p-inputgroup w-full">
-                            <InputText ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
-                              class="w-full" show-clear aria-describedby="inputtext-help" />
+                            <InputText
+                              ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
+                              class="w-full" show-clear aria-describedby="inputtext-help"
+                            />
                             <span class="p-inputgroup-addon p-0 m-0">
-                              <Button icon="pi pi-file-import" severity="secondary" :disabled="listItems.length === 0"
-                                class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                              <Button
+                                icon="pi pi-file-import" severity="secondary" :disabled="listItems.length === 0"
+                                class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()"
+                              />
                             </span>
                           </div>
                           <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                          <input ref="fileUpload" type="file" style="display: none;"
+                          <input
+                            ref="fileUpload" type="file" style="display: none;"
                             accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                            @change="onChangeFile($event)">
+                            @change="onChangeFile($event)"
+                          >
                         </div>
-
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
-
-
             </div>
           </AccordionTab>
         </Accordion>
       </div>
 
-      <DynamicTable :data="listItems" :columns="columns" :options="options" :pagination="pagination"
+      <DynamicTable
+        :data="listItems" :columns="columns" :options="options" :pagination="pagination"
         @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
-        @update:clicked-item="onMultipleSelect($event)">
-
+        @update:clicked-item="onMultipleSelect($event)"
+      >
         <template #column-status="{ data: item }">
-          <Badge :value="getStatusName(item?.status)"
-            :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
+          <Badge
+            :value="getStatusName(item?.status)"
+            :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+          />
         </template>
 
         <!-- <template #datatable-footer>
@@ -722,10 +728,14 @@ onMounted(async () => {
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="clearForm"
-          :disabled="!importModel.importFile || selectedElements.length ===0" />
-        <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
-          @click="clearForm" />
+        <Button
+          v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="!importModel.importFile || selectedElements.length === 0"
+          @click="clearForm"
+        />
+        <Button
+          v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
+          @click="clearForm"
+        />
       </div>
     </div>
   </div>
