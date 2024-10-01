@@ -3,13 +3,14 @@ import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
+import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import type { MenuItem } from '~/components/menu/MenuItems'
 // VARIABLES -----------------------------------------------------------------------------------------
-
+const toast = useToast()
 const authStore = useAuthStore()
 const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
@@ -52,7 +53,7 @@ const allMenuListItems = [
     type: MenuType.resendEmail,
     label: 'Resend Payment Link',
     icon: 'pi pi-send',
-    command: () => {},
+    command: () => resendPaymentLink(),
     disabled: false,
     isCollection: false
   },
@@ -647,6 +648,22 @@ function onSortField(event: any) {
   }
 }
 
+async function resendPaymentLink() {
+  try {
+    if (contextMenuTransaction.value.id) {
+      options.value.loading = true
+      await GenericService.create('creditcard', 'transactions/resend-payment-link', { id: contextMenuTransaction.value.id })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    }
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
 async function openNewManualTransactionDialog() {
   newManualTransactionDialogVisible.value = true
 }
@@ -698,7 +715,7 @@ function findNoCollectionStatusMenuOptions() {
   const noCollectionItems: any[] = allMenuListItems.filter((element: any) => !element.isCollection)
   for (let i = 0; i < noCollectionItems.length; i++) {
     const element = noCollectionItems[i]
-    if (element.type === MenuType.resendEmail/* && contextMenuTransaction.value.method === 'LINK'*/) {
+    if (element.type === MenuType.resendEmail/* && contextMenuTransaction.value.method === 'LINK' */) {
       menuListItems.value.push(element)
     }
   }
