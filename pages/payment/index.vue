@@ -455,6 +455,7 @@ const options = ref({
   loading: false,
   actionsAsMenu: true,
   selectionMode: 'multiple',
+  selectAllItemByDefault: false,
   messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
 })
 // selectionMode: 'multiple',
@@ -1066,6 +1067,7 @@ function searchAndFilter() {
     //   }]
     // }
   }
+  options.value.selectAllItemByDefault = false
   getList()
 }
 

@@ -40,6 +40,7 @@ const props = defineProps({
       search?: boolean
       selectionMode?: 'single' | 'multiple' | undefined
       expandableRows?: boolean
+      selectAllItemByDefault?: boolean
     }>
   },
   pagination: {
@@ -478,14 +479,22 @@ function clearSelectedItems() {
 }
 
 watch(() => props.data, async (newValue) => {
-  if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
-    clickedItem.value = props.data[0]
+  if (props.options?.selectAllItemByDefault) {
+    clickedItem.value = props.data
+  }
+  else {
+    if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
+      clickedItem.value = props.data[0]
+    }
   }
 })
 
 onMounted(() => {
   getDataFromSelectors()
-  if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
+  if (props.options?.selectAllItemByDefault) {
+    clickedItem.value = props.data
+  }
+  else if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
     clickedItem.value = props.data[0]
   }
 })

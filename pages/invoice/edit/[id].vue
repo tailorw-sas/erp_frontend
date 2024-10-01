@@ -25,6 +25,7 @@ const forceUpdate = ref(false)
 const active = ref(0)
 
 const route = useRoute()
+const invoiceType = ref<string>(route.query.type as string)
 
 //@ts-ignore
 const selectedInvoice = <string>ref(route.params.id.toString())
@@ -888,9 +889,19 @@ onMounted(async () => {
       {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
     </div>
     <div class="p-4">
-      <EditFormV2 :key="formReload" :fields="Fields" :item="item" :show-actions="true" :loading-save="loadingSaveAll"
-        :loading-delete="loadingDelete" @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
-        :force-save="forceSave" @force-save="forceSave = $event" container-class="grid pt-3">
+      <EditFormV2 
+        :key="formReload" 
+        :fields="Fields" 
+        :item="item" 
+        :show-actions="true" 
+        :loading-save="loadingSaveAll"
+        :loading-delete="loadingDelete" 
+        @cancel="clearForm" 
+        @delete="requireConfirmationToDelete($event)"
+        :force-save="forceSave" 
+        @force-save="forceSave = $event" 
+        container-class="grid pt-3"
+      >
         <template #field-invoiceDate="{ item: data, onUpdate }">
           <Calendar v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
             @update:model-value="($event) => {
@@ -1005,6 +1016,7 @@ onMounted(async () => {
               :set-active="($event) => { active = $event }" 
               :showTotals="true"
               :night-type-required="nightTypeRequired" 
+              :invoiceType='invoiceType'
             />
             <div>
               <div class="flex justify-content-end">

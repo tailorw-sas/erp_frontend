@@ -625,25 +625,25 @@ async function GetItemById(id: string) {
     loadingSaveAll.value = true
 
     if (props.isCreationDialog) {
-      // @ts-expect-error
-      const element: any = props.listItems.find((item: any) => item.id === id)
-      console.log(element)
-      item.value.id = element.id
-      item.value.roomRateId = element.roomRateId
-      item.value.checkIn = new Date(element.checkIn)
-      item.value.checkOut = new Date(element.checkOut)
-      item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : 0
-      item.value.roomNumber = +element.roomNumber
-      item.value.adults = element.adults
-      item.value.children = element.children
-      item.value.rateAdult = element.rateAdult
-      item.value.rateChild = element.rateChild
-      item.value.hotelAmount = element.hotelAmount ? element.hotelAmount : 0
-      item.value.remark = element.remark
-      item.value.booking = element.booking
-      currentBooking.value = element.booking
+      if (props?.listItems && props?.listItems?.length > 0) {
+        const element: any = props.listItems.find((item: any) => item.id === id)
+        item.value.id = element.id
+        item.value.roomRateId = element.roomRateId
+        item.value.checkIn = new Date(element.checkIn)
+        item.value.checkOut = new Date(element.checkOut)
+        item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : 0
+        item.value.roomNumber = +element.roomNumber
+        item.value.adults = element.adults
+        item.value.children = element.children
+        item.value.rateAdult = element.rateAdult
+        item.value.rateChild = element.rateChild
+        item.value.hotelAmount = element.hotelAmount ? element.hotelAmount : 0
+        item.value.remark = element.remark
+        item.value.booking = element.booking
+        currentBooking.value = element.booking
 
-      return loadingSaveAll.value = false
+        return loadingSaveAll.value = false
+      }
     }
 
     try {
@@ -718,7 +718,6 @@ async function saveRoomRate(item: { [key: string]: any }) {
     }
   }
 
-  console.log(item)
   loadingSaveAll.value = true
   let successOperation = true
   item.nights = dayjs(item.checkOut).endOf('day').diff(dayjs(item.checkIn).startOf('day'), 'day', false)
@@ -886,18 +885,23 @@ watch(() => props.bookingObj, () => {
     checkIn: dayjs(props.bookingObj?.checkIn).toDate(),
     checkOut: dayjs(props.bookingObj?.checkOut).toDate(),
   }
-  console.log(item.value)
-  console.log(props.bookingObj)
 })
 </script>
 
 <template>
   <div>
     <DynamicTable
-      :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns" :options="Options"
-      :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-row-right-click="onRowRightClick"
-      @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+      :data="isCreationDialog ? listItems as any : ListItems"
+      :columns="finalColumns"
+      :options="Options"
+      :pagination="Pagination"
+      @on-confirm-create="ClearForm"
+      @open-edit-dialog="OpenEditDialog($event)"
+      @on-change-pagination="PayloadOnChangePage = $event"
+      @on-row-right-click="onRowRightClick"
+      @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems"
+      @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
         if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
