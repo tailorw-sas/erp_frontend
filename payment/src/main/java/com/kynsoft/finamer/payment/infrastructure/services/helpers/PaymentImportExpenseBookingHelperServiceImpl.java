@@ -84,8 +84,10 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
 
     @Value("${payment.source.expense.code}")
     private String PAYMENT_SOURCE_EXP_CODE;
-    @Value("${payment.status.confirm.code}")
-    private String PAYMENT_STATUS_CONF_CODE;
+    @Value("${payment.source.apply.code}")
+    private String PAYMENT_STATUS_APPLY_CODE;
+    @Value("${payment.attachment.status.code}")
+    private String PAYMENT_ATTACHMENT_STATUS_CODE;
 
 
     public PaymentImportExpenseBookingHelperServiceImpl(PaymentExpenseBookingImportCacheRepository cacheRepository,
@@ -201,8 +203,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private UUID createPayment(UUID hotelId, UUID employeeId, ManageAgencyDto agencyDto, double amount) {
         PaymentCloseOperationDto closeOperationDto = closeOperationService.findByHotelIds(hotelId);
         ManagePaymentSourceDto paymentSource = paymentSourceService.findByCodeActive(PAYMENT_SOURCE_EXP_CODE);
-        ManagePaymentStatusDto paymentStatus = paymentStatusService.findByCode("APL");
-        ManagePaymentAttachmentStatusDto attachmentStatusDto = paymentAttachmentStatusService.findByCode("BOO");
+        ManagePaymentStatusDto paymentStatus = paymentStatusService.findByCode(PAYMENT_STATUS_APPLY_CODE);
+        ManagePaymentAttachmentStatusDto attachmentStatusDto = paymentAttachmentStatusService.findByCode(PAYMENT_ATTACHMENT_STATUS_CODE);
         CreatePaymentCommand createPaymentCommand = new CreatePaymentCommand(Status.ACTIVE, paymentSource.getId(), "",
                 closeOperationDto.getEndDate(), paymentStatus.getId(),
                 agencyDto.getClient().getId(), agencyDto.getId(), hotelId, null, attachmentStatusDto.getId(), amount,

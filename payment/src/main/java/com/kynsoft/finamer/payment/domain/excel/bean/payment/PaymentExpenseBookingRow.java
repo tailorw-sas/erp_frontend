@@ -29,4 +29,14 @@ public class PaymentExpenseBookingRow extends Row implements Serializable {
     private String hotelId;
     private String clientName;
 
+    //extras fields
+    private String invoiceNo;
+    private String fullName;
+    private String reservationNumber;
+    private String couponNumber;
+    private String checkIn;
+    private String checkOut;
+    private Integer adults;
+    private Integer children;
+
 }
