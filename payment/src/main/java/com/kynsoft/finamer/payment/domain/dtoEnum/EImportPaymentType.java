@@ -4,5 +4,6 @@ public enum EImportPaymentType {
     EXPENSE,
     BANK,
     ANTI,
-    DETAIL
+    DETAIL,
+    EXPENSE_TO_BOOKING
 }

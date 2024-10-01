@@ -30,6 +30,7 @@ public class CreatePaymentCommand implements ICommand {
     private String remark;
     private Status status;
     private UUID employee;
+    private boolean ignoreBankAccount;
 
     private PaymentDto payment;
     private List<CreateAttachmentRequest> attachments;
@@ -37,7 +38,7 @@ public class CreatePaymentCommand implements ICommand {
     public CreatePaymentCommand(Status status, UUID paymentSource, String reference, LocalDate transactionDate, 
                                 UUID paymentStatus, UUID client, UUID agency, UUID hotel, UUID bankAccount, 
                                 UUID attachmentStatus, Double paymentAmount, String remark, List<CreateAttachmentRequest> attachments,
-                                UUID employee) {
+                                UUID employee,boolean ignoreBankAccount) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.paymentSource = paymentSource;
@@ -53,6 +54,7 @@ public class CreatePaymentCommand implements ICommand {
         this.remark = remark;
         this.attachments = attachments;
         this.employee = employee;
+        this.ignoreBankAccount =ignoreBankAccount;
     }
 
     public static CreatePaymentCommand fromRequest(CreatePaymentRequest request) {
@@ -70,7 +72,8 @@ public class CreatePaymentCommand implements ICommand {
                 request.getPaymentAmount(),
                 request.getRemark(),
                 request.getAttachments(),
-                request.getEmployee()
+                request.getEmployee(),
+                false
         );
     }
 

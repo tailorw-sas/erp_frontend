@@ -15,8 +15,11 @@ public interface IManageBookingService {
 
     ManageBookingDto findById(UUID id);
 
+    ManageBookingDto findByGenId(long id);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    boolean exitBookingByGenId(long id);
     void deleteAll();
 
 }

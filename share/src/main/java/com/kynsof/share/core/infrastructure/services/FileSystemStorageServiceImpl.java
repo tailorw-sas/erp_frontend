@@ -1,8 +1,8 @@
-package com.kynsoft.finamer.invoicing.infrastructure.services;
+package com.kynsof.share.core.infrastructure.services;
 
-import com.kynsoft.finamer.invoicing.domain.services.StorageService;
+import com.kynsof.share.config.StorageConfig;
+import com.kynsof.share.core.domain.service.StorageService;
 import com.kynsof.share.core.infrastructure.exceptions.StorageException;
-import com.kynsoft.finamer.invoicing.infrastructure.config.StorageConfig;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @Service
@@ -85,8 +86,10 @@ public class FileSystemStorageServiceImpl implements StorageService {
 
     @Override
     public void init() {
-        this.rootLocation = Paths.get(config.getUploadLocation());
-        createDirectory(rootLocation);
+        if (Objects.nonNull(config.getUploadLocation())) {
+            this.rootLocation = Paths.get(config.getUploadLocation());
+            createDirectory(rootLocation);
+        }
     }
 
     private Path getImportLocation(String importProcessId) {
