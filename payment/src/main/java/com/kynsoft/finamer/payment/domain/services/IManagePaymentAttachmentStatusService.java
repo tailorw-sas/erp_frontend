@@ -20,4 +20,6 @@ public interface IManagePaymentAttachmentStatusService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     ManagePaymentAttachmentStatusDto findByDefaults();
+
+    ManagePaymentAttachmentStatusDto findByCode(String code);
 }
