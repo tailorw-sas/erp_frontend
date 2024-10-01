@@ -38,7 +38,7 @@ public class FileSystemStorageServiceImpl implements IStorageService {
             Path transferPath = Paths.get(importPath.toFile().getAbsolutePath(), filePart.filename());
             transferPath.toFile().getParentFile().mkdirs();
           return filePart.transferTo(transferPath.toFile());
-        }).subscribe();
+        }).doOnError(Throwable::printStackTrace).subscribe();
     }
 
     @Override
