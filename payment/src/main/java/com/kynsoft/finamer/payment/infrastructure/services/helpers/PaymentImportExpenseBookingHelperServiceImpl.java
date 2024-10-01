@@ -4,7 +4,7 @@ import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsof.share.core.domain.service.StorageService;
+import com.kynsof.share.core.domain.service.IStorageService;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
@@ -68,7 +68,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private final PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory;
     private final IManageBookingService bookingService;
     private List<String> availableClient;
-    private final StorageService fileSystemService;
+    private final IStorageService fileSystemService;
     //private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
     private final IPaymentCloseOperationService closeOperationService;
     private final IManagePaymentSourceService paymentSourceService;
@@ -86,7 +86,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                                                         PaymentImportExpenseBookingErrorRepository errorRepository,
                                                         RedisTemplate<String, String> redisTemplate,
                                                         PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory,
-                                                        IManageBookingService bookingService, StorageService fileSystemService,
+                                                        IManageBookingService bookingService, IStorageService fileSystemService,
                                                         //PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
                                                         IPaymentCloseOperationService closeOperationService,
                                                         IManagePaymentSourceService paymentSourceService,
