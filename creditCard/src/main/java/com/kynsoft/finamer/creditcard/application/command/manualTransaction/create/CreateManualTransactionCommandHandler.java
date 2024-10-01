@@ -141,7 +141,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
             // Variables para el template de email
             List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("payment_link", "http://localhost:3000/" + "?param=" + "payment?token=" + "&var=" + token),
+                    new MailJetVar("payment_link", "http://localhost:3000/" + "payment?token="+ token),
                     new MailJetVar("invoice_amount", command.getAmount().toString())
             );
             request.setMailJetVars(vars);
