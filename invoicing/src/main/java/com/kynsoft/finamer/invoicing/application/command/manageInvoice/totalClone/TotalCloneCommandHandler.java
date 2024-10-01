@@ -304,7 +304,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 false, //TODO: de donde sale esto?
                 bookings,
                 attachmentDtos,
-                false, //TODO: de donde sale esto?
+                false,
                 null,
                 invoiceToClone.getManageInvoiceType(),
                 invoiceStatus,
