@@ -33,7 +33,7 @@ public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> 
     private void sendEmail(SendMailCommand command, UUID transactionUuid) {
 
        TransactionDto transactionDto = transactionService.findByUuid(transactionUuid);
-       String token = tokenService.generateToken(transactionUuid).toString();
+       String token = tokenService.generateToken(transactionUuid);
         if (transactionDto.getEmail() != null) {
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
             request.setTemplateId(6324713); // Cambiar en configuración

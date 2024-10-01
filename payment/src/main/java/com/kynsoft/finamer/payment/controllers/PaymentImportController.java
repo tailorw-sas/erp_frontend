@@ -1,7 +1,7 @@
 package com.kynsoft.finamer.payment.controllers;
 
 import com.kynsof.share.core.domain.request.SearchRequest;
-import com.kynsof.share.core.domain.service.StorageService;
+import com.kynsof.share.core.domain.service.IStorageService;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
@@ -33,9 +33,9 @@ import java.util.UUID;
 public class PaymentImportController {
 
     private final IMediator mediator;
-    private final StorageService storageService;
+    private final IStorageService storageService;
 
-    public PaymentImportController(IMediator mediator, StorageService storageService) {
+    public PaymentImportController(IMediator mediator, IStorageService storageService) {
         this.mediator = mediator;
         this.storageService = storageService;
     }

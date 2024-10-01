@@ -14,7 +14,7 @@ import com.kynsoft.finamer.invoicing.domain.event.importError.CreateImportErrorE
 import com.kynsoft.finamer.invoicing.domain.event.importStatus.CreateImportStatusEvent;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.InvoiceReconcileImportService;
-import com.kynsof.share.core.domain.service.StorageService;
+import com.kynsof.share.core.domain.service.IStorageService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.InvoiceReconcileImportError;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.InvoiceReconcileImportProcessStatusRedisEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcile.InvoiceReconcileImportErrorRedisRepository;
@@ -44,13 +44,13 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
 
     private final IManageInvoiceService invoiceService;
 
-    private final StorageService storageService;
+    private final IStorageService storageService;
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public InvoiceReconcileImportServiceImpl(InvoiceReconcileImportProcessStatusRedisRepository statusRedisRepository,
                                              InvoiceReconcileImportErrorRedisRepository errorRedisRepository,
-                                             IManageInvoiceService invoiceService, StorageService storageService,
+                                             IManageInvoiceService invoiceService, IStorageService storageService,
                                              ApplicationEventPublisher applicationEventPublisher) {
         this.statusRedisRepository = statusRedisRepository;
         this.errorRedisRepository = errorRedisRepository;
