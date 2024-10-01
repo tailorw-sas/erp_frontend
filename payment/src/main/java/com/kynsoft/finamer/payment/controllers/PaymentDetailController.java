@@ -33,11 +33,11 @@ import com.kynsoft.finamer.payment.application.command.paymentDetailSplitDeposit
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentDetailResponse;
 import com.kynsoft.finamer.payment.application.query.paymentDetail.getById.FindPaymentDetailByIdQuery;
 import com.kynsoft.finamer.payment.application.query.paymentDetail.search.GetSearchPaymentDetailQuery;
-
-import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/payment-detail")
@@ -109,7 +109,7 @@ public class PaymentDetailController {
     @DeleteMapping(path = "/{id}/employee/{employeeId}")
     public ResponseEntity<?> deleteById(@PathVariable UUID id, @PathVariable UUID employeeId) {
 
-        DeletePaymentDetailCommand command = new DeletePaymentDetailCommand(id, employeeId);
+        DeletePaymentDetailCommand command = new DeletePaymentDetailCommand(id, employeeId, false);
         DeletePaymentDetailMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);

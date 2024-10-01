@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.redis.error;
 
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseBookingRowError;
-import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseRowError;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;

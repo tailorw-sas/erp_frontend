@@ -8,16 +8,8 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDepositToSplitRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDepositTransactionTypeRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountSplitGreaterThanZeroRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailDepositTypeIsApplyRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckSplitAmountRule;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.*;
+import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
 
 @Component

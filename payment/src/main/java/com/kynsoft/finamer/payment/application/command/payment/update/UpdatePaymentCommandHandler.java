@@ -5,28 +5,13 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageBankAccountDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentAttachmentStatusDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentSourceDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.payment.domain.services.IManageBankAccountService;
-import com.kynsoft.finamer.payment.domain.services.IManageClientService;
-import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentAttachmentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentSourceService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.services.*;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDate;
 import java.util.UUID;
-
 import java.util.function.Consumer;
-
-import org.springframework.stereotype.Component;
 
 @Component
 public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymentCommand> {

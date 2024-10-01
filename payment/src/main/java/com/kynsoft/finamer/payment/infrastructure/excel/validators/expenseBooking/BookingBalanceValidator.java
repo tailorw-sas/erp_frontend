@@ -3,7 +3,6 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBooki
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import org.springframework.context.ApplicationEventPublisher;

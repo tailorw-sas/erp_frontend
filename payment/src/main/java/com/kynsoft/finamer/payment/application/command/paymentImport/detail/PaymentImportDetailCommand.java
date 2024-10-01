@@ -2,14 +2,11 @@ package com.kynsoft.finamer.payment.application.command.paymentImport.detail;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 import java.util.UUID;
-
-import static io.lettuce.core.pubsub.PubSubOutput.Type.message;
 
 @Getter
 @Setter

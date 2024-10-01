@@ -7,14 +7,14 @@ import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.services.IAttachmentStatusHistoryService;
 import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
-import org.springframework.stereotype.Component;
 
 @Component
 public class DeleteMasterPaymentAttachmentCommandHandler implements ICommandHandler<DeleteMasterPaymentAttachmentCommand> {

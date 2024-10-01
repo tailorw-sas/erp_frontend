@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.manageEmployee;
 
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageEmployeeKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageEmployeeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.manageEmployee.create.CreateManageEmployeeCommand;
