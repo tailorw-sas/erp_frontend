@@ -14,13 +14,7 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -48,9 +42,9 @@ public class PaymentImportController {
                                                  @RequestPart(value = "employeeId",required = false) String employeeId,
                                                  @RequestPart(value = "attachments",required = false) Flux<FilePart> attachments
     ) {
-        if (Objects.nonNull(attachments)) {
-            storageService.store(attachments, importProcessId);
-        }
+//        if (Objects.nonNull(attachments)) {
+//            storageService.store(attachments, importProcessId);
+//        }
 
         return DataBufferUtils.join(filePart.content())
                 .flatMap(dataBuffer -> {

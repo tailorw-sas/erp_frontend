@@ -5,9 +5,10 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
+import org.springframework.stereotype.Component;
+
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import org.springframework.stereotype.Component;
 
 @Component
 public class CreatePaymentDetailTypeDepositCommandHandler implements ICommandHandler<CreatePaymentDetailTypeDepositCommand> {

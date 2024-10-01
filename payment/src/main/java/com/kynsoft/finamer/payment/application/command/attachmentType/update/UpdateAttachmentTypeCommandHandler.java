@@ -10,10 +10,9 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.attachmentType.AttachmentTypeAntiToIncomeImportMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.attachmentType.AttachmentTypeDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.IManageAttachmentTypeService;
+import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
-
-import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateAttachmentTypeCommandHandler implements ICommandHandler<UpdateAttachmentTypeCommand> {

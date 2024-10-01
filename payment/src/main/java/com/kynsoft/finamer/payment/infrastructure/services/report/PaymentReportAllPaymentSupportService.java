@@ -1,26 +1,17 @@
 package com.kynsoft.finamer.payment.infrastructure.services.report;
 
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
-import com.kynsoft.finamer.payment.application.query.report.PaymentReportResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentContentProvider;
 import com.kynsoft.finamer.payment.domain.services.IPaymentReport;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.ReportContentProviderFactory;
-import com.kynsoft.finamer.payment.infrastructure.services.report.util.ReportUtil;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service(value = PaymentReportAllPaymentSupportService.BEAN_ID)
 public class PaymentReportAllPaymentSupportService implements IPaymentReport {

@@ -11,11 +11,10 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceInvoiceMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
-
-import java.util.function.Consumer;
-
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.resourceType.ProducerUpdateResourceTypeService;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Consumer;
 
 @Component
 public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<UpdateManageResourceTypeCommand> {

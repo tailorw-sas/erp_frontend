@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.application.command.manageBankAccount.create;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import lombok.Getter;

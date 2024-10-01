@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.redis.expenseBooking;
 
 import com.kynsoft.finamer.payment.domain.excel.PaymentExpenseBookingImportCache;
-import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;

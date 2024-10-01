@@ -1,10 +1,6 @@
 package com.kynsoft.finamer.payment.domain.excel;
 
-import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseRow;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +10,6 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 @AllArgsConstructor
 @Getter
