@@ -4,7 +4,7 @@ import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsof.share.core.domain.service.StorageService;
+import com.kynsof.share.core.domain.service.IStorageService;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
@@ -22,6 +22,7 @@ import com.kynsoft.finamer.payment.application.query.objectResponse.ResourceType
 import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.payment.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentSourceDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
@@ -33,6 +34,7 @@ import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBooki
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseBookingRowError;
 import com.kynsoft.finamer.payment.domain.services.AbstractPaymentImportHelperService;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
+import com.kynsoft.finamer.payment.domain.services.IManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentSourceService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
@@ -40,6 +42,7 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBooking.PaymentExpenseBookingValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseBookingErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.expenseBooking.PaymentExpenseBookingImportCacheRepository;
+import com.kynsoft.finamer.payment.infrastructure.utils.PaymentUploadAttachmentUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -54,6 +57,7 @@ import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -68,12 +72,14 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private final PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory;
     private final IManageBookingService bookingService;
     private List<String> availableClient;
-    private final StorageService fileSystemService;
-    //private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
+    private final IStorageService fileSystemService;
+    private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
     private final IPaymentCloseOperationService closeOperationService;
     private final IManagePaymentSourceService paymentSourceService;
     private final IManagePaymentStatusService paymentStatusService;
     private final IManagePaymentTransactionTypeService transactionTypeService;
+
+    private final IManagePaymentAttachmentStatusService paymentAttachmentStatusService;
     private final ServiceLocator<IMediator> serviceLocator;
 
     @Value("${payment.source.expense.code}")
@@ -86,12 +92,12 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                                                         PaymentImportExpenseBookingErrorRepository errorRepository,
                                                         RedisTemplate<String, String> redisTemplate,
                                                         PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory,
-                                                        IManageBookingService bookingService, StorageService fileSystemService,
-                                                        //PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
+                                                        IManageBookingService bookingService, IStorageService fileSystemService,
+                                                        PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
                                                         IPaymentCloseOperationService closeOperationService,
                                                         IManagePaymentSourceService paymentSourceService,
                                                         IManagePaymentStatusService paymentStatusService,
-                                                        IManagePaymentTransactionTypeService transactionTypeService,
+                                                        IManagePaymentTransactionTypeService transactionTypeService, IManagePaymentAttachmentStatusService paymentAttachmentStatusService,
                                                         ServiceLocator<IMediator> serviceLocator
     ) {
         super(redisTemplate);
@@ -100,16 +106,18 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         this.expenseBookingValidatorFactory = expenseBookingValidatorFactory;
         this.bookingService = bookingService;
         this.fileSystemService = fileSystemService;
-        //this.paymentUploadAttachmentUtil = paymentUploadAttachmentUtil;
+        this.paymentUploadAttachmentUtil = paymentUploadAttachmentUtil;
         this.closeOperationService = closeOperationService;
         this.paymentSourceService = paymentSourceService;
         this.paymentStatusService = paymentStatusService;
         this.transactionTypeService = transactionTypeService;
+        this.paymentAttachmentStatusService = paymentAttachmentStatusService;
         this.serviceLocator = serviceLocator;
         this.availableClient = new ArrayList<>();
     }
 
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        availableClient.clear();
         readerConfiguration.setStrictHeaderOrder(false);
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
         expenseBookingValidatorFactory.createValidators();
@@ -144,7 +152,6 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         } while (cacheList.hasNext());
     }
 
-    @Transactional
     @Override
     public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
@@ -195,9 +202,10 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         PaymentCloseOperationDto closeOperationDto = closeOperationService.findByHotelIds(hotelId);
         ManagePaymentSourceDto paymentSource = paymentSourceService.findByCodeActive(PAYMENT_SOURCE_EXP_CODE);
         ManagePaymentStatusDto paymentStatus = paymentStatusService.findByCode("APL");
+        ManagePaymentAttachmentStatusDto attachmentStatusDto = paymentAttachmentStatusService.findByCode("BOO");
         CreatePaymentCommand createPaymentCommand = new CreatePaymentCommand(Status.ACTIVE, paymentSource.getId(), "",
                 closeOperationDto.getEndDate(), paymentStatus.getId(),
-                agencyDto.getClient().getId(), agencyDto.getId(), hotelId, null, null, amount,
+                agencyDto.getClient().getId(), agencyDto.getId(), hotelId, null, attachmentStatusDto.getId(), amount,
                 "Expense generated from action of import files", null, employeeId,true);
         CreatePaymentMessage createPaymentMessage = serviceLocator.getBean(IMediator.class).send(createPaymentCommand);
         return createPaymentMessage.getPayment().getId();
@@ -241,14 +249,13 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                try(FileInputStream fileInputStream = new FileInputStream(attachment.getValue())) {
                    byte[] fileContent = fileInputStream.readAllBytes();
 
-                   //LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent(attachment.getKey(), fileContent);
+                   LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent(attachment.getKey(), fileContent);
 
                    CreateMasterPaymentAttachmentCommand createMasterPaymentAttachmentCommand =
                            new CreateMasterPaymentAttachmentCommand(Status.ACTIVE, employeeId,
                                    paymentId
                                    , resourceTypeResponse.getId(), attachmentTypeResponse.getId(),
-                                   attachment.getKey(), "",
-//                                   attachment.getKey(), ""response.get("url"),
+                                   attachment.getKey(), response.get("url"),
                                    "Attachment added automatically when the payment was imported",
                                    String.valueOf(fileContent.length));
                    serviceLocator.getBean(IMediator.class).send(createMasterPaymentAttachmentCommand);
