@@ -109,7 +109,7 @@ public class PaymentDetailController {
     @DeleteMapping(path = "/{id}/employee/{employeeId}")
     public ResponseEntity<?> deleteById(@PathVariable UUID id, @PathVariable UUID employeeId) {
 
-        DeletePaymentDetailCommand command = new DeletePaymentDetailCommand(id, employeeId);
+        DeletePaymentDetailCommand command = new DeletePaymentDetailCommand(id, employeeId, false);
         DeletePaymentDetailMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);

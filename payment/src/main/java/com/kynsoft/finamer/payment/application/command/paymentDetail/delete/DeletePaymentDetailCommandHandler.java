@@ -6,7 +6,6 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePaymentDetailsApplyPaymentRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePaymentDetailsDepositRule;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
@@ -32,11 +31,13 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
 
         PaymentDto update = delete.getPayment();
         //RulesChecker.checkRule(new CheckValidateHourForDeleteRule(delete.getCreatedAt()));
-        if (delete.getTransactionType().getCash() || delete.getTransactionType().getApplyDeposit()) {
-            RulesChecker.checkRule(new CheckDeletePaymentDetailsApplyPaymentRule(delete));
-        }
-        if (delete.getTransactionType().getDeposit()) {
-            RulesChecker.checkRule(new CheckDeletePaymentDetailsDepositRule(delete));
+        if (!command.isUndoApplication()) {
+            if (delete.getTransactionType().getCash() || delete.getTransactionType().getApplyDeposit()) {
+                RulesChecker.checkRule(new CheckDeletePaymentDetailsApplyPaymentRule(delete));
+            }
+            if (delete.getTransactionType().getDeposit()) {
+                RulesChecker.checkRule(new CheckDeletePaymentDetailsDepositRule(delete));
+            }
         }
 
         ConsumerUpdate updatePayment = new ConsumerUpdate();
@@ -71,8 +72,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             UpdateIfNotNull.updateDouble(update::setNotIdentified, update.getPaymentAmount() - update.getIdentified(), updatePayment::setUpdate);
             //Para este caso no se elimina, dado que el objeto esta relacionado con otro objeto del mismo tipo, por tanto voy a actuar modificando
             //los valores y poniendo en inactivo el apply deposit que se trata de eliminar.
-            delete.setStatus(Status.INACTIVE);
-            service.update(delete);
+            service.delete(delete);
         }
 
         paymentService.update(update);
