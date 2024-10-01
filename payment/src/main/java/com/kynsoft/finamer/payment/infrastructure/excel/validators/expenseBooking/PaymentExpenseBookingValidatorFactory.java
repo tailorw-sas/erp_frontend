@@ -1,23 +1,11 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBooking;
 
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
-import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseRow;
-import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseBookingRowError;
-import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseRowError;
-import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.payment.infrastructure.excel.event.error.expense.PaymentImportExpenseErrorEvent;
-import com.kynsoft.finamer.payment.infrastructure.excel.event.error.expenseToBooking.PaymentImportExpenseToBookingErrorEvent;
-import com.kynsoft.finamer.payment.infrastructure.excel.validators.CommonImportValidators;
-import com.kynsoft.finamer.payment.infrastructure.excel.validators.expense.PaymentImportAmountValidator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 @Component
 public class PaymentExpenseBookingValidatorFactory extends IValidatorFactory<PaymentExpenseBookingRow> {
@@ -52,12 +40,12 @@ public class PaymentExpenseBookingValidatorFactory extends IValidatorFactory<Pay
         bookingBalanceValidator.validate(toValidate,errorFieldList);
         transactionTypeValidation.validate(toValidate,errorFieldList);
         remarksValidator.validate(toValidate,errorFieldList);
-        if (this.hasErrors()) {
-            PaymentImportExpenseToBookingErrorEvent paymentImportErrorEvent =
-                    new PaymentImportExpenseToBookingErrorEvent(new PaymentExpenseBookingRowError(null, toValidate.getRowNumber(),
-                            toValidate.getImportProcessId(), errorFieldList, toValidate));
-            this.sendErrorEvent(paymentImportErrorEvent);
-        }
+//        if (this.hasErrors()) {
+//            PaymentImportExpenseToBookingErrorEvent paymentImportErrorEvent =
+//                    new PaymentImportExpenseToBookingErrorEvent(new PaymentExpenseBookingRowError(null, toValidate.getRowNumber(),
+//                            toValidate.getImportProcessId(), errorFieldList, toValidate));
+//            this.sendErrorEvent(paymentImportErrorEvent);
+//        }
         boolean result = !this.hasErrors();
         this.clearErrors();
         return result;

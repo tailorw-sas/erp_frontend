@@ -40,7 +40,6 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBooking.PaymentExpenseBookingValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseBookingErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.expenseBooking.PaymentExpenseBookingImportCacheRepository;
-import com.kynsoft.finamer.payment.infrastructure.utils.PaymentUploadAttachmentUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -55,7 +54,6 @@ import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,7 +69,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private final IManageBookingService bookingService;
     private List<String> availableClient;
     private final StorageService fileSystemService;
-    private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
+    //private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
     private final IPaymentCloseOperationService closeOperationService;
     private final IManagePaymentSourceService paymentSourceService;
     private final IManagePaymentStatusService paymentStatusService;
@@ -89,7 +87,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                                                         RedisTemplate<String, String> redisTemplate,
                                                         PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory,
                                                         IManageBookingService bookingService, StorageService fileSystemService,
-                                                        PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
+                                                        //PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
                                                         IPaymentCloseOperationService closeOperationService,
                                                         IManagePaymentSourceService paymentSourceService,
                                                         IManagePaymentStatusService paymentStatusService,
@@ -102,7 +100,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         this.expenseBookingValidatorFactory = expenseBookingValidatorFactory;
         this.bookingService = bookingService;
         this.fileSystemService = fileSystemService;
-        this.paymentUploadAttachmentUtil = paymentUploadAttachmentUtil;
+        //this.paymentUploadAttachmentUtil = paymentUploadAttachmentUtil;
         this.closeOperationService = closeOperationService;
         this.paymentSourceService = paymentSourceService;
         this.paymentStatusService = paymentStatusService;
@@ -243,13 +241,14 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                try(FileInputStream fileInputStream = new FileInputStream(attachment.getValue())) {
                    byte[] fileContent = fileInputStream.readAllBytes();
 
-                   LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent(attachment.getKey(), fileContent);
+                   //LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent(attachment.getKey(), fileContent);
 
                    CreateMasterPaymentAttachmentCommand createMasterPaymentAttachmentCommand =
                            new CreateMasterPaymentAttachmentCommand(Status.ACTIVE, employeeId,
                                    paymentId
                                    , resourceTypeResponse.getId(), attachmentTypeResponse.getId(),
-                                   attachment.getKey(), response.get("url"),
+                                   attachment.getKey(), "",
+//                                   attachment.getKey(), ""response.get("url"),
                                    "Attachment added automatically when the payment was imported",
                                    String.valueOf(fileContent.length));
                    serviceLocator.getBean(IMediator.class).send(createMasterPaymentAttachmentCommand);
