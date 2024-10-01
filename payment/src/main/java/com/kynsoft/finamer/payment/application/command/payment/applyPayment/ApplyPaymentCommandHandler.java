@@ -69,7 +69,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 
                             //double amountToApply = Math.min(depositAmount, Math.min(notApplied, bookingDto.getAmountBalance()));
                             double amountToApply = Math.min(depositAmount,bookingDto.getAmountBalance());
-                            CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply * -1, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate()));
+                            CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate()));// quite *-1
                             command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId()));
 
                             notApplied = notApplied - amountToApply;
