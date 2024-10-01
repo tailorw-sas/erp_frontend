@@ -73,7 +73,7 @@ const columns: IColumn[] = [
 
   { field: 'invoiceDate', header: 'Generation Date', type: 'date', width: '150px' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '150px' },
-  { field: 'impstatus', header: 'Sent Status', type: 'slot-text', sortable: false, showFilter: false, width: '350px' },
+  { field: 'sendStatusError', header: 'Sent Status', type: 'slot-text', sortable: false, showFilter: false, width: '350px' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: false, showFilter: false },
 ]
 

@@ -29,12 +29,12 @@ const totalImportedRows = ref(0)
 
 const confApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment-detail/import',
+  uriApi: 'payment/import',
 })
 
 const confPaymentApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment-detail',
+  uriApi: 'payment',
 })
 
 const hotelList = ref<any[]>([])
@@ -67,7 +67,7 @@ const columns: IColumn[] = [
 const options = ref({
   tableName: 'Payment Import Expense to booking',
   moduleApi: 'payment',
-  uriApi: 'payment-expense-booking/import',
+  uriApi: 'payment/import',
   loading: false,
   showDelete: false,
   showFilters: true,
@@ -202,13 +202,13 @@ async function importExpenseBooking() {
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.BOOKING)
     // formData.append('totalAmount', importModel.value.totalAmount.toFixed(0).toString())
-    formData.append('hotel', importModel.value.hotel)
-    formData.append('employee', userData?.value?.user?.userId || '')
+    formData.append('hotelId', importModel.value.hotel)
+    formData.append('employeeId', userData?.value?.user?.userId || '')
     for (const fileInput of pdfFiles) {
-      formData.append('attachment', fileInput)
+      formData.append('attachments', fileInput)
     }
 
-    // await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
+    await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
     successOperation = false
@@ -218,9 +218,9 @@ async function importExpenseBooking() {
   }
 
   if (successOperation) {
-    // await validateStatusImport()
+    await validateStatusImport()
     if (!haveErrorImportStatus.value) {
-      // await getErrorList()
+      await getErrorList()
       if (listItems.value.length === 0) {
         toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 0 })
         options.value.loading = false
@@ -408,7 +408,7 @@ onMounted(async () => {
                   <div class="w-full">
                     <div class="p-inputgroup w-full">
                       <InputText
-                        ref="attachUpload" v-model="importModel.attachFile" placeholder="Choose file"
+                        ref="attachUpload" v-model="fileNames" placeholder="Choose file"
                         class="w-full" show-clear aria-describedby="inputtext-help"
                       />
                       <span class="p-inputgroup-addon p-0 m-0">
