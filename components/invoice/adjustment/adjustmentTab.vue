@@ -709,10 +709,17 @@ onMounted(() => {
 <template>
   <div>
     <DynamicTable
-      :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="Options"
-      :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-row-right-click="onRowRightClick" @on-sort-field="OnSortField"
+      :data="isCreationDialog ? listItems as any : ListItems"
+      :columns="Columns"
+      :options="Options"
+      :pagination="Pagination"
+      @on-confirm-create="ClearForm"
+      @open-edit-dialog="OpenEditDialog($event)"
+      @on-change-pagination="PayloadOnChangePage = $event"
+      @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems"
+      @on-row-right-click="onRowRightClick"
+      @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
       }"

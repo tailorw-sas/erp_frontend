@@ -960,6 +960,7 @@ const itemTemp2 = ref<GenericObject>({
 // ])
 
 const roomRateList = ref<any[]>([])
+const adjustmentList = ref<any[]>([])
 const ratePlanList = ref<any[]>([])
 const roomCategoryList = ref<any[]>([])
 const roomTypeList = ref<any[]>([])
@@ -969,6 +970,8 @@ const activeTab = ref(0)
 const totalInvoiceAmount = ref<number>(0)
 const totalHotelAmount = ref<number>(0)
 const roomRateContextMenu = ref()
+
+const totalAmountAdjustment = ref<number>(0)
 
 const confApi = reactive({
   booking: {
@@ -1009,6 +1012,12 @@ const confnightTypeApi = reactive({
   keyValue: 'name'
 })
 
+const transactionTypeApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-invoice-transaction-type',
+  keyValue: 'name'
+})
+
 const optionsRoomRate = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
@@ -1018,6 +1027,17 @@ const optionsRoomRate = ref({
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
 })
+
+const optionsAdjustment = ref({
+  tableName: 'Invoice',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-adjustment',
+  messageToDelete: 'Do you want to save the change?',
+  loading: false,
+  showFilters: false,
+  actionsAsMenu: false,
+})
+
 const columnsRoomRate: IColumn[] = [
   { field: 'roomRateId', header: 'Id', type: 'text', sortable: false },
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -1031,17 +1051,19 @@ const columnsRoomRate: IColumn[] = [
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: false },
   { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: false },
 ]
+const columnsAdjustment: IColumn[] = [
+  { field: 'adjustmentId', header: 'Id', type: 'text', sortable: false },
+  { field: 'amount', header: 'Amount', type: 'text', sortable: false },
+  { field: 'roomRateId', header: 'Room Rate', type: 'text', sortable: false },
+  { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: false },
+  { field: 'date', header: 'Transaction Date', type: 'date', sortable: false },
+  { field: 'employee', header: 'Employee', type: 'text', sortable: false },
+  { field: 'description', header: 'Description', type: 'text', sortable: false },
+]
 
 const payloadOnChangePageRoomRate = ref<PageState>()
 const payloadRoomRate = ref<IQueryRequest>({
-  filter: [
-    {
-      key: 'booking.id',
-      operator: 'EQUALS',
-      value: selectedInvoice.value,
-      logicalOperation: 'OR'
-    },
-  ],
+  filter: [],
   query: '',
   pageSize: 10,
   page: 0,
@@ -1057,11 +1079,35 @@ const paginationRoomRate = ref<IPagination>({
   search: ''
 })
 
+const payloadOnChangePageAdjustment = ref<PageState>()
+const payloadAdjustment = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'adjustmentId',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
+const paginationAdjustment = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
 function clearFormRoomRate() {
   // item2.value = { ...itemTemp2.value }
   // idItem.value = ''
   // formReload.value++
-  console.log('lImpiar')
+  console.log('lImpiar Room Rate')
+}
+
+function clearFormAdjustment() {
+  // item2.value = { ...itemTemp2.value }
+  // idItem.value = ''
+  // formReload.value++
+  console.log('lImpiar Adjustment')
 }
 
 function onRowRightClick(event: any) {
@@ -1100,6 +1146,14 @@ function onSortFieldRoomRate(event: any) {
   }
 }
 
+function onSortFieldAdjustment(event: any) {
+  if (event) {
+    payloadAdjustment.value.sortBy = event.sortField
+    payloadAdjustment.value.sortType = event.sortOrder
+    getAdjustmentList()
+  }
+}
+
 async function resetListItemsRoomRate() {
   payloadRoomRate.value.page = 0
   getRoomRateList()
@@ -1109,7 +1163,12 @@ async function getRoomRateList() {
     idItemToLoadFirstTime.value = ''
     optionsRoomRate.value.loading = true
     roomRateList.value = []
-
+    payloadRoomRate.value.filter = [...payloadRoomRate.value.filter, {
+      key: 'booking.id',
+      operator: 'EQUALS',
+      value: selectedInvoice.value,
+      logicalOperation: 'OR'
+    }]
     const response = await GenericService.search(optionsRoomRate.value.moduleApi, optionsRoomRate.value.uriApi, payloadRoomRate.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -1157,6 +1216,71 @@ async function getRoomRateList() {
   finally {
     optionsRoomRate.value.loading = false
   }
+}
+
+async function getAdjustmentList() {
+  try {
+    idItemToLoadFirstTime.value = ''
+    optionsAdjustment.value.loading = true
+    adjustmentList.value = []
+    totalAmountAdjustment.value = 0
+
+    payloadAdjustment.value.filter = [...payloadAdjustment.value.filter, {
+      key: 'roomRate.booking.id',
+      operator: 'EQUALS',
+      value: selectedInvoice.value,
+      logicalOperation: 'OR'
+    }]
+    const response = await GenericService.search(optionsAdjustment.value.moduleApi, optionsAdjustment.value.uriApi, payloadAdjustment.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    paginationAdjustment.value.page = page
+    paginationAdjustment.value.limit = size
+    paginationAdjustment.value.totalElements = totalElements
+    paginationAdjustment.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+      let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ''}-${iterator?.transaction?.name || ''}` }
+
+      if (iterator?.invoice?.invoiceType === InvoiceType.INCOME) {
+        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ''}-${iterator?.paymentTransactionType?.name || ''}` }
+      }
+
+      adjustmentList.value = [...adjustmentList.value, {
+        ...iterator,
+        loadingEdit: false,
+        loadingDelete: false,
+        roomRateId: iterator?.roomRate?.roomRateId,
+        date: iterator?.date,
+
+      }]
+
+      if (typeof +iterator?.amount === 'number') {
+        totalAmountAdjustment.value += Number(iterator?.amount)
+      }
+    }
+    if (adjustmentList.value.length > 0) {
+      idItemToLoadFirstTime.value = adjustmentList.value[0].id
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    optionsAdjustment.value.loading = false
+  }
+}
+
+async function resetListItemsAdjustment() {
+  payloadAdjustment.value.page = 0
+  getAdjustmentList()
+}
+
+async function parseDataTableFilterAdjustment(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsAdjustment)
+  payloadAdjustment.value.filter = [...parseFilter || []]
+  getAdjustmentList()
 }
 
 async function openEditDialog(item: any) {
@@ -1430,6 +1554,7 @@ onMounted(async () => {
   if (route.params && 'id' in route.params && route.params.id) {
     await getBookingItemById(route.params.id as string)
     getRoomRateList()
+    getAdjustmentList()
   }
 })
 </script>
@@ -1647,6 +1772,44 @@ onMounted(async () => {
                       </template>
                     </DynamicTable>
                   </TabPanel>
+                  <TabPanel>
+                    <template #header>
+                      <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+                        <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
+                        <span class="font-bold white-space-nowrap">
+                          Adjustments
+                          <!-- <i
+                            v-if="errorInTab.tabGeneralData" class="pi p-error pi-question-circle"
+                            style="font-size: 1.2rem"
+                          /> -->
+                        </span>
+                      </div>
+                    </template>
+                    <DynamicTable
+                      :data="adjustmentList"
+                      :columns="columnsAdjustment"
+                      :options="optionsAdjustment"
+                      :pagination="paginationAdjustment"
+                      @on-confirm-create="clearFormAdjustment"
+                      @on-change-pagination="payloadOnChangePageAdjustment = $event"
+                      @on-row-right-click="onRowRightClick"
+                      @on-change-filter="parseDataTableFilterAdjustment"
+                      @on-list-item="resetListItemsAdjustment"
+                      @on-sort-field="onSortFieldAdjustment"
+                      @on-row-double-click="($event) => {}"
+                    >
+                      <template #datatable-footer>
+                        <ColumnGroup type="footer" class="flex align-items-center">
+                          <Row>
+                            <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
+                            <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2))" footer-style="font-weight: 700" />
+
+                            <Column :colspan="6" />
+                          </Row>
+                        </ColumnGroup>
+                      </template>
+                    </DynamicTable>
+                  </TabPanel>
                 </TabView>
 
                 <!-- <InvoiceTabView
@@ -1714,3 +1877,32 @@ onMounted(async () => {
 
   <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
 </template>
+
+<style lang="scss">
+.no-global-style .p-tabview-nav-container {
+  padding-left: 0 !important;
+  background-color: initial !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+#tabView {
+  .p-tabview-nav-container {
+    .p-tabview-nav-link {
+      color: var(--secondary-color) !important;
+    }
+    .p-tabview-nav-link:hover{
+      border-bottom-color: transparent !important;
+    }
+  }
+
+  .p-tabview-panels {
+    padding: 0 !important;
+  }
+}
+
+.no-global-style .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+    background: #d8f2ff;
+    border-color: #0F8BFD;
+    color: #0F8BFD;
+}
+</style>
