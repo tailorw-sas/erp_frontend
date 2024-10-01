@@ -6,9 +6,7 @@ import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsof.share.core.infrastructure.redis.CacheConfig;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentResponse;
 import com.kynsoft.finamer.payment.application.query.objectResponse.search.PaymentSearchResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -20,7 +18,6 @@ import com.kynsoft.finamer.payment.infrastructure.repository.query.PaymentReadDa
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -105,6 +102,16 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
+    public PaginatedResponse searchExcelExporter(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+
+        GenericSpecificationsBuilder<Payment> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<Payment> data = this.repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedExcelExporter(data);
+    }
+
+    @Override
     public List<PaymentDto> createBulk(List<PaymentDto> dtoList) {
         return repositoryCommand.saveAllAndFlush(dtoList.stream().map(Payment::new).toList())
                 .stream().map(Payment::toAggregate).toList();
@@ -127,6 +134,15 @@ public class PaymentServiceImpl implements IPaymentService {
         List<PaymentSearchResponse> responses = new ArrayList<>();
         for (Payment p : data.getContent()) {
             responses.add(new PaymentSearchResponse(p.toAggregateWihtDetails()));
+        }
+        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    private PaginatedResponse getPaginatedExcelExporter(Page<Payment> data) {
+        List<PaymentDto> responses = new ArrayList<>();
+        for (Payment p : data.getContent()) {
+            responses.add(p.toAggregateWihtDetails());
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());

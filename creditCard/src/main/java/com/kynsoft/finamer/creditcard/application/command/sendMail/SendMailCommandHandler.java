@@ -23,26 +23,24 @@ public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> 
         this.mailService = mailService;
         this.transactionService = transactionService;
         this.tokenService = tokenService;
-
     }
 
     @Override
     @Transactional
     public void handle(SendMailCommand command) {
-        sendEmail(command, command.getToken());
+        sendEmail(command, command.getTransactionUuid());
     }
+    private void sendEmail(SendMailCommand command, UUID transactionUuid) {
 
-    private void sendEmail(SendMailCommand command, String token) {
-
-       UUID transactionUuid = UUID.fromString(tokenService.validateToken(token).getId());
        TransactionDto transactionDto = transactionService.findByUuid(transactionUuid);
+       String token = tokenService.generateToken(transactionUuid).toString();
         if (transactionDto.getEmail() != null) {
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
             request.setTemplateId(6324713); // Cambiar en configuración
 
             // Variables para el template de email
             List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("payment_link", "https://kynsoft.com/" + "?param=" + "Payment" + "&var=" + token),
+                    new MailJetVar("payment_link", "http://localhost:3000/" + "?param=" + "payment?token=" + "&var=" + token),
                     new MailJetVar("invoice_amount", transactionDto.getAmount().toString())
             );
             request.setMailJetVars(vars);

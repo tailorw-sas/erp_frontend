@@ -16,44 +16,49 @@ import java.util.UUID;
 public class TotalCloneCommand implements ICommand {
 
     private UUID invoiceToClone;
-    private UUID agency;
-    private UUID hotel;
-    private LocalDateTime invoiceDate;
-    private UUID employeeId;
+//    private UUID agency;
+//    private UUID hotel;
+//    private LocalDateTime invoiceDate;
+//    private UUID employeeId;
     private String employeeName;
-    List<TotalCloneAttachmentRequest> attachments;
-    List<TotalCloneBookingRequest> bookings;
+//    List<TotalCloneAttachmentRequest> attachments;
+//    List<TotalCloneBookingRequest> bookings;
 
     private UUID clonedInvoice;
     private Long clonedInvoiceId;
     private String clonedInvoiceNo;
 
-    public TotalCloneCommand(UUID invoiceToClone, UUID agency, LocalDateTime invoiceDate,
-                             UUID employeeId, String employeeName,
-                             List<TotalCloneAttachmentRequest> attachments,
-                             List<TotalCloneBookingRequest> bookings, UUID hotel) {
+    public TotalCloneCommand(UUID invoiceToClone,
+//                             UUID agency, LocalDateTime invoiceDate,
+//                             UUID employeeId,
+                               String employeeName
+//                             ,
+//                             List<TotalCloneAttachmentRequest> attachments,
+//                             List<TotalCloneBookingRequest> bookings, UUID hotel
+    ) {
 
         this.clonedInvoice = UUID.randomUUID();
         this.invoiceToClone = invoiceToClone;
-        this.agency = agency;
-        this.invoiceDate = invoiceDate;
-        this.employeeId = employeeId;
+//        this.agency = agency;
+//        this.invoiceDate = invoiceDate;
+//        this.employeeId = employeeId;
         this.employeeName = employeeName;
-        this.attachments = attachments;
-        this.bookings = bookings;
-        this.hotel = hotel;
+//        this.attachments = attachments;
+//        this.bookings = bookings;
+//        this.hotel = hotel;
     }
 
     public static TotalCloneCommand fromRequest(TotalCloneRequest request){
         return new TotalCloneCommand(
                 request.getInvoiceToClone(),
-                request.getAgency(),
-                request.getInvoiceDate(),
-                request.getEmployeeId(),
-                request.getEmployeeName(),
-                request.attachments,
-                request.bookings,
-                request.getHotel()
+//                request.getAgency(),
+//                request.getInvoiceDate(),
+//                request.getEmployeeId(),
+                  request.getEmployeeName()
+//                ,
+//                request.attachments,
+//                request.bookings,
+//                request.getHotel()
         );
     }
 

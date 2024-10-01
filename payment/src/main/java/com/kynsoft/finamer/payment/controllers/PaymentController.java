@@ -19,6 +19,9 @@ import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaym
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentMessage;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentRequest;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentResponse;
+import com.kynsoft.finamer.payment.application.query.payment.excelExporter.GetPaymentExcelExporterQuery;
+import com.kynsoft.finamer.payment.domain.dtoEnum.PaymentExcelExporterEnum;
+import com.kynsoft.finamer.payment.application.query.payment.excelExporter.PaymentExcelExporterResponse;
 import com.kynsoft.finamer.payment.application.query.payment.getById.FindPaymentByIdQuery;
 import com.kynsoft.finamer.payment.application.query.payment.search.GetSearchPaymentQuery;
 
@@ -56,13 +59,6 @@ public class PaymentController {
 
     @PostMapping(path = "/change-attachment-status")
     public ResponseEntity<ChangeAttachmentStatusMessage> attachmentStatus(@RequestBody ChangeAttachmentStatusRequest request) {
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
         ChangeAttachmentStatusCommand createCommand = ChangeAttachmentStatusCommand.fromRequest(request);
         ChangeAttachmentStatusMessage response = mediator.send(createCommand);
 
@@ -94,7 +90,7 @@ public class PaymentController {
 
         return ResponseEntity.ok(response);
     }
-    
+
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
@@ -103,4 +99,14 @@ public class PaymentController {
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
+
+    @PostMapping("/excel-exporter/{eenum}")
+    public ResponseEntity<?> excelExporter(@RequestBody SearchRequest request, @PathVariable PaymentExcelExporterEnum eenum) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetPaymentExcelExporterQuery query = new GetPaymentExcelExporterQuery(pageable, request.getFilter(), request.getQuery(), eenum);
+        PaymentExcelExporterResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
 }

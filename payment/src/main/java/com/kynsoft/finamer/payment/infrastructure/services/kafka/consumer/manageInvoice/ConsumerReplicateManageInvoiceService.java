@@ -23,9 +23,6 @@ import java.util.List;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 @Service
 public class ConsumerReplicateManageInvoiceService {
 
@@ -96,9 +93,9 @@ public class ConsumerReplicateManageInvoiceService {
 
         this.service.create(invoiceDto);
 
-        if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
-            ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
-            if (hotelDto.getAutoApplyCredit()) {
+            if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
+                ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
+                if (!hotelDto.getAutoApplyCredit()) {
 
                 List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
                 if (objKafka.getAttachments() != null) {
@@ -116,9 +113,26 @@ public class ConsumerReplicateManageInvoiceService {
                     }
                 }
 
-                this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, mediator));
+                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, true, mediator));
+                } else {
+                    List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
+                    if (objKafka.getAttachments() != null) {
+                        for (AttachmentKafka attDto : objKafka.getAttachments()) {
+                            attachmentKafkas.add(new CreateAttachmentRequest(
+                                    Status.ACTIVE,
+                                    attDto.getEmployee(),
+                                    null,
+                                    null,
+                                    attDto.getFileName(),
+                                    "",
+                                    attDto.getPath(),
+                                    attDto.getRemark()
+                            ));
+                        }
+                    }
+                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, false, mediator));
+                }
             }
-        }
 //        } catch (Exception ex) {
 //            Logger.getLogger(ConsumerReplicateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
 //        }
