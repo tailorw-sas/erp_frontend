@@ -4,6 +4,7 @@ import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 

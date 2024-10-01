@@ -2,10 +2,14 @@ package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.manag
 
 import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
+import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
+import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +24,18 @@ public class ConsumerUpdateManageInvoiceService {
 
     private final IManageInvoiceService service;
     private final IManageBookingService serviceBookingService;
+    private final IManageHotelService manageHotelService;
+    private final IManageAgencyService manageAgencyService;
 
     public ConsumerUpdateManageInvoiceService(IManageInvoiceService service,
-            IManageBookingService serviceBookingService) {
+                                              IManageBookingService serviceBookingService,
+                                              IManageHotelService manageHotelService,
+                                              IManageAgencyService manageAgencyService) {
 
         this.service = service;
         this.serviceBookingService = serviceBookingService;
+        this.manageHotelService = manageHotelService;
+        this.manageAgencyService = manageAgencyService;
     }
 
     @KafkaListener(topics = "finamer-update-manage-invoice", groupId = "payment-entity-replica")
@@ -53,6 +63,8 @@ public class ConsumerUpdateManageInvoiceService {
                     ));
                 }
             }
+            ManageHotelDto manageHotelDto = manageHotelService.findById(objKafka.getHotel());
+            ManageAgencyDto manageAgencyDto = manageAgencyService.findById(objKafka.getAgency());
 
             this.service.update(new ManageInvoiceDto(
                     objKafka.getId(), 
@@ -64,7 +76,9 @@ public class ConsumerUpdateManageInvoiceService {
                     bookingDtos,
                     objKafka.getHasAttachment(),
                     objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null,
-                    objKafka.getInvoiceDate()
+                    objKafka.getInvoiceDate(),
+                    manageHotelDto,
+                    manageAgencyDto
             ));
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);

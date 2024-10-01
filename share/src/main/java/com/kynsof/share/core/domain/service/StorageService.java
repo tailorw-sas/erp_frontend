@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.domain.services;
+package com.kynsof.share.core.domain.service;
 
 import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Flux;

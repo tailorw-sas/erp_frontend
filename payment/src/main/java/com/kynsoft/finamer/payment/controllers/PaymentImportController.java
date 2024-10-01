@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.controllers;
 
 import com.kynsof.share.core.domain.request.SearchRequest;
+import com.kynsof.share.core.domain.service.StorageService;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
@@ -20,7 +21,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Objects;
+import java.util.UUID;
 
 
 @RestController
@@ -28,40 +33,55 @@ import reactor.core.publisher.Mono;
 public class PaymentImportController {
 
     private final IMediator mediator;
+    private final StorageService storageService;
 
-    public PaymentImportController(IMediator mediator) {
+    public PaymentImportController(IMediator mediator, StorageService storageService) {
         this.mediator = mediator;
+        this.storageService = storageService;
     }
 
-    @PostMapping(value = "/import",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<ResponseEntity<?>> importPayment(@RequestPart("file") FilePart filePart,
                                                  @RequestPart("importProcessId") String importProcessId,
-                                                 @RequestPart("importType") String eImportPaymentType){
+                                                 @RequestPart("importType") String eImportPaymentType,
+                                                 @RequestPart(value = "hotelId",required = false) String hotelId,
+                                                 @RequestPart(value = "employeeId",required = false) String employeeId,
+                                                 @RequestPart(value = "attachments",required = false) Flux<FilePart> attachments
+    ) {
+        if (Objects.nonNull(attachments)) {
+            storageService.store(attachments, importProcessId);
+        }
+
         return DataBufferUtils.join(filePart.content())
                 .flatMap(dataBuffer -> {
                     byte[] bytes = new byte[dataBuffer.readableByteCount()];
                     dataBuffer.read(bytes);
                     DataBufferUtils.release(dataBuffer);
 
-                    PaymentImportRequest paymentImportRequest = new PaymentImportRequest(importProcessId,bytes,EImportPaymentType.valueOf(eImportPaymentType));
-                    PaymentImportCommand paymentImportCommand = new PaymentImportCommand(paymentImportRequest);
+                    PaymentImportRequest.PaymentImportRequestBuilder paymentImportRequest = PaymentImportRequest.builder();
+                    paymentImportRequest.file(bytes).importProcessId(importProcessId).importPaymentType(EImportPaymentType.valueOf(eImportPaymentType));
+                    if (Objects.nonNull(hotelId))
+                        paymentImportRequest.hotelId(UUID.fromString(hotelId));
+                    if (Objects.nonNull(employeeId))
+                        paymentImportRequest.employeeId(UUID.fromString(employeeId));
+                    PaymentImportCommand paymentImportCommand = new PaymentImportCommand(paymentImportRequest.build());
                     try {
-                       IMessage message = mediator.send(paymentImportCommand);
-                       return Mono.just(ResponseEntity.ok(message));
-                    }catch (Exception e) {
+                        IMessage message = mediator.send(paymentImportCommand);
+                        return Mono.just(ResponseEntity.ok(message));
+                    } catch (Exception e) {
                         return Mono.error(e);
                     }
 
-                } );
+                });
     }
     @GetMapping("/{importProcessId}/import-status")
-    public ResponseEntity<PaymentImportStatusResponse> importPaymentStatus(@PathVariable("importProcessId") String importProcessId){
+    public ResponseEntity<PaymentImportStatusResponse> importPaymentStatus(@PathVariable("importProcessId") String importProcessId) {
         PaymentImportStatusQuery paymentImportStatusQuery = new PaymentImportStatusQuery(importProcessId);
         return ResponseEntity.ok(mediator.send(paymentImportStatusQuery));
     }
 
     @PostMapping("/import-search")
-    public ResponseEntity<?> importPayment(@RequestBody SearchRequest request){
+    public ResponseEntity<?> importPayment(@RequestBody SearchRequest request) {
         PaymentImportSearchErrorQuery command = new PaymentImportSearchErrorQuery(request);
         return ResponseEntity.ok(mediator.send(command));
     }

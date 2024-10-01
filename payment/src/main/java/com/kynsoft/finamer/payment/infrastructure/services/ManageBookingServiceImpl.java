@@ -53,6 +53,15 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
+    public ManageBookingDto findByGenId(long id) {
+        Optional<ManageBooking> booking = this.repositoryQuery.findManageBookingByBookingId(id);
+        if (booking.isPresent()) {
+            return booking.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND, new ErrorField("booking Id", DomainErrorMessage.BOOKING_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
@@ -60,6 +69,11 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         Page<ManageBooking> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public boolean exitBookingByGenId(long id) {
+        return repositoryQuery.existsManageBookingByBookingId(id);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

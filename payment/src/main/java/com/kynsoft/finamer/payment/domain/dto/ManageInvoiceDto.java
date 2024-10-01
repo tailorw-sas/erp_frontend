@@ -26,4 +26,6 @@ public class ManageInvoiceDto {
     private Boolean hasAttachment;
     private ManageInvoiceDto parent;
     private LocalDateTime invoiceDate;
+    private ManageHotelDto hotel;
+    private ManageAgencyDto agency;
 }

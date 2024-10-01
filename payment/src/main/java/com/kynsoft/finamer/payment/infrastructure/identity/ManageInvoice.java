@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -42,6 +43,14 @@ public class ManageInvoice {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
     private List<ManageBooking> bookings;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_hotel")
+    private ManageHotel hotel;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_agency")
+    private ManageAgency agency;
+
     public ManageInvoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceId = dto.getInvoiceId();
@@ -57,6 +66,8 @@ public class ManageInvoice {
         this.hasAttachment = dto.getHasAttachment();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.invoiceDate = dto.getInvoiceDate();
+        this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
+        this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -70,7 +81,10 @@ public class ManageInvoice {
                 null,
                 hasAttachment,
                 null,
-                invoiceDate
+                invoiceDate,
+                Objects.nonNull(hotel)? hotel.toAggregate():null,
+               Objects.nonNull(agency)? agency.toAggregate():null
+
         );
     }
 
@@ -87,7 +101,9 @@ public class ManageInvoice {
                         }).collect(Collectors.toList()) : null,
                 hasAttachment,
                 parent != null ? parent.toAggregateSample() : null,
-                invoiceDate
+                invoiceDate,
+                Objects.nonNull(hotel)? hotel.toAggregate():null,
+                Objects.nonNull(agency)? agency.toAggregate():null
         );
     }
 

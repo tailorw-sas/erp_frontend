@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -16,4 +17,8 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Manage
 
     @Override
     Page<ManageBooking> findAll(Specification specification, Pageable pageable);
+
+    boolean existsManageBookingByBookingId(long bookingId);
+
+    Optional<ManageBooking> findManageBookingByBookingId(long bookingId);
 }
