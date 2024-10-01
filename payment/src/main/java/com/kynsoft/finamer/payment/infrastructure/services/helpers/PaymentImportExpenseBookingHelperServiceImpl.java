@@ -40,6 +40,7 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBooking.PaymentExpenseBookingValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseBookingErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.expenseBooking.PaymentExpenseBookingImportCacheRepository;
+import com.kynsoft.finamer.payment.infrastructure.utils.PaymentUploadAttachmentUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -69,7 +70,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private final IManageBookingService bookingService;
     private List<String> availableClient;
     private final StorageService fileSystemService;
-    //private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
+    private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
     private final IPaymentCloseOperationService closeOperationService;
     private final IManagePaymentSourceService paymentSourceService;
     private final IManagePaymentStatusService paymentStatusService;
@@ -87,7 +88,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                                                         RedisTemplate<String, String> redisTemplate,
                                                         PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory,
                                                         IManageBookingService bookingService, StorageService fileSystemService,
-                                                        //PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
+                                                        PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
                                                         IPaymentCloseOperationService closeOperationService,
                                                         IManagePaymentSourceService paymentSourceService,
                                                         IManagePaymentStatusService paymentStatusService,
@@ -100,7 +101,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         this.expenseBookingValidatorFactory = expenseBookingValidatorFactory;
         this.bookingService = bookingService;
         this.fileSystemService = fileSystemService;
-        //this.paymentUploadAttachmentUtil = paymentUploadAttachmentUtil;
+        this.paymentUploadAttachmentUtil = paymentUploadAttachmentUtil;
         this.closeOperationService = closeOperationService;
         this.paymentSourceService = paymentSourceService;
         this.paymentStatusService = paymentStatusService;
