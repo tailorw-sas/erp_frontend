@@ -82,7 +82,7 @@ const columns: IColumn[] = [
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '14%' },
   { field: 'reconcilestatus', header: 'Rec Status', type: 'slot-text', width: '15%' },
   // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', sortable: true , objApi: { moduleApi: 'settings', uriApi: 'manage-invoice-status'}},
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'local-select', showFilter: false, localItems: ENUM_INVOICE_STATUS, sortable: true },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', showFilter: false, localItems: ENUM_INVOICE_STATUS, sortable: true },
 
 ]
 
