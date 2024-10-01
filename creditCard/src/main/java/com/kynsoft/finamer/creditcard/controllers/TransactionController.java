@@ -19,7 +19,6 @@ import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailReque
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.getById.FindTransactionByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.GetSearchTransactionQuery;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -75,7 +74,7 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/send-mail")
+    @PostMapping("/resend/email/payment-link")
     public ResponseEntity<?> send(@RequestBody SendMailRequest request) {
         SendMailCommand command = SendMailCommand.fromRequest(request);
         SendMailMessage response = this.mediator.send(command);

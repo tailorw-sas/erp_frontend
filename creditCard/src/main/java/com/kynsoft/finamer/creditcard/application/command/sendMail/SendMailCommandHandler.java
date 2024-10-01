@@ -28,19 +28,19 @@ public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> 
     @Override
     @Transactional
     public void handle(SendMailCommand command) {
-        sendEmail(command, command.getTransactionUuid());
+        sendEmail(command, command.getId());
     }
-    private void sendEmail(SendMailCommand command, UUID transactionUuid) {
+    private void sendEmail(SendMailCommand command, Long id) {
 
-       TransactionDto transactionDto = transactionService.findByUuid(transactionUuid);
-       String token = tokenService.generateToken(transactionUuid);
+       TransactionDto transactionDto = transactionService.findById(id);
+       String token = tokenService.generateToken(transactionDto.getTransactionUuid());
         if (transactionDto.getEmail() != null) {
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
             request.setTemplateId(6324713); // Cambiar en configuración
 
             // Variables para el template de email
             List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("payment_link", "http://localhost:3000/" + "?param=" + "payment?token=" + "&var=" + token),
+                    new MailJetVar("payment_link", "http://localhost:3000/" + "payment?token="+ token),
                     new MailJetVar("invoice_amount", transactionDto.getAmount().toString())
             );
             request.setMailJetVars(vars);

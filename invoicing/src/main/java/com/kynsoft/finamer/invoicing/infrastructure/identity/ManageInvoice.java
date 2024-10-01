@@ -91,13 +91,12 @@ public class ManageInvoice {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.MERGE)
     private List<ManageAttachment> attachments;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
     private Double credits;
+
+    private String sendStatusError;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -105,9 +104,6 @@ public class ManageInvoice {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
 
     public ManageInvoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -144,6 +140,7 @@ public class ManageInvoice {
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
+        this.sendStatusError = dto.getSendStatusError();
     }
 
     public ManageInvoiceDto toAggregateSample() {

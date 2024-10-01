@@ -129,7 +129,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                         agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21);
                 updateStatusAgency(invoice, manageInvoiceStatus, employee);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                invoice.setSendStatusError(e.getMessage());
+                service.update(invoice);
             }
         }
     }
@@ -148,8 +149,9 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                     updateStatusAgency(invoice, manageInvoiceStatus, employee);
                     System.out.println("Archivo subido exitosamente al FTP.");
                 } catch (Exception e) {
+                    invoice.setSendStatusError(e.getMessage());
+                    service.update(invoice);
                     e.printStackTrace();
-                    throw new RuntimeException("Error al subir el archivo al servidor FTP: " + e.getMessage(), e);
                 }
             } else {
                 System.out.println("No se pudo obtener el archivo de las facturas.");
@@ -186,15 +188,9 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
                 request.setMailJetVars(vars);
                 List<MailJetAttachment> attachments = new ArrayList<>();
-                // Crear el adjunto con el XML
-                String nameFileXml = invoice.getInvoiceNumber() + ".xml"; // Cambiar la extensión a .xml
-                // MailJetAttachment attachmentXML = new MailJetAttachment("application/xml", nameFileXml, base64Xml);
-                //   attachments.add(attachmentXML);
                 Optional<ByteArrayOutputStream> invoiceBooking = getInvoicesBooking(invoice.getId().toString());
                 String nameFile = invoice.getInvoiceNumber() + ".pdf";
                 byte[] pdfBytes = invoiceBooking.get().toByteArray();
-
-                // Codificar los bytes en Base64
                 String base64EncodedPDF = Base64.getEncoder().encodeToString(pdfBytes);
 
                 MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, base64EncodedPDF);
@@ -203,10 +199,13 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 try {
                     mailService.sendMail(request);
                     updateStatusAgency(invoice, manageInvoiceStatus, employee);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    invoice.setSendStatusError(e.getMessage());
+                    service.update(invoice);
                 }
             } catch (DocumentException | IOException e) {
-                throw new RuntimeException(e);
+               invoice.setSendStatusError(e.getMessage());
+               service.update(invoice);
             }
 
         }
@@ -263,8 +262,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             result.put(invoiceId, PDFUtils.mergePDFtoByte(finalContent));
         }
 
-
-        // Retornar el mapa de resultados si no está vacío
         return result.isEmpty() ? Optional.empty() : Optional.of(result);
     }
 
