@@ -68,7 +68,7 @@ const confagencyListApi = reactive({
   uriApi: 'manage-agency',
 })
 // -------------------------------------------------------------------------------------------------------
-const columns: IColumn[] = [
+/*const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Invoice Id', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
   { field: 'invoiceNumber', header: 'Invoice No', type: 'text' },
@@ -78,7 +78,17 @@ const columns: IColumn[] = [
   { field: 'reconcilestatus', header: 'Rec Status', type: 'slot-text' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
-
+*/
+const columns: IColumn[] = [
+  { field: 'invoiceId', header: 'Id', type: 'text', width: '6%' },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi, width: '20%' },
+  { field: 'invoiceNumber', header: 'Inv. No', type: 'text', width: '6%' },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi, width: '20%' },
+  { field: 'invoiceDate', header: 'Gen.  Date', type: 'date', width: '9%' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '12%' },
+  { field: 'reconcilestatus', header: 'Rec Status', type: 'slot-text', width: '15%' },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+]
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -489,7 +499,7 @@ onMounted(async () => {
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
-                  Invoices to Reconcile
+                  Invoice to Reconcile Manual
                 </div>
               </div>
             </template>
@@ -568,7 +578,7 @@ onMounted(async () => {
 
               
               </div>
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
                 <div class="flex w-full">
                   <div class="flex flex-row w-full">
                     <div class="flex flex-column gap-2 w-full">
