@@ -604,7 +604,6 @@ async function getItemById(id: string) {
         item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
         item.value.invoiceNumber = item.value.invoiceNumber.replace("OLD", "CRE")
 
-
         item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
@@ -621,9 +620,6 @@ async function getItemById(id: string) {
         item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
-
-
-
       }
 
       formReload.value += 1
@@ -661,9 +657,6 @@ async function createItem(item: { [key: string]: any }) {
 const nightTypeRequired = ref(false)
 
 async function updateItem(item: { [key: string]: any }) {
-
-
-
 
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}

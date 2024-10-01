@@ -2,20 +2,18 @@
 import { ref, watch } from 'vue'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
+import type { PageState } from 'primevue/paginator'
+import dayjs from 'dayjs'
 import getUrlByImage from '~/composables/files'
 import { ModulesService } from '~/services/modules-services'
 import { GenericService } from '~/services/generic-services'
-import type { PageState } from 'primevue/paginator'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
-import type { FieldDefinitionType, Container } from '~/components/form/EditFormV2WithContainer'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import dayjs from 'dayjs'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
-
-
 
 const toast = useToast()
 const { data: userData } = useAuth()
@@ -26,12 +24,11 @@ const active = ref(0)
 
 const route = useRoute()
 
-//@ts-ignore
-const selectedInvoice = <string>ref(route.params.id.toString())
+// @ts-expect-error
+const selectedInvoice = ref<string>(route.params.id.toString())
 const nightTypeRequired = ref(route.query?.nightTypeRequired as string)
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
-
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
@@ -45,15 +42,10 @@ const adjustmentDialogOpen = ref<boolean>(false)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
 const exportAttachmentsDialogOpen = ref<boolean>(false)
 
-
-
-
 const invoiceAgency = ref<any>(null)
 const invoiceHotel = ref<any>(null)
 
 const attachmentDialogOpen = ref<boolean>(false)
-
-
 
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
@@ -66,23 +58,15 @@ const confhotelListApi = reactive({
   uriApi: 'manage-hotel',
 })
 
-
 const confagencyListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
 })
 
-
 const confinvoiceTypeListtApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
 })
-
-
-
-
-
-
 
 // VARIABLES -----------------------------------------------------------------------------------------
 
@@ -107,8 +91,6 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 
-
-
 const item = ref<GenericObject>({
   invoiceId: '',
   invoiceNumber: '',
@@ -131,8 +113,6 @@ const itemTemp = ref<GenericObject>({
   invoiceType: null,
 })
 
-
-
 // -------------------------------------------------------------------------------------------------------
 
 // -------------------------------------------------------------------------------------------------------
@@ -153,65 +133,62 @@ const options = ref({
   messageToDelete: 'Do you want to save the change?'
 })
 
-
-
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
-
 function handleDialogOpen() {
-  console.log(active);
+  console.log(active)
   switch (active.value) {
     case 0:
       bookingDialogOpen.value = true
-      break;
+      break
 
     case 1:
       roomRateDialogOpen.value = true
-      break;
+      break
 
     case 2:
       adjustmentDialogOpen.value = true
-      break;
+      break
 
     default:
-      break;
+      break
   }
 
-  console.log(bookingDialogOpen);
+  console.log(bookingDialogOpen)
 }
 
 async function getHotelList(query = '') {
   try {
     const payload
       = {
-      filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
@@ -225,8 +202,6 @@ async function getHotelList(query = '') {
   }
 }
 
-
-
 function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
@@ -235,32 +210,32 @@ async function getAgencyList(query = '') {
   try {
     const payload
       = {
-      filter: [
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
@@ -278,13 +253,13 @@ async function getInvoiceTypeList() {
   try {
     const payload
       = {
-      filter: [],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confinvoiceTypeListtApi.moduleApi, confinvoiceTypeListtApi.uriApi, payload)
     const { data: dataList } = response
@@ -302,7 +277,6 @@ function refetchInvoice() {
   getInvoiceAmountById(route.params.id as string)
   update()
 }
-
 
 function clearForm() {
   item.value = { ...itemTemp.value }
@@ -350,7 +324,6 @@ async function getInvoiceStatusListDefault(moduleApi: string, uriApi: string, qu
   }
 }
 
-
 async function loadDefaultsValues() {
   const objQueryToSearch = {
     query: '',
@@ -367,7 +340,6 @@ async function loadDefaultsValues() {
 }
 
 async function getInvoiceAmountById(id: string) {
-
   if (id) {
     idItem.value = id
 
@@ -375,13 +347,9 @@ async function getInvoiceAmountById(id: string) {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
 
       if (response) {
-
         item.value.invoiceAmount = response.invoiceAmount
         invoiceAmount.value = response.invoiceAmount
-
       }
-
-
     }
     catch (error) {
       if (error) {
@@ -395,7 +363,6 @@ async function getInvoiceAmountById(id: string) {
 }
 
 async function getItemById(id: string) {
-
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
@@ -410,10 +377,9 @@ async function getItemById(id: string) {
         const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
         item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
-        item.value.invoiceNumber = item.value.invoiceNumber.replace("OLD", "CRE")
+        item.value.invoiceNumber = item.value.invoiceNumber.replace('OLD', 'CRE')
 
-
-        item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
+        item.value.invoiceDate = dayjs(response.invoiceDate).format('YYYY-MM-DD')
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
         invoiceAmount.value = response.invoiceAmount
@@ -429,9 +395,6 @@ async function getItemById(id: string) {
         item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
-
-
-
       }
 
       formReload.value += 1
@@ -446,7 +409,6 @@ async function getItemById(id: string) {
     }
   }
 }
-
 
 async function createItem(item: { [key: string]: any }) {
   if (item) {
@@ -469,10 +431,6 @@ async function createItem(item: { [key: string]: any }) {
 // const nightTypeRequired = ref(false)
 
 async function updateItem(item: { [key: string]: any }) {
-
-
-
-
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
   payload.employee = userData?.value?.user?.name
@@ -572,7 +530,6 @@ function requireConfirmationToDelete(event: any) {
   })
 }
 
-
 function toggleForceUpdate() {
   forceUpdate.value = !forceUpdate.value
 }
@@ -581,11 +538,9 @@ function update() {
   forceUpdate.value = true
 
   setTimeout(() => {
-
     forceUpdate.value = false
-  }, 100);
+  }, 100)
 }
-
 
 function openAdjustmentDialog(roomRate?: any) {
   active.value = 2
@@ -597,7 +552,6 @@ function openAdjustmentDialog(roomRate?: any) {
   adjustmentDialogOpen.value = true
 }
 
-
 async function getInvoiceHotel(id) {
   try {
     const hotel = await GenericService.getById(confhotelListApi.moduleApi, confhotelListApi.uriApi, id)
@@ -605,12 +559,7 @@ async function getInvoiceHotel(id) {
     if (hotel) {
       invoiceHotel.value = { ...hotel }
 
-
-
       requiresFlatRate.value = hotel?.requiresFlatRate
-
-
-
     }
   }
   catch (err) {
@@ -619,8 +568,7 @@ async function getInvoiceHotel(id) {
 }
 async function getInvoiceAgency(id) {
   try {
-
-    console.log(id);
+    console.log(id)
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
 
     if (agency) {
@@ -628,13 +576,12 @@ async function getInvoiceAgency(id) {
 
       nightTypeRequired.value = agency?.client?.isNightType
 
-      console.log(agency);
+      console.log(agency)
     }
   }
   catch (err) {
 
   }
-
 }
 
 function handleAttachmentDialogOpen() {
@@ -662,7 +609,6 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
     invoiceStatusList.value = []
   }
 }
-
 
 const fieldsV2: Array<FieldDefinitionType> = [
   // Booking Id
@@ -713,12 +659,12 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'date',
     class: 'field col-12 md:col-3 required ',
     headerClass: 'mb-1',
-    
+
     validation: z.date({
       required_error: 'The Hotel Creation Date field is required',
       invalid_type_error: 'The Hotel Creation Date field is required',
     }).max(dayjs().endOf('day').toDate(), 'The Hotel Creation Date field cannot be greater than current date')
-  
+
   },
   // Invoice Amount
   {
@@ -729,20 +675,20 @@ const fieldsV2: Array<FieldDefinitionType> = [
     disabled: true,
     headerClass: 'mb-1',
     ...(
-      route.query.type === InvoiceType.OLD_CREDIT || 
-      route.query.type === InvoiceType.CREDIT ? 
-      { 
-        validation: 
+      route.query.type === InvoiceType.OLD_CREDIT
+      || route.query.type === InvoiceType.CREDIT
+        ? {
+            validation:
         z.string()
-        .min(0, 'The Invoice Amount field is required')
-        .refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) 
-      } : 
-      { 
-        validation: 
+          .min(0, 'The Invoice Amount field is required')
+          .refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' })
+          }
+        : {
+            validation:
         z.string()
-        .min(0, 'The Invoice Amount field is required')
-        .refine((value: any) => !isNaN(value) && +value >= 0, { message: 'The Invoice Amount field must be greater or equals than 0' }) 
-      }
+          .min(0, 'The Invoice Amount field is required')
+          .refine((value: any) => !isNaN(value) && +value >= 0, { message: 'The Invoice Amount field must be greater or equals than 0' })
+          }
     )
   },
   // // Children
@@ -772,7 +718,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
   },
-  
+
   {
     field: 'firstName',
     header: 'First Name',
@@ -904,7 +850,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
   },
-  
+
   //  Contract
   {
     field: 'contract',
@@ -912,9 +858,9 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-    //validation: z.string().regex(/^[a-z0-9]+$/i, 'No se permiten caracteres especiales').nullable()
+    // validation: z.string().regex(/^[a-z0-9]+$/i, 'No se permiten caracteres especiales').nullable()
   },
-  
+
   // // Rate Adult
   // {
   //   field: 'rateAdult',
@@ -934,17 +880,14 @@ const fieldsV2: Array<FieldDefinitionType> = [
   //   validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
   // },
 
-
-
-
-// Description
-{
-  field: 'description',
-  header: 'Remark',
-  dataType: 'text',
-  class: 'field col-12 md:col-3',
-  headerClass: 'mb-1',
-},
+  // Description
+  {
+    field: 'description',
+    header: 'Remark',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
 ]
 
 const item2 = ref<GenericObject>({
@@ -1010,13 +953,24 @@ const itemTemp2 = ref<GenericObject>({
   id: ''
 })
 
+// const menuModel = ref([
+//   { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
+//   { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
 
+// ])
+
+const roomRateList = ref<any[]>([])
 const ratePlanList = ref<any[]>([])
 const roomCategoryList = ref<any[]>([])
 const roomTypeList = ref<any[]>([])
 const nightTypeList = ref<any[]>([])
 const activeTab = ref(0)
-  const confApi = reactive({
+
+const totalInvoiceAmount = ref<number>(0)
+const totalHotelAmount = ref<number>(0)
+const roomRateContextMenu = ref()
+
+const confApi = reactive({
   booking: {
     moduleApi: 'invoicing',
     uriApi: 'manage-booking',
@@ -1055,36 +1009,207 @@ const confnightTypeApi = reactive({
   keyValue: 'name'
 })
 
+const optionsRoomRate = ref({
+  tableName: 'Invoice',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-room-rate',
+  loading: false,
+  showFilters: false,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?',
+})
+const columnsRoomRate: IColumn[] = [
+  { field: 'roomRateId', header: 'Id', type: 'text', sortable: false },
+  // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'checkIn', header: 'Check In', type: 'date', sortable: false },
+  { field: 'checkOut', header: 'Check Out', type: 'date', sortable: false },
+  { field: 'adults', header: 'Adults', type: 'text', sortable: false },
+  { field: 'children', header: 'Children', type: 'text', sortable: false },
+  // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'nights', header: 'Nights', type: 'text', sortable: false },
+  // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: false },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: false },
+]
+
+const payloadOnChangePageRoomRate = ref<PageState>()
+const payloadRoomRate = ref<IQueryRequest>({
+  filter: [
+    {
+      key: 'booking.id',
+      operator: 'EQUALS',
+      value: selectedInvoice.value,
+      logicalOperation: 'OR'
+    },
+  ],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'roomRateId',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
+
+const paginationRoomRate = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
+function clearFormRoomRate() {
+  // item2.value = { ...itemTemp2.value }
+  // idItem.value = ''
+  // formReload.value++
+  console.log('lImpiar')
+}
+
+function onRowRightClick(event: any) {
+  // Si el estado de la factura no es procesada, no se puede editar
+  // Pendiente
+
+  // !props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED
+  // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  //   return
+  // }
+  selectedRoomRate.value = event.data
+  roomRateContextMenu.value.show(event.originalEvent)
+}
+
+async function parseDataTableFilterRoomRate(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsRoomRate)
+  payloadRoomRate.value.filter = [...parseFilter || []]
+  getRoomRateList()
+}
+
+function onSortFieldRoomRate(event: any) {
+  if (event) {
+    // if (props?.isCreationDialog) {
+    //   return props.sortRoomRate(event)
+    // }
+
+    if (event.sortField === 'fullName') {
+      payloadRoomRate.value.sortBy = 'booking.firstName'
+    }
+    else {
+      payloadRoomRate.value.sortBy = event.sortField
+    }
+
+    payloadRoomRate.value.sortType = event.sortOrder
+    getRoomRateList()
+  }
+}
+
+async function resetListItemsRoomRate() {
+  payloadRoomRate.value.page = 0
+  getRoomRateList()
+}
+async function getRoomRateList() {
+  try {
+    idItemToLoadFirstTime.value = ''
+    optionsRoomRate.value.loading = true
+    roomRateList.value = []
+
+    const response = await GenericService.search(optionsRoomRate.value.moduleApi, optionsRoomRate.value.uriApi, payloadRoomRate.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    paginationRoomRate.value.page = page
+    paginationRoomRate.value.limit = size
+    paginationRoomRate.value.totalElements = totalElements
+    paginationRoomRate.value.totalPages = totalPages
+
+    let countRR = 0
+    totalInvoiceAmount.value = 0
+    totalHotelAmount.value = 0
+    for (const iterator of dataList) {
+      countRR++
+
+      roomRateList.value = [...roomRateList.value, {
+        ...iterator,
+        invoiceAmount: iterator?.invoiceAmount || 0,
+        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        loadingEdit: false,
+        loadingDelete: false,
+        fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
+        bookingId: iterator.booking.bookingId,
+        roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
+        nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
+        ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
+        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
+      }]
+
+      if (typeof +iterator.invoiceAmount === 'number') {
+        totalInvoiceAmount.value += Number(iterator.invoiceAmount)
+      }
+
+      if (typeof +iterator.hotelAmount === 'number') {
+        totalHotelAmount.value += Number(iterator.hotelAmount)
+      }
+    }
+    if (roomRateList.value.length > 0) {
+      idItemToLoadFirstTime.value = roomRateList.value[0].id
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    optionsRoomRate.value.loading = false
+  }
+}
+
+async function openEditDialog(item: any) {
+  console.log('openEditDialog', item)
+
+  // if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
+  //   return null
+  // }
+
+  // props.openDialog()
+  // if (item?.id) {
+  //   idItem.value = item?.id
+  //   idItemToLoadFirstTime.value = item?.id
+  //   await GetItemById(item?.id)
+  // }
+
+  // if (typeof item === 'string') {
+  //   idItem.value = item
+  //   idItemToLoadFirstTime.value = item
+  //   await GetItemById(item)
+  // }
+}
+
 async function getratePlanList(query = '') {
   try {
     const payload
       = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confratePlanApi.moduleApi, confratePlanApi.uriApi, payload)
     const { data: dataList } = response
@@ -1102,44 +1227,44 @@ async function getRoomCategoryList(query = '') {
   try {
     const payload
       = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confroomCategoryApi.moduleApi, confroomCategoryApi.uriApi, payload)
     const { data: dataList } = response
     roomCategoryList.value = []
     for (const iterator of dataList) {
       roomCategoryList.value = [
-        ...roomCategoryList.value, 
-        { 
-          id: iterator.id, 
-          name: iterator.name, 
-          code: iterator.code, 
-          status: iterator.status 
+        ...roomCategoryList.value,
+        {
+          id: iterator.id,
+          name: iterator.name,
+          code: iterator.code,
+          status: iterator.status
         }
       ]
     }
@@ -1152,32 +1277,32 @@ async function getRoomTypeList(query = '') {
   try {
     const payload
       = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confroomTypeApi.moduleApi, confroomTypeApi.uriApi, payload)
     const { data: dataList } = response
@@ -1194,32 +1319,32 @@ async function getNightTypeList(query = '') {
   try {
     const payload
       = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confnightTypeApi.moduleApi, confnightTypeApi.uriApi, payload)
     const { data: dataList } = response
@@ -1234,14 +1359,13 @@ async function getNightTypeList(query = '') {
 }
 
 async function getBookingItemById(id: string) {
-  
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
-      console.log("response", response);
-      
+      console.log('response', response)
+
       if (response) {
         idItem.value = response?.id
         item2.value.id = response.id
@@ -1296,28 +1420,24 @@ async function getBookingItemById(id: string) {
 //   }
 // })
 
-
-
-
 onMounted(async () => {
   // filterToSearch.value.criterial = ENUM_FILTER[0]
   // //@ts-ignore
   // await getItemById(route.params.id.toString())
 
   // await loadDefaultsValues()
-  
+
   if (route.params && 'id' in route.params && route.params.id) {
-    await getBookingItemById(route.params.id as string);
+    await getBookingItemById(route.params.id as string)
+    getRoomRateList()
   }
-
-
 })
 </script>
 
 <template>
   <div class="justify-content-center align-center ">
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-       Edit Booking
+      Edit Booking
     </div>
     <div class="p-4">
       <EditFormV2
@@ -1332,7 +1452,7 @@ onMounted(async () => {
         @delete="requireConfirmationToDelete($event)"
         @submit="requireConfirmationToSave($event)"
       >
-        <template #field-hotelCreationDate="{ item: data, onUpdate,  }">
+        <template #field-hotelCreationDate="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
             v-model="data.hotelCreationDate"
@@ -1346,7 +1466,7 @@ onMounted(async () => {
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.invoiceAmount"
-            show-clear 
+            show-clear
             :disabled="!!item2?.id && route.query.type !== InvoiceType.CREDIT"
             @update:model-value="($event) => {
               let value: any = $event
@@ -1363,7 +1483,7 @@ onMounted(async () => {
         <template #field-hotelAmount="{ onUpdate, item: data, fields, field }">
           <InputText
             v-model="data.hotelAmount"
-            show-clear 
+            show-clear
             :disabled="fields.find((f) => f.field === field)?.disabled"
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
@@ -1394,15 +1514,15 @@ onMounted(async () => {
         </template>
         <template #field-ratePlan="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" 
-            id="autocomplete" 
-            field="name" 
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="name"
             item-value="id"
-            :model="data.ratePlan" 
-            :suggestions="ratePlanList" 
+            :model="data.ratePlan"
+            :suggestions="ratePlanList"
             @change="($event) => {
               onUpdate('ratePlan', $event)
-            }" 
+            }"
             @load="($event) => getratePlanList($event)"
           >
             <template #option="props">
@@ -1455,15 +1575,15 @@ onMounted(async () => {
 
         <template #field-nightType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" 
-            id="autocomplete" 
-            field="name" 
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="name"
             item-value="id"
-            :model="data.nightType" 
-            :suggestions="nightTypeList" 
+            :model="data.nightType"
+            :suggestions="nightTypeList"
             @change="($event) => {
               onUpdate('nightType', $event)
-            }" 
+            }"
             @load="($event) => getNightTypeList($event)"
           >
             <template #option="props">
@@ -1475,26 +1595,80 @@ onMounted(async () => {
           <div class="grid w-full p-0 m-0">
             <div class="col-12 mb-5 justify-content-center align-center">
               <div style="width: 100%; height: 100%;">
-                <InvoiceTabView 
-                  :requires-flat-rate="requiresFlatRate" 
-                  :get-invoice-hotel="getInvoiceHotel"  
-                  :get-invoice-agency="getInvoiceAgency" 
+                <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
+                  <TabPanel>
+                    <template #header>
+                      <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+                        <i class="pi pi-receipt" style="font-size: 1.5rem" />
+                        <span class="font-bold">
+                          Room Rates
+                          <!-- <i
+                            v-if="errorInTab.tabGeneralData" class="pi p-error pi-question-circle"
+                            style="font-size: 1.2rem"
+                          /> -->
+                        </span>
+                      </div>
+                    </template>
+                    <DynamicTable
+                      :data="roomRateList"
+                      :columns="columnsRoomRate"
+                      :options="optionsRoomRate"
+                      :pagination="paginationRoomRate"
+                      @on-confirm-create="clearFormRoomRate"
+                      @on-change-pagination="payloadOnChangePageRoomRate = $event"
+                      @on-row-right-click="onRowRightClick"
+                      @on-change-filter="parseDataTableFilterRoomRate"
+                      @on-list-item="resetListItemsRoomRate"
+                      @on-sort-field="onSortFieldRoomRate"
+                      @on-row-double-click="($event) => {
+
+                        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
+                        //   return;
+                        // }
+
+                        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
+                        //   return;
+                        // }
+                        openEditDialog($event)
+
+                      }"
+                    >
+                      <template #datatable-footer>
+                        <ColumnGroup type="footer" class="flex align-items-center">
+                          <Row>
+                            <Column
+                              footer="Totals:" :colspan="6"
+                              footer-style="text-align:right; font-weight: 700"
+                            />
+                            <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2))" footer-style="font-weight: 700" />
+                            <Column :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))" footer-style="font-weight: 700" />
+                          </Row>
+                        </ColumnGroup>
+                      </template>
+                    </DynamicTable>
+                  </TabPanel>
+                </TabView>
+
+                <!-- <InvoiceTabView
+                  :requires-flat-rate="requiresFlatRate"
+                  :get-invoice-hotel="getInvoiceHotel"
+                  :get-invoice-agency="getInvoiceAgency"
                   :invoice-obj-amount="invoiceAmount"
-                  :is-dialog-open="bookingDialogOpen" 
+                  :is-dialog-open="bookingDialogOpen"
                   :close-dialog="() => { bookingDialogOpen = false }"
-                  :open-dialog="handleDialogOpen" 
-                  :selected-booking="selectedBooking" 
+                  :open-dialog="handleDialogOpen"
+                  :selected-booking="selectedBooking"
                   :force-update="forceUpdate"
-                  :toggle-force-update="update" 
-                  :invoice-obj="item2" 
+                  :toggle-force-update="update"
+                  :invoice-obj="item2"
                   :refetch-invoice="refetchInvoice"
-                  :is-creation-dialog="false" 
-                  :selected-invoice="selectedInvoice as any" 
+                  :is-creation-dialog="false"
+                  :selected-invoice="selectedInvoice as any"
                   :active="active"
-                  :set-active="($event) => { active = $event }" 
+                  :set-active="($event) => { active = $event }"
                   :showTotals="true"
                   :invoiceType="route.query?.type?.toString()"
-                />
+                /> -->
               </div>
             </div>
             <div class="col-12 flex justify-content-end">
@@ -1502,218 +1676,13 @@ onMounted(async () => {
                 v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
                 @click="props.item.submitForm($event)"
               />
-              <Button 
-                v-tooltip.top="'Cancel'" 
-                severity="secondary" 
-                class="w-3rem mx-1" 
-                icon="pi pi-times" 
+              <Button
+                v-tooltip.top="'Cancel'"
+                severity="secondary"
+                class="w-3rem mx-1"
+                icon="pi pi-times"
                 @click="navigateTo('/invoice')"
               />
-            </div>
-          </div>
-        </template>
-      </EditFormV2>
-
-      <EditFormV2 
-        v-if="false"
-        :key="formReload" 
-        :fields="Fields" 
-        :item="item" 
-        :show-actions="true" 
-        :loading-save="loadingSaveAll"  
-        :loading-delete="loadingDelete" 
-        @cancel="clearForm" 
-        @delete="requireConfirmationToDelete($event)"
-        :force-save="forceSave" 
-        @force-save="forceSave = $event" 
-        container-class="grid pt-3"
-      >
-        <template #field-invoiceDate="{ item: data, onUpdate }">
-          <Calendar 
-            v-if="!loadingSaveAll" 
-            v-model="data.invoiceDate" 
-            date-format="yy-mm-dd" 
-            :max-date="new Date()" 
-            :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
-            @update:model-value="($event) => {
-              onUpdate('invoiceDate', $event)
-            }" />
-        </template>
-
-        <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText 
-            v-if="!loadingSaveAll"
-            v-model="invoiceAmount" 
-            :disabled="true" 
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-
-        <template #field-invoiceStatus="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent 
-            v-if="!loadingSaveAll" 
-            id="autocomplete" 
-            field="name" 
-            item-value="id"
-            :model="data.invoiceStatus" 
-            :suggestions="[...invoiceStatusList]" 
-            :disabled="idItem !== ''" 
-            @change="async ($event) => {
-              onUpdate('invoiceStatus', $event)
-            }" @load="async ($event) => {
-              const objQueryToSearch = {
-                query: $event,
-                keys: ['name', 'code'],
-              }
-              const filter: FilterCriteria[] = [{
-                key: 'status',
-                logicalOperation: 'AND',
-                operator: 'EQUALS',
-                value: 'ACTIVE',
-              }]
-              await getInvoiceStatusList(objApis.invoiceStatus.moduleApi, objApis.invoiceStatus.uriApi, objQueryToSearch, filter)
-            }" />
-            <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-
-        <template #field-status="{ item: data, onUpdate }">
-          <Dropdown 
-            v-if="!loadingSaveAll" 
-            v-model="data.status" 
-            :options="[ENUM_INVOICE_STATUS[0], ENUM_INVOICE_STATUS[2]]" 
-            option-label="name"
-            return-object="false" 
-            show-clear 
-            :disabled="data?.status?.id !== InvoiceStatus.PROCECSED" 
-            @update:model-value="($event) => {
-              onUpdate('status', $event)
-            }">
-            <template #option="props">
-              {{ props.option?.code }}-{{ props.option?.name }}
-            </template>
-            <template #value="props">
-              {{ props.value?.code }}-{{ props.value?.name }}
-            </template>
-          </Dropdown>
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-
-        <template #field-invoiceType="{ item: data, onUpdate }">
-          <Dropdown v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
-            option-label="name" return-object="false" show-clear disabled @update:model-value="($event) => {
-        onUpdate('invoiceType', $event)
-      }">
-            <template #option="props">
-              {{ props.option?.code }}-{{ props.option?.name }}
-            </template>
-            <template #value="props">
-              {{ props.value?.code }}-{{ props.value?.name }}
-            </template>
-          </Dropdown>
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-hotel="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
-            :model="data.hotel" :suggestions="hotelList" @change="($event) => {
-        onUpdate('hotel', $event)
-      }" @load="($event) => getHotelList($event)">
-            <template #option="props">
-              <span>{{ props.item.fullName }}</span>
-            </template>
-            <template #chip="{ value }">
-              <div>
-                {{ value?.fullName }}
-              </div>
-            </template>
-          </DebouncedAutoCompleteComponent>
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-agency="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
-            :model="data.agency" :suggestions="agencyList" @change="($event) => {
-        onUpdate('agency', $event)
-      }" @load="($event) => getAgencyList($event)">
-            <template #option="props">
-              <span>{{ props.item.fullName }}</span>
-            </template>
-            <template #chip="{ value }">
-              <div>
-                {{ value?.fullName }}
-              </div>
-            </template>
-          </DebouncedAutoCompleteComponent>
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-
-        <template #form-footer="props">
-          <div style="width: 100%; height: 100%;">
-            <InvoiceTabView 
-              :requires-flat-rate="requiresFlatRate" 
-              :get-invoice-hotel="getInvoiceHotel"  
-              :get-invoice-agency="getInvoiceAgency" 
-              :invoice-obj-amount="invoiceAmount"
-              :is-dialog-open="bookingDialogOpen" 
-              :close-dialog="() => { bookingDialogOpen = false }"
-              :open-dialog="handleDialogOpen" 
-              :selected-booking="selectedBooking" 
-              :force-update="forceUpdate"
-              :toggle-force-update="update" 
-              :invoice-obj="item" 
-              :refetch-invoice="refetchInvoice"
-              :is-creation-dialog="false" 
-              :selected-invoice="selectedInvoice as any" 
-              :active="active"
-              :set-active="($event) => { active = $event }" 
-              :showTotals="true"
-              :night-type-required="nightTypeRequired" 
-            />
-            <div>
-              <div class="flex justify-content-end">
-                <IfCan :perms="['INVOICE-MANAGEMENT:EDIT']">
-                  <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED" :loading="loadingSaveAll" @click="() => {
-                      saveItem(props.item.fieldValues)
-                    }" />
-                </IfCan>
-
-              
-                <Button v-tooltip.top="'Print'" class="w-3rem mx-1" icon="pi pi-print" :loading="loadingSaveAll"
-                  @click="() => {
-                    exportAttachmentsDialogOpen = true
-                  }" />
-           
-
-                <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
-                  <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"  />
-                  </IfCan>
-                  <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-SHOW-HISTORY']"> 
-                    <Button v-tooltip.top="'Show History'" class="w-3rem mx-1" :loading="loadingSaveAll"
-                      @click="handleAttachmentHistoryDialogOpen()" :disabled="!item?.hasAttachments">
-                      <template #icon>
-                        <span class="flex align-items-center justify-content-center p-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px"
-                            fill="#e8eaed">
-                            <path
-                              d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" />
-                          </svg>
-                        </span>
-                      </template>
-                    </Button>
-                  </IfCan>
-
-                <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-CREATE']">
-                  <Button v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                    :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME || invoiceStatus !== InvoiceStatus.PROCECSED" />
-                </IfCan>
-                
-                <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === InvoiceType.INCOME" class="w-3rem ml-1"
-                  disabled icon="pi pi-file-import"  />
-
-                <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll"
-                  @click="update" />
-                <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times"
-                  @click="goToList" />
-              </div>
             </div>
           </div>
         </template>
@@ -1721,21 +1690,27 @@ onMounted(async () => {
     </div>
 
     <div v-if="attachmentDialogOpen">
-      <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
+      <AttachmentDialog
+        :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
         :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
-        :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
+        :selected-invoice="selectedInvoice" :selected-invoice-obj="item"
+      />
     </div>
   </div>
   <div v-if="attachmentHistoryDialogOpen">
-    <AttachmentHistoryDialog selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+    <AttachmentHistoryDialog
+      selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
       header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
-      :selected-invoice-obj="item" :is-creation-dialog="false" />
+      :selected-invoice-obj="item" :is-creation-dialog="false"
+    />
   </div>
   <div v-if="exportAttachmentsDialogOpen">
-    <PrintInvoiceDialog 
+    <PrintInvoiceDialog
       :close-dialog="() => { exportAttachmentsDialogOpen = false }"
-      :open-dialog="exportAttachmentsDialogOpen" 
+      :open-dialog="exportAttachmentsDialogOpen"
       :invoice="item"
     />
   </div>
+
+  <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
 </template>
