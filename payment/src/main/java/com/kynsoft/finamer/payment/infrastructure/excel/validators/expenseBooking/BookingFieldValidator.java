@@ -40,7 +40,7 @@ public class BookingFieldValidator extends ExcelRuleValidator<PaymentExpenseBook
             return false;
         }
         ManageInvoiceDto manageInvoiceDto = manageBooking.getInvoice();
-        if (!obj.getHotelCode().equals(manageInvoiceDto.getHotel().getCode())){
+        if (!obj.getHotelId().equals(manageInvoiceDto.getHotel().getId().toString())){
             errorFieldList.add(new ErrorField("bookingId","Booking don't belong to the selected hotel"));
             return false;
         }

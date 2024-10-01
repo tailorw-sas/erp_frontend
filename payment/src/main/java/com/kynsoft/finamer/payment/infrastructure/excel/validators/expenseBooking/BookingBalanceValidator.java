@@ -13,9 +13,10 @@ import java.util.Objects;
 
 public class BookingBalanceValidator extends ExcelRuleValidator<PaymentExpenseBookingRow> {
 
-    private IManageBookingService bookingService;
-    protected BookingBalanceValidator(ApplicationEventPublisher applicationEventPublisher) {
+    private final IManageBookingService bookingService;
+    protected BookingBalanceValidator(ApplicationEventPublisher applicationEventPublisher, IManageBookingService bookingService) {
         super(applicationEventPublisher);
+        this.bookingService = bookingService;
     }
 
     @Override

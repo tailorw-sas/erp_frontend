@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @Service
@@ -85,8 +86,10 @@ public class FileSystemStorageServiceImpl implements StorageService {
 
     @Override
     public void init() {
-        this.rootLocation = Paths.get(config.getUploadLocation());
-        createDirectory(rootLocation);
+        if (Objects.nonNull(config.getUploadLocation())) {
+            this.rootLocation = Paths.get(config.getUploadLocation());
+            createDirectory(rootLocation);
+        }
     }
 
     private Path getImportLocation(String importProcessId) {

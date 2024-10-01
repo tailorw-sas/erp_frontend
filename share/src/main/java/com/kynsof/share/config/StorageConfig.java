@@ -7,6 +7,6 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Configuration
 public class StorageConfig {
-    @Value("${upload.location}")
+    @Value("${upload.location:#{null}}")
     private String uploadLocation;
 }
