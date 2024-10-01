@@ -170,13 +170,13 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
         String agencyName = manageInvoiceDto.getAgency().getName();
         String code = manageInvoiceDto.getAgency().getCode();
         String month = LocalDate.now().getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
-        return agencyName + "-" + code + "-" + month;
+        return code + "-" + agencyName + "-" + month;
     }
 
     private String resolveSingleFileName(String invoiceId) {
         ManageInvoiceDto manageInvoiceDto = manageInvoiceService.findById(UUID.fromString(invoiceId));
-        String hotelName = manageInvoiceDto.getHotel().getName();
+        String hotelCode = manageInvoiceDto.getHotel().getCode();
         String invoiceNumber = manageInvoiceDto.getInvoiceNumber();
-        return hotelName + "-" + invoiceNumber;
+        return hotelCode + "-" + invoiceNumber;
     }
 }
