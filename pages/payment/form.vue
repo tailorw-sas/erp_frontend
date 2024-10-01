@@ -2885,7 +2885,6 @@ onMounted(async () => {
       </IfCan>
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
-    <pre>{{ idItemDetail }}</pre>
     <div v-show="onOffDialogPaymentDetail">
       <DialogPaymentDetailForm
         :key="dialogPaymentDetailFormReload"
