@@ -175,6 +175,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Change Agency',
     icon: 'pi pi-arrow-right-arrow-left',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => { },
     default: true,
     showItem: false,
@@ -182,6 +185,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'New Credit',
     icon: 'pi pi-credit-card',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
       navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
     },
@@ -191,7 +197,11 @@ const invoiceAllContextMenuItems = ref([
   },
   {
     label: 'Status History',
-    icon: 'pi pi-file',
+    iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
+    viewBox: '0 -960 960 960',
+    width: '19px',
+    height: '19px',
+    icon:'',
     command: handleAttachmentHistoryDialogOpen,
     default: true,
     disabled: computedShowMenuItemShowHistory,
@@ -200,6 +210,10 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Document',
     icon: 'pi pi-paperclip',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
+    viewBox:'',
     command: () => {
       attachmentDialogOpen.value = true
     },
@@ -210,6 +224,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Print',
     icon: 'pi pi-print',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
       if (attachmentInvoice.value?.hasAttachments) {
         exportAttachments()
@@ -222,6 +239,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Clone',
     icon: 'pi pi-copy',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => doubleFactor(),
     default: true,
    // disabled: computedShowClone,
@@ -230,6 +250,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Adjustment',
     icon: 'pi pi-wrench',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
     },
     default: true,
@@ -238,6 +261,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Undo Import',
     icon: 'pi pi-file-import',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => { },
     default: true,
     showItem: false,
@@ -245,6 +271,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Payments',
     icon: 'pi pi-money-bill',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => { },
     default: true,
     showItem: false,
@@ -252,6 +281,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Clone Complete',
     icon: 'pi pi-clone',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
       doubleFactorTotal()
     },
@@ -261,6 +293,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Re-Send',
     icon: 'pi pi-send',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => { SendInvoiceByType() },
     default: true,
     showItem: false,
@@ -268,6 +303,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Send',
     icon: 'pi pi-send',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => { SendInvoiceByType() },
     default: true,
     showItem: false,
@@ -275,6 +313,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'From Invoice',
     icon: 'pi pi-receipt',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => { },
     default: true,
     showItem: false,
@@ -282,6 +323,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Clone Total',
     icon: 'pi pi-clone',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
       doubleFactorTotal()
     },
@@ -2058,7 +2102,18 @@ const legend = ref(
 
       </ExpandableTable>
     </div>
-    <ContextMenu ref="invoiceContextMenu" :model="invoiceContextMenuItems" />
+    <ContextMenu ref="invoiceContextMenu" :model="invoiceContextMenuItems" >
+      <template #itemicon="{ item }">
+      <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" :height="item.height" :viewBox="item.viewBox" :width="item.width" fill="#8d8faa">
+          <path :d="item.iconSvg" />
+        </svg>
+      </div>
+      <div v-else class="w-2rem flex justify-content-center align-items-center">
+        <i v-if="item.icon" :class="item.icon" />
+      </div>
+    </template>
+  </ContextMenu>
   </div>
   <div v-if="attachmentDialogOpen">
     <AttachmentDialog 
