@@ -8,7 +8,7 @@ import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcil
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.InvoiceReconcileImportErrorRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.InvoiceReconcileImportProcessStatusQuery;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.InvoiceReconcileImportProcessStatusRequest;
-import com.kynsof.share.core.domain.service.StorageService;
+import com.kynsof.share.core.domain.service.IStorageService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
@@ -25,10 +25,10 @@ import reactor.core.publisher.Flux;
 @RequestMapping("/api/manage-invoice")
 public class InvoiceReconcileImportController {
 
-    private final StorageService storageService;
+    private final IStorageService storageService;
     private final IMediator mediator;
 
-    public InvoiceReconcileImportController(StorageService storageService,
+    public InvoiceReconcileImportController(IStorageService storageService,
                                             IMediator mediator) {
         this.storageService = storageService;
         this.mediator = mediator;

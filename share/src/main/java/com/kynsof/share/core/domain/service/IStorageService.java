@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public interface StorageService {
+public interface IStorageService {
 
     void init();
 
