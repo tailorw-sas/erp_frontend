@@ -19,15 +19,6 @@ const showDetails = ref(false)
 const route = useRoute()
 const router = useRouter()
 
-// Importante! se deshabilita la autenticacion por conflictos con la redireccion del merchant Cardnet y la variable SESSION que envia en el formData.
-definePageMeta({
-  layout: 'default',
-  auth: {
-    unauthenticatedOnly: false,
-    // navigateAuthenticatedTo: '/',
-  }
-})
-
 function disableBackNavigation() {
   history.pushState(null, document.title, location.href)
   history.back()
@@ -117,7 +108,9 @@ function toggleDetails() {
               <p><strong>Authorization Code:</strong> {{ route.query.AuthorizationCode }}</p>
               <p><strong>Date and Time:</strong> {{ dateTime }}</p>
               <p><strong>Merchant Response:</strong> {{ route.query.ResponseMessage }} ({{ route.query.IsoCode }})</p>
-              <p v-if="transactionStatus === 'declined' || transactionStatus === 'cancelled'"><strong>Error Description:</strong> {{ route.query.ErrorDescription }}</p>
+              <p v-if="transactionStatus === 'declined' || transactionStatus === 'cancelled'">
+                <strong>Error Description:</strong> {{ route.query.ErrorDescription }}
+              </p>
               <p><strong>Reference Number:</strong> {{ route.query.RRN }}</p>
               <p><strong>Card Number:</strong> {{ route.query.CardNumber }}</p>
             </template>
