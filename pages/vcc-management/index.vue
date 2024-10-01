@@ -35,12 +35,26 @@ const filterToSearch = ref<IData>({
 })
 const contextMenu = ref()
 
+enum MenuType {
+  refund, resendEmail
+}
+
 const allMenuListItems = [
   {
+    type: MenuType.refund,
     label: 'Refund',
     icon: 'pi pi-dollar',
     command: () => openNewRefundDialog(),
-    disabled: false
+    disabled: false,
+    isCollection: true // que pertenecen a un status en el collection status
+  },
+  {
+    type: MenuType.resendEmail,
+    label: 'Resend Payment Link',
+    icon: 'pi pi-send',
+    command: () => {},
+    disabled: false,
+    isCollection: false
   },
 ]
 
@@ -671,22 +685,40 @@ const disabledSearch = computed(() => {
   return false
 })
 
-async function findMenuItems(status: string) {
+async function findCollectionStatusMenuOptions(status: string) {
   const collection: any = collectionStatusList.value.find(item => item?.name.toLowerCase() === status.toLowerCase())
-  menuListItems.value = []
   if (collection) {
     const navigateOptions = collection.navigate.map((n: any) => n.name.toLowerCase())
-    menuListItems.value = allMenuListItems.filter((element: any) => navigateOptions.includes(element.label.toLowerCase()))
+    // se agregan los elementos que pertenecen al navigate de dicho status
+    menuListItems.value = allMenuListItems.filter((element: any) => element.isCollection && navigateOptions.includes(element.label.toLowerCase()))
+  }
+}
+
+function findNoCollectionStatusMenuOptions() {
+  const noCollectionItems: any[] = allMenuListItems.filter((element: any) => !element.isCollection)
+  for (let i = 0; i < noCollectionItems.length; i++) {
+    const element = noCollectionItems[i]
+    if (element.type === MenuType.resendEmail/* && contextMenuTransaction.value.method === 'LINK'*/) {
+      menuListItems.value.push(element)
+    }
   }
 }
 
 async function onRowRightClick(event: any) {
+  // console.log(event.data)
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
-  await findMenuItems(contextMenuTransaction.value.status)
+  menuListItems.value = [] // Elementos que se van a mostrar en el menu
+  // Agrega a la lista las opciones que estan presentes en el navigate para el collection status del estado del elemento seleccionado
+  await findCollectionStatusMenuOptions(contextMenuTransaction.value.status)
   if (menuListItems.value.length > 0) {
     const enableManualTransaction = (status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
+    // aqui se valida que hayan fondos disponibles para la devolucion
     setRefundAvailable(enableManualTransaction ? contextMenuTransaction.value.permitRefund : false)
+  }
+  // Agregar opciones que no son tipo coleccion:
+  findNoCollectionStatusMenuOptions()
+  if (menuListItems.value.length > 0) {
     contextMenu.value.show(event.originalEvent)
   }
 }
