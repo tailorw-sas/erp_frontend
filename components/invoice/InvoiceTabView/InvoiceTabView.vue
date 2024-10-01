@@ -415,10 +415,20 @@ onMounted(async () => {
 
               adjustmentDialogOpen = false;
 
-            }" :open-dialog="handleDialogOpen" :refetch-invoice="refetchInvoice"
-            :selected-room-rate="selectedRoomRate" :sort-adjustment="sortAdjustment" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :list-items="adjustmentList" :add-item="addAdjustment"
-            :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any" :is-detail-view="isDetailView" :show-totals="showTotals"
+            }"
+            :open-dialog="handleDialogOpen"
+            :refetch-invoice="refetchInvoice"
+            :selected-room-rate="selectedRoomRate"
+            :sort-adjustment="sortAdjustment"
+            :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate"
+            :list-items="adjustmentList"
+            :add-item="addAdjustment"
+            :update-item="updateAdjustment"
+            :is-creation-dialog="isCreationDialog"
+            :selected-invoice="selectedInvoice as any"
+            :is-detail-view="isDetailView"
+            :show-totals="showTotals"
           />
         </TabPanel>
       </TabView>
