@@ -39,12 +39,6 @@ public class TransactionController {
     public ResponseEntity<?> createManual(@RequestBody CreateManualTransactionRequest request) {
         CreateManualTransactionCommand command = CreateManualTransactionCommand.fromRequest(request);
         CreateManualTransactionMessage response = mediator.send(command);
-        if(command.getMethodType() == MethodType.LINK){
-
-            SendMailCommand sendCommand = new SendMailCommand(command.getTransactionUuid());
-            SendMailMessage sendResponse = this.mediator.send(sendCommand);
-          return ResponseEntity.ok(sendResponse);
-        }
         return ResponseEntity.ok(response);
     }
 

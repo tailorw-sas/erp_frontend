@@ -1,5 +1,9 @@
 package com.kynsoft.finamer.creditcard.application.command.manualTransaction.create;
 
+import com.kynsof.share.core.application.mailjet.MailJetRecipient;
+import com.kynsof.share.core.application.mailjet.MailJetVar;
+import com.kynsof.share.core.application.mailjet.MailService;
+import com.kynsof.share.core.application.mailjet.SendMailJetEMailRequest;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
@@ -11,9 +15,10 @@ import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.*;
 import com.kynsoft.finamer.creditcard.domain.services.*;
+import com.kynsoft.finamer.creditcard.infrastructure.services.TokenService;
 import org.springframework.stereotype.Component;
 
-import java.util.Objects;
+import java.util.*;
 
 @Component
 public class CreateManualTransactionCommandHandler implements ICommandHandler<CreateManualTransactionCommand> {
@@ -40,7 +45,11 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
     private final ICreditCardCloseOperationService closeOperationService;
 
-    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService) {
+    private final TokenService tokenService;
+
+    private final MailService mailService;
+
+    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService, TokenService tokenService, MailService mailService) {
         this.service = service;
         this.merchantService = merchantService;
         this.hotelService = hotelService;
@@ -52,6 +61,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         this.parameterizationService = parameterizationService;
         this.transactionTypeService = transactionTypeService;
         this.closeOperationService = closeOperationService;
+        this.tokenService = tokenService;
+        this.mailService = mailService;
     }
 
     @Override
@@ -120,5 +131,27 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 true
         ));
         command.setId(id);
+
+        //Send mail after the crate transaction
+        String token = tokenService.generateToken(command.getTransactionUuid());
+        if (command.getEmail() != null) {
+            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+            request.setTemplateId(6324713); // Cambiar en configuración
+
+            // Variables para el template de email
+            List<MailJetVar> vars = Arrays.asList(
+                    new MailJetVar("payment_link", "http://localhost:3000/" + "?param=" + "payment?token=" + "&var=" + token),
+                    new MailJetVar("invoice_amount", command.getAmount().toString())
+            );
+            request.setMailJetVars(vars);
+
+            // Recipients
+            List<MailJetRecipient> recipients = new ArrayList<>();
+            recipients.add(new MailJetRecipient(command.getEmail(), command.getGuestName()));
+            request.setRecipientEmail(recipients);
+
+            mailService.sendMail(request);
+            }
     }
+
 }
