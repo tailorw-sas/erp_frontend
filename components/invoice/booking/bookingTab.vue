@@ -91,7 +91,11 @@ const props = defineProps({
   refetchInvoice: { type: Function, default: () => { } },
   getInvoiceAgency: { type: Function, default: () => { } },
   sortBooking: Function as any,
-  nightTypeRequired: Boolean
+  nightTypeRequired: Boolean,
+  invoiceType:{
+    type: String,
+    required: false
+  }
 })
 
 const toast = useToast()
@@ -752,6 +756,12 @@ const ENUM_FILTER = [
 const finalColumns = ref<IColumn[]>(Columns)
 
 async function openEditBooking(item: any) {
+  console.log('OPEN EDIT BOOKING', item);
+
+  // if (item?.id) {
+  //   await navigateTo({ path: `booking/${item?.id}`, query: { type: props.invoiceType } }, { open: { target: '_blank' } })
+  // }
+  
   props.openDialog()
   if (item?.id) {
     idItem.value = item?.id
@@ -1436,8 +1446,6 @@ function onCellEditComplete(val: any) {
     if (route.query.type === InvoiceType.CREDIT) {
       val.newData.invoiceAmount = toNegative(val.newData.invoiceAmount)
 
-      console.log(val.newData);
-
       if (toPositive(val.newData.invoiceAmount) > toPositive(val.newData.originalAmount)) {
         toast.add({ severity: 'error', summary: 'Error', detail: "Booking invoice amount cannot be greater than original amount", life: 10000 })
         return null;
@@ -1458,7 +1466,7 @@ watch(PayloadOnChangePage, (newValue) => {
 })
 
 
-onMounted(() => {
+onMounted(() => { 
   
   if (props.selectedInvoice) {
     Payload.value.filter = [{
@@ -1619,19 +1627,38 @@ onMounted(() => {
   <ContextMenu v-if="!isDetailView" ref="bookingContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen" style="h-fit">
-    <BookingDialog :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen"
-      :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
-      :require-confirmation-to-save="saveBooking" :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
-      :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" :close-dialog="() => {
+    <BookingDialog 
+      :fields="Fields" 
+      :fieldsv2="fieldsV2" 
+      :item="item" 
+      :open-dialog="isDialogOpen"
+      :form-reload="formReload" 
+      :loading-save-all="loadingSaveAll" 
+      :clear-form="ClearForm"
+      :require-confirmation-to-save="saveBooking" 
+      :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
+      :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" 
+      :close-dialog="() => {
         ClearForm()
         closeDialog()
-      }" container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
-      content-class="w-full" :night-type-list="nightTypeList" :rate-plan-list="ratePlanList"
-      :room-category-list="roomCategoryList" :room-type-list="roomTypeList" :get-night-type-list="getNightTypeList"
-      :get-room-category-list="getRoomCategoryList" :get-room-type-list="getRoomTypeList"
-      :getrate-plan-list="getratePlanList" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel"
-      :is-night-type-required="nightTypeRequired" :coupon-number-validation="couponNumberValidation"
-      :invoice-obj="currentInvoice" />
+      }" 
+      container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" 
+      class="h-fit p-2 overflow-y-hidden"
+      content-class="w-full" 
+      :night-type-list="nightTypeList" 
+      :rate-plan-list="ratePlanList"
+      :room-category-list="roomCategoryList" 
+      :room-type-list="roomTypeList" 
+      :get-night-type-list="getNightTypeList"
+      :get-room-category-list="getRoomCategoryList" 
+      :get-room-type-list="getRoomTypeList"
+      :getrate-plan-list="getratePlanList" 
+      :invoice-agency="invoiceAgency" 
+      :invoice-hotel="invoiceHotel"
+      :is-night-type-required="nightTypeRequired" 
+      :coupon-number-validation="couponNumberValidation"
+      :invoice-obj="currentInvoice"
+    />
   </div>
 </template>
 

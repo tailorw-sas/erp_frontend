@@ -177,7 +177,7 @@ onMounted(() => {
         <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
-            show-clear 
+            show-clear
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
         </template>
@@ -215,7 +215,6 @@ onMounted(() => {
             </template>
           </DebouncedAutoCompleteComponent>
         </template>
-
         <template #field-roomCategory="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
@@ -228,7 +227,6 @@ onMounted(() => {
             </template>
           </DebouncedAutoCompleteComponent>
         </template>
-
         <template #field-bookingDate="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
@@ -240,7 +238,6 @@ onMounted(() => {
             }"
           />
         </template>
-
         <template #field-roomType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
@@ -253,14 +250,12 @@ onMounted(() => {
             </template>
           </DebouncedAutoCompleteComponent>
         </template>
-
         <template #header-nightType="{ field }">
           <strong>
             {{ typeof field.header === 'function' ? field.header() : field.header }}
           </strong>
           <span v-if="isNightTypeRequired" class="p-error">*</span>
         </template>
-
         <template #field-nightType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"

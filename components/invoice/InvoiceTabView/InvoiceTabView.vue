@@ -116,6 +116,10 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  invoiceType: {
+    type: String,
+    required: false
+  }
 })
 
 const activeTab = ref(props.active)
@@ -313,7 +317,7 @@ onMounted(async () => {
   <div class="justify-content-center align-center ">
     <div style="width: 100%; height: 100%;">
       <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
-        <TabPanel>
+        <TabPanel v-if="route.name !== 'invoice-edit-booking-id'">
           <template #header>
             <div class="flex align-items-center gap-2 p-2" :style="`${active === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-calendar" style="font-size: 1.5rem" />
@@ -326,8 +330,6 @@ onMounted(async () => {
               </span>
             </div>
           </template>
-
-          <!-- BookingTab -> components/invoice/booking/bookingTab.vue  -->
           <BookingTab
             :refetch-invoice="refetchInvoice"
             :get-invoice-agency="getInvoiceAgency"
@@ -349,6 +351,7 @@ onMounted(async () => {
             :invoice-hotel="invoiceHotel"
             :is-detail-view="isDetailView"
             :show-totals="showTotals"
+            :invoice-type="props.invoiceType"
           />
         </TabPanel>
         <TabPanel v-if="showTabs">

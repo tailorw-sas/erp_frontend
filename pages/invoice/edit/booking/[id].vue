@@ -25,10 +25,10 @@ const forceUpdate = ref(false)
 const active = ref(0)
 
 const route = useRoute()
-const invoiceType = ref<string>(route.query.type as string)
 
 //@ts-ignore
 const selectedInvoice = <string>ref(route.params.id.toString())
+const nightTypeRequired = ref(route.query?.nightTypeRequired as string)
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
 
@@ -79,199 +79,8 @@ const confinvoiceTypeListtApi = reactive({
 })
 
 
-const fields: Array<Container> = [
-  {
-    childs: [
-      {
-        field: 'invoiceId',
-        header: 'Id',
-        dataType: 'text',
-        class: `w-full px-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
-        disabled: true,
-        containerFieldClass: 'ml-10'
-
-      },
-      {
-        field: 'invoiceNumber',
-        header: 'Invoice Number',
-        dataType: 'text',
-        class: 'w-full px-3 ',
-        disabled: true,
-
-      },
 
 
-    ],
-    containerClass: 'flex flex-column justify-content-evenly w-full'
-  },
-
-  {
-    childs: [
-
-      {
-        field: 'hotel',
-        header: 'Hotel',
-        dataType: 'select',
-        class: 'w-full px-3 required',
-        disabled: String(route.query.type) as any === InvoiceType.CREDIT
-
-      },
-      {
-        field: 'agency',
-        header: 'Agency',
-        dataType: 'select',
-        class: 'w-full px-3 required',
-        disabled: String(route.query.type) as any === InvoiceType.CREDIT
-      },
-
-    ],
-
-    containerClass: 'flex flex-column justify-content-evenly w-full '
-  },
-  {
-    childs: [
-      {
-        field: 'invoiceDate',
-        header: 'Invoice Date',
-        dataType: 'date',
-        class: 'w-full px-3  required',
-        validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
-      },
-      {
-        field: 'status',
-        header: 'Status',
-        dataType: 'select',
-        class: 'w-full px-3 mb-5',
-        containerFieldClass: '',
-        disabled: true
-      },
-
-
-    ],
-    containerClass: 'flex flex-column justify-content-evenly w-full'
-  },
-  {
-    childs: [
-
-      {
-        field: 'invoiceType',
-        header: 'Type',
-        dataType: 'select',
-        class: 'w-full px-3 mb-5',
-        containerFieldClass: '',
-        disabled: true
-      },
-      {
-        field: 'invoiceAmount',
-        header: 'Invoice Amount',
-        dataType: 'text',
-        class: 'w-full px-3  required',
-        disabled: true,
-        ...(route.query.type === InvoiceType.OLD_CREDIT && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
-      },
-      {
-        field: 'isManual',
-        header: 'Manual',
-        dataType: 'check',
-        class: `w-full px-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
-        disabled: true
-      },
-
-    ],
-    containerClass: 'flex flex-column justify-content-evenly w-full'
-  },
-
-]
-
-const Fields = ref<FieldDefinitionType[]>([
-  {
-    field: 'invoiceId',
-    header: 'ID',
-    dataType: 'text',
-    class: `field col-12 md:col-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`,
-    disabled: true,
-
-
-  },
-  {
-    field: 'invoiceDate',
-    header: 'Invoice Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-3  required',
-    validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
-  },
-  {
-    field: 'hotel',
-    header: 'Hotel',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    disabled: String(route.query.type) as any === InvoiceType.CREDIT,
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    })
-      .required()
-      .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` })
-  },
-  {
-    field: 'invoiceType',
-    header: 'Invoice Type',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 mb-5',
-    containerFieldClass: '',
-    disabled: true
-  },
-  {
-    field: 'invoiceNumber',
-    header: 'Invoice Number',
-    dataType: 'text',
-    class: 'field col-12 md:col-3 ',
-    disabled: true,
-
-  },
-  {
-    field: 'invoiceAmount',
-    header: 'Invoice Amount',
-    dataType: 'text',
-    class: 'field col-12 md:col-3  required',
-    disabled: true,
-    ...(route.query.type === InvoiceType.OLD_CREDIT && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
-  },
-  
-  {
-    field: 'agency',
-    header: 'Agency',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    disabled: String(route.query.type) as any === InvoiceType.CREDIT,
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    }).required()
-      .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
-  },
-  
-  {
-    field: 'status',
-    header: 'Status',
-    dataType: 'select',
-    class: 'field col-12 md:col-2 mb-5',
-    containerFieldClass: '',
-    disabled: true
-  },
-
-  
-
-  {
-    field: 'isManual',
-    header: 'Manual',
-    dataType: 'check',
-    class: `field col-12 md:col-1  flex align-items-center pb-2 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
-    disabled: true
-  },
-])
 
 
 
@@ -490,7 +299,6 @@ async function getInvoiceTypeList() {
 }
 
 function refetchInvoice() {
-  console.log("REFETCH");
   getInvoiceAmountById(route.params.id as string)
   update()
 }
@@ -658,7 +466,7 @@ async function createItem(item: { [key: string]: any }) {
   }
 }
 
-const nightTypeRequired = ref(false)
+// const nightTypeRequired = ref(false)
 
 async function updateItem(item: { [key: string]: any }) {
 
@@ -776,10 +584,6 @@ function update() {
 
     forceUpdate.value = false
   }, 100);
-
-
-
-
 }
 
 
@@ -860,24 +664,651 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
 }
 
 
-watch(() => idItemToLoadFirstTime.value, async (newValue) => {
-  if (!newValue) {
-    clearForm()
-  }
-  else {
-    await getItemById(newValue)
-  }
+const fieldsV2: Array<FieldDefinitionType> = [
+  // Booking Id
+
+  {
+    field: 'bookingId',
+    header: 'Booking Id',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    disabled: true,
+  },
+  // Invoice Original Amount
+  {
+    field: 'invoiceOriginalAmount',
+    header: 'Invoice Original Amount',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    disabled: true,
+    headerClass: 'mb-1',
+  },
+
+  // //Adults
+  {
+    field: 'adults',
+    header: 'Adult',
+    dataType: 'number',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    disabled: true,
+    validation: z.number().min(1, 'The Adults field must be greater than 0').nullable()
+  },
+
+  // Room Type
+  {
+    field: 'roomType',
+    header: 'Room Type',
+    dataType: 'select',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+
+  // Check In
+  // Hotel Creation Date
+  {
+    field: 'hotelCreationDate',
+    header: 'Hotel Creation Date',
+    dataType: 'date',
+    class: 'field col-12 md:col-3 required ',
+    headerClass: 'mb-1',
+    
+    validation: z.date({
+      required_error: 'The Hotel Creation Date field is required',
+      invalid_type_error: 'The Hotel Creation Date field is required',
+    }).max(dayjs().endOf('day').toDate(), 'The Hotel Creation Date field cannot be greater than current date')
+  
+  },
+  // Invoice Amount
+  {
+    field: 'invoiceAmount',
+    header: 'Booking Amount',
+    dataType: 'number',
+    class: 'field col-12 md:col-3 required',
+    disabled: true,
+    headerClass: 'mb-1',
+    ...(
+      route.query.type === InvoiceType.OLD_CREDIT || 
+      route.query.type === InvoiceType.CREDIT ? 
+      { 
+        validation: 
+        z.string()
+        .min(0, 'The Invoice Amount field is required')
+        .refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) 
+      } : 
+      { 
+        validation: 
+        z.string()
+        .min(0, 'The Invoice Amount field is required')
+        .refine((value: any) => !isNaN(value) && +value >= 0, { message: 'The Invoice Amount field must be greater or equals than 0' }) 
+      }
+    )
+  },
+  // // Children
+  {
+    field: 'children',
+    header: 'Children',
+    dataType: 'number',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    disabled: true,
+    validation: z.number().nonnegative('The Children field must not be negative').nullable()
+  },
+
+  // Rate Plan
+  {
+    field: 'ratePlan',
+    header: 'Rate Plan',
+    dataType: 'select',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+
+  {
+    field: 'bookingDate',
+    header: 'Booking Date',
+    dataType: 'date',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+  
+  {
+    field: 'firstName',
+    header: 'First Name',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The First Name field is required')
+  },
+
+  // Hotel Invoice Number
+  {
+    field: 'hotelInvoiceNumber',
+    header: 'Hotel Invoice No',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    validation: z.string().refine((val: string) => {
+      if ((Number(val) < 0)) {
+        return false
+      }
+      return true
+    }, { message: 'The Hotel Invoice No. field must not be negative' }).nullable()
+  },
+
+  // Room Category
+  {
+    field: 'roomCategory',
+    header: 'Room Category',
+    dataType: 'select',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+
+  },
+  {
+    field: 'checkIn',
+    header: 'Check In',
+    dataType: 'date',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    disabled: true,
+    validation: z.date({
+      required_error: 'The Check In field is required',
+      invalid_type_error: 'The Check In field is required',
+    })
+  },
+  {
+    field: 'lastName',
+    header: 'Last Name',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The Last Name field is required')
+  },
+  // Folio Number
+  {
+    field: 'folioNumber',
+    header: 'Folio Number',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+  // Hotel Amount
+  {
+    field: 'hotelAmount',
+    header: 'Hotel Amount',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    disabled: true,
+    validation: z.string().trim().regex(/^\d+$/, 'The Hotel Amount field must be greater than or equal to 0')
+    // validation: z.string().trim().regex(/^\d+$/, 'Only numeric characters allowed')
+  },
+  // Check Out
+  {
+    field: 'checkOut',
+    header: 'Check Out',
+    dataType: 'date',
+    disabled: true,
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.date({
+      required_error: 'The Check Out field is required',
+      invalid_type_error: 'The Check Out field is required',
+    })
+  },
+
+  // Room Number
+  {
+    field: 'roomNumber',
+    header: 'Room Number',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 ',
+    headerClass: 'mb-1',
+  },
+
+  // Night Type
+  {
+    field: 'nightType',
+    header: 'Night Type',
+    dataType: 'select',
+    class: `field col-12 md:col-3 ${nightTypeRequired.value ? 'required' : ''}`,
+    headerClass: 'mb-1',
+  },
+
+  // Booking Balance
+  {
+    field: 'dueAmount',
+    header: 'Booking Balance',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    disabled: true,
+    headerClass: 'mb-1',
+  },
+  // Hotel Booking No.
+  {
+    field: 'hotelBookingNumber',
+    header: 'Hotel Booking No.',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d{2,}\s*$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
+  },
+
+  // Coupon No.
+  {
+    field: 'couponNumber',
+    header: 'Coupon No.',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+  },
+  
+  //  Contract
+  {
+    field: 'contract',
+    header: 'Contract',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    //validation: z.string().regex(/^[a-z0-9]+$/i, 'No se permiten caracteres especiales').nullable()
+  },
+  
+  // // Rate Adult
+  // {
+  //   field: 'rateAdult',
+  //   header: 'Rate Adult',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().min(0, 'The Rate Adult field must be greater or equal than 0')
+  // },
+  // Rate Child
+  // {
+  //   field: 'rateChild',
+  //   header: 'Rate Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
+  // },
+
+
+
+
+// Description
+{
+  field: 'description',
+  header: 'Remark',
+  dataType: 'text',
+  class: 'field col-12 md:col-3',
+  headerClass: 'mb-1',
+},
+]
+
+const item2 = ref<GenericObject>({
+  bookingId: '-',
+  hotelCreationDate: new Date(),
+  bookingDate: new Date(),
+  checkIn: new Date(),
+  checkOut: new Date(),
+  hotelBookingNumber: '',
+  fullName: '',
+  firstName: '',
+  lastName: '',
+  invoiceAmount: '0',
+  roomNumber: '0',
+  couponNumber: '',
+  adults: 0,
+  children: 0,
+  rateAdult: 0,
+  rateChild: 0,
+  hotelInvoiceNumber: '',
+  folioNumber: '',
+  hotelAmount: '0',
+  description: '',
+  invoice: '',
+  ratePlan: null,
+  nightType: null,
+  roomType: null,
+  roomCategory: null,
+  dueAmount: 0,
+  contract: '',
+  id: ''
 })
+
+const itemTemp2 = ref<GenericObject>({
+  bookingId: '-',
+  hotelCreationDate: new Date(),
+  bookingDate: new Date(),
+  checkIn: new Date(),
+  checkOut: new Date(),
+  hotelBookingNumber: '',
+  fullName: '',
+  firstName: '',
+  lastName: '',
+
+  invoiceAmount: '0',
+  roomNumber: '0',
+  couponNumber: '',
+  adults: 0,
+  children: 0,
+  rateAdult: 0,
+  rateChild: 0,
+  hotelInvoiceNumber: '',
+  folioNumber: '',
+  hotelAmount: '0',
+  description: '',
+  invoice: '',
+  ratePlan: null,
+  nightType: null,
+  roomType: null,
+  roomCategory: null,
+  dueAmount: 0,
+  contract: '',
+  id: ''
+})
+
+
+const ratePlanList = ref<any[]>([])
+const roomCategoryList = ref<any[]>([])
+const roomTypeList = ref<any[]>([])
+const nightTypeList = ref<any[]>([])
+const activeTab = ref(0)
+  const confApi = reactive({
+  booking: {
+    moduleApi: 'invoicing',
+    uriApi: 'manage-booking',
+  },
+  // roomRate: {
+  //   moduleApi: 'invoicing',
+  //   uriApi: 'manage-room-rate',
+  // },
+  // adjustment: {
+  //   moduleApi: 'invoicing',
+  //   uriApi: 'manage-adjustment',
+  // },
+  // invoice: {
+  //   moduleApi: 'invoicing',
+  //   uriApi: 'manage-invoice',
+  // },
+})
+const confratePlanApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-rate-plan',
+  keyValue: 'name'
+})
+const confroomCategoryApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-room-category',
+  keyValue: 'name'
+})
+const confroomTypeApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-room-type',
+  keyValue: 'name'
+})
+const confnightTypeApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-night-type',
+  keyValue: 'name'
+})
+
+async function getratePlanList(query = '') {
+  try {
+    const payload
+      = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confratePlanApi.moduleApi, confratePlanApi.uriApi, payload)
+    const { data: dataList } = response
+    ratePlanList.value = []
+    for (const iterator of dataList) {
+      ratePlanList.value = [...ratePlanList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+}
+
+async function getRoomCategoryList(query = '') {
+  try {
+    const payload
+      = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confroomCategoryApi.moduleApi, confroomCategoryApi.uriApi, payload)
+    const { data: dataList } = response
+    roomCategoryList.value = []
+    for (const iterator of dataList) {
+      roomCategoryList.value = [
+        ...roomCategoryList.value, 
+        { 
+          id: iterator.id, 
+          name: iterator.name, 
+          code: iterator.code, 
+          status: iterator.status 
+        }
+      ]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+}
+async function getRoomTypeList(query = '') {
+  try {
+    const payload
+      = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confroomTypeApi.moduleApi, confroomTypeApi.uriApi, payload)
+    const { data: dataList } = response
+    roomTypeList.value = []
+    for (const iterator of dataList) {
+      roomTypeList.value = [...roomTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+}
+async function getNightTypeList(query = '') {
+  try {
+    const payload
+      = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confnightTypeApi.moduleApi, confnightTypeApi.uriApi, payload)
+    const { data: dataList } = response
+    nightTypeList.value = []
+    for (const iterator of dataList) {
+      nightTypeList.value = [...nightTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+}
+
+async function getBookingItemById(id: string) {
+  
+  if (id) {
+    idItem.value = id
+    loadingSaveAll.value = true
+    try {
+      const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
+      console.log("response", response);
+      
+      if (response) {
+        idItem.value = response?.id
+        item2.value.id = response.id
+        item2.value.bookingId = response.bookingId
+        item2.value.hotelCreationDate = new Date(response.hotelCreationDate)
+        item2.value.bookingDate = response.bookingDate ? new Date(response.bookingDate) : ''
+        item2.value.contract = response.contract
+        item2.value.dueAmount = response.dueAmount
+        item2.value.checkIn = new Date(response.checkIn)
+        item2.value.checkOut = new Date(response.checkOut)
+        item2.value.hotelBookingNumber = response.hotelBookingNumber
+        item2.value.fullName = response.fullName
+        item2.value.firstName = response.firstName
+        item2.value.lastName = response.lastName
+
+        item2.value.invoiceAmount = response.invoiceAmount ? String(response?.invoiceAmount) : '0'
+        item2.value.roomNumber = response.roomNumber
+        item2.value.couponNumber = response.couponNumber
+        item2.value.adults = response.adults
+        item2.value.children = response.children
+        item2.value.rateAdult = response.rateAdult
+        item2.value.rateChild = response.rateChild
+        item2.value.hotelInvoiceNumber = response.hotelInvoiceNumber
+        item2.value.folioNumber = response.folioNumber
+        item2.value.hotelAmount = String(response.hotelAmount)
+        item2.value.description = response.description
+        item2.value.invoice = response.invoice
+        item2.value.ratePlan = response.ratePlan?.name == '-' ? null : response.ratePlan
+        item2.value.nightType = response.nightType
+        item2.value.roomType = response.roomType?.name == '-' ? null : response.roomType
+        item2.value.roomCategory = response.roomCategory
+      }
+      formReload.value += 1
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice could not be loaded', life: 3000 })
+      }
+    }
+    finally {
+      loadingSaveAll.value = false
+    }
+  }
+}
+
+// watch(() => idItemToLoadFirstTime.value, async (newValue) => {
+//   if (!newValue) {
+//     clearForm()
+//   }
+//   else {
+//     await getItemById(newValue)
+//   }
+// })
 
 
 
 
 onMounted(async () => {
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  //@ts-ignore
-  await getItemById(route.params.id.toString())
+  // filterToSearch.value.criterial = ENUM_FILTER[0]
+  // //@ts-ignore
+  // await getItemById(route.params.id.toString())
 
-  await loadDefaultsValues()
+  // await loadDefaultsValues()
+  
+  if (route.params && 'id' in route.params && route.params.id) {
+    await getBookingItemById(route.params.id as string);
+  }
 
 
 })
@@ -886,15 +1317,210 @@ onMounted(async () => {
 <template>
   <div class="justify-content-center align-center ">
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
+       Edit Booking
     </div>
     <div class="p-4">
+      <EditFormV2
+        v-if="true"
+        :key="formReload"
+        :fields="fieldsV2"
+        :item="item2"
+        :show-actions="true"
+        :loading-save="loadingSaveAll"
+        container-class="grid pt-5"
+        @cancel="clearForm"
+        @delete="requireConfirmationToDelete($event)"
+        @submit="requireConfirmationToSave($event)"
+      >
+        <template #field-hotelCreationDate="{ item: data, onUpdate,  }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.hotelCreationDate"
+            date-format="yy-mm-dd"
+            :max-date="new Date()"
+            @update:model-value="($event) => {
+              onUpdate('hotelCreationDate', $event)
+            }"
+          />
+        </template>
+        <template #field-invoiceAmount="{ onUpdate, item: data }">
+          <InputText
+            v-model="data.invoiceAmount"
+            show-clear 
+            :disabled="!!item2?.id && route.query.type !== InvoiceType.CREDIT"
+            @update:model-value="($event) => {
+              let value: any = $event
+              if (route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT){
+                value = toNegative(value)
+              }
+              else {
+                value = toPositive(value)
+              }
+              onUpdate('invoiceAmount', String(value))
+            }"
+          />
+        </template>
+        <template #field-hotelAmount="{ onUpdate, item: data, fields, field }">
+          <InputText
+            v-model="data.hotelAmount"
+            show-clear 
+            :disabled="fields.find((f) => f.field === field)?.disabled"
+            @update:model-value="onUpdate('hotelAmount', $event)"
+          />
+        </template>
+        <template #field-checkIn="{ item: data, onUpdate, fields, field }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.checkIn"
+            date-format="yy-mm-dd"
+            :disabled="fields.find((f) => f.field === field)?.disabled"
+            :max-date="data.checkOut ? new Date(data.checkOut) : undefined"
+            @update:model-value="($event) => {
+              onUpdate('checkIn', $event)
+            }"
+          />
+        </template>
+        <template #field-checkOut="{ item: data, onUpdate, fields, field }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.checkOut"
+            date-format="yy-mm-dd"
+            :disabled="fields.find((f) => f.field === field)?.disabled"
+            :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
+            @update:model-value="($event) => {
+              onUpdate('checkOut', $event)
+            }"
+          />
+        </template>
+        <template #field-ratePlan="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll" 
+            id="autocomplete" 
+            field="name" 
+            item-value="id"
+            :model="data.ratePlan" 
+            :suggestions="ratePlanList" 
+            @change="($event) => {
+              onUpdate('ratePlan', $event)
+            }" 
+            @load="($event) => getratePlanList($event)"
+          >
+            <template #option="props">
+              <span>{{ props.item.code }} - {{ props.item.name }}</span>
+            </template>
+          </DebouncedAutoCompleteComponent>
+        </template>
+        <template #field-roomCategory="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+            :model="data.roomCategory" :suggestions="roomCategoryList" @change="($event) => {
+              onUpdate('roomCategory', $event)
+            }" @load="($event) => getRoomCategoryList($event)"
+          >
+            <template #option="props">
+              <span>{{ props.item.code }} - {{ props.item.name }}</span>
+            </template>
+          </DebouncedAutoCompleteComponent>
+        </template>
+        <template #field-bookingDate="{ item: data, onUpdate }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.bookingDate"
+            date-format="yy-mm-dd"
+            :max-date="new Date()"
+            @update:model-value="($event) => {
+              onUpdate('bookingDate', $event)
+            }"
+          />
+        </template>
+        <template #field-roomType="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+            :model="data.roomType" :suggestions="roomTypeList" @change="($event) => {
+              onUpdate('roomType', $event)
+            }" @load="($event) => getRoomTypeList($event)"
+          >
+            <template #option="props">
+              <span>{{ props.item.code }} - {{ props.item.name }}</span>
+            </template>
+          </DebouncedAutoCompleteComponent>
+        </template>
+
+        <!-- <template #header-nightType="{ field }">
+          <strong>
+            {{ typeof field.header === 'function' ? field.header() : field.header }}
+          </strong>
+          <span v-if="isNightTypeRequired" class="p-error">*</span>
+        </template> -->
+
+        <template #field-nightType="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll" 
+            id="autocomplete" 
+            field="name" 
+            item-value="id"
+            :model="data.nightType" 
+            :suggestions="nightTypeList" 
+            @change="($event) => {
+              onUpdate('nightType', $event)
+            }" 
+            @load="($event) => getNightTypeList($event)"
+          >
+            <template #option="props">
+              <span>{{ props.item.code }} - {{ props.item.name }}</span>
+            </template>
+          </DebouncedAutoCompleteComponent>
+        </template>
+        <template #form-footer="props">
+          <div class="grid w-full p-0 m-0">
+            <div class="col-12 mb-5 justify-content-center align-center">
+              <div style="width: 100%; height: 100%;">
+                <InvoiceTabView 
+                  :requires-flat-rate="requiresFlatRate" 
+                  :get-invoice-hotel="getInvoiceHotel"  
+                  :get-invoice-agency="getInvoiceAgency" 
+                  :invoice-obj-amount="invoiceAmount"
+                  :is-dialog-open="bookingDialogOpen" 
+                  :close-dialog="() => { bookingDialogOpen = false }"
+                  :open-dialog="handleDialogOpen" 
+                  :selected-booking="selectedBooking" 
+                  :force-update="forceUpdate"
+                  :toggle-force-update="update" 
+                  :invoice-obj="item2" 
+                  :refetch-invoice="refetchInvoice"
+                  :is-creation-dialog="false" 
+                  :selected-invoice="selectedInvoice as any" 
+                  :active="active"
+                  :set-active="($event) => { active = $event }" 
+                  :showTotals="true"
+                  :invoiceType="route.query?.type?.toString()"
+                />
+              </div>
+            </div>
+            <div class="col-12 flex justify-content-end">
+              <Button
+                v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+                @click="props.item.submitForm($event)"
+              />
+              <Button 
+                v-tooltip.top="'Cancel'" 
+                severity="secondary" 
+                class="w-3rem mx-1" 
+                icon="pi pi-times" 
+                @click="navigateTo('/invoice')"
+              />
+            </div>
+          </div>
+        </template>
+      </EditFormV2>
+
       <EditFormV2 
+        v-if="false"
         :key="formReload" 
         :fields="Fields" 
         :item="item" 
         :show-actions="true" 
-        :loading-save="loadingSaveAll"
+        :loading-save="loadingSaveAll"  
         :loading-delete="loadingDelete" 
         @cancel="clearForm" 
         @delete="requireConfirmationToDelete($event)"
@@ -903,41 +1529,65 @@ onMounted(async () => {
         container-class="grid pt-3"
       >
         <template #field-invoiceDate="{ item: data, onUpdate }">
-          <Calendar v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
+          <Calendar 
+            v-if="!loadingSaveAll" 
+            v-model="data.invoiceDate" 
+            date-format="yy-mm-dd" 
+            :max-date="new Date()" 
+            :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
             @update:model-value="($event) => {
-        onUpdate('invoiceDate', $event)
-      }" />
+              onUpdate('invoiceDate', $event)
+            }" />
         </template>
 
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText v-model="invoiceAmount" :disabled="true" v-if="!loadingSaveAll"/>
+          <InputText 
+            v-if="!loadingSaveAll"
+            v-model="invoiceAmount" 
+            :disabled="true" 
+          />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
         <template #field-invoiceStatus="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.invoiceStatus" :suggestions="[...invoiceStatusList]" :disabled="idItem !== ''" @change="async ($event) => {
-        onUpdate('invoiceStatus', $event)
-      }" @load="async ($event) => {
-        const objQueryToSearch = {
-          query: $event,
-          keys: ['name', 'code'],
-        }
-        const filter: FilterCriteria[] = [{
-          key: 'status',
-          logicalOperation: 'AND',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-        }]
-        await getInvoiceStatusList(objApis.invoiceStatus.moduleApi, objApis.invoiceStatus.uriApi, objQueryToSearch, filter)
-      }" />
-          <Skeleton v-else height="2rem" class="mb-2" />
+          <DebouncedAutoCompleteComponent 
+            v-if="!loadingSaveAll" 
+            id="autocomplete" 
+            field="name" 
+            item-value="id"
+            :model="data.invoiceStatus" 
+            :suggestions="[...invoiceStatusList]" 
+            :disabled="idItem !== ''" 
+            @change="async ($event) => {
+              onUpdate('invoiceStatus', $event)
+            }" @load="async ($event) => {
+              const objQueryToSearch = {
+                query: $event,
+                keys: ['name', 'code'],
+              }
+              const filter: FilterCriteria[] = [{
+                key: 'status',
+                logicalOperation: 'AND',
+                operator: 'EQUALS',
+                value: 'ACTIVE',
+              }]
+              await getInvoiceStatusList(objApis.invoiceStatus.moduleApi, objApis.invoiceStatus.uriApi, objQueryToSearch, filter)
+            }" />
+            <Skeleton v-else height="2rem" class="mb-2" />
         </template>
+
         <template #field-status="{ item: data, onUpdate }">
-          <Dropdown v-if="!loadingSaveAll" v-model="data.status" :options="[ENUM_INVOICE_STATUS[0], ENUM_INVOICE_STATUS[2]]" option-label="name"
-            return-object="false" show-clear :disabled="data?.status?.id !== InvoiceStatus.PROCECSED" @update:model-value="($event) => {
-        onUpdate('status', $event)
-      }">
+          <Dropdown 
+            v-if="!loadingSaveAll" 
+            v-model="data.status" 
+            :options="[ENUM_INVOICE_STATUS[0], ENUM_INVOICE_STATUS[2]]" 
+            option-label="name"
+            return-object="false" 
+            show-clear 
+            :disabled="data?.status?.id !== InvoiceStatus.PROCECSED" 
+            @update:model-value="($event) => {
+              onUpdate('status', $event)
+            }">
             <template #option="props">
               {{ props.option?.code }}-{{ props.option?.name }}
             </template>
@@ -1016,7 +1666,6 @@ onMounted(async () => {
               :set-active="($event) => { active = $event }" 
               :showTotals="true"
               :night-type-required="nightTypeRequired" 
-              :invoiceType='invoiceType'
             />
             <div>
               <div class="flex justify-content-end">
