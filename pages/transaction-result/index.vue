@@ -32,7 +32,7 @@ onMounted(() => {
   // disableBackNavigation()
 
   const status = route.query.status || 'error'
-
+  console.log(route)
   transactionStatus.value = String(status) // Asignar el estado recibido a transactionStatus
   orderNumber.value = String(route.query.OrderNumber) || ''
   amount.value = (Number.parseFloat(String(route.query.Amount)) / 100).toFixed(2) || '0.00'
@@ -78,7 +78,7 @@ function toggleDetails() {
             <h2>
               {{ transactionStatus === 'success' ? 'Transaction Successful!'
                 : transactionStatus === 'declined' ? 'Transaction Declined'
-                  : 'Transaction Cancelled' }}
+                    : 'Transaction Cancelled' }}
             </h2>
             <p v-if="transactionStatus === 'success'">
               We have successfully processed your payment.
@@ -108,7 +108,9 @@ function toggleDetails() {
               <p><strong>Authorization Code:</strong> {{ route.query.AuthorizationCode }}</p>
               <p><strong>Date and Time:</strong> {{ dateTime }}</p>
               <p><strong>Merchant Response:</strong> {{ route.query.ResponseMessage }} ({{ route.query.IsoCode }})</p>
-              <p v-if="transactionStatus === 'declined' || transactionStatus === 'cancelled'"><strong>Error Description:</strong> {{ route.query.ErrorDescription }}</p>
+              <p v-if="transactionStatus === 'declined' || transactionStatus === 'cancelled'">
+                <strong>Error Description:</strong> {{ route.query.ErrorDescription }}
+              </p>
               <p><strong>Reference Number:</strong> {{ route.query.RRN }}</p>
               <p><strong>Card Number:</strong> {{ route.query.CardNumber }}</p>
             </template>
