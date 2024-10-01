@@ -29,8 +29,8 @@ const filterToSearch = ref<IData>({
   allFromAndTo: false,
   agency: [allDefaultItem],
   hotel: [allDefaultItem],
-  from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-  to: new Date(),
+  from: dayjs(new Date()).startOf('month').toDate(),
+  to: dayjs(new Date()).endOf('month').toDate(),
 })
 
 const hotelList = ref<any[]>([])
@@ -99,6 +99,7 @@ const options = ref({
   loading: false,
   showDelete: false,
   selectionMode: 'multiple' as 'multiple' | 'single',
+  selectAllItemByDefault: false,
   showFilters: true,
   expandableRows: false,
   messageToDelete: 'Do you want to save the change?'
@@ -362,7 +363,7 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
     newPayload.filter.push({
       key: 'invoiceDate',
       operator: 'GREATER_THAN_OR_EQUAL_TO',
-      value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
+      value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
       logicalOperation: 'AND',
       type: 'filterSearch'
     });
@@ -371,7 +372,7 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
     newPayload.filter.push({
       key: 'invoiceDate',
       operator: 'LESS_THAN_OR_EQUAL_TO',
-      value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
+      value:  dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
       logicalOperation: 'AND',
       type: 'filterSearch'
     });
@@ -438,6 +439,7 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
 
   payload.value = newPayload;
    // Obtener la lista de facturas
+   options.value.selectAllItemByDefault = true
    const dataList = await getList();
 
 // Verificar si no hay resultados
@@ -650,7 +652,8 @@ onMounted(async () => {
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="clearForm"  :disabled="listItems.length ===0"/>
+        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="clearForm"
+        :disabled="selectedElements.length ===0" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>
