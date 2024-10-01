@@ -81,15 +81,14 @@ const confagencyListApi = reactive({
 */
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text', width: '6%' },
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi, width: '20%' },
-  { field: 'invoiceNumber', header: 'Inv. No', type: 'text', width: '6%' },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi, width: '20%' },
-  { field: 'invoiceDate', header: 'Gen.  Date', type: 'date', width: '9%' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '12%' },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi, width: '15%' },
+  { field: 'invoiceNumber', header: 'Inv. No', type: 'text', width: '8%' },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi, width: '15%' },
+  { field: 'invoiceDate', header: 'Gen.  Date', type: 'date', width: '12%' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '14%' },
   { field: 'reconcilestatus', header: 'Rec Status', type: 'slot-text', width: '15%' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
-
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
