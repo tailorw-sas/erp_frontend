@@ -476,7 +476,7 @@ async function createClonation() {
 async function handleTotalApplyClick() {
   entryCode.value = '';
 
-  try {
+  /*try {
     const response: any = await createClonation();
 
     if (response && response.clonedInvoice) {
@@ -502,6 +502,11 @@ async function handleTotalApplyClick() {
   } finally {
     handleDialogCloseTotal();
   }
+
+  */
+  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
+
+  handleDialogCloseTotal();
 }
 
 
