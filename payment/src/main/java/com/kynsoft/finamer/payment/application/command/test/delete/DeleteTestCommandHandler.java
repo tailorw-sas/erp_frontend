@@ -1,9 +1,8 @@
 package com.kynsoft.finamer.payment.application.command.test.delete;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.payment.domain.services.ITestService;
-import com.kynsoft.finamer.payment.application.command.test.delete.DeleteTestCommand;
 import com.kynsoft.finamer.payment.domain.dto.TestDto;
+import com.kynsoft.finamer.payment.domain.services.ITestService;
 import org.springframework.stereotype.Component;
 
 @Component

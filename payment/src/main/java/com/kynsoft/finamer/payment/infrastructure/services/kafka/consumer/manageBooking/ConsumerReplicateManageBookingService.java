@@ -8,9 +8,6 @@ import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 @Service
 public class ConsumerReplicateManageBookingService {
 

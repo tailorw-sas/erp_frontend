@@ -1,11 +1,11 @@
 package com.kynsoft.finamer.payment.application.command.payment.create;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import java.time.LocalDate;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Getter

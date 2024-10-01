@@ -9,18 +9,12 @@ import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
-import java.util.UUID;
-
-import java.util.function.Consumer;
-
+import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+import java.util.function.Consumer;
 
 @Component
 public class UpdatePaymentDetailCommandHandler implements ICommandHandler<UpdatePaymentDetailCommand> {

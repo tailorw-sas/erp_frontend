@@ -1,15 +1,8 @@
 package com.kynsoft.finamer.payment.infrastructure.services.report.util;
 
-import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.Chapter;
-import com.itextpdf.text.Chunk;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.kynsoft.finamer.payment.application.query.report.PaymentReportResponse;
-import org.springframework.security.core.parameters.P;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -5,27 +5,15 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
-import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
-import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.masterPaymentAttachment.MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule;
-import com.kynsoft.finamer.payment.domain.services.IAttachmentStatusHistoryService;
-import com.kynsoft.finamer.payment.domain.services.IManageAttachmentTypeService;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
-import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import com.kynsoft.finamer.payment.domain.services.*;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import java.util.function.Consumer;
-
-import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHandler<UpdateMasterPaymentAttachmentCommand> {

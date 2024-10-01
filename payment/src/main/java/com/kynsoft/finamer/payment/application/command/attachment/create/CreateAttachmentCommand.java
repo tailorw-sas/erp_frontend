@@ -5,9 +5,10 @@ import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.payment.application.command.payment.create.CreateAttachmentRequest;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter

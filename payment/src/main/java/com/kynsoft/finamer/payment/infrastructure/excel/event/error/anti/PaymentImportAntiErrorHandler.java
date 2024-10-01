@@ -2,7 +2,6 @@ package com.kynsoft.finamer.payment.infrastructure.excel.event.error.anti;
 
 import com.kynsoft.finamer.payment.domain.excel.IPaymentImportExtrasFieldProcessor;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentAntiRowError;
-import com.kynsoft.finamer.payment.domain.excel.error.PaymentBankRowError;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportAntiErrorRepository;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
