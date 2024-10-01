@@ -15,7 +15,6 @@ import com.kynsoft.finamer.payment.application.command.payment.applyPayment.Appl
 import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaymentCommand;
 import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaymentMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommand;
-import com.kynsoft.finamer.payment.application.command.paymentImport.expenseToBooking.PaymentExpenseToBookingImportRequest;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
 import com.kynsoft.finamer.payment.application.query.attachmentType.search.GetSearchAttachmentTypeQuery;
 import com.kynsoft.finamer.payment.application.query.manageResourceType.search.GetSearchManageResourceTypeQuery;
