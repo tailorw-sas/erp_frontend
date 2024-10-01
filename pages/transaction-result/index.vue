@@ -78,7 +78,7 @@ function toggleDetails() {
             <h2>
               {{ transactionStatus === 'success' ? 'Transaction Successful!'
                 : transactionStatus === 'declined' ? 'Transaction Declined'
-                  : 'Transaction Cancelled' }}
+                    : 'Transaction Cancelled' }}
             </h2>
             <p v-if="transactionStatus === 'success'">
               We have successfully processed your payment.
