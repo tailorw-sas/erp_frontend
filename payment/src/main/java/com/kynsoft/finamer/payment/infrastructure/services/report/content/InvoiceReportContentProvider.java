@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.services.report.content;
 
 import com.kynsof.share.core.domain.service.IReportGenerator;
-import com.kynsoft.finamer.payment.infrastructure.services.report.util.ReportUtil;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;

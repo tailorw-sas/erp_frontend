@@ -2,9 +2,10 @@ package com.kynsoft.finamer.payment.application.query.payment.excelExporter;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsoft.finamer.payment.infrastructure.services.ExcelExporterService;
+import org.springframework.stereotype.Component;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.springframework.stereotype.Component;
 
 @Component
 public class GetPaymentExcelExporterQueryHandler implements IQueryHandler<GetPaymentExcelExporterQuery, PaymentExcelExporterResponse> {

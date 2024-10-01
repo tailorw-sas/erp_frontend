@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.application.query.report;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data

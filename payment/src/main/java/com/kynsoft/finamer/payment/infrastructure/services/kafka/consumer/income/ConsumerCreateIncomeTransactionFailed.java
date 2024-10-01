@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.income;
 
 import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionFailedKafka;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

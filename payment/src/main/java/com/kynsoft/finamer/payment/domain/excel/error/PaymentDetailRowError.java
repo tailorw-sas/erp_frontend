@@ -2,7 +2,6 @@ package com.kynsoft.finamer.payment.domain.excel.error;
 
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

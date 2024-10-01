@@ -2,8 +2,8 @@ package com.kynsoft.finamer.payment.application.query.paymentStatusHistory.searc
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import org.springframework.stereotype.Component;
 import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import org.springframework.stereotype.Component;
 
 @Component
 public class GetSearchPaymentAttachmentStatusHistoryQueryHandler implements IQueryHandler<GetSearchPaymentAttachmentStatusHistoryQuery, PaginatedResponse> {

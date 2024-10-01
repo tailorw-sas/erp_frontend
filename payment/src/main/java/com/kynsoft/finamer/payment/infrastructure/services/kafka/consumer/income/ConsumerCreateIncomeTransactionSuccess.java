@@ -1,26 +1,15 @@
 package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.income;
 
-import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionKafka;
 import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionSuccessKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
-import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
-import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
-import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManageBooking;
+import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 @Service
 public class ConsumerCreateIncomeTransactionSuccess {

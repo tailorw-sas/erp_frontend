@@ -5,7 +5,10 @@ import com.kynsoft.finamer.payment.application.command.replicate.objects.CreateR
 import com.kynsoft.finamer.payment.application.command.replicate.objects.CreateReplicateMessage;
 import com.kynsoft.finamer.payment.application.command.replicate.objects.CreateReplicateRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/replicate")

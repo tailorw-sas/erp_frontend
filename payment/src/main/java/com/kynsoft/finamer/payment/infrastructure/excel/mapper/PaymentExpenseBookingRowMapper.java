@@ -3,7 +3,6 @@ package com.kynsoft.finamer.payment.infrastructure.excel.mapper;
 import com.kynsof.share.core.application.excel.mapper.IMapper;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseRow;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

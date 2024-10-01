@@ -5,9 +5,9 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.finamer.payment.domain.dto.TestDto;
 import com.kynsoft.finamer.payment.domain.rules.test.TestUserNameMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.ITestService;
-import com.kynsoft.finamer.payment.domain.dto.TestDto;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -3,7 +3,6 @@ package com.kynsoft.finamer.payment.application.command.replicate.delete.objects
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
-
 import org.springframework.stereotype.Component;
 
 @Component
