@@ -125,8 +125,8 @@ catch (error) {
             {{ message.message }}
           </p>
           <div class="flex align-items-center gap-2 mt-4">
-            <Button label="Save" class="w-8rem" @click="acceptCallback" />
-            <Button :class="message.rejectClass" label="Cancel" outlined class="w-8rem" @click="rejectCallback" />
+            <Button :label="message.acceptLabel || 'Accept'" class="w-8rem" @click="acceptCallback" />
+            <Button :class="message.rejectClass" :label="message.rejectLabel || 'Cancel'" outlined class="w-8rem" @click="rejectCallback" />
           </div>
         </div>
       </template>

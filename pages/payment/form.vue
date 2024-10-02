@@ -1816,7 +1816,7 @@ function undoApplication(event: any) {
     icon: 'pi pi-exclamation-triangle',
     rejectClass: 'p-button-danger p-button-outlined',
     rejectLabel: 'Cancel',
-    acceptLabel: 'Save',
+    acceptLabel: 'Accept',
     accept: () => {
       applyUndoApplication(event)
     },
@@ -1848,7 +1848,7 @@ function reverseTransaction(event: any) {
     icon: 'pi pi-exclamation-triangle',
     rejectClass: 'p-button-danger p-button-outlined',
     rejectLabel: 'Cancel',
-    acceptLabel: 'Save',
+    acceptLabel: 'Accept',
     accept: () => {
       applyReverseTransaction(event)
     },
