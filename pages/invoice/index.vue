@@ -316,7 +316,7 @@ const invoiceAllContextMenuItems = ref([
     width: '24px',
     height: '24px',
     iconSvg:'',
-    command: () => { },
+    command: () => { onFromInvoice() },
     default: true,
     showItem: false,
   },
@@ -445,7 +445,10 @@ async function SendInvoiceByType() {
   loadingSaveAll.value = false
 }
 
-
+async function onFromInvoice() {
+  const id: string = selectedInvoice  // TODO: Aqui debe ser el id del padre
+  await getItemById({ id: id, type: 'INVOICE', status: '' })
+}
 
 async function createSend() {
    // Opcional: Puedes manejar el estado de carga aquí
@@ -858,9 +861,6 @@ async function getList() {
     totalDueAmount.value = 0
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    console.log(response.data);
-    
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -1147,9 +1147,7 @@ function clearFilterToSearch() {
   getList()
 }
 async function getItemById(data: { id: string, type: string, status: any }) {
-
-  openEditDialog(data?.id, data?.type)
-
+  await openEditDialog(data?.id, data?.type)
 }
 
 function handleDialogOpen() {
@@ -1624,8 +1622,8 @@ function onRowRightClick(event: any) {
     findMenuItemByLabelSetShow('Send', invoiceContextMenuItems.value, true)
   }
 
-  // From Invoice
-  if (event?.data?.status === InvoiceStatus.CANCELED && [InvoiceType.CREDIT, InvoiceType.OLD_CREDIT].includes(event.data?.invoiceType)) {
+  // From Invoice // TODO: Solo se debe mostrar la opcion si el parentId no es null, o sea, si es un Credit
+  if (/*event?.data?.status === InvoiceStatus.CANCELED &&*/ [InvoiceType.CREDIT].includes(event.data?.invoiceType)) {
     findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
   }
 
