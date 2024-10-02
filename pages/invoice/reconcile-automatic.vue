@@ -30,8 +30,8 @@ const filterToSearch = ref<IData>({
   allFromAndTo: false,
   agency: [allDefaultItem],
   hotel: [allDefaultItem],
-  from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-  to: new Date(),
+  from: dayjs(new Date()).startOf('month').toDate(),
+  to: dayjs(new Date()).endOf('month').toDate(),
 })
 
 const hotelList = ref<any[]>([])
@@ -96,6 +96,7 @@ const options = ref({
   showDelete: false,
   selectionMode: 'multiple' as 'multiple' | 'single',
   showFilters: true,
+  selectAllItemByDefault: false,
   expandableRows: false,
   messageToDelete: 'Do you want to save the change?'
 })
@@ -348,6 +349,8 @@ function onSortField(event: any) {
   }
 }
 
+
+
 async function searchAndFilter() {
   const newPayload: IQueryRequest = {
     filter: [],
@@ -378,7 +381,7 @@ async function searchAndFilter() {
     newPayload.filter.push({
       key: 'invoiceDate',
       operator: 'GREATER_THAN_OR_EQUAL_TO',
-      value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
+      value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
       logicalOperation: 'AND',
       type: 'filterSearch'
     });
@@ -387,7 +390,7 @@ async function searchAndFilter() {
     newPayload.filter.push({
       key: 'invoiceDate',
       operator: 'LESS_THAN_OR_EQUAL_TO',
-      value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
+      value:  dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
       logicalOperation: 'AND',
       type: 'filterSearch'
     });
@@ -454,6 +457,7 @@ async function searchAndFilter() {
 
   payload.value = newPayload;
   // Obtener la lista de facturas
+  options.value.selectAllItemByDefault = true
   const dataList = await getList();
 
   // Verificar si no hay resultados
@@ -480,8 +484,10 @@ function clearFilterToSearch() {
     hotel: [allDefaultItem], // Restablecer a valor predeterminado
     from: null, // Limpiar el campo de fecha 'from'
     to: null, // Limpiar el campo de fecha 'to'
+  
   };
   listItems.value = [];
+  importModel.value.importFile=null
   pagination.value.totalElements = 0
 
 }
@@ -591,7 +597,7 @@ onMounted(async () => {
                       <div class="flex align-items-center gap-2" style=" z-index:5 ">
                         <label class="filter-label font-bold" for="">Criteria:</label>
                         <div class="w-full">
-                          <Dropdown v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
+                          <Dropdown v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
                             placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear />
                         </div>
                       </div>
@@ -674,7 +680,7 @@ onMounted(async () => {
 
       <div class="flex align-items-end justify-content-end">
         <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="clearForm"
-          :disabled="listItems.length === 0 || !importModel.importFile" />
+          :disabled="!importModel.importFile || selectedElements.length ===0" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
           @click="clearForm" />
       </div>
