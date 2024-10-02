@@ -18,6 +18,9 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceRequest;
@@ -182,6 +185,15 @@ public class InvoiceController {
     public ResponseEntity<?> send(@RequestBody SendInvoiceRequest request){
         SendInvoiceCommand command = SendInvoiceCommand.fromRequest(request);
         SendInvoiceMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reconcile-manual")
+    public ResponseEntity<?> generateInvoicePdf(@RequestBody ReconcileManualRequest request){
+
+        ReconcileManualCommand command = ReconcileManualCommand.fromRequest(request);
+        ReconcileManualMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
     }
