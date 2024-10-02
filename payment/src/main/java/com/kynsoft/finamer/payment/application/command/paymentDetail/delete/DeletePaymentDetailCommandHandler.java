@@ -10,6 +10,10 @@ import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePayment
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePaymentDetailsDepositRule;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -72,7 +76,17 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             UpdateIfNotNull.updateDouble(update::setNotIdentified, update.getPaymentAmount() - update.getIdentified(), updatePayment::setUpdate);
             //Para este caso no se elimina, dado que el objeto esta relacionado con otro objeto del mismo tipo, por tanto voy a actuar modificando
             //los valores y poniendo en inactivo el apply deposit que se trata de eliminar.
-            service.delete(delete);
+            PaymentDetailDto parent = this.service.findByPaymentDetailId(delete.getParentId());
+            List<PaymentDetailDto> childrens = new ArrayList<>();
+            for (PaymentDetailDto children : parent.getChildren()) {
+                if (!children.getId().equals(delete.getId())) {
+                    childrens.add(children);
+                }
+            }
+            parent.setChildren(childrens);
+            this.service.update(parent);
+            this.service.delete(delete);
+            //service.delete(delete);
         }
 
         paymentService.update(update);
