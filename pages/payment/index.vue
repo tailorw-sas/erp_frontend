@@ -33,6 +33,7 @@ const disabledBtnApplyPayment = ref(true)
 const disabledBtnApplyPaymentOtherDeduction = ref(true)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
+const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
 const paymentDetailsTypeDepositList = ref<any[]>([])
 const paymentDetailsTypeDepositLoading = ref(false)
 const paymentDetailsTypeDepositSelected = ref<any[]>([])
@@ -740,6 +741,7 @@ async function checkAttachment(code: string) {
   }
   try {
     await GenericService.create('payment', 'payment/change-attachment-status', payload)
+    toast.add({ severity: 'success', summary: 'Success', detail: `The payment with id ${objItemSelectedForRightClickPaymentWithOrNotAttachment.value?.paymentId} was updated successfully`, life: 3000 })
     await getList()
   }
   catch (error) {
@@ -1866,6 +1868,7 @@ function onRowContextMenu(event: any) {
     objItemSelectedForRightClickApplyPaymentOtherDeduction.value = {}
   }
   objItemSelectedForRightClickApplyPayment.value = event.data
+  objItemSelectedForRightClickPaymentWithOrNotAttachment.value = event.data
   if (event && event.data && (event.data.notApplied !== '' || event.data.notApplied !== null) && event.data.notApplied.replace(/,/g, '') > 0 && (event.data.paymentStatus && event.data.paymentStatus.code !== 'CAN')) {
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
