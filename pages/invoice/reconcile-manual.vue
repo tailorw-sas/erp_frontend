@@ -469,8 +469,8 @@ function clearFilterToSearch() {
     search: '', // Dejar el campo de búsqueda en blanco
     agency: [allDefaultItem], // Restablecer a valor predeterminado
     hotel: [allDefaultItem], // Restablecer a valor predeterminado
-    from: null, // Limpiar el campo de fecha 'from'
-    to: null, // Limpiar el campo de fecha 'to'
+    from: dayjs(new Date()).startOf('month').toDate(),
+    to: dayjs(new Date()).endOf('month').toDate(),
   };
  listItems.value = [];
  pagination.value.totalElements=0
