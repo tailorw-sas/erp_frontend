@@ -169,6 +169,18 @@ public class ManageInvoice {
                 parent != null ? parent.toAggregateSample() : null, credits);
     }
 
+    public ManageInvoiceDto toAggregateSearch() {
+
+        return new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+                invoiceAmount, dueAmount,
+                hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
+                autoRec, null, null, reSend, reSendDate,
+                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
+                parent != null ? parent.toAggregateSample() : null, credits);
+
+    }
+
     @PostLoad
     public void initDefaultValue() {
         if (dueAmount == null) {
