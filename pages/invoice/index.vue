@@ -29,6 +29,7 @@ const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
 const menu = ref()
 let selectedInvoice = ref('')
+let selectedInvoiceObj = ref<any>()
 const menu_import = ref()
 const menu_send = ref()
 const menu_reconcile = ref()
@@ -56,6 +57,7 @@ const attachmentHistoryDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const doubleFactorOpen = ref<boolean>(false)
 const doubleFactorTotalOpen = ref<boolean>(false)
+const changeAgencyDialogOpen = ref<boolean>(false)
 const attachmentInvoice = <any>ref(null)
 
 const active = ref(0)
@@ -178,7 +180,9 @@ const invoiceAllContextMenuItems = ref([
     width: '24px',
     height: '24px',
     iconSvg:'',
-    command: () => { },
+    command: () => {
+      changeAgencyDialogOpen.value = true
+    },
     default: true,
     showItem: false,
   },
@@ -316,7 +320,7 @@ const invoiceAllContextMenuItems = ref([
     width: '24px',
     height: '24px',
     iconSvg:'',
-    command: () => { },
+    command: () => { onFromInvoice() },
     default: true,
     showItem: false,
   },
@@ -445,7 +449,12 @@ async function SendInvoiceByType() {
   loadingSaveAll.value = false
 }
 
-
+async function onFromInvoice() {
+  const id = selectedInvoiceObj.value.parent
+  if (id) {
+    await getItemById({ id: id, type: 'INVOICE', status: '' })
+  }
+}
 
 async function createSend() {
    // Opcional: Puedes manejar el estado de carga aquí
@@ -858,9 +867,6 @@ async function getList() {
     totalDueAmount.value = 0
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    console.log(response.data);
-    
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -1147,9 +1153,7 @@ function clearFilterToSearch() {
   getList()
 }
 async function getItemById(data: { id: string, type: string, status: any }) {
-
-  openEditDialog(data?.id, data?.type)
-
+  await openEditDialog(data?.id, data?.type)
 }
 
 function handleDialogOpen() {
@@ -1566,6 +1570,7 @@ function findMenuItemByLabelSetShow(label: string, list: any[], showItem: boolea
 function onRowRightClick(event: any) {
 
   selectedInvoice = event.data.id
+  selectedInvoiceObj.value = event.data
   setMenuOptions()
 
   if (event.data?.invoiceType !== InvoiceType.INVOICE || ![InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)) {
@@ -1624,8 +1629,9 @@ function onRowRightClick(event: any) {
     findMenuItemByLabelSetShow('Send', invoiceContextMenuItems.value, true)
   }
 
-  // From Invoice
-  if (event?.data?.status === InvoiceStatus.CANCELED && [InvoiceType.CREDIT, InvoiceType.OLD_CREDIT].includes(event.data?.invoiceType)) {
+  // From Invoice // TODO: Solo se debe mostrar la opcion si el parentId no es null, o sea, si es un Credit
+  if (/*event?.data?.status === InvoiceStatus.CANCELED &&*/ [InvoiceType.CREDIT].includes(event.data?.invoiceType)
+      && selectedInvoiceObj.value.parent) { //indica si es de tipo credit, ya que los old-credit no tienen padre
     findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
   }
 
@@ -2230,6 +2236,13 @@ const legend = ref(
       :open-dialog="exportAttachmentsDialogOpen" 
       :payload="payload" 
       :invoice="attachmentInvoice"
+    />
+  </div>
+  <div v-if="changeAgencyDialogOpen">
+    <InvoiceChangeAgencyDialog
+      :open-dialog="changeAgencyDialogOpen"
+      :selected-invoice="selectedInvoiceObj"
+      @on-close-dialog="() => { changeAgencyDialogOpen = false }"
     />
   </div>
 
