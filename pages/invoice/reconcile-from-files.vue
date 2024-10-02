@@ -63,6 +63,52 @@ async function onChangeAttachFile(event: any) {
   }
 }
 
+/*async function onChangeAttachFile(event: any) {
+  if (event.target.files && event.target.files.length > 0) {
+    const files: File[] = Array.from(event.target.files);
+    const pdfFiles = files.filter(file => file.type === 'application/pdf');
+
+    if (pdfFiles.length > 0) {
+      const invalidFiles = pdfFiles.filter(file => {
+        // Extrae el nombre del archivo sin extensión
+        const fileName = file.name.split('.')[0];
+        // Verifica si el nombre del archivo es un número
+        return isNaN(Number(fileName)); // Retorna true si no es un número
+      });
+
+      if (invalidFiles.length > 0) {
+        // Si hay archivos inválidos, muestra un toast con el detalle del error
+        invalidFiles.forEach((file) => {
+          toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `El archivo '${file.name}' no es válido. Su nombre debe ser un número.`,
+            life: 10000
+          });
+        });
+        importModel.value.attachFile = []; // Limpia si hay archivos inválidos
+      } else {
+        // Si todos los archivos son válidos, almacena los archivos PDF
+        importModel.value.attachFile = pdfFiles; // Almacena objetos File
+        pdfFiles.forEach((file) => {
+          console.log(`Archivo PDF seleccionado: ${file.name}`);
+        });
+      }
+    } else {
+      importModel.value.attachFile = []; // Limpia si no hay PDFs
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Please select only PDF files.',
+        life: 10000
+      });
+    }
+
+    event.target.value = ''; // Limpia el input
+    await activeImport();
+  }
+}
+*/
 async function activeImport() {
   if (importModel.value.attachFile !== null) {
     uploadComplete.value = false
