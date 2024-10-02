@@ -28,7 +28,7 @@ public class CreatePaymentDetailTypeDepositCommandHandler implements ICommandHan
                 Status.ACTIVE,
                 command.getPayment(),
                 this.paymentTransactionTypeService.findByDeposit(),
-                command.getPayment().getPaymentAmount(),
+                command.getPayment().getPaymentAmount() * -1,//El Credit viene con valor negativo, el payment se crea en positivo y aqui se multiplica por -1 para crear el Deposit negativo.
                 command.getPayment().getRemark(),
                 null,
                 null,
