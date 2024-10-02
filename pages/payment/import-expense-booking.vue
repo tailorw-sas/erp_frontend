@@ -4,6 +4,7 @@ import { useToast } from 'primevue/usetoast'
 import { v4 as uuidv4 } from 'uuid'
 import type { PageState } from 'primevue/paginator'
 import { filter } from 'lodash'
+import dayjs from 'dayjs'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
@@ -48,12 +49,12 @@ const idItem = ref('')
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'bookingId', header: 'Booking Id', type: 'text' },
-  { field: 'InvoiceNo', header: 'Invoice No', type: 'text' },
+  { field: 'invoiceNo', header: 'Invoice No', type: 'text' },
   { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'reservationNumber', header: 'Reservation No', type: 'text' },
   { field: 'couponNumber', header: 'Coupon No', type: 'text' },
-  { field: 'checkIn', header: 'Check In', type: 'text' },
-  { field: 'checkOut', header: 'Check Out', type: 'text' },
+  { field: 'checkIn', header: 'Check In', type: 'date' },
+  { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'adults', header: 'Adults', type: 'text' },
   { field: 'children', header: 'Children', type: 'text' },
   { field: 'balance', header: 'Amount', type: 'text' },
@@ -130,7 +131,7 @@ async function getErrorList() {
         }
 
         // const datTemp = new Date(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        newListItems.push({ ...iterator.row, id: iterator.id, checkIn: dayjs(iterator.row.checkIn).format('YYYY-MM-DD'), checkOut: dayjs(iterator.row.checkOut).format('YYYY-MM-DD'), impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
