@@ -252,7 +252,7 @@ const allMenuListItems = ref([
   },
   {
     id: 'applyPaymentOtherDeduction',
-    label: 'Apply Other Deduction',
+    label: 'Apply Other Deductions',
     icon: 'pi pi-cog',
     iconSvg: '',
     viewBox: '',
