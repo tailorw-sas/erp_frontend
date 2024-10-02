@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcil
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +35,10 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             }
             if(invoiceDto.getStatus().compareTo(EInvoiceStatus.PROCECSED) != 0){
                 errors.put(invoiceDto.getId(), "The invoice is not in processed status.");
+                continue;
+            }
+            if(invoiceDto.getInvoiceType().compareTo(EInvoiceType.INVOICE) != 0){
+                errors.put(invoiceDto.getId(), "The invoice type must be INV.");
                 continue;
             }
             try{
