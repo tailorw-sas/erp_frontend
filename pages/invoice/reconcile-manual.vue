@@ -87,7 +87,7 @@ const columns: IColumn[] = [
   { field: 'invoiceDate', header: 'Gen.  Date', type: 'date', width: '12%' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '14%' },
   { field: 'reconcilestatus', header: 'Rec Status', type: 'slot-text', width: '15%' },
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+  { field: 'status', header: 'Status', width: '100px', frozen: true,showFilter: false, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -137,7 +137,12 @@ async function getList() {
     options.value.loading = true
     listItems.value = []
     const newListItems = []
-
+    payload.value.filter = [...payload.value.filter, {
+      key: 'invoiceStatus',
+      operator: 'IN',
+      value: ['PROCECSED'],
+      logicalOperation: 'AND'
+    }]
   
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
