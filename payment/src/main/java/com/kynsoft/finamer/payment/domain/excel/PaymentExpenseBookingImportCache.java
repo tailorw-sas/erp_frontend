@@ -15,7 +15,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @NoArgsConstructor
-@RedisHash(value = "paymentimportcache",timeToLive = 14400)
+@RedisHash(value = "paymentexpensebookingcache",timeToLive = 14400)
 public class PaymentExpenseBookingImportCache implements Serializable {
     @Id
     private String id;
@@ -25,7 +25,6 @@ public class PaymentExpenseBookingImportCache implements Serializable {
     @Indexed
     private String clientName;
     private String bookingId;
-
     private Double balance;
     private String transactionType;
     private String remarks;
@@ -37,7 +36,7 @@ public class PaymentExpenseBookingImportCache implements Serializable {
         this.clientName=row.getClientName();
         this.bookingId = row.getBookingId();
         this.balance = row.getBalance();
-        this.transactionType=getTransactionType();
+        this.transactionType=row.getTransactionType();
         this.remarks=row.getRemarks();
     }
 
