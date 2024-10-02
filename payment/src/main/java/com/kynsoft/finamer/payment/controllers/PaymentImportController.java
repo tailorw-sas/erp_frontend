@@ -42,9 +42,9 @@ public class PaymentImportController {
                                                  @RequestPart(value = "employeeId",required = false) String employeeId,
                                                  @RequestPart(value = "attachments",required = false) Flux<FilePart> attachments
     ) {
-//        if (Objects.nonNull(attachments)) {
-//            storageService.store(attachments, importProcessId);
-//        }
+        if (Objects.nonNull(attachments)) {
+            storageService.store(attachments, importProcessId);
+        }
 
         return DataBufferUtils.join(filePart.content())
                 .flatMap(dataBuffer -> {

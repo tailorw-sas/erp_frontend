@@ -8,15 +8,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentImportExpenseToBookingErrorHandler implements ApplicationListener<PaymentImportExpenseToBookingErrorEvent> {
     private final PaymentImportExpenseBookingErrorRepository paymentImportErrorRepository;
+    private final PaymentExpenseBookingExtrasFieldProcessor extrasFieldProcessor;
 
-    public PaymentImportExpenseToBookingErrorHandler(PaymentImportExpenseBookingErrorRepository paymentImportErrorRepository) {
+    public PaymentImportExpenseToBookingErrorHandler(PaymentImportExpenseBookingErrorRepository paymentImportErrorRepository,
+                                                     PaymentExpenseBookingExtrasFieldProcessor extrasFieldProcessor) {
         this.paymentImportErrorRepository = paymentImportErrorRepository;
+        this.extrasFieldProcessor = extrasFieldProcessor;
     }
 
 
     @Override
     public void onApplicationEvent(PaymentImportExpenseToBookingErrorEvent event) {
         PaymentExpenseBookingRowError paymentImportError = (PaymentExpenseBookingRowError) event.getSource();
+        extrasFieldProcessor.addExtrasField(paymentImportError);
         paymentImportErrorRepository.save(paymentImportError);
     }
 }
