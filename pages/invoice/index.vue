@@ -450,8 +450,10 @@ async function SendInvoiceByType() {
 }
 
 async function onFromInvoice() {
-  const id: string = selectedInvoice  // TODO: Aqui debe ser el id del padre
-  await getItemById({ id: id, type: 'INVOICE', status: '' })
+  const id = selectedInvoiceObj.value.parent
+  if (id) {
+    await getItemById({ id: id, type: 'INVOICE', status: '' })
+  }
 }
 
 async function createSend() {
@@ -1628,7 +1630,8 @@ function onRowRightClick(event: any) {
   }
 
   // From Invoice // TODO: Solo se debe mostrar la opcion si el parentId no es null, o sea, si es un Credit
-  if (/*event?.data?.status === InvoiceStatus.CANCELED &&*/ [InvoiceType.CREDIT].includes(event.data?.invoiceType)) {
+  if (/*event?.data?.status === InvoiceStatus.CANCELED &&*/ [InvoiceType.CREDIT].includes(event.data?.invoiceType)
+      && selectedInvoiceObj.value.parent) { //indica si es de tipo credit, ya que los old-credit no tienen padre
     findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
   }
 
