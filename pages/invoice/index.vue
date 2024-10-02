@@ -1629,8 +1629,8 @@ function onRowRightClick(event: any) {
     findMenuItemByLabelSetShow('Send', invoiceContextMenuItems.value, true)
   }
 
-  // From Invoice // TODO: Solo se debe mostrar la opcion si el parentId no es null, o sea, si es un Credit
-  if (/*event?.data?.status === InvoiceStatus.CANCELED &&*/ [InvoiceType.CREDIT].includes(event.data?.invoiceType)
+  // From Invoice // Solo se debe mostrar la opcion si el parentId no es null, o sea, si es un Credit
+  if (event?.data?.status === InvoiceStatus.CANCELED && [InvoiceType.CREDIT].includes(event.data?.invoiceType)
       && selectedInvoiceObj.value.parent) { //indica si es de tipo credit, ya que los old-credit no tienen padre
     findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
   }
