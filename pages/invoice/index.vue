@@ -29,6 +29,7 @@ const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
 const menu = ref()
 let selectedInvoice = ref('')
+let selectedInvoiceObj = ref<any>()
 const menu_import = ref()
 const menu_send = ref()
 const menu_reconcile = ref()
@@ -56,6 +57,7 @@ const attachmentHistoryDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const doubleFactorOpen = ref<boolean>(false)
 const doubleFactorTotalOpen = ref<boolean>(false)
+const changeAgencyDialogOpen = ref<boolean>(false)
 const attachmentInvoice = <any>ref(null)
 
 const active = ref(0)
@@ -178,7 +180,9 @@ const invoiceAllContextMenuItems = ref([
     width: '24px',
     height: '24px',
     iconSvg:'',
-    command: () => { },
+    command: () => {
+      changeAgencyDialogOpen.value = true
+    },
     default: true,
     showItem: false,
   },
@@ -1564,6 +1568,7 @@ function findMenuItemByLabelSetShow(label: string, list: any[], showItem: boolea
 function onRowRightClick(event: any) {
 
   selectedInvoice = event.data.id
+  selectedInvoiceObj.value = event.data
   setMenuOptions()
 
   if (event.data?.invoiceType !== InvoiceType.INVOICE || ![InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)) {
@@ -2228,6 +2233,13 @@ const legend = ref(
       :open-dialog="exportAttachmentsDialogOpen" 
       :payload="payload" 
       :invoice="attachmentInvoice"
+    />
+  </div>
+  <div v-if="changeAgencyDialogOpen">
+    <InvoiceChangeAgencyDialog
+      :open-dialog="changeAgencyDialogOpen"
+      :selected-invoice="selectedInvoiceObj"
+      @on-close-dialog="() => { changeAgencyDialogOpen = false }"
     />
   </div>
 
