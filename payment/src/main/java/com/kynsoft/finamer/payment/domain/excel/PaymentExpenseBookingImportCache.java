@@ -25,7 +25,6 @@ public class PaymentExpenseBookingImportCache implements Serializable {
     @Indexed
     private String clientName;
     private String bookingId;
-
     private Double balance;
     private String transactionType;
     private String remarks;
@@ -37,7 +36,7 @@ public class PaymentExpenseBookingImportCache implements Serializable {
         this.clientName=row.getClientName();
         this.bookingId = row.getBookingId();
         this.balance = row.getBalance();
-        this.transactionType=getTransactionType();
+        this.transactionType=row.getTransactionType();
         this.remarks=row.getRemarks();
     }
 
