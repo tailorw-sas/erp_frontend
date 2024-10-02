@@ -38,6 +38,11 @@ const clickedItem = ref<string[]>([])
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 
+const payloadOfCheckBox = ref({
+  groupByClient: true,
+  withAttachment: true
+})
+
 const confApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice',
@@ -73,8 +78,8 @@ const columns: IColumn[] = [
 
   { field: 'invoiceDate', header: 'Generation Date', type: 'date', width: '150px' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '150px' },
-  { field: 'sendStatusError', header: 'Sent Status', type: 'slot-text', sortable: false, showFilter: false, width: '350px' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: false, showFilter: false },
+  { field: 'sendStatusError', header: 'Sent Status', frozen: true, type: 'slot-text', sortable: false, showFilter: false, width: '350px' },
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -457,7 +462,9 @@ async function send() {
     }
     const payload = {
       invoice: clickedItem.value,
-      employee: userData?.value?.user?.userId
+      employee: userData?.value?.user?.userId,
+      groupByClient: payloadOfCheckBox.value.groupByClient,
+      withAttachment: payloadOfCheckBox.value.withAttachment
     }
     await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload)
     completed = true
@@ -640,37 +647,67 @@ onMounted(async () => {
           </AccordionTab>
         </Accordion>
       </div>
+      <div class="p-fluid pt-3">
+        <DynamicTable
+          ref="tableRef"
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-confirm-create="clearForm"
+          @update:clicked-item="onMultipleSelect"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+        >
+          <template #column-impSta="{ data }">
+            <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
+              <span style="color: red;">{{ data.impSta }}</span>
+            </div>
+          </template>
 
-      <DynamicTable
-        ref="tableRef"
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @update:clicked-item="onMultipleSelect"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-      >
-        <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
-            <span style="color: red;">{{ data.impSta }}</span>
+          <template #column-status="{ data }">
+            <Badge
+              :value="getStatusName(data?.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
+            />
+          </template>
+        </DynamicTable>
+      </div>
+      <div class="flex justify-content-between">
+        <div class="flex align-items-center">
+          <div class="ml-2">
+            <Checkbox
+              id="withAttachment"
+              v-model="payloadOfCheckBox.withAttachment"
+              :binary="true"
+              @update:model-value="($event) => {
+                payloadOfCheckBox.withAttachment = $event
+              }"
+            />
+            <label for="withAttachment" class="ml-2 font-bold">
+              With Attachment
+            </label>
           </div>
-        </template>
-
-        <template #column-status="{ data }">
-          <Badge
-            :value="getStatusName(data?.status)"
-            :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
-          />
-        </template>
-      </DynamicTable>
-
-      <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="listItems.length === 0 || clickedItem.length === 0" @click="send" />
-        <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+          <div class="mx-4">
+            <Checkbox
+              id="groupByClient"
+              v-model="payloadOfCheckBox.groupByClient"
+              :binary="true"
+              @update:model-value="($event) => {
+                payloadOfCheckBox.groupByClient = $event
+              }"
+            />
+            <label for="groupbyClient" class="ml-2 font-bold">
+              Group By Client
+            </label>
+          </div>
+        </div>
+        <div class="flex align-items-end justify-content-end">
+          <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="listItems.length === 0 || clickedItem.length === 0" @click="send" />
+          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+        </div>
       </div>
     </div>
   </div>
