@@ -674,17 +674,17 @@ const itemsMenuImport = ref([
 const itemsMenuSend = ref([
   {
     label: 'By Ftp',
-    command: () => navigateTo(`invoice/sendInvoice?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
+    command: () => navigateTo(`invoice/sendInvoice-ftp?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromFile
   },
   {
     label: 'By Email',
-    command: () => navigateTo(`invoice/sendInvoice?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } }),
+    command: () => navigateTo(`invoice/sendInvoice-email?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromVirtual
   },
   {
     label: 'By Bavel',
-    command: () => navigateTo(`invoice/sendInvoice?type=${ENUM_INVOICE_SEND_TYPE.BAVEL}`, { open: { target: '_blank' } }),
+    command: () => navigateTo(`invoice/sendInvoice-bavel?type=${ENUM_INVOICE_SEND_TYPE.BAVEL}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromVirtual
   }
 ])
@@ -1326,7 +1326,7 @@ async function getClientList(query = '') {
     }
   }
   catch (error) {
-    console.error('Error loading hotel list:', error)
+    console.error('Error loading client list:', error)
   }
 }
 
