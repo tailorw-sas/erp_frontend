@@ -70,13 +70,14 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             invoicesByAgency.computeIfAbsent(invoice.getAgency(), k -> new ArrayList<>()).add(invoice);
         }
 
-       ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
+        ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         // Enviar correos agrupados por agencia
         for (Map.Entry<ManageAgencyDto, List<ManageInvoiceDto>> entry : invoicesByAgency.entrySet()) {
             ManageAgencyDto agency = entry.getKey();
             List<ManageInvoiceDto> agencyInvoices = entry.getValue();
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
-                sendEmail(command, agency, agencyInvoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getLastName());
+               sendEmail(command, agency, agencyInvoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getLastName());
+                continue;
             }
 
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
@@ -88,14 +89,12 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             }
 
             if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
-
                 try {
                     sendFtp(agency, agencyInvoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
                 } catch (DocumentException | IOException e) {
                     throw new RuntimeException(e);
                 }
             }
-
         }
         command.setResult(true);
     }
@@ -141,8 +140,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             if (invoiceBooking.isPresent()) {
                 String nameFile = invoice.getInvoiceNumber() + ".pdf";
 
-                // Convertir ByteArrayOutputStream a InputStream directamente
-                //TODO capturar los datos de conexcion del ftp que viene en el b2B parnet
                 try (InputStream inputStream = new ByteArrayInputStream(invoiceBooking.get().toByteArray())) {
                     ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
                             agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21);
@@ -160,9 +157,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     }
 
     private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
-
         SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-
         request.setTemplateId(6285030); // Cambiar en configuración
 
         // Recipients
@@ -173,29 +168,42 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         recipients.add(new MailJetRecipient("enrique.muguercia2016@gmail.com", "Enrique Basto"));
         recipients.add(new MailJetRecipient("reimardelgado@gmail.com", "Enrique Basto"));
         recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
-        //TODO send email employee
+
         request.setRecipientEmail(recipients);
-        // Adjuntar todas las facturas de la agencia
 
         for (ManageInvoiceDto invoice : invoices) {
             try {
                 request.setSubject("INVOICES for " + agency.getName() + "-" + invoice.getInvoiceNo());
+
+                // Manejo de posibles nulos en getInvoiceAmount()
+                String invoiceAmount = (invoice.getInvoiceAmount() != null)
+                        ? invoice.getInvoiceAmount().toString()
+                        : "0.00";
+
                 // Variables para el template de email
                 List<MailJetVar> vars = Arrays.asList(
                         new MailJetVar("invoice_date", new Date().toString()),
-                        new MailJetVar("invoice_amount", invoice.getInvoiceAmount().toString())
+                        new MailJetVar("invoice_amount", invoiceAmount)
                 );
-
                 request.setMailJetVars(vars);
+
                 List<MailJetAttachment> attachments = new ArrayList<>();
                 Optional<ByteArrayOutputStream> invoiceBooking = getInvoicesBooking(invoice.getId().toString());
-                String nameFile = invoice.getInvoiceNumber() + ".pdf";
-                byte[] pdfBytes = invoiceBooking.get().toByteArray();
-                String base64EncodedPDF = Base64.getEncoder().encodeToString(pdfBytes);
 
-                MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, base64EncodedPDF);
-                attachments.add(attachment);
-                request.setMailJetAttachments(attachments);
+                if (invoiceBooking.isPresent()) {
+                    String nameFile = invoice.getInvoiceNumber() + ".pdf";
+                    byte[] pdfBytes = invoiceBooking.get().toByteArray();
+                    String base64EncodedPDF = Base64.getEncoder().encodeToString(pdfBytes);
+
+                    MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, base64EncodedPDF);
+                    attachments.add(attachment);
+                    request.setMailJetAttachments(attachments);
+                } else {
+                    invoice.setSendStatusError("No se pudo obtener el archivo PDF.");
+                    service.update(invoice);
+                    continue; // Continuar con el siguiente invoice
+                }
+
                 try {
                     mailService.sendMail(request);
                     updateStatusAgency(invoice, manageInvoiceStatus, employee);
@@ -203,41 +211,32 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                     invoice.setSendStatusError(e.getMessage());
                     service.update(invoice);
                 }
+
             } catch (DocumentException | IOException e) {
-               invoice.setSendStatusError(e.getMessage());
-               service.update(invoice);
+                invoice.setSendStatusError(e.getMessage());
+                service.update(invoice);
             }
-
         }
-
-
     }
 
-
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds) throws DocumentException, IOException {
-        // Configurar los servicios del reporte.
         Map<EInvoiceReportType, IInvoiceReport> services = new HashMap<>();
         services.put(EInvoiceReportType.INVOICE_AND_BOOKING,
                 invoiceReportProviderFactory.getInvoiceReportService(EInvoiceReportType.INVOICE_AND_BOOKING));
 
-        // Obtener el contenido del reporte
         Optional<Map<String, byte[]>> response = getReportContent(services, invoiceIds);
 
-        // Verificar si la respuesta está presente y tiene contenido
         if (response.isPresent() && !response.get().isEmpty()) {
-            // Tomar el primer contenido del mapa de bytes y convertirlo a ByteArrayOutputStream
-            byte[] content = response.get().values().iterator().next(); // Obtiene el primer valor del mapa
+            byte[] content = response.get().values().iterator().next();
 
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 outputStream.write(content);
                 return Optional.of(outputStream);
             } catch (IOException e) {
                 e.printStackTrace();
-                // Manejar la excepción según corresponda
                 return Optional.empty();
             }
         } else {
-            // Si no hay contenido, devolver Optional.empty()
             System.out.println("No se pudo obtener el contenido del reporte.");
             return Optional.empty();
         }
@@ -271,5 +270,4 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         orderedContent.add(content.getOrDefault(EInvoiceReportType.INVOICE_SUPPORT, Optional.empty()));
         return orderedContent;
     }
-
 }
