@@ -339,7 +339,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
-  { field: 'reverseFrom', header: 'Reverse From', width: 'auto', type: 'date' },
+  { field: 'reverseFrom', header: 'Reverse From', width: 'auto', type: 'text' },
   { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
 
 ]
@@ -1809,7 +1809,24 @@ async function handleSave(event: any) {
   }
 }
 
-async function undoApplication(event: any) {
+function undoApplication(event: any) {
+  confirm.require({
+    message: 'Are you sure you want to revert the payment application?',
+    header: 'Question',
+    icon: 'pi pi-exclamation-triangle',
+    rejectClass: 'p-button-danger p-button-outlined',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Save',
+    accept: () => {
+      applyUndoApplication(event)
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected the action', life: 3000 })
+    }
+  })
+}
+
+async function applyUndoApplication(event: any) {
   try {
     if (objItemSelectedForRightClickUndoApplication.value?.id) {
       const payload = {
@@ -1824,7 +1841,24 @@ async function undoApplication(event: any) {
   }
 }
 
-async function reverseTransaction(event: any) {
+function reverseTransaction(event: any) {
+  confirm.require({
+    message: 'Are you sure you want to revert this transaction?',
+    header: 'Question',
+    icon: 'pi pi-exclamation-triangle',
+    rejectClass: 'p-button-danger p-button-outlined',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Save',
+    accept: () => {
+      applyReverseTransaction(event)
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected the action', life: 3000 })
+    }
+  })
+}
+
+async function applyReverseTransaction(event: any) {
   try {
     if (objItemSelectedForRightClickReverseTransaction.value?.id) {
       const payload = {
@@ -2077,8 +2111,6 @@ async function openDialogStatusHistory() {
 }
 
 async function openModalApplyPayment($event: any) {
-  console.log($event)
-  console.log('originalEvent' in $event)
   if ('originalEvent' in $event) {
     isApplyPaymentFromTheForm.value = false
   }

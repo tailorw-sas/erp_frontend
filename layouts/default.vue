@@ -114,7 +114,23 @@ catch (error) {
     <AppProfileMenu />
     <AppConfig />
     <ConfirmPopup group="headless" />
-    <ConfirmDialog />
+    <ConfirmDialog>
+      <template #container="{ message, acceptCallback, rejectCallback }">
+        <div class="flex flex-column align-items-center p-5 surface-overlay border-round">
+          <div class="border-circle bg-primary inline-flex justify-content-center align-items-center h-4rem w-4rem -mt-7">
+            <i class="pi pi-question text-5xl" />
+          </div>
+          <span class="font-bold text-2xl block mb-2 mt-4">{{ message.header }}</span>
+          <p class="mb-0">
+            {{ message.message }}
+          </p>
+          <div class="flex align-items-center gap-2 mt-4">
+            <Button label="Save" class="w-8rem" @click="acceptCallback" />
+            <Button :class="message.rejectClass" label="Cancel" outlined class="w-8rem" @click="rejectCallback" />
+          </div>
+        </div>
+      </template>
+    </ConfirmDialog>
     <Toast />
   </div>
 </template>
