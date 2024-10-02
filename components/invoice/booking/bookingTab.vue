@@ -776,6 +776,27 @@ async function openEditBooking(item: any) {
   }
 }
 
+async function newOpenEditBooking(item: any) {
+  console.log('OPEN EDIT BOOKING', item);
+
+  if (item?.id) {
+    await navigateTo({ path: `booking/${item?.id}`, query: { type: props.invoiceType } }, { open: { target: '_blank' } })
+  }
+  
+  // props.openDialog()
+  // if (item?.id) {
+  //   idItem.value = item?.id
+  //   idItemToLoadFirstTime.value = item?.id
+  //   await GetItemById(item?.id)
+  // }
+
+  // if (typeof item === 'string') {
+  //   idItem.value = item
+  //   idItemToLoadFirstTime.value = item
+  //   await GetItemById(item)
+  // }
+}
+
 async function deleteBookingOption(item: any) {
   if (item?.id) {
     await deleteBooking(item?.id)
@@ -1530,7 +1551,13 @@ onMounted(() => {
       label: 'Edit booking',
       command: () => openEditBooking(selectedBooking.value),
       disabled: computedShowMenuItemEditBooking
-    }
+    },
+    // Esto es solo para pruebas
+    {
+      label: 'New Edit booking',
+      command: () => newOpenEditBooking(selectedBooking.value),
+      disabled: computedShowMenuItemEditBooking
+    },
   ]
 
   if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
