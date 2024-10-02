@@ -33,7 +33,7 @@ const filterToSearch = ref<IData>({
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
 })
-
+const invList = ref<any[]>([])
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 
@@ -81,7 +81,9 @@ const columns: IColumn[] = [
   { field: 'invoiceDate', header: 'Gen.  Date', type: 'date', width: '12%' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '14%' },
   { field: 'reconcilestatus', header: 'Rec Status', type: 'slot-text', width: '15%' },
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', sortable: true , objApi: { moduleApi: 'settings', uriApi: 'manage-invoice-status'}},
+ // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'local-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+  
 ]
 
 
@@ -171,7 +173,8 @@ async function getList() {
 
     for (const iterator of dataList) {
       // Verificar si el ID ya existe en la lista
-      if (!existingIds.has(iterator.id)) {
+     // if (!existingIds.has(iterator.id)) {
+        if (!existingIds.has(iterator.id) && iterator.status === 'PROCECSED') {
         let invoiceNumber
         if (iterator?.invoiceNumber?.split('-')?.length === 3) {
           invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
@@ -210,6 +213,45 @@ async function getList() {
   }
 }
 
+
+async function getInvoiceList(query: string = '') {
+  try {
+    const payload = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        },
+    
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search('settings','manage-invoice-status', payload)
+    const { data: dataList } = response
+   
+    for (const iterator of dataList) {
+      invList.value = [...invList.value, { id: iterator.id, name: iterator.name }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading invoice list:', error)
+  }
+}
+
 async function getHotelList(query: string = '') {
   try {
     const payload = {
@@ -231,7 +273,8 @@ async function getHotelList(query: string = '') {
           operator: 'EQUALS',
           value: 'ACTIVE',
           logicalOperation: 'AND'
-        }
+        },
+    
       ],
       query: '',
       pageSize: 20,
@@ -487,7 +530,7 @@ function clearFilterToSearch() {
   
   };
   listItems.value = [];
-  importModel.value.importFile=null
+  importModel.value.importFile=''
   pagination.value.totalElements = 0
 
 }
