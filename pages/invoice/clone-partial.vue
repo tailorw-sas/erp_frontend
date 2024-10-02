@@ -50,6 +50,7 @@ const bookingList = ref<any[]>([])
 const roomRateList = ref<any[]>([])
 const loadedRoomRates = ref<any[]>([])
 const adjustmentList = ref<any[]>([])
+const auxList = ref<any[]>([])
 const attachmentList = ref<any[]>([])
 
 const confClonationPartialApi = reactive({
@@ -61,6 +62,7 @@ const nightTypeRequired = ref(false)
 const requiresFlatRate = ref(false)
 
 const invoiceAmountError = ref(false)
+const showAdjustmentInTable = ref(false); 
 const invoiceAmountErrorMessage = ref('')
 
 const hotelList = ref<any[]>([])
@@ -481,7 +483,7 @@ async function getRoomRateClonationList(idItemCreated: any) {
         loadingEdit: false,
         loadingDelete: false,
         fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
-        bookingId: iterator.booking.bookingId,
+       bookingId: iterator.booking.bookingId,
         roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
@@ -710,29 +712,6 @@ async function getAttachmentList(globalSelectedInvoicing: any) {
   }
 }
 
-async function findBookingByInvoiceId() {
-  console.log('id desde find booking', globalSelectedInvoicing)
-  try {
-    const bookings = await getBookingClonationList() // Obtener el listado completo de bookings
-
-    return bookings
-  }
-  catch (error) {
-    console.error('Error al buscar el booking asociado a la factura:', error)
-    return []
-  }
-}
-
-async function findRoomRates() {
-  try {
-    const roomRates = await getRoomRateClonationList(globalSelectedInvoicing)
-    console.log('Room Rates encontrados:', roomRates)
-  }
-  catch (error) {
-    console.error('Error al buscar los room rates asociados a la factura:', error)
-    return []
-  }
-}
 /*
 async function findRoomRates() {
   try {
@@ -752,26 +731,7 @@ async function findRoomRates() {
   }
 }
 */
-async function findAdjustments() {
-  try {
-    const adjustmentList = await getAdjustmentList(globalSelectedInvoicing)
-    return adjustmentList
-  }
-  catch (error) {
-    console.error('Error al buscar los adjustments asociados a la factura:', error)
-    return []
-  }
-}
-async function getAttachments(globalSelectedInvoicing: any) {
-  try {
-    const attachments = await getAttachmentList(globalSelectedInvoicing)
-    return attachments
-  }
-  catch (error) {
-    console.error('Error al buscar los attachments asociados a la factura:', error)
-    return [] // Devolver una lista de adjuntos vacía en caso de error
-  }
-}
+
 // Variante 1
 async function createPartialClonation(item: { [key: string]: any }) {
   try {
@@ -1135,7 +1095,7 @@ async function saveItem(item: { [key: string]: any }) {
       itemDetails = await getItemById(response.cloned)
 
       // Actualizar los campos del item con los detalles obtenidos
-      const invoiceNo = itemDetails.invoiceNo
+      const invoiceNo = itemDetails.invoiceNumber
       toast.add({
         severity: 'info',
         summary: 'Confirmed',
@@ -1579,9 +1539,11 @@ function addAdjustment(adjustment: any) {
         ...adjustment?.transactionType,
         name: `${adjustment?.transactionType?.code || ''}-${adjustment?.transactionType?.name || ''}`
       },
-      date: dayjs(adjustment?.date).startOf('day').toISOString()
+      date: dayjs(adjustment?.date).startOf('day').toISOString(),
+      
     }
   ]
+  console.log('este es el listado')
   calcInvoiceAmountByAdjustment()
   calcInvoiceAmountInBookingByRoomRate()
 }
@@ -1721,7 +1683,7 @@ onMounted(async () => {
             :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
             :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
             :update-room-rate="updateRoomRate" :is-creation-dialog="idItemCreated === ''" :invoice-obj="item"
-            :selected-invoice="idItemCreated" :booking-list="bookingList" :adjustment-list="adjustmentList"
+            :selected-invoice="idItemCreated" :booking-list="bookingList"   :adjustment-list="[]"
             :add-adjustment="addAdjustment" :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
               active = $event
             }" :open-adjustment-dialog-first-time="showAdjustmentDialogFirstTime"
