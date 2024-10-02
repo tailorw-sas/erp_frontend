@@ -1,10 +1,6 @@
 package com.kynsoft.finamer.payment.domain.excel;
 
-import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseRow;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,13 +10,12 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 @AllArgsConstructor
 @Getter
 @Setter
 @NoArgsConstructor
-@RedisHash(value = "paymentimportcache",timeToLive = 14400)
+@RedisHash(value = "paymentexpensebookingcache",timeToLive = 14400)
 public class PaymentExpenseBookingImportCache implements Serializable {
     @Id
     private String id;
@@ -30,7 +25,6 @@ public class PaymentExpenseBookingImportCache implements Serializable {
     @Indexed
     private String clientName;
     private String bookingId;
-
     private Double balance;
     private String transactionType;
     private String remarks;
@@ -42,7 +36,7 @@ public class PaymentExpenseBookingImportCache implements Serializable {
         this.clientName=row.getClientName();
         this.bookingId = row.getBookingId();
         this.balance = row.getBalance();
-        this.transactionType=getTransactionType();
+        this.transactionType=row.getTransactionType();
         this.remarks=row.getRemarks();
     }
 

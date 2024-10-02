@@ -1,12 +1,9 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.event;
 
-import com.kynsoft.finamer.payment.domain.excel.PaymentImportError;
-import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentAntiRowError;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentBankRowError;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentDetailRowError;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseRowError;
-import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportAntiErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportBankErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportDetailErrorRepository;

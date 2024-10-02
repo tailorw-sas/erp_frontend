@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.payment.application.command.paymentImport.payment;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EImportPaymentType;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 

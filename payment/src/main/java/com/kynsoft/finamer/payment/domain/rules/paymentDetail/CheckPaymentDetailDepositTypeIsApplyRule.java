@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.BusinessRule;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+
 import java.util.List;
 
 public class CheckPaymentDetailDepositTypeIsApplyRule extends BusinessRule {

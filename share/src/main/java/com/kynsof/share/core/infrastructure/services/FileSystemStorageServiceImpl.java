@@ -1,7 +1,7 @@
 package com.kynsof.share.core.infrastructure.services;
 
 import com.kynsof.share.config.StorageConfig;
-import com.kynsof.share.core.domain.service.StorageService;
+import com.kynsof.share.core.domain.service.IStorageService;
 import com.kynsof.share.core.infrastructure.exceptions.StorageException;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 @Service
-public class FileSystemStorageServiceImpl implements StorageService {
+public class FileSystemStorageServiceImpl implements IStorageService {
     private Path rootLocation;
     private final StorageConfig config;
 
@@ -38,7 +38,7 @@ public class FileSystemStorageServiceImpl implements StorageService {
             Path transferPath = Paths.get(importPath.toFile().getAbsolutePath(), filePart.filename());
             transferPath.toFile().getParentFile().mkdirs();
           return filePart.transferTo(transferPath.toFile());
-        }).subscribe();
+        }).doOnError(Throwable::printStackTrace).subscribe();
     }
 
     @Override

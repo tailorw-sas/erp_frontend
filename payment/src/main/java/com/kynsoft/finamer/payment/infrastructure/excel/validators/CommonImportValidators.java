@@ -9,7 +9,6 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManageHotel;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;

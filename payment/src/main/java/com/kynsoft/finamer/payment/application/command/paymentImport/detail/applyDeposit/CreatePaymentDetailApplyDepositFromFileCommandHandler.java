@@ -15,11 +15,7 @@ import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckApplyDepositR
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDepositToApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckGreaterThanOrEqualToTheTransactionAmountRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.createIncomeTransaction.ProducerCreateIncomeTransactionService;
 import org.springframework.stereotype.Component;
 

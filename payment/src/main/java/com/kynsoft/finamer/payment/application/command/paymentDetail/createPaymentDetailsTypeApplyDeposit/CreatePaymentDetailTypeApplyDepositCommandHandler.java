@@ -35,7 +35,7 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
                 Status.ACTIVE,
                 command.getPayment(),
                 this.paymentTransactionTypeService.findByApplyDeposit(),
-                command.getAmount() * -1,
+                command.getAmount(),
                 command.getPayment().getRemark(),
                 null,
                 null,
@@ -59,7 +59,7 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
         }
         updateChildrens.add(newDetailDto);
         command.getParentDetailDto().setChildren(updateChildrens);
-        command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - newDetailDto.getAmount());
+        command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - (newDetailDto.getAmount() * -1));//*-1
         paymentDetailService.update(command.getParentDetailDto());
 
         if (command.isApplyPayment()) {

@@ -14,15 +14,15 @@ import com.kynsoft.finamer.payment.domain.services.IManagePaymentAttachmentStatu
 import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentAttachmentStatus;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentAttachmentStatusWriteDataJpaRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManagePaymentAttachmentStatusReadDataJpaRepository;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentAttachmentStatusService {
@@ -105,6 +105,17 @@ public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentA
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public ManagePaymentAttachmentStatusDto findByCode(String code) {
+        Optional<ManagePaymentAttachmentStatus> optionalEntity= repositoryQuery.findManagePaymentAttachmentStatusByCodeAndStatus(code,Status.ACTIVE.name());
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("code", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+
     }
 
 }

@@ -5,7 +5,10 @@ import com.kynsoft.finamer.payment.application.command.replicate.delete.objects.
 import com.kynsoft.finamer.payment.application.command.replicate.delete.objects.DeleteReplicateMessage;
 import com.kynsoft.finamer.payment.application.command.replicate.delete.objects.DeleteReplicateRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/booking-invoice")

@@ -15,9 +15,10 @@ import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
+import org.springframework.stereotype.Component;
+
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import org.springframework.stereotype.Component;
 
 @Component
 public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPaymentDetailCommand> {
@@ -61,7 +62,11 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka));
+            if (bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
+                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount() * -1, paymentKafka));
+            } else {
+                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka));
+            }
         } catch (Exception e) {
         }
 

@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -16,8 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -72,6 +72,11 @@ public class PaymentDetail implements Serializable {
     private Integer childrens;
 
     @OneToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "payment_detail_payment_detail",
+            joinColumns = @JoinColumn(name = "paymentdetail_id"),
+            inverseJoinColumns = @JoinColumn(name = "children_id")
+    )
     private List<PaymentDetail> children = new ArrayList<>();
 
     //@CreationTimestamp

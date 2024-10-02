@@ -5,7 +5,6 @@ import com.kynsoft.finamer.payment.domain.dto.ManageBankAccountDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;

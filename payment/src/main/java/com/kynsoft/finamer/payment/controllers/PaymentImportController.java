@@ -1,7 +1,7 @@
 package com.kynsoft.finamer.payment.controllers;
 
 import com.kynsof.share.core.domain.request.SearchRequest;
-import com.kynsof.share.core.domain.service.StorageService;
+import com.kynsof.share.core.domain.service.IStorageService;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
@@ -14,13 +14,7 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -33,9 +27,9 @@ import java.util.UUID;
 public class PaymentImportController {
 
     private final IMediator mediator;
-    private final StorageService storageService;
+    private final IStorageService storageService;
 
-    public PaymentImportController(IMediator mediator, StorageService storageService) {
+    public PaymentImportController(IMediator mediator, IStorageService storageService) {
         this.mediator = mediator;
         this.storageService = storageService;
     }

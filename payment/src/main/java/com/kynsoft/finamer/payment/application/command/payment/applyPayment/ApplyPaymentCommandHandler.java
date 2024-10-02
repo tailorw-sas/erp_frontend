@@ -15,12 +15,9 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
 import org.springframework.stereotype.Component;
+
+import java.util.*;
 
 @Component
 public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentCommand> {
@@ -69,7 +66,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 
                             //double amountToApply = Math.min(depositAmount, Math.min(notApplied, bookingDto.getAmountBalance()));
                             double amountToApply = Math.min(depositAmount,bookingDto.getAmountBalance());
-                            CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply * -1, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate()));
+                            CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate()));// quite *-1
                             command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId()));
 
                             notApplied = notApplied - amountToApply;

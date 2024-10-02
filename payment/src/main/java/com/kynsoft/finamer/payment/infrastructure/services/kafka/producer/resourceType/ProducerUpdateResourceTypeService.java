@@ -2,7 +2,6 @@ package com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.resou
 
 
 import com.kynsof.share.core.domain.kafka.entity.update.UpdatePaymentResourceTypeKafka;
-
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

@@ -5,7 +5,6 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentResourceTypeKaf
 import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.resourceType.ProducerReplicateResourceTypeService;
-
 import org.springframework.stereotype.Component;
 
 @Component

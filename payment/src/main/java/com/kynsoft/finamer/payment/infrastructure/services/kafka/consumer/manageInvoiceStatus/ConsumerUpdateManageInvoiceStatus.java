@@ -4,7 +4,6 @@ package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.manag
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageInvoiceStatusKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.manageInvoiceStatus.update.UpdateManageInvoiceStatusCommand;
-
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 

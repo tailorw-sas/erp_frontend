@@ -1,18 +1,13 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.detail;
 
-import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
-import com.kynsoft.finamer.payment.domain.excel.error.PaymentAntiRowError;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentDetailRowError;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import com.kynsoft.finamer.payment.infrastructure.excel.event.error.anti.PaymentImportAntiErrorEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.error.detail.PaymentImportDetailErrorEvent;
-import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentAntiValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentImportAmountValidator;
-import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentTotalAmountValidator;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentTransactionIdValidator;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import org.springframework.context.ApplicationEventPublisher;

@@ -1,10 +1,7 @@
 package com.kynsoft.finamer.payment.application.query.paymentImport.payment.status;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
-import com.kynsoft.finamer.payment.domain.services.IPaymentImportDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentImportService;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 

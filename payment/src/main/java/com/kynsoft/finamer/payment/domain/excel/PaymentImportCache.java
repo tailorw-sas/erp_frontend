@@ -1,8 +1,8 @@
 package com.kynsoft.finamer.payment.domain.excel;
 
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
-import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseRow;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.payment.domain.services;
 
 import com.kynsoft.finamer.payment.domain.dto.ManageBankAccountDto;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManageBankAccount;
 
 import java.util.UUID;
 

@@ -1,10 +1,10 @@
 package com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction;
 
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import java.util.UUID;
 import lombok.Getter;
-
 import lombok.Setter;
+
+import java.util.UUID;
 
 @Getter
 @Setter

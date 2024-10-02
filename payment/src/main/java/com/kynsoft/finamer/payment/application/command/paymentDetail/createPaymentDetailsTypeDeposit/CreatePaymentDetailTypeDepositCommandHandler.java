@@ -5,9 +5,10 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
+import org.springframework.stereotype.Component;
+
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import org.springframework.stereotype.Component;
 
 @Component
 public class CreatePaymentDetailTypeDepositCommandHandler implements ICommandHandler<CreatePaymentDetailTypeDepositCommand> {
@@ -27,7 +28,7 @@ public class CreatePaymentDetailTypeDepositCommandHandler implements ICommandHan
                 Status.ACTIVE,
                 command.getPayment(),
                 this.paymentTransactionTypeService.findByDeposit(),
-                command.getPayment().getPaymentAmount() * -1,
+                command.getPayment().getPaymentAmount() * -1,//El Credit viene con valor negativo, el payment se crea en positivo y aqui se multiplica por -1 para crear el Deposit negativo.
                 command.getPayment().getRemark(),
                 null,
                 null,

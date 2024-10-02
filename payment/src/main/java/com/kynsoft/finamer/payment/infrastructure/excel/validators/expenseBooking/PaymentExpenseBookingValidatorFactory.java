@@ -2,8 +2,10 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBooki
 
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
+import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseBookingRowError;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
+import com.kynsoft.finamer.payment.infrastructure.excel.event.error.expenseToBooking.PaymentImportExpenseToBookingErrorEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -40,12 +42,12 @@ public class PaymentExpenseBookingValidatorFactory extends IValidatorFactory<Pay
         bookingBalanceValidator.validate(toValidate,errorFieldList);
         transactionTypeValidation.validate(toValidate,errorFieldList);
         remarksValidator.validate(toValidate,errorFieldList);
-//        if (this.hasErrors()) {
-//            PaymentImportExpenseToBookingErrorEvent paymentImportErrorEvent =
-//                    new PaymentImportExpenseToBookingErrorEvent(new PaymentExpenseBookingRowError(null, toValidate.getRowNumber(),
-//                            toValidate.getImportProcessId(), errorFieldList, toValidate));
-//            this.sendErrorEvent(paymentImportErrorEvent);
-//        }
+        if (this.hasErrors()) {
+            PaymentImportExpenseToBookingErrorEvent paymentImportErrorEvent =
+                    new PaymentImportExpenseToBookingErrorEvent(new PaymentExpenseBookingRowError(null, toValidate.getRowNumber(),
+                            toValidate.getImportProcessId(), errorFieldList, toValidate));
+            this.sendErrorEvent(paymentImportErrorEvent);
+        }
         boolean result = !this.hasErrors();
         this.clearErrors();
         return result;

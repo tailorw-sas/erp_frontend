@@ -28,7 +28,7 @@ public class ManageInvoiceSearchResponse {
     private EInvoiceType invoiceType;
     private String invoiceNumber;
     private ManageInvoiceTypeResponse manageInvoiceType;
-    private String parent;
+    private String sendStatusError;
 
     public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
         this.id = projection.getId();
@@ -47,7 +47,7 @@ public class ManageInvoiceSearchResponse {
         this.invoiceType = projection.getInvoiceType();
         this.invoiceNumber = deleteHotelInfo(projection.getInvoiceNumber());
         this.manageInvoiceType = projection.getManageInvoiceType() != null ? new ManageInvoiceTypeResponse(projection.getManageInvoiceType()) : null;
-        this.parent = projection.getParent() != null ? projection.getParent().getId().toString() : null;
+        this.sendStatusError = projection.getSendStatusError();
     }
 
     private String deleteHotelInfo(String input) {
