@@ -396,24 +396,24 @@ async function saveItem() {
   }
 
   // Comprobar si la respuesta contiene errorsResponse
-  const { errors } = response; // Asumiendo que la respuesta tiene una propiedad 'errors'
+  const { errorsResponse, totalInvoicesRec} = response; // Asumiendo que la respuesta tiene una propiedad 'errors'
 
   // Si no hay errores, navegar y mostrar mensaje de éxito
-  if (errors && errors === 0) {
+  if (errorsResponse && errorsResponse.length === 0) {
+     // Navegar a la página de invoice
+     navigateTo('/invoice'); // Define la función para navegar a la página deseada
     toast.add({ 
       severity: 'info', 
       summary: 'Confirmed', 
-      detail: 'The invoices have been reconciled successfully.', 
-      life: 10000 
+      detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`, 
+      life: 0 
     });
 
-    // Navegar a la página de invoice
-    navigateTo('/invoice'); // Define la función para navegar a la página deseada
-  } else if (errors && errors.length > 0) {
+   
+  } else if (errorsResponse && errorsResponse.length > 0) {
     // Si hay errores, llamar a la función getErrors para mostrar los errores
-    //getErrors(errorsResponse);
-
-    
+    getErrors(errorsResponse);
+ 
   }
 
   loadingSaveAll.value = false;
@@ -432,7 +432,8 @@ async function getErrors(errorsResponse:any) {
 
     const newListItems = errorsResponse.map((error: { invoiceId: any; message: any }) => ({
       invoiceId: error.invoiceId, // Asignar invoiceId
-      message: error.message, // Asignar message
+      message: error.message, // Asignar message 
+     
       loadingEdit: false,
       loadingDelete: false,
       
@@ -847,7 +848,12 @@ onMounted(async () => {
         @on-sort-field="onSortField"
         @update:clicked-item="onMultipleSelect($event)"
       >
-    
+      <template #column-message="{ data }">
+        <div id="fieldError">
+            <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
+          </div>
+        </template>
+
         <template #column-status="{ data: item }">
             <Badge
               :value="getStatusName(item?.status)"
