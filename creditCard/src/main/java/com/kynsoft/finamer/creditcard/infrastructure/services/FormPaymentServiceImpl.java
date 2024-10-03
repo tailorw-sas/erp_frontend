@@ -27,11 +27,15 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             String merchantType = merchantConfigDto.getMerchantType(); //Campo merchantType de Merchant Config
             String currencyCode = "$"; //Valor $ por ahora
             String orderNumber = merchantConfigDto.getId().toString(); //Viene en el request
-            String amount = transactionDto.getAmount().toString(); //Viene en el request
+
+            double amountValue = transactionDto.getAmount() * 100;
+            int intValue = (int) Math.round(amountValue);
+            String amount = Integer.toString(intValue);
+
             String itbis = "000"; //Valor 000 por defecto
-            String approvedUrl = "https://erpdev.tailor.net/transaction-result?status=success"; //Campo successUrl de Merchant Config
-            String declinedUrl = "https://erpdev.tailor.net/transaction-result?status=declined";//Campo declinedUrl de Merchant Config
-            String cancelUrl = "https://erpdev.tailor.net/transaction-result?status=error";//Campo errorUrl de Merchant Config
+            String approvedUrl = "https://localhost/3000/transaction-result?status=success"; //Campo successUrl de Merchant Config
+            String declinedUrl = "https://localhost/3000/transaction-result?status=declined";//Campo declinedUrl de Merchant Config
+            String cancelUrl = "https://localhost/3000/transaction-result?status=error";//Campo errorUrl de Merchant Config
             String useCustomField1 = "0";  //Se mantiene asi por defecto
             String customField1Label = "";//Se mantiene asi por defecto
             String customField1Value = "";//Se mantiene asi por defecto
@@ -56,9 +60,9 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                     "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
                     "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
                     "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
-                    "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + merchantConfigDto.getSuccessUrl() + "\">" +
-                    "<input type=\"hidden\" name=\"DeclinedUrl\" value=\"" + merchantConfigDto.getDeclinedUrl() + "\">" +
-                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + merchantConfigDto.getErrorUrl() + "\">" +
+                    "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + approvedUrl + "\">" +
+                    "<input type=\"hidden\" name=\"DeclinedUrl\" value=\"" + declinedUrl + "\">" +
+                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\">" +
                     "<input type=\"hidden\" name=\"UseCustomField1\" value=\"" + useCustomField1 + "\">" +
                     "<input type=\"hidden\" name=\"CustomField1Label\" value=\"" + customField1Label + "\">" +
                     "<input type=\"hidden\" name=\"CustomField1Value\" value=\"" + customField1Value + "\">" +
