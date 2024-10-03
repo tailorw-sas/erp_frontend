@@ -830,7 +830,7 @@ onMounted(async () => {
                 <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
                   required</span>
               </template>
-
+              <!-- :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? (!haveAttachmentWithAttachmentTypeInv) : (!isCreationDialog && ListItems.length > 0)" -->
               <template #field-type="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
                   v-if="!loadingSaveAll"
@@ -838,7 +838,7 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                  :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? (!haveAttachmentWithAttachmentTypeInv) : (!isCreationDialog && ListItems.length > 0)"
+                  :disabled="!isCreationDialog ? !ListItems.some((item: any) => item.type?.attachInvDefault) : isCreationDialog ? !listItemsLocal.some((item: any) => item.type?.attachInvDefault) : false"
                   :suggestions="attachmentTypeList"
                   @change="($event) => {
                     onUpdate('type', $event)
@@ -857,11 +857,6 @@ onMounted(async () => {
                 <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
                   required</span>
               </template>
-              async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
-              const file = event.files[0]
-              objFile.value = file
-              listFields[fieldKey] = file
-              }
 
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
@@ -928,7 +923,7 @@ onMounted(async () => {
                     @click="saveItem(props.item.fieldValues)"
                   />
                 </IfCan>
-                
+
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
                   <Button
                     v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus"

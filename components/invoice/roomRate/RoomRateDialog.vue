@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
+import { z } from 'zod'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 
 const props = defineProps({
@@ -58,6 +59,29 @@ const props = defineProps({
   }
 })
 const dialogVisible = ref(props.openDialog)
+
+const validationSchema = z.object({
+  invoiceAmount: z.string()
+    .min(1, 'The Rate amount field is required')
+    .refine(val => +val > +0, 'The Rate amount field must be greater than 0')
+    .refine(val => +val > +5, 'The Rate amount field must be greater than 5'),
+
+  hotelAmount: z.string()
+    .refine((val, ctx) => {
+      const invoiceAmount = +ctx.parent.invoiceAmount
+      return invoiceAmount > 0 ? +val >= 0 : true
+    }, 'The Hotel Amount field cannot be negative when the Rate amount is greater than 0')
+    .refine((val, ctx) => {
+      const adults = ctx.parent.adults
+      return adults > 2 ? +val >= 100 : true
+    }, 'The Hotel Amount must be at least 100 when there are more than 2 adults')
+    .nullable(),
+
+  adults: z.number().min(1, 'The Adults field must be greater than 0'),
+  checkIn: z.date({ required_error: 'The Check In field is required' }),
+  checkOut: z.date({ required_error: 'The Check Out field is required' })
+})
+const reloadHotelAmount = ref(0)
 </script>
 
 <template>
@@ -76,7 +100,132 @@ const dialogVisible = ref(props.openDialog)
           <InputText
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id"
-            @update:model-value="onUpdate('invoiceAmount', $event)"
+            @update:model-value="($event) => {
+              onUpdate('invoiceAmount', $event)
+            }"
+          />
+        </template>
+
+        <template #field-adults="{ onUpdate, item: data }">
+          <InputNumber
+            v-if="false"
+            v-model="data.adults"
+            input-id="withoutgrouping"
+            :use-grouping="false"
+            @update:model-value="($event) => {
+              onUpdate('adults', $event)
+
+              if (data?.children && data?.children > 0) {
+                const decimalSchema = z.object(
+                  {
+                    adults: z
+                      .string()
+                      .refine(value => !Number.isNaN(value) && +value >= 0, 'The adults field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+              }
+              else {
+                const decimalSchema = z.object(
+                  {
+                    adults: z
+                      .string()
+                      .refine(value => !Number.isNaN(value) && +value > 0, 'The adults field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+              }
+            }"
+          />
+          <InputText
+            v-model="data.adults"
+            show-clear
+            @update:model-value="($event) => {
+              onUpdate('adults', $event)
+
+              if (data?.children && data?.children > 0) {
+                const decimalSchema = z.object(
+                  {
+                    adults: z
+                      .string()
+                      .refine(value => !Number.isNaN(value) && +value >= 0, 'The adults field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+              }
+              else {
+                const decimalSchema = z.object(
+                  {
+                    adults: z
+                      .string()
+                      .refine(value => !Number.isNaN(value) && +value > 0, 'The adults field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+              }
+            }"
+          />
+        </template>
+
+        <template #field-children="{ onUpdate, item: data }">
+          <InputText
+            v-model="data.children"
+            show-clear
+            @update:model-value="($event) => {
+              onUpdate('children', $event)
+
+              if (data?.adults && data?.adults > 0) {
+                const decimalSchema = z.object(
+                  {
+                    children: z
+                      .string()
+                      .refine(value => +value >= 0, 'The children field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+              }
+              else {
+                const decimalSchema = z.object(
+                  {
+                    children: z
+                      .string()
+                      .refine(value => +value > 0, 'The children field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+              }
+            }"
+          />
+        </template>
+
+        <template #field-hotelAmount="{ onUpdate, item: data }">
+          <InputText
+            v-model="data.hotelAmount"
+            show-clear
+            @update:model-value="($event) => {
+              onUpdate('hotelAmount', $event)
+
+              if (data?.invoiceAmount && data?.invoiceAmount > 0) {
+                const decimalSchema = z.object(
+                  {
+                    hotelAmount: z
+                      .string()
+                      .refine(value => +value >= 0, 'The Hotel Amount field cannot be negative').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
+              }
+              else {
+                const decimalSchema = z.object(
+                  {
+                    hotelAmount: z
+                      .string()
+                      .refine(value => +value > 0, 'The Hotel Amount field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
+              }
+            }"
           />
         </template>
 
@@ -102,13 +251,6 @@ const dialogVisible = ref(props.openDialog)
 
               onUpdate('checkOut', dayjs($event).startOf('day').toDate())
             }"
-          />
-        </template>
-        <template #field-hotelAmount="{ onUpdate, item: data }">
-          <InputText
-            v-model="data.hotelAmount"
-            show-clear
-            @update:model-value="onUpdate('hotelAmount', $event)"
           />
         </template>
         <template #form-footer="props">
