@@ -23,4 +23,7 @@ public class CreateManageInvoiceStatusRequest {
     private List<UUID> navigate;
 
     private Boolean showClone;
+    private boolean sentStatus;
+    private boolean reconciledStatus;
+    private boolean canceledStatus;
 }

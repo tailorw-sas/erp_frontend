@@ -28,4 +28,9 @@ public class ManageInvoiceStatusDto {
     private List<ManageInvoiceStatusDto> navigate;
 
     private Boolean showClone;
+
+    private boolean sentStatus;
+    private boolean reconciledStatus;
+    private boolean canceledStatus;
+
 }
