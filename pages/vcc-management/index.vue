@@ -171,6 +171,7 @@ const columns: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
   { field: 'creditCardType', header: 'CC Type', type: 'text', },
+  { field: 'methodType', header: 'Method Type', type: 'text' },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'commission', header: 'Commission', type: 'text' },
@@ -715,7 +716,7 @@ function findNoCollectionStatusMenuOptions() {
   const noCollectionItems: any[] = allMenuListItems.filter((element: any) => !element.isCollection)
   for (let i = 0; i < noCollectionItems.length; i++) {
     const element = noCollectionItems[i]
-    if (element.type === MenuType.resendEmail/* && contextMenuTransaction.value.method === 'LINK' */) {
+    if (element.type === MenuType.resendEmail && contextMenuTransaction.value.methodType === 'LINK') {
       menuListItems.value.push(element)
     }
   }
