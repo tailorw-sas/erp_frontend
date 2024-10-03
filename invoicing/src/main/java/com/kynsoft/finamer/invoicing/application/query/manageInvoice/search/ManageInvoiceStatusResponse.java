@@ -12,11 +12,13 @@ public class ManageInvoiceStatusResponse {
         private String code;
         private String name;
         private Boolean showClone;
+        private Boolean enabledToApply;
 
         public ManageInvoiceStatusResponse(ManageInvoiceStatusDto projection) {
             this.id = projection.getId();
             this.code = projection.getCode();
             this.name = projection.getName();
             this.showClone = projection.getShowClone();
+            this.enabledToApply = projection.getEnabledToApply();
         }
 }
