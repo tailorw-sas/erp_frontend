@@ -316,44 +316,57 @@ function handleAttachmentHistoryDialogOpen() {
 
 async function getHotelList(query = '') {
   try {
-    const payload
-      = {
-        filter: [
-          {
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'code',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
+    const payload = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        },
+        {
+          key: 'applyByTradingCompany', // Agregar filtro para applyByTradingCompany
+          operator: 'EQUALS',
+          value: true, // Solo hoteles donde applyByTradingCompany es true
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 200,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    };
 
-    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
-    const { data: dataList } = response
-    hotelList.value = []
+    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload);
+    const { data: dataList } = response;
+    
+    hotelList.value = [];
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { isNightType: iterator?.isNightType, id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+      hotelList.value.push({
+        isNightType: iterator?.isNightType,
+        id: iterator.id,
+        name: iterator.name,
+        code: iterator.code,
+        status: iterator.status,
+        fullName: `${iterator.code} - ${iterator.name}`,
+        manageTradingCompanies: iterator.manageTradingCompanies
+      });
     }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
+  } catch (error) {
+    console.error('Error loading hotel list:', error);
   }
 }
 
@@ -1517,6 +1530,10 @@ function updateAttachment(attachment: any) {
   attachmentList.value[index] = attachment
 }
 
+//validacion del hotel
+
+//
+
 watch(invoiceAmount, () => {
   invoiceAmountError.value = false
 
@@ -1616,21 +1633,44 @@ onMounted(async () => {
       <template #field-hotel="{ item: data, onUpdate }">
         <DebouncedAutoCompleteComponent
           v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :disabled="true" :model="data.hotel" :suggestions="hotelList" @change="($event) => {
-            onUpdate('hotel', $event)
-          }" @load="($event) => getHotelList($event)"
-        >
-          <template #option="props">
-            <span>{{ props.item.fullName }}</span>
-          </template>
-          <template #chip="{ value }">
-            <div>
-              {{ value?.fullName }}
-            </div>
-          </template>
-        </DebouncedAutoCompleteComponent>
-        <Skeleton v-else height="2rem" class="mb-2" />
-      </template>
+          :disabled="false" :model="data.hotel" :suggestions="hotelList"   @change="($event) => {
+      const currentHotel = data.hotel;
+
+      if (currentHotel && $event) {
+        const currentManageTradingCompany = currentHotel.manageTradingCompanies.company;
+        console.log(currentManageTradingCompany,'actual')
+        const newManageTradingCompany = $event.manageTradingCompanies.company;
+        console.log(newManageTradingCompany,'nuevo')
+        // Verificar si los nombres coinciden
+        if (currentManageTradingCompany !== newManageTradingCompany) {
+          hotelError = true; // Mostrar error
+          console.log(hotelError,'q hay aqui')
+
+          return; // Salir sin actualizar
+        } else {
+          hotelError = false; // Resetear el error si coincide
+        }
+      }
+
+      // Si la validación pasa, actualizar el hotel
+      onUpdate('hotel', $event);
+    }"
+    @load="($event) => getHotelList($event)"
+  >
+    <template #option="props">
+      <span>{{ props.item.fullName }}</span>
+    </template>
+    <template #chip="{ value }">
+      <div>
+        {{ value?.fullName }}
+      </div>
+    </template>
+  </DebouncedAutoCompleteComponent>
+  <Skeleton v-else height="2rem" class="mb-2" />
+  <span v-if="hotelError" class="error-message p-error text-xs">
+    The hotel does not belong to the same trading company.
+  </span>
+</template>
       <template #field-status="{ item: data, onUpdate }">
         <Dropdown
           v-if="!loadingSaveAll" v-model="data.status" :options="[...ENUM_INVOICE_STATUS]" option-label="name"
