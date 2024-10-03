@@ -58,6 +58,7 @@ const attachmentDialogOpen = ref<boolean>(false)
 const doubleFactorOpen = ref<boolean>(false)
 const doubleFactorTotalOpen = ref<boolean>(false)
 const changeAgencyDialogOpen = ref<boolean>(false)
+const paymentsDialogOpen = ref<boolean>(false)
 const attachmentInvoice = <any>ref(null)
 
 const active = ref(0)
@@ -278,7 +279,9 @@ const invoiceAllContextMenuItems = ref([
     width: '24px',
     height: '24px',
     iconSvg:'',
-    command: () => { },
+    command: () => {
+      paymentsDialogOpen.value = true
+    },
     default: true,
     showItem: false,
   },
@@ -2243,6 +2246,13 @@ const legend = ref(
       :open-dialog="changeAgencyDialogOpen"
       :selected-invoice="selectedInvoiceObj"
       @on-close-dialog="() => { changeAgencyDialogOpen = false }"
+    />
+  </div>
+  <div v-if="paymentsDialogOpen">
+    <InvoicePaymentDetailsDialog
+        :open-dialog="paymentsDialogOpen"
+        :selected-invoice="selectedInvoiceObj"
+        @on-close-dialog="() => { paymentsDialogOpen = false }"
     />
   </div>
 
