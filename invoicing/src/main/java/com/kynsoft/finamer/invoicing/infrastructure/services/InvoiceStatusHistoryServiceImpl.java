@@ -9,6 +9,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.InvoiceStatusHistoryResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceStatusHistoryDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceStatusHistoryService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.InvoiceStatusHistory;
@@ -76,6 +77,20 @@ public class InvoiceStatusHistoryServiceImpl implements IInvoiceStatusHistorySer
         Page<InvoiceStatusHistory> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public UUID create(ManageInvoiceDto invoiceDto, String employee) {
+        InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto(
+                UUID.randomUUID(),
+                invoiceDto,
+                "The invoice data was inserted.",
+                null,
+                employee,
+                invoiceDto.getStatus()
+        );
+        InvoiceStatusHistory data = new InvoiceStatusHistory(dto);
+        return this.repositoryCommand.save(data).getId();
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

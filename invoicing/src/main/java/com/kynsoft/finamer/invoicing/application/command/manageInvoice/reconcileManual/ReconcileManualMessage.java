@@ -12,5 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ReconcileManualMessage implements ICommandMessage {
     private final String command = "MANUAL_RECONCILE";
-    List<ReconcileManualErrorResponse> errorResponse;
+    List<ReconcileManualErrorResponse> errorsResponse;
+    private int totalInvoicesRec;
+    private int totalInvoices;
 }
