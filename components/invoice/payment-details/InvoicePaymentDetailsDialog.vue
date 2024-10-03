@@ -190,8 +190,11 @@ async function getPaymentDetailList() {
   }
 }
 
-async function onRowDoubleClickInDataTable(event: any) {
-
+async function onRowDoubleClickInDataTable(item: any) {
+  if (item.hasOwnProperty('paymentId')) {
+    const url = `/payment/form?id=${encodeURIComponent(item.paymentId)}`
+    window.open(url, '_blank')
+  }
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
