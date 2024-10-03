@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
+import jakarta.annotation.Resource;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -16,6 +17,8 @@ public interface IManageResourceTypeService {
     void delete(ResourceTypeDto dto);
 
     ResourceTypeDto findById(UUID id);
+
+    ResourceTypeDto findByCode(String code);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 

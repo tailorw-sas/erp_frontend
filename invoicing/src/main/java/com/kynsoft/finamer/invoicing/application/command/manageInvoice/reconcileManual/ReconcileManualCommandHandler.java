@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcil
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -25,21 +26,37 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
 
     @Override
     public void handle(ReconcileManualCommand command) {
-        Map<UUID, String> errors = new HashMap<>();
+        List<ReconcileManualErrorResponse> errorResponse = new ArrayList<>();
         for (UUID id : command.getInvoices()){
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(id);
             if(!invoiceDto.getAgency().getAutoReconcile()){
-                errors.put(invoiceDto.getId(), "The agency does not have auto-reconciliation enabled.");
+                errorResponse.add(new ReconcileManualErrorResponse(
+                        invoiceDto.getId().toString(),
+                        "The agency does not have auto-reconciliation enabled."
+                ));
                 continue;
             }
             if(invoiceDto.getStatus().compareTo(EInvoiceStatus.PROCECSED) != 0){
-                errors.put(invoiceDto.getId(), "The invoice is not in processed status.");
+                errorResponse.add(new ReconcileManualErrorResponse(
+                        invoiceDto.getId().toString(),
+                        "The invoice is not in processed status."
+                ));
+                continue;
+            }
+            if(invoiceDto.getInvoiceType().compareTo(EInvoiceType.INVOICE) != 0){
+                errorResponse.add(new ReconcileManualErrorResponse(
+                        invoiceDto.getId().toString(),
+                        "The invoice type must be INV."
+                ));
                 continue;
             }
             try{
                 //TODO: obtener el pdf
             } catch (Exception e){
-                errors.put(invoiceDto.getId(), "The pdf could not be generated.");
+                errorResponse.add(new ReconcileManualErrorResponse(
+                        invoiceDto.getId().toString(),
+                        "The pdf could not be generated."
+                ));
                 continue;
             }
 
@@ -48,7 +65,10 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             try {
                 //TODO: subir el archivo y obtener los datos para el attachment
             } catch (Exception e) {
-                errors.put(invoiceDto.getId(), "The attachment could not be uploaded.");
+                errorResponse.add(new ReconcileManualErrorResponse(
+                        invoiceDto.getId().toString(),
+                        "The attachment could not be uploaded."
+                ));
                 continue;
             }
 
@@ -78,6 +98,6 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             invoiceDto.setManageInvoiceStatus(invoiceStatusDto);
             this.invoiceService.update(invoiceDto);
         }
-        command.setErrors(errors);
+        command.setErrorResponse(errorResponse);
     }
 }

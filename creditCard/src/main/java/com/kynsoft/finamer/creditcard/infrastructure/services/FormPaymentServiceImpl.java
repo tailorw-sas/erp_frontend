@@ -1,9 +1,9 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSessionResponse;
-import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMerchantResponse;
-import com.kynsoft.finamer.creditcard.domain.dto.PaymentRequestDto;
-import com.kynsoft.finamer.creditcard.domain.services.IFormService;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -13,25 +13,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class FormServiceIml implements IFormService {
+public class FormPaymentServiceImpl implements IFormPaymentService {
     @Value("${redirect.private.key}")
     private String privateKey;
 
     @Override
-    public ResponseEntity<String> redirectToBlueMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto) {
+    public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
         try {
             // Extraer los parámetros del objeto PaymentRequest
             //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
-            String merchantId = response.getMerchantConfigResponse().getMerchantNumber(); //Campo merchantNumber de Merchant Config
-            String merchantName = response.getMerchantConfigResponse().getName(); //Campo name de Merchant Config
-            String merchantType = response.getMerchantConfigResponse().getMerchantType(); //Campo merchantType de Merchant Config
+            String merchantId = merchantConfigDto.getMerchantNumber(); //Campo merchantNumber de Merchant Config
+            String merchantName = merchantConfigDto.getName(); //Campo name de Merchant Config
+            String merchantType = merchantConfigDto.getMerchantType(); //Campo merchantType de Merchant Config
             String currencyCode = "$"; //Valor $ por ahora
-            String orderNumber = requestDto.getOrderNumber(); //Viene en el request
-            String amount = requestDto.getAmount(); //Viene en el request
+            String orderNumber = merchantConfigDto.getId().toString(); //Viene en el request
+            String amount = transactionDto.getAmount().toString(); //Viene en el request
             String itbis = "000"; //Valor 000 por defecto
-            String approvedUrl = response.getMerchantConfigResponse().getSuccessUrl(); //Campo successUrl de Merchant Config
-            String declinedUrl = response.getMerchantConfigResponse().getDeclinedUrl();//Campo declinedUrl de Merchant Config
-            String cancelUrl = response.getMerchantConfigResponse().getErrorUrl();//Campo errorUrl de Merchant Config
+            String approvedUrl = "https://erpdev.tailor.net/transaction-result?status=success"; //Campo successUrl de Merchant Config
+            String declinedUrl = "https://erpdev.tailor.net/transaction-result?status=declined";//Campo declinedUrl de Merchant Config
+            String cancelUrl = "https://erpdev.tailor.net/transaction-result?status=error";//Campo errorUrl de Merchant Config
             String useCustomField1 = "0";  //Se mantiene asi por defecto
             String customField1Label = "";//Se mantiene asi por defecto
             String customField1Value = "";//Se mantiene asi por defecto
@@ -48,17 +48,17 @@ public class FormServiceIml implements IFormService {
             String htmlForm = "<html lang=\"en\">" +
                     "<head></head>" +
                     "<body>" +
-                    "<form action=\"" + response.getMerchantConfigResponse().getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
-                    "<input type=\"hidden\" name=\"MerchantId\" value=\"" + response.getMerchantConfigResponse().getMerchantNumber() + "\">" +
-                    "<input type=\"hidden\" name=\"MerchantName\" value=\"" + response.getMerchantConfigResponse().getName() + "\">" +
-                    "<input type=\"hidden\" name=\"MerchantType\" value=\"" + response.getMerchantConfigResponse().getMerchantType() + "\">" +
+                    "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
+                    "<input type=\"hidden\" name=\"MerchantId\" value=\"" + merchantConfigDto.getMerchantNumber() + "\">" +
+                    "<input type=\"hidden\" name=\"MerchantName\" value=\"" + merchantConfigDto.getName() + "\">" +
+                    "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantConfigDto.getMerchantType() + "\">" +
                     "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
                     "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
                     "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
                     "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
-                    "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + response.getMerchantConfigResponse().getSuccessUrl() + "\">" +
-                    "<input type=\"hidden\" name=\"DeclinedUrl\" value=\"" + response.getMerchantConfigResponse().getDeclinedUrl() + "\">" +
-                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + response.getMerchantConfigResponse().getErrorUrl() + "\">" +
+                    "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + merchantConfigDto.getSuccessUrl() + "\">" +
+                    "<input type=\"hidden\" name=\"DeclinedUrl\" value=\"" + merchantConfigDto.getDeclinedUrl() + "\">" +
+                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + merchantConfigDto.getErrorUrl() + "\">" +
                     "<input type=\"hidden\" name=\"UseCustomField1\" value=\"" + useCustomField1 + "\">" +
                     "<input type=\"hidden\" name=\"CustomField1Label\" value=\"" + customField1Label + "\">" +
                     "<input type=\"hidden\" name=\"CustomField1Value\" value=\"" + customField1Value + "\">" +
@@ -100,7 +100,7 @@ public class FormServiceIml implements IFormService {
         }
     }
 
-    public ResponseEntity<String> redirectToCardNetMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto) {
+    public ResponseEntity<String> redirectToPost(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
         try {
             // Paso 1: Enviar los datos para generar la sesión
             //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
@@ -108,19 +108,19 @@ public class FormServiceIml implements IFormService {
             requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
             requestData.put("CurrencyCode", "214"); // dejar 214 por ahora que es el peso dominicano. El usd es 840
             requestData.put("Tax", "0"); // 0 por defecto
-            requestData.put("AcquiringInstitutionCode", response.getMerchantConfigResponse().getInstitutionCode()); //Campo institutionCode de Merchant Config
-            requestData.put("MerchantType", response.getMerchantConfigResponse().getMerchantType()); //Campo merchantType de Merchant Config
-            requestData.put("MerchantNumber", response.getMerchantConfigResponse().getMerchantNumber()); //Campo merchantNumber de Merchant Config
-            requestData.put("MerchantTerminal", response.getMerchantConfigResponse().getMerchantTerminal()); //Campo merchantTerminal de Merchant Config
+            requestData.put("AcquiringInstitutionCode", merchantConfigDto.getInstitutionCode()); //Campo institutionCode de Merchant Config
+            requestData.put("MerchantType", merchantConfigDto.getMerchantType()); //Campo merchantType de Merchant Config
+            requestData.put("MerchantNumber", merchantConfigDto.getMerchantNumber()); //Campo merchantNumber de Merchant Config
+            requestData.put("MerchantTerminal", merchantConfigDto.getMerchantTerminal()); //Campo merchantTerminal de Merchant Config
 //            requestData.put("MerchantTerminal_amex", paymentRequest.getMerchantTerminalAmex()); //No enviar por ahora
-            requestData.put("ReturnUrl", response.getMerchantConfigResponse().getSuccessUrl()); //Campo successUrl de Merchant Config
-            requestData.put("CancelUrl", response.getMerchantConfigResponse().getErrorUrl()); //Campo errorUrl de Merchant Config
+            requestData.put("ReturnUrl", merchantConfigDto.getSuccessUrl()); //Campo successUrl de Merchant Config
+            requestData.put("CancelUrl", merchantConfigDto.getErrorUrl()); //Campo errorUrl de Merchant Config
             requestData.put("PageLanguaje", "ENG"); //Se envia por ahora ENG
-            requestData.put("TransactionId", String.valueOf(requestDto.getTransactionId())); //Viene en el request
-            requestData.put("OrdenId", requestDto.getOrderNumber()); //Viene en el request
-            requestData.put("MerchantName", response.getMerchantConfigResponse().getName()); //Campo name de Merchant Config
+            requestData.put("TransactionId", String.valueOf(transactionDto.getId())); //Viene en el request
+            requestData.put("OrdenId", transactionDto.getId().toString()); //Viene en el request
+            requestData.put("MerchantName", merchantConfigDto.getName()); //Campo name de Merchant Config
             requestData.put("IpClient", ""); // Campo ip del b2b partner del merchant
-            requestData.put("Amount", requestDto.getAmount()); //Viene en el request
+            requestData.put("Amount", transactionDto.getAmount().toString()); //Viene en el request
 
             // Enviar la solicitud POST y obtener la respuesta
             RestTemplate restTemplate = new RestTemplate();
@@ -128,7 +128,7 @@ public class FormServiceIml implements IFormService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestData, headers);
 
-            ResponseEntity<CardNetSessionResponse> sessionResponse = restTemplate.exchange(response.getMerchantConfigResponse().getAltUrl(), HttpMethod.POST, entity, CardNetSessionResponse.class);
+            ResponseEntity<CardNetSessionResponse> sessionResponse = restTemplate.exchange(merchantConfigDto.getAltUrl(), HttpMethod.POST, entity, CardNetSessionResponse.class);
 
             // Convertir la respuesta en objeto
             CardNetSessionResponse sessionData = sessionResponse.getBody();
@@ -140,10 +140,10 @@ public class FormServiceIml implements IFormService {
             String htmlForm = "<html lang=\"en\">" +
                     "<head></head>" +
                     "<body>" +
-                    "<form action=\"" + response.getMerchantConfigResponse().getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
+                    "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
                     "<input type=\"hidden\" name=\"SESSION\" value=\"" + sessionData.getSession() + "\"/>" +
-                    "<input type=\"hidden\" name=\"ReturnUrl\" value=\"" + response.getMerchantConfigResponse().getSuccessUrl() + "\"/>" +
-                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + response.getMerchantConfigResponse().getErrorUrl() + "\"/>" +
+                    "<input type=\"hidden\" name=\"ReturnUrl\" value=\"" + merchantConfigDto.getSuccessUrl() + "\"/>" +
+                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + merchantConfigDto.getErrorUrl() + "\"/>" +
                     "</form>" +
                     "<script>document.getElementById('paymentForm').submit();</script>" +
                     "</body>" +

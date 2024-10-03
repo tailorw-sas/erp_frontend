@@ -16,5 +16,7 @@ import java.util.UUID;
 public class SendInvoiceRequest {
     private List<UUID> invoice;
     private String employee;
+    private boolean groupByClient;
+    private boolean withAttachment;
 
 }

@@ -23,6 +23,7 @@ public class ConsumerDeleteManageAttachmentService {
         try {
             ManageAttachmentTypeDto attachmentTypeDto = this.service.findById(objKafka.getId());
             attachmentTypeDto.setDefaults(false);
+            attachmentTypeDto.setAttachInvDefault(false);
             this.service.update(attachmentTypeDto);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerDeleteManageAttachmentService.class.getName()).log(Level.SEVERE, null, ex);
