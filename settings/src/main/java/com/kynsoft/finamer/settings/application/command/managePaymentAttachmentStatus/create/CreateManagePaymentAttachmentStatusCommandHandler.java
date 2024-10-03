@@ -49,8 +49,18 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
         service.create(
                 new ManagePaymentAttachmentStatusDto(command.getId(), command.getCode(), command.getName(),
                         command.getStatus(),  moduleDto, command.getShow(), command.getDefaults(), command.getPermissionCode(),
-                        command.getDescription(), managePaymentAttachmentStatusDtoList));
+                        command.getDescription(), managePaymentAttachmentStatusDtoList, command.isNonNone(), command.isPatWithAttachment(), 
+                        command.isPwaWithOutAttachment()));
 
-        this.paymentAttachmentStatusService.create(new ReplicateManagePaymentAttachmentStatusKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name(), command.getDefaults()));
+        this.paymentAttachmentStatusService.create(new ReplicateManagePaymentAttachmentStatusKafka(
+                command.getId(), 
+                command.getCode(), 
+                command.getName(), 
+                command.getStatus().name(), 
+                command.getDefaults(),
+                command.isNonNone(),
+                command.isPatWithAttachment(),
+                command.isPwaWithOutAttachment()
+        ));
     }
 }

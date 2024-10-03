@@ -23,9 +23,13 @@ public class UpdateManagePaymentAttachmentStatusCommand implements ICommand {
     private Boolean defaults;
     private String permissionCode;
     private String description;
+    private boolean nonNone;
+    private boolean patWithAttachment;
+    private boolean pwaWithOutAttachment;
 
     public UpdateManagePaymentAttachmentStatusCommand(UUID id, String code, String name, Status status, List<UUID> navigate,
-                                                      UUID module, Boolean show, Boolean defaults, String permissionCode, String description) {
+                                                      UUID module, Boolean show, Boolean defaults, String permissionCode, String description, 
+                                                      boolean nonNone, boolean patWithAttachment, boolean pwaWithOutAttachment) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -36,22 +40,16 @@ public class UpdateManagePaymentAttachmentStatusCommand implements ICommand {
         this.defaults = defaults;
         this.permissionCode = permissionCode;
         this.description = description;
+        this.nonNone = nonNone;
+        this.patWithAttachment = patWithAttachment;
+        this.pwaWithOutAttachment = pwaWithOutAttachment;
     }
     
     public static UpdateManagePaymentAttachmentStatusCommand fromRequest(UpdateManagePaymentAttachmentStatusRequest request,
                                                                          UUID id){
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("LLega: " + request.getModule());
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
-        System.err.println("###################################################");
         return new UpdateManagePaymentAttachmentStatusCommand(id, request.getCode(), request.getName(),
                 request.getStatus(), request.getNavigate(), request.getModule(), request.getShow(), request.getDefaults(),
-                request.getPermissionCode(), request.getDescription());
+                request.getPermissionCode(), request.getDescription(), request.isNonNone(), request.isPatWithAttachment(), request.isPwaWithOutAttachment());
     }
 
     @Override
