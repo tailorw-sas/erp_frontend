@@ -200,15 +200,10 @@ async function getList() {
 
 async function getClientList(query = '') {
   try {
+    const newListItems = []
     const payload
       = {
         filter: [
-          {
-            key: 'agencies.sentB2BPartner.b2bPartnerType.code',
-            operator: 'LIKE',
-            value: ENUM_INVOICE_SEND_TYPE.EMAIL,
-            logicalOperation: 'AND'
-          },
           {
             key: 'name',
             operator: 'LIKE',
@@ -226,7 +221,13 @@ async function getClientList(query = '') {
             operator: 'EQUALS',
             value: 'ACTIVE',
             logicalOperation: 'AND'
-          }
+          },
+          {
+            key: 'agencies.sentB2BPartner.b2bPartnerType.code',
+            operator: 'LIKE',
+            value: ENUM_INVOICE_SEND_TYPE.EMAIL,
+            logicalOperation: 'AND'
+          },
         ],
         query: '',
         pageSize: 200,
@@ -238,9 +239,16 @@ async function getClientList(query = '') {
     clientList.value = []
     const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
     const { data: dataList } = response
+
+    const existingIds = new Set(listItems.value.map(item => item.id))
     for (const iterator of dataList) {
-      clientList.value = [...clientList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      if (!existingIds.has(iterator.id)) {
+      // clientList.value = [...clientList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+        newListItems.push({ id: iterator.id, name: iterator.name, code: iterator.code })
+        existingIds.add(iterator.id)
+      }
     }
+    clientList.value = [...clientList.value, ...newListItems]
   }
   catch (error) {
     console.error('Error loading client list:', error)
