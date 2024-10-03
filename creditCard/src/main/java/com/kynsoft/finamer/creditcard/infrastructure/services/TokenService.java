@@ -3,7 +3,6 @@ package com.kynsoft.finamer.creditcard.infrastructure.services;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -17,7 +16,7 @@ public class TokenService {
 
     public String generateToken(UUID transactionUuid) {
         return Jwts.builder()
-                .claim("transactionId", transactionUuid)
+                .claim("transactionUuid", transactionUuid)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7)) // 24 horas * 7
                 .signWith(secretKey)
