@@ -51,6 +51,13 @@ public class ManageInvoiceStatus implements Serializable {
     private Boolean enabledToPolicy;
     private Boolean processStatus;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean sentStatus;
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean reconciledStatus;
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean canceledStatus;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "manage_invoice_status_relations",
@@ -61,7 +68,7 @@ public class ManageInvoiceStatus implements Serializable {
 
     private Boolean showClone;
 
-    public ManageInvoiceStatus(ManageInvoiceStatusDto dto){
+    public ManageInvoiceStatus(ManageInvoiceStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.status = dto.getStatus();
@@ -69,7 +76,7 @@ public class ManageInvoiceStatus implements Serializable {
         this.name = dto.getName();
         this.enabledToPrint = dto.getEnabledToPrint();
         this.enabledToPropagate = dto.getEnabledToPropagate();
-        this.enabledToApply= dto.getEnabledToApply();
+        this.enabledToApply = dto.getEnabledToApply();
         this.enabledToPolicy = dto.getEnabledToPolicy();
         this.processStatus = dto.getProcessStatus();
         if (dto.getNavigate() != null) {
@@ -78,22 +85,25 @@ public class ManageInvoiceStatus implements Serializable {
                     .collect(Collectors.toList());
         }
         this.showClone = dto.getShowClone();
+        this.canceledStatus = dto.isCanceledStatus();
+        this.reconciledStatus = dto.isReconciledStatus();
+        this.sentStatus = dto.isSentStatus();
     }
 
-    public ManageInvoiceStatusDto toAggregateSimple(){
+    public ManageInvoiceStatusDto toAggregateSimple() {
         return new ManageInvoiceStatusDto(
                 id, code, description, status, name, enabledToPrint, enabledToPropagate,
                 enabledToApply, enabledToPolicy, processStatus,
-                 null, showClone
+                null, showClone, sentStatus, reconciledStatus, canceledStatus
         );
     }
 
-    public ManageInvoiceStatusDto toAggregate(){
+    public ManageInvoiceStatusDto toAggregate() {
         return new ManageInvoiceStatusDto(
                 id, code, description, status, name, enabledToPrint, enabledToPropagate,
                 enabledToApply, enabledToPolicy, processStatus,
                 navigate != null ? navigate.stream().map(ManageInvoiceStatus::toAggregateSimple).toList() : null,
-                showClone
+                showClone, sentStatus, reconciledStatus, canceledStatus
         );
     }
 }

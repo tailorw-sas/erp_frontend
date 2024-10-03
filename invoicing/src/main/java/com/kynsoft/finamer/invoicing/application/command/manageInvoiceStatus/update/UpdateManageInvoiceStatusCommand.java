@@ -27,6 +27,10 @@ public class UpdateManageInvoiceStatusCommand implements ICommand {
     private List<UUID> navigate;
     private Boolean showClone;
 
+    private boolean sentStatus;
+    private boolean reconciledStatus;
+    private boolean canceledStatus;
+
     public static UpdateManageInvoiceStatusCommand fromRequest(UpdateManageInvoiceStatusRequest request, UUID id){
         return new UpdateManageInvoiceStatusCommand(
                 id,
@@ -39,7 +43,10 @@ public class UpdateManageInvoiceStatusCommand implements ICommand {
                 request.getEnabledToPolicy(),
                 request.getProcessStatus(),
                 request.getNavigate(),
-                request.getShowClone()
+                request.getShowClone(),
+                request.isSentStatus(),
+                request.isReconciledStatus(),
+                request.isCanceledStatus()
         );
     }
 

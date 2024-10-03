@@ -30,6 +30,9 @@ public class ManageInvoiceStatusResponse implements IResponse {
     private List<ManageInvoiceStatusResponse> navigate;
 
     private Boolean showClone;
+    private boolean sentStatus;
+    private boolean reconciledStatus;
+    private boolean canceledStatus;
 
     public ManageInvoiceStatusResponse(ManageInvoiceStatusDto dto){
         this.id = dto.getId();
@@ -44,5 +47,8 @@ public class ManageInvoiceStatusResponse implements IResponse {
         this.processStatus = dto.getProcessStatus();
         this.navigate = dto.getNavigate() != null ? dto.getNavigate().stream().map(ManageInvoiceStatusResponse::new).toList() : null;
         this.showClone = dto.getShowClone();
+        this.sentStatus = dto.isSentStatus();
+        this.reconciledStatus = dto.isReconciledStatus();
+        this.canceledStatus = dto.isCanceledStatus();
     }
 }

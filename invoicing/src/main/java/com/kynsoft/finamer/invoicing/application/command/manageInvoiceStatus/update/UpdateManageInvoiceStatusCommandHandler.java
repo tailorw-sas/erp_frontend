@@ -47,6 +47,10 @@ public class UpdateManageInvoiceStatusCommandHandler implements ICommandHandler<
         UpdateIfNotNull.updateBoolean(dto::setProcessStatus, command.getProcessStatus(), dto.getProcessStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setShowClone, command.getShowClone(), dto.getShowClone(), update::setUpdate);
 
+        UpdateIfNotNull.updateBoolean(dto::setSentStatus, command.isSentStatus(), dto.isSentStatus(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setReconciledStatus, command.isReconciledStatus(), dto.isReconciledStatus(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setCanceledStatus, command.isCanceledStatus(), dto.isCanceledStatus(), update::setUpdate);
+
         updateNavigates(dto::setNavigate, command.getNavigate(), dto.getNavigate().stream().map(ManageInvoiceStatusDto::getId).toList(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
