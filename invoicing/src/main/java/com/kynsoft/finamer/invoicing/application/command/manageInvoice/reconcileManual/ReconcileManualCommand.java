@@ -18,6 +18,8 @@ public class ReconcileManualCommand implements ICommand {
     private String employeeName;
     private UUID employeeId;
     private List<ReconcileManualErrorResponse> errorResponse;
+    private int totalInvoicesRec = 0;
+    private int totalInvoices = 0;
 
     public ReconcileManualCommand(List<UUID> invoices, UUID attachInvDefault,
                                   String employeeName, UUID employeeId, UUID resourceType) {
@@ -40,6 +42,6 @@ public class ReconcileManualCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new ReconcileManualMessage(errorResponse);
+        return new ReconcileManualMessage(errorResponse, totalInvoicesRec, totalInvoices);
     }
 }

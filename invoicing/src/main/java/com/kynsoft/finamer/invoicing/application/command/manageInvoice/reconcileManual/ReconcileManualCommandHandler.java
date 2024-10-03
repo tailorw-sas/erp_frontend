@@ -16,12 +16,16 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageResourceTypeService resourceTypeService;
     private final IManageInvoiceStatusService invoiceStatusService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
-    public ReconcileManualCommandHandler(IManageInvoiceService invoiceService, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService, IManageInvoiceStatusService invoiceStatusService) {
+    public ReconcileManualCommandHandler(IManageInvoiceService invoiceService, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService, IManageInvoiceStatusService invoiceStatusService, IAttachmentStatusHistoryService attachmentStatusHistoryService, IInvoiceStatusHistoryService invoiceStatusHistoryService) {
         this.invoiceService = invoiceService;
         this.attachmentTypeService = attachmentTypeService;
         this.resourceTypeService = resourceTypeService;
         this.invoiceStatusService = invoiceStatusService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
     }
 
     @Override
@@ -31,21 +35,21 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(id);
             if(!invoiceDto.getAgency().getAutoReconcile()){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The agency does not have auto-reconciliation enabled."
                 ));
                 continue;
             }
             if(invoiceDto.getStatus().compareTo(EInvoiceStatus.PROCECSED) != 0){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The invoice is not in processed status."
                 ));
                 continue;
             }
             if(invoiceDto.getInvoiceType().compareTo(EInvoiceType.INVOICE) != 0){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The invoice type must be INV."
                 ));
                 continue;
@@ -54,7 +58,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 //TODO: obtener el pdf
             } catch (Exception e){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The pdf could not be generated."
                 ));
                 continue;
@@ -66,7 +70,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 //TODO: subir el archivo y obtener los datos para el attachment
             } catch (Exception e) {
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The attachment could not be uploaded."
                 ));
                 continue;
@@ -79,8 +83,9 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             ResourceTypeDto resourceTypeDto = command.getResourceType() != null
                     ? this.resourceTypeService.findById(command.getResourceType())
                     : null;
-            List<ManageAttachmentDto> attachments = invoiceDto.getAttachments();
-            attachments.add(new ManageAttachmentDto(
+            List<ManageAttachmentDto> attachments = invoiceDto.getAttachments() != null ? invoiceDto.getAttachments() : new ArrayList<>();
+
+            ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
                     UUID.randomUUID(),
                     null,
                     filename,
@@ -92,12 +97,17 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                     command.getEmployeeId(),
                     null,
                     resourceTypeDto
-            ));
+            );
+            attachments.add(attachmentDto);
             invoiceDto.setStatus(EInvoiceStatus.RECONCILED);
             ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
             invoiceDto.setManageInvoiceStatus(invoiceStatusDto);
             this.invoiceService.update(invoiceDto);
+            this.attachmentStatusHistoryService.create(attachmentDto, invoiceDto);
+            this.invoiceStatusHistoryService.create(invoiceDto, command.getEmployeeName());
         }
         command.setErrorResponse(errorResponse);
+        command.setTotalInvoicesRec(command.getInvoices().size() - errorResponse.size());
+        command.setTotalInvoices(command.getInvoices().size());
     }
 }
