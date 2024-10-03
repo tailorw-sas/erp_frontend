@@ -5,6 +5,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -36,21 +37,39 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             if(!invoiceDto.getAgency().getAutoReconcile()){
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto.getInvoiceId().toString(),
-                        "The agency does not have auto-reconciliation enabled."
+                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
+                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
+                        invoiceDto.getAgency().getCode(),
+                        invoiceDto.getInvoiceDate().toLocalDate(),
+                        invoiceDto.getInvoiceAmount(),
+                        "The agency does not have auto-reconciliation enabled.",
+                        invoiceDto.getStatus()
                 ));
                 continue;
             }
             if(invoiceDto.getStatus().compareTo(EInvoiceStatus.PROCECSED) != 0){
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto.getInvoiceId().toString(),
-                        "The invoice is not in processed status."
+                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
+                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
+                        invoiceDto.getAgency().getCode(),
+                        invoiceDto.getInvoiceDate().toLocalDate(),
+                        invoiceDto.getInvoiceAmount(),
+                        "The invoice is not in processed status.",
+                        invoiceDto.getStatus()
                 ));
                 continue;
             }
             if(invoiceDto.getInvoiceType().compareTo(EInvoiceType.INVOICE) != 0){
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto.getInvoiceId().toString(),
-                        "The invoice type must be INV."
+                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
+                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
+                        invoiceDto.getAgency().getCode(),
+                        invoiceDto.getInvoiceDate().toLocalDate(),
+                        invoiceDto.getInvoiceAmount(),
+                        "The invoice type must be INV.",
+                        invoiceDto.getStatus()
                 ));
                 continue;
             }
@@ -59,7 +78,13 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             } catch (Exception e){
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto.getInvoiceId().toString(),
-                        "The pdf could not be generated."
+                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
+                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
+                        invoiceDto.getAgency().getCode(),
+                        invoiceDto.getInvoiceDate().toLocalDate(),
+                        invoiceDto.getInvoiceAmount(),
+                        "The pdf could not be generated.",
+                        invoiceDto.getStatus()
                 ));
                 continue;
             }
@@ -71,7 +96,13 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             } catch (Exception e) {
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto.getInvoiceId().toString(),
-                        "The attachment could not be uploaded."
+                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
+                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
+                        invoiceDto.getAgency().getCode(),
+                        invoiceDto.getInvoiceDate().toLocalDate(),
+                        invoiceDto.getInvoiceAmount(),
+                        "The attachment could not be uploaded.",
+                        invoiceDto.getStatus()
                 ));
                 continue;
             }
