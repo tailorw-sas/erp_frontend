@@ -978,18 +978,18 @@ const confApi = reactive({
     moduleApi: 'invoicing',
     uriApi: 'manage-booking',
   },
-  // roomRate: {
-  //   moduleApi: 'invoicing',
-  //   uriApi: 'manage-room-rate',
-  // },
-  // adjustment: {
-  //   moduleApi: 'invoicing',
-  //   uriApi: 'manage-adjustment',
-  // },
-  // invoice: {
-  //   moduleApi: 'invoicing',
-  //   uriApi: 'manage-invoice',
-  // },
+  roomRate: {
+    moduleApi: 'invoicing',
+    uriApi: 'manage-room-rate',
+  },
+  adjustment: {
+    moduleApi: 'invoicing',
+    uriApi: 'manage-adjustment',
+  },
+  invoice: {
+    moduleApi: 'invoicing',
+    uriApi: 'manage-invoice',
+  },
 })
 const confratePlanApi = reactive({
   moduleApi: 'settings',
@@ -1041,15 +1041,15 @@ const optionsAdjustment = ref({
 const columnsRoomRate: IColumn[] = [
   { field: 'roomRateId', header: 'Id', type: 'text', sortable: false },
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'checkIn', header: 'Check In', type: 'date', sortable: false },
-  { field: 'checkOut', header: 'Check Out', type: 'date', sortable: false },
-  { field: 'adults', header: 'Adults', type: 'text', sortable: false },
-  { field: 'children', header: 'Children', type: 'text', sortable: false },
+  { field: 'checkIn', header: 'Check In', type: 'date', sortable: false, editable: true },
+  { field: 'checkOut', header: 'Check Out', type: 'date', sortable: false, editable: true },
+  { field: 'adults', header: 'Adults', type: 'text', sortable: false, editable: true },
+  { field: 'children', header: 'Children', type: 'text', sortable: false, editable: true },
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'nights', header: 'Nights', type: 'text', sortable: false },
+  { field: 'nights', header: 'Nights', type: 'text', sortable: false, editable: true },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: false },
-  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: false },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: false, editable: true },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: false, editable: true },
 ]
 const columnsAdjustment: IColumn[] = [
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: false },
@@ -1108,6 +1108,44 @@ function clearFormAdjustment() {
   // idItem.value = ''
   // formReload.value++
   console.log('lImpiar Adjustment')
+}
+
+async function onCellEditRoomRate(event: any) {
+  const { data, newValue, field, newData } = event
+  console.log('--------------------------------------------------------')
+
+  console.log('event', event)
+
+  console.log('--------------------------------------------------------')
+
+  if (data[field] === newValue) { return }
+
+  const payload: { [key: string]: any } = {
+
+    roomRateId: newData.roomRateId,
+    roomNumber: newData.roomNumber,
+    checkIn: newData.checkIn,
+    checkOut: newData.checkOut,
+    adults: newData.adults,
+    children: newData.children,
+    invoiceAmount: newData.invoiceAmount,
+    hotelAmount: newData.hotelAmount,
+    remark: newData.remark,
+    nights: newData.nights,
+    id: newData.id
+  }
+  try {
+    await updateRoomRate(payload)
+    reloadBookingItem(idItem.value)
+  }
+  catch (error: any) {
+    console.log(error)
+  }
+}
+
+async function updateRoomRate(itemRoomRate: { [key: string]: any }) {
+  const payload: { [key: string]: any } = { ...itemRoomRate }
+  await GenericService.update(confApi.roomRate.moduleApi, confApi.roomRate.uriApi, itemRoomRate.id || '', payload)
 }
 
 function onRowRightClick(event: any) {
@@ -1488,7 +1526,6 @@ async function getBookingItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
-      console.log('response', response)
 
       if (response) {
         idItem.value = response?.id
@@ -1517,9 +1554,10 @@ async function getBookingItemById(id: string) {
         item2.value.hotelAmount = String(response.hotelAmount)
         item2.value.description = response.description
         item2.value.invoice = response.invoice
-        item2.value.ratePlan = response.ratePlan?.name == '-' ? null : response.ratePlan
+        item2.value.invoiceOriginalAmount = response.invoice.invoiceAmount
+        item2.value.ratePlan = response.ratePlan?.name === '-' ? null : response.ratePlan
         item2.value.nightType = response.nightType
-        item2.value.roomType = response.roomType?.name == '-' ? null : response.roomType
+        item2.value.roomType = response.roomType?.name === '-' ? null : response.roomType
         item2.value.roomCategory = response.roomCategory
       }
       formReload.value += 1
@@ -1533,6 +1571,12 @@ async function getBookingItemById(id: string) {
       loadingSaveAll.value = false
     }
   }
+}
+
+async function reloadBookingItem(id: string) {
+  await getBookingItemById(id)
+  getRoomRateList()
+  getAdjustmentList()
 }
 
 // watch(() => idItemToLoadFirstTime.value, async (newValue) => {
@@ -1745,6 +1789,7 @@ onMounted(async () => {
                       @on-change-filter="parseDataTableFilterRoomRate"
                       @on-list-item="resetListItemsRoomRate"
                       @on-sort-field="onSortFieldRoomRate"
+                      @on-table-cell-edit-complete="onCellEditRoomRate($event)"
                       @on-row-double-click="($event) => {
 
                         // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {

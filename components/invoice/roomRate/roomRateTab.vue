@@ -689,6 +689,7 @@ async function createRoomRate(item: { [key: string]: any }) {
 async function updateRoomRate(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
+  console.log('payload', payload)
 
   await GenericService.update(confApi.roomrate.moduleApi, confApi.roomrate.uriApi, idItem.value || '', payload)
 }
