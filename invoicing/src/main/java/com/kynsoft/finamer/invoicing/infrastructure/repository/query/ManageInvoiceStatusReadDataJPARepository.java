@@ -23,4 +23,17 @@ public interface ManageInvoiceStatusReadDataJPARepository extends JpaRepository<
 
     @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.code = :code")
     ManageInvoiceStatus findByCode(@Param("code") String code);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.sentStatus = true AND b.id <> :id")
+    Long countBySentStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.reconciledStatus = true AND b.id <> :id")
+    Long countByReconciledStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.canceledStatus = true AND b.id <> :id")
+    Long countByCanceledStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.processStatus = true AND b.id <> :id")
+    Long countByProcessStatusAndNotId(@Param("id") UUID id);
+
 }

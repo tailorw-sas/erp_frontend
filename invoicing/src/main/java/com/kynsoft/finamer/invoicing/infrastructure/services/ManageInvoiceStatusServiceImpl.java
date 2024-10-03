@@ -162,4 +162,24 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
 
         return null;
     }
+
+    @Override
+    public Long countBySentStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countBySentStatusAndNotId(id);
+    }
+
+    @Override
+    public Long countByReconciledStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByReconciledStatusAndNotId(id);
+    }
+
+    @Override
+    public Long countByCanceledStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByCanceledStatusAndNotId(id);
+    }
+
+    @Override
+    public Long countByProcessStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByProcessStatusAndNotId(id);
+    }
 }

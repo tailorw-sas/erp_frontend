@@ -29,4 +29,12 @@ public interface IManageInvoiceStatusService {
     ManageInvoiceStatusDto findByCode(String code);
 
     ManageInvoiceStatusDto findByEInvoiceStatus(EInvoiceStatus invoiceStatus);
+
+    Long countBySentStatusAndNotId(UUID id);
+
+    Long countByReconciledStatusAndNotId(UUID id);
+
+    Long countByCanceledStatusAndNotId(UUID id);
+
+    Long countByProcessStatusAndNotId(UUID id);
 }
