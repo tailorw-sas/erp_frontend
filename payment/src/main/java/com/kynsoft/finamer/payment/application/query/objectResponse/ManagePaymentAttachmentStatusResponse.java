@@ -18,6 +18,9 @@ public class ManagePaymentAttachmentStatusResponse implements IResponse {
     private String name;
     private String status;
     private Boolean defaults;
+    private boolean nonNone;
+    private boolean patWithAttachment;
+    private boolean pwaWithOutAttachment;
 
     public ManagePaymentAttachmentStatusResponse(ManagePaymentAttachmentStatusDto dto) {
         this.id = dto.getId();
@@ -25,6 +28,9 @@ public class ManagePaymentAttachmentStatusResponse implements IResponse {
         this.name = dto.getName();
         this.status = dto.getStatus();
         this.defaults = dto.getDefaults();
+        this.nonNone = dto.isNonNone();
+        this.patWithAttachment = dto.isPatWithAttachment();
+        this.pwaWithOutAttachment = dto.isPwaWithOutAttachment();
     }
 
     public ManagePaymentAttachmentStatusResponse() {
