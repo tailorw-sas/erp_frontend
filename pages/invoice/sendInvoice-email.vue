@@ -24,6 +24,7 @@ const loadingSaveAll = ref(false)
 
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 
+const filterHotel = ref<any>(null)
 const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
@@ -81,7 +82,7 @@ const columns: IColumn[] = [
   { field: 'invoiceDate', header: 'Generation Date', type: 'date', width: '150px' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '150px' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: false, showFilter: false },
-  { field: 'sendStatusError', header: 'Sent Status', frozen: true, type: 'slot-text', sortable: false, showFilter: false, width: '350px' },
+  { field: 'sendStatusError', header: 'Sent Status', frozen: true, type: 'slot-text', sortable: false, showFilter: false, width: '250px' },
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -447,18 +448,18 @@ function searchAndFilter() {
         }]
       }
     }
-    if (filterToSearch.value.hotel?.length > 0) {
-      const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
-      if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
-        payload.value.filter = [...payload.value.filter, {
-          key: 'hotel.id',
-          operator: 'IN',
-          value: itemIds,
-          logicalOperation: 'AND',
-          type: 'filterSearch'
-        }]
-      }
+    if (filterHotel.value) { // filterToSearch.value.hotel?.length > 0
+      // const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
+      // if (filteredItems.length > 0) {
+      const itemIds = [filterHotel.value.id]
+      payload.value.filter = [...payload.value.filter, {
+        key: 'hotel.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+      // }
     }
   }
   // payload.value = { ...payload.value, ...newPayload }
@@ -633,10 +634,12 @@ onMounted(async () => {
                     <div class="w-full">
                       <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
+                        :multiple="false" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
-                        @load="($event) => getHotelList($event)" @change="($event) => {
-                          filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                        @load="($event) => getHotelList($event)"
+                        @change="($event) => {
+                          filterHotel = $event
+                          // filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                         }"
                       >
                         <template #option="props">
@@ -648,7 +651,7 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <div class="col-12 md:col-6 lg:col-2 flex align-items-center gap-3">
+              <div class="col-12 md:col-6 lg:col-2 flex">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">From:</label>
@@ -670,7 +673,7 @@ onMounted(async () => {
                   </div>
                 </div>
               </div>
-              <div class="col-12 md:col-6 lg:col-3 flex align-items-center gap-2">
+              <div class="col-12 md:col-6 lg:col-3 flex">
                 <div class="flex w-full">
                   <div class="flex flex-row w-full">
                     <div class="flex flex-column gap-2 w-full">
@@ -743,9 +746,9 @@ onMounted(async () => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
       >
-        <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
-            <span style="color: red;">{{ data.impSta }}</span>
+        <template #column-sendStatusError="{ data }">
+          <div id="fieldError" v-tooltip.bottom="data.sendStatusError" class="ellipsis-text">
+            <span style="color: red;">{{ data.sendStatusError }}</span>
           </div>
         </template>
 
@@ -779,6 +782,6 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
-  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
+  max-width: 200px; /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>

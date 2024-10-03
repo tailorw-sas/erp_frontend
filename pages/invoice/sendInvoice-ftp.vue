@@ -79,7 +79,7 @@ const columns: IColumn[] = [
   { field: 'invoiceDate', header: 'Generation Date', type: 'date', width: '150px' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '150px' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: false, showFilter: false },
-  { field: 'sendStatusError', header: 'Sent Status', frozen: true, type: 'slot-text', sortable: false, showFilter: false, width: '350px' },
+  { field: 'sendStatusError', header: 'Sent Status', frozen: true, type: 'slot-text', sortable: false, showFilter: false, width: '250px' },
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -661,9 +661,9 @@ onMounted(async () => {
           @on-list-item="resetListItems"
           @on-sort-field="onSortField"
         >
-          <template #column-impSta="{ data }">
-            <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
-              <span style="color: red;">{{ data.impSta }}</span>
+          <template #column-sendStatusError="{ data }">
+            <div id="fieldError" v-tooltip.bottom="data.sendStatusError" class="ellipsis-text">
+              <span style="color: red;">{{ data.sendStatusError }}</span>
             </div>
           </template>
 
@@ -727,6 +727,6 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
-  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
+  max-width: 200px; /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>
