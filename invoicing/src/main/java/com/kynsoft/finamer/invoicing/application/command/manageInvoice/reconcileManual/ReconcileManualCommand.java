@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Getter
@@ -14,11 +13,11 @@ import java.util.UUID;
 public class ReconcileManualCommand implements ICommand {
 
     private List<UUID> invoices;
-    Map<UUID, String> errors;
     private UUID attachInvDefault;
     private UUID resourceType;
     private String employeeName;
     private UUID employeeId;
+    private List<ReconcileManualErrorResponse> errorResponse;
 
     public ReconcileManualCommand(List<UUID> invoices, UUID attachInvDefault,
                                   String employeeName, UUID employeeId, UUID resourceType) {
@@ -41,6 +40,6 @@ public class ReconcileManualCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new ReconcileManualMessage(errors);
+        return new ReconcileManualMessage(errorResponse);
     }
 }
