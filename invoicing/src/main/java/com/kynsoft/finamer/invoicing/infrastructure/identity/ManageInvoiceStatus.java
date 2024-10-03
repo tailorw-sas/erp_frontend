@@ -1,10 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +11,10 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,35 +28,72 @@ public class ManageInvoiceStatus implements Serializable {
     @Column(name = "id")
     private UUID id;
 
+    @Column(unique = true)
     private String code;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+    private String description;
 
     private String name;
 
-    private Boolean showClone;
-
-    @Column(columnDefinition = "boolean DEFAULT FALSE")
-    private Boolean deleted = false;
-
     @CreationTimestamp
-//    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    private LocalDateTime deletedAt;
+    private Boolean enabledToPrint;
+    private Boolean enabledToPropagate;
+    private Boolean enabledToApply;
+    private Boolean enabledToPolicy;
+    private Boolean processStatus;
 
-    public ManageInvoiceStatus(ManageInvoiceStatusDto dto) {
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "manage_invoice_status_relations",
+            joinColumns = @JoinColumn(name = "parent_id"),
+            inverseJoinColumns = @JoinColumn(name = "child_id")
+    )
+    private List<ManageInvoiceStatus> navigate = new ArrayList<>();
+
+    private Boolean showClone;
+
+    public ManageInvoiceStatus(ManageInvoiceStatusDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
-
+        this.status = dto.getStatus();
+        this.description = dto.getDescription();
         this.name = dto.getName();
+        this.enabledToPrint = dto.getEnabledToPrint();
+        this.enabledToPropagate = dto.getEnabledToPropagate();
+        this.enabledToApply= dto.getEnabledToApply();
+        this.enabledToPolicy = dto.getEnabledToPolicy();
+        this.processStatus = dto.getProcessStatus();
+        if (dto.getNavigate() != null) {
+            this.navigate = dto.getNavigate().stream()
+                    .map(ManageInvoiceStatus::new)
+                    .collect(Collectors.toList());
+        }
         this.showClone = dto.getShowClone();
     }
 
-
-    public ManageInvoiceStatusDto toAggregate() {
+    public ManageInvoiceStatusDto toAggregateSimple(){
         return new ManageInvoiceStatusDto(
-                id, code, name, showClone
+                id, code, description, status, name, enabledToPrint, enabledToPropagate,
+                enabledToApply, enabledToPolicy, processStatus,
+                 null, showClone
+        );
+    }
+
+    public ManageInvoiceStatusDto toAggregate(){
+        return new ManageInvoiceStatusDto(
+                id, code, description, status, name, enabledToPrint, enabledToPropagate,
+                enabledToApply, enabledToPolicy, processStatus,
+                navigate != null ? navigate.stream().map(ManageInvoiceStatus::toAggregateSimple).toList() : null,
+                showClone
         );
     }
 }

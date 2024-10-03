@@ -1,22 +1,16 @@
-package com.kynsoft.finamer.invoicing.domain.dto;
+package com.kynsoft.finamer.invoicing.application.command.manageInvoiceStatus.update;
 
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 import java.util.UUID;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-public class ManageInvoiceStatusDto {
+public class UpdateManageInvoiceStatusRequest {
 
-    private UUID id;
-    private String code;
     private String description;
     private Status status;
     private String name;
@@ -25,7 +19,7 @@ public class ManageInvoiceStatusDto {
     private Boolean enabledToApply;
     private Boolean enabledToPolicy;
     private Boolean processStatus;
-    private List<ManageInvoiceStatusDto> navigate;
+    private List<UUID> navigate;
 
     private Boolean showClone;
 }
