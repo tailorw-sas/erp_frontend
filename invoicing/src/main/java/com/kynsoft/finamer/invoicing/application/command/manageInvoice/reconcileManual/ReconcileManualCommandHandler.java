@@ -35,21 +35,21 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(id);
             if(!invoiceDto.getAgency().getAutoReconcile()){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The agency does not have auto-reconciliation enabled."
                 ));
                 continue;
             }
             if(invoiceDto.getStatus().compareTo(EInvoiceStatus.PROCECSED) != 0){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The invoice is not in processed status."
                 ));
                 continue;
             }
             if(invoiceDto.getInvoiceType().compareTo(EInvoiceType.INVOICE) != 0){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The invoice type must be INV."
                 ));
                 continue;
@@ -58,7 +58,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 //TODO: obtener el pdf
             } catch (Exception e){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The pdf could not be generated."
                 ));
                 continue;
@@ -70,7 +70,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 //TODO: subir el archivo y obtener los datos para el attachment
             } catch (Exception e) {
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getId().toString(),
+                        invoiceDto.getInvoiceId().toString(),
                         "The attachment could not be uploaded."
                 ));
                 continue;
