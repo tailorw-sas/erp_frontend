@@ -9,6 +9,7 @@ import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.
 import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionRequest;
 import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentCommandMessage;
+import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentRequest;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionRequest;
@@ -84,10 +85,10 @@ public class TransactionController {
     }
 
     @PostMapping("/redirectTypeLink")
-    public ResponseEntity<?> getPaymentForm(@RequestBody String token) {
+    public ResponseEntity<?> getPaymentForm(@RequestBody CreateRedirectTransactionPaymentRequest request) {
 
         CreateRedirectTransactionPaymentCommand redirectTransactionPaymentCommand = CreateRedirectTransactionPaymentCommand.builder()
-                .Token(token)
+                .Token(request.getToken())
                 .build();
         CreateRedirectTransactionPaymentCommandMessage createRedirectCommandMessage = mediator.send(redirectTransactionPaymentCommand);
         return ResponseEntity.ok(createRedirectCommandMessage);
