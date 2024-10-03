@@ -69,7 +69,6 @@ function onClose(isCancel: boolean = true) {
   emit('onCloseDialog', isCancel)
 }
 
-// TODO: Validar que si es de tipo processed se deben listar todas las agencias, si es sent o reconciled entonces solo se listan las agencias del cliente
 async function getAgencyByClient() {
   if (optionsOfTableChangeAgency.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -81,19 +80,13 @@ async function getAgencyByClient() {
     const newListItems = []
     payloadChangeAgency.value.filter = []
 
-    const filter: FilterCriteria[] = [
+    let filter: FilterCriteria[] = [
       { // no listar la actual
         key: 'id',
         logicalOperation: 'AND',
         operator: 'NOT_EQUALS',
         value: props.selectedInvoice.agency.id,
       },
-      // {
-      //   key: 'client.id',
-      //   logicalOperation: 'AND',
-      //   operator: 'EQUALS',
-      //   value: objClientFormChangeAgency.value?.id,
-      // },
       {
         key: 'status',
         logicalOperation: 'AND',
@@ -101,6 +94,18 @@ async function getAgencyByClient() {
         value: 'ACTIVE',
       },
     ]
+    // Si es RECONCILED o SENT se deben listar solo las agencias del cliente
+    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(props.selectedInvoice.status) && props.selectedInvoice.agency.client) {
+      filter = [
+        ...filter,
+        {
+          key: 'client.id',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: props.selectedInvoice.agency.client.id,
+        }
+      ]
+    }
 
     payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...filter]
 
@@ -145,7 +150,7 @@ async function getAgencyByClient() {
   }
 }
 
-//TODO: Implement change agency api integration
+// TODO: Implement change agency api integration
 async function onRowDoubleClickInDataTableForChangeAgency(event: any) {
   /* if (optionsOfTableChangeAgency.value.loading) { return }
   try {
@@ -183,7 +188,7 @@ async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
-  getAgencyByClient()
+  await getAgencyByClient()
 }
 
 function onSortFieldForChangeAgency(event: any) {
@@ -237,10 +242,11 @@ onMounted(async () => {
     <template #default>
       <div class="p-fluid pt-3">
         <!-- // Label -->
+<!--        <pre>{{ props.selectedInvoice }}</pre>-->
         <div class="flex justify-content-between mb-2">
           <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
             <strong class="mr-2 w-auto">Client:</strong>
-            <span class="w-auto text-white font-semibold">{{ props.selectedInvoice.client?.code ?? '' }} - {{ props.selectedInvoice.client?.name ?? '' }}</span>
+            <span class="w-auto text-white font-semibold">{{ props.selectedInvoice.agency?.client.code ?? '' }} - {{ props.selectedInvoice.agency?.client.name ?? '' }}</span>
           </div>
           <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
             <strong class="mr-2 w-auto">Current Agency:</strong>
