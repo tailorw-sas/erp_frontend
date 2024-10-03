@@ -1570,6 +1570,13 @@ function findMenuItemByLabelSetShow(label: string, list: any[], showItem: boolea
   }
 }
 
+async function onCloseChangeAgencyDialog(isCancel: boolean) {
+  changeAgencyDialogOpen.value = false
+  if (!isCancel) {
+    getList()
+  }
+}
+
 function onRowRightClick(event: any) {
 
   selectedInvoice = event.data.id
@@ -2245,7 +2252,7 @@ const legend = ref(
     <InvoiceChangeAgencyDialog
       :open-dialog="changeAgencyDialogOpen"
       :selected-invoice="selectedInvoiceObj"
-      @on-close-dialog="() => { changeAgencyDialogOpen = false }"
+      @on-close-dialog="onCloseChangeAgencyDialog($event)"
     />
   </div>
   <div v-if="paymentsDialogOpen">

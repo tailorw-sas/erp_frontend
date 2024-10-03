@@ -25,6 +25,7 @@ const $primevue = usePrimeVue()
 defineExpose({
   $primevue
 })
+const toast = useToast()
 const dialogVisible = ref(props.openDialog)
 const listAgencyByClient = ref<any[]>([])
 const payloadOnChangePageChangeAgency = ref<PageState>()
@@ -152,36 +153,25 @@ async function getAgencyByClient() {
 
 // TODO: Implement change agency api integration
 async function onRowDoubleClickInDataTableForChangeAgency(event: any) {
-  /* if (optionsOfTableChangeAgency.value.loading) { return }
+  if (optionsOfTableChangeAgency.value.loading) {
+    return
+  }
   try {
     optionsOfTableChangeAgency.value.loading = true
-    const payloadToApplyPayment: GenericObject = {
-      payment: objItemSelectedForRightClickApplyPayment.value.id || '',
-      transactionDate: objItemSelectedForRightClickApplyPayment.value.transactionDate,
-      reference: objItemSelectedForRightClickApplyPayment.value.reference,
-      remark: objItemSelectedForRightClickApplyPayment.value.remark,
-      paymentSource: objItemSelectedForRightClickApplyPayment.value.paymentSource?.id || '',
-      paymentStatus: objItemSelectedForRightClickApplyPayment.value.paymentStatus?.id || '',
-      client: event.client || '',
+    const payloadChangeAgency: any = {
       agency: event?.id,
-      hotel: objItemSelectedForRightClickApplyPayment.value.hotel?.id || '',
-      bankAccount: objItemSelectedForRightClickApplyPayment.value.bankAccount?.id || '',
-      attachmentStatus: objItemSelectedForRightClickApplyPayment.value.attachmentStatus?.id || '',
     }
 
-    await GenericService.update(options.value.moduleApi, options.value.uriApi, objItemSelectedForRightClickApplyPayment.value.id || '', payloadToApplyPayment)
-    openDialogApplyPayment.value = false
+    await GenericService.update('invoicing', 'manage-invoice', props.selectedInvoice.id || '', payloadChangeAgency)
     toast.add({ severity: 'success', summary: 'Successful', detail: 'The agency has been changed successfully', life: 3000 })
-    getList()
-    openDialogChangeAgency.value = false
+    onClose(false)
   }
   catch (error) {
-    openDialogApplyPayment.value = false
     toast.add({ severity: 'error', summary: 'Error', detail: 'The agency could not be changed', life: 3000 })
   }
   finally {
     optionsOfTableChangeAgency.value.loading = false
-  } */
+  }
 }
 
 async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
@@ -242,7 +232,7 @@ onMounted(async () => {
     <template #default>
       <div class="p-fluid pt-3">
         <!-- // Label -->
-<!--        <pre>{{ props.selectedInvoice }}</pre>-->
+        <!--        <pre>{{ props.selectedInvoice }}</pre> -->
         <div class="flex justify-content-between mb-2">
           <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
             <strong class="mr-2 w-auto">Client:</strong>
