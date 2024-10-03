@@ -909,7 +909,9 @@ onMounted(async () => {
               </template>
               <template #field-remark="{ item: data }">
                 <Textarea
-                  v-model="data.remark" field="remark" :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)"
+                  v-model="data.remark"
+                  field="remark"
+                  :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)"
                   rows="5"
                 />
               </template>
@@ -925,9 +927,10 @@ onMounted(async () => {
                 </IfCan>
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
+                  <!-- :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)"  -->
                   <Button
                     v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus"
-                    :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)" @click="() => {
+                    @click="() => {
                       idItem = ''
                       item = itemTemp
                       clearForm()
