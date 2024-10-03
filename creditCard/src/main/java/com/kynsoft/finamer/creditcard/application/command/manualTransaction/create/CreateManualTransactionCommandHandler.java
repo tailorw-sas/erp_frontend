@@ -132,7 +132,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ));
         command.setId(id);
 
-        //Send Mail after create the transaction to the Hotel Email Contact in case of this exist
+        //Send Mail after create the transaction to the HotelEmailContact in case of this exist
         if(command.getHotelContactEmail() != null){
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
             request.setTemplateId(6324713); // Cambiar en configuración
