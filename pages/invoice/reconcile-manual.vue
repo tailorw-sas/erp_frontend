@@ -34,8 +34,11 @@ const filterToSearch = ref<IData>({
 })
 
 const hotelList = ref<any[]>([])
+const attachList = ref<any[]>([])
+const resourceList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 
+const { data: userData } = useAuth()
 const confApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-booking/import',
@@ -67,6 +70,19 @@ const confagencyListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
 })
+
+const confAttachApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-attachment-type',
+})
+const confResourceApi = reactive({
+  moduleApi: 'payment',
+  uriApi: 'resource-type',
+})
+const confReconcileApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/reconcile-manual',
+})
 // -------------------------------------------------------------------------------------------------------
 /*const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Invoice Id', type: 'text' },
@@ -86,7 +102,7 @@ const columns: IColumn[] = [
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi, width: '15%' },
   { field: 'invoiceDate', header: 'Gen.  Date', type: 'date', width: '12%' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '14%' },
-  { field: 'reconcilestatus', header: 'Rec Status', type: 'slot-text', width: '15%' },
+  { field: 'message', header: 'Rec Status', type: 'slot-text', width: '15%' },
   { field: 'status', header: 'Status', width: '100px', frozen: true,showFilter: false, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -125,6 +141,7 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 async function onMultipleSelect(data: any) {
   selectedElements.value = data
+  console.log(selectedElements.value,'que hay aqui')
 }
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
@@ -199,6 +216,81 @@ async function getList() {
   }
 }
 
+
+async function getAttach() {
+  try {
+    const payload = {
+      filter: [
+        {
+          key: 'attachInvDefault',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    };
+
+    const response= await GenericService.search(confAttachApi.moduleApi, confAttachApi.uriApi, payload);
+    const { data: dataList } = response;
+
+    // Inicializar la lista de adjuntos
+    
+
+    if (dataList.length > 0) {
+      const attachId = dataList[0].id; // Tomar solo el primer ID
+      console.log(attachId, 'resource id');
+      return attachId; // Devolver solo el ID
+    } else {
+      return null; // Devolver null si no hay recursos
+    }
+  }
+     catch (error) {
+    console.error('Error loading attachments:', error);
+    return null; // Devolver un arreglo vacío en caso de error
+  }
+}
+
+async function getResource() {
+  try {
+    const payload = {
+      filter: [
+        {
+          key: 'invoice',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    };
+
+    const response = await GenericService.search(confResourceApi.moduleApi, confResourceApi.uriApi, payload);
+    const { data: dataList } = response;
+
+    // Verificar si hay resultados
+    if (dataList.length > 0) {
+      const resourceId = dataList[0].id; // Tomar solo el primer ID
+      console.log(resourceId, 'resource id');
+      return resourceId; // Devolver solo el ID
+    } else {
+      return null; // Devolver null si no hay recursos
+    }
+  } catch (error) {
+    console.error('Error loading resource:', error);
+    return null; // Devolver null en caso de error
+  }
+}
+
+
 async function getHotelList(query: string = '') {
   try {
     const payload = {
@@ -240,6 +332,123 @@ async function getHotelList(query: string = '') {
     console.error('Error loading hotel list:', error)
   }
 }
+
+async function reconcileManual() {
+  try {
+    loadingSaveAll.value = true;
+ 
+    const attachmentIds = await getAttach(); // Obtener arreglo de IDs
+    const resource  = await getResource();
+   
+    // Asegúrate de que attachInvDefault tenga solo un ID o esté vacío
+   // const attachInvDefault = attachmentIds.length > 0 ? attachmentIds[0] : null; // Solo tomar un ID
+    //const resourceType = resource.length > 0 ? resource[0] : null; // Solo tomar un ID
+ 
+    // Extraer el ID del attachment y asegurarte de que esté en un arreglo
+
+    // Crear el payload inicial
+    const payload: any = {
+      invoices: [], // Inicializar el array de facturas
+      employeeName: userData?.value?.user?.name || 'Sin nombre',
+      employeeId: userData?.value?.user?.userId || 'Sin ID',
+      attachInvDefault: attachmentIds,
+      resourceType: resource
+    };
+
+    // Utilizar selectedElements.value como el array de facturas
+    const invoicesFromState = selectedElements.value;
+
+    // Llenar el array de facturas
+    if (invoicesFromState && Array.isArray(invoicesFromState)) {
+      payload.invoices = invoicesFromState; // Asignar directamente
+    }
+
+    // Enviar el payload a la API
+    return await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload);
+  } catch (error: any) {
+    console.error('Error en reconcileManual:', error?.data?.data?.error?.errorMessage);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error?.data?.data?.error?.errorMessage || error?.message,
+      life: 10000,
+    });
+  } finally {
+    loadingSaveAll.value = false;
+  }
+}
+
+
+async function saveItem() {
+  loadingSaveAll.value = true;
+
+  // Llamar a reconcileManual y guardar la respuesta
+  let response: any;
+  try {
+    response = await reconcileManual();
+  } catch (error) {
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: error?.data?.data?.error?.errorMessage || 'An error occurred while reconciling invoices.', 
+      life: 10000 
+    });
+  }
+
+  // Comprobar si la respuesta contiene errorsResponse
+  const { errors } = response; // Asumiendo que la respuesta tiene una propiedad 'errors'
+
+  // Si no hay errores, navegar y mostrar mensaje de éxito
+  if (errors && errors === 0) {
+    toast.add({ 
+      severity: 'info', 
+      summary: 'Confirmed', 
+      detail: 'The invoices have been reconciled successfully.', 
+      life: 10000 
+    });
+
+    // Navegar a la página de invoice
+    navigateTo('/invoice'); // Define la función para navegar a la página deseada
+  } else if (errors && errors.length > 0) {
+    // Si hay errores, llamar a la función getErrors para mostrar los errores
+    //getErrors(errorsResponse);
+
+    
+  }
+
+  loadingSaveAll.value = false;
+}
+
+async function getErrors(errorsResponse:any) {
+  if (options.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return;
+  }
+  
+  try {
+    idItemToLoadFirstTime.value = '';
+    options.value.loading = true;
+    listItems.value = []; // Limpiar la lista antes de agregar nuevos elementos
+
+    const newListItems = errorsResponse.map((error: { invoiceId: any; message: any }) => ({
+      invoiceId: error.invoiceId, // Asignar invoiceId
+      message: error.message, // Asignar message
+      loadingEdit: false,
+      loadingDelete: false,
+      
+    }));
+
+    // Llenar listItems con los nuevos errores
+    listItems.value = newListItems;
+
+    return listItems;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    options.value.loading = false;
+  }
+}
+
 
 
 async function getAgencyList(query: string = '') {
@@ -416,6 +625,7 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
     logicalOperation: 'AND',
     type: 'filterSearch'
   });
+
 
   // Filtros de hoteles
   if (filterToSearch.value.hotel?.length > 0) {
@@ -657,8 +867,8 @@ onMounted(async () => {
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="clearForm"
-        :disabled="selectedElements.length ===0" />
+        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="saveItem()"
+        :disabled="selectedElements.length === 0" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>
