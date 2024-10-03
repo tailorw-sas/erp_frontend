@@ -313,7 +313,11 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     UNDO_APPLICATION_CHECK_APPLY_PAYMENT(1091, Series.DOMAIN_ERROR,"The selected payment detail does not have an applied payment."),
     DELETE_PAYMENT_DETAILS(1092, Series.DOMAIN_ERROR,"The payment detail you want to delete has an applied payment."),
     UNDO_APPLICATION_TYPE_CASH_OR_APPLY_DEPOSIT(1093, Series.DOMAIN_ERROR,"The selected payment detail must be of type cash or apply deposit."),
-    UNDO_APPLICATION_CURRENT_DATE(1094, Series.DOMAIN_ERROR,"The selected payment detail was created prior to the current day.");
+    UNDO_APPLICATION_CURRENT_DATE(1094, Series.DOMAIN_ERROR,"The selected payment detail was created prior to the current day."),
+    MANAGE_INVOICE_STATUS_CHECK_RECONCILED(1095, Series.DOMAIN_ERROR,"Another item already exists with reconciled."),
+    MANAGE_INVOICE_STATUS_CHECK_PROCESSED(1096, Series.DOMAIN_ERROR,"Another item already exists with Processed."),
+    MANAGE_INVOICE_STATUS_CHECK_SENT(1097, Series.DOMAIN_ERROR,"Another item already exists with Sent."),
+    MANAGE_INVOICE_STATUS_CHECK_CANCELED(1098, Series.DOMAIN_ERROR,"Another item already exists with canceled.");
 
     private static final DomainErrorMessage[] VALUES;
 
