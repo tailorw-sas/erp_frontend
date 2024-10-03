@@ -171,14 +171,15 @@ public class ManageInvoice {
 
     public ManageInvoiceDto toAggregateSearch() {
 
-        return new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
                 invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 parent != null ? parent.toAggregateSample() : null, credits);
-
+        manageInvoiceDto.setSendStatusError(sendStatusError);
+        return manageInvoiceDto;
     }
 
     @PostLoad
