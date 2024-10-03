@@ -352,3 +352,10 @@ export enum ENUM_INVOICE_SEND_TYPE {
   FTP = 'FTP',
   BAVEL = 'BVL',
 }
+
+export enum CALENDAR_MODE {
+  MONTH = 'month',
+  YEAR = 'year',
+  DATE = 'date',
+  UNDEFINED = 'undefined',
+}

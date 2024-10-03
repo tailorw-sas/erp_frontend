@@ -808,7 +808,7 @@ defineExpose({ clearSelectedItems })
           <template v-if="column.type === 'date-editable'" #editor="{ data, field }">
             <Calendar
               v-model="data[field]" :manual-input="false"
-              style="width: 100%" view="month"
+              style="width: 100%" :view="column.props?.calendarMode || 'month'"
               date-format="yy-mm-dd"
               @update:model-value="onCellEditComplete($event, data)"
             />

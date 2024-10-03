@@ -14,6 +14,7 @@ import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
+import { CALENDAR_MODE } from '~/utils/Enums'
 
 const toast = useToast()
 const { data: userData } = useAuth()
@@ -1041,7 +1042,7 @@ const optionsAdjustment = ref({
 const columnsRoomRate: IColumn[] = [
   { field: 'roomRateId', header: 'Id', type: 'text', sortable: false },
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'checkIn', header: 'Check In', type: 'date', sortable: false, editable: true },
+  { field: 'checkIn', header: 'Check In', type: 'date-editable', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
   { field: 'checkOut', header: 'Check Out', type: 'date', sortable: false, editable: true },
   { field: 'adults', header: 'Adults', type: 'text', sortable: false, editable: true },
   { field: 'children', header: 'Children', type: 'text', sortable: false, editable: true },
@@ -1124,8 +1125,8 @@ async function onCellEditRoomRate(event: any) {
 
     roomRateId: newData.roomRateId,
     roomNumber: newData.roomNumber,
-    checkIn: newData.checkIn,
-    checkOut: newData.checkOut,
+    checkIn: dayjs(newData.checkIn).toISOString(),
+    checkOut: dayjs(newData.checkOut).toISOString(),
     adults: newData.adults,
     children: newData.children,
     invoiceAmount: newData.invoiceAmount,
@@ -1224,6 +1225,8 @@ async function getRoomRateList() {
 
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
+        checkIn: dayjs(iterator?.checkIn).format('YYYY-MM-DD'),
+        checkOut: dayjs(iterator?.checkOut).format('YYYY-MM-DD'),
         invoiceAmount: iterator?.invoiceAmount || 0,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         loadingEdit: false,

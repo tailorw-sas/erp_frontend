@@ -1,3 +1,5 @@
+import type { CALENDAR_MODE } from '~/utils/Enums'
+
 export interface IColumn {
   field: string
   header: string
@@ -27,8 +29,13 @@ export interface IColumn {
     name: string
   }[]
   statusClassMap?: IStatusClass[]
-  props?: any
+  props?: IProps
   hidden?: boolean
+}
+
+export interface IProps {
+  isRange?: boolean
+  calendarMode?: CALENDAR_MODE
 }
 
 export interface IPagination {

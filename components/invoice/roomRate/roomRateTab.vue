@@ -221,7 +221,8 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
-    validation: z.number({ invalid_type_error: 'The Adults field must be greater than 0 ' }).min(1, 'The Adults field must be greater than 0')
+    validation: z.string()
+      .refine(val => !Number.isNaN(val) && +val > 0, { message: 'The Adults field must be greater than 0' })
   },
   {
     field: 'children',
@@ -229,7 +230,8 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
-
+    validation: z.string()
+      .refine(val => !Number.isNaN(val) && +val >= 0, { message: 'The Children field must be greater than 0' })
   },
   // {
   //   field: 'rateAdult',
@@ -254,8 +256,10 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-6 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Rate amount field is required').refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
-
+    validation:
+    z.string()
+      .min(1, 'The Rate amount field is required')
+      .refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
   },
   {
     field: 'hotelAmount',
