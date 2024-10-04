@@ -423,9 +423,7 @@ function handleAttachmentHistoryDialogOpen() {
 
 async function getAgencyList(query = '') {
   try {
-    const payload
-      = {
-      filter: [
+    const listFilter = invoiceStatus.value !== InvoiceStatus.PROCECSED ? [
             {
               key: 'name',
               operator: 'LIKE',
@@ -450,6 +448,31 @@ async function getAgencyList(query = '') {
               value: 'ACTIVE',
               logicalOperation: 'AND'
             }
+          ] : [
+          {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ]
+    const payload
+      = {
+      filter: [
+            ...listFilter
           ],
       query: '',
       pageSize: 200,
@@ -457,7 +480,7 @@ async function getAgencyList(query = '') {
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
     }
-
+    
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
     agencyList.value = []
@@ -980,10 +1003,16 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-hotel="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
-            :model="data.hotel" :suggestions="hotelList" @change="($event) => {
-        onUpdate('hotel', $event)
-      }" @load="($event) => getHotelList($event)">
+          <DebouncedAutoCompleteComponent 
+          v-if="!loadingSaveAll" id="autocomplete" 
+          field="fullName" 
+          item-value="id" 
+          :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED"
+          :model="data.hotel" 
+          :suggestions="hotelList" 
+          @change="($event) => {
+            onUpdate('hotel', $event)
+          }" @load="($event) => getHotelList($event)">
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
             </template>
