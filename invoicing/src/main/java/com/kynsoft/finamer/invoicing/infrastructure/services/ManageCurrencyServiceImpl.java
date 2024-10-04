@@ -61,10 +61,8 @@ public class ManageCurrencyServiceImpl implements IManageCurrencyService {
     @Override
     public ManageCurrencyDto findById(UUID id) {
         Optional<ManageCurrency> userSystem = this.repositoryQuery.findById(id);
-        if (userSystem.isPresent()) {
-            return userSystem.get().toAggregate();
-        }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_CURRENCY_NOT_FOUND, new ErrorField("id", "Element cannot be deleted has a related element.")));
+        return userSystem.map(ManageCurrency::toAggregate).orElse(null);
+        //        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_CURRENCY_NOT_FOUND, new ErrorField("id", "Element cannot be deleted has a related element.")));
     }
 
     @Override

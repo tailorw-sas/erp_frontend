@@ -69,13 +69,11 @@ public class ManageTradingCompaniesServiceImpl implements IManageTradingCompanie
     public ManageTradingCompaniesDto findById(UUID id) {
         Optional<ManageTradingCompanies> optionalEntity = repositoryQuery.findById(id);
 
-        if (optionalEntity.isPresent()) {
-            return optionalEntity.get().toAggregate();
-        }
+        return optionalEntity.map(ManageTradingCompanies::toAggregate).orElse(null);
 
-        throw new BusinessNotFoundException(
-                new GlobalBusinessException(DomainErrorMessage.MANAGE_TRADING_COMPANIES_TYPE_NOT_FOUND,
-                        new ErrorField("id", "The source not found.")));
+//        throw new BusinessNotFoundException(
+//                new GlobalBusinessException(DomainErrorMessage.MANAGE_TRADING_COMPANIES_TYPE_NOT_FOUND,
+//                        new ErrorField("id", "The source not found.")));
     }
 
     @Override
