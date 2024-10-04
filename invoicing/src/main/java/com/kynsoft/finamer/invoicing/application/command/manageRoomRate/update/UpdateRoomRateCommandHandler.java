@@ -1,9 +1,11 @@
 package com.kynsoft.finamer.invoicing.application.command.manageRoomRate.update;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckInCheckOutRule;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
@@ -25,7 +27,7 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
     @Override
     public void handle(UpdateRoomRateCommand command) {
         ManageRoomRateDto dto = this.roomRateService.findById(command.getId());
-
+        RulesChecker.checkRule(new ManageRoomRateCheckInCheckOutRule(command.getCheckIn(), command.getCheckOut()));
 
         ConsumerUpdate update = new ConsumerUpdate();
 
@@ -40,18 +42,14 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
         UpdateIfNotNull.updateDouble(dto::setHotelAmount, command.getHotelAmount(), dto.getHotelAmount(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setRemark, command.getRemark(), dto.getRemark(), update::setUpdate);
 
-
-
         UpdateIfNotNull.updateEntity(dto::setBooking, command.getBooking(), dto.getBooking().getId(), update::setUpdate, this.bookingService::findById);
 
         if (!command.getInvoiceAmount().equals(dto.getInvoiceAmount())) {
-
 
             bookingService.calculateInvoiceAmount(this.bookingService.findById(dto.getBooking().getId()));
             bookingService.calculateHotelAmount(this.bookingService.findById(dto.getBooking().getId()));
             invoiceService.calculateInvoiceAmount(this.invoiceService.findById(dto.getBooking().getInvoice().getId()));
         }
-
 
         if (update.getUpdate() > 0) {
             this.roomRateService.update(dto);
