@@ -79,26 +79,11 @@ async function getAgencyByClient() {
     optionsOfTableChangeAgency.value.loading = true
     listAgencyByClient.value = []
     const newListItems = []
-    payloadChangeAgency.value.filter = []
 
-    let filter: FilterCriteria[] = [
-      { // no listar la actual
-        key: 'id',
-        logicalOperation: 'AND',
-        operator: 'NOT_EQUALS',
-        value: props.selectedInvoice.agency.id,
-      },
-      {
-        key: 'status',
-        logicalOperation: 'AND',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-      },
-    ]
     // Si es RECONCILED o SENT se deben listar solo las agencias del cliente
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(props.selectedInvoice.status) && props.selectedInvoice.agency.client) {
-      filter = [
-        ...filter,
+      payloadChangeAgency.value.filter = [
+        ...payloadChangeAgency.value.filter,
         {
           key: 'client.id',
           logicalOperation: 'AND',
@@ -107,8 +92,6 @@ async function getAgencyByClient() {
         }
       ]
     }
-
-    payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...filter]
 
     const response = await GenericService.search(optionsOfTableChangeAgency.value.moduleApi, optionsOfTableChangeAgency.value.uriApi, payloadChangeAgency.value)
 
@@ -201,6 +184,22 @@ watch(() => props.openDialog, (newValue) => {
 })
 
 onMounted(async () => {
+  payloadChangeAgency.value.filter = [
+    { // no listar la actual
+      key: 'id',
+      logicalOperation: 'AND',
+      operator: 'NOT_EQUALS',
+      value: props.selectedInvoice.agency.id,
+      type: 'filterSearch'
+    },
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+      type: 'filterSearch'
+    },
+  ]
   await getAgencyByClient()
 })
 </script>
