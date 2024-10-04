@@ -221,6 +221,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
+    resetValidation: false,
     validation: z.string()
       .refine(val => !Number.isNaN(val) && +val > 0, { message: 'The Adults field must be greater than 0' })
   },
@@ -230,6 +231,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
+    resetValidation: false,
     validation: z.string()
       .refine(val => !Number.isNaN(val) && +val >= 0, { message: 'The Children field must be greater than 0' })
   },
