@@ -486,10 +486,15 @@ async function getErrors(errorsResponse:any) {
     options.value.loading = true;
     listItems.value = []; // Limpiar la lista antes de agregar nuevos elementos
 
-    const newListItems = errorsResponse.map((error: { invoiceId: any; message: any }) => ({
+    const newListItems = errorsResponse.map((error: { invoiceId: any; message: any ,agency:any,hotel:any,invoiceDate:any,status:any,invoiceNo:any,invoiceAmount:any}) => ({
       invoiceId: error.invoiceId, // Asignar invoiceId
+      hotel:error.hotel,
+      agency:error.agency,
+      invoiceDate:error.invoiceDate,
+      status:error.status,
+      invoiceAmount: error.invoiceAmount.toString(),
+      invoiceNumber:error.invoiceNo,
       message: error.message, // Asignar message 
-     
       loadingEdit: false,
       loadingDelete: false,
       
@@ -675,7 +680,7 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
   }
 
   // Siempre agregar el filtro para autoReconcile en true
- newPayload.filter.push({
+ /*newPayload.filter.push({
     key: 'agency.autoReconcile',
     operator: 'EQUALS',
     value: true,
@@ -683,7 +688,7 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
     type: 'filterSearch'
   });
 
-
+*/
   // Filtros de hoteles
   if (filterToSearch.value.hotel?.length > 0) {
     const selectedHotelIds = filterToSearch.value.hotel
@@ -869,7 +874,7 @@ onMounted(async () => {
                         <div class="w-full">
                           <IconField icon-position="left">
                             <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
+                            <InputIcon class="pi pi-search"  />
                           </IconField>
                         </div>
                       </div>
