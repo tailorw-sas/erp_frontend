@@ -1477,6 +1477,10 @@ async function parseDataTableFilter(payloadFilter: any) {
         parseFilter[i].key = 'invoiceStatus'
       }
 
+      if (parseFilter[i]?.key === 'invoiceNumber') {
+        parseFilter[i].key = 'invoiceNumberPrefix'
+      }
+
     }
   }
 
@@ -1498,9 +1502,9 @@ function onSortField(event: any) {
     if(event.sortField === 'status') {
       event.sortField = 'invoiceStatus'
     }
-    // if (event.sortField === 'invoiceNumber') {
-    //   event.sortField = 'invoiceNumber'
-    // }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'invoiceNumberPrefix'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     getList()
