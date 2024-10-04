@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
       delete body.SESSION
 
       // Realizamos la redirección sin volver a enviar la session en el cuerpo
-      return sendRedirect(event, `/vcc-management/transaction-result?status=success&session=${session}`)
+      return sendRedirect(event, `/transaction-result?status=success&session=${session}`)
     }
   }
 })
