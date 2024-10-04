@@ -378,7 +378,7 @@ async function reconcileManual() {
   }
 }
 
-
+/*
 async function saveItem() {
   loadingSaveAll.value = true;
 
@@ -417,6 +417,62 @@ async function saveItem() {
   }
 
   loadingSaveAll.value = false;
+}
+*/
+async function saveItem() {
+  loadingSaveAll.value = true;
+
+  // Llamar a reconcileManual y guardar la respuesta
+  let response: any;
+  try {
+    response = await reconcileManual();
+  } catch (error) {
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: error?.data?.data?.error?.errorMessage || 'An error occurred while reconciling invoices.', 
+      life: 10000 
+    });
+    loadingSaveAll.value = false; // Detener el loading en caso de error
+    return; // Salir de la función si hay un error
+  }
+
+  // Comprobar si la respuesta contiene errorsResponse y totalInvoicesRec
+  const { errorsResponse, totalInvoicesRec } = response;
+
+  // Validaciones según tus requisitos
+  if (errorsResponse && errorsResponse.length === 0) {
+    // Si no hay errores y totalInvoicesRec es 0
+    if (totalInvoicesRec === 0) {
+      // No mostrar mensaje ni redirección, solo llamar a getErrors
+      getErrors(errorsResponse);
+    } else {
+      // Si totalInvoicesRec es mayor que 0
+      navigateTo('/invoice'); // Navegar a la página de invoice
+      toast.add({ 
+        severity: 'info', 
+        summary: 'Confirmed', 
+        detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`, 
+        life: 0 
+      });
+     
+    }
+  } else if (errorsResponse && errorsResponse.length > 0) {
+    // Si hay errores y totalInvoicesRec es mayor que 0
+    if (totalInvoicesRec > 0) {
+      toast.add({ 
+        severity: 'info', 
+        summary: 'Confirmed', 
+        detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`, 
+        life: 0 
+      });
+      // No redirigir, solo mostrar errores
+    }
+    // Llamar a getErrors para mostrar los errores
+    getErrors(errorsResponse);
+  }
+
+  loadingSaveAll.value = false; // Detener el loading al final de la función
 }
 
 async function getErrors(errorsResponse:any) {
@@ -619,14 +675,14 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
   }
 
   // Siempre agregar el filtro para autoReconcile en true
-  newPayload.filter.push({
+/* newPayload.filter.push({
     key: 'agency.autoReconcile',
     operator: 'EQUALS',
     value: true,
     logicalOperation: 'AND',
     type: 'filterSearch'
   });
-
+*/
 
   // Filtros de hoteles
   if (filterToSearch.value.hotel?.length > 0) {
