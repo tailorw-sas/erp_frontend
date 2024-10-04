@@ -161,6 +161,30 @@ async function getList() {
       value: ['PROCECSED'],
       logicalOperation: 'AND'
     }]
+
+
+    
+    // Agregar filtros de fecha solo si se especifican
+    if (filterToSearch.value.from) {
+      payload.value.filter.push({
+        key: 'invoiceDate',
+        operator: 'GREATER_THAN_OR_EQUAL_TO',
+        value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      });
+    }
+
+    if (filterToSearch.value.to) {
+      payload.value.filter.push({
+        key: 'invoiceDate',
+        operator: 'LESS_THAN_OR_EQUAL_TO',
+        value: dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      });
+    }
+
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -494,6 +518,14 @@ async function searchAndFilter() {
   // Obtener la lista de facturas
   options.value.selectAllItemByDefault = true
   const dataList = await getList()
+
+  
+   // Seleccionar automáticamente todos los elementos retornados
+   if (dataList && dataList.value.length > 0) {
+    selectedElements.value = dataList.value; // Llenar selectedElements con los elementos obtenidos
+  } else {
+    selectedElements.value = []; // Asegurarse de que esté vacío si no hay resultados
+  }
 
   // Verificar si no hay resultados
   if (!dataList || dataList.value.length === 0) {
