@@ -517,8 +517,8 @@ function clearFilterToSearch() {
     agency: [allDefaultItem], // Restablecer a valor predeterminado
     hotel: [allDefaultItem], // Restablecer a valor predeterminado
     from: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'from'
-    to: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'to'
-
+    //to: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'to'
+    to: dayjs(new Date()).endOf('month').toDate(),
   }
   listItems.value = []
   importModel.value.importFile = ''
