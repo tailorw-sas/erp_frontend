@@ -675,14 +675,14 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
   }
 
   // Siempre agregar el filtro para autoReconcile en true
-/* newPayload.filter.push({
+ newPayload.filter.push({
     key: 'agency.autoReconcile',
     operator: 'EQUALS',
     value: true,
     logicalOperation: 'AND',
     type: 'filterSearch'
   });
-*/
+
 
   // Filtros de hoteles
   if (filterToSearch.value.hotel?.length > 0) {
