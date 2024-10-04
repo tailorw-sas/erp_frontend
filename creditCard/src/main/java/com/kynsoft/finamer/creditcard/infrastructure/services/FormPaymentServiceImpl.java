@@ -3,6 +3,7 @@ package com.kynsoft.finamer.creditcard.infrastructure.services;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSessionResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -21,7 +22,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
         if (compareDates(transactionDto.getTransactionDate())) {
             try {
-                if (merchantConfigDto.getMethod().equals("AZUL")) {
+                if (merchantConfigDto.getMethod().equals(Method.AZUL.toString())) {
                     return redirectToAzul(transactionDto, merchantConfigDto);
                 } else {
                     return redirectToCardNet(transactionDto, merchantConfigDto);
