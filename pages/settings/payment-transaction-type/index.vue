@@ -139,6 +139,13 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.boolean()
   },
   {
+    field: 'expenseToBooking',
+    header: 'Expense To Booking',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+    validation: z.boolean()
+  },
+  {
     field: 'minNumberOfCharacter',
     header: 'Min Number Of Character',
     dataType: 'number',
@@ -189,6 +196,7 @@ const item = ref<GenericObject>({
   applyDeposit: false,
   defaults: false,
   antiToIncome: false,
+  expenseToBooking: false,
   paymentInvoice: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
@@ -211,6 +219,7 @@ const itemTemp = ref<GenericObject>({
   defaults: false,
   antiToIncome: false,
   paymentInvoice: false,
+  expenseToBooking: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
 })
@@ -369,6 +378,7 @@ async function getItemById(id: string) {
         item.value.defaults = response.defaults
         item.value.incomeDefault = response.incomeDefault
         item.value.antiToIncome = response.antiToIncome
+        item.value.expenseToBooking = response.expenseToBooking
         item.value.paymentInvoice = response.paymentInvoice
         item.value.debit = response.debit
         updateFieldProperty(fields, 'minNumberOfCharacter', 'disabled', !response.remarkRequired)

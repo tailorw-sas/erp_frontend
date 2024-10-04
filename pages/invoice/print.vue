@@ -88,7 +88,7 @@ const ENUM_FILTER = [
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text' },
-  { field: 'manageInvoiceType', header: 'Type', type: 'select',objApi:confinvoiceApi },
+  { field: 'manageInvoiceType', header: 'Type', type: 'select',objApi:confinvoiceApi }, 
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
