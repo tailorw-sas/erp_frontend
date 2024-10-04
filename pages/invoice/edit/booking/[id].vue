@@ -967,6 +967,7 @@ const roomCategoryList = ref<any[]>([])
 const roomTypeList = ref<any[]>([])
 const nightTypeList = ref<any[]>([])
 const activeTab = ref(0)
+const requiresFlatRateCheck = ref(false)
 
 const totalInvoiceAmount = ref<number>(0)
 const totalHotelAmount = ref<number>(0)
@@ -1113,6 +1114,7 @@ function clearFormAdjustment() {
 
 async function onCellEditRoomRate(event: any) {
   const { data, newValue, field, newData } = event
+
   console.log('--------------------------------------------------------')
 
   console.log('event', event)
@@ -1120,6 +1122,28 @@ async function onCellEditRoomRate(event: any) {
   console.log('--------------------------------------------------------')
 
   if (data[field] === newValue) { return }
+
+  if (field === 'hotelAmount') {
+    if (+newValue <= 0 && requiresFlatRateCheck.value) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
+      return
+    }
+  }
+
+  if (field === 'adults') {
+    if (+newValue <= 0 && newData.children === 0) {
+      // Mensaje de error: Almenos uno de los dos debe ser mayo que 0
+      toast.add({ severity: 'error', summary: 'Error', detail: 'At least one of the fields Adults or Children must be greater than 0.', life: 3000 })
+      return
+    }
+  }
+
+  if (field === 'children') {
+    if (+newValue <= 0 && newData.adults === 0) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'At least one of the fields Adults or Children must be greater than 0.', life: 3000 })
+      return
+    }
+  }
 
   const payload: { [key: string]: any } = {
 
@@ -1529,6 +1553,9 @@ async function getBookingItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
+      console.log(response)
+
+      console.log(response?.invoice?.hotel?.virtual)
 
       if (response) {
         idItem.value = response?.id
@@ -1562,6 +1589,81 @@ async function getBookingItemById(id: string) {
         item2.value.nightType = response.nightType
         item2.value.roomType = response.roomType?.name === '-' ? null : response.roomType
         item2.value.roomCategory = response.roomCategory
+      }
+      console.log(response?.invoice?.hotel)
+
+      if (response?.invoice?.hotel?.virtual) {
+        const decimalSchema = z.object(
+          {
+            hotelInvoiceNumber:
+            z.string()
+              .min(1, 'The Hotel Invoice No. field is required')
+              .refine((val: string) => {
+                if ((Number(val) < 0)) {
+                  return false
+                }
+                return true
+              }, { message: 'The Hotel Invoice No. field must not be negative' }).nullable()
+          },
+        )
+        const objField = fieldsV2.find(field => field.field === 'hotelInvoiceNumber')
+
+        updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'validation', decimalSchema.shape.hotelInvoiceNumber)
+        updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'class', `${objField?.class} required`)
+      }
+      else {
+        const decimalSchema = z.object(
+          {
+            hotelInvoiceNumber: z
+              .string()
+              .refine((val: string) => {
+                if ((Number(val) < 0)) {
+                  return false
+                }
+                return true
+              }, { message: 'The Hotel Invoice No. field must not be negative' }).nullable(),
+          },
+        )
+        const objField = fieldsV2.find(field => field.field === 'hotelInvoiceNumber')
+        updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'validation', decimalSchema.shape.hotelInvoiceNumber)
+        updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'class', `${objField?.class}`)
+      }
+      requiresFlatRateCheck.value = response?.invoice?.hotel?.requiresFlatRate
+      if (response?.invoice?.hotel?.requiresFlatRate) {
+        const decimalSchema = z.object(
+          {
+            hotelAmount:
+            z.string()
+              .min(1, 'The Hotel Amount field is required')
+              .refine((val: string) => {
+                if ((Number(val) < 0)) {
+                  return false
+                }
+                return true
+              }, { message: 'The Hotel Amount field must not be negative' }).nullable()
+          },
+        )
+        const objField = fieldsV2.find(field => field.field === 'hotelAmount')
+
+        updateFieldProperty(fieldsV2, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
+        updateFieldProperty(fieldsV2, 'hotelAmount', 'class', `${objField?.class} required`)
+      }
+      else {
+        const decimalSchema = z.object(
+          {
+            hotelAmount: z
+              .string()
+              .refine((val: string) => {
+                if ((Number(val) < 0)) {
+                  return false
+                }
+                return true
+              }, { message: 'The Hotel Invoice No. field must not be negative' }).nullable(),
+          },
+        )
+        const objField = fieldsV2.find(field => field.field === 'hotelAmount')
+        updateFieldProperty(fieldsV2, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
+        updateFieldProperty(fieldsV2, 'hotelAmount', 'class', `${objField?.class}`)
       }
       formReload.value += 1
     }

@@ -540,7 +540,12 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-    validation: z.string().trim().regex(/^\d+$/, 'The Hotel Amount field must be greater than or equal to 0')
+    validation: z.string().refine((val: string) => {
+      if ((Number(val) < 0)) {
+        return false
+      }
+      return true
+    }, { message: 'The Hotel Amount field must be greater or equals than 0' }).nullable()
     // validation: z.string().trim().regex(/^\d+$/, 'Only numeric characters allowed')
   },
 

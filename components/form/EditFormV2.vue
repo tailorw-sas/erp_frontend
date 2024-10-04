@@ -18,14 +18,15 @@ const props = defineProps<{
   backendValidation?: { [key: string]: string[] }
   hideDeleteButton?: boolean
   showCancel?: boolean
+  errorList?: { [key: string]: string[] }
 }>()
 
-const emit = defineEmits(['update:field', 'clearField', 'submit', 'cancel', 'delete', 'forceSave'])
+const emit = defineEmits(['update:field', 'clearField', 'submit', 'cancel', 'delete', 'forceSave', 'update:errorsList'])
 
 const hideCancelLocal = ref(props.hideCancel)
 const $primevue = usePrimeVue()
 const fieldValues = reactive<{ [key: string]: any }>({})
-const errors = reactive<{ [key: string]: string[] }>({})
+const errors = reactive<{ [key: string]: string[] }>(props.errorList || {})
 const objFile = ref<IFileMetadata | null>(null)
 
 props.fields.forEach((field) => {
@@ -86,7 +87,7 @@ function validateField(fieldKey: string, value: any) {
   if (field && field.validation) {
     const result = field.validation.safeParse(value)
     if (!result.success) {
-      errors[fieldKey] = result.error.issues.map(e => e.message)
+      errors[fieldKey] = result && result.error ? result.error.issues.map(e => e.message) : []
     }
     else {
       delete errors[fieldKey]
@@ -126,6 +127,10 @@ function formatSize(bytes: number) {
 
   return `${formattedSize} ${sizes[i]}`
 }
+
+watch(errors, (newVal, oldVal) => {
+  emit('update:errorsList', errors)
+}, { deep: true })
 
 watch(() => props.forceSave, () => {
   if (props.forceSave) {

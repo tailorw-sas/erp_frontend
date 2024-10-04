@@ -81,7 +81,7 @@ const validationSchema = z.object({
   checkIn: z.date({ required_error: 'The Check In field is required' }),
   checkOut: z.date({ required_error: 'The Check Out field is required' })
 })
-const reloadHotelAmount = ref(0)
+const errorsListParent = reactive<{ [key: string]: string[] }>({})
 </script>
 
 <template>
@@ -92,9 +92,17 @@ const reloadHotelAmount = ref(0)
   >
     <div class="w-full h-full overflow-hidden p-2 mt-3">
       <EditFormV2
-        :key="formReload" :fields="fields" :item="item" :show-actions="true"
-        :loading-save="loadingSaveAll" :container-class="containerClass"
-        @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
+        :key="formReload"
+        :fields="fields"
+        :item="item"
+        :error-list="errorsListParent"
+        :show-actions="true"
+        :loading-save="loadingSaveAll"
+        :container-class="containerClass"
+        @cancel="clearForm"
+        @delete="requireConfirmationToDelete($event)"
+        @submit="requireConfirmationToSave($event)"
+        @update:errors-list="errorsListParent = $event"
       >
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText
@@ -107,41 +115,14 @@ const reloadHotelAmount = ref(0)
         </template>
 
         <template #field-adults="{ onUpdate, item: data }">
-          <InputNumber
-            v-if="false"
-            v-model="data.adults"
-            input-id="withoutgrouping"
-            :use-grouping="false"
-            @update:model-value="($event) => {
-              onUpdate('adults', $event)
-
-              if (data?.children && data?.children > 0) {
-                const decimalSchema = z.object(
-                  {
-                    adults: z
-                      .string()
-                      .refine(value => !Number.isNaN(value) && +value >= 0, 'The adults field must be greater than 0').nullable(),
-                  },
-                )
-                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
-              }
-              else {
-                const decimalSchema = z.object(
-                  {
-                    adults: z
-                      .string()
-                      .refine(value => !Number.isNaN(value) && +value > 0, 'The adults field must be greater than 0').nullable(),
-                  },
-                )
-                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
-              }
-            }"
-          />
           <InputText
             v-model="data.adults"
             show-clear
             @update:model-value="($event) => {
               onUpdate('adults', $event)
+              if ($event && +$event > 0) {
+                delete errorsListParent.children
+              }
 
               if (data?.children && data?.children > 0) {
                 const decimalSchema = z.object(
@@ -173,6 +154,10 @@ const reloadHotelAmount = ref(0)
             show-clear
             @update:model-value="($event) => {
               onUpdate('children', $event)
+
+              if ($event && +$event > 0) {
+                delete errorsListParent.adults
+              }
 
               if (data?.adults && data?.adults > 0) {
                 const decimalSchema = z.object(
