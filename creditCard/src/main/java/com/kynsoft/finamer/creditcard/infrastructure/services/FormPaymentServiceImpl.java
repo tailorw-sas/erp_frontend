@@ -29,16 +29,16 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 String merchantName = merchantConfigDto.getName(); //Campo name de Merchant Config
                 String merchantType = merchantConfigDto.getMerchantType(); //Campo merchantType de Merchant Config
                 String currencyCode = "$"; //Valor $ por ahora
-                String orderNumber = merchantConfigDto.getId().toString(); //Viene en el request
+                String orderNumber = transactionDto.getId().toString(); //Viene en el request
 
                 double amountValue = transactionDto.getAmount() * 100;
                 int intValue = (int) Math.round(amountValue);
                 String amount = Integer.toString(intValue);
 
                 String itbis = "000"; //Valor 000 por defecto
-                String approvedUrl = "https://localhost/3000/transaction-result?status=success"; //Campo successUrl de Merchant Config
-                String declinedUrl = "https://localhost/3000/transaction-result?status=declined";//Campo declinedUrl de Merchant Config
-                String cancelUrl = "https://localhost/3000/transaction-result?status=error";//Campo errorUrl de Merchant Config
+                String approvedUrl = "http://localhost:3000/transaction-result?status=success"; //Campo successUrl de Merchant Config
+                String declinedUrl = "http://localhost:3000/transaction-result?status=declined";//Campo declinedUrl de Merchant Config
+                String cancelUrl = "http://localhost:3000/transaction-result?status=cancelled";//Campo errorUrl de Merchant Config
                 String useCustomField1 = "0";  //Se mantiene asi por defecto
                 String customField1Label = "";//Se mantiene asi por defecto
                 String customField1Value = "";//Se mantiene asi por defecto
