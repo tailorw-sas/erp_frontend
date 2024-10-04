@@ -30,7 +30,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'invoicing',
   uriApi: 'manage-invoice-status',
 })
 
@@ -162,7 +162,7 @@ const formTitle = computed(() => {
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Invoice Status',
-  moduleApi: 'settings',
+  moduleApi: 'invoicing',
   uriApi: 'manage-invoice-status',
   loading: false,
   actionsAsMenu: false,
