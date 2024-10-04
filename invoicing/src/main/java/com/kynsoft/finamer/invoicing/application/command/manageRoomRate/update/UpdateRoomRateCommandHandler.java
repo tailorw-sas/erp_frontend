@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckAdultsAndChildrenRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckInCheckOutRule;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
@@ -28,6 +29,7 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
     public void handle(UpdateRoomRateCommand command) {
         ManageRoomRateDto dto = this.roomRateService.findById(command.getId());
         RulesChecker.checkRule(new ManageRoomRateCheckInCheckOutRule(command.getCheckIn(), command.getCheckOut()));
+        RulesChecker.checkRule(new ManageRoomRateCheckAdultsAndChildrenRule(command.getAdults(), command.getChildren()));
 
         ConsumerUpdate update = new ConsumerUpdate();
 
