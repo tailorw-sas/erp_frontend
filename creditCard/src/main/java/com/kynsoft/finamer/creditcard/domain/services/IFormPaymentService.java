@@ -5,8 +5,5 @@ import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import org.springframework.http.ResponseEntity;
 
 public interface IFormPaymentService {
-
-    ResponseEntity<String> redirectToPost(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto);
-
     ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto);
 }
