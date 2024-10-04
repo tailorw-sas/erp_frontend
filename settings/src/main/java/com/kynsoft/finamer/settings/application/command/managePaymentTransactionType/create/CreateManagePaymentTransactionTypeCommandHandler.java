@@ -62,7 +62,8 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
                 command.getAntiToIncome(),
                 command.getIncomeDefault(),
                 command.getPaymentInvoice(),
-                command.getDebit()
+                command.getDebit(),
+                command.isExpenseToBooking()
         ));
         this.producerReplicateManagePaymentTransactionTypeService
                 .create(new ReplicateManagePaymentTransactionTypeKafka(

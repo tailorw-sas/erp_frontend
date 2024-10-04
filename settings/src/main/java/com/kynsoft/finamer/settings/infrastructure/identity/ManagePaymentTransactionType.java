@@ -47,6 +47,9 @@ public class ManagePaymentTransactionType implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean debit;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean expenseToBooking;
+
     private Integer minNumberOfCharacter;
     private String defaultRemark;
 
@@ -83,6 +86,7 @@ public class ManagePaymentTransactionType implements Serializable {
         this.incomeDefault = dto.getIncomeDefault();
         this.paymentInvoice = dto.getPaymentInvoice();
         this.debit = dto.getDebit();
+        this.expenseToBooking = dto.isExpenseToBooking();
     }
 
     public ManagePaymentTransactionTypeDto toAggregate(){
@@ -99,7 +103,8 @@ public class ManagePaymentTransactionType implements Serializable {
                 antiToIncome,
                 incomeDefault,
                 paymentInvoice,
-                debit
+                debit,
+                expenseToBooking
         );
     }
 
