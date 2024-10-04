@@ -318,7 +318,9 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_INVOICE_STATUS_CHECK_PROCESSED(1096, Series.DOMAIN_ERROR,"Another item already exists with Processed."),
     MANAGE_INVOICE_STATUS_CHECK_SENT(1097, Series.DOMAIN_ERROR,"Another item already exists with Sent."),
     MANAGE_INVOICE_STATUS_CHECK_CANCELED(1098, Series.DOMAIN_ERROR,"Another item already exists with canceled."),
-    INVOICE_MUST_HAVE_ATTACHMENT_TYPE(1095, Series.DOMAIN_ERROR,"The invoice must have at least one attachment of type default.");
+    MANAGE_ROOM_RATE_CHECKHIN_CHECKOUT(1099, Series.DOMAIN_ERROR,"The check-in date must be earlier than the check-out date."),
+    MANAGE_ROOM_RATE_ADULTS_CHILDREN(1100, Series.DOMAIN_ERROR,"Both adults and children cannot be zero."),
+    INVOICE_MUST_HAVE_ATTACHMENT_TYPE(1101, Series.DOMAIN_ERROR,"The invoice must have at least one attachment of type default.");
 
     private static final DomainErrorMessage[] VALUES;
 
