@@ -67,7 +67,10 @@ const confinvoiceApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
 })
-
+const confinvoiceStatusApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-invoice-status',
+})
 const confhotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
@@ -100,6 +103,7 @@ const columns: IColumn[] = [
   { field: 'hasAttachments', header: 'Attachment', type: 'bool' },
   { field: 'aging', header: 'Aging', type: 'text' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -119,12 +123,7 @@ const options = ref({
 })
 
 const payload = ref<IQueryRequest>({
-  filter: [{
-    key: 'invoiceStatus',
-    operator: 'IN', // Cambia a 'IN' para incluir varios valores
-    value: ['RECONCILED', 'SENT'],
-    logicalOperation: 'AND'
-  }],
+  filter: [],
   query: '',
   pageSize: 50,
   page: 0,
@@ -154,6 +153,14 @@ async function getPrintList() {
     options.value.loading = true
     listPrintItems.value = []
     const newListItems = []
+    
+   payload.value.filter = [...payload.value.filter,
+     {
+      key: 'invoiceStatus',
+      operator: 'IN',
+      value: ['SENT', 'RECONCILED'],
+      logicalOperation: 'AND'
+    }]
 
     totalInvoiceAmount.value = 0
     totalDueAmount.value = 0
@@ -355,9 +362,33 @@ async function resetListItems() {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+
+   
+   /*   if (parseFilter[i]?.key === 'status') {
+        parseFilter[i].key = 'invoiceStatus'
+      }
+*/
+if (parseFilter[i]?.key === 'status') {
+        parseFilter[i].key = 'invoiceStatus'
+  }
+
+
+      if (parseFilter[i]?.key === 'invoiceNumber') {
+        parseFilter[i].key = 'invoiceNumberPrefix'
+      }
+
+    }
+  }
+
   payload.value.filter = [...parseFilter || []]
   getPrintList()
+  
 }
+  //payload.value.filter = [...parseFilter || []]
+ // getPrintList()
+//}
 
 function onSortField(event: any) {
   if (event) {
@@ -524,6 +555,7 @@ onMounted(async () => {
             />
           </template>
 
+         
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center " style="font-weight: 700">
               <Row>
