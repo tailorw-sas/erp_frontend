@@ -27,4 +27,5 @@ public class CreateManagePaymentTransactionTypeRequest {
     private Boolean incomeDefault;
     private Boolean paymentInvoice;
     private Boolean debit;
+    private boolean expenseToBooking;
 }
