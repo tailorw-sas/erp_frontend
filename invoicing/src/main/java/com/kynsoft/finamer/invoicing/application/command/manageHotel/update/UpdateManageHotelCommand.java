@@ -24,8 +24,9 @@ public class UpdateManageHotelCommand implements ICommand {
     private String babelCode;
     private String address;
     private String city;
+    private UUID manageCurrency;
 
-    public UpdateManageHotelCommand(UUID id, String name, UUID tradingCompany, String status, Boolean isVirtual,boolean requiresFlatRate, Boolean autoApplyCredit, UUID cityState, UUID country, String babelCode, String address, String city) {
+    public UpdateManageHotelCommand(UUID id, String name, UUID tradingCompany, String status, Boolean isVirtual,boolean requiresFlatRate, Boolean autoApplyCredit, UUID cityState, UUID country, String babelCode, String address, String city, UUID manageCurrency) {
         this.id = id;
         this.name = name;
         this.tradingCompany = tradingCompany;
@@ -38,6 +39,7 @@ public class UpdateManageHotelCommand implements ICommand {
         this.babelCode = babelCode;
         this.address = address;
         this.city = city;
+        this.manageCurrency = manageCurrency;
     }
 
     @Override
