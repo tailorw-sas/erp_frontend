@@ -317,7 +317,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_INVOICE_STATUS_CHECK_RECONCILED(1095, Series.DOMAIN_ERROR,"Another item already exists with reconciled."),
     MANAGE_INVOICE_STATUS_CHECK_PROCESSED(1096, Series.DOMAIN_ERROR,"Another item already exists with Processed."),
     MANAGE_INVOICE_STATUS_CHECK_SENT(1097, Series.DOMAIN_ERROR,"Another item already exists with Sent."),
-    MANAGE_INVOICE_STATUS_CHECK_CANCELED(1098, Series.DOMAIN_ERROR,"Another item already exists with canceled.");
+    MANAGE_INVOICE_STATUS_CHECK_CANCELED(1098, Series.DOMAIN_ERROR,"Another item already exists with canceled."),
+    INVOICE_MUST_HAVE_ATTACHMENT_TYPE(1095, Series.DOMAIN_ERROR,"The invoice must have at least one attachment of type default.");
 
     private static final DomainErrorMessage[] VALUES;
 

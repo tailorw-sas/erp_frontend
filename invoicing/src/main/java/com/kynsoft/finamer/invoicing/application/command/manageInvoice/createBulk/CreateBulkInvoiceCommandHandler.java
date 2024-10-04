@@ -2,6 +2,8 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBu
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -267,10 +269,13 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         }
 
+        int cont = 0;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
-
+            if(attachmentType.isAttachInvDefault()) {
+                cont++;
+            }
             ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
                     command.getAttachmentCommands().get(i).getId(),
                     null,
@@ -283,7 +288,12 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
             attachmentDtos.add(attachmentDto);
         }
-
+        if(cont == 0){
+            throw new BusinessException(
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+            );
+        }
         for (ManageBookingDto booking : bookings) {
             this.calculateBookingHotelAmount(booking);
 
