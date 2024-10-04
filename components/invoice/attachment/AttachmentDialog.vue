@@ -696,6 +696,36 @@ const haveAttachmentWithAttachmentTypeInv = computed(() => {
   return ListItems.value?.some((attachment: any) => attachment?.type?.code === 'INV')
 })
 
+function disabledBtnSave(propsValue: any): boolean {
+  if (!props.isCreationDialog) {
+    if (props.documentOptionHasBeenUsed && propsValue.item.fieldValues.file) {
+      return false
+    }
+    else if (props.documentOptionHasBeenUsed && !propsValue.item.fieldValues.file) {
+      return true
+    }
+    else {
+      return true
+    }
+  }
+  else {
+    return false
+  }
+}
+function disabledFields(): boolean {
+  if (!props.isCreationDialog) {
+    if (props.documentOptionHasBeenUsed) {
+      return false
+    }
+    else {
+      return true
+    }
+  }
+  else {
+    return false
+  }
+}
+
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
 })
@@ -872,7 +902,7 @@ onMounted(async () => {
                       <div class="flex gap-2">
                         <Button
                           id="btn-choose" class="p-2" icon="pi pi-plus"
-                          :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)" text @click="chooseCallback()"
+                          :disabled="disabledFields()" text @click="chooseCallback()"
                         />
                         <Button
                           icon="pi pi-times" class="ml-2" severity="danger"
@@ -911,7 +941,7 @@ onMounted(async () => {
                 <Textarea
                   v-model="data.remark"
                   field="remark"
-                  :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)"
+                  :disabled="disabledFields()"
                   rows="5"
                 />
               </template>
@@ -921,7 +951,7 @@ onMounted(async () => {
                 >
                   <Button
                     v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-                    :disabled="!props.item?.fieldValues?.file || idItem !== '' || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
+                    :disabled="disabledBtnSave(props)"
                     @click="saveItem(props.item.fieldValues)"
                   />
                 </IfCan>
@@ -930,6 +960,7 @@ onMounted(async () => {
                   <!-- :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)"  -->
                   <Button
                     v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus"
+                    :disabled="disabledFields()"
                     @click="() => {
                       idItem = ''
                       item = itemTemp

@@ -45,8 +45,7 @@ const adjustmentDialogOpen = ref<boolean>(false)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
 const exportAttachmentsDialogOpen = ref<boolean>(false)
 
-
-
+const idClientForAgencyFilter = ref<string>('')
 
 const invoiceAgency = ref<any>(null)
 const invoiceHotel = ref<any>(null)
@@ -440,6 +439,12 @@ async function getAgencyList(query = '') {
               logicalOperation: 'OR'
             },
             {
+              key: 'client.id',
+              operator: 'EQUALS',
+              value: `${idClientForAgencyFilter.value}`,
+              logicalOperation: 'AND'
+            },
+            {
               key: 'status',
               operator: 'EQUALS',
               value: 'ACTIVE',
@@ -457,7 +462,16 @@ async function getAgencyList(query = '') {
     const { data: dataList } = response
     agencyList.value = []
     for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+      agencyList.value = [
+        ...agencyList.value, 
+        { 
+          id: iterator.id, 
+          name: iterator.name, 
+          code: iterator.code, 
+          status: iterator.status, 
+          fullName: `${iterator.code} - ${iterator.name}` 
+        }
+      ]
     }
   }
   catch (error) {
@@ -481,7 +495,15 @@ async function getInvoiceTypeList() {
     const { data: dataList } = response
     invoiceTypeList.value = []
     for (const iterator of dataList) {
-      invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      invoiceTypeList.value = [
+        ...invoiceTypeList.value, 
+        { 
+          id: iterator.id, 
+          name: iterator.name, 
+          code: iterator.code, 
+          status: iterator.status 
+        }
+      ]
     }
   }
   catch (error) {
@@ -593,7 +615,8 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-
+      console.log(response);
+      
       if (response) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
@@ -618,6 +641,7 @@ async function getItemById(id: string) {
         item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
         invoiceStatus.value = response.status
         item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
+        idClientForAgencyFilter.value = response.agency?.client?.id
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
       }
@@ -972,10 +996,18 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-agency="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
-            :model="data.agency" :suggestions="agencyList" @change="($event) => {
-        onUpdate('agency', $event)
-      }" @load="($event) => getAgencyList($event)">
+          <DebouncedAutoCompleteComponent 
+            v-if="!loadingSaveAll" 
+            id="autocomplete" 
+            field="fullName" 
+            item-value="id" 
+            :disabled="invoiceStatus !== InvoiceStatus.PROCECSED && invoiceStatus !== InvoiceStatus.SENT && invoiceStatus !== InvoiceStatus.RECONCILED"
+            :model="data.agency" 
+            :suggestions="agencyList" 
+            @change="($event) => {
+              onUpdate('agency', $event)
+            }" @load="($event) => getAgencyList($event)"
+          >
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
             </template>
