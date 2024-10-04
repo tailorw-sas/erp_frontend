@@ -27,4 +27,5 @@ public class ManageHotelDto {
     private ManagerCountryDto manageCountry;
     private ManageCityStateDto manageCityState;
     private String city;
+    private ManageCurrencyDto manageCurrency;
 }
