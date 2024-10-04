@@ -102,7 +102,8 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
                     command.getBabelCode(),
                     command.getAddress(),
                     command.getManageCityState(),
-                    command.getManageCountry()
+                    command.getManageCountry(),
+                    command.getManageCurrency()
             ));
         }
     }

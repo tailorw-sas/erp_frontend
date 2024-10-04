@@ -7,13 +7,13 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManagerCountryResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.ManagerCountryDto;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageCurrencyResponse;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageCurrencyDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import com.kynsoft.finamer.invoicing.domain.services.IManagerCountryService;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageCountry;
-import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManagerCountryWriteDataJPARepository;
-import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManagerCountryReadDataJPARepository;
+import com.kynsoft.finamer.invoicing.domain.services.IManageCurrencyService;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageCurrency;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageCurrencyWriteDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageCurrencyReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,23 +26,23 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class ManagerCountyServiceImpl implements IManagerCountryService {
+public class ManageCurrencyServiceImpl implements IManageCurrencyService {
 
     @Autowired
-    private ManagerCountryWriteDataJPARepository repositoryCommand;
+    private ManageCurrencyWriteDataJPARepository repositoryCommand;
 
     @Autowired
-    private ManagerCountryReadDataJPARepository repositoryQuery;
+    private ManageCurrencyReadDataJPARepository repositoryQuery;
 
     @Override
-    public UUID create(ManagerCountryDto dto) {
-        ManageCountry data = new ManageCountry(dto);
+    public UUID create(ManageCurrencyDto dto) {
+        ManageCurrency data = new ManageCurrency(dto);
         return this.repositoryCommand.save(data).getId();
     }
 
     @Override
-    public void update(ManagerCountryDto dto) {
-        ManageCountry update = new ManageCountry(dto);
+    public void update(ManageCurrencyDto dto) {
+        ManageCurrency update = new ManageCurrency(dto);
 
         update.setUpdateAt(LocalDateTime.now());
 
@@ -50,7 +50,7 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
     }
 
     @Override
-    public void delete(ManagerCountryDto dto) {
+    public void delete(ManageCurrencyDto dto) {
         try {
             this.repositoryCommand.deleteById(dto.getId());
         } catch (Exception e) {
@@ -59,19 +59,18 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
     }
 
     @Override
-    public ManagerCountryDto findById(UUID id) {
-        Optional<ManageCountry> userSystem = this.repositoryQuery.findById(id);
-        return userSystem.map(ManageCountry::toAggregate).orElse(null);
-
-//        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_COUNTRY_NOT_FOUND, new ErrorField("id", "Manager County not found.")));
+    public ManageCurrencyDto findById(UUID id) {
+        Optional<ManageCurrency> userSystem = this.repositoryQuery.findById(id);
+        return userSystem.map(ManageCurrency::toAggregate).orElse(null);
+        //        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_CURRENCY_NOT_FOUND, new ErrorField("id", "Element cannot be deleted has a related element.")));
     }
 
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        filterCriteria(filterCriteria);
+//        filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<ManageCountry> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageCountry> data = this.repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<ManageCurrency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageCurrency> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -90,10 +89,10 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManageCountry> data) {
-        List<ManagerCountryResponse> userSystemsResponses = new ArrayList<>();
-        for (ManageCountry p : data.getContent()) {
-            userSystemsResponses.add(new ManagerCountryResponse(p.toAggregate()));
+    private PaginatedResponse getPaginatedResponse(Page<ManageCurrency> data) {
+        List<ManageCurrencyResponse> userSystemsResponses = new ArrayList<>();
+        for (ManageCurrency p : data.getContent()) {
+            userSystemsResponses.add(new ManageCurrencyResponse(p.toAggregate()));
         }
         return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
@@ -102,11 +101,6 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
-    }
-
-    @Override
-    public Long countByNameAndNotId(String name, UUID id) {
-        return this.repositoryQuery.countByNameAndNotId(name, id);
     }
 
 }

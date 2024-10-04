@@ -9,9 +9,10 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashMap;
 import java.util.Map;
-
 @Service
 public class FormPaymentServiceImpl implements IFormPaymentService {
     @Value("${redirect.private.key}")
@@ -19,74 +20,77 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
 
     @Override
     public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
-        try {
-            // Extraer los parámetros del objeto PaymentRequest
-            //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
-            String merchantId = merchantConfigDto.getMerchantNumber(); //Campo merchantNumber de Merchant Config
-            String merchantName = merchantConfigDto.getName(); //Campo name de Merchant Config
-            String merchantType = merchantConfigDto.getMerchantType(); //Campo merchantType de Merchant Config
-            String currencyCode = "$"; //Valor $ por ahora
-            String orderNumber = merchantConfigDto.getId().toString(); //Viene en el request
 
-            double amountValue = transactionDto.getAmount() * 100;
-            int intValue = (int) Math.round(amountValue);
-            String amount = Integer.toString(intValue);
+        if (compareDates(transactionDto.getTransactionDate())) {
+            try {
+                // Extraer los parámetros del objeto PaymentRequest
+                //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
+                String merchantId = merchantConfigDto.getMerchantNumber(); //Campo merchantNumber de Merchant Config
+                String merchantName = merchantConfigDto.getName(); //Campo name de Merchant Config
+                String merchantType = merchantConfigDto.getMerchantType(); //Campo merchantType de Merchant Config
+                String currencyCode = "$"; //Valor $ por ahora
+                String orderNumber = merchantConfigDto.getId().toString(); //Viene en el request
 
-            String itbis = "000"; //Valor 000 por defecto
-            String approvedUrl = "https://localhost/3000/transaction-result?status=success"; //Campo successUrl de Merchant Config
-            String declinedUrl = "https://localhost/3000/transaction-result?status=declined";//Campo declinedUrl de Merchant Config
-            String cancelUrl = "https://localhost/3000/transaction-result?status=error";//Campo errorUrl de Merchant Config
-            String useCustomField1 = "0";  //Se mantiene asi por defecto
-            String customField1Label = "";//Se mantiene asi por defecto
-            String customField1Value = "";//Se mantiene asi por defecto
-            String useCustomField2 = "0";//Se mantiene asi por defecto
-            String customField2Label = "";//Se mantiene asi por defecto
-            String customField2Value = "";//Se mantiene asi por defecto
+                double amountValue = transactionDto.getAmount() * 100;
+                int intValue = (int) Math.round(amountValue);
+                String amount = Integer.toString(intValue);
 
-            // Construir el hash de autenticación
-            String data = String.join("", merchantId, merchantName, merchantType, currencyCode, orderNumber, amount, itbis, approvedUrl, declinedUrl, cancelUrl,
-                    useCustomField1, customField1Label, customField1Value, useCustomField2, customField2Label, customField2Value, privateKey);
-            String authHash = createAuthHash(data);
+                String itbis = "000"; //Valor 000 por defecto
+                String approvedUrl = "https://localhost/3000/transaction-result?status=success"; //Campo successUrl de Merchant Config
+                String declinedUrl = "https://localhost/3000/transaction-result?status=declined";//Campo declinedUrl de Merchant Config
+                String cancelUrl = "https://localhost/3000/transaction-result?status=error";//Campo errorUrl de Merchant Config
+                String useCustomField1 = "0";  //Se mantiene asi por defecto
+                String customField1Label = "";//Se mantiene asi por defecto
+                String customField1Value = "";//Se mantiene asi por defecto
+                String useCustomField2 = "0";//Se mantiene asi por defecto
+                String customField2Label = "";//Se mantiene asi por defecto
+                String customField2Value = "";//Se mantiene asi por defecto
 
-            // Generar el formulario HTML
-            String htmlForm = "<html lang=\"en\">" +
-                    "<head></head>" +
-                    "<body>" +
-                    "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
-                    "<input type=\"hidden\" name=\"MerchantId\" value=\"" + merchantConfigDto.getMerchantNumber() + "\">" +
-                    "<input type=\"hidden\" name=\"MerchantName\" value=\"" + merchantConfigDto.getName() + "\">" +
-                    "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantConfigDto.getMerchantType() + "\">" +
-                    "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
-                    "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
-                    "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
-                    "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
-                    "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + approvedUrl + "\">" +
-                    "<input type=\"hidden\" name=\"DeclinedUrl\" value=\"" + declinedUrl + "\">" +
-                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\">" +
-                    "<input type=\"hidden\" name=\"UseCustomField1\" value=\"" + useCustomField1 + "\">" +
-                    "<input type=\"hidden\" name=\"CustomField1Label\" value=\"" + customField1Label + "\">" +
-                    "<input type=\"hidden\" name=\"CustomField1Value\" value=\"" + customField1Value + "\">" +
-                    "<input type=\"hidden\" name=\"UseCustomField2\" value=\"" + useCustomField2 + "\">" +
-                    "<input type=\"hidden\" name=\"CustomField2Label\" value=\"" + customField2Label + "\">" +
-                    "<input type=\"hidden\" name=\"CustomField2Value\" value=\"" + customField2Value + "\">" +
-                    "<input type=\"hidden\" name=\"AuthHash\" value=\"" + authHash + "\">" +
+                // Construir el hash de autenticación
+                String data = String.join("", merchantId, merchantName, merchantType, currencyCode, orderNumber, amount, itbis, approvedUrl, declinedUrl, cancelUrl,
+                        useCustomField1, customField1Label, customField1Value, useCustomField2, customField2Label, customField2Value, privateKey);
+                String authHash = createAuthHash(data);
 
-                    "</form>" +
-                    "<script>document.getElementById('paymentForm').submit();</script>" +
-                    "</body>" +
-                    "</html>";
+                // Generar el formulario HTML
+                String htmlForm = "<html lang=\"en\">" +
+                        "<head></head>" +
+                        "<body>" +
+                        "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
+                        "<input type=\"hidden\" name=\"MerchantId\" value=\"" + merchantConfigDto.getMerchantNumber() + "\">" +
+                        "<input type=\"hidden\" name=\"MerchantName\" value=\"" + merchantConfigDto.getName() + "\">" +
+                        "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantConfigDto.getMerchantType() + "\">" +
+                        "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
+                        "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
+                        "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
+                        "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
+                        "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + approvedUrl + "\">" +
+                        "<input type=\"hidden\" name=\"DeclinedUrl\" value=\"" + declinedUrl + "\">" +
+                        "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\">" +
+                        "<input type=\"hidden\" name=\"UseCustomField1\" value=\"" + useCustomField1 + "\">" +
+                        "<input type=\"hidden\" name=\"CustomField1Label\" value=\"" + customField1Label + "\">" +
+                        "<input type=\"hidden\" name=\"CustomField1Value\" value=\"" + customField1Value + "\">" +
+                        "<input type=\"hidden\" name=\"UseCustomField2\" value=\"" + useCustomField2 + "\">" +
+                        "<input type=\"hidden\" name=\"CustomField2Label\" value=\"" + customField2Label + "\">" +
+                        "<input type=\"hidden\" name=\"CustomField2Value\" value=\"" + customField2Value + "\">" +
+                        "<input type=\"hidden\" name=\"AuthHash\" value=\"" + authHash + "\">" +
 
-            // Devolver el formulario HTML como respuesta
-            return ResponseEntity.ok()
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(htmlForm);
+                        "</form>" +
+                        "<script>document.getElementById('paymentForm').submit();</script>" +
+                        "</body>" +
+                        "</html>";
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing payment.");
-        }
+                // Devolver el formulario HTML como respuesta
+                return ResponseEntity.ok()
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(htmlForm);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing payment.");
+            }
+        }else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing transaction date.");
+
     }
-
     // Método para crear el AuthHash
     private String createAuthHash(String data) {
         try {
@@ -160,6 +164,18 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing Cardnet payment.");
+        }
+    }
+
+    private Boolean compareDates(LocalDate date1) {
+        LocalDate currentDate = LocalDate.now();
+        // Calcular la diferencia en minutos
+        Period diferencia = Period.between(date1, currentDate);
+        //Comprobar que la diferncia sea menor que una semana
+        if (diferencia.getDays() <= 7 && diferencia.getMonths()<1 && diferencia.getYears()<1) {
+            return true;
+        }else {
+            return false;
         }
     }
 }

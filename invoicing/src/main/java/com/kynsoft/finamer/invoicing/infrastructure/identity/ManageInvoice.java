@@ -136,7 +136,7 @@ public class ManageInvoice {
                 : null;
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
-        this.invoiceNumberPrefix= InvoiceUtils.getInvoiceNumberPrefix(dto.getInvoiceNumber());
+        this.invoiceNumberPrefix= InvoiceUtils.deleteHotelInfo(dto.getInvoiceNumber());
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();

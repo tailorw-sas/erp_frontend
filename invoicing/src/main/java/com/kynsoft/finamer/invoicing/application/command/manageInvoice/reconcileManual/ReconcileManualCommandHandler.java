@@ -5,7 +5,6 @@ import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -36,40 +35,22 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(id);
             if(!invoiceDto.getAgency().getAutoReconcile()){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getInvoiceId().toString(),
-                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
-                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
-                        invoiceDto.getAgency().getCode(),
-                        invoiceDto.getInvoiceDate().toLocalDate(),
-                        invoiceDto.getInvoiceAmount(),
-                        "The agency does not have auto-reconciliation enabled.",
-                        invoiceDto.getStatus()
+                        invoiceDto,
+                        "The agency does not have auto-reconciliation enabled."
                 ));
                 continue;
             }
             if(invoiceDto.getStatus().compareTo(EInvoiceStatus.PROCECSED) != 0){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getInvoiceId().toString(),
-                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
-                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
-                        invoiceDto.getAgency().getCode(),
-                        invoiceDto.getInvoiceDate().toLocalDate(),
-                        invoiceDto.getInvoiceAmount(),
-                        "The invoice is not in processed status.",
-                        invoiceDto.getStatus()
+                        invoiceDto,
+                        "The invoice is not in processed status."
                 ));
                 continue;
             }
             if(invoiceDto.getInvoiceType().compareTo(EInvoiceType.INVOICE) != 0){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getInvoiceId().toString(),
-                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
-                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
-                        invoiceDto.getAgency().getCode(),
-                        invoiceDto.getInvoiceDate().toLocalDate(),
-                        invoiceDto.getInvoiceAmount(),
-                        "The invoice type must be INV.",
-                        invoiceDto.getStatus()
+                        invoiceDto,
+                        "The invoice type must be INV."
                 ));
                 continue;
             }
@@ -77,14 +58,8 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 //TODO: obtener el pdf
             } catch (Exception e){
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getInvoiceId().toString(),
-                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
-                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
-                        invoiceDto.getAgency().getCode(),
-                        invoiceDto.getInvoiceDate().toLocalDate(),
-                        invoiceDto.getInvoiceAmount(),
-                        "The pdf could not be generated.",
-                        invoiceDto.getStatus()
+                        invoiceDto,
+                        "The pdf could not be generated."
                 ));
                 continue;
             }
@@ -95,14 +70,8 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 //TODO: subir el archivo y obtener los datos para el attachment
             } catch (Exception e) {
                 errorResponse.add(new ReconcileManualErrorResponse(
-                        invoiceDto.getInvoiceId().toString(),
-                        invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName(),
-                        InvoiceUtils.deleteHotelInfo(invoiceDto.getInvoiceNumber()),
-                        invoiceDto.getAgency().getCode(),
-                        invoiceDto.getInvoiceDate().toLocalDate(),
-                        invoiceDto.getInvoiceAmount(),
-                        "The attachment could not be uploaded.",
-                        invoiceDto.getStatus()
+                        invoiceDto,
+                        "The attachment could not be uploaded."
                 ));
                 continue;
             }

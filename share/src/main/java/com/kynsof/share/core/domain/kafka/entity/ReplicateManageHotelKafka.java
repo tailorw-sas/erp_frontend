@@ -27,4 +27,5 @@ public class ReplicateManageHotelKafka implements Serializable {
     private String address;
     private UUID manageCityState;
     private UUID manageCountry;
+    private UUID manageCurrency;
 }

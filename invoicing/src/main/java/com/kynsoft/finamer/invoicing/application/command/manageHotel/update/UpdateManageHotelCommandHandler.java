@@ -5,10 +5,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageTradingCompaniesDto;
-import com.kynsoft.finamer.invoicing.domain.services.IManageCityStateService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageTradingCompaniesService;
-import com.kynsoft.finamer.invoicing.domain.services.IManagerCountryService;
+import com.kynsoft.finamer.invoicing.domain.services.*;
 
 import org.springframework.stereotype.Component;
 
@@ -22,15 +19,17 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
     private final IManageTradingCompaniesService tradingCompaniesService;
     private final IManageCityStateService cityStateService;
     private final IManagerCountryService countryService;
+    private final IManageCurrencyService currencyService;
 
     public UpdateManageHotelCommandHandler(IManageHotelService service,
                                            IManageTradingCompaniesService tradingCompaniesService,
                                            IManageCityStateService cityStateService,
-                                           IManagerCountryService countryService) {
+                                           IManagerCountryService countryService, IManageCurrencyService currencyService) {
         this.service = service;
         this.tradingCompaniesService = tradingCompaniesService;
         this.cityStateService = cityStateService;
         this.countryService = countryService;
+        this.currencyService = currencyService;
     }
 
     @Override
@@ -50,6 +49,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
             update.setUpdate(1);
         }
 
+        dto.setManageCurrency(this.currencyService.findById(command.getManageCurrency()));
         dto.setManageCityState(cityStateService.findById(command.getCityState()));
         dto.setManageCountry(countryService.findById(command.getCountry()));
         dto.setAddress(command.getAddress());
