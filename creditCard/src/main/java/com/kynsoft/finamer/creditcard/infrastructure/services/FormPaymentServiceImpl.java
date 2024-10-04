@@ -18,8 +18,22 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     @Value("${redirect.private.key}")
     private String privateKey;
 
-    @Override
     public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+        if (compareDates(transactionDto.getTransactionDate())) {
+            try {
+                if (merchantConfigDto.getMethod().equals("AZUL")) {
+                    return redirectToAzul(transactionDto, merchantConfigDto);
+                } else {
+                    return redirectToCardNet(transactionDto, merchantConfigDto);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing payment.");
+            }
+        }else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing transaction date.");
+    }
+
+    private ResponseEntity<String> redirectToAzul(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
 
         if (compareDates(transactionDto.getTransactionDate())) {
             try {
@@ -108,11 +122,14 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         }
     }
 
-    public ResponseEntity<String> redirectToPost(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+    private ResponseEntity<String> redirectToCardNet(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
         try {
             // Paso 1: Enviar los datos para generar la sesión
             //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
             Map<String, String> requestData = new HashMap<>();
+            String successUrl = "http://localhost:3000/transaction-result?status=success";
+            String cancelUrl = "http://localhost:3000/transaction-result?status=cancelled";
+
             requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
             requestData.put("CurrencyCode", "214"); // dejar 214 por ahora que es el peso dominicano. El usd es 840
             requestData.put("Tax", "0"); // 0 por defecto
@@ -121,8 +138,8 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             requestData.put("MerchantNumber", merchantConfigDto.getMerchantNumber()); //Campo merchantNumber de Merchant Config
             requestData.put("MerchantTerminal", merchantConfigDto.getMerchantTerminal()); //Campo merchantTerminal de Merchant Config
 //            requestData.put("MerchantTerminal_amex", paymentRequest.getMerchantTerminalAmex()); //No enviar por ahora
-            requestData.put("ReturnUrl", merchantConfigDto.getSuccessUrl()); //Campo successUrl de Merchant Config
-            requestData.put("CancelUrl", merchantConfigDto.getErrorUrl()); //Campo errorUrl de Merchant Config
+            requestData.put("ReturnUrl", successUrl); //Campo successUrl de Merchant Config
+            requestData.put("CancelUrl", cancelUrl); //Campo errorUrl de Merchant Config
             requestData.put("PageLanguaje", "ENG"); //Se envia por ahora ENG
             requestData.put("TransactionId", String.valueOf(transactionDto.getId())); //Viene en el request
             requestData.put("OrdenId", transactionDto.getId().toString()); //Viene en el request
@@ -150,8 +167,8 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                     "<body>" +
                     "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
                     "<input type=\"hidden\" name=\"SESSION\" value=\"" + sessionData.getSession() + "\"/>" +
-                    "<input type=\"hidden\" name=\"ReturnUrl\" value=\"" + merchantConfigDto.getSuccessUrl() + "\"/>" +
-                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + merchantConfigDto.getErrorUrl() + "\"/>" +
+                    "<input type=\"hidden\" name=\"ReturnUrl\" value=\"" + successUrl + "\"/>" +
+                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\"/>" +
                     "</form>" +
                     "<script>document.getElementById('paymentForm').submit();</script>" +
                     "</body>" +
