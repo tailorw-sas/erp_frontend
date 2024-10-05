@@ -4,7 +4,9 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingAdults.UpdateBookingCalculateBookingAdultsCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingAmount.UpdateBookingCalculateBookingAmountCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingChildren.UpdateBookingCalculateBookingChildrenCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateChickInAndCheckOut.UpdateBookingCalculateCheckIntAndCheckOutCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckAdultsAndChildrenRule;
@@ -61,6 +63,8 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
             this.roomRateService.update(dto);
             command.getMediator().send(new UpdateBookingCalculateCheckIntAndCheckOutCommand(dto.getBooking().getId()));
             command.getMediator().send(new UpdateBookingCalculateBookingAmountCommand(dto.getBooking().getId()));
+            command.getMediator().send(new UpdateBookingCalculateBookingAdultsCommand(dto.getBooking().getId()));
+            command.getMediator().send(new UpdateBookingCalculateBookingChildrenCommand(dto.getBooking().getId()));
         }
     }
 
