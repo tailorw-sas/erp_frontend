@@ -632,8 +632,25 @@ function getStatusBadgeBackgroundColor(code: string) {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+
+   
+   /*   if (parseFilter[i]?.key === 'status') {
+        parseFilter[i].key = 'invoiceStatus'
+      }
+*/
+
+      if (parseFilter[i]?.key === 'invoiceNumber') {
+        parseFilter[i].key = 'invoiceNumberPrefix'
+      }
+
+    }
+  }
+
   payload.value.filter = [...parseFilter || []]
   getList()
+  
 }
 
 function onSortField(event: any) {
