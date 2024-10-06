@@ -9,6 +9,8 @@ import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculate
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingChildren.UpdateBookingCalculateBookingChildrenCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateChickInAndCheckOut.UpdateBookingCalculateCheckIntAndCheckOutCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateHotelAmount.UpdateBookingCalculateHotelAmountCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateRateAdult.UpdateBookingCalculateRateAdultCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateRateChild.UpdateBookingCalculateRateChildCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckAdultsAndChildrenRule;
@@ -57,11 +59,18 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
         if (update.getUpdate() > 0) {
             this.roomRateService.update(dto);
             ManageBookingDto bookingDto = this.bookingService.findById(dto.getBooking().getId());
+
             command.getMediator().send(new UpdateBookingCalculateCheckIntAndCheckOutCommand(bookingDto));
+
             command.getMediator().send(new UpdateBookingCalculateBookingAmountCommand(bookingDto));
             command.getMediator().send(new UpdateBookingCalculateHotelAmountCommand(bookingDto));
+
             command.getMediator().send(new UpdateBookingCalculateBookingAdultsCommand(bookingDto));
             command.getMediator().send(new UpdateBookingCalculateBookingChildrenCommand(bookingDto));
+
+            command.getMediator().send(new UpdateBookingCalculateRateChildCommand(bookingDto));
+            command.getMediator().send(new UpdateBookingCalculateRateAdultCommand(bookingDto));
+
             this.bookingService.update(bookingDto);
         }
     }
