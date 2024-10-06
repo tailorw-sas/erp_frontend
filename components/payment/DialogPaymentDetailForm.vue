@@ -440,7 +440,6 @@ watch(() => props.visible, (newValue) => {
 
 watch(() => props.item, async (newValue) => {
   if (newValue) {
-    // newValue.transactionType.status = 'ACTIVE'
     item.value = { ...newValue }
   }
 })

@@ -2185,22 +2185,43 @@ function havePermissionMenu() {
   }
 }
 
+async function exportToExcel() {
+  try {
+    console.log(paymentSelectedForPrintList.value)
+    if (paymentSelectedForPrintList.value.length > 0) {
+      const response = await GenericService.create('payment', `payment/excel-exporter/export-summary`, { paymentIds: [...paymentSelectedForPrintList.value] })
+      console.log(response)
+    }
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
 function assingFunctionsToExportMenuInItemMenuList() {
   const itemsExportToExcel: any = itemMenuList.value.find(item => item.id === 'export')
   if (itemsExportToExcel) {
     itemsExportToExcel.menuItems = itemsExportToExcel.menuItems.map((item: any) => {
       console.log(item)
-
-      if (item.id === 'export-hierarchy') {
-        item.command = function () {
+      const objExportHierarchy = item.items.find((obj: any) => obj.id === 'export-hierarchy')
+      if (objExportHierarchy) {
+        objExportHierarchy.command = function () {
           console.log('Esto es una prueba')
         }
       }
-      else if (item.id === 'export-summary') {
-        item.command = () => {}
+
+      const objExportSummary = item.items.find((obj: any) => obj.id === 'export-summary')
+      if (objExportSummary) {
+        objExportSummary.command = function () {
+          exportToExcel()
+        }
       }
-      else if (item.id === 'visual-setting') {
-        item.command = () => {}
+
+      const objExportInvoice = item.items.find((obj: any) => obj.id === 'export-invoice')
+      if (objExportInvoice) {
+        objExportInvoice.command = function () {
+          console.log('Esto es una prueba')
+        }
       }
       return item
     })
