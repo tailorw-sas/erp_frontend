@@ -69,9 +69,9 @@ const itemsImport = ref([
 const itemsExportToExcel = ref([
   {
     items: [
-      { id: 'visual-setting', label: 'Visual Setting', command: () => {} },
+      // { id: 'visual-setting', label: 'Visual Setting', command: () => {} },
       { id: 'export-summary', label: 'Export Summary', command: () => {} },
-      { id: 'export-hierarchy', label: 'Export Hierarchy', command: () => {} },
+      // { id: 'export-hierarchy', label: 'Export Hierarchy', command: () => {} },
     ]
   }
 ])
