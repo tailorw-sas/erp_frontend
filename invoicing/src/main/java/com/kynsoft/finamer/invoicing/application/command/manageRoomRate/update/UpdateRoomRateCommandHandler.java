@@ -11,7 +11,9 @@ import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculate
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateHotelAmount.UpdateBookingCalculateHotelAmountCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateRateAdult.UpdateBookingCalculateRateAdultCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateRateChild.UpdateBookingCalculateRateChildCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.calculateInvoiceAmount.UpdateInvoiceCalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckAdultsAndChildrenRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckInCheckOutRule;
@@ -58,6 +60,8 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
 
         if (update.getUpdate() > 0) {
             this.roomRateService.update(dto);
+
+            //Actualizando el booking
             ManageBookingDto bookingDto = this.bookingService.findById(dto.getBooking().getId());
 
             command.getMediator().send(new UpdateBookingCalculateCheckIntAndCheckOutCommand(bookingDto));
@@ -72,6 +76,11 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
             command.getMediator().send(new UpdateBookingCalculateRateAdultCommand(bookingDto));
 
             this.bookingService.update(bookingDto);
+
+            //Actualizando la invoice
+            ManageInvoiceDto invoiceDto = this.invoiceService.findById(bookingDto.getInvoice().getId());
+            command.getMediator().send(new UpdateInvoiceCalculateInvoiceAmountCommand(invoiceDto));
+            this.invoiceService.update(invoiceDto);
         }
     }
 
