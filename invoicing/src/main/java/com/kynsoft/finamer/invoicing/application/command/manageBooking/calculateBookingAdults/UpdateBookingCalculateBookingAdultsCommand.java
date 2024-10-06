@@ -2,23 +2,22 @@ package com.kynsoft.finamer.invoicing.application.command.manageBooking.calculat
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.UUID;
 
 @Getter
 @Setter
 public class UpdateBookingCalculateBookingAdultsCommand implements ICommand {
 
-    private UUID bookingId;
+    private ManageBookingDto bookingDto;
 
-    public UpdateBookingCalculateBookingAdultsCommand(UUID bookingId) {
-        this.bookingId = bookingId;
+    public UpdateBookingCalculateBookingAdultsCommand(ManageBookingDto bookingDto) {
+        this.bookingDto = bookingDto;
     }
 
     @Override
     public ICommandMessage getMessage() {
-        return new UpdateBookingCalculateBookingAdultsMessage(bookingId);
+        return new UpdateBookingCalculateBookingAdultsMessage(bookingDto.getId());
     }
 }

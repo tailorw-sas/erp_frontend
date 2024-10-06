@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculate
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingAmount.UpdateBookingCalculateBookingAmountCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingChildren.UpdateBookingCalculateBookingChildrenCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateChickInAndCheckOut.UpdateBookingCalculateCheckIntAndCheckOutCommand;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckAdultsAndChildrenRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckInCheckOutRule;
@@ -52,19 +53,14 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
 
         UpdateIfNotNull.updateDouble(dto::setHotelAmount, command.getHotelAmount(), dto.getHotelAmount(), update::setUpdate);
 
-        if (!command.getInvoiceAmount().equals(dto.getInvoiceAmount())) {
-
-            bookingService.calculateInvoiceAmount(this.bookingService.findById(dto.getBooking().getId()));
-            bookingService.calculateHotelAmount(this.bookingService.findById(dto.getBooking().getId()));
-            invoiceService.calculateInvoiceAmount(this.invoiceService.findById(dto.getBooking().getInvoice().getId()));
-        }
-
         if (update.getUpdate() > 0) {
             this.roomRateService.update(dto);
-            command.getMediator().send(new UpdateBookingCalculateCheckIntAndCheckOutCommand(dto.getBooking().getId()));
-            command.getMediator().send(new UpdateBookingCalculateBookingAmountCommand(dto.getBooking().getId()));
-            command.getMediator().send(new UpdateBookingCalculateBookingAdultsCommand(dto.getBooking().getId()));
-            command.getMediator().send(new UpdateBookingCalculateBookingChildrenCommand(dto.getBooking().getId()));
+            ManageBookingDto bookingDto = this.bookingService.findById(dto.getBooking().getId());
+            command.getMediator().send(new UpdateBookingCalculateCheckIntAndCheckOutCommand(bookingDto));
+            command.getMediator().send(new UpdateBookingCalculateBookingAmountCommand(bookingDto));
+            command.getMediator().send(new UpdateBookingCalculateBookingAdultsCommand(bookingDto));
+            command.getMediator().send(new UpdateBookingCalculateBookingChildrenCommand(bookingDto));
+            this.bookingService.update(bookingDto);
         }
     }
 
