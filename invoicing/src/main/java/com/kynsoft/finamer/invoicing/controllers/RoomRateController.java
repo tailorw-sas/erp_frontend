@@ -37,8 +37,6 @@ public class RoomRateController {
         CreateRoomRateCommand createCommand = CreateRoomRateCommand.fromRequest(request);
         CreateRoomRateMessage response = mediator.send(createCommand);
 
-    
-
         return ResponseEntity.ok(response);
     }
 
@@ -60,7 +58,6 @@ public class RoomRateController {
         return ResponseEntity.ok(response);
     }
 
-
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
@@ -73,11 +70,9 @@ public class RoomRateController {
     @PatchMapping(path = "/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateRoomRateRequest request) {
 
-        UpdateRoomRateCommand command = UpdateRoomRateCommand.fromRequest(request, id);
+        UpdateRoomRateCommand command = UpdateRoomRateCommand.fromRequest(request, id, mediator);
         UpdateRoomRateMessage response = mediator.send(command);
 
-      
-        
         return ResponseEntity.ok(response);
     }
 }
