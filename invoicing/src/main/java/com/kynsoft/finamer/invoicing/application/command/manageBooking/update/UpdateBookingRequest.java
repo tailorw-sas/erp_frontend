@@ -17,26 +17,27 @@ public class UpdateBookingRequest {
     private UUID id;
     private LocalDateTime hotelCreationDate;
     private LocalDateTime bookingDate;
-    private LocalDateTime checkIn;
-    private LocalDateTime checkOut;
+//    private LocalDateTime checkIn;
+//    private LocalDateTime checkOut;
 
     private String hotelBookingNumber;
     private String fullName;
     private String firstName;
     private String lastName;
-    private Double invoiceAmount;
+//    private Double invoiceAmount;
     private String roomNumber;
     private String couponNumber;
-    private Integer adults;
-    private Integer children;
-    private Double rateAdult;
-    private Double rateChild;
+//    private Integer adults;
+//    private Integer children;
+//    private Double rateAdult;
+//    private Double rateChild;
     private String hotelInvoiceNumber;
     private String folioNumber;
-    private Double hotelAmount;
+//    private Double hotelAmount;
     private String description;
+    private String contract;
 
-    private UUID invoice;
+//    private UUID invoice;
     private UUID ratePlan;
     private UUID nightType;
     private UUID roomType;
