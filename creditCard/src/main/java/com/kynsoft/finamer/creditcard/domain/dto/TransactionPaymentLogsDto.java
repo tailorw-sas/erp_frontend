@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -14,10 +13,11 @@ import java.util.UUID;
 @Setter
 public class TransactionPaymentLogsDto {
 
-
+    private UUID id;
     private UUID transactionUuid;
     private String html;
     private String merchantReturn;
-    private LocalDate createdAt;
+
+
 
 }

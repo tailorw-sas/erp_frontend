@@ -18,6 +18,8 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
 @Service
 public class FormPaymentServiceImpl implements IFormPaymentService {
     @Value("${redirect.private.key}")
@@ -208,7 +210,8 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             return false;
         }
     }
-    public Long create(TransactionPaymentLogsDto dto) {
+
+    public UUID create(TransactionPaymentLogsDto dto) {
         TransactionPaymentLogs entity = new TransactionPaymentLogs(dto);
         return this.repositoryCommand.save(entity).getId();
     }

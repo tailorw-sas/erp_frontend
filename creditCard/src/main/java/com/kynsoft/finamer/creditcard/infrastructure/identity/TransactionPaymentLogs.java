@@ -9,11 +9,12 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@NoArgsConstructor
+
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 @Entity
@@ -22,8 +23,7 @@ public class TransactionPaymentLogs implements Serializable {
 
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private UUID id;
 
     private UUID transactionUuid;
 
@@ -34,19 +34,18 @@ public class TransactionPaymentLogs implements Serializable {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     public TransactionPaymentLogs(TransactionPaymentLogsDto dto) {
-
+        this.id = dto.getId();
         this.transactionUuid = dto.getTransactionUuid();
         this.html = dto.getHtml();
         this.merchantReturn = dto.getMerchantReturn();
-        this.createdAt = dto.getCreatedAt();
-    }
 
+    }
     public TransactionPaymentLogs toAggregate(){
         return new TransactionPaymentLogs(
-                id, transactionUuid, html, merchantReturn, createdAt
+                 id,transactionUuid, html, merchantReturn,createdAt
         );
     }
 }
