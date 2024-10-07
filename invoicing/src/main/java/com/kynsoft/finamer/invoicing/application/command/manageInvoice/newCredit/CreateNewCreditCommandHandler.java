@@ -132,9 +132,13 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             invoiceAmount+=newBookingAmount;
         }
 
+        int cont = 0;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
+            if(attachmentType.isAttachInvDefault()) {
+                cont++;
+            }
 
             ResourceTypeDto resourceTypeDto = resourceTypeService.findById(command.getAttachmentCommands().get(i).getPaymentResourceType());
 
@@ -149,6 +153,13 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                     UUID.fromString(command.getEmployee()), null, resourceTypeDto);
 
             attachments.add(attachmentDto);
+        }
+        //debe venir al menos un attachment de tipo attinvdefault
+        if(cont == 0){
+            throw new BusinessException(
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+            );
         }
 
         //preparando los datos del nuevo invoice
