@@ -13,6 +13,13 @@ import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { validateEntityStatus } from '~/utils/schemaValidations'
 
+const props = defineProps({
+  agency: {
+    type: Object,
+    required: false
+  },
+})
+
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
 const confirm = useConfirm()
@@ -20,6 +27,7 @@ const listItems = ref<any[]>([])
 const loadingSearch = ref(false)
 const regionList = ref<any[]>([])
 const regionSelected = ref('')
+const agencyList = ref<any[]>([])
 const hotelList = ref<any[]>([])
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
@@ -51,6 +59,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Agency',
     dataType: 'select',
     class: 'field col-12 required',
+    validation: validateEntityStatus('agency'),
   },
   {
     field: 'manageRegion',
@@ -83,18 +92,18 @@ const fields: Array<FieldDefinitionType> = [
 ]
 
 const item = ref<GenericObject>({
-  manageAgency: '',
-  manageRegion: '',
+  manageAgency: props.agency ? props.agency : null,
+  manageRegion: null,
   manageHotel: [],
-  emailContact: null,
+  emailContact: '',
   status: true,
 })
 
 const itemTemp = ref<GenericObject>({
-  manageAgency: '',
-  manageRegion: '',
+  manageAgency: props.agency ? props.agency : null,
+  manageRegion: null,
   manageHotel: [],
-  emailContact: null,
+  emailContact: '',
   status: true,
 })
 
@@ -106,14 +115,14 @@ const formTitle = computed(() => {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 
-const ENUM_FILTER = [
+let ENUM_FILTER = [
   { id: 'emailContact', name: 'Email Contact' },
 ]
 
 const columns: IColumn[] = [
-  { field: 'manageAgency', header: 'Agency', type: 'text', showFilter: false, sortable: false },
-  { field: 'manageRegion', header: 'Region', type: 'select' },
-  { field: 'manageHotel', header: 'Hotel', type: 'select' },
+  { field: 'manageAgency', header: 'Agency', type: 'text', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' }, showFilter: false, sortable: false },
+  { field: 'manageRegion', header: 'Region', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-region' } },
+  { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
   { field: 'emailContact', header: 'Email Contact', type: 'text' },
   { field: 'status', header: 'Active', type: 'bool' },
 ]
@@ -169,6 +178,13 @@ function clearForm() {
   fields[0].disabled = false
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
+  formReload.value++
+  if (!props.agency) {
+    agencyList.value = []
+  }
+  else {
+    item.value.manageAgency = props.agency
+  }
   regionList.value = []
   hotelList.value = []
 }
@@ -196,6 +212,9 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'manageAgency')) {
+        iterator.manageAgency = iterator.manageAgency.name
+      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
@@ -245,6 +264,37 @@ function clearFilterToSearch() {
 async function resetListItems() {
   payload.value.page = 0
   getList()
+}
+
+async function getAgencyList(query: string) {
+  try {
+    const payload
+        = {
+          filter: [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'AND'
+            },
+          ],
+          query: '',
+          pageSize: 20,
+          page: 0,
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.DESC
+        }
+
+    const response = await GenericService.search('settings', 'manage-agency', payload)
+    const { data: dataList } = response
+    agencyList.value = []
+    for (const iterator of dataList) {
+      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error on loading hotels list:', error)
+  }
 }
 
 async function getRegionList(query: string = '') {
@@ -526,9 +576,17 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 // -------------------------------------------------------------------------------------------------------
-
+function initData() {
+  if (props.agency) {
+    ENUM_FILTER = [{ id: 'code', name: 'Code' }, { id: 'name', name: 'Name' },]
+    updateFieldProperty(fields, 'manageAgency', 'disabled', true)
+    agencyList.value = [props.agency]
+    item.value.manageHotel = props.agency
+  }
+}
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(async () => {
+  initData()
   filterToSearch.value.criterial = ENUM_FILTER[0]
   await getRegionList()
   await getList()
@@ -541,7 +599,7 @@ onMounted(async () => {
     <h3 class="mb-0">
       Manage Agency Contact
     </h3>
-    <IfCan :perms="['REPORT:CREATE']">
+    <IfCan :perms="['AGENCY:CREATE']">
       <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
@@ -620,6 +678,20 @@ onMounted(async () => {
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
+            <template #field-manageAgency="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.manageAgency"
+                :suggestions="agencyList"
+                :disabled="fields[0].disabled"
+                @change="($event) => onUpdate('manageAgency', $event)"
+                @load="($event) => getAgencyList($event)"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
             <template #field-manageRegion="{ item: data, onUpdate }">
               <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
@@ -658,10 +730,10 @@ onMounted(async () => {
             </template>
             <template #form-footer="props">
               <div class="flex justify-content-end">
-                <IfCan :perms="idItem ? ['AGENCY-CONTACT:EDIT'] : ['AGENCY-CONTACT:CREATE']">
+                <IfCan :perms="idItem ? ['AGENCY:EDIT'] : ['AGENCY:CREATE']">
                   <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
                 </IfCan>
-                <IfCan :perms="['AGENCY-CONTACT:DELETE']">
+                <IfCan :perms="['AGENCY:DELETE']">
                   <Button v-tooltip.top="'Delete'" class="w-3rem" severity="danger" outlined :loading="loadingDelete" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
                 </IfCan>
               </div>

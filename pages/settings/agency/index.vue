@@ -14,6 +14,7 @@ import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import createClientDialog from '~/components/clientForm/createClientDialog.vue'
 import { validateEntityStatus } from '~/utils/schemaValidations'
+import ContactAgencyPage from '~/pages/settings/agency-contact/index.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -26,6 +27,7 @@ const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
 const loadingDelete = ref(false)
+const contactDialogVisible = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
@@ -77,6 +79,14 @@ const fields: Array<FieldDefinitionType> = [
     hidden: false,
     headerClass: 'mb-1',
     validation: validateEntityStatus('agency type'),
+  },
+
+  {
+    field: 'contact',
+    header: 'Agency Contact',
+    hidden: true,
+    dataType: 'text',
+    class: 'field col-12',
   },
   {
     field: 'generationType',
@@ -435,6 +445,7 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
   // clientObject.value = {}
+  updateFieldProperty(fields, 'contact', 'hidden', true)
   updateFieldProperty(fields, 'status', 'disabled', true)
   fields[0].disabled = false
   formReload.value++
@@ -594,6 +605,7 @@ async function getItemById(id: string) {
         item.value.generationType = ENUM_GENERATION_TYPE.find(i => i.id === response.generationType)
       }
       fields[0].disabled = true
+      updateFieldProperty(fields, 'contact', 'hidden', false)
       updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
     }
@@ -1152,6 +1164,17 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
 
+            <template #field-contact>
+              <InputGroup v-if="!loadingSaveAll">
+                <InputText placeholder="Agency Contacts" disabled />
+                <Button
+                  icon="pi pi-eye" type="button" text aria-haspopup="true" aria-controls="overlay_menu_filter"
+                  @click="contactDialogVisible = true"
+                />
+              </InputGroup>
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+
             <template #field-client="{ item: data, onUpdate }">
               <div class="flex">
                 <InputGroup icon-position="left" class="w-full">
@@ -1367,6 +1390,10 @@ onMounted(() => {
               </div>
             </template>
           </EditFormV2>
+          <DynamicContentModal
+            :visible="contactDialogVisible" :component="ContactAgencyPage" :component-props="{ agency: { id: item.id, name: item.name, status: 'ACTIVE' } }"
+            :header="`Agency ${item.name}`" @close="contactDialogVisible = $event"
+          />
         </div>
       </div>
     </div>
