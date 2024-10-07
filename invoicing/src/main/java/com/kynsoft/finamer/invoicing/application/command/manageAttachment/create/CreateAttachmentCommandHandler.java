@@ -1,11 +1,13 @@
 package com.kynsoft.finamer.invoicing.application.command.manageAttachment.create;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoiceStatus;
@@ -42,6 +44,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
 
     @Override
     public void handle(CreateAttachmentCommand command) {
+        RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(command.getFile()));
 
         ManageAttachmentTypeDto attachmentType = command.getType() != null
                 ? this.attachmentTypeService.findById(command.getType())

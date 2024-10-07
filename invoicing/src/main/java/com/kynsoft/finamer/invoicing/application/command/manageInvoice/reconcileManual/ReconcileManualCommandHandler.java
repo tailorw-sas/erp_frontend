@@ -1,9 +1,11 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -77,6 +79,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             }
 
             //creando y adjuntando el attachment
+//            RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(file));
             ManageAttachmentTypeDto attachmentTypeDto = command.getAttachInvDefault() != null
                     ? this.attachmentTypeService.findById(command.getAttachInvDefault())
                     : null;
