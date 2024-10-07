@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSessionResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
@@ -42,7 +44,9 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing payment.");
             }
-        }else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing transaction date.");
+        }
+        else throw new BusinessException(DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK, DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK.name());
+//        else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing transaction date.");
     }
 
     private ResponseEntity<String> redirectToAzul(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
