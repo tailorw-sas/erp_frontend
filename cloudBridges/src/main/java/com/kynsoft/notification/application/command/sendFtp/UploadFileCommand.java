@@ -14,13 +14,15 @@ public class UploadFileCommand implements ICommand {
     private final String user;
     private final String password;
     private final int port;
+    private final String path;
 
-    public UploadFileCommand(FilePart file, String server, String user, String password, String port) {
+    public UploadFileCommand(FilePart file, String server, String user, String password, String port, String path) {
         this.file = file;
         this.server = server;
         this.user = user;
         this.password = password;
         this.port = Integer.parseInt(port);
+        this.path = path;
     }
 
     @Override
