@@ -478,7 +478,15 @@ function searchAndFilter() {
 }
 
 function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  // payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  payload.value = {
+    filter: [],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
+  }
   filterToSearch.value = {
     criteria: null,
     search: '',
@@ -488,6 +496,7 @@ function clearFilterToSearch() {
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
+  filterAllDateRange.value = false
   filterToSearch.value.criteria = ENUM_FILTER[0]
   getList()
 }

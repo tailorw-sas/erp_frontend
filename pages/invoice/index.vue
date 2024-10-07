@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
-import { string, z } from 'zod'
+import { any, string, z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
@@ -40,7 +40,7 @@ const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const listPrintItems = ref<any[]>([])
 const formReload = ref(0)
-const invoiceTypeList = ref<any[]>()
+const invoiceTypeList = ref<any[]>([])
 
 const totalInvoiceAmount = ref(0)
 const totalDueAmount = ref(0)
@@ -64,26 +64,21 @@ const attachmentInvoice = <any>ref(null)
 const active = ref(0)
 
 
-const confClientApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-client',
-})
-
-
 const itemSend = ref<GenericObject>({
   employee:userData?.value?.user?.userId,
   invoice:null,
 })
 
+const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
   criteria: ENUM_INVOICE_CRITERIA[3],
   search: '',
-  client: [],
-  agency: [],
-  hotel: [{ id: 'All', name: 'All', code: 'All' }],
+  client: [allDefaultItem],
+  agency: [allDefaultItem],
+  hotel: [allDefaultItem],
   status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
-  invoiceType: [{ id: 'All', name: 'All', code: 'All' }],
+  invoiceType: [allDefaultItem],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
 
@@ -95,6 +90,13 @@ const confApi = reactive({
   uriApi: 'manage-invoice',
 })
 
+const objApis = ref({
+  client: { moduleApi: 'settings', uriApi: 'manage-client' },
+  agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
+  hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
+  status: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
+  invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
+})
 
 const confAttachmentApi = reactive({
   moduleApi: 'invoicing',
@@ -1247,214 +1249,274 @@ function requireConfirmationToDelete(event: any) {
   })
 }
 
-async function getHotelList(query = '') {
-  try {
-    const payload
-      = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
+// async function getHotelList(query = '') {
+//   try {
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'code',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ],
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
 
-    hotelList.value = [{ id: 'All', name: 'All', code: 'All' }]
-    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
+//     hotelList.value = [{ id: 'All', name: 'All', code: 'All' }]
+//     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
+//     const { data: dataList } = response
+//     for (const iterator of dataList) {
+//       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+//     }
+//   }
+//   catch (error) {
+//     console.error('Error loading hotel list:', error)
+//   }
+// }
+
+// async function getClientList(query = '') {
+//   try {
+//     debugger
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ],
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
+//     let clientTemp: any[] = []
+//     clientList.value = [allDefaultItem]
+//     const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
+//      const { data: dataList } = response
+//     for (const iterator of dataList) {
+//        clientList.value = [...clientList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+//      }
+//   }
+//   catch (error) {
+//     console.error('Error loading client list:', error)
+//   }
+// }
+
+interface DataListItem {
+  id: string
+  name: string
+  code: string
+  status: string
+  description?: string
+}
+
+interface ListItem {
+  id: string
+  name: string
+  status: boolean | string
+  code?: string
+  description?: string
+}
+
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.name}`,
+    status: data.status,
+    code: data.code,
+    description: data.description
   }
 }
 
-async function getClientList(query = '') {
-  try {
-    const payload
-      = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
-
-    clientList.value = [{ id: 'All', name: 'All', code: 'All' }]
-    const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      clientList.value = [...clientList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading client list:', error)
-  }
+async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
+  let clientTemp: any[] = []
+  clientList.value = [allDefaultItem]
+  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  clientList.value = [...clientList.value, ...clientTemp]
+}
+async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  let agencyTemp: any[] = []
+  agencyList.value = [allDefaultItem]
+  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  agencyList.value = [...agencyList.value, ...agencyTemp]
+}
+async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
+async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  let hotelTemp: any[] = []
+  hotelList.value = [allDefaultItem]
+  hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  hotelList.value = [...hotelList.value, ...hotelTemp]
+}
+async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
+async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  let statusTemp: any[] = []
+  statusList.value = [allDefaultItem]
+  statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  statusList.value = [...statusList.value, ...statusTemp]
 }
 
-async function getStatusList(query = '') {
-  try {
-    statusList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_STATUS]
 
-    if (query) {
-      statusList.value = statusList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
+// async function getStatusList(query = '') {
+//   try {
+//     statusList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_STATUS]
+
+//     if (query) {
+//       statusList.value = statusList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
+//     }
+//   }
+//   catch (error) {
+//     console.error('Error loading hotel list:', error)
+//   }
+// }
+
+async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  let invoiceTypeListTemp: any[] = []
+  invoiceTypeList.value = [allDefaultItem]
+  invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    invoiceTypeList.value = [...invoiceTypeList.value, ...invoiceTypeListTemp]
 }
 
-async function getInvoiceTypeList(query = '') {
-  try {
+// async function getInvoiceTypeList(query = '') {
+//   try {
 
-    const payload
-      = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'code',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ],
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
 
-    invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }]
-    const response = await GenericService.search(confinvoiceTypeListApi.moduleApi, confinvoiceTypeListApi.uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
+//     invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }]
+//     const response = await GenericService.search(confinvoiceTypeListApi.moduleApi, confinvoiceTypeListApi.uriApi, payload)
+//     const { data: dataList } = response
+//     for (const iterator of dataList) {
+//       invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+//     }
 
-    // invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_TYPE]
+//     // invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_TYPE]
 
-    // if (query) {
-    //   invoiceTypeList.value = invoiceTypeList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
-    // }
+//     // if (query) {
+//     //   invoiceTypeList.value = invoiceTypeList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
+//     // }
 
 
-  }
-  catch (error) {
-    console.error('Error loading invoice type list:', error)
-  }
-}
+//   }
+//   catch (error) {
+//     console.error('Error loading invoice type list:', error)
+//   }
+// }
 
-async function getAgencyList(query = '') {
-  try {
-    const payload
-      = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ] as any,
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
+// async function getAgencyList(query = '') {
+//   try {
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'code',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ] as any,
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
 
-    agencyList.value = [{ id: 'All', name: 'All', code: 'All' }]
+//     agencyList.value = [{ id: 'All', name: 'All', code: 'All' }]
 
-    if (filterToSearch.value.client?.length === 0) {
-      return agencyList.value = []
-    }
-    const clientIds: any[] = []
+//     if (filterToSearch.value.client?.length === 0) {
+//       return agencyList.value = []
+//     }
+//     const clientIds: any[] = []
 
-    filterToSearch.value?.client?.forEach((client: any) => clientIds.push(client?.id))
+//     filterToSearch.value?.client?.forEach((client: any) => clientIds.push(client?.id))
 
-    payload.filter.push({
-      key: 'client.id',
-      operator: 'IN',
-      value: clientIds,
-      logicalOperation: 'AND'
-    })
+//     payload.filter.push({
+//       key: 'client.id',
+//       operator: 'IN',
+//       value: clientIds,
+//       logicalOperation: 'AND'
+//     })
 
-    const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading agency list:', error)
-  }
-}
+//     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
+//     const { data: dataList } = response
+//     for (const iterator of dataList) {
+//       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+//     }
+//   }
+//   catch (error) {
+//     console.error('Error loading agency list:', error)
+//   }
+// }
 
 async function parseDataTableFilter(payloadFilter: any) {
   console.log(payloadFilter);
@@ -1838,56 +1900,85 @@ const legend = ref(
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" multiple field="name"
-                        item-value="id" :model="filterToSearch.client" :suggestions="clientList" placeholder=""
-                        :disabled="disableClient" style="max-width: 400px;" @load="($event) => getClientList($event)"
-                        @change="($event) => {
-
-                          if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        class="w-full"
+                        :multiple="true"
+                        :model="filterToSearch.client"
+                        :suggestions="[...clientList]"
+                        @change="async ($event) => {
+                          if (!filterToSearch.client.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.client = $event.filter((element: any) => element?.id === 'All')
                           }
                           else {
-
                             filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
                           }
-
-                          filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : []
-                        }">
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                        <template #chip="{ value }">
-                          <div>
-                            {{ value?.code }}
-                          </div>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
+                          if (filterToSearch.client.length === 0) {
+                            filterToSearch.agency = []
+                          }
+                        }"
+                        @load="async($event) => {
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          const filter: FilterCriteria[] = [{
+                            key: 'status',
+                            logicalOperation: 'AND',
+                            operator: 'EQUALS',
+                            value: 'ACTIVE',
+                          }]
+                          await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <div class="w-full lg:w-auto">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" placeholder="" multiple
-                        field="name" item-value="id" :model="filterToSearch.agency" :suggestions="agencyList"
-                        :disabled="disableClient" style="max-width: 400px;" @change="($event) => {
-
-                          if (!filterToSearch.agency.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        class="w-full"
+                        :multiple="true"
+                        :model="filterToSearch.agency"
+                        :suggestions="[...agencyList]"
+                        @change="($event) => {
+                          if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
                           }
                           else {
-
                             filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
                           }
+                        }"
+                        @load="async($event) => {
+                          let ids = []
+                          if (filterToSearch.client.length > 0) {
+                            ids = filterToSearch.client.map((element: any) => element?.id)
+                          }
 
-                        }" @load="($event) => getAgencyList($event)">
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                        <template #chip="{ value }">
-                          <div>
-                            {{ value?.code }}-{{ value?.name }}
-                          </div>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'client.id',
+                              logicalOperation: 'AND',
+                              operator: 'IN',
+                              value: ids,
+                            },
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }, filter)
+                        }"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1903,55 +1994,79 @@ const legend = ref(
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full" style=" z-index:5">
                       <div class="flex gap-2 w-full">
-                        <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
-                          item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList" placeholder=""
-                          class="w-full" @load="($event) => getHotelList($event)" @change="($event) => {
-
-                            if (!filterToSearch.hotel.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                            }
-                            else {
-
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                            }
-                            hotelError = false
-
-                          }">
-                          <template #option="props">
-                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                          </template>
-                          <template #chip="{ value }">
-                            <div>
-                              {{ value?.code }}-{{ value?.name }}
-                            </div>
-                          </template>
-                        </DebouncedAutoCompleteComponent>
+                        <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        class="w-full"
+                        field="name"
+                        item-value="id"
+                        :multiple="true"
+                        :model="filterToSearch.hotel"
+                        :suggestions="[...hotelList]"
+                        @change="($event) => {
+                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }"
+                        @load="async($event) => {
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                         <div v-if="hotelError" class="flex align-items-center text-sm">
                           <span style="color: red; margin-right: 3px; margin-left: 3px;">You must select the "Hotel"
-                            field
-                            as required</span>
+                            field as required</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <div class="w-full lg:w-auto">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
-                        item-value="id" :model="filterToSearch.status" :suggestions="statusList" placeholder=""
-                        @load="($event) => getStatusList($event)" @change="($event) => {
-                          if (!filterToSearch.status.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        class="w-full"
+                        field="name"
+                        item-value="id"
+                        :multiple="true"
+                        :model="filterToSearch.status"
+                        :suggestions="[...statusList]"
+                        @change="($event) => {
+                          if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
                           }
                           else {
-
                             filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
                           }
-                        }">
-                        <template #option="props">
-                          <span>{{ props.item.name }}</span>
-                        </template>
-
-                      </DebouncedAutoCompleteComponent>
+                        }"
+                        @load="async($event) => {
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getStatusList(objApis.status.moduleApi, objApis.status.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                     </div>
                   </div>
                 </div>
@@ -2024,27 +2139,38 @@ const legend = ref(
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
-                        placeholder="" item-value="id" :model="filterToSearch.invoiceType"
-                        :suggestions="invoiceTypeList" style="max-width: 400px;"
-                        @load="($event) => getInvoiceTypeList($event)" @change="($event) => {
-                          if (!filterToSearch.invoiceType.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        class="w-full"
+                        field="name"
+                        item-value="id"
+                        :multiple="true"
+                        :model="filterToSearch.invoiceType"
+                        :suggestions="[...invoiceTypeList]"
+                        @change="($event) => {
+                          if (!filterToSearch.invoiceType.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.invoiceType = $event.filter((element: any) => element?.id === 'All')
                           }
                           else {
-
                             filterToSearch.invoiceType = $event.filter((element: any) => element?.id !== 'All')
                           }
-                        }">
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                        <template #chip="{ value }">
-                          <div>
-                            {{ value?.code }}-{{ value?.name }}
-                          </div>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
+                        }"
+                        @load="async($event) => {
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'invoiceType',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getInvoiceTypeList(objApis.invoiceType.moduleApi, objApis.invoiceType.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2 w-full">
