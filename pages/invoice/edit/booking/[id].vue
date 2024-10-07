@@ -134,6 +134,11 @@ const options = ref({
   messageToDelete: 'Do you want to save the change?'
 })
 
+const confBookingApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-booking',
+})
+
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -434,19 +439,27 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
-  payload.employee = userData?.value?.user?.name
-  payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
-  payload.isManual = item.isManual
-  payload.hotel = item.hotel.id
-  payload.agency = item.agency.id
-  payload.dueDate = item?.dueDate
-  payload.reSend = item.reSend
-  payload.reSendDate = item.reSendDate
 
-  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
-  navigateTo(
-    '/invoice'
-  )
+  payload.id = route.params.id
+  payload.hotelCreationDate = dayjs(item.hotelCreationDate).toISOString()
+  payload.bookingDate = dayjs(item.bookingDate).toISOString()
+  payload.hotelBookingNumber = item.hotelBookingNumber
+  payload.fullName = `${item.firstName} ${item.lastName}`
+  payload.firstName = item.firstName
+  payload.lastName = item.lastName
+  payload.roomNumber = item.roomNumber
+  payload.couponNumber = item.couponNumber
+  payload.hotelInvoiceNumber = item.hotelInvoiceNumber
+  payload.folioNumber = item.folioNumber
+  payload.description = item.description
+  payload.contract = item.contract
+  payload.ratePlan = item.ratePlan ? item.ratePlan.id : null
+  payload.nightType = item.nightType ? item.nightType.id : null
+  payload.roomType = item.roomType ? item.roomType.id : null
+  payload.roomCategory = item.roomCategory ? item.roomCategory.id : null
+
+  await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
+  navigateTo('/invoice')
 }
 
 async function deleteItem(id: string) {
@@ -474,6 +487,8 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       successOperation = false
+      console.log(error)
+
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
     idItem.value = ''
