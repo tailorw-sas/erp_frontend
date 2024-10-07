@@ -1553,8 +1553,6 @@ async function getBookingItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
-      console.log(response)
-
       if (response) {
         idItem.value = response?.id
         item2.value.id = response.id
