@@ -79,7 +79,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             Double bookingAmount = parentBooking.getInvoiceAmount();
             Double newBookingAmount = bookingRequest.getAmount();
 
-            if(!Objects.equals(bookingAmount, newBookingAmount)){
+            if(newBookingAmount != 0){
                 //en caso de que venga positivo
                 if (newBookingAmount > 0) {
                     newBookingAmount = -newBookingAmount;
