@@ -1452,8 +1452,8 @@ watch(() => props.forceUpdate, () => {
 })
 
 function onRowRightClick(event: any) {
-
-  console.log(props.invoiceObj);
+  console.log(event);
+  
   if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
     return;
   }
