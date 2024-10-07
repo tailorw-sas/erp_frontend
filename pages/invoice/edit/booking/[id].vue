@@ -1555,8 +1555,6 @@ async function getBookingItemById(id: string) {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
       console.log(response)
 
-      console.log(response?.invoice?.hotel?.virtual)
-
       if (response) {
         idItem.value = response?.id
         item2.value.id = response.id
@@ -1590,7 +1588,6 @@ async function getBookingItemById(id: string) {
         item2.value.roomType = response.roomType?.name === '-' ? null : response.roomType
         item2.value.roomCategory = response.roomCategory
       }
-      console.log(response?.invoice?.hotel)
 
       if (response?.invoice?.hotel?.virtual) {
         const decimalSchema = z.object(
