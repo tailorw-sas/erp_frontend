@@ -20,11 +20,11 @@ public class FtpService implements IFtpService {
     @Value("${ftp.api.url:http://localhost:8097/api/ftp}")
     private String ftpApiUrl;
 
-    public void sendFile(InputStream inputStream, String fileName, String server, String user, String password, int port) {
+    public void sendFile(InputStream inputStream, String fileName, String server, String user, String password, int port, String path) {
         String uploadUrl = ftpApiUrl + "/upload";
 
         try (CloseableHttpClient client = HttpClients.createDefault()) {
-            HttpPost post = createHttpPost(uploadUrl, inputStream, fileName, server, user, password, port);
+            HttpPost post = createHttpPost(uploadUrl, inputStream, fileName, server, user, password, port,path );
 
             // Enviar la solicitud y manejar la respuesta
             try (CloseableHttpResponse response = client.execute(post)) {
@@ -37,7 +37,7 @@ public class FtpService implements IFtpService {
     }
 
     private HttpPost createHttpPost(String url, InputStream inputStream, String fileName, String server, String user,
-                                    String password, int port) {
+                                    String password, int port, String path) {
         // Configurar la solicitud POST con los datos necesarios
         HttpPost post = new HttpPost(url);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create()
@@ -45,6 +45,7 @@ public class FtpService implements IFtpService {
                 .addTextBody("server", server)
                 .addTextBody("user", user)
                 .addTextBody("password", password)
+                .addTextBody("path", path)
                 .addTextBody("port", String.valueOf(port)); // Convertir el puerto a String
 
         post.setEntity(builder.build());
