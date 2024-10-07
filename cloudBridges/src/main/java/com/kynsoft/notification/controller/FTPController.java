@@ -22,10 +22,11 @@ public class FTPController {
                                                    @RequestPart(value = "server") String server,
                                                    @RequestPart("user") String user,
                                                    @RequestPart("password") String password,
-                                                   @RequestPart("port") String port
+                                                   @RequestPart("port") String port,
+                                                   @RequestPart("path") String path
                                                    ) {
         // Enviar el comando al bus de comandos para que lo maneje el handler correspondiente
-        return Mono.fromRunnable(() -> mediator.send(new UploadFileCommand(file, server, user,password,port)))
+        return Mono.fromRunnable(() -> mediator.send(new UploadFileCommand(file, server, user,password,port,path)))
                 .then(Mono.just(ResponseEntity.ok("Archivo subido exitosamente.")))
                 .onErrorResume(e -> {
                     e.printStackTrace();
