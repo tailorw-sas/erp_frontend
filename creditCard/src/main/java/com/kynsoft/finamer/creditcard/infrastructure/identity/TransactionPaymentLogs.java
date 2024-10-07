@@ -1,10 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +22,7 @@ public class TransactionPaymentLogs implements Serializable {
 
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     private UUID transactionUuid;
@@ -39,7 +37,7 @@ public class TransactionPaymentLogs implements Serializable {
     private LocalDate createdAt;
 
     public TransactionPaymentLogs(TransactionPaymentLogsDto dto) {
-        this.id = dto.getId();
+
         this.transactionUuid = dto.getTransactionUuid();
         this.html = dto.getHtml();
         this.merchantReturn = dto.getMerchantReturn();

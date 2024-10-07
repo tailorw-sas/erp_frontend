@@ -14,7 +14,7 @@ import java.util.UUID;
 @Setter
 public class TransactionPaymentLogsDto {
 
-    private Long id;
+
     private UUID transactionUuid;
     private String html;
     private String merchantReturn;

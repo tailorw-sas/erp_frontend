@@ -33,6 +33,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     }
 
     public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+
         if (compareDates(transactionDto.getTransactionDate())) {
             try {
                 if (merchantConfigDto.getMethod().equals(Method.AZUL.toString())) {
