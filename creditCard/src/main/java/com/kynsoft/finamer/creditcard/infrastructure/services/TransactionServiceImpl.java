@@ -143,4 +143,5 @@ public class TransactionServiceImpl implements ITransactionService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
 }
