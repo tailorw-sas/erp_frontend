@@ -49,6 +49,9 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
         if (delete.getTransactionType().getCash()) {
             UpdateIfNotNull.updateDouble(update::setIdentified, update.getIdentified() - delete.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(update::setNotIdentified, update.getNotIdentified() + delete.getAmount(), updatePayment::setUpdate);
+            UpdateIfNotNull.updateDouble(update::setApplied, update.getApplied() - delete.getAmount(), updatePayment::setUpdate);
+            UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() + delete.getAmount(), updatePayment::setUpdate);
+
             //El valor del Detalle de tipo cash fue restado al Payment Amount en el create, en el delete debe de ser sumado.
             UpdateIfNotNull.updateDouble(update::setPaymentBalance, update.getPaymentBalance() + delete.getAmount(), updatePayment::setUpdate);
 
@@ -74,6 +77,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             UpdateIfNotNull.updateDouble(update::setDepositBalance, update.getDepositBalance() + delete.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(update::setIdentified, update.getIdentified() - delete.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(update::setNotIdentified, update.getPaymentAmount() - update.getIdentified(), updatePayment::setUpdate);
+            UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() - delete.getAmount(), updatePayment::setUpdate);
             //Para este caso no se elimina, dado que el objeto esta relacionado con otro objeto del mismo tipo, por tanto voy a actuar modificando
             //los valores y poniendo en inactivo el apply deposit que se trata de eliminar.
             PaymentDetailDto parent = this.service.findByPaymentDetailId(delete.getParentId());
@@ -83,7 +87,9 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
                     childrens.add(children);
                 }
             }
+
             parent.setChildren(childrens);
+            parent.setApplyDepositValue(parent.getApplyDepositValue() + delete.getAmount());
             this.service.update(parent);
             this.service.delete(delete);
             //service.delete(delete);
