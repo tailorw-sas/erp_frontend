@@ -3,8 +3,12 @@ package com.kynsoft.finamer.creditcard.infrastructure.services;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSessionResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
+import com.kynsoft.finamer.creditcard.infrastructure.identity.TransactionPaymentLogs;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageTransactionsRedirectLogsWriteDataJPARepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,13 @@ import java.util.Map;
 public class FormPaymentServiceImpl implements IFormPaymentService {
     @Value("${redirect.private.key}")
     private String privateKey;
+
+    @Autowired
+    private final ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand;
+
+    public FormPaymentServiceImpl(ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand){
+        this.repositoryCommand = repositoryCommand;
+    }
 
     public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
         if (compareDates(transactionDto.getTransactionDate())) {
@@ -195,5 +206,9 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         }else {
             return false;
         }
+    }
+    public Long create(TransactionPaymentLogsDto dto) {
+        TransactionPaymentLogs entity = new TransactionPaymentLogs(dto);
+        return this.repositoryCommand.save(entity).getId();
     }
 }
