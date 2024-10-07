@@ -32,5 +32,6 @@ public class ManagePaymentTransactionTypeDto {
     private Boolean incomeDefault;
     private Boolean paymentInvoice;
     private Boolean debit;
+    private boolean expenseToBooking;
 
 }

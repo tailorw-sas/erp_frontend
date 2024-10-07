@@ -1,9 +1,11 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
+import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -186,6 +188,9 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
         //vienen todos los attachments juntos, lo del padre y los nuevos
         for (TotalCloneAttachmentRequest attachmentRequest: command.getAttachments()) {
+            RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
+                    attachmentRequest.getFile()
+            ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     attachmentRequest.getType());
 

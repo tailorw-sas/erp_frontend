@@ -21,5 +21,7 @@ public class ManagePaymentAttachmentStatusDto {
     private String permissionCode;
     private String description;
     private List<ManagePaymentAttachmentStatusDto> relatedStatuses;
-
+    private boolean nonNone;
+    private boolean patWithAttachment;
+    private boolean pwaWithOutAttachment;
 }

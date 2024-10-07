@@ -91,10 +91,9 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
         ManageInvoiceTypeDto invoiceTypeDto = null;
         if(parameterization != null){
             invoiceTypeDto = switch (invoiceType) {
-                case CREDIT -> this.findByCode(parameterization.getTypeCredit());
+                case CREDIT, OLD_CREDIT -> this.findByCode(parameterization.getTypeCredit());
                 case INVOICE -> this.findByCode(parameterization.getTypeInvoice());
                 case INCOME -> this.findByCode(parameterization.getTypeIncome());
-                case OLD_CREDIT -> this.findByCode(parameterization.getTypeOldCredit());
             };
         }
         return invoiceTypeDto;

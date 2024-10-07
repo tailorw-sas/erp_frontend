@@ -61,10 +61,9 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
     @Override
     public ManagerCountryDto findById(UUID id) {
         Optional<ManageCountry> userSystem = this.repositoryQuery.findById(id);
-        if (userSystem.isPresent()) {
-            return userSystem.get().toAggregate();
-        }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_COUNTRY_NOT_FOUND, new ErrorField("id", "Manager County not found.")));
+        return userSystem.map(ManageCountry::toAggregate).orElse(null);
+
+//        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_COUNTRY_NOT_FOUND, new ErrorField("id", "Manager County not found.")));
     }
 
     @Override

@@ -9,6 +9,8 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.rules.undoApplication.CheckApplyPaymentRule;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -42,7 +44,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
                 null,
                 null,
                 null,
-                paymentDetailDto.getTransactionDate(),
+                OffsetDateTime.now(ZoneId.of("UTC")),
                 null,
                 null,
                 null,

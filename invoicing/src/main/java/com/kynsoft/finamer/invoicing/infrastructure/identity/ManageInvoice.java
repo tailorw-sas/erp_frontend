@@ -136,7 +136,7 @@ public class ManageInvoice {
                 : null;
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
-        this.invoiceNumberPrefix= InvoiceUtils.getInvoiceNumberPrefix(dto.getInvoiceNumber());
+        this.invoiceNumberPrefix= InvoiceUtils.deleteHotelInfo(dto.getInvoiceNumber());
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
@@ -167,6 +167,19 @@ public class ManageInvoice {
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 parent != null ? parent.toAggregateSample() : null, credits);
+    }
+
+    public ManageInvoiceDto toAggregateSearch() {
+
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+                invoiceAmount, dueAmount,
+                hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
+                autoRec, null, null, reSend, reSendDate,
+                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
+                parent != null ? parent.toAggregateSample() : null, credits);
+        manageInvoiceDto.setSendStatusError(sendStatusError);
+        return manageInvoiceDto;
     }
 
     @PostLoad

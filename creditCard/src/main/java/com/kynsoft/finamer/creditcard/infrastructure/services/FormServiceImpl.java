@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class FormServiceIml implements IFormService {
+public class FormServiceImpl implements IFormService {
     @Value("${redirect.private.key}")
     private String privateKey;
 

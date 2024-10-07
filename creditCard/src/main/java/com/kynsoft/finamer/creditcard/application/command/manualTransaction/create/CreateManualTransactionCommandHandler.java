@@ -132,6 +132,27 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ));
         command.setId(id);
 
+        //Send Mail after create the transaction to the HotelEmailContact in case of this exist
+        if(command.getHotelContactEmail() != null){
+            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+            request.setTemplateId(6324713); // Cambiar en configuración
+
+            // Variables para el template de email, cambiar cuando keimer genere la plantilla
+            List<MailJetVar> vars = Arrays.asList(
+                    new MailJetVar("topic", "Transaction Verification"),
+                    new MailJetVar("name", command.getGuestName())
+            );
+            request.setMailJetVars(vars);
+
+            // Recipients
+            List<MailJetRecipient> recipients = new ArrayList<>();
+            recipients.add(new MailJetRecipient(command.getHotelContactEmail(), command.getGuestName()));
+            request.setRecipientEmail(recipients);
+
+            mailService.sendMail(request);
+        }
+
+        //Send Mail in case the methodType be Link
         if(command.getMethodType() == MethodType.LINK){
         //Send mail after the crate transaction
         String token = tokenService.generateToken(command.getTransactionUuid());

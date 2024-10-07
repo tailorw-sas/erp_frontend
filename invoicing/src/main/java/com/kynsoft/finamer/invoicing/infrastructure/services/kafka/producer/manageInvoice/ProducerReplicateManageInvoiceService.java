@@ -82,7 +82,7 @@ public class ProducerReplicateManageInvoiceService {
                     entity.getInvoiceAmount(),
                     bookingKafkas,
                     attachmentKafkas,
-                    !entity.getAttachments().isEmpty(),
+                    entity.getAttachments() != null && !entity.getAttachments().isEmpty(),
                     entity.getInvoiceDate()
             ));
         } catch (Exception ex) {

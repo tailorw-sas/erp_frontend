@@ -7,6 +7,9 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionRequest;
+import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentCommand;
+import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentCommandMessage;
+import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentRequest;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionRequest;
@@ -22,7 +25,6 @@ import com.kynsoft.finamer.creditcard.application.query.transaction.search.GetSe
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -80,6 +82,16 @@ public class TransactionController {
         SendMailMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/redirectTypeLink")
+    public ResponseEntity<?> getPaymentForm(@RequestBody CreateRedirectTransactionPaymentRequest request) {
+
+        CreateRedirectTransactionPaymentCommand redirectTransactionPaymentCommand = CreateRedirectTransactionPaymentCommand.builder()
+                .Token(request.getToken())
+                .build();
+        CreateRedirectTransactionPaymentCommandMessage createRedirectCommandMessage = mediator.send(redirectTransactionPaymentCommand);
+        return ResponseEntity.ok(createRedirectCommandMessage);
     }
 
 }

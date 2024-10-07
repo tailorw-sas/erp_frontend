@@ -1,11 +1,13 @@
 package com.kynsoft.finamer.invoicing.application.command.manageAttachment.create;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoiceStatus;
@@ -42,6 +44,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
 
     @Override
     public void handle(CreateAttachmentCommand command) {
+        RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(command.getFile()));
 
         ManageAttachmentTypeDto attachmentType = command.getType() != null
                 ? this.attachmentTypeService.findById(command.getType())
@@ -63,24 +66,43 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
             }
         }
 
-        Long attachmentId = attachmentService.create(new ManageAttachmentDto(
-                command.getId(),
-                null,
-                command.getFilename(),
-                command.getFile(),
-                command.getRemark(),
-                attachmentType,
-                invoiceDto, command.getEmployee(), command.getEmployeeId(), null, resourceTypeDto));
+        List<ManageAttachmentDto> attachmentDtoList = invoiceDto.getAttachments();
+        boolean defaultAttachment = false;
+        if(attachmentDtoList != null && !attachmentDtoList.isEmpty()){
+            for(ManageAttachmentDto attachmentDto : attachmentDtoList){
+                if(attachmentDto.getType().isAttachInvDefault()){
+                    defaultAttachment = true;
+                    break;
+                }
+            }
+        } else if (attachmentType != null && attachmentType.isAttachInvDefault()){
+            defaultAttachment = true;
+        }
+        if(defaultAttachment) {
+            Long attachmentId = attachmentService.create(new ManageAttachmentDto(
+                    command.getId(),
+                    null,
+                    command.getFilename(),
+                    command.getFile(),
+                    command.getRemark(),
+                    attachmentType,
+                    invoiceDto, command.getEmployee(), command.getEmployeeId(), null, resourceTypeDto));
 
-        this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(),
-                command.getEmployeeId());
+            this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(),
+                    command.getEmployeeId());
 
-        if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCECSED)) {
-            invoiceDto.setStatus(EInvoiceStatus.RECONCILED);
-            ManageInvoiceStatusDto invoiceStatus = invoiceStatusService.findByCode(EInvoiceStatus.RECONCILED.getCode());
-            invoiceDto.setManageInvoiceStatus(invoiceStatus);
-            this.manageInvoiceService.update(invoiceDto);
-            this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
+            if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCECSED)) {
+                invoiceDto.setStatus(EInvoiceStatus.RECONCILED);
+                ManageInvoiceStatusDto invoiceStatus = invoiceStatusService.findByCode(EInvoiceStatus.RECONCILED.getCode());
+                invoiceDto.setManageInvoiceStatus(invoiceStatus);
+                this.manageInvoiceService.update(invoiceDto);
+                this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
+            }
+        } else{
+            throw new BusinessException(
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+            );
         }
     }
 

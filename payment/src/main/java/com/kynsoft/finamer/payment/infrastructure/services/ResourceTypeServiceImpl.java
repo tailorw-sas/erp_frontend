@@ -68,6 +68,15 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
     }
 
     @Override
+    public ResourceTypeDto findByCode(String code) {
+        Optional<ResourceType> resourceType = this.repositoryQuery.findResourceTypeByCodeAndStatus(code,Status.ACTIVE);
+        if (resourceType.isPresent()) {
+            return resourceType.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 

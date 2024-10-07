@@ -5,13 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.List;
 
 @Getter
 @Setter
 @AllArgsConstructor
 public class ReconcileManualMessage implements ICommandMessage {
     private final String command = "MANUAL_RECONCILE";
-    Map<UUID, String> errors;
+    List<ReconcileManualErrorResponse> errorsResponse;
+    private int totalInvoicesRec;
+    private int totalInvoices;
 }

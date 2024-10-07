@@ -72,6 +72,11 @@ public class PaymentDetail implements Serializable {
     private Integer childrens;
 
     @OneToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "payment_detail_payment_detail",
+            joinColumns = @JoinColumn(name = "paymentdetail_id"),
+            inverseJoinColumns = @JoinColumn(name = "children_id")
+    )
     private List<PaymentDetail> children = new ArrayList<>();
 
     //@CreationTimestamp

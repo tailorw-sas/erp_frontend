@@ -52,6 +52,15 @@ public class ManagePaymentAttachmentStatus {
     @Column(nullable = true)
     private Boolean defaults;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean nonNone;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean patWithAttachment;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean pwaWithOutAttachment;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -82,19 +91,23 @@ public class ManagePaymentAttachmentStatus {
                     .map(ManagePaymentAttachmentStatus::new)
                     .collect(Collectors.toList());
         }
+        this.nonNone = dto.isNonNone();
+        this.patWithAttachment = dto.isPatWithAttachment();
+        this.pwaWithOutAttachment = dto.isPwaWithOutAttachment();
     }
 
     public ManagePaymentAttachmentStatusDto toAggregateSample() {
         return new ManagePaymentAttachmentStatusDto(
                 id, code, name, status, module != null ? module.toAggregate() : null, show, defaults, permissionCode, description,
-                null
+                null, nonNone, patWithAttachment, pwaWithOutAttachment
         );
     }
 
     public ManagePaymentAttachmentStatusDto toAggregate() {
         return new ManagePaymentAttachmentStatusDto(
                 id, code, name, status, module != null ? module.toAggregate() : null, show, defaults, permissionCode, description,
-                relatedStatuses != null ? relatedStatuses.stream().map(ManagePaymentAttachmentStatus::toAggregateSample).toList() : null
+                relatedStatuses != null ? relatedStatuses.stream().map(ManagePaymentAttachmentStatus::toAggregateSample).toList() : null,
+                nonNone, patWithAttachment, pwaWithOutAttachment
         );
     }
 }

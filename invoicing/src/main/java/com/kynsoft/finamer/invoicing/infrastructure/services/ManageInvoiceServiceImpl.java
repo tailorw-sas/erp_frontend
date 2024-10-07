@@ -151,18 +151,10 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                         && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
                         || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
                 Boolean isHasAttachments = entity.getAttachments() != null && !entity.getAttachments().isEmpty();
-                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSample(), isHasAttachments, isCloseOperation);
-//                InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(response.getHotel().getId());
-//                if (response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
-//                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())) {
-//                    response.setIsInCloseOperation(false);
-//                }
+                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSearch(), isHasAttachments, isCloseOperation);
               responseList.add(response);
             } catch (Exception e) {
                 System.err.print(e.getMessage());
-//                ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
-//                response.setIsInCloseOperation(false);
-//                responseList.add(response);
             }
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),

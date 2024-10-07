@@ -2,11 +2,8 @@ package com.kynsoft.finamer.invoicing.infrastructure.utils;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
 
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class InvoiceUtils {
 
@@ -31,5 +28,9 @@ public class InvoiceUtils {
 
         }
         return "";
+    }
+
+    public static String deleteHotelInfo(String input) {
+        return input.replaceAll("-(.*?)-", "-");
     }
 }
