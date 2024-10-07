@@ -169,11 +169,11 @@ export const model = ref([
             icon: 'pi pi-fw pi-folder',
             to: '/settings/agency-type'
           },
-          // {
-          //   label: 'Agency',
-          //   icon: 'pi pi-fw pi-folder',
-          //   to: ''
-          // },
+          {
+            label: 'Agency Contact',
+            icon: 'pi pi-fw pi-folder',
+            to: '/settings/agency-contact'
+          },
           {
             label: 'Client',
             icon: 'pi pi-fw pi-folder',
@@ -784,6 +784,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/settings/agency-type'),
               items: []
             },
+            // {
+            //   label: 'Agency Contact',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/settings/agency-contact'),
+            //   items: []
+            // },
             {
               label: 'Client',
               icon: 'pi pi-fw pi-file',
