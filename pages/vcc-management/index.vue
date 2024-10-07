@@ -971,7 +971,7 @@ onMounted(() => {
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
+              <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
               <Column :footer="Math.round((subTotals.amount + Number.EPSILON) * 100) / 100" />
               <Column :footer="Math.round((subTotals.commission + Number.EPSILON) * 100) / 100" />
               <Column :footer="Math.round((subTotals.net + Number.EPSILON) * 100) / 100" />
