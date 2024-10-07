@@ -3,6 +3,7 @@ package com.kynsoft.finamer.creditcard.application.command.manageRedirectTransac
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
@@ -38,6 +39,9 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
 
         command.setResult(formPaymentService.redirectToLink(transactionDto, merchantConfigDto).getBody());
+        formPaymentService.create(new TransactionPaymentLogsDto(
+                transactionDto.getId(),transactionDto.getTransactionUuid(),command.getResult(), null, transactionDto.getTransactionDate())
+        );
     }
 
 }
