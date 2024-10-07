@@ -222,7 +222,7 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
     resetValidation: false,
-    validation: z.string()
+    validation: z.number()
       .refine(val => !Number.isNaN(val) && +val > 0, { message: 'The Adults field must be greater than 0' })
   },
   {
@@ -232,7 +232,7 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
     resetValidation: false,
-    validation: z.string()
+    validation: z.number()
       .refine(val => !Number.isNaN(val) && +val >= 0, { message: 'The Children field must be greater than 0' })
   },
   // {
@@ -639,8 +639,8 @@ async function GetItemById(id: string) {
         item.value.checkOut = new Date(element.checkOut)
         item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : 0
         item.value.roomNumber = +element.roomNumber
-        item.value.adults = element.adults
-        item.value.children = element.children
+        item.value.adults = element.adults ? element.adults.toString() : '0'
+        item.value.children = element.children ? element.children.toString() : '0'
         item.value.rateAdult = element.rateAdult
         item.value.rateChild = element.rateChild
         item.value.hotelAmount = element.hotelAmount ? element.hotelAmount : 0
@@ -695,8 +695,6 @@ async function createRoomRate(item: { [key: string]: any }) {
 async function updateRoomRate(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
-  console.log('payload', payload)
-
   await GenericService.update(confApi.roomrate.moduleApi, confApi.roomrate.uriApi, idItem.value || '', payload)
 }
 

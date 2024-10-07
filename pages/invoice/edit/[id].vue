@@ -636,9 +636,7 @@ async function getItemById(id: string) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-      console.log(response);
-      
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)      
       if (response) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
@@ -899,8 +897,19 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
     }
   ]
 
-  invoiceStatusList.value = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
-  console.log(invoiceStatusList.value);
+  invoiceStatusList.value = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)  
+}
+
+function disabledInvoiceStatus(payload: any) {
+  let result = true
+  // Verificar si esta en estado Sent o Reconciled (En estos estados solo se puede editar la agencia)
+  if (payload && (payload.sentStatus || payload.reconciledStatus)) {
+    result = true
+  } else if (payload && payload.processStatus) {
+    result = false
+  }
+
+  return result
   
 }
 
@@ -964,7 +973,8 @@ onMounted(async () => {
             field="name" 
             item-value="id"
             :model="data.invoiceStatus" 
-            :suggestions="[...invoiceStatusList]"  
+            :suggestions="[...invoiceStatusList]"
+            :disabled="disabledInvoiceStatus(data?.invoiceStatus)"  
             @change="async ($event) => {
               onUpdate('invoiceStatus', $event)
             }" 
@@ -1007,10 +1017,16 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-invoiceType="{ item: data, onUpdate }">
-          <Dropdown v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
-            option-label="name" return-object="false" show-clear disabled @update:model-value="($event) => {
-        onUpdate('invoiceType', $event)
-      }">
+          <Dropdown v-if="!loadingSaveAll" 
+            v-model="data.invoiceType" 
+            :options="[...ENUM_INVOICE_TYPE]"
+            option-label="name" 
+            return-object="false" 
+            show-clear 
+            disabled 
+            @update:model-value="($event) => {
+              onUpdate('invoiceType', $event)
+            }">
             <template #option="props">
               {{ props.option?.code }}-{{ props.option?.name }}
             </template>
