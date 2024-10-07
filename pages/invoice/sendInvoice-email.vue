@@ -4,6 +4,7 @@ import { useToast } from 'primevue/usetoast'
 
 import dayjs from 'dayjs'
 import type { PageState } from 'primevue/paginator'
+import { filter } from 'lodash'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
@@ -40,6 +41,7 @@ const clickedItem = ref<string[]>([])
 const clientList = ref<any[]>([])
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
+const clientIds = ref<any[]>([])
 
 const confApi = reactive({
   moduleApi: 'invoicing',
@@ -299,51 +301,55 @@ async function getHotelList(query: string = '') {
 
 async function getAgencyList(query: string = '') {
   try {
-    const payload = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        },
-        // {
-        //   key: 'autoReconcile',
-        //   operator: 'EQUALS',
-        //   value: true,
-        //   logicalOperation: 'AND'
-        // }
-        {
-          key: 'sentB2BPartner.b2bPartnerType.code',
-          operator: 'EQUALS',
-          value: type.toString(),
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+    clientIds.value = []
+    clientIds.value = filterToSearch.value.client.map((c: { id: any }) => c.id)
+    if (clientIds.value.length > 0) {
+      const payload = {
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          },
+          {
+            key: 'client.id',
+            operator: 'IN',
+            value: clientIds.value,
+            logicalOperation: 'AND'
+          },
+          {
+            key: 'sentB2BPartner.b2bPartnerType.code',
+            operator: 'EQUALS',
+            value: type.toString(),
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
-    const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
-    const { data: dataList } = response
-    agencyList.value = []
-    for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
+      const { data: dataList } = response
+      agencyList.value = []
+      for (const iterator of dataList) {
+        agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      }
     }
   }
   catch (error) {
@@ -399,6 +405,7 @@ function searchAndFilter() {
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.DESC
   }
+
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
     // newPayload.filter = [{
     payload.value.filter = [...payload.value.filter, {
@@ -430,18 +437,14 @@ function searchAndFilter() {
         type: 'filterSearch'
       }]
     }
-    if (filterToSearch.value.agency?.length > 0) {
-      const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
-      if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
-        payload.value.filter = [...payload.value.filter, {
-          key: 'client.id',
-          operator: 'IN',
-          value: itemIds,
-          logicalOperation: 'AND',
-          type: 'filterSearch'
-        }]
-      }
+    if (clientIds.value.length > 0) {
+      payload.value.filter = [...payload.value.filter, {
+        key: 'client.id',
+        operator: 'IN',
+        value: clientIds.value,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
     }
     if (filterToSearch.value.agency?.length > 0) {
       const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
@@ -578,6 +581,7 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // loadInvoiceType()
+  // getAgencyList()
   await getList()
 })
 </script>
@@ -610,6 +614,7 @@ onMounted(async () => {
                         @load="($event) => getClientList($event)"
                         @change="($event) => {
                           filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
+                          getAgencyList()
                         }"
                       >
                         <template #option="props">
