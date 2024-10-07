@@ -784,12 +784,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/settings/agency-type'),
               items: []
             },
-            // {
-            //   label: 'Agency Contact',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/agency-contact'),
-            //   items: []
-            // },
             {
               label: 'Client',
               icon: 'pi pi-fw pi-file',
