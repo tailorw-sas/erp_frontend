@@ -141,12 +141,19 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
         ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
         ManageInvoiceStatusDto invoiceStatusDto = null;
         if(parameterization != null){
-            invoiceStatusDto = switch (invoiceStatus){
-                case PROCECSED, PROCESSED -> this.findByCode(parameterization.getProcessed());
-                case RECONCILED -> this.findByCode(parameterization.getReconciled());
-                case SENT -> this.findByCode(parameterization.getSent());
-                case CANCELED -> this.findByCode(parameterization.getCanceled());
-                case PENDING -> this.findByCode(parameterization.getPending());
+            switch (invoiceStatus){
+                case PROCECSED, PROCESSED -> {
+                    invoiceStatusDto = this.repositoryQuery.findByProcessStatus().map(ManageInvoiceStatus::toAggregate).orElse(null);
+                }
+                case RECONCILED -> {
+                    invoiceStatusDto = this.repositoryQuery.findByReconciledStatus().map(ManageInvoiceStatus::toAggregate).orElse(null);
+                }
+                case SENT -> {
+                    invoiceStatusDto = this.repositoryQuery.findBySentStatus().map(ManageInvoiceStatus::toAggregate).orElse(null);
+                }
+                case CANCELED -> {
+                    invoiceStatusDto = this.repositoryQuery.findByCanceledStatus().map(ManageInvoiceStatus::toAggregate).orElse(null);
+                }
             };
         }
         return invoiceStatusDto;
