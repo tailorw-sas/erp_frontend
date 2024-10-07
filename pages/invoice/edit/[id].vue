@@ -189,8 +189,6 @@ const Fields = ref<FieldDefinitionType[]>([
     dataType: 'text',
     class: `field col-12 md:col-3  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`,
     disabled: true,
-
-
   },
   {
     field: 'invoiceDate',
@@ -251,18 +249,14 @@ const Fields = ref<FieldDefinitionType[]>([
     }).required()
       .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
   },
-  
   {
-    field: 'status',
+    field: 'invoiceStatus',
     header: 'Status',
     dataType: 'select',
     class: 'field col-12 md:col-2 mb-5',
     containerFieldClass: '',
     disabled: true
   },
-
-  
-
   {
     field: 'isManual',
     header: 'Manual',
@@ -278,7 +272,7 @@ const Fields = ref<FieldDefinitionType[]>([
 
 const objApis = ref({
   invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
-  invoiceStatus: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
+  invoiceStatus: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' },
   agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
   hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
   bankAccount: { moduleApi: 'settings', uriApi: 'manage-bank-account' },
@@ -557,7 +551,11 @@ function mapFunction(data: any): any {
   return {
     id: data.id,
     name: `${data.code} - ${data.name}`,
-    status: data.status
+    status: data.status,
+    processStatus: data.processStatus,
+    sentStatus: data.sentStatus,
+    reconciledStatus: data.reconciledStatus,
+    canceledStatus: data.canceledStatus
   }
 }
 
@@ -566,10 +564,16 @@ async function getInvoiceStatusListDefault(moduleApi: string, uriApi: string, qu
     objApisLoading.value.invoiceStatus = true
     const additionalFilter: FilterCriteria[] = [
       {
-        key: 'name',
-        logicalOperation: 'AND',
+        key: 'processStatus',
+        logicalOperation: 'OR',
         operator: 'EQUALS',
-        value: 'Sent'
+        value: 'true'
+      },
+      {
+        key: 'canceledStatus',
+        logicalOperation: 'OR',
+        operator: 'EQUALS',
+        value: 'true'
       }
     ]
     const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
@@ -600,7 +604,7 @@ async function loadDefaultsValues() {
     value: 'ACTIVE',
   }]
 
-  getInvoiceStatusListDefault(objApis.value.invoiceStatus.moduleApi, objApis.value.invoiceStatus.uriApi, objQueryToSearch, filter)
+  // getInvoiceStatusListDefault(objApis.value.invoiceStatus.moduleApi, objApis.value.invoiceStatus.uriApi, objQueryToSearch, filter)
 }
 
 async function getInvoiceAmountById(id: string) {
@@ -610,15 +614,10 @@ async function getInvoiceAmountById(id: string) {
 
     try {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-
       if (response) {
-
         item.value.invoiceAmount = response.invoiceAmount
         invoiceAmount.value = response.invoiceAmount
-
       }
-
-
     }
     catch (error) {
       if (error) {
@@ -663,7 +662,17 @@ async function getItemById(id: string) {
         item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
         item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
         invoiceStatus.value = response.status
-        item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
+        // item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
+
+        item.value.invoiceStatus = response.manageInvoiceStatus ? {
+          id: response.manageInvoiceStatus.id,
+          name: `${response.manageInvoiceStatus.code} - ${response.manageInvoiceStatus.name}`,
+          status: response.manageInvoiceStatus.status,
+          processStatus: response.manageInvoiceStatus.processStatus,
+          sentStatus: response.manageInvoiceStatus.sentStatus,
+          reconciledStatus: response.manageInvoiceStatus.reconciledStatus,
+          canceledStatus: response.manageInvoiceStatus.canceledStatus
+        } : null
         idClientForAgencyFilter.value = response.agency?.client?.id
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
@@ -834,26 +843,21 @@ function openAdjustmentDialog(roomRate?: any) {
 }
 
 
-async function getInvoiceHotel(id) {
+async function getInvoiceHotel(id: string) {
   try {
     const hotel = await GenericService.getById(confhotelListApi.moduleApi, confhotelListApi.uriApi, id)
 
     if (hotel) {
       invoiceHotel.value = { ...hotel }
 
-
-
       requiresFlatRate.value = hotel?.requiresFlatRate
-
-
-
     }
   }
   catch (err) {
 
   }
 }
-async function getInvoiceAgency(id) {
+async function getInvoiceAgency(id: string) {
   try {
 
     console.log(id);
@@ -882,23 +886,23 @@ const invoiceStatusList = ref<any[]>([])
 async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   const additionalFilter: FilterCriteria[] = [
     {
-      key: 'name',
-      logicalOperation: 'AND',
+      key: 'processStatus',
+      logicalOperation: 'OR',
       operator: 'EQUALS',
-      value: 'Sent'
+      value: 'true'
+    },
+    {
+      key: 'canceledStatus',
+      logicalOperation: 'OR',
+      operator: 'EQUALS',
+      value: 'true'
     }
   ]
 
-  const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
-
-  if (filteredList.length > 0) {
-    invoiceStatusList.value = [filteredList[0]]
-  }
-  else {
-    invoiceStatusList.value = []
-  }
+  invoiceStatusList.value = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+  console.log(invoiceStatusList.value);
+  
 }
-
 
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
@@ -909,17 +913,12 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 
-
-
-
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-  //@ts-ignore
-  await getItemById(route.params.id.toString())
-
-  await loadDefaultsValues()
-
-
+  if (route.params && 'id' in route.params && route.params.id) {
+    await getItemById(route.params.id.toString())
+    await loadDefaultsValues()
+  }
 })
 </script>
 
@@ -943,41 +942,61 @@ onMounted(async () => {
         container-class="grid pt-3"
       >
         <template #field-invoiceDate="{ item: data, onUpdate }">
-          <Calendar v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
+          <Calendar 
+            v-if="!loadingSaveAll" 
+            v-model="data.invoiceDate" 
+            date-format="yy-mm-dd" 
+            :max-date="new Date()" 
+            :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
             @update:model-value="($event) => {
-        onUpdate('invoiceDate', $event)
-      }" />
+              onUpdate('invoiceDate', $event)
+            }" 
+          />
         </template>
-
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText v-model="invoiceAmount" :disabled="true" v-if="!loadingSaveAll"/>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-
         <template #field-invoiceStatus="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.invoiceStatus" :suggestions="[...invoiceStatusList]" :disabled="idItem !== ''" @change="async ($event) => {
-        onUpdate('invoiceStatus', $event)
-      }" @load="async ($event) => {
-        const objQueryToSearch = {
-          query: $event,
-          keys: ['name', 'code'],
-        }
-        const filter: FilterCriteria[] = [{
-          key: 'status',
-          logicalOperation: 'AND',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-        }]
-        await getInvoiceStatusList(objApis.invoiceStatus.moduleApi, objApis.invoiceStatus.uriApi, objQueryToSearch, filter)
-      }" />
+          <DebouncedAutoCompleteComponent 
+            v-if="!loadingSaveAll" 
+            id="autocomplete" 
+            field="name" 
+            item-value="id"
+            :model="data.invoiceStatus" 
+            :suggestions="[...invoiceStatusList]"  
+            @change="async ($event) => {
+              onUpdate('invoiceStatus', $event)
+            }" 
+            @load="async ($event) => {
+            const objQueryToSearch = {
+              query: $event,
+              keys: ['name', 'code'],
+            }
+            const filter: FilterCriteria[] = [
+              {
+                key: 'status',
+                logicalOperation: 'AND',
+                operator: 'EQUALS',
+                value: 'ACTIVE',
+              }
+          ]
+            await getInvoiceStatusList(objApis.invoiceStatus.moduleApi, objApis.invoiceStatus.uriApi, objQueryToSearch, filter)
+          }" />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-status="{ item: data, onUpdate }">
-          <Dropdown v-if="!loadingSaveAll" v-model="data.status" :options="[ENUM_INVOICE_STATUS[0], ENUM_INVOICE_STATUS[2]]" option-label="name"
-            return-object="false" show-clear :disabled="data?.status?.id !== InvoiceStatus.PROCECSED" @update:model-value="($event) => {
-        onUpdate('status', $event)
-      }">
+          <!-- :disabled="data?.status?.id !== InvoiceStatus.PROCECSED"  -->
+          <Dropdown 
+            v-if="!loadingSaveAll" 
+            v-model="data.status" 
+            :options="[...invoiceStatusList]" 
+            option-label="name"
+            return-object="false" 
+            show-clear 
+            @update:model-value="($event) => {
+              onUpdate('status', $event)
+            }">
             <template #option="props">
               {{ props.option?.code }}-{{ props.option?.name }}
             </template>
@@ -987,7 +1006,6 @@ onMounted(async () => {
           </Dropdown>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-
         <template #field-invoiceType="{ item: data, onUpdate }">
           <Dropdown v-if="!loadingSaveAll" v-model="data.invoiceType" :options="[...ENUM_INVOICE_TYPE]"
             option-label="name" return-object="false" show-clear disabled @update:model-value="($event) => {
@@ -1004,15 +1022,16 @@ onMounted(async () => {
         </template>
         <template #field-hotel="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent 
-          v-if="!loadingSaveAll" id="autocomplete" 
-          field="fullName" 
-          item-value="id" 
-          :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED"
-          :model="data.hotel" 
-          :suggestions="hotelList" 
-          @change="($event) => {
-            onUpdate('hotel', $event)
-          }" @load="($event) => getHotelList($event)">
+            v-if="!loadingSaveAll" 
+            id="autocomplete" 
+            field="fullName" 
+            item-value="id" 
+            :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED"
+            :model="data.hotel" 
+            :suggestions="hotelList" 
+            @change="($event) => {
+              onUpdate('hotel', $event)
+            }" @load="($event) => getHotelList($event)">
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
             </template>
@@ -1048,7 +1067,6 @@ onMounted(async () => {
           </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-
         <template #form-footer="props">
           <div style="width: 100%; height: 100%;">
             <InvoiceTabView 
@@ -1075,16 +1093,27 @@ onMounted(async () => {
             <div>
               <div class="flex justify-content-end">
                 <IfCan :perms="['INVOICE-MANAGEMENT:EDIT']">
-                  <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :disabled="invoiceStatus !== InvoiceStatus.PROCECSED" :loading="loadingSaveAll" @click="() => {
-                      saveItem(props.item.fieldValues)
-                    }" />
+                  <Button 
+                    v-tooltip.top="'Save'" 
+                    class="w-3rem mx-1" 
+                    icon="pi pi-save" 
+                    :disabled="invoiceStatus !== InvoiceStatus.PROCECSED" 
+                    :loading="loadingSaveAll" 
+                    @click="() => {
+                        saveItem(props.item.fieldValues)
+                      }"
+                  />
                 </IfCan>
 
-              
-                <Button v-tooltip.top="'Print'" class="w-3rem mx-1" icon="pi pi-print" :loading="loadingSaveAll"
+                <Button 
+                  v-tooltip.top="'Print'" 
+                  class="w-3rem mx-1" 
+                  icon="pi pi-print" 
+                  :loading="loadingSaveAll"
                   @click="() => {
                     exportAttachmentsDialogOpen = true
-                  }" />
+                  }"
+                />
            
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
@@ -1124,7 +1153,6 @@ onMounted(async () => {
         </template>
       </EditFormV2>
     </div>
-
     <div v-if="attachmentDialogOpen">
       <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
         :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
