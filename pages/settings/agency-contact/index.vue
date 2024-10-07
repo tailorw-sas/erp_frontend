@@ -9,7 +9,6 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
-import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { validateEntityStatus } from '~/utils/schemaValidations'
 
@@ -71,7 +70,7 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'manageHotel',
-    header: 'Hotel',
+    header: 'Hotels',
     dataType: 'multi-select',
     class: 'field col-12 required',
   },
@@ -82,29 +81,20 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 required',
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 100 characters')
   },
-  {
-    field: 'status',
-    header: 'Active',
-    dataType: 'check',
-    disabled: true,
-    class: 'field col-12 required mt-3 mb-3',
-  },
 ]
 
 const item = ref<GenericObject>({
   manageAgency: props.agency ? props.agency : null,
   manageRegion: null,
   manageHotel: [],
-  emailContact: '',
-  status: true,
+  emailContact: ''
 })
 
 const itemTemp = ref<GenericObject>({
   manageAgency: props.agency ? props.agency : null,
   manageRegion: null,
   manageHotel: [],
-  emailContact: '',
-  status: true,
+  emailContact: ''
 })
 
 const formTitle = computed(() => {
@@ -115,16 +105,14 @@ const formTitle = computed(() => {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 
-let ENUM_FILTER = [
-  { id: 'emailContact', name: 'Email Contact' },
+const ENUM_FILTER = [
+  { id: 'manageRegion', name: 'Region' },
 ]
 
 const columns: IColumn[] = [
   { field: 'manageAgency', header: 'Agency', type: 'text', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' }, showFilter: false, sortable: false },
   { field: 'manageRegion', header: 'Region', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-region' } },
-  { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
   { field: 'emailContact', header: 'Email Contact', type: 'text' },
-  { field: 'status', header: 'Active', type: 'bool' },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -176,7 +164,6 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
   fields[0].disabled = false
-  updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
   formReload.value++
   if (!props.agency) {
@@ -214,9 +201,6 @@ async function getList() {
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageAgency')) {
         iterator.manageAgency = iterator.manageAgency.name
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
       }
 
       // Verificar si el ID ya existe en la lista
@@ -404,10 +388,8 @@ async function getItemById(id: string) {
         item.value.manageHotel = response.manageHotel.map((hotel: any) => {
           return { id: hotel.id, name: `${hotel.code} - ${hotel.name}`, status: hotel.status }
         })
-        item.value.status = statusToBoolean(response.status)
       }
       fields[0].disabled = true
-      updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
     }
     catch (error) {
@@ -428,7 +410,6 @@ async function createItem(item: { [key: string]: any }) {
     payload.manageAgency = item.module.id
     payload.manageRegion = typeof payload.manageRegion === 'object' ? payload.manageRegion.id : payload.manageRegion
     payload.manageHotel = payload.manageHotel.map((p: any) => p.id)
-    payload.status = statusToString(payload.status)
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
@@ -439,7 +420,6 @@ async function updateItem(item: { [key: string]: any }) {
   payload.manageAgency = item.module.id
   payload.manageRegion = typeof payload.manageRegion === 'object' ? payload.manageRegion.id : payload.manageRegion
   payload.manageHotel = payload.manageHotel.map((p: any) => p.id)
-  payload.status = statusToString(payload.status)
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -578,7 +558,7 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 // -------------------------------------------------------------------------------------------------------
 function initData() {
   if (props.agency) {
-    ENUM_FILTER = [{ id: 'code', name: 'Code' }, { id: 'name', name: 'Name' },]
+    // ENUM_FILTER = [{ id: 'code', name: 'Code' }, { id: 'name', name: 'Name' },]
     updateFieldProperty(fields, 'manageAgency', 'disabled', true)
     agencyList.value = [props.agency]
     item.value.manageHotel = props.agency
