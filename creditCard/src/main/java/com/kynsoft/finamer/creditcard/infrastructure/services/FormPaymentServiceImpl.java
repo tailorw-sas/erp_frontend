@@ -45,7 +45,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing payment.");
             }
         }
-        else throw new BusinessException(DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK, DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK.name());
+        else throw new BusinessException(DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK, DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK.getReasonPhrase());
 //        else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing transaction date.");
     }
 
