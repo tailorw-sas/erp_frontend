@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckAdultsAndChildrenRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -171,6 +172,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         }
 
         for (int i = 0; i < command.getRoomRateCommands().size(); i++) {
+            RulesChecker.checkRule(new ManageRoomRateCheckAdultsAndChildrenRule(command.getRoomRateCommands().get(i).getAdults(), command.getRoomRateCommands().get(i).getChildren()));
             Double invoiceAmount = command.getRoomRateCommands().get(i).getInvoiceAmount();
             if (command.getInvoiceCommand().getInvoiceType().compareTo(EInvoiceType.CREDIT) == 0
                     && invoiceAmount > 0) {
