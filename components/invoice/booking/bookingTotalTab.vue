@@ -412,7 +412,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
   // Hotel Creation Date
   {
     field: 'hotelCreationDate',
-    header: 'Hotel Creation Date',
+    header: 'Hotel Creation Date aqui',
     dataType: 'date',
     class: 'field col-12 md:col-3 required ',
     headerClass: 'mb-1',
@@ -485,9 +485,16 @@ const fieldsV2: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
     validation: z.number().min(1, 'The Adults field must be greater than 0').nullable()
   },
-
-  // Children
   {
+        field: 'contract',
+        header: 'Contract',
+        dataType: 'text',
+        class: 'field col-12 md:col-3',
+        headerClass: 'mb-1',
+        //validation: z.string().regex(/^[a-z0-9]+$/i, 'No se permiten caracteres especiales').nullable()
+      },
+  // Children
+ /* {
     field: 'children',
     header: 'Child',
     dataType: 'number',
@@ -517,11 +524,11 @@ const fieldsV2: Array<FieldDefinitionType> = [
     validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
   },
 
-
+*/
   // Invoice Amount
   {
     field: 'invoiceAmount',
-    header: 'Invoice Amount',
+    header: 'Booking Amount',
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
@@ -647,7 +654,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     field: 'description',
     header: 'Remark',
     dataType: 'text',
-    class: 'field col-12 md:col-9',
+    class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
   },
 ]

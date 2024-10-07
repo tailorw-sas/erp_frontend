@@ -1450,9 +1450,10 @@ function updateBooking(booking: any) {
         lastName: booking?.lastName,
         hotelAmount: booking?.hotelAmount,
         adults: booking?.adults,
-        children: booking?.children
-
+        children: booking?.children,
+       
       }
+
     }
   }
 
@@ -1463,7 +1464,7 @@ function updateBooking(booking: any) {
 
     // roomType: { id: booking?.roomType?.id }, // Solo el ID
     // ratePlan: { id: booking?.ratePlan?.id }, // Solo el ID
-    // agency: bookingList.value[index]?.agency,
+    agency: bookingList.value[index]?.agency,
     dueAmount: booking?.invoiceAmount,
     // agency: { id: bookingList.value[index]?.agency?.id },
   }
@@ -1476,10 +1477,12 @@ function updateBooking(booking: any) {
   const existingEditIndex = bookingEdit.value.findIndex((item: any) => item.id === booking.id)
   if (existingEditIndex === -1) {
     bookingEdit.value.push(booking) // Agregar el booking editado al array solo si no está presente
+    console.log(bookingEdit.value,'que hay aqui')
   }
   else {
     bookingEdit.value[existingEditIndex] = booking // Actualizar el booking existente en el array
   }
+  
   // bookingEdit.value.push(booking); // Agregar el booking editado al array
   // bookingEdit.value = [booking]; //
   calcInvoiceAmountUpdate()
