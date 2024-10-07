@@ -15,6 +15,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageClient.ProducerReplicateManageClientService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageContact.ProducerReplicateManageContactService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCountry.ProducerReplicateManageCountryService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCurrency.ProducerReplicateManageCurrencyService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageEmployee.ProducerReplicateManageEmployeeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageHotel.ProducerReplicateManageHotelService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceStatus.ProducerReplicateManageInvoiceStatusService;
@@ -100,45 +101,48 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
 
     private final ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService;
 
+    private final IManagerCurrencyService currencyService;
+    private final ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService;
+
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService,
-            IManagerPaymentStatusService paymentStatusService,
-            IManagePaymentSourceService paymentSourceService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            ProducerReplicateManageInvoiceTypeService replicateManageInvoiceTypeService,
-            ProducerReplicateManagePaymentSourceService replicateManagePaymentSourceService,
-            ProducerReplicateManagePaymentStatusService replicateManagePaymentStatusService,
-            ProducerReplicateManagePaymentTransactionTypeService replicateManagePaymentTransactionTypeService,
-            ProducerReplicateManageInvoiceStatusService replicateManageInvoiceStatusService,
-            ProducerReplicateManageInvoiceTransactionTypeService replicateManageInvoiceTransactionTypeService,
-            IManageInvoiceStatusService invoiceStatusService, IManageTradingCompaniesService tradingCompaniesService, IManageAgencyService manageAgencyService,
-            IManageBankAccountService manageBankAccountService, IManageEmployeeService manageEmployeeService,
-            IManageHotelService manageHotelService, IManagerClientService managerClientService,
-            IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService,
-            ProducerReplicateManageAgencyService replicateManageAgencyService,
-            ProducerReplicateManageBankAccount replicateManageBankAccount,
-            ProducerReplicateManageEmployeeService replicateManageEmployeeService,
-            ProducerReplicateManageHotelService replicateManageHotelService,
-            ProducerReplicateManageClientService replicateManageClientService,
-            ProducerReplicateManagePaymentAttachmentStatusService replicateManagePaymentAttachmentStatusService,
-            IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
-            ProducerReplicateManageAttachmentTypeService replicateManageAttachmentTypeService,
-            IManageAttachmentTypeService attachmentTypeService,
-            IManageAgencyTypeService manageAgencyTypeService, IManagerB2BPartnerService managerB2BPartnerService,
-            ProducerReplicateManageAgencyTypeService replicateManageAgencyTypeService,
-            IManagerLanguageService managerLanguageService,
-            IManageVCCTransactionTypeService manageVCCTransactionTypeService,
-            IManageTransactionStatusService manageTransactionStatusService,
-            IManageB2BPartnerTypeService manageB2BPartnerTypeService, IManageMerchantConfigService manageMerchantConfigService, IManagerMerchantService iManagerMerchantService, ProducerReplicateManageMerchantConfigService producerReplicateManageMerchantConfigService,
-            IManageCityStateService manageCityStateService, IManagerCountryService managerCountryService,
-            ProducerReplicateManageLanguageService replicateManageLanguageService,
-            ProducerReplicateManageVCCTransactionTypeService replicateManageVCCTransactionTypeService,
-            ProducerReplicateManageTransactionStatusService replicateManageTransactionStatusService,
-            ProducerReplicateB2BPartnerService producerReplicateB2BPartnerService,
-            ProducerReplicateB2BPartnerTypeService producerReplicateB2BPartnerTypeService, ProducerReplicateManageMerchantService producerReplicateManageMerchantService,
-            ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
-            ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService,
-            IManageContactService manageContactService,
-            ProducerReplicateManageContactService producerReplicateManageContactService) {
+                                         IManagerPaymentStatusService paymentStatusService,
+                                         IManagePaymentSourceService paymentSourceService,
+                                         IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                         ProducerReplicateManageInvoiceTypeService replicateManageInvoiceTypeService,
+                                         ProducerReplicateManagePaymentSourceService replicateManagePaymentSourceService,
+                                         ProducerReplicateManagePaymentStatusService replicateManagePaymentStatusService,
+                                         ProducerReplicateManagePaymentTransactionTypeService replicateManagePaymentTransactionTypeService,
+                                         ProducerReplicateManageInvoiceStatusService replicateManageInvoiceStatusService,
+                                         ProducerReplicateManageInvoiceTransactionTypeService replicateManageInvoiceTransactionTypeService,
+                                         IManageInvoiceStatusService invoiceStatusService, IManageTradingCompaniesService tradingCompaniesService, IManageAgencyService manageAgencyService,
+                                         IManageBankAccountService manageBankAccountService, IManageEmployeeService manageEmployeeService,
+                                         IManageHotelService manageHotelService, IManagerClientService managerClientService,
+                                         IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService,
+                                         ProducerReplicateManageAgencyService replicateManageAgencyService,
+                                         ProducerReplicateManageBankAccount replicateManageBankAccount,
+                                         ProducerReplicateManageEmployeeService replicateManageEmployeeService,
+                                         ProducerReplicateManageHotelService replicateManageHotelService,
+                                         ProducerReplicateManageClientService replicateManageClientService,
+                                         ProducerReplicateManagePaymentAttachmentStatusService replicateManagePaymentAttachmentStatusService,
+                                         IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
+                                         ProducerReplicateManageAttachmentTypeService replicateManageAttachmentTypeService,
+                                         IManageAttachmentTypeService attachmentTypeService,
+                                         IManageAgencyTypeService manageAgencyTypeService, IManagerB2BPartnerService managerB2BPartnerService,
+                                         ProducerReplicateManageAgencyTypeService replicateManageAgencyTypeService,
+                                         IManagerLanguageService managerLanguageService,
+                                         IManageVCCTransactionTypeService manageVCCTransactionTypeService,
+                                         IManageTransactionStatusService manageTransactionStatusService,
+                                         IManageB2BPartnerTypeService manageB2BPartnerTypeService, IManageMerchantConfigService manageMerchantConfigService, IManagerMerchantService iManagerMerchantService, ProducerReplicateManageMerchantConfigService producerReplicateManageMerchantConfigService,
+                                         IManageCityStateService manageCityStateService, IManagerCountryService managerCountryService,
+                                         ProducerReplicateManageLanguageService replicateManageLanguageService,
+                                         ProducerReplicateManageVCCTransactionTypeService replicateManageVCCTransactionTypeService,
+                                         ProducerReplicateManageTransactionStatusService replicateManageTransactionStatusService,
+                                         ProducerReplicateB2BPartnerService producerReplicateB2BPartnerService,
+                                         ProducerReplicateB2BPartnerTypeService producerReplicateB2BPartnerTypeService, ProducerReplicateManageMerchantService producerReplicateManageMerchantService,
+                                         ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
+                                         ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService,
+                                         IManageContactService manageContactService,
+                                         ProducerReplicateManageContactService producerReplicateManageContactService, IManagerCurrencyService currencyService, ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService) {
         this.tradingCompaniesService = tradingCompaniesService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerLanguageService = managerLanguageService;
@@ -189,6 +193,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.producerReplicateManageTradingCompanyService = producerReplicateManageTradingCompanyService;
         this.manageContactService = manageContactService;
         this.producerReplicateManageContactService = producerReplicateManageContactService;
+        this.currencyService = currencyService;
+        this.producerReplicateManageCurrencyService = producerReplicateManageCurrencyService;
     }
 
     @Override
@@ -435,6 +441,15 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                         producerReplicateManageTradingCompanyService.create(new ReplicateManageTradingCompanyKafka(manageTradingCompaniesDto.getId(),
                                 manageTradingCompaniesDto.getCode(), manageTradingCompaniesDto.getIsApplyInvoice(),
                                 manageTradingCompaniesDto.getCif(), manageTradingCompaniesDto.getAddress(), manageTradingCompaniesDto.getCompany()));
+                    }
+                }
+                case MANAGE_CURRENCY -> {
+                    for (ManagerCurrencyDto dto: this.currencyService.findAllToReplicate()){
+                        this.producerReplicateManageCurrencyService.create(
+                                new ReplicateManageCurrencyKafka(
+                                        dto.getId(), dto.getCode(), dto.getName(), dto.getStatus().name()
+                                )
+                        );
                     }
                 }
                 default ->
