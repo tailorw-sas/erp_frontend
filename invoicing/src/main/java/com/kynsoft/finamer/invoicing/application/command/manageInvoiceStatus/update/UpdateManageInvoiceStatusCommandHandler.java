@@ -8,6 +8,10 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoiceStatus.ManageInvoiceStatusCanceledMustBeUniqueRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoiceStatus.ManageInvoiceStatusProcessedMustBeUniqueRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoiceStatus.ManageInvoiceStatusReconciledMustBeUniqueRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoiceStatus.ManageInvoiceStatusSentMustBeUniqueRule;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceStatusService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoiceStatus.ProducerUpdateManageInvoiceStatusService;
 import org.springframework.stereotype.Component;
@@ -34,7 +38,18 @@ public class UpdateManageInvoiceStatusCommandHandler implements ICommandHandler<
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Invoice Status ID cannot be null."));
 
         ManageInvoiceStatusDto dto = service.findById(command.getId());
-
+        if (command.isSentStatus()) {
+            RulesChecker.checkRule(new ManageInvoiceStatusSentMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.isCanceledStatus()) {
+            RulesChecker.checkRule(new ManageInvoiceStatusCanceledMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.isReconciledStatus()) {
+            RulesChecker.checkRule(new ManageInvoiceStatusReconciledMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.getProcessStatus()) {
+            RulesChecker.checkRule(new ManageInvoiceStatusProcessedMustBeUniqueRule(service, command.getId()));
+        }
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
