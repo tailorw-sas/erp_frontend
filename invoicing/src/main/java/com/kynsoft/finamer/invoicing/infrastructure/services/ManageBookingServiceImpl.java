@@ -109,7 +109,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
-    public Optional<ManageBookingDto> findManageBookingByReservationNumber(String reservationNumber) {
+    public Optional<ManageBookingDto> findManageBookingByReservationNumber(long reservationNumber) {
         Optional<ManageBooking> manageBooking= this.repositoryQuery.findManageBookingByReservationNumber(reservationNumber);
         if (manageBooking.isPresent()){
             return manageBooking.map(ManageBooking::toAggregate);

@@ -17,7 +17,7 @@ public class InvoiceReconcileAutomaticRow {
     @Cell(position = 0)
     private String columnA;
     @Cell(position = 23)
-    private String columnW;
+    private Long columnW;
     @Cell(position = 40,cellType = CustomCellType.NUMERIC)
     private String columnAN;
     @Cell(position = 4)

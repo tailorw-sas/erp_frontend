@@ -31,7 +31,7 @@ public class ReconcileValidatorReservationNumberValidator extends ExcelRuleValid
     }
 
     private boolean validateColumnWIsNotEmpty(InvoiceReconcileAutomaticRow obj, List<ErrorField> errorFieldList) {
-        if (Objects.isNull(obj.getColumnW()) || obj.getColumnW().isEmpty()) {
+        if (Objects.isNull(obj.getColumnW())) {
             errorFieldList.add(new ErrorField("Column W", "The column W can't be empty"));
             return false;
         }
