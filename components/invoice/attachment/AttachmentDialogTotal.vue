@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { v4 } from 'uuid'
 import AttachmentHistoryTotal from './AttachmentHistoryTotal.vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { Container } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -54,6 +54,7 @@ const props = defineProps({
     required: false
   }
 })
+const emit = defineEmits(['update:listItems', 'deleteListItems'])
 
 const { data: userData } = useAuth()
 
@@ -448,9 +449,16 @@ async function createItem(item: { [key: string]: any }) {
 
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
-
     payload.type = item.type?.id
-    await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+
+    if (props.isCreationDialog) {
+      payload.id = v4()
+      payload.type = item.type
+      emit('update:listItems', payload)
+    }
+    else {
+      await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+    }
   }
 }
 
@@ -508,12 +516,6 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      if (props.isCreationDialog) {
-        item.id = v4()
-        await props.addItem(item)
-        clearForm()
-        return loadingSaveAll.value = false
-      }
       await createItem(item)
     }
     catch (error: any) {
@@ -524,7 +526,9 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    if (!props.isCreationDialog) {
+      getList()
+    }
   }
 }
 
@@ -710,6 +714,7 @@ onMounted(async () => {
             </div>
           </div>
           <div style="max-width: 700px; overflow: auto;">
+            <!--            <pre>{{listItems}}</pre> -->
             <DynamicTable
               :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="options"
               :pagination="Pagination" @update:clicked-item="getItemById($event)"

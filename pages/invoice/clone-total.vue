@@ -10,6 +10,7 @@ import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTotalTabView.vue'
+import type {IQueryRequest} from "~/components/fields/interfaces/IFieldInterfaces";
 
 const bookingEdited = ref(false)
 const bookingEdit: any = ref([])
@@ -69,6 +70,7 @@ const active = ref(0)
 const route = useRoute()
 const transactionTypeList = ref<any[]>([])
 const ListItems = ref<any[]>([])
+const LocalAttachmentList = ref<any[]>([])
 const { data: userData } = useAuth()
 
 const selectedInvoice = ref({})
@@ -76,6 +78,7 @@ const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
 const totalAmount = ref(0)
 const loadingSaveAll = ref(false)
+const loadingAttachmentList = ref(false)
 const loadingDelete = ref(false)
 const agencyError = ref(false)
 const hotelError = ref(false)
@@ -263,6 +266,15 @@ const Pagination = ref<IPagination>({
   totalElements: 0,
   totalPages: 0,
   search: ''
+})
+
+const AttachmentsPayload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10000,
+  page: 0,
+  sortBy: 'attachmentId',
+  sortType: ENUM_SHORT_TYPE.ASC
 })
 
 // -------------------------------------------------------------------------------------------------------
@@ -888,6 +900,50 @@ async function getAdjustmentList() {
   }
 }
 
+async function getParentAttachmentList(invoiceId: string) {
+  try {
+    loadingAttachmentList.value = true
+    AttachmentsPayload.value.filter = [{
+      key: 'invoice.id',
+      operator: 'EQUALS',
+      value: invoiceId,
+      logicalOperation: 'AND'
+    }]
+    const response = await GenericService.search('invoicing', 'manage-attachment', AttachmentsPayload.value)
+    LocalAttachmentList.value = []
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+      LocalAttachmentList.value = [
+        ...LocalAttachmentList.value,
+        {
+          ...iterator,
+          attachmentId: '',
+          // attachmentId: iterator?.attachmentId ?? '',
+          fullName: `${iterator.code} - ${iterator.name}`,
+          loadingEdit: false,
+          loadingDelete: false,
+          type: {
+            ...iterator?.type,
+            fullName: `${iterator?.type?.code}-${iterator?.type?.name}`
+          }
+        }
+      ]
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    loadingAttachmentList.value = false
+  }
+}
+
 function requireConfirmationToSave(item: any) {
   const { event } = item
   confirm.require({
@@ -960,7 +1016,7 @@ async function createClonation(item: { [key: string]: any }) {
     payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
 
     // Obtener los attachments asociados al invoice
-    const attachments = await getAttachments(globalSelectedInvoicing)
+    /* const attachments = await getAttachments(globalSelectedInvoicing)
     payload.attachments = attachments.map(att => ({
       attachmentId: att.attachmentId,
       filename: att.filename,
@@ -970,7 +1026,19 @@ async function createClonation(item: { [key: string]: any }) {
       resourceType: 'INV-Invoice',
       employeeName: userData?.value?.user?.name,
       employeeId: userData?.value?.user?.userId,
-    }))
+    })) */
+    if (LocalAttachmentList.value.length > 0) {
+      payload.attachments = LocalAttachmentList.value.map(att => ({
+        attachmentId: att.attachmentId,
+        filename: att.filename,
+        file: att.file,
+        remark: att.remark,
+        type: att.type.id,
+        resourceType: 'INV-Invoice',
+        employeeName: userData?.value?.user?.name,
+        employeeId: userData?.value?.user?.userId,
+      }))
+    }
 
     const listBookingsTemp = JSON.parse(JSON.stringify(bookingList.value))
     const bookingsEdit = await filterEditFields(listBookingsTemp) || []
@@ -1570,6 +1638,7 @@ onMounted(async () => {
   await getBookingList()
   await getRoomRateList(globalSelectedInvoicing)
   await getAdjustmentList()
+  await getParentAttachmentList(globalSelectedInvoicing)
   calcInvoiceAmount()
   // }
 })
@@ -1730,7 +1799,7 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
                 <Button
                   v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                  :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"
+                  :loading="loadingSaveAll || loadingAttachmentList" @click="handleAttachmentDialogOpen()"
                 />
               </IfCan>
               <Button
@@ -1745,9 +1814,10 @@ onMounted(async () => {
             :close-dialog="() => {
               attachmentDialogOpen = false;
               getItemById(idItem)
-            }" :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
-            :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item"
-            :is-save-in-total-clone="isSaveInTotalClone"
+            }" :is-creation-dialog="idItemCreated === ''" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
+            :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item" :list-items="LocalAttachmentList"
+            :is-save-in-total-clone="isSaveInTotalClone" @update:list-items="($event) => LocalAttachmentList = [...LocalAttachmentList, $event]"
+            @delete-list-items="($id) => LocalAttachmentList = LocalAttachmentList.filter(item => item.id !== $id)"
           />
         </div>
       </template>
