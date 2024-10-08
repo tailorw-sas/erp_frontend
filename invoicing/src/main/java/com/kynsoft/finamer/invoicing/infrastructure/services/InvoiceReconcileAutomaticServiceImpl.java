@@ -17,6 +17,7 @@ import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooki
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileAutomaticImportProcessDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.event.importStatus.CreateImportReconcileAutomaticStatusEvent;
@@ -25,6 +26,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReconcileAutomaticS
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReport;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto.ReconcileAutomaticValidatorFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportCacheEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportErrorEntity;
@@ -34,6 +36,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAu
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportProcessStatusRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -60,6 +63,10 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private final InvoiceReconcileAutomaticImportErrorRedisRepository errorRedisRepository;
     private final InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository;
     private final ServiceLocator<IMediator> serviceLocator;
+    private final IManageResourceTypeService resourceTypeService;
+
+    @Value("${resource.type.code}")
+    private String paymentInvoiceTypeCode;
 
     public InvoiceReconcileAutomaticServiceImpl(ApplicationEventPublisher applicationEventPublisher,
                                                 InvoiceReconcileAutomaticImportCacheRedisRepository cacheRedisRepository,
@@ -69,7 +76,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
                                                 IManageAttachmentTypeService typeService, IManageBookingService manageBookingService,
                                                 InvoiceReconcileAutomaticImportErrorRedisRepository errorRedisRepository,
                                                 InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository,
-                                                ServiceLocator<IMediator> serviceLocator
+                                                ServiceLocator<IMediator> serviceLocator, IManageResourceTypeService resourceTypeService
     ) {
         this.applicationEventPublisher = applicationEventPublisher;
         this.cacheRedisRepository = cacheRedisRepository;
@@ -82,6 +89,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         this.errorRedisRepository = errorRedisRepository;
         this.statusRedisRepository = statusRedisRepository;
         this.serviceLocator = serviceLocator;
+        this.resourceTypeService = resourceTypeService;
+
     }
 
     @Override
@@ -161,11 +170,12 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private void createAttachmentForInvoice(String invoiceId, String employeeId, String employeeName, byte[] fileContent) {
         try {
             Optional<ManageAttachmentTypeDto> attachmentTypeDto = typeService.findDefault();
+            ResourceTypeDto resourceTypeDto = resourceTypeService.findByCode(paymentInvoiceTypeCode);
             if (attachmentTypeDto.isPresent()) {
                 LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent("Reconcile automatic", fileContent);
                 CreateAttachmentCommand createAttachmentCommand = new CreateAttachmentCommand("Reconcile Automatic Support", response.get("url"),
                         "Importer by reconcile automatic", attachmentTypeDto.get().getId(),
-                        UUID.fromString(invoiceId), employeeName, UUID.fromString(employeeId), null);
+                        UUID.fromString(invoiceId), employeeName, UUID.fromString(employeeId), resourceTypeDto.getId());
                 IMediator mediator = serviceLocator.getBean(IMediator.class);
                 mediator.send(createAttachmentCommand);
             }

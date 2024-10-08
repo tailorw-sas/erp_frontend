@@ -68,6 +68,15 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND.getReasonPhrase())));
     }
 
+    @Override
+    public ResourceTypeDto findByCode(String code) {
+        Optional<ResourceType> userSystem = this.repositoryQuery.findResourceTypeByCode(code);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND, new ErrorField("code", DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
 
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
