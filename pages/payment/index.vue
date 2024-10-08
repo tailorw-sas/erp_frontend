@@ -857,6 +857,7 @@ async function getList() {
       ATTACHMENT_WITH_ERROR: '#ff002b',
       ATTACHMENT_WITHOUT_ERROR: '#00b816',
     }
+    let color = listColor.NONE
 
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
@@ -904,6 +905,15 @@ async function getList() {
         iterator.status = String(iterator.status)
       }
 
+      if (Object.prototype.hasOwnProperty.call(iterator, 'attachmentStatus')) {
+        if (iterator.attachmentStatus?.patWithAttachment) {
+          color = listColor.ATTACHMENT_WITHOUT_ERROR
+        }
+        else if (iterator.attachmentStatus?.pwaWithOutAttachment) {
+          color = listColor.ATTACHMENT_WITH_ERROR
+        }
+      }
+
       // "paymentAmount": 1000,
       // "paymentBalance": 1000,
       // "depositAmount": 100,
@@ -919,8 +929,9 @@ async function getList() {
             ...iterator,
             loadingEdit: false,
             loadingDelete: false,
-            color: listColor[iterator.eattachment as keyof ListColor]
+            color,
           }
+          // color: listColor[iterator.eattachment as keyof ListColor]
         ) // color: valores[Math.floor(Math.random() * valores.length)]
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
@@ -1277,9 +1288,6 @@ async function applyPaymentGetList() {
     applyPaymentOptions.value.loading = true
     applyPaymentListOfInvoice.value = []
     const newListItems = []
-    console.log('Entro a este listar....')
-    console.log(objItemSelectedForRightClickApplyPayment.value)
-    console.log('---------------------------------------------------')
 
     // Validacion para busar por por las agencias
     const filter: FilterCriteria[] = [
@@ -1405,6 +1413,22 @@ async function applyPaymentGetList() {
         value: 'PROCECSED',
         logicalOperation: 'AND'
       })
+    }
+
+    const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'manageInvoiceStatus.enabledToApply')
+
+    if (objFilterEnabledToApply) {
+      objFilterEnabledToApply.value = true
+    }
+    else {
+      applyPaymentPayload.value.filter.push(
+        {
+          key: 'manageInvoiceStatus.enabledToApply',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        }
+      )
     }
 
     const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
