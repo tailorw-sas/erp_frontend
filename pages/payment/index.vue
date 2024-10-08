@@ -1277,6 +1277,9 @@ async function applyPaymentGetList() {
     applyPaymentOptions.value.loading = true
     applyPaymentListOfInvoice.value = []
     const newListItems = []
+    console.log('Entro a este listar....')
+    console.log(objItemSelectedForRightClickApplyPayment.value)
+    console.log('---------------------------------------------------')
 
     // Validacion para busar por por las agencias
     const filter: FilterCriteria[] = [
@@ -1918,7 +1921,6 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    objItemSelectedForRightClickApplyPayment.value = {}
     const menuItemChangeAgency = allMenuListItems.value.find(item => item.id === 'changeAgency')
     if (menuItemChangeAgency) {
       menuItemChangeAgency.disabled = true
@@ -3113,7 +3115,6 @@ onMounted(async () => {
       </template>
       <template #default>
         <div class="p-fluid pt-3">
-          <!-- <pre>{{ paymentDetailsTypeDepositSelected }}</pre> -->
           <BlockUI v-if="objItemSelectedForRightClickApplyPayment?.hasDetailTypeDeposit" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
             <DataTable
               v-model:selection="paymentDetailsTypeDepositSelected"
