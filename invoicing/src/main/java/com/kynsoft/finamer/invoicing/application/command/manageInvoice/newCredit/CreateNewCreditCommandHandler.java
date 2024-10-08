@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
+import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
@@ -79,7 +80,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             Double bookingAmount = parentBooking.getInvoiceAmount();
             Double newBookingAmount = bookingRequest.getAmount();
 
-            if(!Objects.equals(bookingAmount, newBookingAmount)){
+            if(newBookingAmount != 0){
                 //en caso de que venga positivo
                 if (newBookingAmount > 0) {
                     newBookingAmount = -newBookingAmount;
@@ -134,6 +135,9 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
 
         int cont = 0;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
+            RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
+                    command.getAttachmentCommands().get(i).getFile()
+            ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
             if(attachmentType.isAttachInvDefault()) {

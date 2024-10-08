@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
+import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckAdultsAndChildrenRule;
@@ -283,6 +284,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         int cont = 0;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
+            RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
+                    command.getAttachmentCommands().get(i).getFile()
+            ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
             if(attachmentType.isAttachInvDefault()) {

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -35,5 +36,17 @@ public interface ManageInvoiceStatusReadDataJPARepository extends JpaRepository<
 
     @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.processStatus = true AND b.id <> :id")
     Long countByProcessStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.sentStatus = true")
+    Optional<ManageInvoiceStatus> findBySentStatus();
+
+    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.reconciledStatus = true")
+    Optional<ManageInvoiceStatus> findByReconciledStatus();
+
+    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.canceledStatus = true")
+    Optional<ManageInvoiceStatus> findByCanceledStatus();
+
+    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.processStatus = true")
+    Optional<ManageInvoiceStatus> findByProcessStatus();
 
 }
