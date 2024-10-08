@@ -265,7 +265,7 @@ const Fields = ref<Array<Container>>([
         field: 'couponNumber',
         header: 'Coupon No.',
         dataType: 'text',
-        class: 'field col-12 md: required',
+        class: 'field col-12',
         headerClass: 'mb-1',
         ...(couponNumberValidation.value ? { validation: z.string().min(1, 'The coupon no. field is required').regex(new RegExp(couponNumberValidation.value), 'The coupon no. field is invalid') } : { validation: z.string().min(1, 'The coupon no. field is required') })
 
@@ -443,7 +443,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     field: 'couponNumber',
     header: 'Coupon No.',
     dataType: 'text',
-    class: 'field col-12 md:col-3 required',
+    class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
   },
   // Check In
