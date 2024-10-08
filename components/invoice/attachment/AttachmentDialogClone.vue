@@ -650,6 +650,34 @@ function showHistory() {
 }
 
 function downloadFile() {
+  if (props.isCreationDialog && item.value.file) {
+    const url = URL.createObjectURL(item.value.file);
+    
+    // Abre el PDF en una nueva ventana
+    const newWindow = window.open(url, '_blank');
+    if (!newWindow) {
+      alert('Por favor, habilita las ventanas emergentes para este sitio.');
+    }
+    
+    // Libera el objeto URL después de usarlo
+    newWindow.onload = () => {
+      URL.revokeObjectURL(url);
+    };
+    
+    return;
+  }
+
+  if (item.value && item.value.file) {
+    // Abre el archivo en una nueva ventana
+    const newWindow = window.open(item.value.file, '_blank');
+    if (!newWindow) {
+      alert('Por favor, habilita las ventanas emergentes para este sitio.');
+    }
+  }
+}
+
+/*
+function downloadFile() {
   if (props.isCreationDialog) {
     const reader = new FileReader()
     reader.readAsDataURL(item.value.file)
@@ -675,7 +703,7 @@ function downloadFile() {
     link.click()
     document.body.removeChild(link)
   }
-}
+}*/
 
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
@@ -815,7 +843,8 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                  :disabled="!isCreationDialog && ListItems.length > 0"
+                  :disabled="!isCreationDialog ? !ListItems.some((item: any) => item.type?.attachInvDefault) : isCreationDialog ? !listItemsLocal.some((item: any) => item.type?.attachInvDefault) : false"
+              
                   :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
                     typeError = false
