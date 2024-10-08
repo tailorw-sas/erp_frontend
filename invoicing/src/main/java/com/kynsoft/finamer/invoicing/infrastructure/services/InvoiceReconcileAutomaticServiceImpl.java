@@ -3,17 +3,26 @@ package com.kynsoft.finamer.invoicing.infrastructure.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
+import com.kynsof.share.core.domain.exception.ExcelException;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsof.share.utils.ServiceLocator;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileAuto.InvoiceReconcileAutomaticRequest;
+import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.automatic.InvoiceReconcileAutomaticImportProcessStatusRequest;
+import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.automatic.InvoiceReconcileAutomaticImportErrorRequest;
+import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingErrorRequest;
+import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
+import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
+import com.kynsoft.finamer.invoicing.domain.dto.BookingImportProcessDto;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileAutomaticImportProcessDto;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileImportProcessStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
+import com.kynsoft.finamer.invoicing.domain.event.importStatus.CreateImportReconcileAutomaticStatusEvent;
 import com.kynsoft.finamer.invoicing.domain.event.importStatus.CreateImportStatusEvent;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.reconcileAutomatic.InvoiceReconcileAutomaticRow;
@@ -25,10 +34,15 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto.ReconcileAutomaticValidatorFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportProcessRedisEntity;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.InvoiceReconcileImportError;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportCacheEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportErrorEntity;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportProcessStatusRedisEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportErrorRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportProcessStatusRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.content.InvoiceReconcileAutomaticProvider;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
@@ -57,7 +71,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private final InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil;
     private final IManageAttachmentTypeService typeService;
     private final IManageBookingService manageBookingService;
-
+    private final InvoiceReconcileAutomaticImportErrorRedisRepository errorRedisRepository;
+    private final InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository;
     private final ServiceLocator<IMediator> serviceLocator;
 
     public InvoiceReconcileAutomaticServiceImpl(ApplicationEventPublisher applicationEventPublisher,
@@ -66,6 +81,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
                                                 InvoiceReportProviderFactory invoiceReportProviderFactory,
                                                 InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil,
                                                 IManageAttachmentTypeService typeService, IManageBookingService manageBookingService,
+                                                InvoiceReconcileAutomaticImportErrorRedisRepository errorRedisRepository,
+                                                InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository,
                                                 ServiceLocator<IMediator> serviceLocator
     ) {
         this.applicationEventPublisher = applicationEventPublisher;
@@ -76,6 +93,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         this.invoiceUploadAttachmentUtil = invoiceUploadAttachmentUtil;
         this.typeService = typeService;
         this.manageBookingService = manageBookingService;
+        this.errorRedisRepository = errorRedisRepository;
+        this.statusRedisRepository = statusRedisRepository;
         this.serviceLocator = serviceLocator;
     }
 
@@ -170,7 +189,33 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     }
 
     private void createImportProcessStatusEvent(InvoiceReconcileAutomaticImportProcessDto dto) {
-        CreateImportStatusEvent createImportStatusEvent = new CreateImportStatusEvent(this, dto);
+        CreateImportReconcileAutomaticStatusEvent createImportStatusEvent = new CreateImportReconcileAutomaticStatusEvent(this, dto);
         applicationEventPublisher.publishEvent(createImportStatusEvent);
+    }
+
+    @Override
+    public PaginatedResponse getImportErrors(InvoiceReconcileAutomaticImportErrorRequest invoiceReconcileAutomaticErrorRequest) {
+        Page<InvoiceReconcileAutomaticImportErrorEntity> importErrorPages = errorRedisRepository.
+                findAllByImportProcessId(invoiceReconcileAutomaticErrorRequest.getQuery(),
+                        invoiceReconcileAutomaticErrorRequest.getPageable());
+        return new PaginatedResponse(importErrorPages.getContent(),
+                importErrorPages.getTotalPages(),
+                importErrorPages.getNumberOfElements(),
+                importErrorPages.getTotalElements(),
+                importErrorPages.getSize(),
+                importErrorPages.getNumber());
+    }
+
+    @Override
+    public ImportBookingProcessStatusResponse getImportBookingProcessStatus(InvoiceReconcileAutomaticImportProcessStatusRequest importProcessStatusRequest) {
+        Optional<InvoiceReconcileAutomaticImportProcessStatusRedisEntity> statusDtp =
+                statusRedisRepository.findByImportProcessId(importProcessStatusRequest.getImportProcessId());
+        if (statusDtp.isPresent()) {
+            if (statusDtp.get().isHasError()) {
+                throw new ExcelException(statusDtp.get().getExceptionMessage());
+            }
+            return new ImportBookingProcessStatusResponse(statusDtp.get().getStatus().name(), statusDtp.get().getTotal());
+        }
+        return null;
     }
 }

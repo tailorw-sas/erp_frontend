@@ -10,6 +10,5 @@ public class InvoiceReconcileAutomaticRequest{
     private String employeeId;
     private String employeeName;
     private String[] invoiceIds;
-
     private byte[] fileContent;
 }
