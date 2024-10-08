@@ -5,6 +5,8 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.reconcileAutomatic.Invoic
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
+import com.kynsoft.finamer.invoicing.infrastructure.excel.event.error.reconcileAutomatic.InvoiceReconcileAutomaticRowErrorEvent;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportErrorEntity;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -43,9 +45,23 @@ public class ReconcileAutomaticValidatorFactory extends ValidatorFactory<Invoice
                    priceValidator.validate(toValidate,errorFieldList);
        }
 
-        this.sendErrorEvent(bookingRow);
+        this.sendErrorEvents(toValidate);
         boolean result = errorFieldList.isEmpty();
         this.clearErrors();
         return result;
+    }
+
+
+    private void sendErrorEvents(InvoiceReconcileAutomaticRow toValidate){
+        if (!errorFieldList.isEmpty()) {
+            InvoiceReconcileAutomaticRowErrorEvent errorEvent = new InvoiceReconcileAutomaticRowErrorEvent();
+            errorEvent.setError(InvoiceReconcileAutomaticImportErrorEntity.builder()
+                    .errorFields(errorFieldList)
+                    .importProcessId(toValidate.getImportProcessId())
+                    .rowNumber(toValidate.getRowNumber())
+                    .row(toValidate)
+                    .build());
+            applicationEventPublisher.publishEvent(errorEvent);
+        }
     }
 }

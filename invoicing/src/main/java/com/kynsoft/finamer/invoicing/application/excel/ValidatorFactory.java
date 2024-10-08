@@ -13,7 +13,7 @@ import java.util.Map;
 
 public abstract class ValidatorFactory<T> {
 
-    private final ApplicationEventPublisher applicationEventPublisher;
+    protected final ApplicationEventPublisher applicationEventPublisher;
     protected List<ErrorField> errorFieldList;
     protected Map<String, ExcelRuleValidator<BookingRow>> validators;
 
