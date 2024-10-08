@@ -4,6 +4,7 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfCopy;
 import com.itextpdf.text.pdf.PdfReader;
+import com.kynsof.share.core.infrastructure.util.PDFUtils;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
@@ -13,6 +14,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.Invo
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -109,11 +111,24 @@ public class InvoiceGrouper {
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds, boolean isWithAttachment) throws DocumentException, IOException {
         ByteArrayOutputStream combinedOutputStream = new ByteArrayOutputStream();
         if (isWithAttachment) {
-            combineReports(invoiceIds, combinedOutputStream, EInvoiceReportType.INVOICE_AND_BOOKING, EInvoiceReportType.INVOICE_SUPPORT);
+            combinedOutputStream=PDFUtils.mergePDF(getReportContent(invoiceIds,EInvoiceReportType.INVOICE_AND_BOOKING, EInvoiceReportType.INVOICE_SUPPORT));
+            //combineReports(invoiceIds, combinedOutputStream, EInvoiceReportType.INVOICE_AND_BOOKING, EInvoiceReportType.INVOICE_SUPPORT);
         } else {
             combineReports(invoiceIds, combinedOutputStream, EInvoiceReportType.INVOICE_AND_BOOKING);
         }
         return combinedOutputStream.size() > 0 ? Optional.of(combinedOutputStream) : Optional.empty();
+    }
+
+    private List<InputStream> getReportContent(String invoiceIds,EInvoiceReportType... reportTypes) throws DocumentException, IOException {
+        List<InputStream> result = new ArrayList<>();
+        for (EInvoiceReportType reportType : reportTypes) {
+            IInvoiceReport reportService = invoiceReportProviderFactory.getInvoiceReportService(reportType);
+            Optional<Map<String, byte[]>> response = getReportContent(reportService, invoiceIds);
+            if (response.isPresent() && !response.get().isEmpty()) {
+               result.add(new ByteArrayInputStream(response.get().values().iterator().next()));
+            }
+        }
+        return result;
     }
 
     // Combinar los reportes en el output stream
