@@ -1356,6 +1356,16 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
+function mapFunctionForType(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    code: data.code,
+    description: data.description
+  }
+}
+
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
   let clientTemp: any[] = []
   clientList.value = [allDefaultItem]
@@ -1404,8 +1414,8 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
 async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let invoiceTypeListTemp: any[] = []
   invoiceTypeList.value = [allDefaultItem]
-  invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-    invoiceTypeList.value = [...invoiceTypeList.value, ...invoiceTypeListTemp]
+  invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionForType, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })    
+  invoiceTypeList.value = [...invoiceTypeList.value, ...invoiceTypeListTemp]
 }
 
 // async function getInvoiceTypeList(query = '') {
@@ -2158,7 +2168,7 @@ const legend = ref(
                         @load="async($event) => {
                           const filter: FilterCriteria[] = [
                             {
-                              key: 'invoiceType',
+                              key: 'status',
                               logicalOperation: 'AND',
                               operator: 'EQUALS',
                               value: 'ACTIVE',
