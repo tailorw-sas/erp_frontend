@@ -804,6 +804,7 @@ function clearFilterToSearch() {
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
   };
+selectedElements.value = [];
  listItems.value = [];
  pagination.value.totalElements=0
  
