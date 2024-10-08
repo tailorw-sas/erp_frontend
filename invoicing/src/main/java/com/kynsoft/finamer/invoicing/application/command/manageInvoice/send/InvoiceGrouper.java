@@ -173,7 +173,7 @@ public class InvoiceGrouper {
             String agencyName = firstInvoice.getAgency().getName();
             String invoiceNumber = firstInvoice.getInvoiceNumber();
             LocalDate invoiceDate = firstInvoice.getInvoiceDate().toLocalDate();
-            return "INV-" + invoiceNumber + " " + agencyName + " " + formatDate(invoiceDate) + ".pdf";
+            return invoiceNumber + " " + agencyName + " " + formatDate(invoiceDate) + ".pdf";
         }
     }
 
