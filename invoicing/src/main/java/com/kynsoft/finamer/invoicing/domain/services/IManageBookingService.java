@@ -24,7 +24,7 @@ public interface IManageBookingService {
 
     boolean existsByExactLastChars(String lastChars, UUID hotelId);
 
-    Optional<ManageBookingDto> findManageBookingByReservationNumber(long reservationNumber);
+    Optional<ManageBookingDto> findManageBookingByBookingNumber(String reservationNumber);
 
     void calculateHotelAmount(ManageBookingDto dto);
 

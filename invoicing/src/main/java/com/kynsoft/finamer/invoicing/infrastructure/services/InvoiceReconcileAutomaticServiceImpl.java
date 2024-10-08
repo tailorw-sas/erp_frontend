@@ -13,7 +13,6 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcile
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.automatic.InvoiceReconcileAutomaticImportProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.automatic.InvoiceReconcileAutomaticImportProcessStatusResponse;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.automatic.InvoiceReconcileAutomaticImportErrorRequest;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileAutomaticImportProcessDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
@@ -117,7 +116,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         InputStream inputStream = new ByteArrayInputStream(request.getFileContent());
         readerConfiguration.setInputStream(inputStream);
         readerConfiguration.setReadLastActiveSheet(true);
-        ExcelBeanReader<InvoiceReconcileAutomaticRow> reader = new ExcelBeanReader<>(readerConfiguration, InvoiceReconcileAutomaticRow.class);
+        readerConfiguration.setStartReading(3);
+         ExcelBeanReader<InvoiceReconcileAutomaticRow> reader = new ExcelBeanReader<>(readerConfiguration, InvoiceReconcileAutomaticRow.class);
         ExcelBean<InvoiceReconcileAutomaticRow> excelBean = new ExcelBean<>(reader);
         reconcileAutomaticValidatorFactory.createValidators(request.getInvoiceIds());
         for (InvoiceReconcileAutomaticRow invoiceReconcileAutomaticRow : excelBean) {
@@ -143,7 +143,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         do {
             cachePage = cacheRedisRepository.findAllByImportProcessId(request.getImportProcessId(), pageable);
             cachePage.stream().forEach(cacheEntity -> {
-                Optional<ManageBookingDto> booking = manageBookingService.findManageBookingByReservationNumber(cacheEntity.getReservationNumber());
+                Optional<ManageBookingDto> booking = manageBookingService.findManageBookingByBookingNumber(cacheEntity.getReservationNumber());
                 Optional<byte[]> fileContent = createInvoiceReconcileAutomaticSupportAttachmentContent(booking.get().getInvoice().getId().toString());
                 fileContent.ifPresent(content -> createAttachmentForInvoice(booking.get().getInvoice().getId().toString(),
                         request.getEmployeeId(),request.getEmployeeName(), content));

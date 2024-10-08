@@ -16,7 +16,7 @@ public class InvoiceReconcileAutomaticImportCacheEntity {
     private String importProcessId;
     private String contract;
     @Indexed
-    private Long reservationNumber;
+    private String reservationNumber;
     @Indexed
     private String couponNumber;
     private String nightType;

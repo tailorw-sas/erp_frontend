@@ -42,7 +42,7 @@ public class ReconcileAutomaticCouponNumberValidator extends ExcelRuleValidator<
     }
 
     private boolean validateCouponNumber(InvoiceReconcileAutomaticRow obj, List<ErrorField> errorFieldList){
-        Optional<ManageBookingDto> bookingDto = manageBookingService.findManageBookingByReservationNumber(obj.getColumnW());
+        Optional<ManageBookingDto> bookingDto = manageBookingService.findManageBookingByBookingNumber(obj.getColumnW());
         boolean isInTheSelectedInvoiceList = Arrays.stream(selectedInvoiceIds)
                 .anyMatch(id-> id.equals(bookingDto.get().getInvoice().getId().toString()));
         if (!isInTheSelectedInvoiceList){

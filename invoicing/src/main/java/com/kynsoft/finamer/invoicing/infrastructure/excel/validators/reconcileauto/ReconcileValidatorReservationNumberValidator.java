@@ -39,7 +39,7 @@ public class ReconcileValidatorReservationNumberValidator extends ExcelRuleValid
     }
 
     private boolean validateIfBookingExistByReservationNumber(InvoiceReconcileAutomaticRow obj, List<ErrorField> errorFieldList) {
-        Optional<ManageBookingDto> booking = manageBookingService.findManageBookingByReservationNumber(obj.getColumnW());
+        Optional<ManageBookingDto> booking = manageBookingService.findManageBookingByBookingNumber(obj.getColumnW());
         if (booking.isEmpty()) {
             errorFieldList.add(new ErrorField("Reservation Number", "There is not booking with the reservation Number"));
             return false;

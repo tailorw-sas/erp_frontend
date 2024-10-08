@@ -1,11 +1,10 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto;
 
 import com.kynsoft.finamer.invoicing.application.excel.ValidatorFactory;
+import com.kynsoft.finamer.invoicing.domain.event.importError.CreateImportReconcileAutomaticErrorEvent;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.reconcileAutomatic.InvoiceReconcileAutomaticRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
-import com.kynsoft.finamer.invoicing.infrastructure.excel.event.error.reconcileAutomatic.InvoiceReconcileAutomaticRowErrorEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportErrorEntity;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -61,8 +60,9 @@ public class ReconcileAutomaticValidatorFactory extends ValidatorFactory<Invoice
 
     private void sendErrorEvents(InvoiceReconcileAutomaticRow toValidate){
         if (!errorFieldList.isEmpty()) {
-            InvoiceReconcileAutomaticRowErrorEvent errorEvent = new InvoiceReconcileAutomaticRowErrorEvent();
-            errorEvent.setError(InvoiceReconcileAutomaticImportErrorEntity.builder()
+
+            CreateImportReconcileAutomaticErrorEvent errorEvent = new CreateImportReconcileAutomaticErrorEvent(this,
+                    InvoiceReconcileAutomaticImportErrorEntity.builder()
                     .errorFields(errorFieldList)
                     .importProcessId(toValidate.getImportProcessId())
                     .rowNumber(toValidate.getRowNumber())

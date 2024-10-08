@@ -12,6 +12,7 @@ import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcil
 import org.aspectj.bridge.IMessage;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,12 +34,12 @@ public class InvoiceReconcileAutomaticController {
         this.mediator = mediator;
     }
 
-    @PostMapping("/import-reconcile-auto")
-    public Mono<ResponseEntity<?>> importReconcileAutomaticFromFile(@RequestPart("files") FilePart filePart,
+    @PostMapping(value = "/import-reconcile-auto",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<ResponseEntity<?>> importReconcileAutomaticFromFile(@RequestPart("file") FilePart filePart,
                                                                     @RequestPart("importProcessId") String importProcessId,
                                                                     @RequestPart("employee") String employee,
                                                                     @RequestPart("employeeId") String employeeId,
-                                                                    @RequestPart("invoiceIds") String[] invoiceIds
+                                                                    @RequestPart("invoiceIds") String invoiceIdString
 
     ) {
         return DataBufferUtils.join(filePart.content())
@@ -46,7 +47,7 @@ public class InvoiceReconcileAutomaticController {
                     byte[] bytes = new byte[dataBuffer.readableByteCount()];
                     dataBuffer.read(bytes);
                     DataBufferUtils.release(dataBuffer);
-
+                    String [] invoiceIds = invoiceIdString.split(",");
                     InvoiceReconcileAutomaticRequest request = new InvoiceReconcileAutomaticRequest(importProcessId, employeeId, employee,invoiceIds, bytes);
                     InvoiceReconcileAutomaticCommand command = new InvoiceReconcileAutomaticCommand(request);
                     try {

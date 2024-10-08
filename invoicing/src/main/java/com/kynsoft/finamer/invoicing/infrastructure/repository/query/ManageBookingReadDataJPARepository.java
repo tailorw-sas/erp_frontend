@@ -24,5 +24,5 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Manage
 
     boolean existsByHotelBookingNumber(String bookingNumber);
 
-    Optional<ManageBooking> findManageBookingByReservationNumber(long reservationNumber);
+    Optional<ManageBooking> findManageBookingByHotelBookingNumber(String hotelBookingNumber);
 }
