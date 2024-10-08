@@ -1,6 +1,9 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.send;
 
+import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfCopy;
+import com.itextpdf.text.pdf.PdfReader;
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManagerB2BPartnerDto;
@@ -24,7 +27,7 @@ public class InvoiceGrouper {
         this.invoiceReportProviderFactory = invoiceReportProviderFactory;
     }
 
-    public List<GeneratedInvoice> generateInvoicesPDFs(List<ManageInvoiceDto> invoices, boolean groupByClient)
+    public List<GeneratedInvoice> generateInvoicesPDFs(List<ManageInvoiceDto> invoices, boolean groupByClient, boolean withAttachment)
             throws DocumentException, IOException {
         List<GeneratedInvoice> generatedInvoices = new ArrayList<>();
 
@@ -44,7 +47,7 @@ public class InvoiceGrouper {
                         .collect(Collectors.groupingBy(invoice -> invoice.getAgency().getClient().getId()));
 
                 for (List<ManageInvoiceDto> clientInvoices : invoicesByClient.values()) {
-                    ByteArrayOutputStream pdfStream = generatePDF(clientInvoices);
+                    ByteArrayOutputStream pdfStream = generatePDF(clientInvoices, withAttachment);
                     String nameFile = generateFileName(clientInvoices, true); // Genera el nombre correcto
                     generatedInvoices.add(new GeneratedInvoice(pdfStream, nameFile, b2bPartner.getIp(), b2bPartner.getUserName(), b2bPartner.getPassword(), clientInvoices));
                 }
@@ -54,7 +57,7 @@ public class InvoiceGrouper {
                         .collect(Collectors.groupingBy(invoice -> invoice.getHotel().getId()));
 
                 for (List<ManageInvoiceDto> hotelInvoices : invoicesByHotel.values()) {
-                    ByteArrayOutputStream pdfStream = generatePDF(hotelInvoices);
+                    ByteArrayOutputStream pdfStream = generatePDF(hotelInvoices, withAttachment);
                     String nameFile = generateFileName(hotelInvoices, false); // Genera el nombre correcto
                     generatedInvoices.add(new GeneratedInvoice(pdfStream, nameFile, b2bPartner.getIp(), b2bPartner.getUserName(), b2bPartner.getPassword(), hotelInvoices));
                 }
@@ -64,17 +67,33 @@ public class InvoiceGrouper {
         return generatedInvoices;
     }
 
-    private ByteArrayOutputStream generatePDF(List<ManageInvoiceDto> invoices) throws DocumentException, IOException {
+    public ByteArrayOutputStream generatePDF(List<ManageInvoiceDto> invoices, boolean withAttachment) throws DocumentException, IOException {
+        // Crear un nuevo OutputStream para almacenar el PDF combinado
+        ByteArrayOutputStream combinedPdfOutputStream = new ByteArrayOutputStream();
+        Document document = new Document();
+        PdfCopy copy = new PdfCopy(document, combinedPdfOutputStream);
+        document.open();
 
+        // Iterar sobre las facturas y combinar sus PDFs
         for (ManageInvoiceDto invoice : invoices) {
-            Optional<ByteArrayOutputStream> value = getInvoicesBooking(invoice.getId().toString(), true);
-            if (value.isPresent()) {
-                return value.get();
+            Optional<ByteArrayOutputStream> invoicePdf = getInvoicesBooking(invoice.getId().toString(), withAttachment);
+            if (invoicePdf.isPresent()) {
+                ByteArrayInputStream invoicePdfStream = new ByteArrayInputStream(invoicePdf.get().toByteArray());
+                PdfReader reader = new PdfReader(invoicePdfStream);
+
+                // Añadir cada página del PDF al documento combinado
+                for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+                    copy.addPage(copy.getImportedPage(reader, i));
+                }
+                reader.close();
             }
         }
-        // Si no se encuentra nada, devolver un PDF vacío
-        return new ByteArrayOutputStream();
+
+        // Cerrar el documento combinado
+        document.close();
+        return combinedPdfOutputStream;
     }
+
 
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds, boolean isWithAttachment) throws DocumentException, IOException {
         EInvoiceReportType reportType = isWithAttachment
@@ -154,7 +173,7 @@ public class InvoiceGrouper {
             String agencyName = firstInvoice.getAgency().getName();
             String invoiceNumber = firstInvoice.getInvoiceNumber();
             LocalDate invoiceDate = firstInvoice.getInvoiceDate().toLocalDate();
-            return "INV-" + invoiceNumber + " " + agencyName + " " + formatDate(invoiceDate) + ".pdf";
+            return invoiceNumber + " " + agencyName + " " + formatDate(invoiceDate) + ".pdf";
         }
     }
 
