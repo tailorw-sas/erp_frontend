@@ -1145,11 +1145,11 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criteria: ENUM_INVOICE_CRITERIA[3],
     search: '',
-    client: [],
-    agency: [],
-    hotel: [{ id: 'All', name: 'All', code: 'All' }],
+    client: [allDefaultItem],
+    agency: [allDefaultItem],
+    hotel: [allDefaultItem],
     status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
-    invoiceType: [{ id: 'All', name: 'All', code: 'All' }],
+    invoiceType: [allDefaultItem],
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
 
