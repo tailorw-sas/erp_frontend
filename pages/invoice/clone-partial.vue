@@ -62,7 +62,7 @@ const nightTypeRequired = ref(false)
 const requiresFlatRate = ref(false)
 
 const invoiceAmountError = ref(false)
-const showAdjustmentInTable = ref(false); 
+const showAdjustmentInTable = ref(false)
 const invoiceAmountErrorMessage = ref('')
 
 const hotelList = ref<any[]>([])
@@ -483,7 +483,7 @@ async function getRoomRateClonationList(idItemCreated: any) {
         loadingEdit: false,
         loadingDelete: false,
         fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
-       bookingId: iterator.booking.bookingId,
+        bookingId: iterator.booking.bookingId,
         roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
@@ -774,7 +774,7 @@ async function createPartialClonation(item: { [key: string]: any }) {
             id: adjustment.id,
             amount: adjustment.amount,
             transaction: adjustment.transaction,
-            date:adjustment.date,
+            date: adjustment.date,
             employee: adjustment.employee
           }
         })
@@ -799,7 +799,6 @@ async function createPartialClonation(item: { [key: string]: any }) {
     loadingSaveAll.value = false
   }
 }
-
 
 async function getHotelList(query = '') {
   try {
@@ -1031,30 +1030,29 @@ async function deleteItem(id: string) {
 }
 
 function disabledButtonSave() {
-    let result = false;
+  let result = false
 
-    if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
-       
-        const bookingIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.bookingId));
+  if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
+    const bookingIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.bookingId))
 
-        for (let i = 0; i < roomRateList.value.length; i++) {
-            const roomRate = roomRateList.value[i];
+    for (let i = 0; i < roomRateList.value.length; i++) {
+      const roomRate = roomRateList.value[i]
 
-            if (!bookingIdsWithAdjustments.has(roomRate.bookingId)) {
-                result = true; // Deshabilitar el botón si al menos un room rate por booking no tiene ajustes asociados
-                break; // Se encontró un room rate sin ajustes, por lo tanto, se deshabilita el botón
-            }
-        }
-    } else {
-        result = false; // Deshabilitar el botón si no hay ajustes o adjuntos
+      if (!bookingIdsWithAdjustments.has(roomRate.bookingId)) {
+        result = true // Deshabilitar el botón si al menos un room rate por booking no tiene ajustes asociados
+        break // Se encontró un room rate sin ajustes, por lo tanto, se deshabilita el botón
+      }
     }
+  }
+  else {
+    result = false // Deshabilitar el botón si no hay ajustes o adjuntos
+  }
 
-  
-    return result;
+  return result
 }
 
-//Funcion para el cloando total
-/*function disabledButtonSave() {
+// Funcion para el cloando total
+/* function disabledButtonSave() {
   let result = false
   if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
     result = true
@@ -1077,7 +1075,6 @@ function disabledButtonSave() {
   return result
 }
 */
-
 
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
@@ -1124,8 +1121,6 @@ async function saveItem(item: { [key: string]: any }) {
         await getBookingClonationList()
         await getRoomRateClonationList(idItemCreated.value)
         await getItemById(itemDetails.cloned)
-        console.log(itemDetails.cloned,'ID DEL INVOICE')
-        console.log(getItemById,'QUE MUESTRA AQUI')
         //  await getItemById(itemDetails.cloned)
 
         // Obtener los detalles del elemento recién creado
@@ -1540,10 +1535,9 @@ function addAdjustment(adjustment: any) {
         name: `${adjustment?.transactionType?.code || ''}-${adjustment?.transactionType?.name || ''}`
       },
       date: dayjs(adjustment?.date).startOf('day').toISOString(),
-      
+
     }
   ]
-  console.log('este es el listado')
   calcInvoiceAmountByAdjustment()
   calcInvoiceAmountInBookingByRoomRate()
 }
@@ -1602,7 +1596,6 @@ onMounted(async () => {
   if (route.query.type === InvoiceType.INVOICE && route.query.selected) {
     await getBookingList()
     await getRoomRateList(globalSelectedInvoicing)
-    console.log(adjustmentList, 'listado de ajustes')
     //   calcInvoiceAmount()
     calcInvoiceAmountByAdjustment()
     calcInvoiceAmountInBookingByRoomRate()
@@ -1676,15 +1669,30 @@ onMounted(async () => {
       <template #form-footer="props">
         <div style="width: 100%; height: 100%;">
           <InvoicePartialTabView
-            :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
-            :invoice-obj-amount="invoiceAmount" :is-dialog-open="bookingDialogOpen"
-            :close-dialog="() => { bookingDialogOpen = false }" :open-dialog="handleDialogOpen"
-            :selected-booking="selectedBooking" :open-adjustment-dialog="openAdjustmentDialog"
-            :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
-            :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
-            :update-room-rate="updateRoomRate" :is-creation-dialog="idItemCreated === ''" :invoice-obj="item"
-            :selected-invoice="idItemCreated" :booking-list="bookingList"   :adjustment-list="[]"
-            :add-adjustment="addAdjustment" :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
+            :requires-flat-rate="requiresFlatRate"
+            :get-invoice-hotel="getInvoiceHotel"
+            :invoice-obj-amount="invoiceAmount"
+            :is-dialog-open="bookingDialogOpen"
+            :close-dialog="() => { bookingDialogOpen = false }"
+            :open-dialog="handleDialogOpen"
+            :selected-booking="selectedBooking"
+            :open-adjustment-dialog="openAdjustmentDialog"
+            :force-update="forceUpdate"
+            :sort-adjustment="sortAdjustment"
+            :sort-booking="sortBooking"
+            :sort-room-rate="sortRoomRate"
+            :toggle-force-update="toggleForceUpdate"
+            :room-rate-list="roomRateList"
+            :update-room-rate="updateRoomRate"
+            :is-creation-dialog="idItemCreated === ''"
+            :invoice-obj="item"
+            :selected-invoice="idItemCreated"
+            :booking-list="bookingList"
+            :adjustment-list="[]"
+            :add-adjustment="addAdjustment"
+            :update-adjustment="updateAdjustment"
+            :active="active"
+            :set-active="($event) => {
               active = $event
             }" :open-adjustment-dialog-first-time="showAdjustmentDialogFirstTime"
           />
@@ -1716,9 +1724,14 @@ onMounted(async () => {
           <AttachmentDialogClone
             :add-item="addAttachment"
             :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem); }"
-            :is-creation-dialog="idItemCreated === ''" header="Manage Invoice Attachment" :list-items="attachmentList"
-            :open-dialog="attachmentDialogOpen" :update-item="updateAttachment"
-            :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item" :delete-item="deleteAttachment"
+            :is-creation-dialog="idItemCreated === ''"
+            header="Manage Invoice Attachment"
+            :list-items="attachmentList"
+            :open-dialog="attachmentDialogOpen"
+            :update-item="updateAttachment"
+            :selected-invoice="globalSelectedInvoicing"
+            :selected-invoice-obj="item"
+            :delete-item="deleteAttachment"
           />
         </div>
       </template>
