@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
+import { useToast } from 'primevue/usetoast'
+import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import { GenericService } from '~/services/generic-services'
 
 const props = defineProps({
   fields: {
@@ -69,12 +72,31 @@ const props = defineProps({
   },
   invoiceAmount: { type: Number, required: true }
 })
-const dialogVisible = ref(props.openDialog)
-const formFields = ref<FieldDefinitionType[]>([])
+const toast = useToast()
 const route = useRoute()
 
+const dialogVisible = ref(props.openDialog)
+const formFields = ref<FieldDefinitionType[]>([])
+const idInvoiceSelected = ref(route.query.selected)
 const invoiceType = ref('')
 const amountError = ref(false)
+
+const minDate = ref(dayjs().startOf('month').toDate())
+const maxDate = ref(dayjs().endOf('month').toDate())
+
+const configInvoiceApi = {
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice',
+  uriApiCloseOperations: 'invoice-close-operation'
+}
+const payloadForCloseOperation = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 50,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
 
 function validateInvoiceAmount(newAmount: number) {
   let amount = props.invoiceAmount
@@ -96,6 +118,59 @@ function validateInvoiceAmount(newAmount: number) {
   }
 }
 
+async function getInvoiceById() {
+  const result = await GenericService.getById(configInvoiceApi.moduleApi, configInvoiceApi.uriApi, route.query.selected as string)
+  return result || null
+}
+
+async function getCloseOperationsByHotelId(): Promise<{ minDate: string, maxDate: string }> {
+  let objResult: { minDate: string, maxDate: string } = {
+    minDate: dayjs().format('YYYY-MM-DD'),
+    maxDate: dayjs().format('YYYY-MM-DD')
+  }
+  try {
+    const { hotel } = await getInvoiceById()
+
+    if (hotel && hotel.id) {
+      const hotelFilter = payloadForCloseOperation.value.filter.find((item: IFilter) => item.key === 'hotel.id')
+
+      if (hotelFilter) {
+        hotelFilter.value = hotel.id
+      }
+      else {
+        payloadForCloseOperation.value.filter = [...payloadForCloseOperation.value.filter, {
+          key: 'hotel.id',
+          operator: 'EQUALS',
+          value: hotel.id,
+          logicalOperation: 'AND',
+          type: 'filterSearch',
+        }]
+      }
+      const objCloseOperation = await GenericService.search(configInvoiceApi.moduleApi, configInvoiceApi.uriApiCloseOperations, payloadForCloseOperation.value)
+
+      if (objCloseOperation.data.length === 0) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Close operation not found', life: 3000 })
+        objResult = {
+          minDate: dayjs().format('YYYY-MM-DD'),
+          maxDate: dayjs().format('YYYY-MM-DD')
+        }
+      }
+      else if (objCloseOperation.data.length > 0) {
+        objResult = {
+          minDate: objCloseOperation.data[0]?.beginDate,
+          maxDate: objCloseOperation.data[0]?.endDate
+        }
+      }
+    }
+
+    return objResult
+  }
+  catch (error) {
+    console.log(error)
+    return objResult
+  }
+}
+
 watch(() => props.invoiceObj, () => {
   if (props.invoiceObj?.invoiceType?.id) {
     invoiceType.value = props.invoiceObj?.invoiceType?.id
@@ -105,7 +180,7 @@ watch(() => props.invoiceObj, () => {
   }
 })
 
-onMounted(() => {
+onMounted(async () => {
   props?.fields.forEach((container) => {
     formFields.value.push(...container.childs)
   })
@@ -116,13 +191,19 @@ onMounted(() => {
   else {
     invoiceType.value = route.query.type as string
   }
+
+  minDate.value = dayjs((await getCloseOperationsByHotelId()).minDate).toDate()
+  maxDate.value = dayjs((await getCloseOperationsByHotelId()).maxDate).toDate()
 })
 </script>
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" :class="props.class || 'p-4 h-fit'"
-    :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
+    v-model:visible="dialogVisible"
+    modal :header="header"
+    :class="props.class || 'p-4 h-fit'"
+    :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'"
+    :block-scroll="true"
     @hide="closeDialog"
   >
     <div class="w-full h-full overflow-hidden p-2">
@@ -133,9 +214,12 @@ onMounted(() => {
       >
         <template #field-date="{ item: data, onUpdate }">
           <Calendar
-            v-if="!loadingSaveAll" v-model="data.date" date-format="yy-mm-dd"
-            :max-date="dayjs().endOf('day').toDate()" @update:model-value="($event) => {
-
+            v-if="!loadingSaveAll"
+            v-model="data.date"
+            date-format="yy-mm-dd"
+            :min-date="minDate"
+            :max-date="maxDate"
+            @update:model-value="($event) => {
               if (dayjs($event).isValid()){
                 onUpdate('date', dayjs($event).startOf('day').toDate())
               }
@@ -212,10 +296,7 @@ onMounted(() => {
 
               clearForm()
               closeDialog()
-            
-       
-     
-           
+
             }"
           />
         </template>
