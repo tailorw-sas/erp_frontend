@@ -73,9 +73,14 @@ public class InvoiceGrouper {
                 .collect(Collectors.groupingBy(invoice -> invoice.getHotel().getId()));
 
         for (List<ManageInvoiceDto> hotelInvoices : invoicesByHotel.values()) {
-            ByteArrayOutputStream pdfStream = generatePDF(hotelInvoices, withAttachment);
-            String nameFile = generateFileName(hotelInvoices, false);
-            generatedInvoices.add(new GeneratedInvoice(pdfStream, nameFile, b2bPartner.getIp(), b2bPartner.getUserName(), b2bPartner.getPassword(), hotelInvoices));
+            for (ManageInvoiceDto invoice : hotelInvoices) {
+                List<ManageInvoiceDto> invoiceDtos = new ArrayList<>();
+                invoiceDtos.add(invoice);
+                ByteArrayOutputStream pdfStream = generatePDF(invoiceDtos, withAttachment);
+                String nameFile = generateFileName(invoiceDtos, false);
+                generatedInvoices.add(new GeneratedInvoice(pdfStream, nameFile, b2bPartner.getIp(), b2bPartner.getUserName(), b2bPartner.getPassword(), hotelInvoices));
+            }
+
         }
     }
 
