@@ -4,7 +4,6 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfCopy;
 import com.itextpdf.text.pdf.PdfReader;
-import com.kynsof.share.core.infrastructure.util.PDFUtils;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
@@ -13,8 +12,8 @@ import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.Invo
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -80,7 +79,6 @@ public class InvoiceGrouper {
                 String nameFile = generateFileName(invoiceDtos, false);
                 generatedInvoices.add(new GeneratedInvoice(pdfStream, nameFile, b2bPartner.getIp(), b2bPartner.getUserName(), b2bPartner.getPassword(), hotelInvoices));
             }
-
         }
     }
 
@@ -121,14 +119,33 @@ public class InvoiceGrouper {
 
     // Combinar los reportes en el output stream
     private void combineReports(String invoiceIds, ByteArrayOutputStream combinedOutputStream, EInvoiceReportType... reportTypes) throws DocumentException, IOException {
+        // Crear un nuevo documento que almacenará todas las páginas combinadas
+        Document document = new Document();
+        PdfCopy copy = new PdfCopy(document, combinedOutputStream);
+        document.open();
+
         for (EInvoiceReportType reportType : reportTypes) {
             IInvoiceReport reportService = invoiceReportProviderFactory.getInvoiceReportService(reportType);
             Optional<Map<String, byte[]>> response = getReportContent(reportService, invoiceIds);
             if (response.isPresent() && !response.get().isEmpty()) {
+                savePdfLocally("/Users/keimermontes/Development/erp-finamer-sas/erp_backend/payment/" + invoiceIds + "-" + reportType.toString() + ".pdf", response);
+
                 byte[] content = response.get().values().iterator().next();
-                combinedOutputStream.write(content);
+
+                // Cargar el PDF actual desde los bytes recibidos
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
+                PdfReader reader = new PdfReader(inputStream);
+
+                // Agregar todas las páginas del PDF actual al documento combinado
+                for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+                    copy.addPage(copy.getImportedPage(reader, i));
+                }
+                reader.close();
             }
         }
+
+        // Cerrar el documento combinado
+        document.close();
     }
 
     private Optional<Map<String, byte[]>> getReportContent(IInvoiceReport reportService, String invoiceId) throws DocumentException, IOException {
@@ -160,4 +177,21 @@ public class InvoiceGrouper {
     private String formatDate(LocalDate date) {
         return String.format("%02d%02d%02d", date.getMonthValue(), date.getDayOfMonth(), date.getYear() % 100);
     }
+
+    public void savePdfLocally(String fileName, Optional<Map<String, byte[]>> response) throws IOException {
+            if (response.isPresent() && !response.get().isEmpty()) {
+                byte[] pdfContent = response.get().values().iterator().next();  // Obtener el primer archivo PDF del mapa
+
+                try (FileOutputStream fos = new FileOutputStream(fileName)) {
+                    fos.write(pdfContent);
+                    System.out.println("PDF guardado exitosamente en: " + fileName);
+                } catch (IOException e) {
+                    System.err.println("Error al guardar el PDF: " + e.getMessage());
+                    throw e;  // Relanza la excepción para manejarla en el flujo superior si es necesario
+                }
+            } else {
+                System.out.println("No se recibió contenido para guardar el PDF.");
+            }
+        }
+
 }
