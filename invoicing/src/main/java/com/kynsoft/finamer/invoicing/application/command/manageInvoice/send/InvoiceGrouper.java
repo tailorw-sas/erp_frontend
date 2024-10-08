@@ -12,7 +12,6 @@ import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.Invo
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
