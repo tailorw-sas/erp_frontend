@@ -19,8 +19,9 @@ public class ReconcileAutomaticNightTypeValidator extends ExcelRuleValidator<Inv
     @Override
     public boolean validate(InvoiceReconcileAutomaticRow obj, List<ErrorField> errorFieldList) {
         if (validateIfNightTypeIsNotEmpty(obj,errorFieldList)){
-
+            return validateIfNightTypeExist(obj,errorFieldList);
         }
+        return false;
     }
 
     private boolean validateIfNightTypeIsNotEmpty(InvoiceReconcileAutomaticRow obj, List<ErrorField> errorFieldList){

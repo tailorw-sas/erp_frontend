@@ -33,7 +33,7 @@ public class ReconcileAutomaticValidatorFactory extends ValidatorFactory<Invoice
             nightTypeValidator = new ReconcileAutomaticNightTypeValidator(nightTypeService);
             couponNumberValidator = new ReconcileAutomaticCouponNumberValidator(manageBookingService);
             reservationNumberValidator = new ReconcileValidatorReservationNumberValidator(manageBookingService);
-            priceValidator = new ReconcileAutomaticPriceValidator();
+            priceValidator = new ReconcileAutomaticPriceValidator(manageBookingService);
 
     }
 
