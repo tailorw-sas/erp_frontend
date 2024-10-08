@@ -115,7 +115,7 @@ const errorsListParent = reactive<{ [key: string]: string[] }>({})
         </template>
 
         <template #field-adults="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.adults"
             show-clear
             @update:model-value="($event) => {
@@ -128,7 +128,7 @@ const errorsListParent = reactive<{ [key: string]: string[] }>({})
                 const decimalSchema = z.object(
                   {
                     adults: z
-                      .string()
+                      .number()
                       .refine(value => !Number.isNaN(value) && +value >= 0, 'The adults field must be greater than 0').nullable(),
                   },
                 )
@@ -138,7 +138,7 @@ const errorsListParent = reactive<{ [key: string]: string[] }>({})
                 const decimalSchema = z.object(
                   {
                     adults: z
-                      .string()
+                      .number()
                       .refine(value => !Number.isNaN(value) && +value > 0, 'The adults field must be greater than 0').nullable(),
                   },
                 )
@@ -149,7 +149,7 @@ const errorsListParent = reactive<{ [key: string]: string[] }>({})
         </template>
 
         <template #field-children="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.children"
             show-clear
             @update:model-value="($event) => {
@@ -163,7 +163,7 @@ const errorsListParent = reactive<{ [key: string]: string[] }>({})
                 const decimalSchema = z.object(
                   {
                     children: z
-                      .string()
+                      .number()
                       .refine(value => +value >= 0, 'The children field must be greater than 0').nullable(),
                   },
                 )
@@ -173,7 +173,7 @@ const errorsListParent = reactive<{ [key: string]: string[] }>({})
                 const decimalSchema = z.object(
                   {
                     children: z
-                      .string()
+                      .number()
                       .refine(value => +value > 0, 'The children field must be greater than 0').nullable(),
                   },
                 )

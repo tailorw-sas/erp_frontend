@@ -263,7 +263,6 @@ const ENUM_FILTER = [
 ]
 
 async function openEditDialog(item: any) {
-  console.log(item)
   props.openDialog()
   if (item?.id) {
     idItem.value = item?.id

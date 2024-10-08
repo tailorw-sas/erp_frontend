@@ -1040,7 +1040,6 @@ function calcBookingInvoiceAmount(roomRate: any) {
 
 function calcBookingHotelAmount(roomRate: any) {
   const bookingIndex = bookingList.value.findIndex(b => b?.id === roomRate?.booking)
-
   bookingList.value[bookingIndex].hotelAmount = 0
 
   const roomRates = roomRateList.value.filter((roomRate: any) => roomRate.booking === bookingList.value[bookingIndex]?.id)
@@ -1171,7 +1170,6 @@ function addRoomRate(rate: any) {
 }
 
 function updateRoomRate(roomRate: any) {
-  console.log(roomRate)
   const index = roomRateList.value.findIndex(item => item.id === roomRate.id)
 
   const booking = bookingList.value.find((b => b?.id === roomRateList.value[index]?.booking))

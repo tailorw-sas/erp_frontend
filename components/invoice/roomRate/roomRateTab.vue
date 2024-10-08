@@ -259,7 +259,7 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-6 required',
     headerClass: 'mb-1',
     validation:
-    z.string()
+    z.number()
       .min(1, 'The Rate amount field is required')
       .refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
   },
@@ -639,8 +639,8 @@ async function GetItemById(id: string) {
         item.value.checkOut = new Date(element.checkOut)
         item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : 0
         item.value.roomNumber = +element.roomNumber
-        item.value.adults = element.adults ? element.adults.toString() : '0'
-        item.value.children = element.children ? element.children.toString() : '0'
+        item.value.adults = element.adults
+        item.value.children = element.children || 0
         item.value.rateAdult = element.rateAdult
         item.value.rateChild = element.rateChild
         item.value.hotelAmount = element.hotelAmount ? element.hotelAmount : 0
@@ -729,7 +729,7 @@ async function saveRoomRate(item: { [key: string]: any }) {
 
   if (idItem.value || item?.id) {
     try {
-      // item.booking = currentBooking.value
+      item.booking = currentBooking.value
       if (!item?.id) {
         item.id = idItem.value
       }
