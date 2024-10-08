@@ -36,8 +36,9 @@ public class ReconcileAutomaticPriceValidator extends ExcelRuleValidator<Invoice
 
     private boolean validateIfPriceIsEqualToBookingAmount(InvoiceReconcileAutomaticRow obj, List<ErrorField> errorFieldList){
         Optional<ManageBookingDto> bookingDtoOptional= manageBookingService.findManageBookingByReservationNumber(obj.getColumnW());
-
-        if (obj.getColumnAN().equals(bookingDtoOptional.get().getDueAmount())){
+         String[] priceString=obj.getColumnAN().split(":");
+         double price= Double.parseDouble(priceString[1]);
+        if (price != bookingDtoOptional.get().getDueAmount()){
             errorFieldList.add(new ErrorField("Booking amount","The price is not equals to  booking amount"));
             return false;
         }

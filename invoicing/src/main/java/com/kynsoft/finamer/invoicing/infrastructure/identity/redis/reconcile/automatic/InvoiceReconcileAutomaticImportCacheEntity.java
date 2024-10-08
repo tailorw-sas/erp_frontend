@@ -17,5 +17,5 @@ public class InvoiceReconcileAutomaticImportCacheEntity {
     @Indexed
     private String couponNumber;
     private String nightType;
-    private double price;
+    private String price;
 }

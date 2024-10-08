@@ -22,6 +22,8 @@ public class ReconcileAutomaticValidatorFactory extends ValidatorFactory<Invoice
     private final IManageBookingService manageBookingService;
     private final IManageNightTypeService nightTypeService;
 
+    private String[] selectedInvoiceId;
+
     protected ReconcileAutomaticValidatorFactory(ApplicationEventPublisher applicationEventPublisher, IManageBookingService manageBookingService, IManageNightTypeService nightTypeService) {
         super(applicationEventPublisher);
         this.manageBookingService = manageBookingService;
@@ -31,10 +33,15 @@ public class ReconcileAutomaticValidatorFactory extends ValidatorFactory<Invoice
     @Override
     public void createValidators(String importType) {
             nightTypeValidator = new ReconcileAutomaticNightTypeValidator(nightTypeService);
-            couponNumberValidator = new ReconcileAutomaticCouponNumberValidator(manageBookingService);
-            reservationNumberValidator = new ReconcileValidatorReservationNumberValidator(manageBookingService);
+            couponNumberValidator = new ReconcileAutomaticCouponNumberValidator(manageBookingService,selectedInvoiceId);
+            reservationNumberValidator = new ReconcileValidatorReservationNumberValidator(manageBookingService,selectedInvoiceId);
             priceValidator = new ReconcileAutomaticPriceValidator(manageBookingService);
 
+    }
+
+    public void createValidators(String[] selectedInvoiceIds){
+        this.selectedInvoiceId = selectedInvoiceIds;
+        this.createValidators("");
     }
 
     @Override
