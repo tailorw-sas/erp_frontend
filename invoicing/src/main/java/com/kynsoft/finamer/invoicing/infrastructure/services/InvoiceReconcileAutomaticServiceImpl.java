@@ -11,39 +11,27 @@ import com.kynsof.share.utils.ServiceLocator;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileAuto.InvoiceReconcileAutomaticRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.automatic.InvoiceReconcileAutomaticImportProcessStatusRequest;
+import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.automatic.InvoiceReconcileAutomaticImportProcessStatusResponse;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.automatic.InvoiceReconcileAutomaticImportErrorRequest;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingErrorRequest;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.BookingImportProcessDto;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileAutomaticImportProcessDto;
-import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileImportProcessStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.event.importStatus.CreateImportReconcileAutomaticStatusEvent;
-import com.kynsoft.finamer.invoicing.domain.event.importStatus.CreateImportStatusEvent;
-import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.reconcileAutomatic.InvoiceReconcileAutomaticRow;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReconcileAutomaticService;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReport;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto.ReconcileAutomaticValidatorFactory;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportProcessRedisEntity;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.InvoiceReconcileImportError;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportCacheEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportErrorEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportProcessStatusRedisEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportErrorRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportProcessStatusRedisRepository;
-import com.kynsoft.finamer.invoicing.infrastructure.services.report.content.InvoiceReconcileAutomaticProvider;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
 import org.springframework.context.ApplicationEventPublisher;
@@ -54,10 +42,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -207,14 +193,14 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     }
 
     @Override
-    public ImportBookingProcessStatusResponse getImportBookingProcessStatus(InvoiceReconcileAutomaticImportProcessStatusRequest importProcessStatusRequest) {
+    public InvoiceReconcileAutomaticImportProcessStatusResponse getImportProcessStatus(InvoiceReconcileAutomaticImportProcessStatusRequest importProcessStatusRequest) {
         Optional<InvoiceReconcileAutomaticImportProcessStatusRedisEntity> statusDtp =
                 statusRedisRepository.findByImportProcessId(importProcessStatusRequest.getImportProcessId());
         if (statusDtp.isPresent()) {
             if (statusDtp.get().isHasError()) {
                 throw new ExcelException(statusDtp.get().getExceptionMessage());
             }
-            return new ImportBookingProcessStatusResponse(statusDtp.get().getStatus().name(), statusDtp.get().getTotal());
+            return new InvoiceReconcileAutomaticImportProcessStatusResponse(statusDtp.get().getStatus().name());
         }
         return null;
     }
