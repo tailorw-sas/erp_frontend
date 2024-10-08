@@ -128,10 +128,8 @@ public class InvoiceGrouper {
             IInvoiceReport reportService = invoiceReportProviderFactory.getInvoiceReportService(reportType);
             Optional<Map<String, byte[]>> response = getReportContent(reportService, invoiceIds);
             if (response.isPresent() && !response.get().isEmpty()) {
-                savePdfLocally("/Users/keimermontes/Development/erp-finamer-sas/erp_backend/payment/" + invoiceIds + "-" + reportType.toString() + ".pdf", response);
 
                 byte[] content = response.get().values().iterator().next();
-
                 // Cargar el PDF actual desde los bytes recibidos
                 ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
                 PdfReader reader = new PdfReader(inputStream);
@@ -177,21 +175,5 @@ public class InvoiceGrouper {
     private String formatDate(LocalDate date) {
         return String.format("%02d%02d%02d", date.getMonthValue(), date.getDayOfMonth(), date.getYear() % 100);
     }
-
-    public void savePdfLocally(String fileName, Optional<Map<String, byte[]>> response) throws IOException {
-            if (response.isPresent() && !response.get().isEmpty()) {
-                byte[] pdfContent = response.get().values().iterator().next();  // Obtener el primer archivo PDF del mapa
-
-                try (FileOutputStream fos = new FileOutputStream(fileName)) {
-                    fos.write(pdfContent);
-                    System.out.println("PDF guardado exitosamente en: " + fileName);
-                } catch (IOException e) {
-                    System.err.println("Error al guardar el PDF: " + e.getMessage());
-                    throw e;  // Relanza la excepción para manejarla en el flujo superior si es necesario
-                }
-            } else {
-                System.out.println("No se recibió contenido para guardar el PDF.");
-            }
-        }
 
 }
