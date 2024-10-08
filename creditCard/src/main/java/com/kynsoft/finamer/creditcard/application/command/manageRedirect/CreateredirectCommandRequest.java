@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment;
+package com.kynsoft.finamer.creditcard.application.command.manageRedirect;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class CreateRedirectTransactionPaymentRequest {
+public class CreateredirectCommandRequest {
     private String token;
-   }
+    }
+
