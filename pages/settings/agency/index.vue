@@ -83,7 +83,7 @@ const fields: Array<FieldDefinitionType> = [
 
   {
     field: 'contact',
-    header: 'Send Agency Contacts',
+    header: 'Send Agency Contact',
     hidden: true,
     dataType: 'text',
     class: 'field col-12',
@@ -1166,7 +1166,7 @@ onMounted(() => {
 
             <template #field-contact>
               <InputGroup v-if="!loadingSaveAll">
-                <InputText placeholder="Send Agency Contacts" disabled />
+                <InputText placeholder="Send Agency Contact" disabled />
                 <Button
                   icon="pi pi-eye" type="button" text aria-haspopup="true" aria-controls="overlay_menu_filter"
                   @click="contactDialogVisible = true"

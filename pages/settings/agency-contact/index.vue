@@ -163,7 +163,7 @@ const payloadHotel = ref<IQueryRequest>({
 function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
-  fields[0].disabled = false
+  fields[0].disabled = true
   formReload.value++
   formReload.value++
   if (!props.agency) {
@@ -241,7 +241,8 @@ function searchAndFilter() {
 function clearFilterToSearch() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value.criterial = ENUM_FILTER[0]
-  filterToSearch.value.search = ''
+  filterToSearch.value.search = null
+
   getList()
 }
 
@@ -314,7 +315,7 @@ async function getRegionList(query: string = '') {
     regionList.value = []
     const response = await GenericService.search(confRegionApi.moduleApi, confRegionApi.uriApi, payloadRegion.value)
     const { data: dataList } = response
-    regionList.value = []
+
     for (const iterator of dataList) {
       regionList.value = [...regionList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
@@ -343,7 +344,7 @@ async function getHotelList(query: string = '') {
         {
           key: 'manageRegion.id',
           operator: 'EQUALS',
-          value: regionSelected.value.id,
+          value: regionSelected.value,
           logicalOperation: 'AND'
         },
         {
@@ -388,6 +389,7 @@ async function getItemById(id: string) {
         item.value.manageHotel = response.manageHotel.map((hotel: any) => {
           return { id: hotel.id, name: `${hotel.code} - ${hotel.name}`, status: hotel.status }
         })
+        item.value.emailContact = response.emailContact
       }
       fields[0].disabled = true
       formReload.value += 1
@@ -407,7 +409,7 @@ async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-    payload.manageAgency = item.module.id
+    payload.manageAgency = typeof payload.manageAgency === 'object' ? payload.manageAgency.id : payload.manageAgency
     payload.manageRegion = typeof payload.manageRegion === 'object' ? payload.manageRegion.id : payload.manageRegion
     payload.manageHotel = payload.manageHotel.map((p: any) => p.id)
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
@@ -417,7 +419,7 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
-  payload.manageAgency = item.module.id
+  payload.manageAgency = typeof payload.manageAgency === 'object' ? payload.manageAgency.id : payload.manageAgency
   payload.manageRegion = typeof payload.manageRegion === 'object' ? payload.manageRegion.id : payload.manageRegion
   payload.manageHotel = payload.manageHotel.map((p: any) => p.id)
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
@@ -613,10 +615,20 @@ onMounted(async () => {
               <div class="flex align-items-center gap-2">
                 <label for="email">Search</label>
                 <div class="w-full lg:w-auto">
-                  <IconField icon-position="left" class="w-full">
+                  <!-- <IconField icon-position="left" class="w-full">
                     <InputText v-model="filterToSearch.search" type="text" placeholder="Search" class="w-full" />
                     <InputIcon class="pi pi-search" />
-                  </IconField>
+                  </IconField> -->
+                  <Dropdown
+                    v-model="filterToSearch.search"
+                    :options="regionList"
+                    option-label="name"
+                    option-value="id"
+                    placeholder="Criteria"
+                    return-object="false"
+                    class="align-items-center w-full"
+                    show-clear
+                  />
                 </div>
               </div>
               <div class="flex align-items-center">
