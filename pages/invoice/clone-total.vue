@@ -314,7 +314,7 @@ function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
 
-async function getHotelList(query = '') {
+async function getHotelList(query = '',currentTradingCompany) {
   try {
     const payload = {
       filter: [
@@ -340,6 +340,12 @@ async function getHotelList(query = '') {
           key: 'applyByTradingCompany', // Agregar filtro para applyByTradingCompany
           operator: 'EQUALS',
           value: true, // Solo hoteles donde applyByTradingCompany es true
+          logicalOperation: 'AND'
+        },
+        {
+          key: 'manageTradingCompanies.company',
+          operator: 'EQUALS',
+          value: currentTradingCompany,
           logicalOperation: 'AND'
         }
       ],
@@ -1655,7 +1661,7 @@ onMounted(async () => {
       // Si la validación pasa, actualizar el hotel
       onUpdate('hotel', $event);
     }"
-    @load="($event) => getHotelList($event)"
+    @load="($event) => getHotelList($event, data.hotel.manageTradingCompanies.company)"
   >
     <template #option="props">
       <span>{{ props.item.fullName }}</span>
