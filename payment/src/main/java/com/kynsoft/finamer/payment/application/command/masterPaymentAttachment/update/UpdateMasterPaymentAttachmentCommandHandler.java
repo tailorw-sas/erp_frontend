@@ -26,19 +26,22 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IPaymentService paymentService;
 
     public UpdateMasterPaymentAttachmentCommandHandler(IMasterPaymentAttachmentService masterPaymentAttachmentService,
             IManageAttachmentTypeService manageAttachmentTypeService,
             IManageResourceTypeService manageResourceTypeService,
             IManageEmployeeService manageEmployeeService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService) {
+            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IPaymentService paymentService) {
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
         this.manageAttachmentTypeService = manageAttachmentTypeService;
         this.manageResourceTypeService = manageResourceTypeService;
         this.manageEmployeeService = manageEmployeeService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.paymentService = paymentService;
     }
 
     @Override
@@ -66,6 +69,11 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
         if (update.getUpdate() > 0) {
             this.masterPaymentAttachmentService.update(masterPaymentAttachmentDto);
             this.deleteAttachmentStatusHistory(employeeDto, masterPaymentAttachmentDto.getResource(), masterPaymentAttachmentDto.getFileName(), masterPaymentAttachmentDto.getAttachmentId());
+            if (this.masterPaymentAttachmentService.countByResourceAndAttachmentTypeIsDefault(masterPaymentAttachmentDto.getResource().getId()) == 0) {
+                PaymentDto paymentDto = masterPaymentAttachmentDto.getResource();
+                paymentDto.setPaymentSupport(false);
+                this.paymentService.update(paymentDto);
+            }
 //            this.createPaymentAttachmentStatusHistory(employeeDto, masterPaymentAttachmentDto.getResource(), masterPaymentAttachmentDto.getFileName());
         }
 
