@@ -14,7 +14,7 @@ import java.util.UUID;
 public class TransactionPaymentLogsDto {
 
     private UUID id;
-    private UUID transactionUuid;
+    private UUID transactionId;
     private String html;
     private String merchantReturn;
 

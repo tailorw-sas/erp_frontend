@@ -1,13 +1,12 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSessionResponse;
-import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
+import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TransactionPaymentLogs;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageTransactionsRedirectLogsWriteDataJPARepository;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionPaymentLogsReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -15,9 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -27,9 +28,12 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
 
     @Autowired
     private final ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand;
+    private final TransactionPaymentLogsReadDataJPARepository repositoryQuery;
 
-    public FormPaymentServiceImpl(ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand){
+    public FormPaymentServiceImpl(ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand,
+                                  TransactionPaymentLogsReadDataJPARepository repositoryQuery){
         this.repositoryCommand = repositoryCommand;
+        this.repositoryQuery = repositoryQuery;
     }
 
     public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
@@ -215,4 +219,19 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         TransactionPaymentLogs entity = new TransactionPaymentLogs(dto);
         return this.repositoryCommand.save(entity).getId();
     }
+
+    public void update(TransactionPaymentLogsDto dto) {
+        TransactionPaymentLogs entity = new TransactionPaymentLogs(dto);
+        entity.setUpdatedAt(LocalDateTime.now());
+        repositoryCommand.save(entity);
+    }
+
+    public TransactionPaymentLogsDto findByTransactionId(UUID id) {
+        Optional<TransactionPaymentLogs> optional = this.repositoryQuery.findByTransactionId(id);
+        if(optional.isPresent()){
+            return optional.get().toAggregate();
+        }else return null;
+
+    }
+
 }

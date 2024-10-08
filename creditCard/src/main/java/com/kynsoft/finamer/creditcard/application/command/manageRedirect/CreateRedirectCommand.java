@@ -6,6 +6,8 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMer
 import com.kynsoft.finamer.creditcard.domain.dto.PaymentRequestDto;
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @Builder
@@ -16,6 +18,7 @@ public class CreateRedirectCommand implements ICommand {
     private PaymentRequestDto requestDto;
     private ManageMerchantResponse manageMerchantResponse;
     private String result;
+    private UUID id;
 
     @Override
     public ICommandMessage getMessage() {

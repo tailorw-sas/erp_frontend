@@ -34,11 +34,17 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
         }
 
         TransactionDto transactionDto = transactionService.findById(command.getRequestDto().getTransactionId());
-        if(transactionDto.getId() != null){
-            UUID uuid = UUID.randomUUID();
-            formPaymentService.create(new TransactionPaymentLogsDto(
-                   UUID.randomUUID(), transactionDto.getTransactionUuid(),command.getResult(), null)
-            );}
-    }
 
+        TransactionPaymentLogsDto dto = this.formPaymentService.findByTransactionId(transactionDto.getTransactionUuid());
+        if(dto == null) {
+            formPaymentService.create(new TransactionPaymentLogsDto(
+                    UUID.randomUUID(), transactionDto.getTransactionUuid(), command.getResult(), null)
+            );}
+        else{
+            dto.setHtml(command.getResult());
+            this.formPaymentService.update(dto);
+        }
+    }
 }
+
+
