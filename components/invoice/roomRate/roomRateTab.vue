@@ -232,7 +232,7 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
     resetValidation: false,
     validation: z.number()
-      .refine(val => !Number.isNaN(val) && +val >= 0, { message: 'The Children field must be greater than 0' })
+      .refine(val => !Number.isNaN(val) && +val >= 0, { message: 'The Children field must be greater than 0' }).nullable()
   },
   // {
   //   field: 'rateAdult',
@@ -352,7 +352,11 @@ const Fields: Array<Container> = [
         dataType: 'number',
         class: 'field col-12 md:col-6',
         headerClass: 'mb-1',
-
+        validation: z.number(
+          {
+            invalid_type_error: 'The Adults field must be greater than 0 ',
+          }
+        ).nullable()
       },
       {
         field: 'rateAdult',
@@ -636,7 +640,7 @@ async function GetItemById(id: string) {
         item.value.roomRateId = element.roomRateId
         item.value.checkIn = new Date(element.checkIn)
         item.value.checkOut = new Date(element.checkOut)
-        item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : 0
+        item.value.invoiceAmount = element.invoiceAmount ? Number(element.invoiceAmount) : 0
         item.value.roomNumber = +element.roomNumber
         item.value.adults = element.adults
         item.value.children = element.children || 0
@@ -658,7 +662,7 @@ async function GetItemById(id: string) {
         item.value.roomRateId = response.roomRateId
         item.value.checkIn = new Date(response.checkIn)
         item.value.checkOut = new Date(response.checkOut)
-        item.value.invoiceAmount = response.invoiceAmount ? String(response.invoiceAmount) : '0'
+        item.value.invoiceAmount = response.invoiceAmount ? Number(response.invoiceAmount) : 0
         item.value.roomNumber = +response.roomNumber
         item.value.adults = response.adults
         item.value.children = response.children

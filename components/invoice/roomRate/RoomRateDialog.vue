@@ -58,30 +58,79 @@ const props = defineProps({
     required: true
   }
 })
+const route = useRoute()
 const dialogVisible = ref(props.openDialog)
 
-const validationSchema = z.object({
-  invoiceAmount: z.string()
-    .min(1, 'The Rate amount field is required')
-    .refine(val => +val > +0, 'The Rate amount field must be greater than 0')
-    .refine(val => +val > +5, 'The Rate amount field must be greater than 5'),
-
-  hotelAmount: z.string()
-    .refine((val, ctx) => {
-      const invoiceAmount = +ctx.parent.invoiceAmount
-      return invoiceAmount > 0 ? +val >= 0 : true
-    }, 'The Hotel Amount field cannot be negative when the Rate amount is greater than 0')
-    .refine((val, ctx) => {
-      const adults = ctx.parent.adults
-      return adults > 2 ? +val >= 100 : true
-    }, 'The Hotel Amount must be at least 100 when there are more than 2 adults')
-    .nullable(),
-
-  adults: z.number().min(1, 'The Adults field must be greater than 0'),
-  checkIn: z.date({ required_error: 'The Check In field is required' }),
-  checkOut: z.date({ required_error: 'The Check Out field is required' })
-})
 const errorsListParent = reactive<{ [key: string]: string[] }>({})
+
+function checkValuesForValidation(item: any) {
+  if (item?.children && item?.children > 0) {
+    const decimalSchema = z.object(
+      {
+        adults: z
+          .number()
+          .refine(value => !Number.isNaN(value) && +value >= 0, 'The adults field must be greater than 0').nullable(),
+      },
+    )
+    updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+  }
+  else {
+    const decimalSchema = z.object(
+      {
+        adults: z
+          .number()
+          .refine(value => !Number.isNaN(value) && +value > 0, 'The adults field must be greater than 0').nullable(),
+      },
+    )
+    updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+  }
+  // -----------------------------------------------------------------------------------------
+
+  if (item?.adults && item?.adults > 0) {
+    const decimalSchema = z.object(
+      {
+        children: z
+          .number()
+          .refine(value => +value >= 0, 'The children field must be greater than 0').nullable(),
+      },
+    )
+    updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+  }
+  else {
+    const decimalSchema = z.object(
+      {
+        children: z
+          .number()
+          .refine(value => +value > 0, 'The children field must be greater than 0').nullable(),
+      },
+    )
+    updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+  }
+
+  if (route.query.type === InvoiceType.OLD_CREDIT) {
+    const decimalSchema = z.object(
+      {
+        invoiceAmount: z
+          .number({ invalid_type_error: 'The Rate amount field is required' }).safe()
+      },
+    )
+    updateFieldProperty(props.fields, 'invoiceAmount', 'validation', decimalSchema.shape.invoiceAmount)
+  }
+  else {
+    const decimalSchema = z.object(
+      {
+        invoiceAmount: z.number({ invalid_type_error: 'The Rate amount field is required' }).safe()
+          .min(1, 'The Rate amount field is required')
+          .refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
+      },
+    )
+    updateFieldProperty(props.fields, 'invoiceAmount', 'validation', decimalSchema.shape.invoiceAmount)
+  }
+}
+
+onMounted(() => {
+  checkValuesForValidation(props.item)
+})
 </script>
 
 <template>
@@ -105,7 +154,7 @@ const errorsListParent = reactive<{ [key: string]: string[] }>({})
         @update:errors-list="errorsListParent = $event"
       >
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id"
             @update:model-value="($event) => {
