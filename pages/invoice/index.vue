@@ -1075,9 +1075,11 @@ function searchAndFilter() {
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
         payload.value.filter = [...payload.value.filter, {
-          key: 'manageInvoiceType.id',
+         key: 'manageInvoiceType.id',
+          
           operator: 'IN',
           value: itemIds,
+         
           logicalOperation: 'AND'
         }]
       }
@@ -1387,6 +1389,12 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   statusList.value = [...statusList.value, ...statusTemp]
 }
 
+async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  let invoiceTypeListTemp: any[] = []
+  invoiceTypeList.value = [allDefaultItem]
+  invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    invoiceTypeList.value = [...invoiceTypeList.value, ...invoiceTypeListTemp]
+}
 
 // async function getStatusList(query = '') {
 //   try {
@@ -1401,12 +1409,7 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
 //   }
 // }
 
-async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  let invoiceTypeListTemp: any[] = []
-  invoiceTypeList.value = [allDefaultItem]
-  invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-    invoiceTypeList.value = [...invoiceTypeList.value, ...invoiceTypeListTemp]
-}
+
 
 // async function getInvoiceTypeList(query = '') {
 //   try {
@@ -2158,7 +2161,7 @@ const legend = ref(
                         @load="async($event) => {
                           const filter: FilterCriteria[] = [
                             {
-                              key: 'invoiceType',
+                              key: 'status',
                               logicalOperation: 'AND',
                               operator: 'EQUALS',
                               value: 'ACTIVE',
@@ -2170,6 +2173,7 @@ const legend = ref(
                           }
                           await getInvoiceTypeList(objApis.invoiceType.moduleApi, objApis.invoiceType.uriApi, objQueryToSearch, filter)
                         }"
+                        
                       />
                     </div>
                   </div>
