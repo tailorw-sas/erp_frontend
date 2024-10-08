@@ -22,6 +22,5 @@ public class InvoiceReconcileAutomaticImportErrorEntity {
     @Indexed
     public String importProcessId;
     public List<ErrorField> errorFields;
-    private int totalRows;
     public InvoiceReconcileAutomaticRow row;
 }
