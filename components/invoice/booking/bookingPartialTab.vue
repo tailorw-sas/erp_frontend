@@ -721,7 +721,7 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+ // { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
 
   { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -1565,7 +1565,7 @@ onMounted(() => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:"
-              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 10"
+              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 9"
               footer-style="text-align:right; font-weight: 700" />
             <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
               :footer="totalHotelAmount" footer-style="font-weight: 700" />
