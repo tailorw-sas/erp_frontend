@@ -439,7 +439,7 @@ function searchAndFilter() {
     }
     if (clientIds.value.length > 0) {
       payload.value.filter = [...payload.value.filter, {
-        key: 'client.id',
+        key: 'agency.client.id',
         operator: 'IN',
         value: clientIds.value,
         logicalOperation: 'AND',
