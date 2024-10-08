@@ -83,7 +83,6 @@ public class InvoiceGrouper {
         }
     }
 
-    // Generar PDF para una lista de facturas
     public ByteArrayOutputStream generatePDF(List<ManageInvoiceDto> invoices, boolean withAttachment) throws DocumentException, IOException {
         ByteArrayOutputStream combinedPdfOutputStream = new ByteArrayOutputStream();
         Document document = new Document();
@@ -107,14 +106,12 @@ public class InvoiceGrouper {
         return combinedPdfOutputStream;
     }
 
-    // Obtener el contenido de las facturas
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds, boolean isWithAttachment) throws DocumentException, IOException {
         ByteArrayOutputStream combinedOutputStream = new ByteArrayOutputStream();
         if (isWithAttachment) {
             combinedOutputStream=PDFUtils.mergePDF(getReportContent(invoiceIds,EInvoiceReportType.INVOICE_AND_BOOKING, EInvoiceReportType.INVOICE_SUPPORT));
-            //combineReports(invoiceIds, combinedOutputStream, EInvoiceReportType.INVOICE_AND_BOOKING, EInvoiceReportType.INVOICE_SUPPORT);
         } else {
-            combineReports(invoiceIds, combinedOutputStream, EInvoiceReportType.INVOICE_AND_BOOKING);
+            combinedOutputStream=PDFUtils.mergePDF(getReportContent(invoiceIds,EInvoiceReportType.INVOICE_AND_BOOKING));
         }
         return combinedOutputStream.size() > 0 ? Optional.of(combinedOutputStream) : Optional.empty();
     }
@@ -123,7 +120,7 @@ public class InvoiceGrouper {
         List<InputStream> result = new ArrayList<>();
         for (EInvoiceReportType reportType : reportTypes) {
             IInvoiceReport reportService = invoiceReportProviderFactory.getInvoiceReportService(reportType);
-            Optional<Map<String, byte[]>> response = getReportContent(reportService, invoiceIds);
+            Optional<Map<String, byte[]>> response = getReportContentService(reportService, invoiceIds);
             if (response.isPresent() && !response.get().isEmpty()) {
                result.add(new ByteArrayInputStream(response.get().values().iterator().next()));
             }
@@ -131,44 +128,13 @@ public class InvoiceGrouper {
         return result;
     }
 
-    // Combinar los reportes en el output stream
-    private void combineReports(String invoiceIds, ByteArrayOutputStream combinedOutputStream, EInvoiceReportType... reportTypes) throws DocumentException, IOException {
-        // Crear un nuevo documento que almacenará todas las páginas combinadas
-        Document document = new Document();
-        PdfCopy copy = new PdfCopy(document, combinedOutputStream);
-        document.open();
-
-        for (EInvoiceReportType reportType : reportTypes) {
-            IInvoiceReport reportService = invoiceReportProviderFactory.getInvoiceReportService(reportType);
-            Optional<Map<String, byte[]>> response = getReportContent(reportService, invoiceIds);
-            if (response.isPresent() && !response.get().isEmpty()) {
-
-                byte[] content = response.get().values().iterator().next();
-                // Cargar el PDF actual desde los bytes recibidos
-                ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
-                PdfReader reader = new PdfReader(inputStream);
-
-                // Agregar todas las páginas del PDF actual al documento combinado
-                for (int i = 1; i <= reader.getNumberOfPages(); i++) {
-                    copy.addPage(copy.getImportedPage(reader, i));
-                }
-                reader.close();
-            }
-        }
-
-        // Cerrar el documento combinado
-        document.close();
-    }
-
-    private Optional<Map<String, byte[]>> getReportContent(IInvoiceReport reportService, String invoiceId) throws DocumentException, IOException {
+    private Optional<Map<String, byte[]>> getReportContentService(IInvoiceReport reportService, String invoiceId) throws DocumentException, IOException {
         Map<String, byte[]> result = new HashMap<>();
         Optional<byte[]> reportContent = reportService.generateReport(invoiceId);
-
         reportContent.ifPresent(bytes -> result.put(invoiceId, bytes));
         return result.isEmpty() ? Optional.empty() : Optional.of(result);
     }
 
-    // Generar el nombre de archivo en función de si es agrupado por cliente o no
     private String generateFileName(List<ManageInvoiceDto> invoices, boolean groupByClient) {
         ManageInvoiceDto firstInvoice = invoices.get(0);
 
@@ -179,9 +145,9 @@ public class InvoiceGrouper {
             return clientName + "-INV From " + formatDate(fromDate) + " To " + formatDate(toDate) + ".pdf";
         } else {
             String agencyName = firstInvoice.getAgency().getName();
-            String invoiceNumber = firstInvoice.getInvoiceNumber();
+            String invoiceNumber = firstInvoice.getInvoiceNo().toString();
             LocalDate invoiceDate = firstInvoice.getInvoiceDate().toLocalDate();
-            return invoiceNumber + "-" + agencyName + "-" + formatDate(invoiceDate) + ".pdf";
+            return "INV-"+invoiceNumber + "-" + agencyName + "-" + formatDate(invoiceDate) + ".pdf";
         }
     }
 
