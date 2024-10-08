@@ -3,18 +3,14 @@ package com.kynsoft.finamer.invoicing.controllers;
 
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileImport.importReconcile.InvoiceReconcileImportCommand;
-import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileImport.importReconcile.InvoiceReconcileImportRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileAuto.InvoiceReconcileAutomaticCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileAuto.InvoiceReconcileAutomaticRequest;
-import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.InvoiceReconcileImportProcessStatusQuery;
-import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.InvoiceReconcileImportProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.automatic.InvoiceReconcileAutomaticImportProcessStatusQuery;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.automatic.InvoiceReconcileAutomaticImportProcessStatusRequest;
-import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.InvoiceReconcileImportErrorQuery;
-import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.InvoiceReconcileImportErrorRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.automatic.InvoiceReconcileAutomaticImportErrorQuery;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.automatic.InvoiceReconcileAutomaticImportErrorRequest;
+import org.aspectj.bridge.IMessage;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
@@ -25,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/manage-invoice")
@@ -38,15 +34,29 @@ public class InvoiceReconcileAutomaticController {
     }
 
     @PostMapping("/import-reconcile-auto")
-    public ResponseEntity<?> importReconcileAutomaticFromFile(@RequestPart("files") FilePart files,
-                                                     @RequestPart("importProcessId") String importProcessId,
-                                                     @RequestPart("employee") String employee,
-                                                     @RequestPart("employeeId") String employeeId
+    public Mono<ResponseEntity<?>> importReconcileAutomaticFromFile(@RequestPart("files") FilePart filePart,
+                                                                    @RequestPart("importProcessId") String importProcessId,
+                                                                    @RequestPart("employee") String employee,
+                                                                    @RequestPart("employeeId") String employeeId,
+                                                                    @RequestPart("invoiceIds") String[] invoiceIds
+
     ) {
-        InvoiceReconcileAutomaticRequest request = new InvoiceReconcileAutomaticRequest(importProcessId, employee, employeeId,);
-        InvoiceReconcileAutomaticCommand command = new InvoiceReconcileAutomaticCommand(request);
-        mediator.send(command);
-        return ResponseEntity.ok().build();
+        return DataBufferUtils.join(filePart.content())
+                .flatMap(dataBuffer -> {
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.read(bytes);
+                    DataBufferUtils.release(dataBuffer);
+
+                    InvoiceReconcileAutomaticRequest request = new InvoiceReconcileAutomaticRequest(importProcessId, employeeId, employee,invoiceIds, bytes);
+                    InvoiceReconcileAutomaticCommand command = new InvoiceReconcileAutomaticCommand(request);
+                    try {
+                        IMessage message = mediator.send(command);
+                        return Mono.just(ResponseEntity.ok(message));
+                    } catch (Exception e) {
+                        return Mono.error(e);
+                    }
+
+                });
     }
 
     @PostMapping(path = "/import-search-auto")
