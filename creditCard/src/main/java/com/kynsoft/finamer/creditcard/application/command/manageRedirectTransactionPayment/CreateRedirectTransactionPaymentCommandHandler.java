@@ -40,7 +40,7 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
 
         command.setResult(formPaymentService.redirectToLink(transactionDto, merchantConfigDto).getBody());
         formPaymentService.create(new TransactionPaymentLogsDto(
-                transactionDto.getTransactionUuid(),command.getResult(), null, transactionDto.getTransactionDate())
+                UUID.randomUUID(),transactionDto.getTransactionUuid(),command.getResult(), null)
         );
     }
 

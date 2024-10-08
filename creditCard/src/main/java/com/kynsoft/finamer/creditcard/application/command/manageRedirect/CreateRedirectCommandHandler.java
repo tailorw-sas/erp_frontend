@@ -9,9 +9,10 @@ import com.kynsoft.finamer.creditcard.domain.services.IFormService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedirectCommand> {
-
     private final IFormService formService;
     private final ITransactionService transactionService;
 
@@ -34,8 +35,9 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
 
         TransactionDto transactionDto = transactionService.findById(command.getRequestDto().getTransactionId());
         if(transactionDto.getId() != null){
+            UUID uuid = UUID.randomUUID();
             formPaymentService.create(new TransactionPaymentLogsDto(
-                    transactionDto.getTransactionUuid(),command.getResult(), null, transactionDto.getTransactionDate())
+                   UUID.randomUUID(), transactionDto.getTransactionUuid(),command.getResult(), null)
             );}
     }
 
