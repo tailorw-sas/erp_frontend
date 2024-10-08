@@ -24,6 +24,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto.ReconcileAutomaticValidatorFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportCacheEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportErrorEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportCacheRedisRepository;
@@ -88,8 +89,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         );
         this.readExcel(request);
         this.createReconcileAutomaticSupport(request);
-
-        //this.cleanImportationResource(request.getImportProcessId());
+        this.removeImportedData(request.getImportProcessId());
         this.createImportProcessStatusEvent(
                 InvoiceReconcileAutomaticImportProcessDto.builder()
                         .status(EProcessStatus.FINISHED)
@@ -97,7 +97,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         );
     }
 
-    private int readExcel(InvoiceReconcileAutomaticRequest request) {
+    private void readExcel(InvoiceReconcileAutomaticRequest request) {
         ReaderConfiguration readerConfiguration = new ReaderConfiguration();
         readerConfiguration.setIgnoreHeaders(true);
         InputStream inputStream = new ByteArrayInputStream(request.getFileContent());
@@ -121,7 +121,6 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
             }
 
         }
-        return 0;
     }
 
     private void createReconcileAutomaticSupport(InvoiceReconcileAutomaticRequest request) {
@@ -140,7 +139,15 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
 
     }
 
-
+    private void removeImportedData(String importProcessId){
+        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
+        Page<InvoiceReconcileAutomaticImportCacheEntity> cachePage;
+        do {
+            cachePage = cacheRedisRepository.findAllByImportProcessId(importProcessId, pageable);
+            cacheRedisRepository.deleteAll(cachePage.getContent());
+            pageable = pageable.next();
+        } while (cachePage.hasNext());
+    }
     private Optional<byte[]> createInvoiceReconcileAutomaticSupportAttachmentContent(String invoiceId) {
         IInvoiceReport service = invoiceReportProviderFactory.getInvoiceReportService(EInvoiceReportType.RECONCILE_AUTO);
         return service.generateReport(invoiceId);

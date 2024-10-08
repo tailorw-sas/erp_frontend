@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.domain.dto;
 
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.InvoiceReconcileImportProcessStatusRedisEntity;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportProcessStatusRedisEntity;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,12 +16,12 @@ public class InvoiceReconcileAutomaticImportProcessDto {
     private boolean hasError;
     private String exceptionMessage;
 
-    public InvoiceReconcileImportProcessStatusRedisEntity toAggregate(InvoiceReconcileAutomaticImportProcessDto invoiceReconcileAutomaticImportProcessDto){
-        return  InvoiceReconcileImportProcessStatusRedisEntity.builder()
-                .importProcessId(invoiceReconcileAutomaticImportProcessDto.importProcessId)
-                .exceptionMessage(invoiceReconcileAutomaticImportProcessDto.exceptionMessage)
-                .hasError(invoiceReconcileAutomaticImportProcessDto.hasError)
-                .totalRows(total)
+    public InvoiceReconcileAutomaticImportProcessStatusRedisEntity toAggregate(){
+        return  InvoiceReconcileAutomaticImportProcessStatusRedisEntity.builder()
+                .importProcessId(importProcessId)
+                .exceptionMessage(exceptionMessage)
+                .hasError(hasError)
+               // .totalRows(total)
                 .build();
     }
 }
