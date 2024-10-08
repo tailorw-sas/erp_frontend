@@ -120,9 +120,9 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         Page<InvoiceReconcileAutomaticImportCacheEntity> cachePage;
         do {
             cachePage = cacheRedisRepository.findAllByImportProcessId(request.getImportProcessId(), pageable);
-            Optional<byte[]> fileContent= createInvoiceReconcileAutomaticSupportAttachmentContent()
-            pageable = pageable.next();
 
+
+            pageable = pageable.next();
             //Validar la importacion y en caso de errores crear los errores en bd
             //devolver los valores en buen estado
         }  while (cachePage.hasNext()) ;
