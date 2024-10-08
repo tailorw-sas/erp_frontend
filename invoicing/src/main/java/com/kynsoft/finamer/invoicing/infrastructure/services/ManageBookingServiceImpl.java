@@ -108,6 +108,15 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         return exists;
     }
 
+    @Override
+    public Optional<ManageBookingDto> findManageBookingByReservationNumber(String reservationNumber) {
+        Optional<ManageBooking> manageBooking= this.repositoryQuery.findManageBookingByReservationNumber(reservationNumber);
+        if (manageBooking.isPresent()){
+            return manageBooking.map(ManageBooking::toAggregate);
+        }
+        return Optional.empty();
+    }
+
     private PaginatedResponse getPaginatedResponse(Page<ManageBooking> data) {
         List<ManageBookingResponse> responseList = new ArrayList<>();
         for (ManageBooking entity : data.getContent()) {

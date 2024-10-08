@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface IManageBookingService {
@@ -22,6 +23,8 @@ public interface IManageBookingService {
     ManageBookingDto findById(UUID id);
 
     boolean existsByExactLastChars(String lastChars, UUID hotelId);
+
+    Optional<ManageBookingDto> findManageBookingByReservationNumber(String reservationNumber);
 
     void calculateHotelAmount(ManageBookingDto dto);
 

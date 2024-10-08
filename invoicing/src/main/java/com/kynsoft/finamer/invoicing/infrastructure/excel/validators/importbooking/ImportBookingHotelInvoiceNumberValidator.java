@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.infrastructure.excel.validators;
+package com.kynsoft.finamer.invoicing.infrastructure.excel.validators.importbooking;
 
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.application.excel.ExcelRuleValidator;
