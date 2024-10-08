@@ -17,6 +17,8 @@ public interface IManageResourceTypeService {
 
     ResourceTypeDto findById(UUID id);
 
+    ResourceTypeDto findByCode(String code);
+
     Long countByCodeAndNotId(String code, UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);

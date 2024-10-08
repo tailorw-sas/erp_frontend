@@ -81,6 +81,15 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
     }
 
     @Override
+    public Optional<ManageAttachmentTypeDto> findDefault() {
+        Optional<ManageAttachmentType> defaultType=repositoryQuery.findManageAttachmentTypeByDefaults(true);
+       if(defaultType.isPresent()){
+           return defaultType.map(ManageAttachmentType::toAggregate);
+       }
+       return Optional.empty();
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filter) {
         filterCriteria(filter);
         GenericSpecificationsBuilder<ManageAttachmentType> specifications = new GenericSpecificationsBuilder<>(filter);
