@@ -697,20 +697,14 @@ const haveAttachmentWithAttachmentTypeInv = computed(() => {
 })
 
 function disabledBtnSave(propsValue: any): boolean {
-  if (!props.isCreationDialog) {
-    if (props.documentOptionHasBeenUsed && propsValue.item.fieldValues.file) {
-      return false
-    }
-    else if (props.documentOptionHasBeenUsed && !propsValue.item.fieldValues.file) {
-      return true
-    }
-    else {
-      return true
-    }
-  }
-  else {
+  if (propsValue.item.fieldValues.file) {
     return false
   }
+  else {
+    return true
+  }
+  // if (!props.isCreationDialog) {
+  // }
 }
 function disabledFields(): boolean {
   if (!props.isCreationDialog) {

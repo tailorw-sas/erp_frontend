@@ -392,7 +392,7 @@ onMounted(async () => {
             :is-save-form-adjustment="isSaveFormAdjustment"
             :close-dialog="() => {
               if (props.bookingList?.length === 1 && isSaveFormAdjustment === false) {
-                // navigateTo('/invoice');
+                navigateTo('/invoice');
               }
               adjustmentDialogOpen = false;
             }"
