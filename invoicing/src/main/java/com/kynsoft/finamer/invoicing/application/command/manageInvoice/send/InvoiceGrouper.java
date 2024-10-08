@@ -97,8 +97,8 @@ public class InvoiceGrouper {
 
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds, boolean isWithAttachment) throws DocumentException, IOException {
         EInvoiceReportType reportType = isWithAttachment
-                ? EInvoiceReportType.INVOICE_AND_BOOKING
-                : EInvoiceReportType.INVOICE_SUPPORT;
+                ? EInvoiceReportType.INVOICE_SUPPORT
+                : EInvoiceReportType.INVOICE_AND_BOOKING;
         Map<EInvoiceReportType, IInvoiceReport> services = new HashMap<>();
         services.put(reportType, invoiceReportProviderFactory.getInvoiceReportService(reportType));
 
