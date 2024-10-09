@@ -3,6 +3,7 @@ package com.kynsoft.finamer.creditcard.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -32,4 +33,6 @@ public interface IManageTransactionStatusService {
     Long countByRefundStatusAndNotId(UUID id);
 
     Long countByReceivedStatusAndNotId(UUID id);
+
+    ManageTransactionStatusDto findByETransactionStatus(ETransactionStatus status);
 }

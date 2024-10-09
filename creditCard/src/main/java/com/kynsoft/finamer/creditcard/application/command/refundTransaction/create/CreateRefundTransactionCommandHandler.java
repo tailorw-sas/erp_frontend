@@ -11,6 +11,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ParameterizationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.refundTransaction.RefundTransactionCompareParentAmountRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
@@ -81,7 +82,7 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
         if(Objects.isNull(parameterizationDto)){
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "No active parameterization")));
         }
-        ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByCode(parameterizationDto.getRefundTransactionStatusCode());
+        ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus(ETransactionStatus.REFUND);
 
         Long id = this.service.create(new TransactionDto(
                 parentTransaction.getTransactionUuid(),

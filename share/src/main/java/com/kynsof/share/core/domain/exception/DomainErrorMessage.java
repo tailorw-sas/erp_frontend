@@ -326,7 +326,10 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_AGENCY_CONTACT_NOT_FOUND(1104, Series.DOMAIN_ERROR, "The source not found."),
     MANAGE_TRANSACTION_STATUS_CHECK_SENT(1105, Series.DOMAIN_ERROR,"Another item already exists with sent status."),
     MANAGE_TRANSACTION_STATUS_CHECK_REFUND(1106, Series.DOMAIN_ERROR,"Another item already exists with refund status."),
-    MANAGE_TRANSACTION_STATUS_CHECK_RECEIVED(1107, Series.DOMAIN_ERROR,"Another item already exists with received status.");
+    MANAGE_TRANSACTION_STATUS_CHECK_RECEIVED(1107, Series.DOMAIN_ERROR,"Another item already exists with received status."),
+    MANAGE_TRANSACTION_STATUS_SENT_NOT_FOUND(1108, Series.DOMAIN_ERROR,"There is no transaction status of type sent selected by default."),
+    MANAGE_TRANSACTION_STATUS_REFUND_NOT_FOUND(1109, Series.DOMAIN_ERROR,"There is no transaction status of type refund selected by default."),
+    MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND(1110, Series.DOMAIN_ERROR,"There is no transaction status of type received selected by default.");
 
     private static final DomainErrorMessage[] VALUES;
 
