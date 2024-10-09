@@ -45,7 +45,7 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
                     UUID.randomUUID(), transactionDto.getTransactionUuid(), command.getResult(), null)
             );}
            else{
-                dto.setHtml(command.getResult());
+                dto.setMerchantRequest(command.getResult());
                 this.formPaymentService.update(dto);
            }
 

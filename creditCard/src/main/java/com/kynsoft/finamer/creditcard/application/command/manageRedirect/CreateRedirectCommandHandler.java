@@ -35,15 +35,34 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
 
         TransactionDto transactionDto = transactionService.findById(command.getRequestDto().getTransactionId());
 
+        //Obtener la data que viene del FormServiceImpl y dividirla en merchantRequest([0]) y Map ([1])
+        String[] dataForm = split(command.getResult());
         TransactionPaymentLogsDto dto = this.formPaymentService.findByTransactionId(transactionDto.getTransactionUuid());
-        if(dto == null) {
-            formPaymentService.create(new TransactionPaymentLogsDto(
-                    UUID.randomUUID(), transactionDto.getTransactionUuid(), command.getResult(), null)
+
+        if(dto == null ) {
+            if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.AZUL.toString()))
+            {formPaymentService.create(new TransactionPaymentLogsDto(
+                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null)
             );}
-        else{
-            dto.setHtml(command.getResult());
-            this.formPaymentService.update(dto);
+            if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.CARDNET.toString())){
+                formPaymentService.create(new TransactionPaymentLogsDto(
+                        UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null)
+                );}
         }
+        else{
+            if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.AZUL.toString())) {
+              dto.setMerchantRequest(dataForm[0]);
+              this.formPaymentService.update(dto);}
+            else{
+              dto.setMerchantRequest(dataForm[1]);
+              this.formPaymentService.update(dto);}
+        }
+        command.setResult(dataForm[0]);
+    }
+    public String[] split(String response){
+        String[] spliter = response.split("\\{", 2);
+        spliter[1] = "{"+spliter[1];
+        return spliter;
     }
 }
 
