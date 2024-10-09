@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.domain.dto;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,9 +16,7 @@ public class TransactionPaymentLogsDto {
 
     private UUID id;
     private UUID transactionId;
-    private String html;
-    private String merchantReturn;
-
-
+    private String merchantRequest;
+    private String merchantResponse;
 
 }

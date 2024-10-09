@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -9,6 +10,8 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageTransactionStatusResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageTransactionStatus;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageTransactionStatusWriteDataJPARepository;
@@ -72,6 +75,58 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
     }
 
     @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+
+        GenericSpecificationsBuilder<ManageTransactionStatus> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageTransactionStatus> data = this.repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    private void filterCriteria(List<FilterCriteria> filterCriteria) {
+        for (FilterCriteria filter : filterCriteria) {
+
+            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
+                try {
+                    Status enumValue = Status.valueOf((String) filter.getValue());
+                    filter.setValue(enumValue);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
+                }
+            }
+        }
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageTransactionStatus> data) {
+        List<ManageTransactionStatusResponse> userSystemsResponses = new ArrayList<>();
+
+        for (ManageTransactionStatus p : data.getContent()) {
+            userSystemsResponses.add(new ManageTransactionStatusResponse(p.toAggregate()));
+        }
+
+        return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public Long countByCodeAndNotId(String code, UUID id) {
+        return repositoryQuery.countByCodeAndNotId(code, id);
+    }
+
+    @Override
+    public List<ManageTransactionStatusDto> findAllToReplicate() {
+        List<ManageTransactionStatus> objects = this.repositoryQuery.findAll();
+        List<ManageTransactionStatusDto> objectDtos = new ArrayList<>();
+
+        for (ManageTransactionStatus object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
+    @Override
     public ManageTransactionStatusDto findByCode(String code) {
         Optional<ManageTransactionStatus> userSystem = this.repositoryQuery.findByCode(code);
         if (userSystem.isPresent()) {
@@ -81,20 +136,48 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
     }
 
     @Override
-    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        GenericSpecificationsBuilder<ManageTransactionStatus> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageTransactionStatus> data = this.repositoryQuery.findAll(specifications, pageable);
-
-        return getPaginatedResponse(data);
+    public Long countBySentStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countBySentStatusAndNotId(id);
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManageTransactionStatus> data) {
-        List<ManageTransactionStatusResponse> responses = new ArrayList<>();
-        for (ManageTransactionStatus p : data.getContent()) {
-            responses.add(new ManageTransactionStatusResponse(p.toAggregate()));
-        }
-        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
-                data.getTotalElements(), data.getSize(), data.getNumber());
+    @Override
+    public Long countByRefundStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByRefundStatusAndNotId(id);
+    }
+
+    @Override
+    public Long countByReceivedStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByReceivedStatusAndNotId(id);
+    }
+
+    @Override
+    public ManageTransactionStatusDto findByETransactionStatus(ETransactionStatus status) {
+       switch (status) {
+           case SENT -> {
+               return this.repositoryQuery.findBySentStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_SENT_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_SENT_NOT_FOUND.getReasonPhrase())
+               );
+           }
+           case REFUND -> {
+               return this.repositoryQuery.findByRefundStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_REFUND_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_REFUND_NOT_FOUND.getReasonPhrase())
+               );
+           }
+           case RECEIVE -> {
+               return this.repositoryQuery.findByReceivedStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND.getReasonPhrase())
+               );
+           }
+       }
+       throw new BusinessException(
+               DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND,
+               DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND.getReasonPhrase());
     }
 
 }

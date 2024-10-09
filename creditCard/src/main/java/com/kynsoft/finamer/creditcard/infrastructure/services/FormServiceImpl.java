@@ -72,10 +72,11 @@ public class FormServiceImpl implements IFormService {
                     "</body>" +
                     "</html>";
 
-            // Devolver el formulario HTML como respuesta
+            // Devolver el formulario HTML como respuesta se le concatena un json de 1 elemento para que cumpla el formato del split del command
+            String concatenatedBody = htmlForm + "{elemento}";
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_HTML)
-                    .body(htmlForm);
+                    .body(concatenatedBody);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -149,13 +150,19 @@ public class FormServiceImpl implements IFormService {
                     "</body>" +
                     "</html>";
 
+            String concatenatedBody = htmlForm + requestData;
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_HTML)
-                    .body(htmlForm);
+                    .body(concatenatedBody);
+
+
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing Cardnet payment.");
         }
     }
+
+
+
 }
