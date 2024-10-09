@@ -11,6 +11,9 @@ import com.kynsoft.finamer.settings.domain.dto.ModuleDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNameMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNonNoneMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusWhitAttachmentMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusWhitOutAttachmentMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageModuleService;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentAttachmentStatus.ProducerUpdateManagePaymentAttachmentStatusService;
@@ -48,6 +51,15 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
 
         if (command.getDefaults()) {
             RulesChecker.checkRule(new ManagePaymentAttachmentStatusDefaultMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.isNonNone()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusNonNoneMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.isPatWithAttachment()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusWhitAttachmentMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.isPwaWithOutAttachment()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusWhitOutAttachmentMustBeUniqueRule(service, command.getId()));
         }
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setPermissionCode, command.getPermissionCode(), dto.getPermissionCode(), update::setUpdate);
