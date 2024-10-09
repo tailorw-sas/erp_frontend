@@ -672,30 +672,50 @@ function showHistory() {
 }
 
 function downloadFile() {
-  if (props.isCreationDialog) {
-    const reader = new FileReader()
-    reader.readAsDataURL(item.value.file)
-    reader.onload = (e) => {
-      const tempLink = document.createElement('a')
-      tempLink.style.display = 'none'
-      tempLink.href = e.target.result as string
-      tempLink.download = item.value.filename
-      document.body.appendChild(tempLink)
-      tempLink.click()
-      document.body.removeChild(tempLink)
+  // if (props.isCreationDialog) {
+  //   const reader = new FileReader()
+  //   reader.readAsDataURL(item.value.file)
+  //   reader.onload = (e) => {
+  //     const tempLink = document.createElement('a')
+  //     tempLink.style.display = 'none'
+  //     tempLink.href = e.target.result as string
+  //     tempLink.download = item.value.filename
+  //     document.body.appendChild(tempLink)
+  //     tempLink.click()
+  //     document.body.removeChild(tempLink)
+  //   }
+
+  //   return
+  // }
+
+  // if (item.value) {
+  //   const link = document.createElement('a')
+  //   link.href = item.value.file
+  //   link.setAttribute('download', `${item.value.filename}`)
+  //   link.setAttribute('target', '_blank')
+  //   document.body.appendChild(link)
+  //   link.click()
+  //   document.body.removeChild(link)
+  // }
+}
+
+function openFileInNewWindow() {
+  if (item.value && item.value.file) {
+    if (typeof item.value.file === 'string' && item.value.file.length > 0) {
+      window.open(item.value.file, '_blank')
     }
+    else if (typeof item.value.file === 'object') {
+      const fileData = item.value.file
+      const fileName = item.value.filename || 'downloaded_file'
 
-    return
-  }
+      const blob = new Blob([fileData], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
 
-  if (item.value) {
-    const link = document.createElement('a')
-    link.href = item.value.file
-    link.setAttribute('download', `${item.value.filename}`)
-    link.setAttribute('target', '_blank')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      window.open(url, '_blank')
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'File not found', life: 3000 })
+    }
   }
 }
 
@@ -1024,7 +1044,7 @@ onMounted(async () => {
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
                   <Button
                     v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="!idItem"
-                    @click="downloadFile"
+                    @click="openFileInNewWindow"
                   />
                 </IfCan>
 
