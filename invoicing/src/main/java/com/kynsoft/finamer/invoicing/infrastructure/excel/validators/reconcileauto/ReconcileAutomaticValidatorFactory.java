@@ -60,13 +60,13 @@ public class ReconcileAutomaticValidatorFactory extends ValidatorFactory<Invoice
 
     private void sendErrorEvents(InvoiceReconcileAutomaticRow toValidate) {
         if (!errorFieldList.isEmpty()) {
-
             CreateImportReconcileAutomaticErrorEvent errorEvent = new CreateImportReconcileAutomaticErrorEvent(this,
                     InvoiceReconcileAutomaticImportErrorEntity.builder()
                             .errorFields(errorFieldList)
                             .importProcessId(toValidate.getImportProcessId())
                             .rowNumber(toValidate.getRowNumber())
                             .row(toValidate)
+                            .invoiceId(toValidate.getInvoiceIds())
                             .build());
             applicationEventPublisher.publishEvent(errorEvent);
         }

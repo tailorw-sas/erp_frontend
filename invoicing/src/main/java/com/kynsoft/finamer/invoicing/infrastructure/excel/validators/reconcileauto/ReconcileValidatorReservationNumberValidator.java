@@ -50,6 +50,7 @@ public class ReconcileValidatorReservationNumberValidator extends ExcelRuleValid
             errorFieldList.add(new ErrorField("Reservation Number","There isn't invoice with booking with this reservation number in th selected list"));
             return false;
         }
+        obj.setInvoiceIds(Arrays.stream(selectedInvoiceIds).filter(id->id.equals(booking.get().getInvoice().getId().toString())).findAny().get());
         return true;
     }
 }

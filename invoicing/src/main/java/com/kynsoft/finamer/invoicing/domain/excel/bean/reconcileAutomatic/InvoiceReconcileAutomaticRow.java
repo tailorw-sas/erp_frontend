@@ -28,4 +28,5 @@ public class InvoiceReconcileAutomaticRow {
     @Cell(position = 13,cellType = CustomCellType.DATAFORMAT)
     private String columnN;
 
+    private String invoiceIds;
 }
