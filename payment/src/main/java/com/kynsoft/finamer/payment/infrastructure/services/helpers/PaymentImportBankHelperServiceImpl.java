@@ -76,6 +76,7 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        this.totalProcessRow=0;
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
         paymentBankValidatorFactory.createValidators();
         ExcelBeanReader<PaymentBankRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentBankRow.class);
@@ -85,6 +86,7 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
             row.setImportType(request.getImportPaymentType().name());
             if (paymentBankValidatorFactory.validate(row)) {
                 cachingPaymentImport(row);
+                this.totalProcessRow++;
             }
         }
     }
