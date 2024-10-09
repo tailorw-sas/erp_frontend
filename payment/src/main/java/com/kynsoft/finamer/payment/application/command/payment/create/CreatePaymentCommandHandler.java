@@ -182,7 +182,14 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
         RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule(countDefaults));
         this.masterPaymentAttachmentService.create(dtos);
-        paymentDto.setPaymentSupport(countDefaults > 0);
+
+        if (countDefaults > 0) {
+            paymentDto.setPaymentSupport(true);
+        } else {
+            paymentDto.setAttachmentStatus(this.attachmentStatusService.findByNonNone());
+            paymentDto.setPaymentSupport(false);
+        }
+
         this.paymentService.update(paymentDto);
         return dtos;
     }
