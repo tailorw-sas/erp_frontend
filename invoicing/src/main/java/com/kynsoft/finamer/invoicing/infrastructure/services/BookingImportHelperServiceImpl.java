@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -141,9 +142,12 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         CreateInvoiceCommand createInvoiceCommand = createInvoiceCommand(getInvoiceDate(sample), LocalDate.now(),
                 false, calculateInvoiceAmount(bookingRowList), hotelDto.getId(), agencyDto.getId(), EInvoiceType.INVOICE);
         List<CreateBookingCommand> createBookingCommands = createBookings(createInvoiceCommand.getId(), bookingRowList);
+        List<CreateRoomRateCommand> createRoomRateCommands = createRateRoomS(createBookingCommands);
         IMediator mediator = serviceLocator.getBean(IMediator.class);
         mediator.send(createInvoiceCommand);
         createBookingCommands.forEach(mediator::send);
+        createRoomRateCommands.forEach(mediator::send);
+
     }
 
 //    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList) {
@@ -263,4 +267,21 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                 .toList();
     }
 
+    private List<CreateRoomRateCommand> createRateRoomS(List<CreateBookingCommand> bookingCommands ){
+        List<CreateRoomRateCommand> roomRateCommands = new ArrayList<>();
+        bookingCommands.forEach(bookings->{
+            roomRateCommands.add( new CreateRoomRateCommand(bookings.getCheckIn(),bookings.getCheckOut(),bookings.getInvoiceAmount(),
+                    bookings.getRoomNumber(),
+                    bookings.getAdults(),
+                    bookings.getChildren(),
+                    bookings.getRateAdult(),
+                    bookings.getRateChild(),
+                    bookings.getHotelAmount(),
+                    "",
+                    bookings.getId(),
+                    UUID.randomUUID()
+                    ));
+        });
+        return roomRateCommands;
+    }
 }
