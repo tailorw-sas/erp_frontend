@@ -1779,6 +1779,22 @@ async function applyPaymentGetListForOtherDeductions() {
       }
     }
 
+    const objFilterEnabledToApply = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
+
+    if (objFilterEnabledToApply) {
+      objFilterEnabledToApply.value = true
+    }
+    else {
+      applyPaymentPayloadOtherDeduction.value.filter.push(
+        {
+          key: 'invoice.manageInvoiceStatus.enabledToApply',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        }
+      )
+    }
+
     const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
