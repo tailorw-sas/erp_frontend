@@ -913,6 +913,22 @@ function disabledInvoiceStatus(payload: any) {
   
 }
 
+function disabledFieldAgency() {
+  console.log('Si entro aqui, necesito....');
+  if (item.value?.invoiceType?.code === 'CRE' || item.value?.invoiceType?.code === 'INC') {
+    
+    return true
+  } else {
+    let result = true
+    if (invoiceStatus.value !== InvoiceStatus.PROCECSED && invoiceStatus.value !== InvoiceStatus.SENT && invoiceStatus.value !== InvoiceStatus.RECONCILED) {
+      result = true
+    } else {
+      result = false
+    }
+    return result
+  } 
+}
+
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
     clearForm()
@@ -1065,7 +1081,7 @@ onMounted(async () => {
             id="autocomplete" 
             field="fullName" 
             item-value="id" 
-            :disabled="invoiceStatus !== InvoiceStatus.PROCECSED && invoiceStatus !== InvoiceStatus.SENT && invoiceStatus !== InvoiceStatus.RECONCILED"
+            :disabled="disabledFieldAgency()"
             :model="data.agency" 
             :suggestions="agencyList" 
             @change="($event) => {
