@@ -36,7 +36,7 @@ COPY --from=builder /build/target/payment-1.0.0.jar /app/payment-1.0.0.jar
 COPY src/main/resources/EstadoCuenta.xlsx /app/resources/EstadoCuenta.xlsx
 
 # Expone el puerto que utiliza la aplicación
-EXPOSE 9909
+EXPOSE 8097
 
 # Comando de inicio de la aplicación
 ENTRYPOINT ["java", "-jar", "/app/payment-1.0.0.jar"]

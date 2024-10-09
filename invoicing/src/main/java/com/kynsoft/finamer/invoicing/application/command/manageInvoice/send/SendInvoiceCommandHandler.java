@@ -15,6 +15,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgencyContact;
+import com.kynsoft.finamer.invoicing.infrastructure.services.AccountStatementService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.InvoiceXmlService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import org.springframework.stereotype.Component;
@@ -26,8 +27,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
 import org.springframework.core.io.ClassPathResource;
 import org.apache.commons.io.IOUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,11 +49,15 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final InvoiceReportProviderFactory invoiceReportProviderFactory;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IManageAgencyContactService manageAgencyContactService;
+    private final AccountStatementService accountStatementService;
 
     public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService,
                                      IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,
                                      IManageInvoiceStatusService manageInvoiceStatusService,
-                                     FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory, IInvoiceStatusHistoryService invoiceStatusHistoryService, IManageAgencyContactService manageAgencyContactService) {
+                                     FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory,
+                                     IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                     IManageAgencyContactService manageAgencyContactService,
+                                     AccountStatementService accountStatementService) {
 
         this.service = service;
         this.mailService = mailService;
@@ -61,6 +68,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         this.invoiceReportProviderFactory = invoiceReportProviderFactory;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.manageAgencyContactService = manageAgencyContactService;
+        this.accountStatementService = accountStatementService;
     }
 
     @Override
@@ -230,21 +238,22 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
             //Adjuntos
             List<MailJetAttachment> attachments = new ArrayList<>();
-            FileService fileService = new FileService();
-            try {
-                MailJetAttachment attachment = new MailJetAttachment(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Content-Type para archivo .xlsx
-                        "AccountStatement.xlsx",  // Nombre del archivo
-                        fileService.convertExcelToBase64()  // Contenido del archivo en base64
-                );
-                attachments.add(attachment);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            List<UUID> ids = agencyInvoices.stream().map(ManageInvoiceDto::getId).toList();
+            SendAccountStatementRequest sendAccountStatementRequest = new SendAccountStatementRequest(ids);
+            SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
+
+            MailJetAttachment attachment = new MailJetAttachment(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Content-Type para archivo .xlsx
+                    "AccountStatement.xlsx",  // Nombre del archivo
+                    sendAccountStatementResponse.getFile()
+            );
+            attachments.add(attachment);
+
             request.setMailJetAttachments(attachments);
             mailService.sendMail(request);
         }
     }
+
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds, SendInvoiceCommand command) throws DocumentException, IOException {
         EInvoiceReportType reportType = command.isWithAttachment()
                 ? EInvoiceReportType.INVOICE_AND_BOOKING

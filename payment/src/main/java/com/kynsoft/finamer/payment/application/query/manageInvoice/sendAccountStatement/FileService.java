@@ -1,7 +1,8 @@
-package com.kynsoft.finamer.invoicing.application.command.manageInvoice.send;
+package com.kynsoft.finamer.payment.application.query.manageInvoice.sendAccountStatement;
 
-import org.springframework.core.io.ClassPathResource;
 import org.apache.commons.io.IOUtils;
+import org.springframework.core.io.ClassPathResource;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
