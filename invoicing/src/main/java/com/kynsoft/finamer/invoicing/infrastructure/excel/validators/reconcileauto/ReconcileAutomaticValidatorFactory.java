@@ -31,25 +31,25 @@ public class ReconcileAutomaticValidatorFactory extends ValidatorFactory<Invoice
 
     @Override
     public void createValidators(String importType) {
-            nightTypeValidator = new ReconcileAutomaticNightTypeValidator(nightTypeService);
-            couponNumberValidator = new ReconcileAutomaticCouponNumberValidator(manageBookingService,selectedInvoiceId);
-            reservationNumberValidator = new ReconcileValidatorReservationNumberValidator(manageBookingService,selectedInvoiceId);
-            priceValidator = new ReconcileAutomaticPriceValidator(manageBookingService);
+        nightTypeValidator = new ReconcileAutomaticNightTypeValidator(nightTypeService);
+        couponNumberValidator = new ReconcileAutomaticCouponNumberValidator(manageBookingService, selectedInvoiceId);
+        reservationNumberValidator = new ReconcileValidatorReservationNumberValidator(manageBookingService, selectedInvoiceId);
+        priceValidator = new ReconcileAutomaticPriceValidator(manageBookingService);
 
     }
 
-    public void createValidators(String[] selectedInvoiceIds){
+    public void createValidators(String[] selectedInvoiceIds) {
         this.selectedInvoiceId = selectedInvoiceIds;
         this.createValidators("");
     }
 
     @Override
     public boolean validate(InvoiceReconcileAutomaticRow toValidate) {
-       if (reservationNumberValidator.validate(toValidate,errorFieldList)){
-           return  couponNumberValidator.validate(toValidate,errorFieldList) &&
-           nightTypeValidator.validate(toValidate,errorFieldList)&&
-                   priceValidator.validate(toValidate,errorFieldList);
-       }
+        if (reservationNumberValidator.validate(toValidate, errorFieldList)) {
+            couponNumberValidator.validate(toValidate, errorFieldList);
+            nightTypeValidator.validate(toValidate, errorFieldList);
+            priceValidator.validate(toValidate, errorFieldList);
+        }
 
         this.sendErrorEvents(toValidate);
         boolean result = errorFieldList.isEmpty();
@@ -58,16 +58,16 @@ public class ReconcileAutomaticValidatorFactory extends ValidatorFactory<Invoice
     }
 
 
-    private void sendErrorEvents(InvoiceReconcileAutomaticRow toValidate){
+    private void sendErrorEvents(InvoiceReconcileAutomaticRow toValidate) {
         if (!errorFieldList.isEmpty()) {
 
             CreateImportReconcileAutomaticErrorEvent errorEvent = new CreateImportReconcileAutomaticErrorEvent(this,
                     InvoiceReconcileAutomaticImportErrorEntity.builder()
-                    .errorFields(errorFieldList)
-                    .importProcessId(toValidate.getImportProcessId())
-                    .rowNumber(toValidate.getRowNumber())
-                    .row(toValidate)
-                    .build());
+                            .errorFields(errorFieldList)
+                            .importProcessId(toValidate.getImportProcessId())
+                            .rowNumber(toValidate.getRowNumber())
+                            .row(toValidate)
+                            .build());
             applicationEventPublisher.publishEvent(errorEvent);
         }
     }
