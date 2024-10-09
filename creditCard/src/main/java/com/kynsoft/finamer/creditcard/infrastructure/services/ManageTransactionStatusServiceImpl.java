@@ -133,4 +133,19 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Transaction Status not found.")));
     }
 
+    @Override
+    public Long countBySentStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countBySentStatusAndNotId(id);
+    }
+
+    @Override
+    public Long countByRefundStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByRefundStatusAndNotId(id);
+    }
+
+    @Override
+    public Long countByReceivedStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByReceivedStatusAndNotId(id);
+    }
+
 }

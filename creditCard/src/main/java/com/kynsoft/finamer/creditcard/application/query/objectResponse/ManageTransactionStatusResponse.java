@@ -27,6 +27,10 @@ public class ManageTransactionStatusResponse implements IResponse {
     private Boolean visible;
     private Status status;
 
+    private boolean sentStatus;
+    private boolean refundStatus;
+    private boolean receivedStatus;
+
     public ManageTransactionStatusResponse(ManageTransactionStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -40,6 +44,9 @@ public class ManageTransactionStatusResponse implements IResponse {
                 this.navigate.add(new ManageTransactionStatusNavegateResponse(manageTransactionStatusDto));
             }
         }
+        this.sentStatus = dto.isSentStatus();
+        this.refundStatus = dto.isRefundStatus();
+        this.receivedStatus = dto.isReceivedStatus();
     }
 
 }

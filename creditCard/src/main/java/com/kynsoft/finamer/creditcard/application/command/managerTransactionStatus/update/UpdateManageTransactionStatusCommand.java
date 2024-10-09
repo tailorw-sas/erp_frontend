@@ -21,7 +21,14 @@ public class UpdateManageTransactionStatusCommand implements ICommand {
     private Boolean visible;
     private Status status;
 
-    public UpdateManageTransactionStatusCommand(UUID id, String description, String name, List<UUID> navigate, Boolean enablePayment, Boolean visible, Status status) {
+    private boolean sentStatus;
+    private boolean refundStatus;
+    private boolean receivedStatus;
+
+    public UpdateManageTransactionStatusCommand(
+            UUID id, String description, String name, List<UUID> navigate,
+            Boolean enablePayment, Boolean visible, Status status,
+            boolean sentStatus, boolean refundStatus, boolean receivedStatus) {
         this.id = id;
         this.description = description;
         this.name = name;
@@ -29,6 +36,9 @@ public class UpdateManageTransactionStatusCommand implements ICommand {
         this.enablePayment = enablePayment;
         this.visible = visible;
         this.status = status;
+        this.sentStatus = sentStatus;
+        this.refundStatus = refundStatus;
+        this.receivedStatus = receivedStatus;
     }
 
     public static UpdateManageTransactionStatusCommand fromRequest(UpdateManageTransactionStatusRequest request, UUID id) {
@@ -39,7 +49,10 @@ public class UpdateManageTransactionStatusCommand implements ICommand {
                 request.getNavigate(),
                 request.getEnablePayment(),
                 request.getVisible(),
-                request.getStatus()
+                request.getStatus(),
+                request.isSentStatus(),
+                request.isRefundStatus(),
+                request.isReceivedStatus()
         );
     }
 

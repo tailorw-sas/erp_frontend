@@ -17,4 +17,8 @@ public class CreateManageTransactionStatusRequest {
     private Boolean enablePayment;
     private Boolean visible;
     private Status status;
+
+    private boolean sentStatus;
+    private boolean refundStatus;
+    private boolean receivedStatus;
 }

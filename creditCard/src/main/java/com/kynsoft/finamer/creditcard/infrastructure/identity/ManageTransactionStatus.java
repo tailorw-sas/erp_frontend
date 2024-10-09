@@ -56,6 +56,15 @@ public class ManageTransactionStatus implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean sentStatus;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean refundStatus;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean receivedStatus;
+
     public ManageTransactionStatus(ManageTransactionStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -67,16 +76,24 @@ public class ManageTransactionStatus implements Serializable {
         this.navigate = dto.getNavigate() != null ? dto.getNavigate().stream()
                     .map(ManageTransactionStatus::new)
                     .collect(Collectors.toList()) : null;
+        this.sentStatus = dto.isSentStatus();
+        this.refundStatus = dto.isRefundStatus();
+        this.receivedStatus = dto.isReceivedStatus();
     }
 
     public ManageTransactionStatusDto toAggregate() {
-
-        return new ManageTransactionStatusDto(id, code, name, description, navigate != null ?
-                navigate.stream().map(ManageTransactionStatus::toAggregateSample).toList() : null, enablePayment, visible, status);
+        return new ManageTransactionStatusDto(
+                id, code, name, description,
+                navigate != null ? navigate.stream().map(ManageTransactionStatus::toAggregateSample).toList() : null,
+                enablePayment, visible, status,
+                sentStatus, refundStatus, receivedStatus);
     }
 
     public ManageTransactionStatusDto toAggregateSample() {
-        return new ManageTransactionStatusDto(id, code, name, description, null, enablePayment, visible, status);
+        return new ManageTransactionStatusDto(
+                id, code, name, description,
+                null, enablePayment, visible, status,
+                sentStatus, refundStatus, receivedStatus);
     }
 
 }

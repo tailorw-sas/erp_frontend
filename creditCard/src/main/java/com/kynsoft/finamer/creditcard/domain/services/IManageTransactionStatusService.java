@@ -26,4 +26,10 @@ public interface IManageTransactionStatusService {
     List<ManageTransactionStatusDto> findAllToReplicate();
 
     ManageTransactionStatusDto findByCode(String code);
+
+    Long countBySentStatusAndNotId(UUID id);
+
+    Long countByRefundStatusAndNotId(UUID id);
+
+    Long countByReceivedStatusAndNotId(UUID id);
 }
