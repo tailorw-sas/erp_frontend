@@ -187,7 +187,7 @@ const Fields: Array<Container> = [
 ]
 
 const attachmentHistoryDialogOpen = ref<boolean>(false)
-
+const listItemsLocal = ref<any[]>([...props.listItems])
 const selectedAttachment = ref<string>('')
 
 const Columns: IColumn[] = [
@@ -771,7 +771,8 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                  :disabled="isCreationDialog && ListItems.length > 0"
+                  :disabled="isCreationDialog ? ListItems.some((item: any) => item.type?.attachInvDefault) : isCreationDialog ? !listItemsLocal.some((item: any) => item.type?.attachInvDefault) : false"
+              
                   :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
                     typeError = false

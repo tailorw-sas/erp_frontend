@@ -650,6 +650,12 @@ function showHistory() {
 }
 
 function downloadFile() {
+  if (listItemsLocal.value?.length > 0) {
+          // Selecciona el primer elemento automáticamente
+          item.value = { ...listItemsLocal.value[0] }; // Asigna el primer elemento a item.value
+          idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id; // Carga el ID del primer elemento
+        }
+        
   if (props.isCreationDialog && item.value.file) {
     const url = URL.createObjectURL(item.value.file);
     
@@ -752,6 +758,8 @@ onMounted(async () => {
     if (listItemsLocal.value?.length > 0) {
       idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id
     }
+    
+
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
@@ -936,7 +944,7 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
                   <Button
-                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="!idItem"
+                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="listItemsLocal.length === 0"
                     @click="downloadFile"
                   />
                 </IfCan>

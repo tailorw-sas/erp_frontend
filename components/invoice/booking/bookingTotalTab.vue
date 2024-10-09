@@ -681,6 +681,7 @@ const item = ref<GenericObject>({
   hotelAmount: '0',
   description: '',
   invoice: '',
+  contract:'',
   ratePlan: null,
   nightType: null,
   roomType: null,
@@ -698,7 +699,7 @@ const itemTemp = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-
+  contract:'',
   invoiceAmount: '0',
   roomNumber: '0',
   couponNumber: '',
@@ -1035,7 +1036,8 @@ async function getBookingList(clearFilter: boolean = false) {
         agency: { ...iterator?.invoice?.agency, name: `${iterator?.invoice?.agency?.code}-${iterator?.invoice?.agency?.name}` },
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`,
-        originalAmount: iterator?.invoiceAmount
+        originalAmount: iterator?.invoiceAmount,
+        contract:iterator?.contract
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
         console.log('Si entro a este total', iterator.invoiceAmount);
@@ -1127,6 +1129,7 @@ async function GetItemById(id: string) {
       item.value.roomNumber = element.roomNumber
       item.value.couponNumber = element.couponNumber
       item.value.adults = element.adults
+      item.value.contract = element.contract
       item.value.children = element.children
       item.value.rateAdult = element.rateAdult
       item.value.rateChild = element.rateChild
@@ -1157,6 +1160,7 @@ async function GetItemById(id: string) {
         item.value.fullName = response.fullName
         item.value.firstName = response.firstName
         item.value.lastName = response.lastName
+        item.value.contract = response.contract
 
         item.value.invoiceAmount = response.invoiceAmount ? String(response?.invoiceAmount) : '0'
         item.value.roomNumber = response.roomNumber
