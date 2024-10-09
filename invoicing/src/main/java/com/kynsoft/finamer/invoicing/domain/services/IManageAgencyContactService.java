@@ -1,8 +1,8 @@
-package com.kynsoft.finamer.settings.domain.services;
+package com.kynsoft.finamer.invoicing.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.settings.domain.dto.ManageAgencyContactDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyContactDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

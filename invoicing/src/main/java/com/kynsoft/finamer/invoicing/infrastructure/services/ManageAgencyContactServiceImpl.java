@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.settings.infrastructure.services;
+package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
@@ -7,12 +7,12 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import com.kynsoft.finamer.settings.application.query.manageAgencyContact.ManageAgencyContactResponse;
-import com.kynsoft.finamer.settings.domain.dto.ManageAgencyContactDto;
-import com.kynsoft.finamer.settings.domain.services.IManageAgencyContactService;
-import com.kynsoft.finamer.settings.infrastructure.identity.ManageAgencyContact;
-import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageAgencyContactWriteDataJPARepository;
-import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageAgencyContactReadDataJPARepository;
+import com.kynsoft.finamer.invoicing.application.query.manageAgencyContact.ManageAgencyContactResponse;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyContactDto;
+import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyContactService;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgencyContact;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageAgencyContactWriteDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageAgencyContactReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

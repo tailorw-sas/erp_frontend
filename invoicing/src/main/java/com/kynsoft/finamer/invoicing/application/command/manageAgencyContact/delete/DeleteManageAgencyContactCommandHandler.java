@@ -1,8 +1,8 @@
-package com.kynsoft.finamer.settings.application.command.manageAgencyContact.delete;
+package com.kynsoft.finamer.invoicing.application.command.manageAgencyContact.delete;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.settings.domain.dto.ManageAgencyContactDto;
-import com.kynsoft.finamer.settings.domain.services.IManageAgencyContactService;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyContactDto;
+import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyContactService;
 import org.springframework.stereotype.Component;
 
 @Component
