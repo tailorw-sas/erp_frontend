@@ -1319,12 +1319,12 @@ async function applyPaymentGetList() {
         objFilter.value = listAgenciesForApplyPayment.map(item => item.id)
       }
       else {
-        // applyPaymentPayload.value.filter.push({
-        //   key: 'agency.id',
-        //   operator: 'IN',
-        //   value: listAgenciesForApplyPayment.map(item => item.id),
-        //   logicalOperation: 'AND'
-        // })
+        applyPaymentPayload.value.filter.push({
+          key: 'agency.id',
+          operator: 'IN',
+          value: listAgenciesForApplyPayment.map(item => item.id),
+          logicalOperation: 'AND'
+        })
       }
     }
 
@@ -1333,17 +1333,17 @@ async function applyPaymentGetList() {
       if (objItemSelectedForRightClickApplyPayment.value?.hotel.applyByTradingCompany) {
         // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
         const filter: FilterCriteria[] = [
-          // {
-          //   key: 'agency.id',
-          //   logicalOperation: 'AND',
-          //   operator: 'EQUALS',
-          //   value: item.value.agency.id,
-          // },
           {
             key: 'manageTradingCompanies.id',
             logicalOperation: 'AND',
             operator: 'EQUALS',
             value: objItemSelectedForRightClickApplyPayment.value?.hotel?.manageTradingCompany,
+          },
+          {
+            key: 'applyByTradingCompany',
+            logicalOperation: 'AND',
+            operator: 'EQUALS',
+            value: true,
           },
         ]
         const objQueryToSearch = {
@@ -1377,12 +1377,12 @@ async function applyPaymentGetList() {
           objFilter.value = objItemSelectedForRightClickApplyPayment.value?.hotel.id
         }
         else {
-          // applyPaymentPayload.value.filter.push({
-          //   key: 'hotel.id',
-          //   operator: 'EQUALS',
-          //   value: objItemSelectedForRightClickApplyPayment.value?.hotel.id,
-          //   logicalOperation: 'AND'
-          // })
+          applyPaymentPayload.value.filter.push({
+            key: 'hotel.id',
+            operator: 'EQUALS',
+            value: objItemSelectedForRightClickApplyPayment.value?.hotel.id,
+            logicalOperation: 'AND'
+          })
         }
       }
     }
@@ -1701,6 +1701,12 @@ async function applyPaymentGetListForOtherDeductions() {
             logicalOperation: 'AND',
             operator: 'EQUALS',
             value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel?.manageTradingCompany,
+          },
+          {
+            key: 'applyByTradingCompany',
+            logicalOperation: 'AND',
+            operator: 'EQUALS',
+            value: true,
           },
         ]
         const objQueryToSearch = {

@@ -2016,7 +2016,6 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
 
     let listAgenciesForApplyPayment: any[] = []
     listAgenciesForApplyPayment = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
-
     if (listAgenciesForApplyPayment.length > 0) {
       const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.agency.id')
 
@@ -2035,6 +2034,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
 
     // Validacion para bucsar por los hoteles
     if (item.value.hotel && item.value.hotel.id) {
+      // El hotel que tiene la cabecera del payment debe pertenecer a la misma trading company
       if (item.value.hotel.applyByTradingCompany) {
         // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
         const filter: FilterCriteria[] = [
@@ -2049,6 +2049,12 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
             logicalOperation: 'AND',
             operator: 'EQUALS',
             value: item.value.hotel?.manageTradingCompany,
+          },
+          {
+            key: 'applyByTradingCompany',
+            logicalOperation: 'AND',
+            operator: 'EQUALS',
+            value: true,
           },
         ]
         const objQueryToSearch = {
@@ -2091,6 +2097,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
         }
       }
     }
+
     const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
 
     if (objFilterEnabledToApply) {
