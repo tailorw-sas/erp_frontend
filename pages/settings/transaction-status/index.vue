@@ -29,7 +29,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-transaction-status',
 })
 
@@ -71,6 +71,24 @@ const fields: Array<FieldDefinitionType> = [
     field: 'visible',
     header: 'Visible',
     dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'sentStatus',
+    header: 'Sent Status',
+    dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'refundStatus',
+    header: 'Refund Status',
+    dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'receivedStatus',
+    header: 'Received Status',
+    dataType: 'check',
     class: 'field col-12 mb-3',
   },
   {
@@ -96,6 +114,9 @@ const item = ref<GenericObject>({
   enablePayment: false,
   navigate: [],
   visible: false,
+  sentStatus: false,
+  refundStatus: false,
+  receivedStatus: false,
   description: '',
   status: true
 })
@@ -107,6 +128,9 @@ const itemTemp = ref<GenericObject>({
   enablePayment: false,
   navigate: [],
   visible: false,
+  sentStatus: false,
+  refundStatus: false,
+  receivedStatus: false,
   status: true
 })
 
@@ -292,17 +316,20 @@ async function getItemById(id: string) {
   try {
     const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
     if (response) {
-      const { id, name, description, status, code, enablePayment, visible, navigate } = response
+      const { id, name, description, status, code, enablePayment, visible, navigate, sentStatus, refundStatus, receivedStatus } = response
 
       item.value = {
         ...item.value,
         id,
         name,
-        description,
+        description: description ?? '',
         status: statusToBoolean(status),
         code,
         enablePayment,
         visible,
+        sentStatus,
+        refundStatus,
+        receivedStatus,
         navigate: navigate
           .map((nav: any) => navigateListItems.value.find((item: any) => item.id === nav?.id))
           .filter((nav: any) => nav !== null)
