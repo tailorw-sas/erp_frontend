@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -9,6 +10,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageTransactionStatusResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageTransactionStatus;
@@ -146,6 +148,36 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
     @Override
     public Long countByReceivedStatusAndNotId(UUID id) {
         return this.repositoryQuery.countByReceivedStatusAndNotId(id);
+    }
+
+    @Override
+    public ManageTransactionStatusDto findByETransactionStatus(ETransactionStatus status) {
+       switch (status) {
+           case SENT -> {
+               return this.repositoryQuery.findBySentStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_SENT_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_SENT_NOT_FOUND.getReasonPhrase())
+               );
+           }
+           case REFUND -> {
+               return this.repositoryQuery.findByRefundStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_REFUND_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_REFUND_NOT_FOUND.getReasonPhrase())
+               );
+           }
+           case RECEIVE -> {
+               return this.repositoryQuery.findByReceivedStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND.getReasonPhrase())
+               );
+           }
+       }
+       throw new BusinessException(
+               DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND,
+               DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND.getReasonPhrase());
     }
 
 }

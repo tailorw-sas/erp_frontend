@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.query.objectResponse;
+package com.kynsoft.finamer.creditcard.application.query.transaction.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import lombok.AllArgsConstructor;
