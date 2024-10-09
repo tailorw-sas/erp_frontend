@@ -1363,6 +1363,13 @@ async function filterEditFields(bookingEdit: any[]) {
       roomType: booking.roomType ? booking.roomType.id : null,
       roomCategory: booking.roomCategory ? booking.roomCategory.id : null,
       agency: booking.agency ? booking.agency.id : null,
+      hotelCreationDate:booking.hotelCreationDate,
+      bookingDate:booking.bookingDate,
+      contract:booking?.contract,
+      hotelBookingNumber:booking.hotelBookingNumber,
+      hotelInvoiceNumber:booking.hotelInvoiceNumber,
+      description:booking?.description
+
 
     }))
 
@@ -1519,6 +1526,13 @@ function updateBooking(booking: any) {
         hotelAmount: booking?.hotelAmount,
         adults: booking?.adults,
         children: booking?.children,
+        hotelCreationDate:booking.hotelCreationDate,
+        bookingDate:booking.bookingDate,
+        hotelBookingNumber:booking?.hotelBookingNumber,
+        hotelInvoiceNumber:booking?.hotelInvoiceNumber,
+        contract:booking?.contract,
+        description:booking?.description,
+
        
       }
 
