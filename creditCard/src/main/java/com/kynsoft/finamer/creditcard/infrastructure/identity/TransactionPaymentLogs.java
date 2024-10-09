@@ -24,31 +24,32 @@ public class TransactionPaymentLogs implements Serializable {
     @Id
     @Column(name = "id", unique = true)
     private UUID id;
-
+    @Column(name = "transaction_id", unique = true)
     private UUID transactionId;
 
-    @Column(columnDefinition = "TEXT")
-    private String html;
+    @Column(name= "merchant_request" ,columnDefinition = "TEXT")
+    private String merchantRequest;
 
-    private String merchantReturn;
+    @Column(name= "merchant_response")
+    private String merchantResponse;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at",nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     public TransactionPaymentLogs(TransactionPaymentLogsDto dto) {
         this.id = dto.getId();
         this.transactionId = dto.getTransactionId();
-        this.html = dto.getHtml();
-        this.merchantReturn = dto.getMerchantReturn();
+        this.merchantRequest = dto.getMerchantRequest();
+        this.merchantResponse = dto.getMerchantResponse();
 
     }
     public TransactionPaymentLogsDto toAggregate(){
         return new TransactionPaymentLogsDto(
-                 id,transactionId, html, merchantReturn
+                 id,transactionId, merchantRequest, merchantResponse
         );
     }
 }
