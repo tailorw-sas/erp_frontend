@@ -21,4 +21,22 @@ public interface ManageTransactionStatusReadDataJPARepository extends JpaReposit
 
     @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.sentStatus = true AND b.id <> :id")
+    Long countBySentStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.sentStatus = true")
+    Optional<ManageTransactionStatus> findBySentStatus();
+
+    @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.refundStatus = true AND b.id <> :id")
+    Long countByRefundStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.refundStatus = true")
+    Optional<ManageTransactionStatus> findByRefundStatus();
+
+    @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.receivedStatus = true AND b.id <> :id")
+    Long countByReceivedStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.receivedStatus = true")
+    Optional<ManageTransactionStatus> findByReceivedStatus();
 }

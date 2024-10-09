@@ -323,7 +323,10 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     INVOICE_MUST_HAVE_ATTACHMENT_TYPE(1101, Series.DOMAIN_ERROR,"The invoice must have at least one attachment of type default."),
     VCC_EXPIRED_PAYMENT_LINK(1102, Series.DOMAIN_ERROR,"Your payment link has expired."),
     MANAGE_ATTACHMENT_URL_CANNOT_BE_EMPTY(1103, Series.DOMAIN_ERROR, "The attachment file cannot be empty."),
-    MANAGE_AGENCY_CONTACT_NOT_FOUND(1104, Series.DOMAIN_ERROR, "The source not found.");
+    MANAGE_AGENCY_CONTACT_NOT_FOUND(1104, Series.DOMAIN_ERROR, "The source not found."),
+    MANAGE_TRANSACTION_STATUS_CHECK_SENT(1105, Series.DOMAIN_ERROR,"Another item already exists with sent status."),
+    MANAGE_TRANSACTION_STATUS_CHECK_REFUND(1106, Series.DOMAIN_ERROR,"Another item already exists with refund status."),
+    MANAGE_TRANSACTION_STATUS_CHECK_RECEIVED(1107, Series.DOMAIN_ERROR,"Another item already exists with received status.");
 
     private static final DomainErrorMessage[] VALUES;
 
