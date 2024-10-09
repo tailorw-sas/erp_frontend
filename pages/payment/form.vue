@@ -1856,7 +1856,10 @@ async function applyUndoApplication(event: any) {
         paymentDetail: objItemSelectedForRightClickUndoApplication.value?.id || ''
       }
       await GenericService.create(confApiPaymentDetailUndoApplication.moduleApi, confApiPaymentDetailUndoApplication.uriApi, payload)
-      getListPaymentDetail()
+      if (route?.query?.id) {
+        const id = route.query.id.toString()
+        await getItemById(id)
+      }
     }
   }
   catch (error) {
