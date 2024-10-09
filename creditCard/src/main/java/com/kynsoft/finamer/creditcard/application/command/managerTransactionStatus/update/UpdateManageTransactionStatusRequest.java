@@ -1,27 +1,20 @@
-package com.kynsoft.finamer.creditcard.domain.dto;
+package com.kynsoft.finamer.creditcard.application.command.managerTransactionStatus.update;
 
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 import java.util.UUID;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-public class ManageTransactionStatusDto {
+public class UpdateManageTransactionStatusRequest {
 
-    private UUID id;
-    private String code;
     private String name;
     private String description;
-    private List<ManageTransactionStatusDto> navigate;
+    private List<UUID> navigate;
     private Boolean enablePayment;
     private Boolean visible;
     private Status status;
-
 }

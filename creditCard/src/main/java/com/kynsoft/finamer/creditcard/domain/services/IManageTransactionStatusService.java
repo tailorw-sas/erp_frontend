@@ -19,7 +19,11 @@ public interface IManageTransactionStatusService {
 
     List<ManageTransactionStatusDto> findByIds(List<UUID> ids);
 
-    ManageTransactionStatusDto findByCode(String code);
-
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    Long countByCodeAndNotId(String code, UUID id);
+
+    List<ManageTransactionStatusDto> findAllToReplicate();
+
+    ManageTransactionStatusDto findByCode(String code);
 }
