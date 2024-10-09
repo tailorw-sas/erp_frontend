@@ -32,6 +32,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -132,14 +133,15 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
     }
 
     private void createInvoiceAttachment(File attachment, InvoiceReconcileImportRequest request) {
+        log.info(Objects.isNull(attachment)?"El attachment es null":attachment.getName());
         try (InputStream inputStream = new FileInputStream(attachment)) {
             ManageInvoiceDto manageInvoiceDto = invoiceService.findByInvoiceId(Long.parseLong(getInvoiceIdFromFileName(attachment)));
             CreateAttachmentEvent createAttachmentEvent = new CreateAttachmentEvent(this,
                     manageInvoiceDto.getId(),
                     request.getEmployee(),
                     UUID.fromString(request.getEmployeeId()),
-                    String.valueOf(getInvoiceIdFromFileName(attachment)),
-                    "Uploaded from file",
+                    attachment.getName(),
+                    "Attachment was inserted by one massive upload",
                     inputStream.readAllBytes()
             );
             applicationEventPublisher.publishEvent(createAttachmentEvent);
