@@ -16,7 +16,8 @@ RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN|g" settings.xml
 
 # Copia los archivos de proyecto
 COPY . /build
-
+# Copia los archivos de recursos, como el archivo EstadoCuenta.xlsx, al contenedor
+COPY --from=builder /build/src/main/resources/EstadoCuenta.xlsx /app/resources/EstadoCuenta.xlsx
 # Argumento para obtener el nombre del POM de forma dinámica
 ARG POM_NAME
 ENV POM_NAME=${POM_NAME}
