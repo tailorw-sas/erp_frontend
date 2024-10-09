@@ -269,7 +269,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     roomRateDtoList,
                     null,
                     bookingToClone,
-                    null
+                    bookingRequest.getContract()
             );
             bookings.add(newBooking);
         }

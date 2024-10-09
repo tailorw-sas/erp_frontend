@@ -89,6 +89,18 @@ public class ManageRegionServiceImpl implements IManageRegionService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManageRegionDto> findAllToReplicate() {
+        List<ManageRegion> objects = this.repositoryQuery.findAll();
+        List<ManageRegionDto> objectDtos = new ArrayList<>();
+
+        for (ManageRegion object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 
