@@ -27,13 +27,12 @@ import java.util.UUID;
 @Service
 public class ManageAgencyContactServiceImpl implements IManageAgencyContactService {
 
-    @Autowired
     private final ManageAgencyContactWriteDataJPARepository repositoryCommand;
 
-    @Autowired
     private final ManageAgencyContactReadDataJPARepository repositoryQuery;
 
-    public ManageAgencyContactServiceImpl(ManageAgencyContactWriteDataJPARepository repositoryCommand, ManageAgencyContactReadDataJPARepository repositoryQuery) {
+    public ManageAgencyContactServiceImpl(ManageAgencyContactWriteDataJPARepository repositoryCommand,
+                                          ManageAgencyContactReadDataJPARepository repositoryQuery) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
     }
@@ -80,7 +79,10 @@ public class ManageAgencyContactServiceImpl implements IManageAgencyContactServi
                 )
         );
     }
-
+    @Override
+    public List<ManageAgencyContact> findContactsByHotelAndAgency(UUID hotelId, UUID agencyId) {
+        return repositoryQuery.findByAgencyAndHotel(agencyId, hotelId);
+    }
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         GenericSpecificationsBuilder<ManageAgencyContact> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
