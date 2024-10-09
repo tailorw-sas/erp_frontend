@@ -1469,10 +1469,16 @@ onMounted(async () => {
         </div>
         <div v-if="attachmentDialogOpen">
           <AttachmentDialog
-            :add-item="addAttachment" :close-dialog="() => { attachmentDialogOpen = false }"
-            :is-creation-dialog="true" header="Manage Invoice Attachment" :list-items="attachmentList"
-            :open-dialog="attachmentDialogOpen" :update-item="updateAttachment" selected-invoice=""
-            :selected-invoice-obj="{}" :delete-item="deleteAttachment"
+            :add-item="addAttachment"
+            :close-dialog="() => { attachmentDialogOpen = false }"
+            :is-creation-dialog="true"
+            header="Manage Invoice Attachment"
+            :list-items="attachmentList"
+            :open-dialog="attachmentDialogOpen"
+            :update-item="updateAttachment"
+            selected-invoice=""
+            :selected-invoice-obj="{}"
+            :delete-item="deleteAttachment"
           />
         </div>
         <div v-if="attachmentHistoryDialogOpen" class="w-fit h-fit">
