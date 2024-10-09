@@ -38,4 +38,5 @@ public class TotalCloneBookingRequest {
     private UUID nightType;
     private UUID roomType;
     private UUID roomCategory;
+    private String contract;
 }
