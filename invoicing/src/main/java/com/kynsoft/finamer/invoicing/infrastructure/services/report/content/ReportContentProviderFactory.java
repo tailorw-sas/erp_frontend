@@ -8,6 +8,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.NoSuchElementException;
 
+import static com.nimbusds.openid.connect.sdk.assurance.claims.ISO3166_1Alpha2CountryCode.RE;
+
 @Component
 public class ReportContentProviderFactory {
 
@@ -31,6 +33,9 @@ public class ReportContentProviderFactory {
             }
             case INVOICE_AND_BOOKING_CONTENT -> {
                 return  new InvoiceAndBookingContentProvider(restTemplate,reportGenerator);
+            }
+            case RECONCILE_AUTO -> {
+                return new InvoiceReconcileAutomaticProvider(restTemplate,reportGenerator);
             }
             default -> throw new NoSuchElementException();
         }

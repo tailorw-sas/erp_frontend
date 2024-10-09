@@ -19,6 +19,12 @@ public class InvoiceReconcileImportProcessStatusDto {
     private String exceptionMessage;
 
     public InvoiceReconcileImportProcessStatusRedisEntity toAggregate(){
-        return new InvoiceReconcileImportProcessStatusRedisEntity(id,importProcessId,status,hasError,exceptionMessage);
+        return  InvoiceReconcileImportProcessStatusRedisEntity.builder().
+                id(id)
+                .status(status)
+                .importProcessId(importProcessId)
+                .hasError(hasError)
+                .exceptionMessage(exceptionMessage)
+                .build();
     }
 }

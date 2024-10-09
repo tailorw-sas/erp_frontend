@@ -22,10 +22,10 @@ import java.util.UUID;
 public class TransactionPaymentLogs implements Serializable {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "id", unique = true)
     private UUID id;
 
-    private UUID transactionUuid;
+    private UUID transactionId;
 
     @Column(columnDefinition = "TEXT")
     private String html;
@@ -36,16 +36,19 @@ public class TransactionPaymentLogs implements Serializable {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = true, updatable = true)
+    private LocalDateTime updatedAt;
+
     public TransactionPaymentLogs(TransactionPaymentLogsDto dto) {
         this.id = dto.getId();
-        this.transactionUuid = dto.getTransactionUuid();
+        this.transactionId = dto.getTransactionId();
         this.html = dto.getHtml();
         this.merchantReturn = dto.getMerchantReturn();
 
     }
-    public TransactionPaymentLogs toAggregate(){
-        return new TransactionPaymentLogs(
-                 id,transactionUuid, html, merchantReturn,createdAt
+    public TransactionPaymentLogsDto toAggregate(){
+        return new TransactionPaymentLogsDto(
+                 id,transactionId, html, merchantReturn
         );
     }
 }

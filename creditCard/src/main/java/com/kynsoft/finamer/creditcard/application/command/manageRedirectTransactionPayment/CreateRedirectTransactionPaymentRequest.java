@@ -11,4 +11,4 @@ import lombok.Setter;
 @Setter
 public class CreateRedirectTransactionPaymentRequest {
     private String token;
-}
+   }
