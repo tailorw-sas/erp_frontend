@@ -14,6 +14,6 @@ public interface BookingImportCacheRedisRepository extends CrudRepository<Bookin
     List<BookingImportCache> findAllByGenerationTypeAndImportProcessId(String generationType, String importProcessId);
     List<BookingImportCache> findAllByImportProcessId(String importProcessId);
 
-    Optional<BookingImportCache> findBookingImportCacheByHotelBookingNumber(String hotelBookingNumber);
+    Optional<BookingImportCache> findBookingImportCacheByHotelBookingNumberAndImportProcessId(String hotelBookingNumber,String importProcessId);
 
 }
