@@ -104,6 +104,7 @@ const confResourceTypeApi = reactive({
 
 const idItem = ref('')
 const item = ref<GenericObject>({
+  id: '',
   type: null,
   filename: '',
   file: '',
@@ -117,6 +118,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
+  id: '',
   type: null,
   filename: '',
   file: '',
@@ -696,15 +698,29 @@ const haveAttachmentWithAttachmentTypeInv = computed(() => {
   return ListItems.value?.some((attachment: any) => attachment?.type?.code === 'INV')
 })
 
+function isFieldDisabled() {
+  if (!props.isCreationDialog) {
+    // !ListItems.value.some(item => item.type?.attachInvDefault)
+    return true
+  }
+  else if (props.isCreationDialog) {
+    return !listItemsLocal.value.some(item => item.type?.attachInvDefault)
+  }
+  return false
+}
+
 function disabledBtnSave(propsValue: any): boolean {
-  if (propsValue.item.fieldValues.file) {
-    return false
+  if (props.isCreationDialog) {
+    if (propsValue.item.fieldValues.file) {
+      return false
+    }
+    else {
+      return true
+    }
   }
   else {
     return true
   }
-  // if (!props.isCreationDialog) {
-  // }
 }
 function disabledFields(): boolean {
   if (!props.isCreationDialog) {
@@ -767,6 +783,7 @@ onMounted(async () => {
   else {
     if (listItemsLocal.value?.length > 0) {
       idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id
+      await getItemById(idItemToLoadFirstTime.value)
     }
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
@@ -835,8 +852,13 @@ onMounted(async () => {
             >
               <template #field-resourceType="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-                  :model="resourceTypeSelected" :disabled="resourceTypeSelected" :suggestions="resourceTypeList"
+                  v-if="!loadingSaveAll"
+                  id="autocomplete"
+                  field="name"
+                  item-value="id"
+                  :model="resourceTypeSelected"
+                  :disabled="resourceTypeSelected"
+                  :suggestions="resourceTypeList"
                   @change="($event) => {
                     onUpdate('resourceType', $event)
                     typeError = false
@@ -863,7 +885,7 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                  :disabled="!isCreationDialog ? !ListItems.some((item: any) => item.type?.attachInvDefault) : isCreationDialog ? !listItemsLocal.some((item: any) => item.type?.attachInvDefault) : false"
+                  :disabled="isFieldDisabled()"
                   :suggestions="attachmentTypeList"
                   @change="($event) => {
                     onUpdate('type', $event)
@@ -886,8 +908,12 @@ onMounted(async () => {
 
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
-                  accept="application/pdf" :max-file-size="300 * 1024 * 1024" :multiple="false" auto
-                  custom-upload @uploader="(event: any) => {
+                  accept="application/pdf"
+                  :max-file-size="300 * 1024 * 1024"
+                  :multiple="false"
+                  auto
+                  custom-upload
+                  @uploader="(event: any) => {
                     const file = event.files[0]
                     onUpdate('file', file)
                     onUpdate('filename', data.file.name || data.file.split('/')[data.file.split('/')?.length - 1])
