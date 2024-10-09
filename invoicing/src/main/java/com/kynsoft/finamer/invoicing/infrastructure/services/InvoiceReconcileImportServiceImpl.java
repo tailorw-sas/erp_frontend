@@ -140,7 +140,7 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
                     manageInvoiceDto.getId(),
                     request.getEmployee(),
                     UUID.fromString(request.getEmployeeId()),
-                    String.valueOf(getInvoiceIdFromFileName(attachment)),
+                    attachment.getName(),
                     "Attachment was inserted by one massive upload",
                     inputStream.readAllBytes()
             );
