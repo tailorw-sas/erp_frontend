@@ -178,6 +178,29 @@ export const GenericService = {
     })
   },
 
+  async importReconcileAuto(MODULE_NAME: string, URI_API: string, formData: FormData) {
+    const { $api } = useNuxtApp()
+    // const formData = new FormData()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+
+    return $api(url, {
+      method: 'POST',
+      body: formData
+
+    })
+  },
+
+  async importSearchAuto(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/import-search-auto`
+    return $api<PaginatedResponse>(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
   async createInvoiceType(MODULE_NAME: string, URI_API: string, payload: any) {
     const { $api } = useNuxtApp()
     const serverUrl = useRequestURL()

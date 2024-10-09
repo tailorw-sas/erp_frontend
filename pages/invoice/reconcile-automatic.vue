@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
-
+import { v4 as uuidv4 } from 'uuid'
 import dayjs from 'dayjs'
 import type { PageState } from 'primevue/paginator'
 import { GenericService } from '~/services/generic-services'
@@ -9,6 +9,8 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
 import type { IData } from '~/components/table/interfaces/IModelData'
+
+const { data: userData } = useAuth()
 
 const idItemToLoadFirstTime = ref('')
 const toast = useToast()
@@ -23,6 +25,8 @@ const fileUpload = ref()
 const loadingSaveAll = ref(false)
 
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+const errorList = ref<any[]>([])
+const reviewError = ref(false)
 
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -39,7 +43,7 @@ const agencyList = ref<any[]>([])
 
 const confApi = reactive({
   moduleApi: 'invoicing',
-  uriApi: 'manage-booking/import',
+  uriApi: 'manage-invoice/import-reconcile-auto',
 })
 
 const confHotelApi = reactive({
@@ -80,7 +84,7 @@ const columns: IColumn[] = [
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi, width: '15%' },
   { field: 'invoiceDate', header: 'Gen.  Date', type: 'date', width: '12%' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '14%' },
-  { field: 'reconcilestatus', header: 'Rec Status', type: 'slot-text', width: '15%' },
+  { field: 'recStatus', header: 'Rec Status', type: 'text', width: '15%' },
   // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', sortable: true , objApi: { moduleApi: 'settings', uriApi: 'manage-invoice-status'}},
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', showFilter: false, localItems: ENUM_INVOICE_STATUS, sortable: true },
 
@@ -160,10 +164,13 @@ async function getList() {
       operator: 'IN',
       value: ['PROCECSED'],
       logicalOperation: 'AND'
+    }, {
+      key: 'agency.autoReconcile',
+      operator: 'EQUALS',
+      value: true,
+      logicalOperation: 'AND'
     }]
 
-
-    
     // Agregar filtros de fecha solo si se especifican
     if (filterToSearch.value.from) {
       payload.value.filter.push({
@@ -172,7 +179,7 @@ async function getList() {
         value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
         logicalOperation: 'AND',
         type: 'filterSearch'
-      });
+      })
     }
 
     if (filterToSearch.value.to) {
@@ -182,7 +189,7 @@ async function getList() {
         value: dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
         logicalOperation: 'AND',
         type: 'filterSearch'
-      });
+      })
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
@@ -206,6 +213,16 @@ async function getList() {
         else {
           invoiceNumber = iterator?.invoiceNumber
         }
+
+        let recStatus = ''
+        const haveError = errorList.value.find(item => item.invoiceId === iterator.id)
+        if (haveError) {
+          recStatus = haveError?.errorMessage
+        }
+        else {
+          recStatus = ''
+        }
+
         newListItems.push({
           ...iterator,
           loadingEdit: false,
@@ -216,13 +233,14 @@ async function getList() {
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
 
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
-
+          recStatus: recStatus || '',
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
 
     listItems.value = [...listItems.value, ...newListItems]
+    // console.log('listItems', listItems.value)
     return listItems
   }
 
@@ -232,6 +250,120 @@ async function getList() {
   finally {
     options.value.loading = false
   }
+}
+
+async function getErrorList() {
+  try {
+    const errorPayload
+    = {
+      filter: [],
+      query: idItem.value,
+      pageSize: 200,
+      page: 0,
+      sortBy: 'invoiceId',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+
+    let rowError = ''
+    errorList.value = []
+    const newListItems = []
+    const response = await GenericService.importSearchAuto(options.value.moduleApi, options.value.uriApi, errorPayload)
+
+    const { data: dataList } = response
+
+    const existingIds = new Set(errorList.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      rowError = ''
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        for (const err of iterator.errorFields) {
+          rowError += `- ${err.message} \n`
+        }
+
+        // const datTemp = new Date(iterator.row.transactionDate)
+        newListItems.push({ ...iterator.row, id: iterator.id, invoiceNo: iterator.invoiceIds, errorMessage: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    errorList.value = [...errorList.value, ...newListItems]
+    reviewError.value = true
+  }
+  catch (error) {
+    console.error('Error loading file:', error)
+    reviewError.value = false
+  }
+}
+
+async function ApplyImport() {
+  loadingSaveAll.value = true
+  options.value.loading = true
+  let successOperation = true
+  uploadComplete.value = true
+  try {
+    if (!inputFile.value) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
+      return
+    }
+    const uuid = uuidv4()
+    idItem.value = uuid
+    // const base64String: any = await fileToBase64(inputFile.value)
+    // const base64 = base64String.split('base64,')[1]
+    // const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
+    const file = await inputFile.value
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('invoiceIds', selectedElements.value.toString())
+    formData.append('employee', userData?.value?.user?.name || '')
+    formData.append('employeeId', userData?.value?.user?.userId || '')
+    formData.append('importProcessId', uuid)
+    await GenericService.importReconcileAuto(confApi.moduleApi, confApi.uriApi, formData)
+  }
+  catch (error: any) {
+    successOperation = false
+    uploadComplete.value = false
+    options.value.loading = false
+  }
+
+  if (successOperation) {
+    await validateStatusImport()
+    // if (!haveErrorImportStatus.value) {
+    debugger
+    await getErrorList()
+    if (reviewError.value) {
+      await getList()
+    }
+    // }
+  }
+  loadingSaveAll.value = false
+  options.value.loading = false
+}
+
+async function validateStatusImport() {
+  options.value.loading = true
+  return new Promise<void>((resolve) => {
+    let status = 'RUNNING'
+    const intervalID = setInterval(async () => {
+      try {
+        const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, idItem.value, 'import-status-auto')
+        status = response.status
+      }
+      catch (error: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+        clearInterval(intervalID)
+        uploadComplete.value = false
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
+
+      if (status === 'FINISHED') {
+        clearInterval(intervalID)
+        options.value.loading = false
+        resolve() // Resuelve la promesa cuando el estado es FINISHED
+      }
+    }, 10000)
+  })
 }
 
 async function getInvoiceList(query: string = '') {
@@ -401,9 +533,7 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
-
-   
-   /*   if (parseFilter[i]?.key === 'status') {
+      /*   if (parseFilter[i]?.key === 'status') {
         parseFilter[i].key = 'invoiceStatus'
       }
 */
@@ -411,17 +541,21 @@ async function parseDataTableFilter(payloadFilter: any) {
       if (parseFilter[i]?.key === 'invoiceNumber') {
         parseFilter[i].key = 'invoiceNumberPrefix'
       }
-
     }
   }
 
   payload.value.filter = [...parseFilter || []]
   getList()
-  
 }
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'hotel') {
+      event.sortField = 'hotel.name'
+    }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'invoiceNo'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     getList()
@@ -536,12 +670,12 @@ async function searchAndFilter() {
   options.value.selectAllItemByDefault = true
   const dataList = await getList()
 
-  
-   // Seleccionar automáticamente todos los elementos retornados
-   if (dataList && dataList.value.length > 0) {
-    selectedElements.value = dataList.value; // Llenar selectedElements con los elementos obtenidos
-  } else {
-    selectedElements.value = []; // Asegurarse de que esté vacío si no hay resultados
+  // Seleccionar automáticamente todos los elementos retornados
+  if (dataList && dataList.value.length > 0) {
+    selectedElements.value = dataList.value // Llenar selectedElements con los elementos obtenidos
+  }
+  else {
+    selectedElements.value = [] // Asegurarse de que esté vacío si no hay resultados
   }
 
   // Verificar si no hay resultados
@@ -566,7 +700,7 @@ function clearFilterToSearch() {
     agency: [allDefaultItem], // Restablecer a valor predeterminado
     hotel: [allDefaultItem], // Restablecer a valor predeterminado
     from: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'from'
-    //to: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'to'
+    // to: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'to'
     to: dayjs(new Date()).endOf('month').toDate(),
   }
   listItems.value = []
@@ -589,7 +723,7 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
-  // getList()
+  getList()
 })
 </script>
 
@@ -765,6 +899,12 @@ onMounted(async () => {
           />
         </template>
 
+        <template #column-sendStatusError="{ data }">
+          <div id="fieldError">
+            <span v-tooltip.bottom="data.sendStatusError" style="color: red;">{{ data.sendStatusError }}</span>
+          </div>
+        </template>
+
         <!-- <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
             <Row>
@@ -778,8 +918,8 @@ onMounted(async () => {
 
       <div class="flex align-items-end justify-content-end">
         <Button
-          v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="!importModel.importFile || selectedElements.length === 0"
-          @click="clearForm"
+          v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check"
+          :disabled="!importModel.importFile || selectedElements.length === 0" @click="ApplyImport"
         />
         <Button
           v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
