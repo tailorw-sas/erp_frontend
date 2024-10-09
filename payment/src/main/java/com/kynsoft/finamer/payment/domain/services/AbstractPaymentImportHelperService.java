@@ -11,6 +11,7 @@ import java.util.UUID;
 public abstract class AbstractPaymentImportHelperService {
 
     private final RedisTemplate<String, String> redisTemplate;
+    protected int  totalProcessRow;
     protected AbstractPaymentImportHelperService(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
@@ -31,5 +32,9 @@ public abstract class AbstractPaymentImportHelperService {
     }
     public String getPaymentImportProcessStatus(String importProcessId) {
         return redisTemplate.opsForValue().get(importProcessId);
+    }
+
+    public int getTotalProcessRow() {
+        return totalProcessRow;
     }
 }
