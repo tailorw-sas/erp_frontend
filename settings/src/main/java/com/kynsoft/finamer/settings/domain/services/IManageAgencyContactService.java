@@ -14,7 +14,7 @@ public interface IManageAgencyContactService {
 
     void update(ManageAgencyContactDto dto);
 
-    void delete(UUID id);
+    void delete(ManageAgencyContactDto dto);
 
     ManageAgencyContactDto findById(UUID id);
 

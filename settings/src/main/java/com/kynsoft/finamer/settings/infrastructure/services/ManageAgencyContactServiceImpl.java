@@ -52,9 +52,13 @@ public class ManageAgencyContactServiceImpl implements IManageAgencyContactServi
     }
 
     @Override
-    public void delete(UUID id) {
+    public void delete(ManageAgencyContactDto dto) {
         try{
-            this.repositoryCommand.deleteById(id);
+            ManageAgencyContact entity = new ManageAgencyContact(dto);
+            entity.setManageAgency(null);
+            entity.setManageRegion(null);
+            entity.setManageHotel(null);
+            this.repositoryCommand.delete(entity);
         } catch (Exception e){
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
