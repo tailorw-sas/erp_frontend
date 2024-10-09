@@ -45,7 +45,7 @@ public class ManagePaymentAttachmentStatus {
         this.defaults = dto.getDefaults();
         this.nonNone = dto.isNonNone();
         this.patWithAttachment = dto.isPatWithAttachment();
-        this.patWithAttachment = dto.isPwaWithOutAttachment();
+        this.pwaWithOutAttachment = dto.isPwaWithOutAttachment();
     }
 
     public ManagePaymentAttachmentStatusDto toAggregate() {
