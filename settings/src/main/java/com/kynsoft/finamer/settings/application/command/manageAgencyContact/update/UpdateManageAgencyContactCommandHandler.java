@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageAgencyContact.upd
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ManageAgencyContactKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -10,6 +11,7 @@ import com.kynsoft.finamer.settings.domain.services.IManageAgencyContactService;
 import com.kynsoft.finamer.settings.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import com.kynsoft.finamer.settings.domain.services.IManageRegionService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgencyContact.ProducerUpdateManageAgencyContactService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -28,12 +30,14 @@ public class UpdateManageAgencyContactCommandHandler implements ICommandHandler<
 
     private final IManageHotelService hotelService;
 
+    private final ProducerUpdateManageAgencyContactService producer;
 
-    public UpdateManageAgencyContactCommandHandler(IManageAgencyContactService agencyContactService, IManageAgencyService agencyService, IManageRegionService regionService, IManageHotelService hotelService) {
+    public UpdateManageAgencyContactCommandHandler(IManageAgencyContactService agencyContactService, IManageAgencyService agencyService, IManageRegionService regionService, IManageHotelService hotelService, ProducerUpdateManageAgencyContactService producer) {
         this.agencyContactService = agencyContactService;
         this.agencyService = agencyService;
         this.regionService = regionService;
         this.hotelService = hotelService;
+        this.producer = producer;
     }
 
     @Override
@@ -51,6 +55,10 @@ public class UpdateManageAgencyContactCommandHandler implements ICommandHandler<
 
         if(update.getUpdate() > 0){
             this.agencyContactService.update(dto);
+            this.producer.update(new ManageAgencyContactKafka(
+                    command.getId(), command.getManageAgency(), command.getManageRegion(),
+                    command.getManageHotel(), command.getEmailContact()
+            ));
         }
     }
 
