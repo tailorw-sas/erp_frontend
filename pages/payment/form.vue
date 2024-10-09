@@ -1888,7 +1888,10 @@ async function applyReverseTransaction(event: any) {
         paymentDetail: objItemSelectedForRightClickReverseTransaction.value?.id || ''
       }
       await GenericService.create(confApiPaymentDetailReverseTransaction.moduleApi, confApiPaymentDetailReverseTransaction.uriApi, payload)
-      getListPaymentDetail()
+      if (route?.query?.id) {
+        const id = route.query.id.toString()
+        await getItemById(id)
+      }
     }
   }
   catch (error) {
@@ -2085,6 +2088,22 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
         }
       }
     }
+    const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
+
+    if (objFilterEnabledToApply) {
+      objFilterEnabledToApply.value = true
+    }
+    else {
+      applyPaymentPayload.value.filter.push(
+        {
+          key: 'invoice.manageInvoiceStatus.enabledToApply',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        }
+      )
+    }
+
     const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
