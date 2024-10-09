@@ -329,7 +329,7 @@ async function ApplyImport() {
   if (successOperation) {
     await validateStatusImport()
     // if (!haveErrorImportStatus.value) {
-    debugger
+
     await getErrorList()
     if (reviewError.value) {
       await getList()
