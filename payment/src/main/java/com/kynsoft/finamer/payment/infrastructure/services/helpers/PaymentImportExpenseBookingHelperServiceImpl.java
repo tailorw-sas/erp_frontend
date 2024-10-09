@@ -117,6 +117,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     }
 
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        this.totalProcessRow=0;
         availableClient.clear();
         readerConfiguration.setStrictHeaderOrder(false);
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
@@ -131,6 +132,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                 row.setClientName(getClientName(row.getBookingId()));
                 availableClient.add(row.getClientName());
                 cachingPaymentImport(row);
+                this.totalProcessRow++;
             }
         }
     }

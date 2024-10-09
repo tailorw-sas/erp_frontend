@@ -118,4 +118,34 @@ public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentA
 
     }
 
+    @Override
+    public ManagePaymentAttachmentStatusDto findByNonNone() {
+        Optional<ManagePaymentAttachmentStatus> optionalEntity= repositoryQuery.findByNonNone();
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("nonNone", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public ManagePaymentAttachmentStatusDto findByPatWithAttachment() {
+        Optional<ManagePaymentAttachmentStatus> optionalEntity= repositoryQuery.findByPatWithAttachment();
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("nonNone", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public ManagePaymentAttachmentStatusDto findByPwaWithOutAttachment() {
+        Optional<ManagePaymentAttachmentStatus> optionalEntity= repositoryQuery.findByPwaWithOutAttachment();
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("nonNone", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
 }

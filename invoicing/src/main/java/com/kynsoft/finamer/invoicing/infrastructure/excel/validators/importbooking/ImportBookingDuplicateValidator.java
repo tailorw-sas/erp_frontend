@@ -23,7 +23,7 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         if (service.existByBookingHotelNumber(obj.getHotelBookingNumber()) ||
-                cacheRedisRepository.findBookingImportCacheByHotelBookingNumber(obj.getHotelBookingNumber()).isPresent()) {
+                cacheRedisRepository.findBookingImportCacheByHotelBookingNumberAndImportProcessId(obj.getHotelBookingNumber(),obj.getImportProcessId()).isPresent()) {
             errorFieldList.add(new ErrorField("Hotel Booking Number", "Record has already been imported"));
             return false;
         }

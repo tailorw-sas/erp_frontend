@@ -30,7 +30,7 @@ public class PaymentExpenseToBookingImportServiceImpl implements IPaymentImportS
     private final PaymentImportHelperProvider providerImportHelperService;
 
     private final PaymentImportProcessStatusRepository statusRepository;
-
+    private AbstractPaymentImportHelperService paymentImportHelperService;
     public PaymentExpenseToBookingImportServiceImpl(ApplicationEventPublisher paymentEventPublisher,
                                                     PaymentImportHelperProvider providerImportHelperService,
                                                     PaymentImportProcessStatusRepository statusRepository) {
@@ -41,7 +41,7 @@ public class PaymentExpenseToBookingImportServiceImpl implements IPaymentImportS
 
     @Override
     public void importPaymentFromFile(PaymentImportRequest request) {
-        AbstractPaymentImportHelperService paymentImportHelperService = providerImportHelperService.
+         paymentImportHelperService = providerImportHelperService.
                 provideImportHelperService(EImportPaymentType.EXPENSE_TO_BOOKING);
         try{
         ReaderConfiguration readerConfiguration = new ReaderConfiguration();
@@ -75,7 +75,7 @@ public class PaymentExpenseToBookingImportServiceImpl implements IPaymentImportS
         if (paymentImportStatusDto.isHasError()){
             throw new ExcelException(paymentImportStatusDto.getExceptionMessage());
         }
-        return new PaymentImportStatusResponse(paymentImportStatusDto.getStatus()) ;
+        return new PaymentImportStatusResponse(paymentImportStatusDto.getStatus(), paymentImportHelperService.getTotalProcessRow()) ;
     }
 
     @Override

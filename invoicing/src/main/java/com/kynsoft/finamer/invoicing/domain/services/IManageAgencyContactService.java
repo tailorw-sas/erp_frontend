@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyContactDto;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgencyContact;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public interface IManageAgencyContactService {
     void delete(ManageAgencyContactDto dto);
 
     ManageAgencyContactDto findById(UUID id);
+    List<ManageAgencyContact> findContactsByHotelAndAgency(UUID hotelId, UUID agencyId);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
