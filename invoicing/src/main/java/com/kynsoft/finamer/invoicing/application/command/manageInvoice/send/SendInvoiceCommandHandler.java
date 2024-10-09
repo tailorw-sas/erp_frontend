@@ -157,7 +157,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         // Paso 3: Llamar al método para generar los PDFs
         try {
             InvoiceGrouper invoiceGrouper = new InvoiceGrouper(invoiceReportProviderFactory);
-            List<GeneratedInvoice> generatedPDFs = invoiceGrouper.generateInvoicesPDFs(invoices, groupByClient);
+            List<GeneratedInvoice> generatedPDFs = invoiceGrouper.generateInvoicesPDFs(invoices, groupByClient, command.isWithAttachment());
 
             // Paso 4: Procesar los PDFs generados (por ejemplo, guardarlos o enviarlos)
             for (GeneratedInvoice generatedInvoice : generatedPDFs) {

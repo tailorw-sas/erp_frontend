@@ -16,4 +16,6 @@ public class ReaderConfiguration {
 
     private boolean strictHeaderOrder;
 
+    private int startReading;
+
 }

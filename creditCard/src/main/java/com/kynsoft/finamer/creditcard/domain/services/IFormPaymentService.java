@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface IFormPaymentService {
     ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto);
     UUID create(TransactionPaymentLogsDto dto);
+    public void update(TransactionPaymentLogsDto dto);
+    TransactionPaymentLogsDto findByTransactionId(UUID id);
 }

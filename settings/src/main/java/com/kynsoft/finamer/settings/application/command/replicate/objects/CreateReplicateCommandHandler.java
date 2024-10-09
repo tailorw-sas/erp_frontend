@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.kafka.entity.vcc.*;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.services.*;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerReplicateManageAgencyService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgencyContact.ProducerReplicateManageAgencyContactService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgencyType.ProducerReplicateManageAgencyTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAttachmentType.ProducerReplicateManageAttachmentTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageB2BPartner.ProducerReplicateB2BPartnerService;
@@ -28,12 +29,14 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentSource.ProducerReplicateManagePaymentSourceService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentStatus.ProducerReplicateManagePaymentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerReplicateManagePaymentTransactionTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRegion.ProducerReplicateManageRegionService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTradigCompany.ProducerReplicateManageTradingCompanyService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTransactionStatus.ProducerReplicateManageTransactionStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerReplicateManageVCCTransactionTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 public class CreateReplicateCommandHandler implements ICommandHandler<CreateReplicateCommand> {
@@ -104,6 +107,12 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final IManagerCurrencyService currencyService;
     private final ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService;
 
+    private final IManageRegionService regionService;
+    private final ProducerReplicateManageRegionService producerReplicateManageRegionService;
+
+    private final IManageAgencyContactService agencyContactService;
+    private final ProducerReplicateManageAgencyContactService producerReplicateManageAgencyContactService;
+
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService,
                                          IManagerPaymentStatusService paymentStatusService,
                                          IManagePaymentSourceService paymentSourceService,
@@ -142,7 +151,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
                                          ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService,
                                          IManageContactService manageContactService,
-                                         ProducerReplicateManageContactService producerReplicateManageContactService, IManagerCurrencyService currencyService, ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService) {
+                                         ProducerReplicateManageContactService producerReplicateManageContactService, IManagerCurrencyService currencyService, ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService, IManageRegionService regionService, ProducerReplicateManageRegionService producerReplicateManageRegionService, IManageAgencyContactService agencyContactService, ProducerReplicateManageAgencyContactService producerReplicateManageAgencyContactService) {
         this.tradingCompaniesService = tradingCompaniesService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerLanguageService = managerLanguageService;
@@ -195,6 +204,10 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.producerReplicateManageContactService = producerReplicateManageContactService;
         this.currencyService = currencyService;
         this.producerReplicateManageCurrencyService = producerReplicateManageCurrencyService;
+        this.regionService = regionService;
+        this.producerReplicateManageRegionService = producerReplicateManageRegionService;
+        this.agencyContactService = agencyContactService;
+        this.producerReplicateManageAgencyContactService = producerReplicateManageAgencyContactService;
     }
 
     @Override
@@ -450,6 +463,20 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                         dto.getId(), dto.getCode(), dto.getName(), dto.getStatus().name()
                                 )
                         );
+                    }
+                } case MANAGE_REGION -> {
+                    for (ManageRegionDto dto: this.regionService.findAllToReplicate()){
+                        this.producerReplicateManageRegionService.create(new ManageRegionKafka(
+                                dto.getId(), dto.getCode(), dto.getName()
+                        ));
+                    }
+                } case MANAGE_AGENCY_CONTACT -> {
+                    for (ManageAgencyContactDto dto: this.agencyContactService.findAllToReplicate()){
+                        this.producerReplicateManageAgencyContactService.create(new ManageAgencyContactKafka(
+                                dto.getId(), dto.getManageAgency().getId(), dto.getManageRegion().getId(),
+                                dto.getManageHotel().stream().map(ManageHotelDto::getId).collect(Collectors.toList()),
+                                dto.getEmailContact()
+                        ));
                     }
                 }
                 default ->

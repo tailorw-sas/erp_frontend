@@ -254,7 +254,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                                     0.0, 0.0, bookingRow.getHotelInvoiceNumber(),
                                     "", bookingRow.getHotelInvoiceAmount(),
                                     bookingRow.getRemarks(),
-                                    invoiceId, ratePlanDto.getId(), null, roomTypeDto.getId(), null, null
+                                    invoiceId, Objects.nonNull(ratePlanDto)?ratePlanDto.getId():null, null,
+                                    Objects.nonNull(roomTypeDto)?roomTypeDto.getId():null, null, null
                             );
                         }
 
