@@ -552,6 +552,11 @@ async function saveItem(item: { [key: string]: any }) {
         item.id = v4()
         await props.addItem(item)
         await clearForm()
+
+        if (listItemsLocal.value?.length > 0) {
+          await getItemById(listItemsLocal.value[0].id)
+        }
+
         return loadingSaveAll.value = false
       }
       await createItem(item)
@@ -704,14 +709,22 @@ function isFieldDisabled() {
     return true
   }
   else if (props.isCreationDialog) {
-    return !listItemsLocal.value.some(item => item.type?.attachInvDefault)
+    if (item.value && item.value.id) {
+      return true
+    }
+    else {
+      return !listItemsLocal.value.some(item => item.type?.attachInvDefault)
+    }
   }
   return false
 }
 
 function disabledBtnSave(propsValue: any): boolean {
   if (props.isCreationDialog) {
-    if (propsValue.item.fieldValues.file) {
+    if (item.value && item.value.id) {
+      return true
+    }
+    else if (propsValue.item.fieldValues.file) {
       return false
     }
     else {
@@ -723,16 +736,33 @@ function disabledBtnSave(propsValue: any): boolean {
   }
 }
 function disabledFields(): boolean {
-  if (!props.isCreationDialog) {
-    if (props.documentOptionHasBeenUsed) {
-      return false
+  // if (data && data.file) {
+  //   console.log(data.file)
+  // }
+
+  if (props.isCreationDialog) {
+    if (item.value && item.value.id) {
+      return true
     }
     else {
-      return true
+      return false
     }
   }
   else {
+    return true
+  }
+}
+
+function disabledBtnCreate(): boolean {
+  // if (data && data.file) {
+  //   console.log(data.file)
+  // }
+
+  if (props.isCreationDialog) {
     return false
+  }
+  else {
+    return true
   }
 }
 
@@ -924,7 +954,7 @@ onMounted(async () => {
                       <div class="flex gap-2">
                         <Button
                           id="btn-choose" class="p-2" icon="pi pi-plus"
-                          :disabled="disabledFields()" text @click="chooseCallback()"
+                          :disabled="disabledFields(data)" text @click="chooseCallback()"
                         />
                         <Button
                           icon="pi pi-times" class="ml-2" severity="danger"
@@ -957,7 +987,7 @@ onMounted(async () => {
                 </FileUpload>
               </template>
               <template #field-filename="{ item: data }">
-                <InputText v-model="data.filename" field="filename" show-clear :disabled="!isCreationDialog" />
+                <InputText v-model="data.filename" field="filename" show-clear :disabled="true" />
               </template>
               <template #field-remark="{ item: data }">
                 <Textarea
@@ -982,7 +1012,7 @@ onMounted(async () => {
                   <!-- :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)"  -->
                   <Button
                     v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus"
-                    :disabled="disabledFields()"
+                    :disabled="disabledBtnCreate()"
                     @click="() => {
                       idItem = ''
                       item = itemTemp
