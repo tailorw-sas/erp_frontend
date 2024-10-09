@@ -851,6 +851,7 @@ onMounted(async () => {
                     </div>
                   </template>
                 </DebouncedAutoCompleteComponent>
+                <Skeleton v-else height="2rem" class="mb-2" />
                 <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
                   required</span>
               </template>
@@ -878,6 +879,7 @@ onMounted(async () => {
                     </div>
                   </template>
                 </DebouncedAutoCompleteComponent>
+                <Skeleton v-else height="2rem" class="mb-2" />
                 <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
                   required</span>
               </template>
