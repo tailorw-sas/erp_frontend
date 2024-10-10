@@ -56,6 +56,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
 
         reverseFrom.setManageBooking(paymentDetailDto.getManageBooking());
         reverseFrom.setApplayPayment(Boolean.TRUE);
+        reverseFrom.setReverseTransaction(true);
         this.paymentDetailService.create(reverseFrom);
 
         if (paymentDetailDto.getTransactionType().getApplyDeposit()) {
