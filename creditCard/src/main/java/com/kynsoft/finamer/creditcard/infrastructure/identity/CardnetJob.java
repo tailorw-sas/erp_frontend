@@ -39,9 +39,6 @@ public class CardnetJob implements Serializable {
     @Column(name= "is_processed")
     private Boolean isProcessed;
 
-    @Column(name= "json_data" ,columnDefinition = "TEXT")
-    private String jsonData;
-
     @CreationTimestamp
     @Column(name = "created_at",nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -55,12 +52,11 @@ public class CardnetJob implements Serializable {
         this.session = dto.getSession();
         this.sessionKey = dto.getSessionKey();
         this.isProcessed = dto.getIsProcessed();
-        this.jsonData = dto.getJsonData();
 
     }
     public CardnetJobDto toAggregate(){
         return new CardnetJobDto(
-                id,transactionId, session, sessionKey, isProcessed, jsonData
+                id,transactionId, session, sessionKey, isProcessed
         );
     }
 }

@@ -6,6 +6,7 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSe
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
+import com.kynsoft.finamer.creditcard.domain.services.IFormService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TransactionPaymentLogs;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageTransactionsRedirectLogsWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionPaymentLogsReadDataJPARepository;
@@ -32,10 +33,14 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     private final ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand;
     private final TransactionPaymentLogsReadDataJPARepository repositoryQuery;
 
+    private final IFormService formService;
+
     public FormPaymentServiceImpl(ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand,
-                                  TransactionPaymentLogsReadDataJPARepository repositoryQuery){
+                                  TransactionPaymentLogsReadDataJPARepository repositoryQuery,
+                                  IFormService formService){
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.formService = formService;
     }
 
     public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
@@ -117,9 +122,10 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                         "</html>";
 
                 // Devolver el formulario HTML como respuesta
+                String concatenatedBody = htmlForm + "{elemento}";
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_HTML)
-                        .body(htmlForm);
+                        .body(concatenatedBody);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -197,9 +203,20 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                     "</body>" +
                     "</html>";
 
+            CardnetJobDto cardnetJobDto = formService.findByTransactionId(transactionDto.getTransactionUuid());
+            if(cardnetJobDto == null){
+                cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), sessionData.getSession().toString(), sessionData.getSessionKey().toString(), Boolean.FALSE);
+                formService.create(cardnetJobDto);
+            }
+            else{
+                cardnetJobDto.setSession(sessionData.getSession());
+                cardnetJobDto.setSessionKey(sessionData.getSessionKey());
+                formService.update(cardnetJobDto);
+            }
+            String concatenatedBody = htmlForm + requestData;
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_HTML)
-                    .body(htmlForm);
+                    .body(concatenatedBody);
 
         } catch (Exception e) {
             e.printStackTrace();
