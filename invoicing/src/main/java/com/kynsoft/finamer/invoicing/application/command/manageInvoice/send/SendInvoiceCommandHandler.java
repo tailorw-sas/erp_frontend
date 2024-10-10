@@ -115,23 +115,34 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         command.setResult(true);
     }
 
-    private void updateStatusAgency(ManageInvoiceDto invoice, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
-        invoice.setStatus(EInvoiceStatus.SENT);
-        invoice.setManageInvoiceStatus(manageInvoiceStatus);
-        if (!invoice.getStatus().equals(EInvoiceStatus.SENT)) {
-            invoice.setReSend(true);
+    private void updateStatusAgency(List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+        for (ManageInvoiceDto manageInvoiceDto : invoices) {
+            if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.RECONCILED)) {
+                manageInvoiceDto.setStatus(EInvoiceStatus.SENT);
+            }if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
+                manageInvoiceDto.setReSend(true);
+                manageInvoiceDto.setReSendDate(LocalDate.now());
+            }
+            this.service.update(manageInvoiceDto);
+            this.invoiceStatusHistoryService.create(
+                    new InvoiceStatusHistoryDto(
+                            UUID.randomUUID(),
+                            manageInvoiceDto,
+                            "The invoice data was inserted.",
+                            null,
+                            employee,
+                            EInvoiceStatus.SENT
+                    )
+            );
         }
-        this.service.update(invoice);
-        this.invoiceStatusHistoryService.create(
-                new InvoiceStatusHistoryDto(
-                        UUID.randomUUID(),
-                        invoice,
-                        "The invoice data was inserted.",
-                        null,
-                        employee,
-                        EInvoiceStatus.SENT
-                )
-        );
+
+//        invoice.setStatus(EInvoiceStatus.SENT);
+//        invoice.setManageInvoiceStatus(manageInvoiceStatus);
+//        if (!invoice.getStatus().equals(EInvoiceStatus.SENT)) {
+//            invoice.setReSend(true);
+//        }
+//        this.service.update(invoice);
+
     }
 
     private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
@@ -142,12 +153,13 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8));
                 ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
                         agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21, "bvl");
-                updateStatusAgency(invoice, manageInvoiceStatus, employee);
+
             } catch (Exception e) {
                 invoice.setSendStatusError(e.getMessage());
                 service.update(invoice);
             }
         }
+        updateStatusAgency(invoices, manageInvoiceStatus, employee);
     }
 
     private void sendFtp(SendInvoiceCommand command, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
@@ -179,16 +191,16 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                         + invoices.get(0).getHotel().getCode();
                 ftpService.sendFile(pdfStream, generatedInvoice.getNameFile(), generatedInvoice.getIp(),
                         generatedInvoice.getUserName(), generatedInvoice.getPassword(), 21, path);
-                for (ManageInvoiceDto manageInvoiceDto : generatedInvoice.getInvoices()) {
-                    updateStatusAgency(manageInvoiceDto, manageInvoiceStatus, employee);
-                }
+                updateStatusAgency( generatedInvoice.getInvoices(), manageInvoiceStatus, employee);
 
 //                savePDF(pdf);
             }
 
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
@@ -251,6 +263,18 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
             request.setMailJetAttachments(attachments);
             mailService.sendMail(request);
+            updateInvoices(invoices);
+        }
+    }
+
+    private static void updateInvoices(List<ManageInvoiceDto> invoices) {
+        for (ManageInvoiceDto manageInvoiceDto : invoices) {
+            if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.RECONCILED)) {
+                manageInvoiceDto.setStatus(EInvoiceStatus.SENT);
+            }if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
+                manageInvoiceDto.setReSend(true);
+                manageInvoiceDto.setReSendDate(LocalDate.now());
+            }
         }
     }
 
