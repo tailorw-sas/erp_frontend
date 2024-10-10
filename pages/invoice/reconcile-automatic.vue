@@ -553,6 +553,9 @@ function onSortField(event: any) {
     if (event.sortField === 'hotel') {
       event.sortField = 'hotel.name'
     }
+    if (event.sortField === 'agency') {
+      event.sortField = 'agency.name'
+    }
     if (event.sortField === 'invoiceNumber') {
       event.sortField = 'invoiceNo'
     }
@@ -807,7 +810,7 @@ onMounted(async () => {
                     <div class="w-full">
                       <Calendar
                         v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full"  :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"  :max-date="new Date(endOfMonth)"
+                        icon-display="input" class="w-full"  :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
                       />
                     </div>
                   </div>
