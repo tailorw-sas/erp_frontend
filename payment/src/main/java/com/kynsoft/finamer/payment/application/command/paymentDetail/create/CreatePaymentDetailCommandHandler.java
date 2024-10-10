@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
@@ -130,9 +131,10 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             msg = "Creating New Deposit Detail with ID: ";
         }
 
-        Long paymentDetail = this.paymentDetailService.create(newDetailDto);
+        this.paymentDetailService.create(newDetailDto);
         if (command.getApplyPayment() && paymentTransactionTypeDto.getCash()) {
-            command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking()));
+            ApplyPaymentDetailMessage message = command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking()));
+            paymentDto.setApplyPayment(message.getPayment().isApplyPayment());
         }
 
         if (updatePayment.getUpdate() > 0) {
