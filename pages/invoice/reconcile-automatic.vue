@@ -798,7 +798,7 @@ onMounted(async () => {
                     <div class="w-full" style=" z-index:5 ">
                       <Calendar
                         v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                        show-icon icon-display="input" class="w-full" :min-date="new Date(startOfMonth)"   :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
                       />
                     </div>
                   </div>
@@ -807,7 +807,7 @@ onMounted(async () => {
                     <div class="w-full">
                       <Calendar
                         v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
+                        icon-display="input" class="w-full"  :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"  :max-date="new Date(endOfMonth)"
                       />
                     </div>
                   </div>

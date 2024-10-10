@@ -655,6 +655,12 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'hotel') {
+      event.sortField = 'hotel.name'
+    }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'invoiceNo'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     getList()
@@ -732,7 +738,7 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
   }
 
   // Siempre agregar el filtro para autoReconcile en true
- /*newPayload.filter.push({
+ newPayload.filter.push({
     key: 'agency.autoReconcile',
     operator: 'EQUALS',
     value: true,
@@ -740,7 +746,7 @@ if (filterToSearch.value.criterial && filterToSearch.value.search) {
     type: 'filterSearch'
   });
 
-*/
+
   // Filtros de hoteles
   if (filterToSearch.value.hotel?.length > 0) {
     const selectedHotelIds = filterToSearch.value.hotel
@@ -899,8 +905,8 @@ onMounted(async () => {
                     <label class="filter-label font-bold" for="">From:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <Calendar
-                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                        v-model="filterToSearch.from"  date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                        show-icon icon-display="input" class="w-full"  :min-date="new Date(startOfMonth)"   :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
                       />
                     </div>
                   </div>
@@ -908,8 +914,10 @@ onMounted(async () => {
                     <label class="filter-label font-bold" for="">To:</label>
                     <div class="w-full">
                       <Calendar
-                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
+                        v-model="filterToSearch.to"  date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                        icon-display="input" class="w-full"   :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
+                        :max-date="new Date(endOfMonth)"
+                   
                       />
                     </div>
                   </div>

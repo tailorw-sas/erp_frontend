@@ -392,6 +392,12 @@ if (parseFilter[i]?.key === 'status') {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'hotel') {
+      event.sortField = 'hotel.name'
+    }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'invoiceNumberPrefix'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     getPrintList()
