@@ -17,6 +17,6 @@ public class SendListInvoiceQueryHandler implements IQueryHandler<SendListInvoic
     @Override
     public PaginatedResponse handle(SendListInvoiceQuery query) {
 
-        return this.service.search(query.getPageable(),query.getFilter());
+        return this.service.sendList(query.getPageable(),query.getFilter());
     }
 }
