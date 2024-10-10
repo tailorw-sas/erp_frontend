@@ -23,6 +23,7 @@ public class CreateUndoApplicationCommandHandler implements ICommandHandler<Crea
     @Override
     public void handle(CreateUndoApplicationCommand command) {
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
+
         RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplayPayment()));
         //Comprobar que la fecha sea del dia actual
         //Comprobar que el paymentDetails sea de tipo Apply Deposit o Cash
@@ -30,8 +31,9 @@ public class CreateUndoApplicationCommandHandler implements ICommandHandler<Crea
         ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
         paymentDetailDto.setManageBooking(null);
         this.paymentDetailService.update(paymentDetailDto);
-
-        command.getMediator().send(new UndoApplyPaymentDetailCommand(paymentDetailDto.getId(), bookingDto.getId()));
+        if (!paymentDetailDto.isReverseTransaction()) {
+            command.getMediator().send(new UndoApplyPaymentDetailCommand(paymentDetailDto.getId(), bookingDto.getId()));
+        }
         command.getMediator().send(new DeletePaymentDetailCommand(command.getPaymentDetail(), null, true));//TODO: es posible que tengamos que agregar el employee a la peticion.
     }
 }
