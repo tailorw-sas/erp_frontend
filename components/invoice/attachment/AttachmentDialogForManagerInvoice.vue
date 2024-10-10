@@ -724,19 +724,7 @@ const haveAttachmentWithAttachmentTypeInv = computed(() => {
 })
 
 function isFieldDisabled() {
-  if (!props.isCreationDialog) {
-    // !ListItems.value.some(item => item.type?.attachInvDefault)
-    return true
-  }
-  else if (props.isCreationDialog) {
-    if (item.value && item.value.id) {
-      return true
-    }
-    else {
-      return !listItemsLocal.value.some(item => item.type?.attachInvDefault)
-    }
-  }
-  return false
+  return !ListItems.value.some(item => item.type?.attachInvDefault)
 }
 
 function disabledBtnSave(propsValue: any): boolean {
@@ -772,6 +760,20 @@ function disabledFields(): boolean {
 function disabledBtnCreate(): boolean {
   if (props.selectedInvoiceObj && props.selectedInvoiceObj?.invoiceStatus?.processStatus) {
     return false
+  }
+  else {
+    return true
+  }
+}
+
+function disabledBtnDelete(): boolean {
+  if (props.selectedInvoiceObj && props.selectedInvoiceObj?.invoiceStatus?.processStatus) {
+    if (ListItems.value && ListItems.value.length > 1) {
+      return false
+    }
+    else {
+      return true
+    }
   }
   else {
     return true
@@ -1053,7 +1055,7 @@ onMounted(async () => {
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
                   <Button
                     v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
-                    :disabled="disableDeleteBtn === false ? (!idItem || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)) : true"
+                    :disabled="disabledBtnDelete()"
                     @click="requireConfirmationToDelete"
                   />
                 </IfCan>

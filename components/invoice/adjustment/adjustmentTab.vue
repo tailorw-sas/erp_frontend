@@ -663,11 +663,6 @@ function OnSortField(event: any) {
   }
 }
 
-function openDialog() {
-  dialogOpen.value = true
-  console.log(dialogOpen)
-}
-
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
     getAdjustmentList()
