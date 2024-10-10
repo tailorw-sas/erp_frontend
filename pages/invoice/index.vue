@@ -2272,7 +2272,7 @@ const legend = ref(
   </ContextMenu>
   </div>
   <div v-if="attachmentDialogOpen">
-    <AttachmentDialog 
+    <AttachmentDialogForManagerInvoice 
       :close-dialog="() => { attachmentDialogOpen = false, getList() }" 
       :is-creation-dialog="false"
       header="Manage Invoice Attachment" 
