@@ -1,12 +1,18 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -21,13 +27,25 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
-    public ReconcileManualCommandHandler(IManageInvoiceService invoiceService, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService, IManageInvoiceStatusService invoiceStatusService, IAttachmentStatusHistoryService attachmentStatusHistoryService, IInvoiceStatusHistoryService invoiceStatusHistoryService) {
+    private final InvoiceReportProviderFactory invoiceReportProviderFactory;
+
+    private final InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil;
+
+    public ReconcileManualCommandHandler(IManageInvoiceService invoiceService, IManageAttachmentTypeService attachmentTypeService,
+                                         IManageResourceTypeService resourceTypeService,
+                                         IManageInvoiceStatusService invoiceStatusService,
+                                         IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                         IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                         InvoiceReportProviderFactory invoiceReportProviderFactory,
+                                         InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil) {
         this.invoiceService = invoiceService;
         this.attachmentTypeService = attachmentTypeService;
         this.resourceTypeService = resourceTypeService;
         this.invoiceStatusService = invoiceStatusService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.invoiceReportProviderFactory = invoiceReportProviderFactory;
+        this.invoiceUploadAttachmentUtil = invoiceUploadAttachmentUtil;
     }
 
     @Override
@@ -56,8 +74,9 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 ));
                 continue;
             }
+            Optional<byte[]> fileContent=Optional.empty();
             try{
-                //TODO: obtener el pdf
+               fileContent=  this.createInvoiceReconcileAutomaticSupportAttachmentContent(invoiceDto.getId().toString());
             } catch (Exception e){
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto,
@@ -69,7 +88,8 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             String filename = "invoice_" + invoiceDto.getInvoiceId() + ".pdf";
             String file = "";
             try {
-                //TODO: subir el archivo y obtener los datos para el attachment
+                LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent(filename, fileContent.get());
+                file=response.get("url");
             } catch (Exception e) {
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto,
@@ -113,4 +133,11 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
         command.setTotalInvoicesRec(command.getInvoices().size() - errorResponse.size());
         command.setTotalInvoices(command.getInvoices().size());
     }
+
+    private Optional<byte[]> createInvoiceReconcileAutomaticSupportAttachmentContent(String invoiceId) {
+        IInvoiceReport service = invoiceReportProviderFactory.getInvoiceReportService(EInvoiceReportType.RECONCILE_AUTO);
+        return service.generateReport(invoiceId);
+    }
+
+
 }
