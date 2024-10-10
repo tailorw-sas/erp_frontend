@@ -736,6 +736,33 @@ watch(PayloadOnChangePage, (newValue) => {
   getList()
 })
 
+// Función que actualiza la propiedad de un campo específico
+  // Función que actualiza la propiedad de un campo específico
+  const updateFieldProperty = (fields: Container[], fieldName: string, property: string, value: any) => {
+      fields.forEach(field => {
+        if (field.childs) {
+          field.childs.forEach((child: any) => { // Especificar el tipo de child
+            if (child.field === fieldName) {
+              child[property] = value; // Actualiza la propiedad deseada
+            }
+          });
+        }
+      });
+    };
+
+    watch(() => idItem.value, (newValue) => {
+      if (newValue === '') {
+        updateFieldProperty(Fields, 'filename', 'disabled', false);
+        updateFieldProperty(Fields, 'remark', 'disabled', false);
+        
+        updateFieldProperty(Fields, 'type', 'disabled', true);
+        
+      } else {
+        updateFieldProperty(Fields, 'filename', 'disabled', true);
+        updateFieldProperty(Fields, 'remark', 'disabled', true);
+      }
+    });
+
 onMounted(async () => {
   await getResourceTypeList()
   await getInvoiceSupportAttachment()
@@ -852,7 +879,7 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                  :disabled="!isCreationDialog ? !ListItems.some((item: any) => item.type?.attachInvDefault) : isCreationDialog ? !listItemsLocal.some((item: any) => item.type?.attachInvDefault) : false"
+                  :disabled=" idItem !== '' || !isCreationDialog ? !ListItems.some((item: any) => item.type?.attachInvDefault) : isCreationDialog ? !listItemsLocal.some((item: any) => item.type?.attachInvDefault) : false"
               
                   :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
@@ -880,7 +907,7 @@ onMounted(async () => {
               }
 
               <template #field-file="{ onUpdate, item: data }">
-                <FileUpload
+                <FileUpload :disabled="idItem !== ''" 
                   accept="application/pdf" :max-file-size="300 * 1024 * 1024" :multiple="false" auto
                   custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
@@ -923,7 +950,7 @@ onMounted(async () => {
               </template>
               <template #form-footer="props">
                 <IfCan
-                  :perms="idItem ? ['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'] : ['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']"
+                  :perms="idItem   ? ['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'] : ['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']"
                 >
                   <Button
                     v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
