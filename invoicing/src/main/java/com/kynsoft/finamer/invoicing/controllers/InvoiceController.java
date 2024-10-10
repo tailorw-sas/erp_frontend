@@ -124,7 +124,7 @@ public class InvoiceController {
         return ResponseEntity.ok(data);
     }
 
-    @PostMapping("/send")
+    @PostMapping("/send-list")
     public ResponseEntity<?> send(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
