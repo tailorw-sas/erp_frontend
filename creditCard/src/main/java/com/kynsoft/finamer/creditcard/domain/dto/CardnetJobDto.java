@@ -18,6 +18,5 @@ public class CardnetJobDto {
     private String session;
     private String sessionKey;
     private Boolean isProcessed;
-    private String jsonData;
 
 }

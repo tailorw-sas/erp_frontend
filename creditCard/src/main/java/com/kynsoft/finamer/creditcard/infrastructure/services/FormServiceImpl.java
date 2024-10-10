@@ -2,20 +2,38 @@ package com.kynsoft.finamer.creditcard.infrastructure.services;
 
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSessionResponse;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMerchantResponse;
+import com.kynsoft.finamer.creditcard.domain.dto.CardnetJobDto;
 import com.kynsoft.finamer.creditcard.domain.dto.PaymentRequestDto;
 import com.kynsoft.finamer.creditcard.domain.services.IFormService;
+import com.kynsoft.finamer.creditcard.infrastructure.identity.CardnetJob;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.command.CardnetJobWriteDataJPARepository;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.query.CardnetJobReadDataJPARepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class FormServiceImpl implements IFormService {
     @Value("${redirect.private.key}")
     private String privateKey;
+
+    @Autowired
+    private CardnetJobWriteDataJPARepository repositoryCommand;
+    @Autowired
+    private CardnetJobReadDataJPARepository repositoryQuery;
+
+    public FormServiceImpl(CardnetJobWriteDataJPARepository repositoryCommand, CardnetJobReadDataJPARepository repositoryQuery){
+        this.repositoryCommand = repositoryCommand;
+        this.repositoryQuery = repositoryQuery;
+    }
 
     @Override
     public ResponseEntity<String> redirectToBlueMerchant(ManageMerchantResponse response, PaymentRequestDto requestDto) {
@@ -149,13 +167,21 @@ public class FormServiceImpl implements IFormService {
                     "<script>document.getElementById('paymentForm').submit();</script>" +
                     "</body>" +
                     "</html>";
-
+            //Instertar el CardnetJob en la tabla
+            CardnetJobDto cardnetJobDto = findByTransactionId(response.getId());
+            if(cardnetJobDto==null) {
+                cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), response.getId(), sessionData.getSession(), sessionData.getSessionKey(), Boolean.FALSE);
+                create(cardnetJobDto);
+            }else
+            {
+                cardnetJobDto.setSession(sessionData.getSession());
+                cardnetJobDto.setSessionKey(sessionData.getSessionKey());
+                update(cardnetJobDto);
+            }
             String concatenatedBody = htmlForm + requestData;
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_HTML)
                     .body(concatenatedBody);
-
-
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -163,6 +189,27 @@ public class FormServiceImpl implements IFormService {
         }
     }
 
+    @Override
+    public UUID create(CardnetJobDto dto) {
+        CardnetJob data = new CardnetJob(dto);
+        return this.repositoryCommand.save(data).getId();
+    }
 
+    @Override
+    public void update(CardnetJobDto dto) {
+       CardnetJob update = new CardnetJob(dto);
+       update.setUpdatedAt(LocalDateTime.now());
+
+        this.repositoryCommand.save(update);
+    }
+
+    @Override
+    public CardnetJobDto findByTransactionId(UUID id) {
+        Optional<CardnetJob> optional = this.repositoryQuery.findByTransactionId(id);
+        if(optional.isPresent()){
+            return optional.get().toAggregate();
+        }else return null;
+
+    }
 
 }
