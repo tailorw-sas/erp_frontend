@@ -24,6 +24,7 @@ public interface IManageInvoiceService {
     ManageInvoiceDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+    PaginatedResponse sendList(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     PaginatedResponse searchToPayment(Pageable pageable, List<FilterCriteria> filterCriteria);
 

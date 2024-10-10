@@ -78,9 +78,9 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 String amount = Integer.toString(intValue);
 
                 String itbis = "000"; //Valor 000 por defecto
-                String approvedUrl = "http://localhost:3000/transaction-result?status=success"; //Campo successUrl de Merchant Config
-                String declinedUrl = "http://localhost:3000/transaction-result?status=declined";//Campo declinedUrl de Merchant Config
-                String cancelUrl = "http://localhost:3000/transaction-result?status=cancelled";//Campo errorUrl de Merchant Config
+                String approvedUrl = merchantConfigDto.getSuccessUrl(); //Campo successUrl de Merchant Config
+                String declinedUrl = merchantConfigDto.getDeclinedUrl();//Campo declinedUrl de Merchant Config
+                String cancelUrl = merchantConfigDto.getErrorUrl();//Campo errorUrl de Merchant Config
                 String useCustomField1 = "0";  //Se mantiene asi por defecto
                 String customField1Label = "";//Se mantiene asi por defecto
                 String customField1Value = "";//Se mantiene asi por defecto
@@ -103,6 +103,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                         "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantConfigDto.getMerchantType() + "\">" +
                         "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
                         "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
+                        "<input type=\"hidden\" name=\"Locale\" value=\"" + "EN" + "\">" +
                         "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
                         "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
                         "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + approvedUrl + "\">" +
@@ -156,8 +157,8 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             // Paso 1: Enviar los datos para generar la sesión
             //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
             Map<String, String> requestData = new HashMap<>();
-            String successUrl = "http://localhost:3000/transaction-result?status=success";
-            String cancelUrl = "http://localhost:3000/transaction-result?status=cancelled";
+            String successUrl = merchantConfigDto.getSuccessUrl();
+            String cancelUrl = merchantConfigDto.getErrorUrl();
 
             requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
             requestData.put("CurrencyCode", "214"); // dejar 214 por ahora que es el peso dominicano. El usd es 840

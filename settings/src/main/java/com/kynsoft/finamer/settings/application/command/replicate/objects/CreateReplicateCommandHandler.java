@@ -16,6 +16,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageClient.ProducerReplicateManageClientService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageContact.ProducerReplicateManageContactService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCountry.ProducerReplicateManageCountryService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCreditCardType.ProducerReplicateManageCreditCardTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCurrency.ProducerReplicateManageCurrencyService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageEmployee.ProducerReplicateManageEmployeeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageHotel.ProducerReplicateManageHotelService;
@@ -113,6 +114,9 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final IManageAgencyContactService agencyContactService;
     private final ProducerReplicateManageAgencyContactService producerReplicateManageAgencyContactService;
 
+    private final IManageCreditCardTypeService creditCardTypeService;
+    private final ProducerReplicateManageCreditCardTypeService producerReplicateManageCreditCardTypeService;
+
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService,
                                          IManagerPaymentStatusService paymentStatusService,
                                          IManagePaymentSourceService paymentSourceService,
@@ -151,7 +155,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
                                          ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService,
                                          IManageContactService manageContactService,
-                                         ProducerReplicateManageContactService producerReplicateManageContactService, IManagerCurrencyService currencyService, ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService, IManageRegionService regionService, ProducerReplicateManageRegionService producerReplicateManageRegionService, IManageAgencyContactService agencyContactService, ProducerReplicateManageAgencyContactService producerReplicateManageAgencyContactService) {
+                                         ProducerReplicateManageContactService producerReplicateManageContactService, IManagerCurrencyService currencyService, ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService, IManageRegionService regionService, ProducerReplicateManageRegionService producerReplicateManageRegionService, IManageAgencyContactService agencyContactService, ProducerReplicateManageAgencyContactService producerReplicateManageAgencyContactService, IManageCreditCardTypeService creditCardTypeService, ProducerReplicateManageCreditCardTypeService producerReplicateManageCreditCardTypeService) {
         this.tradingCompaniesService = tradingCompaniesService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerLanguageService = managerLanguageService;
@@ -208,6 +212,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.producerReplicateManageRegionService = producerReplicateManageRegionService;
         this.agencyContactService = agencyContactService;
         this.producerReplicateManageAgencyContactService = producerReplicateManageAgencyContactService;
+        this.creditCardTypeService = creditCardTypeService;
+        this.producerReplicateManageCreditCardTypeService = producerReplicateManageCreditCardTypeService;
     }
 
     @Override
@@ -476,6 +482,12 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 dto.getId(), dto.getManageAgency().getId(), dto.getManageRegion().getId(),
                                 dto.getManageHotel().stream().map(ManageHotelDto::getId).collect(Collectors.toList()),
                                 dto.getEmailContact()
+                        ));
+                    }
+                } case MANAGE_CREDIT_CARD_TYPE -> {
+                    for (ManageCreditCardTypeDto dto : this.creditCardTypeService.findAllToReplicate()){
+                        this.producerReplicateManageCreditCardTypeService.create(new ReplicateManageCreditCardTypeKafka(
+                                dto.getId(), dto.getCode(), dto.getName()
                         ));
                     }
                 }

@@ -2,7 +2,7 @@ package com.kynsoft.finamer.invoicing.application.query.manageContact.search;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.invoicing.infrastructure.services.IManageContactService;
+import com.kynsoft.finamer.invoicing.domain.IManageContactService;
 import org.springframework.stereotype.Component;
 
 @Component

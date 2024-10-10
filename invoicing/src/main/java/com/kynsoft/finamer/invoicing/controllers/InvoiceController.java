@@ -69,24 +69,8 @@ public class InvoiceController {
 
     @PostMapping("bulk")
     public ResponseEntity<CreateBulkInvoiceMessage> createBulk(@RequestBody CreateBulkInvoiceRequest request) {
-
         CreateBulkInvoiceCommand command = CreateBulkInvoiceCommand.fromRequest(request);
-
         CreateBulkInvoiceMessage message = this.mediator.send(command);
-
-//        this.mediator.send(
-//                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
-//                    return b.getId();
-//                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
-//                    return rr.getId();
-//                }).collect(Collectors.toList())));
-
-//        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
-//
-//        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
-//            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
-//        }
-
         return ResponseEntity.ok(message);
 
     }
@@ -133,6 +117,15 @@ public class InvoiceController {
 
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchInvoiceQuery query = new GetSearchInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/send-list")
+    public ResponseEntity<?> send(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
         GetSearchInvoiceQuery query = new GetSearchInvoiceQuery(pageable, request.getFilter(), request.getQuery());

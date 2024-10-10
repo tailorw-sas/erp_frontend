@@ -110,4 +110,16 @@ public class ManageCreditCardTypeServiceImpl implements IManageCreditCardTypeSer
         return this.repositoryQuery.countByFirstDigitAndNotId(firstDigit, id);
     }
 
+    @Override
+    public List<ManageCreditCardTypeDto> findAllToReplicate() {
+        List<ManageCreditCardType> entityList = this.repositoryQuery.findAll();
+        List<ManageCreditCardTypeDto> dtoList = new ArrayList<>();
+
+        for (ManageCreditCardType entity : entityList){
+            dtoList.add(entity.toAggregate());
+        }
+
+        return dtoList;
+    }
+
 }
