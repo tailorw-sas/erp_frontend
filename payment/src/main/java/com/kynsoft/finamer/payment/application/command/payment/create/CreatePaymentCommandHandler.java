@@ -123,8 +123,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 0.0,
                 0.0,
                 command.getPaymentAmount(),
-                command.getPaymentAmount(),//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                0.0,
+                command.getPaymentAmount(),//Aplicar la formula del Payment Balance
+                0.0,//Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
                 command.getRemark(),
                 null,
                 null,
@@ -133,7 +133,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         );
 
         PaymentDto save = this.paymentService.create(paymentDto);
-        
+
         if (command.getAttachments() != null) {
             paymentDto.setAttachments(this.createAttachment(command.getAttachments(), save));
             this.createAttachmentStatusHistory(employeeDto, save);
