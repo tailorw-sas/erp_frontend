@@ -4,7 +4,6 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
-import AdjustmentDialog from './AdjustmentDialog.vue'
 import { GenericService } from '~/services/generic-services'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -739,7 +738,7 @@ onMounted(() => {
   <ContextMenu v-if="!isDetailView" ref="adjustmentContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen">
-    <AdjustmentDialog
+    <AdjustmentDialogOldCredit
       :invoice-obj="invoiceObj" :invoice-amount="invoiceObjAmount"
       :fields="route.query.type === InvoiceType.INCOME ? IncomeAttachmentFields : Fields" :item="item"
       :open-dialog="isDialogOpen" :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
