@@ -32,6 +32,7 @@ const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
 })
+const agencyContact = ref<any>({})
 const confApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
@@ -1040,6 +1041,11 @@ function onSortField(event: any) {
   }
 }
 
+async function openContactDialogVisible(item: any) {
+  agencyContact.value = { agency: { id: item.id, name: item.name, status: 'ACTIVE' } }
+  contactDialogVisible.value = true
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -1169,7 +1175,7 @@ onMounted(() => {
                 <InputText placeholder="Send Agency Contact" disabled />
                 <Button
                   icon="pi pi-eye" type="button" text aria-haspopup="true" aria-controls="overlay_menu_filter"
-                  @click="contactDialogVisible = true"
+                  @click="openContactDialogVisible(item)"
                 />
               </InputGroup>
               <Skeleton v-else height="2rem" class="mb-2" />
@@ -1391,7 +1397,7 @@ onMounted(() => {
             </template>
           </EditFormV2>
           <DynamicContentModal
-            :visible="contactDialogVisible" :component="ContactAgencyPage" :component-props="{ agency: { id: item.id, name: item.name, status: 'ACTIVE' } }"
+            :visible="contactDialogVisible" :component="ContactAgencyPage" :component-props="agencyContact"
             :header="`Agency ${item.code} - ${item.name}`" @close="contactDialogVisible = $event"
           />
         </div>
