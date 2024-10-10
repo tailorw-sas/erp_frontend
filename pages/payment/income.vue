@@ -199,7 +199,7 @@ const columns: IColumn[] = [
  // { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text' },
-  { field: 'cuponNumber', header: 'Cupon No.', type: 'text' },
+  { field: 'cuponNumber', header: 'Coupon No.', type: 'text' },
   { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
   { field: 'checkIn', header: 'Check In', type: 'date' },
   { field: 'checkOut', header: 'Check Out', type: 'date' },
