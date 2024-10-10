@@ -926,6 +926,20 @@ function disabledFieldAgency() {
   } 
 }
 
+function disableBtnSave() {
+  if (item.value?.invoiceType?.code === 'CRE' || item.value?.invoiceType?.code === 'INC') {
+    return true
+  } else {
+    let result = true
+    if (invoiceStatus.value !== InvoiceStatus.PROCECSED && invoiceStatus.value !== InvoiceStatus.SENT && invoiceStatus.value !== InvoiceStatus.RECONCILED) {
+      result = true
+    } else {
+      result = false
+    }
+    return result
+  } 
+}
+
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
     clearForm()
@@ -1126,7 +1140,7 @@ onMounted(async () => {
                     v-tooltip.top="'Save'" 
                     class="w-3rem mx-1" 
                     icon="pi pi-save" 
-                    :disabled="invoiceStatus !== InvoiceStatus.PROCECSED" 
+                    :disabled="disableBtnSave()" 
                     :loading="loadingSaveAll" 
                     @click="() => {
                         saveItem(props.item.fieldValues)
