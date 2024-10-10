@@ -4,6 +4,7 @@ import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { get } from 'lodash'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -58,7 +59,10 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Agency',
     dataType: 'select',
     class: 'field col-12 required',
-    validation: validateEntityStatus('agency'),
+    validation: z.object({
+      id: z.string().min(1, 'The agency field is required'),
+      name: z.string().min(1, 'The agency field is required'),
+    })
   },
   {
     field: 'manageRegion',
@@ -66,7 +70,10 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: validateEntityStatus('region'),
+    validation: z.object({
+      id: z.string().min(1, 'The region field is required'),
+      name: z.string().min(1, 'The region field is required'),
+    })
   },
   {
     field: 'manageHotel',
@@ -127,7 +134,14 @@ const options = ref({
 })
 const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
-  filter: [],
+  filter: [{
+    key: 'manageAgency.id',
+    operator: 'EQUALS',
+    value: item.value?.manageAgency?.id,
+    logicalOperation: 'AND',
+    type: 'filterSearch',
+
+  }],
   query: '',
   pageSize: 20,
   page: 0,
@@ -225,23 +239,32 @@ async function getList() {
 }
 
 function searchAndFilter() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  const newPayload: IQueryRequest = {
+    filter: [],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.ASC
+  }
+  newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
-    payload.value.filter = [...payload.value.filter, {
-      key: filterToSearch.value.criterial ? filterToSearch.value.criterial.id : '',
+    newPayload.filter.push({
+      key: 'manageRegion.id',
       operator: 'LIKE',
-      value: filterToSearch.value.search,
+      value: filterToSearch.value.search.id,
       logicalOperation: 'AND',
       type: 'filterSearch',
-    }]
+    })
   }
+  payload.value = newPayload
   getList()
 }
 
 function clearFilterToSearch() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value.criterial = ENUM_FILTER[0]
-  filterToSearch.value.search = null
+  filterToSearch.value.search = ''
 
   getList()
 }
@@ -344,7 +367,7 @@ async function getHotelList(query: string = '') {
         {
           key: 'manageRegion.id',
           operator: 'EQUALS',
-          value: regionSelected.value,
+          value: regionSelected.value.id,
           logicalOperation: 'AND'
         },
         {
@@ -537,7 +560,7 @@ const disabledSearch = computed(() => {
 })
 
 const disabledClearSearch = computed(() => {
-  return !(filterToSearch.value.criterial && filterToSearch.value.search)
+  return !(filterToSearch.value.criterial || filterToSearch.value.search)
 })
 
 // -------------------------------------------------------------------------------------------------------
@@ -615,20 +638,19 @@ onMounted(async () => {
               <div class="flex align-items-center gap-2">
                 <label for="email">Search</label>
                 <div class="w-full lg:w-auto">
-                  <!-- <IconField icon-position="left" class="w-full">
-                    <InputText v-model="filterToSearch.search" type="text" placeholder="Search" class="w-full" />
-                    <InputIcon class="pi pi-search" />
-                  </IconField> -->
-                  <Dropdown
-                    v-model="filterToSearch.search"
-                    :options="regionList"
-                    option-label="name"
-                    option-value="id"
-                    placeholder="Criteria"
-                    return-object="false"
-                    class="align-items-center w-full"
-                    show-clear
+                  <DebouncedAutoCompleteComponent
+                    v-if="!loadingSaveAll"
+                    id="autocomplete"
+                    field="name"
+                    item-value="id"
+                    :model="filterToSearch.search"
+                    :suggestions="regionList"
+                    @change="($event) => {
+                      filterToSearch.search = $event
+                    }"
+                    @load="($event) => getRegionList($event)"
                   />
+                  <Skeleton v-else height="2rem" class="mb-2" />
                 </div>
               </div>
               <div class="flex align-items-center">
