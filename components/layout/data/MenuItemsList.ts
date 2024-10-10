@@ -668,12 +668,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/close-operation/vcc'),
               items: []
             },
-            {
-              label: 'VCC Parameterization',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/parameterization/vcc'),
-              items: []
-            },
           ]
         }
       ]
