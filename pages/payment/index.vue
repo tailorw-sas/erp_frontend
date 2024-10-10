@@ -2235,10 +2235,8 @@ function havePermissionMenu() {
 
 async function exportToExcel() {
   try {
-    console.log(paymentSelectedForPrintList.value)
     if (paymentSelectedForPrintList.value.length > 0) {
       const response = await GenericService.create('payment', `payment/excel-exporter/export-summary`, { paymentIds: [...paymentSelectedForPrintList.value] })
-      console.log(response)
     }
   }
   catch (error) {

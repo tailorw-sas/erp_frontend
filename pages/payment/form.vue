@@ -1134,7 +1134,6 @@ async function getListPaymentDetail() {
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 

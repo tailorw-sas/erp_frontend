@@ -855,16 +855,10 @@ async function getInvoiceHotel(id: string) {
 }
 async function getInvoiceAgency(id: string) {
   try {
-
-    console.log(id);
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
-
     if (agency) {
       invoiceAgency.value = { ...agency }
-
       nightTypeRequired.value = agency?.client?.isNightType
-
-      console.log(agency);
     }
   }
   catch (err) {
@@ -899,6 +893,8 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
 }
 
 function disabledInvoiceStatus(payload: any) {  
+  console.log(item.value);
+  
   let result = true
   // Verificar si esta en estado Sent o Reconciled (En estos estados solo se puede editar la agencia)
   if (payload && (payload.sentStatus || payload.reconciledStatus)) {

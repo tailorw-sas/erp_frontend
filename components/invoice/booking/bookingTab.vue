@@ -1036,7 +1036,6 @@ async function getBookingList(clearFilter: boolean = false) {
 
     
     const response = await GenericService.search(Options.value.moduleApi, Options.value.uriApi, Payload.value)
-    console.log(response)
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     Pagination.value.page = page
