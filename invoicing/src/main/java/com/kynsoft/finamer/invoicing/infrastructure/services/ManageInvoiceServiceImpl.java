@@ -87,6 +87,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         entity.setInvoiceNumber(invoiceNumber);
         entity.setInvoiceNo(lastInvoiceNo);
         dto.setInvoiceNo(lastInvoiceNo);
+        String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" +lastInvoiceNo;
+        entity.setInvoiceNumberPrefix(invoicePrefix);
 
         return this.repositoryCommand.saveAndFlush(entity).toAggregate();
     }

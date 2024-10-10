@@ -3,8 +3,8 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -136,7 +136,7 @@ public class ManageInvoice {
                 : null;
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
-        this.invoiceNumberPrefix= InvoiceUtils.deleteHotelInfo(dto.getInvoiceNumber());
+        this.invoiceNumberPrefix= InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" +dto.getInvoiceNo();
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
