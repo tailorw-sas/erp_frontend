@@ -52,8 +52,6 @@ const invoiceHotel = ref<any>(null)
 
 const attachmentDialogOpen = ref<boolean>(false)
 
-
-
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 const invoiceTypeList = ref<any[]>([])
@@ -900,7 +898,7 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
   invoiceStatusList.value = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)  
 }
 
-function disabledInvoiceStatus(payload: any) {
+function disabledInvoiceStatus(payload: any) {  
   let result = true
   // Verificar si esta en estado Sent o Reconciled (En estos estados solo se puede editar la agencia)
   if (payload && (payload.sentStatus || payload.reconciledStatus)) {
@@ -914,7 +912,6 @@ function disabledInvoiceStatus(payload: any) {
 }
 
 function disabledFieldAgency() {
-  console.log('Si entro aqui, necesito....');
   if (item.value?.invoiceType?.code === 'CRE' || item.value?.invoiceType?.code === 'INC') {
     
     return true
@@ -990,7 +987,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.invoiceStatus" 
             :suggestions="[...invoiceStatusList]"
-            :disabled="disabledInvoiceStatus(data?.invoiceStatus)"  
+            :disabled="disabledInvoiceStatus(item.invoiceStatus)"  
             @change="async ($event) => {
               onUpdate('invoiceStatus', $event)
             }" 
