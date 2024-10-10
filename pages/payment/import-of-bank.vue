@@ -185,7 +185,7 @@ async function validateStatusImport() {
       try {
         const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
         status = response.status
-        totalImportedRows.value = response.totalRows ?? 0
+        totalImportedRows.value = response.total ?? 0
       }
       catch (error: any) {
         toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
