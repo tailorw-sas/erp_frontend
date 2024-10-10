@@ -4,7 +4,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageContactDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import com.kynsoft.finamer.invoicing.infrastructure.services.IManageContactService;
+import com.kynsoft.finamer.invoicing.domain.IManageContactService;
 import org.springframework.stereotype.Component;
 
 @Component
