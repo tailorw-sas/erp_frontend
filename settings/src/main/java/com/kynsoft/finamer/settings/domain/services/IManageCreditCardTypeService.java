@@ -22,4 +22,6 @@ public interface IManageCreditCardTypeService {
     Long countByCodeAndNotId(String code, UUID id);
 
     Long countByFirstDigitAndNotId(Integer firstDigit, UUID id);
+
+    List<ManageCreditCardTypeDto> findAllToReplicate();
 }
