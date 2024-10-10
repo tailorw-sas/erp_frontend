@@ -33,4 +33,6 @@ public interface IManagePaymentTransactionTypeService {
     Long countByApplyDepositAndNotId(UUID id);
 
     Long countByDepositAndNotId(UUID id);
+
+    Long countByPaymentInvoiceAndNotId(UUID id);
 }

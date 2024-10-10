@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
@@ -39,16 +40,31 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
         command.setResult(formPaymentService.redirectToLink(transactionDto, merchantConfigDto).getBody());
 
+        String[] dataForm = split(command.getResult());
           TransactionPaymentLogsDto dto = this.formPaymentService.findByTransactionId(transactionDto.getTransactionUuid());
+
           if(dto == null) {
-            formPaymentService.create(new TransactionPaymentLogsDto(
-                    UUID.randomUUID(), transactionDto.getTransactionUuid(), command.getResult(), null)
+              if(merchantConfigDto.getMethod().equals(Method.AZUL.toString())){
+                  formPaymentService.create(new TransactionPaymentLogsDto(
+                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null)
             );}
+              if(merchantConfigDto.getMethod().equals(Method.CARDNET.toString())){
+                  formPaymentService.create(new TransactionPaymentLogsDto(
+                     UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null)
+                  );
+              }
+              }
            else{
-                dto.setMerchantRequest(command.getResult());
+                dto.setMerchantRequest(dataForm[0]);
                 this.formPaymentService.update(dto);
            }
+     command.setResult(dataForm[0]);
 
+    }
+    public String[] split(String response){
+        String[] spliter = response.split("\\{", 2);
+        spliter[1] = "{"+spliter[1];
+        return spliter;
     }
 }
 

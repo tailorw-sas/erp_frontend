@@ -67,9 +67,12 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
         //Deposit Amount and Deposit Balance
         if (delete.getTransactionType().getDeposit()) {
             // Crear regla que valide que el Amount ingresado no debe de ser mayor que el valor del Payment Balance y mayor que cero.
+            //Recordar aqui, en los calculos que se realizan, que los deposit estan almacenados en negativo.
             UpdateIfNotNull.updateDouble(update::setDepositAmount, update.getDepositAmount() + delete.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(update::setDepositBalance, update.getDepositBalance() + delete.getAmount(), updatePayment::setUpdate);
+
             UpdateIfNotNull.updateDouble(update::setPaymentBalance, update.getPaymentBalance() - delete.getAmount(), updatePayment::setUpdate);
+            UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() - delete.getAmount(), updatePayment::setUpdate);
             service.delete(delete);
         }
 
@@ -77,7 +80,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             UpdateIfNotNull.updateDouble(update::setDepositBalance, update.getDepositBalance() + delete.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(update::setIdentified, update.getIdentified() - delete.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(update::setNotIdentified, update.getPaymentAmount() - update.getIdentified(), updatePayment::setUpdate);
-            UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() - delete.getAmount(), updatePayment::setUpdate);
+            UpdateIfNotNull.updateDouble(update::setApplied, update.getApplied() - delete.getAmount(), updatePayment::setUpdate);
             //Para este caso no se elimina, dado que el objeto esta relacionado con otro objeto del mismo tipo, por tanto voy a actuar modificando
             //los valores y poniendo en inactivo el apply deposit que se trata de eliminar.
             PaymentDetailDto parent = this.service.findByPaymentDetailId(delete.getParentId());

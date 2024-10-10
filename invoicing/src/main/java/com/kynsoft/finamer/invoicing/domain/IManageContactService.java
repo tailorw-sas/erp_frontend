@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.infrastructure.services;
+package com.kynsoft.finamer.invoicing.domain;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
