@@ -196,7 +196,7 @@ const invoiceAllContextMenuItems = ref([
     height: '24px',
     iconSvg:'',
     command: () => {
-      navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
+      navigateTo(`invoice/credit/create?type=${InvoiceType.CREDIT}&selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
     },
     default: true,
     disabled: computedShowMenuItemNewCedit,
