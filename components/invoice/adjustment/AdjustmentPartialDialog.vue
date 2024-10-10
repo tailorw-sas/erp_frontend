@@ -218,10 +218,19 @@ onMounted(async () => {
             v-model="data.date"
             date-format="yy-mm-dd"
             :min-date="minDate"
-            :max-date="maxDate"
+            :max-date="dayjs().endOf('day').toDate()"
             @update:model-value="($event) => {
+
               if (dayjs($event).isValid()){
-                onUpdate('date', dayjs($event).startOf('day').toDate())
+                if (dayjs($event).isAfter(minDate) || dayjs($event).isSame(minDate) || dayjs($event).isBefore(maxDate) || dayjs($event).isSame(maxDate)) {
+                  onUpdate('date', dayjs($event).startOf('day').toDate())
+                }
+                else {
+                  toast.add({ severity: 'error', summary: 'Error', detail: 'The date must be within the Close of Operation.', life: 3000 })
+                }
+              }
+              else {
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Invalid date', life: 3000 })
               }
             }"
           />
