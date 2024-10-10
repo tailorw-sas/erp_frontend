@@ -103,6 +103,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                         "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantConfigDto.getMerchantType() + "\">" +
                         "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
                         "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
+                        "<input type=\"hidden\" name=\"Locale\" value=\"" + "EN" + "\">" +
                         "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
                         "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
                         "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + approvedUrl + "\">" +
