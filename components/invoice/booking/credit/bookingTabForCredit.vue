@@ -529,7 +529,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    ...(route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value >= 0, { message: 'The Invoice Amount field must be greater or equals than 0' }) })
+    validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' })
   },
 
   // Hotel Amount
@@ -734,20 +734,16 @@ const confApi = reactive({
 
 const Columns: IColumn[] = [
 
-  { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  //{ field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
-  { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confroomTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
-  { field: 'dueAmount', header: 'Booking Balance', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+//{ field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'originalAmount', header: 'Original Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: true },
 
 ]
 
@@ -1454,7 +1450,7 @@ function onRowRightClick(event: any) {
     return;
   }
 
-  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  if (props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
     return;
   }
 
@@ -1463,21 +1459,13 @@ function onRowRightClick(event: any) {
 }
 
 function onCellEditComplete(val: any) {
+  val.newData.invoiceAmount = toNegative(val.newData.invoiceAmount)
 
-  if (props.isCreationDialog) {
-    if (route.query.type === InvoiceType.CREDIT) {
-      val.newData.invoiceAmount = toNegative(val.newData.invoiceAmount)
-
-      if (toPositive(val.newData.invoiceAmount) > toPositive(val.newData.originalAmount)) {
-        toast.add({ severity: 'error', summary: 'Error', detail: "Booking invoice amount cannot be greater than original amount", life: 10000 })
-        return null;
-      }
-
-    }
-    return props.updateItem(val?.newData)
+  if (toPositive(val.newData.invoiceAmount) > toPositive(val.newData.originalAmount)) {
+    toast.add({ severity: 'error', summary: 'Error', detail: "Booking invoice amount cannot be greater than original amount", life: 10000 })
+    return null;
   }
-
-  console.log(val);
+  return props.updateItem(val?.newData)
 }
 
 
@@ -1518,24 +1506,6 @@ onMounted(() => {
     ]
   }
 
-  if (props?.isCreationDialog && route.query.type === InvoiceType.CREDIT) {
-
-    finalColumns.value = [
-
-    { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-
-      //{ field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'originalAmount', header: 'Original Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
-
-    ]
-  }
-
   const computedShowMenuItemAddRoomRate = computed(() => {
     return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ROOM-RATE-CREATE'])))
   })
@@ -1561,15 +1531,15 @@ onMounted(() => {
     },
   ]
 
-  if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
-    menuModel.value = [
-      {
-        label: 'Edit booking',
-        command: () => openEditBooking(selectedBooking.value),
-        disabled: computedShowMenuItemEditBooking
-      },
-    ]
-  }
+  // if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
+  //   menuModel.value = [
+  //     {
+  //       label: 'Edit booking',
+  //       command: () => openEditBooking(selectedBooking.value),
+  //       disabled: computedShowMenuItemEditBooking
+  //     },
+  //   ]
+  // }
 
   if (!props.isCreationDialog) {
     getBookingList()
@@ -1597,17 +1567,17 @@ onMounted(() => {
       @on-row-double-click="($event) => {
 
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-          return;
-        }
+        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
+        //   return;
+        // }
 
-        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-          return;
-        }
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+        //   return;
+        // }
 
-        if (!props.isDetailView) {
-          openEditBooking($event)
-        }
+        // if (!props.isDetailView) {
+        //   openEditBooking($event)
+        // }
       }">
 
 
@@ -1616,28 +1586,27 @@ onMounted(() => {
           <Row>
             <Column 
               footer="Totals:"
-              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 9"
+              :colspan="isDetailView ? 8 : 6"
               footer-style="text-align:right; font-weight: 700"
             />
            
             <Column 
-              v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
+              v-if="false"
             
-              :footer="Number.parseFloat(totalHotelAmount.toFixed(2)) "
+              :footer="`${Number.parseFloat(totalHotelAmount.toFixed(2))}`"
+              footer-style="font-weight: 700"
+            />
+            <Column
+              :footer="`${Number.parseFloat(totalOriginalAmount.toFixed(2))}`"
               footer-style="font-weight: 700"
             />
             <Column 
-              v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="Number.parseFloat(totalOriginalAmount.toFixed(2))"
+              :footer="`${Number.parseFloat(totalInvoiceAmount.toFixed(2))}`"
               footer-style="font-weight: 700"
             />
             <Column 
-              :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))"
-              footer-style="font-weight: 700"
-            />
-            <Column 
-              v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="Number.parseFloat(totalDueAmount.toFixed(2))"
+              v-if="false"
+              :footer="`${Number.parseFloat(totalDueAmount.toFixed(2))}`"
               footer-style="font-weight: 700" 
             />
           
