@@ -37,6 +37,9 @@ public class ManagePaymentAttachmentStatus {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean pwaWithOutAttachment;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean supported;
+
     public ManagePaymentAttachmentStatus(ManagePaymentAttachmentStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -46,9 +49,10 @@ public class ManagePaymentAttachmentStatus {
         this.nonNone = dto.isNonNone();
         this.patWithAttachment = dto.isPatWithAttachment();
         this.pwaWithOutAttachment = dto.isPwaWithOutAttachment();
+        this.supported = dto.isSupported();
     }
 
     public ManagePaymentAttachmentStatusDto toAggregate() {
-        return new ManagePaymentAttachmentStatusDto(id, code, name, status, defaults, nonNone, patWithAttachment, pwaWithOutAttachment);
+        return new ManagePaymentAttachmentStatusDto(id, code, name, status, defaults, nonNone, patWithAttachment, pwaWithOutAttachment, supported);
     }
 }

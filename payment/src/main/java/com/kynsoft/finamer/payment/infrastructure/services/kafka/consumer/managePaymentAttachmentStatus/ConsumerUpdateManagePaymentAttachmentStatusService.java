@@ -29,7 +29,8 @@ public class ConsumerUpdateManagePaymentAttachmentStatusService {
                     objKafka.getDefaults(),
                     objKafka.isNonNone(),
                     objKafka.isPatWithAttachment(),
-                    objKafka.isPwaWithOutAttachment()
+                    objKafka.isPwaWithOutAttachment(),
+                    objKafka.isSupported()
             );
             mediator.send(command);
         } catch (Exception ex) {
