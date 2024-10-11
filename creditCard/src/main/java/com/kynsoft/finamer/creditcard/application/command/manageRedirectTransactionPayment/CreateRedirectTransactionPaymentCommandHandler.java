@@ -38,7 +38,7 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
         Claims claims = tokenService.validateToken(command.getToken());
         TransactionDto transactionDto = transactionService.findByUuid(UUID.fromString(claims.get("transactionUuid").toString()));
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
-        command.setResult(formPaymentService.redirectToLink(transactionDto, merchantConfigDto).getBody());
+        command.setResult(formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto).getBody());
 
         String[] dataForm = split(command.getResult());
           TransactionPaymentLogsDto dto = this.formPaymentService.findByTransactionId(transactionDto.getTransactionUuid());

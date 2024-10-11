@@ -26,14 +26,9 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
 
     @Override
     public void handle(CreateRedirectCommand command) {
-        if (command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.AZUL.toString())) {
-            command.setResult(formService.redirectToBlueMerchant(command.getManageMerchantResponse(), command.getRequestDto()).getBody());
-        }
-        if (command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.CARDNET.toString())) {
-            command.setResult(formService.redirectToCardNetMerchant(command.getManageMerchantResponse(), command.getRequestDto()).getBody());
-        }
-
         TransactionDto transactionDto = transactionService.findById(command.getRequestDto().getTransactionId());
+
+        command.setResult(formPaymentService.redirectToMerchant(transactionDto, command.getManageMerchantResponse().getMerchantConfigResponse()).getBody());
 
         //Obtener la data que viene del FormServiceImpl y dividirla en merchantRequest([0]) y Map ([1])
         String[] dataForm = split(command.getResult());
