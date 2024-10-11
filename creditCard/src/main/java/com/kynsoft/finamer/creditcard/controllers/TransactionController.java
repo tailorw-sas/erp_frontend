@@ -4,6 +4,9 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.creditcard.application.command.ManageStatusTransaction.update.UpdateManageStatusTransactionCommand;
+import com.kynsoft.finamer.creditcard.application.command.ManageStatusTransaction.update.UpdateManageStatusTransactionCommandMessage;
+import com.kynsoft.finamer.creditcard.application.command.ManageStatusTransaction.update.UpdateManageStatusTransactionCommandRequest;
 import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionRequest;
@@ -92,6 +95,16 @@ public class TransactionController {
                 .build();
         CreateRedirectTransactionPaymentCommandMessage createRedirectCommandMessage = mediator.send(redirectTransactionPaymentCommand);
         return ResponseEntity.ok(createRedirectCommandMessage);
+    }
+
+    @PostMapping("/updateTransactionPayment")
+    public ResponseEntity<?> updateTransactionPayment(@RequestBody UpdateManageStatusTransactionCommandRequest request) {
+        UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()
+                .session(request.getSession())
+                .build();
+
+        UpdateManageStatusTransactionCommandMessage response = mediator.send(updateManageStatusTransactionCommandRequest);
+        return ResponseEntity.ok(response);
     }
 
 }

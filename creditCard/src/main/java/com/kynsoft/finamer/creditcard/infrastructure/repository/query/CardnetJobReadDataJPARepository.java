@@ -12,5 +12,7 @@ import java.util.UUID;
 public interface CardnetJobReadDataJPARepository extends JpaRepository<CardnetJob, UUID>,
         JpaSpecificationExecutor<CardnetJob> {
     Optional<CardnetJob> findByTransactionId(UUID uuid);
+    Optional<CardnetJob> findBySession(String session);
+
 
 }

@@ -18,5 +18,6 @@ public class TransactionPaymentLogsDto {
     private UUID transactionId;
     private String merchantRequest;
     private String merchantResponse;
+    private Boolean isProcessed;
 
 }

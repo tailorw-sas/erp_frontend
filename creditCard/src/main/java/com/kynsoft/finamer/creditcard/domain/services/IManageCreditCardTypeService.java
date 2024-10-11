@@ -19,4 +19,6 @@ public interface IManageCreditCardTypeService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    ManageCreditCardTypeDto findByFirstDigit(Integer digit);
+
 }
