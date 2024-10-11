@@ -76,7 +76,7 @@ public class ManageAgencyResponse implements IResponse, Serializable {
         this.generationType = dto.getGenerationType();
         this.sentFileFormat = dto.getSentFileFormat();
         this.agencyType = dto.getAgencyType() != null ? new ManageAgencyTypeResponse(dto.getAgencyType()) : null;
-        //this.client = dto.getClient() != null ? new ManageClientResponse(dto.getClient()) : null;
+        this.client = dto.getClient() != null ? new ManageClientResponse(dto.getClient()) : null;
         this.sentB2BPartner = dto.getSentB2BPartner() != null ? new ManagerB2BPartnerResponse(dto.getSentB2BPartner()) : null;
         this.country = dto.getCountry() != null ? new ManagerCountryResponse(dto.getCountry()) : null;
         this.cityState = dto.getCityState() != null ? new ManageCityStateResponse(dto.getCityState()) : null;
