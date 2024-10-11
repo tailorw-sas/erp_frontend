@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetTransactionDataResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.CardnetJobDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageStatusTransactionService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.CardnetJob;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Optional;
 
 @Service
@@ -33,12 +35,13 @@ public class ManageStatusTransactionServiceImpl implements IManageStatusTransact
         return optionalEntity.map(CardnetJob::toAggregate).orElse(null);
     }
     @Override
-    public Mono<String> dataTransactionSuccess(String url) {
+    public Mono<CardNetTransactionDataResponse> dataTransactionSuccess(String url) {
 
             return webClientBuilder.build()
                     .get()
                     .uri(url)
                     .retrieve()
-                    .bodyToMono(String.class);
+                    .bodyToMono(CardNetTransactionDataResponse.class)
+                    .timeout(Duration.ofSeconds(10));
         }
 }

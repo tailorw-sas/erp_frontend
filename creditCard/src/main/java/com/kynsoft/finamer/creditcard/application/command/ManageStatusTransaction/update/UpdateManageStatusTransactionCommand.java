@@ -2,7 +2,7 @@ package com.kynsoft.finamer.creditcard.application.command.ManageStatusTransacti
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.creditcard.application.command.manageRedirect.CreateRedirectCommandMessage;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetTransactionDataResponse;
 import lombok.*;
 
 @AllArgsConstructor
@@ -11,12 +11,12 @@ import lombok.*;
 @Setter
 @Builder
 public class UpdateManageStatusTransactionCommand implements ICommand {
-    private String result;
+    private CardNetTransactionDataResponse result;
     private String session;
 
     @Override
     public ICommandMessage getMessage() {
-        return new CreateRedirectCommandMessage(result);
+        return new UpdateManageStatusTransactionCommandMessage(result);
     }
 }
 

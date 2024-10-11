@@ -333,7 +333,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_TRANSACTION_STATUS_SENT_NOT_FOUND(1111, Series.DOMAIN_ERROR,"There is no transaction status of type sent selected by default."),
     MANAGE_TRANSACTION_STATUS_REFUND_NOT_FOUND(1112, Series.DOMAIN_ERROR,"There is no transaction status of type refund selected by default."),
     MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND(1113, Series.DOMAIN_ERROR,"There is no transaction status of type received selected by default."),
-    MANAGE_BOOKING_ADJUSTMENT(1114, Series.DOMAIN_ERROR, "Each booking must have at least one adjustment.");
+    MANAGE_BOOKING_ADJUSTMENT(1114, Series.DOMAIN_ERROR, "Each booking must have at least one adjustment."),
+    VCC_TRANSACTION_RESULT_CARDNET_ERROR(1115, Series.DOMAIN_ERROR, "Could not obtain the transaction result from Cardnet.");
 
     private static final DomainErrorMessage[] VALUES;
 
