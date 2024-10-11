@@ -1029,52 +1029,74 @@ async function deleteItem(id: string) {
   }
 }
 
+/*
 function disabledButtonSave() {
-  let result = false
+  const roomRateIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.roomRateId));
 
-  if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
-    const bookingIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.bookingId))
-
-    for (let i = 0; i < roomRateList.value.length; i++) {
-      const roomRate = roomRateList.value[i]
-
-      if (!bookingIdsWithAdjustments.has(roomRate.bookingId)) {
-        result = true // Deshabilitar el botón si al menos un room rate por booking no tiene ajustes asociados
-        break // Se encontró un room rate sin ajustes, por lo tanto, se deshabilita el botón
-      }
+  for (let i = 0; i < roomRateList.value.length; i++) {
+    const roomRate = roomRateList.value[i];
+    if (!roomRateIdsWithAdjustments.has(roomRate.id)) {
+       return true; // Deshabilitar el botón si al menos un room rate no tiene ajustes asociados
     }
   }
-  else {
-    result = false // Deshabilitar el botón si no hay ajustes o adjuntos
-  }
 
-  return result
-}
-
-// Funcion para el cloando total
-/* function disabledButtonSave() {
-  let result = false
-  if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
-    result = true
-  }
-  else {
-    const listIds = roomRateList.value.map((roomRate: any) => roomRate.id)
-    if (listIds.length === 0) {
-      result = true
-    }
-    else {
-      // recorrer la lista de ids y ver si todos los ids existen en la lista de adjustments y la propiedad a verificar se llama roomRate
-      for (let i = 0; i < listIds.length; i++) {
-        if (!adjustmentList.value.some((adjustment: any) => adjustment.roomRate === listIds[i])) {
-          result = true
-          break
-        }
-      }
-    }
-  }
-  return result
+  return false; // Habilitar el botón si todos los room rates tienen ajustes asociados
 }
 */
+// Funcion para el cloando total
+function disabledButtonSave() {
+  let result = true;
+
+  if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
+    return true;
+  }
+
+  const bookingIds = [...new Set(roomRateList.value.map(roomRate => roomRate.bookingId))];
+
+  // Caso 1: Para un booking con un room rate, el room rate debe tener un ajuste(ok)
+  if (bookingIds.length === 1) {
+    const roomRate = roomRateList.value.find(roomRate => roomRate.bookingId === bookingIds[0]);
+    result = adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id);
+  }
+
+  // Caso 2: Para un booking con dos room rates, al menos uno debe tener un ajuste (ok)
+  if (bookingIds.length === 1) {
+    const roomRates = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingIds[0]);
+    result = roomRates.some(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id));
+  }
+ // Caso 4: Para más de un booking con más de un room rate, al menos uno de los room rates de cada booking debe tener un ajuste (OK)
+ if (bookingIds.length > 1) {
+    for (const bookingId of bookingIds) {
+      const roomRatesForBooking = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingId);
+      const atLeastOneRateWithAdjustment = roomRatesForBooking.some(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id));
+      
+      // Si al menos un room rate para un booking tiene un ajuste, continuar con los demás bookings
+      if (atLeastOneRateWithAdjustment) {
+        continue;
+      } else {
+        return true; // Si no se encontró ningún room rate con ajuste para un booking, deshabilitar el botón
+      }
+    }
+
+    return false; // Si al menos un room rate con ajuste fue encontrado para cada booking, habilitar el botón
+  }
+//caso 3 mas de un booking con un roomrate cada uno (ok)
+if (bookingIds.length > 1) {
+    for (const bookingId of bookingIds) {
+      const roomRatesForBooking = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingId);
+      const roomRatesWithAdjustments = roomRatesForBooking.filter(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id));
+      
+      // Si el número de room rates con ajustes es diferente del número total de room rates para un booking, deshabilitar botón
+      if (roomRatesWithAdjustments.length !== roomRatesForBooking.length) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+ 
+
+}
 
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
