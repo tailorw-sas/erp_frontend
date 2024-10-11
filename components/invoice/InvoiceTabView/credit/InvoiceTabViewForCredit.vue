@@ -126,7 +126,7 @@ const activeTab = ref(props.active)
 
 const route = useRoute()
 
-const showTabs = ref<boolean>(true)
+const showTabs = ref<boolean>(false)
 
 const toast = useToast()
 
@@ -306,10 +306,6 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-
-  if (props.isCreationDialog) {
-    showTabs.value = route.query.type !== InvoiceType.CREDIT
-  }
 })
 </script>
 
