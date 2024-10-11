@@ -5,7 +5,6 @@ import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
-import com.kynsoft.finamer.creditcard.domain.services.IFormService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import org.springframework.stereotype.Component;
 
@@ -13,27 +12,20 @@ import java.util.UUID;
 
 @Component
 public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedirectCommand> {
-    private final IFormService formService;
     private final ITransactionService transactionService;
 
     private final IFormPaymentService formPaymentService;
 
-    public CreateRedirectCommandHandler(IFormService formService, ITransactionService transactionService, IFormPaymentService formPaymentService) {
-        this.formService = formService;
+    public CreateRedirectCommandHandler(ITransactionService transactionService, IFormPaymentService formPaymentService) {
         this.transactionService = transactionService;
         this.formPaymentService = formPaymentService;
     }
 
     @Override
     public void handle(CreateRedirectCommand command) {
-        if (command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.AZUL.toString())) {
-            command.setResult(formService.redirectToBlueMerchant(command.getManageMerchantResponse(), command.getRequestDto()).getBody());
-        }
-        if (command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.CARDNET.toString())) {
-            command.setResult(formService.redirectToCardNetMerchant(command.getManageMerchantResponse(), command.getRequestDto()).getBody());
-        }
-
         TransactionDto transactionDto = transactionService.findById(command.getRequestDto().getTransactionId());
+
+        command.setResult(formPaymentService.redirectToMerchant(transactionDto, command.getManageMerchantResponse().getMerchantConfigResponse()).getBody());
 
         //Obtener la data que viene del FormServiceImpl y dividirla en merchantRequest([0]) y Map ([1])
         String[] dataForm = split(command.getResult());
@@ -42,11 +34,11 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
         if(dto == null ) {
             if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.AZUL.toString()))
             {formPaymentService.create(new TransactionPaymentLogsDto(
-                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null)
+                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null, false)
             );}
             if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.CARDNET.toString())){
                 formPaymentService.create(new TransactionPaymentLogsDto(
-                        UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null)
+                        UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null, false)
                 );}
         }
         else{

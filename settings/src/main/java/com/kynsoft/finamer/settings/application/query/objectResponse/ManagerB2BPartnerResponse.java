@@ -7,12 +7,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @NoArgsConstructor
 @Getter
 @Setter
-public class ManagerB2BPartnerResponse implements IResponse {
+public class ManagerB2BPartnerResponse implements IResponse, Serializable {
 
     private UUID id;
     private String code;

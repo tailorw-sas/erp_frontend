@@ -82,4 +82,14 @@ public class ManageCreditCardTypeServiceImpl implements IManageCreditCardTypeSer
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
+
+    @Override
+    public ManageCreditCardTypeDto findByFirstDigit(Integer digit) {
+        Optional<ManageCreditCardType> manageCreditCardType = this.repositoryQuery.findByFirstDigit(digit);
+        if (manageCreditCardType.isPresent()) {
+            return manageCreditCardType.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Credit Card Type not found.")));
+    }
+
 }

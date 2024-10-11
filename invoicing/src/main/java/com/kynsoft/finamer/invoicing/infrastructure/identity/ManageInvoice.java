@@ -98,6 +98,8 @@ public class ManageInvoice {
 
     private String sendStatusError;
 
+    private Boolean hasAttachments;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -187,7 +189,7 @@ public class ManageInvoice {
         if (dueAmount == null) {
             dueAmount = 0.0;
         }
-
+        hasAttachments = (attachments != null && !attachments.isEmpty());
     }
 
 }
