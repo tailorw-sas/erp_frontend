@@ -170,7 +170,7 @@ const columns: IColumn[] = [
   { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
-  { field: 'creditCardType', header: 'CC Type', type: 'text', },
+  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'methodType', header: 'Method Type', type: 'text' },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'text' },
@@ -241,6 +241,12 @@ async function getList() {
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = iterator.status.name
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel')) {
+        iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType')) {
+        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
         iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
