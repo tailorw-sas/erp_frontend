@@ -399,7 +399,7 @@ function onSortField(event: any) {
       event.sortField = 'agency.name'
     }
     if (event.sortField === 'invoiceNumber') {
-      event.sortField = 'invoiceNumberPrefix'
+      event.sortField = 'invoiceNo'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
