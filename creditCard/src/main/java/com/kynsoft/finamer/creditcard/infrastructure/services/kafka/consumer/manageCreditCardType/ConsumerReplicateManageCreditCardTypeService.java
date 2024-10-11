@@ -21,7 +21,7 @@ public class ConsumerReplicateManageCreditCardTypeService {
     @KafkaListener(topics = "finamer-replicate-manage-credit-card-type", groupId = "vcc-entity-replica")
     public void listen(ReplicateManageCreditCardTypeKafka entity) {
         try {
-            CreateManageCreditCardTypeCommand command = new CreateManageCreditCardTypeCommand(entity.getId(), entity.getCode(), entity.getName());
+            CreateManageCreditCardTypeCommand command = new CreateManageCreditCardTypeCommand(entity.getId(), entity.getCode(), entity.getName(),null,null, null);
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageCreditCardTypeService.class.getName()).log(Level.SEVERE, null, ex);

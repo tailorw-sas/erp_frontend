@@ -28,11 +28,12 @@ public class CreateManageAgencyCommand implements ICommand {
     private String city;
     private Integer creditDay;
     private Boolean autoReconcile;
+    private Boolean validateCheckout;
 
     public CreateManageAgencyCommand(UUID id, String code, String name, UUID client, EGenerationType generationType,
-                                     String status, String cif, String address, UUID sentB2BPartner, UUID cityState, UUID country,
-                                     String mailingAddress, String zipCode, String city, Integer creditDay,
-                                     Boolean autoReconcile) {
+            String status, String cif, String address, UUID sentB2BPartner, UUID cityState, UUID country,
+            String mailingAddress, String zipCode, String city, Integer creditDay,
+            Boolean autoReconcile, Boolean validateCheckout) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -49,9 +50,8 @@ public class CreateManageAgencyCommand implements ICommand {
         this.city = city;
         this.creditDay = creditDay;
         this.autoReconcile = autoReconcile;
+        this.validateCheckout = validateCheckout;
     }
-
-
 
     @Override
     public ICommandMessage getMessage() {

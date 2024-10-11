@@ -67,7 +67,8 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
                     dto.getZipCode(),
                     dto.getCity(),
                     dto.getCreditDay(),
-                    dto.getAutoReconcile()
+                    dto.getAutoReconcile(),
+                    dto.getValidateCheckout()
             ));
         }
     }

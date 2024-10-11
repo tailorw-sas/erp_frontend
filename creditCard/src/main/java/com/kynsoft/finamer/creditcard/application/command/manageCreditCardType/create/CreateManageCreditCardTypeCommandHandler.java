@@ -19,7 +19,11 @@ public class CreateManageCreditCardTypeCommandHandler implements ICommandHandler
         service.create(new ManageCreditCardTypeDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
+                command.getName(),
+                command.getDescription(),
+                command.getFirstDigit(),
+                command.getStatus()
+
         ));
     }
 }

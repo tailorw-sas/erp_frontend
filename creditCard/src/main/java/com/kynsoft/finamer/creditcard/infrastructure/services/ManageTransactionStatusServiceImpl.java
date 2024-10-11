@@ -180,4 +180,13 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
                DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND.getReasonPhrase());
     }
 
+
+    public ManageTransactionStatusDto findByETransactionStatus() {
+        Optional<ManageTransactionStatus> transactionStatus = this.repositoryQuery.findByReceivedStatus();
+        if (transactionStatus.isPresent()) {
+            return transactionStatus.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Transaction Status not found.")));
+    }
+
 }

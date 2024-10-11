@@ -46,11 +46,11 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
           if(dto == null) {
               if(merchantConfigDto.getMethod().equals(Method.AZUL.toString())){
                   formPaymentService.create(new TransactionPaymentLogsDto(
-                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null)
+                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null, false)
             );}
               if(merchantConfigDto.getMethod().equals(Method.CARDNET.toString())){
                   formPaymentService.create(new TransactionPaymentLogsDto(
-                     UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null)
+                     UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null, false)
                   );
               }
               }

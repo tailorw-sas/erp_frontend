@@ -97,6 +97,8 @@ public class ManageInvoice {
     private Double credits;
 
     private String sendStatusError;
+    @Transient
+    private Boolean hasAttachments;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -187,7 +189,7 @@ public class ManageInvoice {
         if (dueAmount == null) {
             dueAmount = 0.0;
         }
-
+        hasAttachments = (attachments != null && !attachments.isEmpty());
     }
 
 }
