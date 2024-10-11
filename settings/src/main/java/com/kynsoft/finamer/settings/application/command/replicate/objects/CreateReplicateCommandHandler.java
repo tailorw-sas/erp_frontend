@@ -299,7 +299,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 paymentAttachmentStatusDto.getDefaults(),
                                 paymentAttachmentStatusDto.isNonNone(),
                                 paymentAttachmentStatusDto.isPatWithAttachment(),
-                                paymentAttachmentStatusDto.isPwaWithOutAttachment()
+                                paymentAttachmentStatusDto.isPwaWithOutAttachment(),
+                                paymentAttachmentStatusDto.isSupported()
                         ));
                     }
                 }

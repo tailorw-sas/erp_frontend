@@ -19,8 +19,10 @@ public class CreateManagePaymentAttachmentStatusCommand implements ICommand {
     private boolean nonNone;
     private boolean patWithAttachment;
     private boolean pwaWithOutAttachment;
+    private boolean supported;
     
-    public CreateManagePaymentAttachmentStatusCommand(UUID id, final String code, final String name, String status, Boolean defaults, boolean nonNone, boolean patWithAttachment, boolean pwaWithOutAttachment) {
+    public CreateManagePaymentAttachmentStatusCommand(UUID id, final String code, final String name, String status, Boolean defaults, boolean nonNone, 
+                                                      boolean patWithAttachment, boolean pwaWithOutAttachment, boolean supported) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -29,6 +31,7 @@ public class CreateManagePaymentAttachmentStatusCommand implements ICommand {
         this.nonNone = nonNone;
         this.patWithAttachment = patWithAttachment;
         this.pwaWithOutAttachment = pwaWithOutAttachment;
+        this.supported = supported;
     }
 
     @Override
