@@ -42,11 +42,11 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
         if(dto == null ) {
             if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.AZUL.toString()))
             {formPaymentService.create(new TransactionPaymentLogsDto(
-                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null)
+                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null, false)
             );}
             if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.CARDNET.toString())){
                 formPaymentService.create(new TransactionPaymentLogsDto(
-                        UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null)
+                        UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null, false)
                 );}
         }
         else{
