@@ -11,8 +11,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -53,11 +55,14 @@ public class JasperReportTemplate extends BaseEntity {
     @JoinColumn(name = "db_conection_id", nullable = true)
     private DBConection dbConection;
 
+    @OneToMany(mappedBy = "jasperReportTemplate", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<JasperReportParameter> parametersList;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @UpdateTimestamp
     private LocalDateTime updateAt;
 
     public JasperReportTemplate(JasperReportTemplateDto jasperReportTemplateDto) {
