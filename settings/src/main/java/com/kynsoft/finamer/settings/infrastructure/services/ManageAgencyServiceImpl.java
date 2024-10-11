@@ -88,7 +88,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
-    @Cacheable(cacheNames = "manageAgencyAll", unless = "#result == null")
+    //@Cacheable(cacheNames = "manageAgencyAll", unless = "#result == null")
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
