@@ -24,11 +24,11 @@ public class ChangeAttachmentStatusCommandHandler implements ICommandHandler<Cha
         switch (command.getAttachmentStatus()) {
             case ATTACHMENT_WITH_ERROR -> {
                 paymentDto.setEAttachment(command.getAttachmentStatus());
-                paymentDto.setAttachmentStatus(this.paymentAttachmentStatusService.findByPatWithAttachment());
+                paymentDto.setAttachmentStatus(this.paymentAttachmentStatusService.findByPwaWithOutAttachment());
             }
             case ATTACHMENT_WITHOUT_ERROR -> {
                 paymentDto.setEAttachment(command.getAttachmentStatus());
-                paymentDto.setAttachmentStatus(this.paymentAttachmentStatusService.findByPwaWithOutAttachment());
+                paymentDto.setAttachmentStatus(this.paymentAttachmentStatusService.findByPatWithAttachment());
             }
             case NONE -> {
                 paymentDto.setEAttachment(command.getAttachmentStatus());
