@@ -21,6 +21,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.excel.ExportInvoiceRow;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
@@ -34,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageInvoiceServiceImpl implements IManageInvoiceService {
@@ -165,8 +167,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
                         && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
                         || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
-                Boolean isHasAttachments = entity.getAttachments() != null && !entity.getAttachments().isEmpty();
-                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSearch(), isHasAttachments, isCloseOperation);
+                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSearch(),
+                        entity.getHasAttachments(), isCloseOperation);
                 responseList.add(response);
             } catch (Exception e) {
                 System.err.print(e.getMessage());
@@ -177,30 +179,30 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     private PaginatedResponse getPaginatedSendListResponse(Page<ManageInvoice> data) {
-        List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
-        for (ManageInvoice entity : data.getContent()) {
-            try {
-                if (!hasPastDueBooking(entity.getBookings())) {
-                    ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSearch(), null, null);
-                    responseList.add(response);
-                }
-            } catch (Exception e) {
-                System.err.print(e.getMessage());
-            }
-        }
-        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
-                data.getTotalElements(), data.getSize(), data.getNumber());
-    }
+        List<ManageInvoiceSearchResponse> responseList = data.getContent().stream()
+                .filter(entity -> {
+                    ManageAgency agency = entity.getAgency();
+                    List<ManageBooking> bookings = entity.getBookings();
+                    return (agency != null && !agency.getValidateCheckout()) || (bookings != null && !hasPastDueBooking(bookings));
+                })
+                .map(entity -> new ManageInvoiceSearchResponse(entity.toAggregateSearch(), null, null))
+                .collect(Collectors.toList());
 
+        return new PaginatedResponse(
+                responseList,
+                data.getTotalPages(),
+                data.getNumberOfElements(),
+                data.getTotalElements(),
+                data.getSize(),
+                data.getNumber()
+        );
+    }
     public boolean hasPastDueBooking(List<ManageBooking> bookings) {
         LocalDateTime currentDate = LocalDateTime.now(); // Obtener la fecha y hora actual
-
-        // Iterar sobre los bookings asociados a la factura
         if (bookings != null && !bookings.isEmpty()) {
             for (ManageBooking booking : bookings) {
-                // Comprobar si el checkOut es menor que la fecha actual
                 if (booking.getCheckOut() != null && booking.getCheckOut().isBefore(currentDate)) {
-                    return true; // Si encontramos algún booking con checkOut anterior, devolver true
+                    return true;
                 }
             }
         }
