@@ -326,7 +326,7 @@ function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
 
-async function getHotelList(query = '',currentTradingCompany) {
+async function getHotelList(query = '',currentTradingCompany,currentHotelId) {
   try {
     const payload = {
       filter: [
@@ -373,7 +373,9 @@ async function getHotelList(query = '',currentTradingCompany) {
     
     hotelList.value = [];
     for (const iterator of dataList) {
+      if (iterator.id !== currentHotelId) {
       hotelList.value.push({
+      
         isNightType: iterator?.isNightType,
         id: iterator.id,
         name: iterator.name,
@@ -383,6 +385,9 @@ async function getHotelList(query = '',currentTradingCompany) {
         manageTradingCompanies: iterator.manageTradingCompanies
       });
     }
+    
+  }
+    
   } catch (error) {
     console.error('Error loading hotel list:', error);
   }
@@ -1747,7 +1752,7 @@ onMounted(async () => {
       // Si la validación pasa, actualizar el hotel
       onUpdate('hotel', $event);
     }"
-    @load="($event) => getHotelList($event, data.hotel.manageTradingCompanies.company)"
+    @load="($event) => getHotelList($event, data.hotel.manageTradingCompanies.company,data.hotel.id)"
   >
     <template #option="props">
       <span>{{ props.item.fullName }}</span>
