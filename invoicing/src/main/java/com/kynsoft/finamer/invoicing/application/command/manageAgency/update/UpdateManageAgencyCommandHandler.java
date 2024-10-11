@@ -59,6 +59,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
                 managerB2BPartnerService::findById);
         UpdateIfNotNull.updateInteger(dto::setCreditDay, command.getCreditDay(), dto.getCreditDay(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setAutoReconcile, command.getAutoReconcile(), dto.getAutoReconcile(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setValidateCheckout, command.getValidateCheckout(), dto.getValidateCheckout(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);

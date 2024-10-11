@@ -32,6 +32,7 @@ public class UpdateManageAgencyCommand implements ICommand {
     private String city;
     private Integer creditDay;
     private Boolean autoReconcile;
+    private Boolean validateCheckout;
 
     @Override
     public ICommandMessage getMessage() {
