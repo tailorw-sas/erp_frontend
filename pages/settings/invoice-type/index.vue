@@ -50,7 +50,7 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'enabledToPolicy',
-    header: 'Enabled to Policy',
+    header: 'Enabled To Policy',
     dataType: 'check',
     class: 'field col-12 required mb-3',
   },
