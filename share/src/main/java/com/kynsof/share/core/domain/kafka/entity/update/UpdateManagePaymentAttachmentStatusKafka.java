@@ -21,4 +21,5 @@ public class UpdateManagePaymentAttachmentStatusKafka implements Serializable {
     private boolean nonNone;
     private boolean patWithAttachment;
     private boolean pwaWithOutAttachment;
+    private boolean supported;
 }
