@@ -190,6 +190,7 @@ async function getPrintList() {
         loadingDelete: false,
         //  invoiceDate: new Date(iterator?.invoiceDate),
         agencyCd: iterator?.agency?.code,
+        hasAttachments:iterator.hasAttachments,
         aging: 0,
         dueAmount: iterator?.dueAmount || 0,
         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
@@ -395,11 +396,18 @@ function onSortField(event: any) {
     if (event.sortField === 'hotel') {
       event.sortField = 'hotel.name'
     }
+    if (event.sortField === 'status') {
+      event.sortField = 'invoiceStatus'
+    }
     if (event.sortField === 'agency') {
       event.sortField = 'agency.name'
     }
+    if (event.sortField === 'agencyCd') {
+      event.sortField = 'agency.code'
+    }
+   
     if (event.sortField === 'invoiceNumber') {
-      event.sortField = 'invoiceNo'
+      event.sortField = 'invoiceNumberPrefix'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
