@@ -23,16 +23,18 @@ public class ManageClientResponse implements IResponse, Serializable {
     private String name;
     private String description;
     private Status status;
-    //private List<ManageAgencyResponse> agencies;
+    private List<ManageAgencyResponse> agencies;
     private Boolean isNightType;
-
     public ManageClientResponse(ManageClientDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
-        //this.agencies = dto.getAgencies() != null ? dto.getAgencies().stream().map(ManageAgencyResponse::new).toList() : null;
+        this.agencies = dto.getAgencies() != null ? dto.getAgencies().stream().map(manageAgencySimpleDto -> {
+            return new ManageAgencyResponse(manageAgencySimpleDto.getId(),manageAgencySimpleDto.getCode(),
+                    manageAgencySimpleDto.getStatus(), manageAgencySimpleDto.getName(), manageAgencySimpleDto.getAgencyAlias());
+        }).toList() : null;
         this.isNightType = dto.getIsNightType();
     }
 

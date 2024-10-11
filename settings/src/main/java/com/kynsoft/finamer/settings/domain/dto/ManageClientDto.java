@@ -21,15 +21,15 @@ public class ManageClientDto implements Serializable {
     private String name;
     private String description;
     private Status status;
-   // private List<ManageAgencyDto> agencies;
+   private List<ManageAgencyDto> agencies;
     private Boolean isNightType;
 
-//    public ManageClientDto(UUID id, String code, String name, String description, Status status, Boolean isNightType) {
-//        this.id = id;
-//        this.code = code;
-//        this.name = name;
-//        this.description = description;
-//        this.status = status;
-//        this.isNightType = isNightType;
-//    }
+    public ManageClientDto(UUID id, String code, String name, String description, Status status, Boolean isNightType) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.isNightType = isNightType;
+    }
 }

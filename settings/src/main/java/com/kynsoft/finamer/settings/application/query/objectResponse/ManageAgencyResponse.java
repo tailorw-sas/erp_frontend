@@ -19,12 +19,12 @@ import java.util.UUID;
 @Setter
 public class ManageAgencyResponse implements IResponse, Serializable {
 
-    private UUID id;
-    private String code;
-    private Status status;
-    private String name;
-    private String cif;
-    private String agencyAlias;
+    private  UUID id;
+    private  String code;
+    private  Status status;
+    private  String name;
+    private  String cif;
+    private  String agencyAlias;
     private Boolean audit;
     private String zipCode;
     private String address;
@@ -49,6 +49,14 @@ public class ManageAgencyResponse implements IResponse, Serializable {
     private ManagerCountryResponse country;
     private ManageCityStateResponse cityState;
     private Boolean isDefault;
+
+    public ManageAgencyResponse(UUID id, String code, Status status, String name,  String agencyAlias) {
+        this.id = id;
+        this.code = code;
+        this.status = status;
+        this.name = name;
+        this.agencyAlias = agencyAlias;
+    }
 
     public ManageAgencyResponse(ManageAgencyDto dto){
         this.id = dto.getId();
@@ -82,4 +90,6 @@ public class ManageAgencyResponse implements IResponse, Serializable {
         this.cityState = dto.getCityState() != null ? new ManageCityStateResponse(dto.getCityState()) : null;
         this.isDefault = dto.getIsDefault();
     }
+
+
 }
