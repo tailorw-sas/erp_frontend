@@ -80,6 +80,8 @@ public class ManageAgency {
     private Integer creditDay;
     private Boolean autoReconcile;
 
+    private Boolean validateCheckout;
+
     public ManageAgency(ManageAgencyDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -97,6 +99,7 @@ public class ManageAgency {
         this.city = dto.getCity();
         this.creditDay = dto.getCreditDay();
         this.autoReconcile = dto.getAutoReconcile();
+        this.validateCheckout = dto.getValidateCheckout();
     }
 
     public ManageAgencyDto toAggregate() {
@@ -109,7 +112,8 @@ public class ManageAgency {
                 zipCode,
                 city,
                 creditDay,
-                autoReconcile
+                autoReconcile,
+                validateCheckout
         );
     }
 
@@ -123,7 +127,8 @@ public class ManageAgency {
                 zipCode,
                 city,
                 creditDay,
-                autoReconcile
+                autoReconcile,
+                validateCheckout
         );
     }
 }
