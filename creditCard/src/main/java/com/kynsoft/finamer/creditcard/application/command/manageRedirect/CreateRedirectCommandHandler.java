@@ -5,7 +5,6 @@ import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
-import com.kynsoft.finamer.creditcard.domain.services.IFormService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import org.springframework.stereotype.Component;
 
@@ -13,13 +12,11 @@ import java.util.UUID;
 
 @Component
 public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedirectCommand> {
-    private final IFormService formService;
     private final ITransactionService transactionService;
 
     private final IFormPaymentService formPaymentService;
 
-    public CreateRedirectCommandHandler(IFormService formService, ITransactionService transactionService, IFormPaymentService formPaymentService) {
-        this.formService = formService;
+    public CreateRedirectCommandHandler(ITransactionService transactionService, IFormPaymentService formPaymentService) {
         this.transactionService = transactionService;
         this.formPaymentService = formPaymentService;
     }

@@ -5,8 +5,8 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSessionResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
+import com.kynsoft.finamer.creditcard.domain.services.ICardNetJobService;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
-import com.kynsoft.finamer.creditcard.domain.services.IFormService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TransactionPaymentLogs;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageTransactionsRedirectLogsWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionPaymentLogsReadDataJPARepository;
@@ -33,14 +33,14 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     private final ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand;
     private final TransactionPaymentLogsReadDataJPARepository repositoryQuery;
 
-    private final IFormService formService;
+    private final ICardNetJobService cardNetJobService;
 
     public FormPaymentServiceImpl(ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand,
                                   TransactionPaymentLogsReadDataJPARepository repositoryQuery,
-                                  IFormService formService){
+                                  ICardNetJobService cardNetJobService){
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
-        this.formService = formService;
+        this.cardNetJobService = cardNetJobService;
     }
 
     public ResponseEntity<String> redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
@@ -204,15 +204,15 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                     "</body>" +
                     "</html>";
 
-            CardnetJobDto cardnetJobDto = formService.findByTransactionId(transactionDto.getTransactionUuid());
+            CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
             if(cardnetJobDto == null){
                 cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), sessionData.getSession().toString(), sessionData.getSessionKey().toString(), Boolean.FALSE);
-                formService.create(cardnetJobDto);
+                cardNetJobService.create(cardnetJobDto);
             }
             else{
                 cardnetJobDto.setSession(sessionData.getSession());
                 cardnetJobDto.setSessionKey(sessionData.getSessionKey());
-                formService.update(cardnetJobDto);
+                cardNetJobService.update(cardnetJobDto);
             }
             String concatenatedBody = htmlForm + requestData;
             return ResponseEntity.ok()
