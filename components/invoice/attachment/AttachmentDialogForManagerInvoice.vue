@@ -888,7 +888,6 @@ onMounted(async () => {
                 </span>
               </template>
             </DynamicTable>
-            <pre>{{ idItem }}</pre>
           </div>
         </div>
 
