@@ -101,6 +101,12 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 mb-3',
   },
   {
+    field: 'supported',
+    header: 'Supported',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
     field: 'permissionCode',
     header: 'Permission Code',
     dataType: 'text',
@@ -135,6 +141,7 @@ const item = ref<GenericObject>({
   nonNone: false,
   patWithAttachment: false,
   pwaWithOutAttachment: false,
+  supported: false,
   status: true
 })
 
@@ -150,6 +157,7 @@ const itemTemp = ref<GenericObject>({
   nonNone: false,
   patWithAttachment: false,
   pwaWithOutAttachment: false,
+  supported: false,
   status: true
 })
 
@@ -313,6 +321,7 @@ async function getItemById(id: string) {
         item.value.nonNone = response.nonNone === null ? false : response.nonNone
         item.value.patWithAttachment = response.patWithAttachment === null ? false : response.patWithAttachment
         item.value.pwaWithOutAttachment = response.pwaWithOutAttachment === null ? false : response.pwaWithOutAttachment
+        item.value.supported = response.supported === null ? false : response.supported
         item.value.navigate = response.navigate.map((nav: any) => {
           let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
           if (!enumStatus) {
