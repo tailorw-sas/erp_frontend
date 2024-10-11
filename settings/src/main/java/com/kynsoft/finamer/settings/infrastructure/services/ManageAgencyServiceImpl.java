@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.settings.application.query.manageAgency.search.ManageAgencyListResponse;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageAgencyResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -124,9 +125,9 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageAgency> data) {
-        List<ManageAgencyResponse> responseList = new ArrayList<>();
+        List<ManageAgencyListResponse> responseList = new ArrayList<>();
         for (ManageAgency entity : data.getContent()) {
-            responseList.add(new ManageAgencyResponse(entity.toAggregate()));
+            responseList.add(new ManageAgencyListResponse(entity.toAggregate()));
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(), data.getTotalElements(), data.getSize(), data.getNumber());
     }
