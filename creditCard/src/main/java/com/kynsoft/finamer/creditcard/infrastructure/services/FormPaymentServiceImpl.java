@@ -43,7 +43,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         this.formService = formService;
     }
 
-    public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+    public ResponseEntity<String> redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
 
         if (compareDates(transactionDto.getTransactionDate())) {
             try {
