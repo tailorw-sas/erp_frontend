@@ -97,7 +97,7 @@ public class ManageInvoice {
     private Double credits;
 
     private String sendStatusError;
-    @Transient
+
     private Boolean hasAttachments;
 
     @CreationTimestamp
