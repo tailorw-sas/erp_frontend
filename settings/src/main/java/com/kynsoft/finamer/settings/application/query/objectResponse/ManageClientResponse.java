@@ -23,7 +23,7 @@ public class ManageClientResponse implements IResponse, Serializable {
     private String name;
     private String description;
     private Status status;
-    private List<ManageAgencyResponse> agencies;
+    //private List<ManageAgencyResponse> agencies;
     private Boolean isNightType;
 
     public ManageClientResponse(ManageClientDto dto) {
@@ -32,7 +32,7 @@ public class ManageClientResponse implements IResponse, Serializable {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
-        this.agencies = dto.getAgencies() != null ? dto.getAgencies().stream().map(ManageAgencyResponse::new).toList() : null;
+        //this.agencies = dto.getAgencies() != null ? dto.getAgencies().stream().map(ManageAgencyResponse::new).toList() : null;
         this.isNightType = dto.getIsNightType();
     }
 
