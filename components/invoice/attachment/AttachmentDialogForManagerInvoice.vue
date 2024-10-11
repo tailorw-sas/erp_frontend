@@ -595,6 +595,7 @@ function requireConfirmationToDelete(event: any) {
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
+    idItemToLoadFirstTime.value = id
     loadingSaveAll.value = true
 
     if (props.isCreationDialog) {
@@ -768,12 +769,24 @@ function disabledBtnCreate(): boolean {
 
 function disabledBtnDelete(): boolean {
   if (props.selectedInvoiceObj && props.selectedInvoiceObj?.invoiceStatus?.processStatus) {
-    if (ListItems.value && ListItems.value.length > 1) {
-      return false
-    }
-    else {
+    const cantItemAttachInvDefault = ListItems.value?.filter((attachment: any) => attachment?.type?.attachInvDefault).length
+    const idObjSelected = ListItems.value?.find((attachment: any) => attachment?.type?.attachInvDefault)?.id
+    console.log({
+      idItem: idItem.value,
+      idObjSelected,
+      idItemToLoadFirstTime: idItemToLoadFirstTime.value,
+    })
+
+    if (cantItemAttachInvDefault === 1 && (idItem.value === idObjSelected || idItemToLoadFirstTime.value === idObjSelected)) {
       return true
     }
+    else
+      if (ListItems.value && ListItems.value.length > 1) {
+        return false
+      }
+      else {
+        return true
+      }
   }
   else {
     return true
@@ -875,6 +888,7 @@ onMounted(async () => {
                 </span>
               </template>
             </DynamicTable>
+            <pre>{{ idItem }}</pre>
           </div>
         </div>
 
