@@ -53,13 +53,17 @@ public class ManageClient implements Serializable {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
-       // this.agencies = dto.getAgencies() != null ? dto.getAgencies().stream().map(ManageAgency::new).toList() : null;
+        this.agencies = dto.getAgencies() != null ? dto.getAgencies().stream().map(ManageAgency::new).toList() : null;
         this.isNightType = dto.getIsNightType();
     }
 
     public ManageClientDto toAggregate() {
         List<ManageAgencyDto> agencies = this.agencies != null ? this.agencies.stream().map(ManageAgency::toAggregateSample).toList() : null;
-        return new ManageClientDto(id, code, name, description, status, isNightType);
+        ManageClientDto manageClientDto = new ManageClientDto(id, code, name, description, status, isNightType);
+        manageClientDto.setAgencies(agencies);
+        return manageClientDto;
     }
+
+
 
 }
