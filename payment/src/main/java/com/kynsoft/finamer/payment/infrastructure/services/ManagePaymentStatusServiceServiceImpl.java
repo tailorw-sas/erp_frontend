@@ -116,4 +116,14 @@ public class ManagePaymentStatusServiceServiceImpl implements IManagePaymentStat
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND.getReasonPhrase())));
     }
 
+    @Override
+    public ManagePaymentStatusDto findByConfirmed() {
+        Optional<ManagePaymentStatus> result = this.repositoryQuery.findByConfirmed();
+        if (result.isPresent()) {
+            return result.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND.getReasonPhrase())));
+    }
+
 }

@@ -66,7 +66,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             UpdateIfNotNull.updateDouble(paymentDto::setNotIdentified, paymentDto.getNotIdentified() - command.getAmount(), updatePayment::setUpdate);
 
             //Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
-            UpdateIfNotNull.updateDouble(paymentDto::setApplied, paymentDto.getApplied() + command.getAmount(), updatePayment::setUpdate);            
+            UpdateIfNotNull.updateDouble(paymentDto::setApplied, paymentDto.getApplied() + command.getAmount(), updatePayment::setUpdate);
 
             //Las transacciones de tipo Cash se restan al Payment Balance.
             UpdateIfNotNull.updateDouble(paymentDto::setPaymentBalance, paymentDto.getPaymentBalance() - command.getAmount(), updatePayment::setUpdate);
@@ -132,15 +132,17 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         }
 
         this.paymentDetailService.create(newDetailDto);
-        if (command.getApplyPayment() && paymentTransactionTypeDto.getCash()) {
-            ApplyPaymentDetailMessage message = command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking()));
-            paymentDto.setApplyPayment(message.getPayment().isApplyPayment());
-        }
 
         if (updatePayment.getUpdate() > 0) {
             this.paymentService.update(paymentDto);
 //            createPaymentAttachmentStatusHistory(employeeDto, paymentDto, paymentDetail, msg);
         }
+        if (command.getApplyPayment() && paymentTransactionTypeDto.getCash()) {
+            ApplyPaymentDetailMessage message = command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking()));
+            paymentDto.setApplyPayment(message.getPayment().isApplyPayment());
+            paymentDto.setPaymentStatus(message.getPayment().getPaymentStatus());
+        }
+
         command.setPaymentResponse(paymentDto);
     }
 
@@ -156,5 +158,4 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
 //
 //        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
 //    }
-
 }

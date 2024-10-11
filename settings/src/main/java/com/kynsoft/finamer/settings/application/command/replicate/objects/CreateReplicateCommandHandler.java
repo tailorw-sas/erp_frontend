@@ -328,7 +328,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_PAYMENT_STATUS -> {
                     for (ManagerPaymentStatusDto paymentStatusDto : this.paymentStatusService.findAllToReplicate()) {
-                        this.replicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(paymentStatusDto.getId(), paymentStatusDto.getCode(), paymentStatusDto.getName(), paymentStatusDto.getStatus().name(), paymentStatusDto.getApplied()));
+                        this.replicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(paymentStatusDto.getId(), paymentStatusDto.getCode(), paymentStatusDto.getName(), paymentStatusDto.getStatus().name(), paymentStatusDto.getApplied(), paymentStatusDto.isConfirmed()));
                     }
                 }
                 case MANAGE_PAYMENT_SOURCE -> {

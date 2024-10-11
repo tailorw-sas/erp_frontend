@@ -26,6 +26,9 @@ public class ManagePaymentStatus {
     private String name;
     private String status;
     private Boolean applied;
+    
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean confirmed;
 
     public ManagePaymentStatus(ManagePaymentStatusDto dto){
         this.id = dto.getId();
@@ -33,9 +36,10 @@ public class ManagePaymentStatus {
         this.name = dto.getName();
         this.status = dto.getStatus();
         this.applied = dto.getApplied();
+        this.confirmed = dto.isConfirmed();
     }
     
     public ManagePaymentStatusDto toAggregate(){
-        return new ManagePaymentStatusDto(id, code, name, status, applied);
+        return new ManagePaymentStatusDto(id, code, name, status, applied, confirmed);
     }
 }

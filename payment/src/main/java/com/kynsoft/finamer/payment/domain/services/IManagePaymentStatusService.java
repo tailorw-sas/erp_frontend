@@ -23,4 +23,6 @@ public interface IManagePaymentStatusService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     ManagePaymentStatusDto findByApplied();
+
+    ManagePaymentStatusDto findByConfirmed();
 }
