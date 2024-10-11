@@ -8,7 +8,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageStatusTransactionService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
-import com.kynsoft.finamer.creditcard.infrastructure.services.CardnetJobServiceImpl;
+import com.kynsoft.finamer.creditcard.infrastructure.services.CardNetJobServiceImpl;
 import com.kynsoft.finamer.creditcard.infrastructure.services.ManageCreditCardTypeServiceImpl;
 import com.kynsoft.finamer.creditcard.infrastructure.services.ManageTransactionStatusServiceImpl;
 import com.kynsoft.finamer.creditcard.infrastructure.services.TransactionPaymentLogsService;
@@ -23,11 +23,11 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
     private final IManageMerchantConfigService merchantConfigService;
     private final ManageCreditCardTypeServiceImpl creditCardTypeService;
     private final ManageTransactionStatusServiceImpl transactionStatusService;
-    private final CardnetJobServiceImpl cardnetJobService;
+    private final CardNetJobServiceImpl cardnetJobService;
     private final TransactionPaymentLogsService transactionPaymentLogsService;
 
     public UpdateManageStatusTransactionCommandHandler(ITransactionService transactionService, IManageStatusTransactionService statusTransactionService, IManageMerchantConfigService merchantConfigService,
-                                                       ManageCreditCardTypeServiceImpl creditCardTypeService, ManageTransactionStatusServiceImpl transactionStatusService, CardnetJobServiceImpl cardnetJobService,
+                                                       ManageCreditCardTypeServiceImpl creditCardTypeService, ManageTransactionStatusServiceImpl transactionStatusService, CardNetJobServiceImpl cardnetJobService,
                                                        TransactionPaymentLogsService transactionPaymentLogsService) {
 
         this.transactionService = transactionService;
