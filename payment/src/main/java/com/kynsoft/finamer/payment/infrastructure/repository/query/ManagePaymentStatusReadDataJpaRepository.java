@@ -17,4 +17,7 @@ public interface ManagePaymentStatusReadDataJpaRepository extends JpaRepository<
 
     @Query("SELECT b FROM ManagePaymentStatus b WHERE b.applied = true")
     Optional<ManagePaymentStatus> findByApplied();
+
+    @Query("SELECT b FROM ManagePaymentStatus b WHERE b.confirmed = true")
+    Optional<ManagePaymentStatus> findByConfirmed();
 }
