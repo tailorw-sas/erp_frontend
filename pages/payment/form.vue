@@ -867,9 +867,17 @@ function goToForm(item: string) {
 }
 
 function navigateToInvoice($event: any) {
-  if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
-    const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
-    window.open(url, '_blank')
+  if (objItemSelectedForRightClickNavigateToInvoice.value?.transactionType?.cash) {
+    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
+      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
+      window.open(url, '_blank')
+    }
+  }
+  else if (objItemSelectedForRightClickNavigateToInvoice.value?.transactionType?.applyDeposit) {
+    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id) {
+      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id}`
+      window.open(url, '_blank')
+    }
   }
 }
 

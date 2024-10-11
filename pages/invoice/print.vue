@@ -91,7 +91,7 @@ const ENUM_FILTER = [
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text' },
-  { field: 'manageInvoiceType', header: 'Type', type: 'select',objApi:confinvoiceApi }, 
+  { field: 'manageInvoiceType', header: 'Type', type: 'select', objApi: confinvoiceApi },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
@@ -153,14 +153,19 @@ async function getPrintList() {
     options.value.loading = true
     listPrintItems.value = []
     const newListItems = []
-    
-   payload.value.filter = [...payload.value.filter,
-     {
-      key: 'invoiceStatus',
-      operator: 'IN',
-      value: ['SENT', 'RECONCILED'],
-      logicalOperation: 'AND'
-    }]
+    const objFilterForInvoiceStatus = payload.value.filter.find(item => item.key === 'invoiceStatus')
+
+    if (objFilterForInvoiceStatus) {
+      objFilterForInvoiceStatus.value = ['SENT', 'RECONCILED']
+    }
+    else {
+      payload.value.filter.push({
+        key: 'invoiceStatus',
+        operator: 'IN',
+        value: ['SENT', 'RECONCILED'],
+        logicalOperation: 'AND'
+      })
+    }
 
     totalInvoiceAmount.value = 0
     totalDueAmount.value = 0
@@ -190,7 +195,7 @@ async function getPrintList() {
         loadingDelete: false,
         //  invoiceDate: new Date(iterator?.invoiceDate),
         agencyCd: iterator?.agency?.code,
-        hasAttachments:iterator.hasAttachments,
+        hasAttachments: iterator.hasAttachments,
         aging: 0,
         dueAmount: iterator?.dueAmount || 0,
         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
@@ -215,7 +220,7 @@ async function getPrintList() {
 
 async function savePrint() {
   options.value.loading = true
-  const startTime = Date.now(); // Captura el tiempo de inicio
+  const startTime = Date.now() // Captura el tiempo de inicio
   try {
     let nameOfPdf = ''
     const payloadTemp: any = {
@@ -244,17 +249,17 @@ async function savePrint() {
     a.click()
     window.URL.revokeObjectURL(url)
     document.body.removeChild(a)
-    const endTime = Date.now(); // Captura el tiempo de fin
-    const totalTime = ((endTime - startTime) / 1000).toFixed(2); // Tiempo total en segundos
-    const totalFiles = selectedElements.value.length; // Total de archivos descargados
+    const endTime = Date.now() // Captura el tiempo de fin
+    const totalTime = ((endTime - startTime) / 1000).toFixed(2) // Tiempo total en segundos
+    const totalFiles = selectedElements.value.length // Total de archivos descargados
 
     // Mostrar el mensaje en el toast
     toast.add({
-      severity:'info',
+      severity: 'info',
       summary: 'Confirmed',
       detail: `The process was executed successfully, records printed  ${totalFiles}`,
       life: 0 // Duración del toast en milisegundos
-    });
+    })
   }
   catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Transaction was failed', life: 3000 })
@@ -351,7 +356,6 @@ async function getAgencyList(query: string = '') {
   }
 }
 
-
 async function clearForm() {
   await goToList()
 }
@@ -365,31 +369,26 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
-
-   
-   /*   if (parseFilter[i]?.key === 'status') {
+      /*   if (parseFilter[i]?.key === 'status') {
         parseFilter[i].key = 'invoiceStatus'
       }
 */
-if (parseFilter[i]?.key === 'status') {
+      if (parseFilter[i]?.key === 'status') {
         parseFilter[i].key = 'invoiceStatus'
-  }
-
+      }
 
       if (parseFilter[i]?.key === 'invoiceNumber') {
         parseFilter[i].key = 'invoiceNumberPrefix'
       }
-
     }
   }
 
   payload.value.filter = [...parseFilter || []]
   getPrintList()
-  
 }
-  //payload.value.filter = [...parseFilter || []]
- // getPrintList()
-//}
+// payload.value.filter = [...parseFilter || []]
+// getPrintList()
+// }
 
 function onSortField(event: any) {
   if (event) {
@@ -405,7 +404,7 @@ function onSortField(event: any) {
     if (event.sortField === 'agencyCd') {
       event.sortField = 'agency.code'
     }
-   
+
     if (event.sortField === 'invoiceNumber') {
       event.sortField = 'invoiceNumberPrefix'
     }
@@ -572,16 +571,14 @@ onMounted(async () => {
             />
           </template>
 
-         
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center " style="font-weight: 700">
               <Row>
                 <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: 700" />
 
-                <Column :colspan="1"  :footer="`$${totalInvoiceAmount.toFixed(2)}`"footer-style="text-align:left; font-weight: 700" />
-                <Column :colspan="1"  :footer="`$${totalDueAmount.toFixed(2)}`" footer-style="text-align:left; font-weight: 700" />
-                <Column :colspan="3"  footer-style="text-align:right; font-weight: 700" />
-    
+                <Column :colspan="1" :footer="`$${totalInvoiceAmount.toFixed(2)}`"footer-style="text-align:left; font-weight: 700" />
+                <Column :colspan="1" :footer="`$${totalDueAmount.toFixed(2)}`" footer-style="text-align:left; font-weight: 700" />
+                <Column :colspan="3" footer-style="text-align:right; font-weight: 700" />
               </Row>
             </ColumnGroup>
           </template>
@@ -632,7 +629,7 @@ onMounted(async () => {
         </div>
 
         <div class="flex align-items-end justify-content-end">
-          <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" @click="savePrint"  :disabled="selectedElements.length === 0" />
+          <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" :disabled="selectedElements.length === 0" @click="savePrint" />
           <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
         </div>
       </div>

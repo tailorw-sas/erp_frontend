@@ -498,7 +498,7 @@ const columnsExpandTable: IColumn[] = [
   { field: 'fullName', header: 'Full Name', width: '200px', type: 'text', sortable: false },
   { field: 'reservationNumber', header: 'Reservation No.', width: '120px', type: 'text', sortable: false },
   // { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
-  { field: 'couponCode', header: 'Coupon No.', width: '120px', type: 'text', sortable: false },
+  { field: 'couponNumber', header: 'Coupon No.', width: '120px', type: 'text', sortable: false },
   // { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
   { field: 'checkIn', header: 'Check In', width: '120px', type: 'text', sortable: false },
   { field: 'checkOut', header: 'Check Out', width: '120px', type: 'text', sortable: false },
