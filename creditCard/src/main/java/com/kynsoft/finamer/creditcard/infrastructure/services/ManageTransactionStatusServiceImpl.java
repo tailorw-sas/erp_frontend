@@ -10,6 +10,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageTransactionStatusResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionResultStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
@@ -210,6 +211,11 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
             return transactionStatus.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Transaction Status not found.")));
+    }
+
+    public ManageTransactionStatusDto findByCardNetResponseCode(String responseCode) {
+        CardNetResponseStatus pairedStatus = CardNetResponseStatus.valueOfCode(responseCode);
+        return findByMerchantResponseStatus(pairedStatus.transactionStatus());
     }
 
     public ManageTransactionStatusDto findByMerchantResponseStatus(ETransactionResultStatus status) {
