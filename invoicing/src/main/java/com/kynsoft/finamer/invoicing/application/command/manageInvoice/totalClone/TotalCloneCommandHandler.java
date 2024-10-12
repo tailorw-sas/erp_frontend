@@ -382,7 +382,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         -roomRateDto.getInvoiceAmount(),
                         LocalDateTime.now(),
                         "Automatic adjustment generated to closed the invoice, because it was cloned",
-                        this.invoiceTransactionTypeService.findByDefaults(), //TODO: aclarar todos los campos que dejo en null
+                        this.invoiceTransactionTypeService.findByDefaults(),
                         null,
                         null,
                         employee
