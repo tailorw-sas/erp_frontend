@@ -977,7 +977,7 @@ function requireConfirmationToSave(item: any) {
 
 async function clearFormAndReload() {
   clearForm()
-  // await loadDefaultsValues()
+  await loadDefaultsValues()
 }
 
 function requireConfirmationToDelete(event: any) {
@@ -1144,12 +1144,14 @@ watch(() => idItem.value, async (newValue) => {
 // }, { deep: true })
 
 onMounted(async () => {
-  loadDefaultsValues()
   if (externalProps.isCreateOrEditPayment !== 'create') {
     await getList()
     if (idItem.value) {
       await getItemById(idItem.value)
     }
+  }
+  else {
+    loadDefaultsValues()
   }
 })
 </script>
