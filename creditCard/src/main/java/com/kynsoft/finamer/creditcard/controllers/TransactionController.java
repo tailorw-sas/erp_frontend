@@ -130,9 +130,7 @@ public class TransactionController {
     @PostMapping("/processMerchantBlueResponse")
     public ResponseEntity<?> processMerchantBlueResponse(@RequestBody UpdateManageStatusTransactionBlueCommandRequest request) {
         UpdateManageStatusTransactionBlueCommand updateManageStatusTransactionBlueCommand = UpdateManageStatusTransactionBlueCommand.builder()
-                .orderNumber(request.getOrderNumber())
-                .cardNumber(request.getCardNumber())
-                .merchantResponse(request.getMerchantResponse())
+                .request(request)
                 .build();
 
         UpdateManageStatusTransactionBlueCommandMessage response = mediator.send(updateManageStatusTransactionBlueCommand);

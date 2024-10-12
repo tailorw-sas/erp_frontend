@@ -10,9 +10,7 @@ import lombok.*;
 @Setter
 @Builder
 public class UpdateManageStatusTransactionBlueCommand implements ICommand {
-    private Long orderNumber;
-    private String cardNumber;
-    private String merchantResponse;
+    private UpdateManageStatusTransactionBlueCommandRequest request;
     private String result;
 
     public ICommandMessage getMessage() {

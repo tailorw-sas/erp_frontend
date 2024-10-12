@@ -29,21 +29,21 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
 
     @Override
     public void handle(UpdateManageStatusTransactionBlueCommand command) {
-        TransactionDto transactionDto = transactionService.findById(command.getOrderNumber());
-        ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(Character.getNumericValue(command.getCardNumber().charAt(0)));
-        ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus();
+        TransactionDto transactionDto = transactionService.findById(command.getRequest().getOrderNumber());
+        ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(Character.getNumericValue(command.getRequest().getCardNumber().charAt(0)));
+        ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(command.getRequest().getStatus());
         TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
 
 
         //Comenzar a actualizar lo referente a la transaccion en las diferntes tablas
         //1- Actualizar data in vcc_transaction
-        transactionDto.setCardNumber(command.getCardNumber());
+        transactionDto.setCardNumber(command.getRequest().getCardNumber());
         transactionDto.setCreditCardType(creditCardTypeDto);
         transactionDto.setStatus(transactionStatusDto);
         this.transactionService.update(transactionDto);
 
         //3- Actualizar vcc_transaction_payment_logs columna merchant_respose en vcc_transaction
-        transactionPaymentLogsDto.setMerchantResponse(command.getMerchantResponse());
+        transactionPaymentLogsDto.setMerchantResponse(command.getRequest().getMerchantResponse());
         transactionPaymentLogsDto.setIsProcessed(true);
         this.transactionPaymentLogsService.update(transactionPaymentLogsDto);
 
