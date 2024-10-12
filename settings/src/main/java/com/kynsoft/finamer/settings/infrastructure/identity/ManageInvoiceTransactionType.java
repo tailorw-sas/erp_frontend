@@ -60,6 +60,9 @@ public class ManageInvoiceTransactionType implements Serializable {
     @Column(name = "default_remark")
     private String defaultRemark;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean defaults;
+
     public ManageInvoiceTransactionType(ManageInvoiceTransactionTypeDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -72,12 +75,13 @@ public class ManageInvoiceTransactionType implements Serializable {
         this.isRemarkRequired = dto.getIsRemarkRequired();
         this.minNumberOfCharacters = dto.getMinNumberOfCharacters();
         this.defaultRemark = dto.getDefaultRemark();
+        this.defaults = dto.isDefaults();
     }
 
     public ManageInvoiceTransactionTypeDto toAggregate(){
         return new ManageInvoiceTransactionTypeDto(
                 id, code, description, status, name, isAgencyRateAmount, isNegative, isPolicyCredit,
-                isRemarkRequired, minNumberOfCharacters, defaultRemark
+                isRemarkRequired, minNumberOfCharacters, defaultRemark, defaults
         );
     }
 }
