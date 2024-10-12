@@ -63,7 +63,10 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(
                     Character.getNumericValue(transactionResponse.getCreditCardNumber().charAt(0))
             );
-            ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus();
+
+            //Obtener estado de la transacción correspondiente dado el responseCode del merchant
+            ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByCardNetResponseCode(transactionResponse.getResponseCode());
+
             TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
 
             // 1- Actualizar data en vcc_transaction
