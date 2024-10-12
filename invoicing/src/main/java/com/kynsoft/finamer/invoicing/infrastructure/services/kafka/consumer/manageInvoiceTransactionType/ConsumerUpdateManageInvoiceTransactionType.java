@@ -30,7 +30,8 @@ public class ConsumerUpdateManageInvoiceTransactionType {
 
             UpdateManageInvoiceTransactionTypeCommand command = new UpdateManageInvoiceTransactionTypeCommand(
                     objKafka.getId(),
-                    objKafka.getName());
+                    objKafka.getName(),
+                    objKafka.isDefaults());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageInvoiceTransactionType.class.getName()).log(Level.SEVERE, null, ex);

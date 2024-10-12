@@ -32,6 +32,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IManageRoomCategoryService roomCategoryService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
+    private final IManageInvoiceTransactionTypeService invoiceTransactionTypeService;
 
     public TotalCloneCommandHandler(IManageInvoiceService invoiceService,
                                     IManageAgencyService agencyService,
@@ -43,7 +44,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                                     IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
                                     IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
                                     IInvoiceStatusHistoryService invoiceStatusHistoryService,
-                                    IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+                                    IAttachmentStatusHistoryService attachmentStatusHistoryService, IManageInvoiceTransactionTypeService invoiceTransactionTypeService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -57,6 +58,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.roomCategoryService = roomCategoryService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.invoiceTransactionTypeService = invoiceTransactionTypeService;
     }
 
 
@@ -380,7 +382,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         -roomRateDto.getInvoiceAmount(),
                         LocalDateTime.now(),
                         "Automatic adjustment generated to closed the invoice, because it was cloned",
-                        null, //TODO: aclarar todos los campos que dejo en null
+                        this.invoiceTransactionTypeService.findByDefaults(), //TODO: aclarar todos los campos que dejo en null
                         null,
                         null,
                         employee
