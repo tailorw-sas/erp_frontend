@@ -25,6 +25,10 @@ const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingDelete = ref(false)
 const loadingSearch = ref(false)
+
+const reportParams = ref<any>({})
+const dialogReportParams = ref(false)
+
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
@@ -48,7 +52,7 @@ const item = ref<GenericObject>({
   type: '',
   query: '',
   description: '',
-  parameters: '',
+  reportParams: '',
 })
 
 const itemTemp = ref<GenericObject>({
@@ -58,7 +62,7 @@ const itemTemp = ref<GenericObject>({
   type: '',
   query: '',
   description: '',
-  parameters: '',
+  reportParams: '',
   status: true,
 })
 
@@ -113,6 +117,13 @@ const fields: Array<FieldDefinitionType> = [
     header: 'File',
     dataType: 'file',
     class: 'field col-12 required',
+  },
+  {
+    field: 'reportParams',
+    header: 'Report Params',
+    hidden: true,
+    dataType: 'text',
+    class: 'field col-12',
   },
   {
     field: 'status',
@@ -197,6 +208,7 @@ function clearForm() {
   idItem.value = ''
   fields[0].disabled = false
   updateFieldProperty(fields, 'status', 'disabled', true)
+  updateFieldProperty(fields, 'reportParams', 'hidden', true)
   formReload.value++
 }
 
@@ -273,6 +285,7 @@ async function getItemById(id: string) {
         }
         item.value.query = response.query
       }
+      updateFieldProperty(fields, 'reportParams', 'hidden', false)
       updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
     }
@@ -484,6 +497,17 @@ function mapFunction(data: DataList): ListItem {
 async function getdbConnectionList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   dbConnectionList.value = await getDataList<DataList, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'createdAt', sortType: ENUM_SHORT_TYPE.ASC })
 }
+
+async function reportParamsOpenDialog(item: any) {
+  reportParams.value = {
+    reportConfig: {
+      id: item.id,
+      name: item.name,
+      status: 'ACTIVE'
+    }
+  }
+  dialogReportParams.value = true
+}
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -505,6 +529,7 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(() => {
+  updateFieldProperty(fields, 'reportParams', 'hidden', true)
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
@@ -625,6 +650,16 @@ onMounted(() => {
               />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
+            <template #field-reportParams>
+              <InputGroup v-if="!loadingSaveAll">
+                <InputText placeholder="Create the parameters for this report." disabled />
+                <Button
+                  icon="pi pi-eye" type="button" text aria-haspopup="true" aria-controls="overlay_menu_filter"
+                  @click="reportParamsOpenDialog(item)"
+                />
+              </InputGroup>
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
             <!-- <template #field-file="{ item: data, onUpdate }">
               <FileUpload
                 v-if="!loadingSaveAll" :max-file-size="1000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept=".jrxml"
@@ -673,6 +708,13 @@ onMounted(() => {
               </FileUpload>
             </template> -->
           </EditFormV2>
+          <DynamicContentModal
+            :visible="dialogReportParams"
+            :component="ContactAgencyPage"
+            :component-props="reportParams"
+            :header="`Params for Report ${item.code} - ${item.name}`"
+            @close="dialogReportParams = $event"
+          />
         </div>
       </div>
     </div>

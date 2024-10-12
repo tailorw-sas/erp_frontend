@@ -1397,8 +1397,11 @@ onMounted(() => {
             </template>
           </EditFormV2>
           <DynamicContentModal
-            :visible="contactDialogVisible" :component="ContactAgencyPage" :component-props="agencyContact"
-            :header="`Agency ${item.code} - ${item.name}`" @close="contactDialogVisible = $event"
+            :visible="contactDialogVisible"
+            :component="ContactAgencyPage"
+            :component-props="agencyContact"
+            :header="`Agency ${item.code} - ${item.name}`"
+            @close="contactDialogVisible = $event"
           />
         </div>
       </div>
