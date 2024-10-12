@@ -523,7 +523,40 @@ onMounted(() => {
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
-          />
+          >
+            <template #field-confirmed="{ item: data, onUpdate }">
+              <Checkbox
+                id="confirmed"
+                v-model="data.confirmed"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('confirmed', $event)
+                  if ($event) {
+                    onUpdate('applied', false)
+                  }
+                }"
+              />
+              <label for="confirmed" class="ml-2 font-bold">
+                Confirmed
+              </label>
+            </template>
+            <template #field-applied="{ item: data, onUpdate }">
+              <Checkbox
+                id="applied"
+                v-model="data.applied"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('applied', $event)
+                  if ($event) {
+                    onUpdate('confirmed', false)
+                  }
+                }"
+              />
+              <label for="applied" class="ml-2 font-bold">
+                Applied
+              </label>
+            </template>
+          </EditFormV2>
         </div>
       </div>
     </div>
