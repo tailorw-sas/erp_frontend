@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.ManageStatusTransaction.update;
+package com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update;
 
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetTransactionDataResponse;

@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.ManageStatusTransaction.update;
+package com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update;
 
 import lombok.*;
 
