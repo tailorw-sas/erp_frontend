@@ -89,6 +89,18 @@ const fields: Array<FieldDefinitionType> = [
     field: 'receivedStatus',
     header: 'Received Status',
     dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'declinedStatus',
+    header: 'Declined Status',
+    dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'cancelledStatus',
+    header: 'Cancelled Status',
+    dataType: 'check',
     class: 'field col-12 mb-3',
   },
   {
@@ -117,6 +129,8 @@ const item = ref<GenericObject>({
   sentStatus: false,
   refundStatus: false,
   receivedStatus: false,
+  declinedStatus: false,
+  cancelledStatus: false,
   description: '',
   status: true
 })
@@ -131,6 +145,8 @@ const itemTemp = ref<GenericObject>({
   sentStatus: false,
   refundStatus: false,
   receivedStatus: false,
+  declinedStatus: false,
+  cancelledStatus: false,
   status: true
 })
 
@@ -316,7 +332,7 @@ async function getItemById(id: string) {
   try {
     const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
     if (response) {
-      const { id, name, description, status, code, enablePayment, visible, navigate, sentStatus, refundStatus, receivedStatus } = response
+      const { id, name, description, status, code, enablePayment, visible, navigate, sentStatus, refundStatus, receivedStatus, declinedStatus, cancelledStatus } = response
 
       item.value = {
         ...item.value,
@@ -330,6 +346,8 @@ async function getItemById(id: string) {
         sentStatus,
         refundStatus,
         receivedStatus,
+        declinedStatus,
+        cancelledStatus,
         navigate: navigate
           .map((nav: any) => navigateListItems.value.find((item: any) => item.id === nav?.id))
           .filter((nav: any) => nav !== null)
