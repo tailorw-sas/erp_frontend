@@ -151,6 +151,16 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
     }
 
     @Override
+    public Long countByCancelledStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByCancelledStatusAndNotId(id);
+    }
+
+    @Override
+    public Long countByDeclinedStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByDeclinedStatusAndNotId(id);
+    }
+
+    @Override
     public ManageTransactionStatusDto findByETransactionStatus(ETransactionStatus status) {
        switch (status) {
            case SENT -> {
@@ -172,6 +182,18 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
                        new BusinessException(
                                DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND,
                                DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND.getReasonPhrase())
+               );
+           } case CANCELLED -> {
+               return this.repositoryQuery.findByCancelledStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_CANCELLED_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_CANCELLED_NOT_FOUND.getReasonPhrase())
+               );
+           } case DECLINED -> {
+               return this.repositoryQuery.findByDeclinedStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND.getReasonPhrase())
                );
            }
        }
