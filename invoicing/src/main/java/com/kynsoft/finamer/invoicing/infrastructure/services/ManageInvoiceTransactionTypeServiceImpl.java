@@ -54,8 +54,8 @@ public class ManageInvoiceTransactionTypeServiceImpl implements IManageInvoiceTr
         ManageInvoiceTransactionType delete = new ManageInvoiceTransactionType(dto);
 
         delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
         delete.setDeletedAt(LocalDateTime.now());
+        delete.setDefaults(false);
 
         repositoryCommand.save(delete);
     }
@@ -76,6 +76,11 @@ public class ManageInvoiceTransactionTypeServiceImpl implements IManageInvoiceTr
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
+    }
+
+    @Override
+    public ManageInvoiceTransactionTypeDto findByDefaults() {
+        return this.repositoryQuery.findByDefaults().map(ManageInvoiceTransactionType::toAggregate).orElse(null);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

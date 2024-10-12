@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTransacti
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceTransactionType.ManageInvoiceTransactionTypeCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceTransactionType.ManageInvoiceTransactionTypeCodeSizeRule;
+import com.kynsoft.finamer.settings.domain.rules.manageInvoiceTransactionType.ManageInvoiceTransactionTypeDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceTransactionType.ManageInvoiceTransactionTypeNameMustBeNullRule;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceTransactionType.ProducerReplicateManageInvoiceTransactionTypeService;
@@ -28,7 +29,9 @@ public class CreateManageInvoiceTransactionTypeCommandHandler implements IComman
         RulesChecker.checkRule(new ManageInvoiceTransactionTypeCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManageInvoiceTransactionTypeNameMustBeNullRule(command.getName()));
         RulesChecker.checkRule(new ManageInvoiceTransactionTypeCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
-
+        if(command.isDefaults()) {
+            RulesChecker.checkRule(new ManageInvoiceTransactionTypeDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
         service.create(new ManageInvoiceTransactionTypeDto(
                 command.getId(),
                 command.getCode(),
@@ -40,9 +43,10 @@ public class CreateManageInvoiceTransactionTypeCommandHandler implements IComman
                 command.getIsPolicyCredit(),
                 command.getIsRemarkRequired(),
                 command.getMinNumberOfCharacters(),
-                command.getDefaultRemark()
+                command.getDefaultRemark(),
+                command.isDefaults()
         ));
 
-        this.producerReplicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(command.getId(), command.getCode(), command.getName()));
+        this.producerReplicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(command.getId(), command.getCode(), command.getName(), command.isDefaults()));
     }
 }
