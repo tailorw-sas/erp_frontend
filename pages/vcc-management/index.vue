@@ -114,7 +114,7 @@ const legend = ref(
       colClass: 'pr-3',
     },
     {
-      name: 'Canceled',
+      name: 'Cancelled',
       color: '#FF1405',
       colClass: 'pr-3',
     },
@@ -137,7 +137,7 @@ const sClassMap: IStatusClass[] = [
   { status: 'Received', class: 'text-received' },
   { status: 'Declined', class: 'text-declined' },
   { status: 'Paid', class: 'text-paid' },
-  { status: 'Canceled', class: 'text-canceled' },
+  { status: 'Cancelled', class: 'text-cancelled' },
   { status: 'Reconciled', class: 'text-reconciled' },
   { status: 'Refund', class: 'text-refund' },
 ]
@@ -1031,7 +1031,7 @@ onMounted(() => {
   background-color: #2E892E;
   color: #fff;
 }
-.text-canceled {
+.text-cancelled {
   background-color: #FF1405;
   color: #fff;
 }
