@@ -3014,6 +3014,7 @@ onMounted(async () => {
             :icon="column.icon"
             class="p-button-rounded p-button-text w-2rem h-2rem"
             aria-label="Submit"
+            :disabled="objData?.attachmentStatus?.nonNone"
             :style="{ color: objData.color }"
           />
         </div>

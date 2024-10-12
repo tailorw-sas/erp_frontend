@@ -493,7 +493,6 @@ onMounted(() => {
         </Accordion>
       </div>
       <DynamicTable
-
         :data="listItems"
         :columns="columns"
         :options="options"
