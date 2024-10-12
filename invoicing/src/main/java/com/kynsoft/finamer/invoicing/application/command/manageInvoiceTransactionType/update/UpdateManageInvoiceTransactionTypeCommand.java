@@ -1,9 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoiceTransactionType.update;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
-import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 

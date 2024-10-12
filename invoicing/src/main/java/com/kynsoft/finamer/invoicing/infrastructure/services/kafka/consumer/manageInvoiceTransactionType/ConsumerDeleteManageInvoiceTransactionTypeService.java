@@ -1,9 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageInvoiceTransactionType;
 
 import com.kynsof.share.core.domain.kafka.entity.ObjectIdKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTransactionTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoiceTransactionType.create.CreateManageInvoiceTransactionTypeCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoiceTransactionType.delete.DeleteManageInvoiceTransactionTypeCommand;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
