@@ -245,7 +245,7 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel')) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType')) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
         iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
