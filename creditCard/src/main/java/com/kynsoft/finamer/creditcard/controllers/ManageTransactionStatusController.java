@@ -77,16 +77,5 @@ public class ManageTransactionStatusController {
         UpdateManageTransactionStatusMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
     }
-    @PostMapping("/transactionSuccessBlue")
-    public ResponseEntity<?> updateTransactionSuccessBlue(@RequestBody UpdateManageStatusTransactionBlueCommandRequest request) {
-        UpdateManageStatusTransactionBlueCommand updateManageStatusTransactionBlueCommand = UpdateManageStatusTransactionBlueCommand.builder()
-                .orderNumber(request.getOrderNumber())
-                .cardNumber(request.getCardNumber())
-                .merchantResponse(request.getMerchantResponse())
-                .build();
-
-        UpdateManageStatusTransactionBlueCommandMessage response = mediator.send(updateManageStatusTransactionBlueCommand);
-        return ResponseEntity.ok(response);
-    }
 
 }
