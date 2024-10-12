@@ -15,15 +15,13 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
     private final ITransactionService transactionService;
     private final ManageCreditCardTypeServiceImpl creditCardTypeService;
     private final ManageTransactionStatusServiceImpl transactionStatusService;
-    private final CardNetJobServiceImpl cardnetJobService;
     private final TransactionPaymentLogsService transactionPaymentLogsService;
     public UpdateManageStatusTransactionBlueCommandHandler(ITransactionService transactionService, ManageCreditCardTypeServiceImpl creditCardTypeService,
-                                                           ManageTransactionStatusServiceImpl transactionStatusService, CardNetJobServiceImpl cardnetJobService,
+                                                           ManageTransactionStatusServiceImpl transactionStatusService,
                                                            TransactionPaymentLogsService transactionPaymentLogsService){
         this.transactionService = transactionService;
         this.creditCardTypeService = creditCardTypeService;
         this.transactionStatusService = transactionStatusService;
-        this.cardnetJobService = cardnetJobService;
         this.transactionPaymentLogsService = transactionPaymentLogsService;
     }
 
