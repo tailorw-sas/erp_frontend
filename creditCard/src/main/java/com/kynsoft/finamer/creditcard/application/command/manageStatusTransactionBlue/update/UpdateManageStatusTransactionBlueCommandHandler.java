@@ -32,7 +32,6 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         TransactionDto transactionDto = transactionService.findById(command.getOrderNumber());
         ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(Character.getNumericValue(command.getCardNumber().charAt(0)));
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus();
-        CardnetJobDto cardnetJobDto = cardnetJobService.findByTransactionId(transactionDto.getTransactionUuid());
         TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
 
 
@@ -42,10 +41,6 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         transactionDto.setCreditCardType(creditCardTypeDto);
         transactionDto.setStatus(transactionStatusDto);
         this.transactionService.update(transactionDto);
-
-        //2- Actualizar data in vcc_cardnet_job
-        cardnetJobDto.setIsProcessed(true);
-        this.cardnetJobService.update(cardnetJobDto);
 
         //3- Actualizar vcc_transaction_payment_logs columna merchant_respose en vcc_transaction
         transactionPaymentLogsDto.setMerchantResponse(command.getMerchantResponse());

@@ -15,6 +15,9 @@ import com.kynsoft.finamer.creditcard.application.command.manageRedirect.CreateR
 import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentCommandMessage;
 import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentRequest;
+import com.kynsoft.finamer.creditcard.application.command.manageStatusTransactionBlue.update.UpdateManageStatusTransactionBlueCommand;
+import com.kynsoft.finamer.creditcard.application.command.manageStatusTransactionBlue.update.UpdateManageStatusTransactionBlueCommandMessage;
+import com.kynsoft.finamer.creditcard.application.command.manageStatusTransactionBlue.update.UpdateManageStatusTransactionBlueCommandRequest;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionRequest;
@@ -114,13 +117,25 @@ public class TransactionController {
         return ResponseEntity.ok(createRedirectCommandMessage);
     }
 
-    @PostMapping("/updateTransactionPayment")
-    public ResponseEntity<?> updateTransactionPayment(@RequestBody UpdateManageStatusTransactionCommandRequest request) {
+    @PostMapping("/processMerchantCardNetResponse")
+    public ResponseEntity<?> processMerchantCardNetResponse(@RequestBody UpdateManageStatusTransactionCommandRequest request) {
         UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()
                 .session(request.getSession())
                 .build();
 
         UpdateManageStatusTransactionCommandMessage response = mediator.send(updateManageStatusTransactionCommandRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/processMerchantBlueResponse")
+    public ResponseEntity<?> processMerchantBlueResponse(@RequestBody UpdateManageStatusTransactionBlueCommandRequest request) {
+        UpdateManageStatusTransactionBlueCommand updateManageStatusTransactionBlueCommand = UpdateManageStatusTransactionBlueCommand.builder()
+                .orderNumber(request.getOrderNumber())
+                .cardNumber(request.getCardNumber())
+                .merchantResponse(request.getMerchantResponse())
+                .build();
+
+        UpdateManageStatusTransactionBlueCommandMessage response = mediator.send(updateManageStatusTransactionBlueCommand);
         return ResponseEntity.ok(response);
     }
 
