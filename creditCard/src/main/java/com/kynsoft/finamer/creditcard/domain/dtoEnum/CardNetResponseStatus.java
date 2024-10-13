@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.domain.dtoEnum;
 
+import com.kynsoft.finamer.creditcard.domain.dto.CardNetStatusResponseDto;
 import jakarta.annotation.Nullable;
 import lombok.Getter;
 
@@ -129,6 +130,11 @@ public enum CardNetResponseStatus implements ICardNetResponseStatus {
         }
         return status;
     }
+
+    public CardNetStatusResponseDto toDTO() {
+        return new CardNetStatusResponseDto(this.code, this.transactionResultStatus.name(), this.message);
+    }
+
 
     /**
      * Resolve the given status code to an {@code CardNetResponseStatus}, if possible.
