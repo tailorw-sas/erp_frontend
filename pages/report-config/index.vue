@@ -4,6 +4,7 @@ import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import ReportParamPage from './params.vue'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
@@ -99,6 +100,13 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('DB Connection'),
   },
   {
+    field: 'reportParams',
+    header: 'Report Params',
+    hidden: true,
+    dataType: 'text',
+    class: 'field col-12',
+  },
+  {
     field: 'query',
     header: 'Query',
     dataType: 'textarea',
@@ -117,13 +125,6 @@ const fields: Array<FieldDefinitionType> = [
     header: 'File',
     dataType: 'file',
     class: 'field col-12 required',
-  },
-  {
-    field: 'reportParams',
-    header: 'Report Params',
-    hidden: true,
-    dataType: 'text',
-    class: 'field col-12',
   },
   {
     field: 'status',
@@ -710,7 +711,7 @@ onMounted(() => {
           </EditFormV2>
           <DynamicContentModal
             :visible="dialogReportParams"
-            :component="ContactAgencyPage"
+            :component="ReportParamPage"
             :component-props="reportParams"
             :header="`Params for Report ${item.code} - ${item.name}`"
             @close="dialogReportParams = $event"

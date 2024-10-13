@@ -359,3 +359,16 @@ export enum CALENDAR_MODE {
   DATE = 'date',
   UNDEFINED = 'undefined',
 }
+
+export const FORM_FIELD_TYPE = [
+  { id: 'select', name: 'Select' },
+  { id: 'text', name: 'Text', show: false },
+  { id: 'number', name: 'Number' },
+  { id: 'email', name: 'Email' },
+  { id: 'date', name: 'Date' },
+  // { id: 'time', name: 'Time' },
+  { id: 'checkbox', name: 'Checkbox' },
+  { id: 'radio', name: 'Radio' },
+  { id: 'textarea', name: 'Textarea' },
+  // { id: 'file', name: 'File' },
+]

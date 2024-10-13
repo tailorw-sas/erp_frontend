@@ -34,6 +34,7 @@ const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
+const errorsListParent = reactive<{ [key: string]: string[] }>({})
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
@@ -59,17 +60,28 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Report',
     dataType: 'select',
     class: 'field col-12 required',
+    disabled: true,
     validation: z.object({
       id: z.string().min(1, 'The report field is required'),
       name: z.string().min(1, 'The report field is required'),
     })
   },
   {
+    field: 'type',
+    header: 'Type',
+    dataType: 'select',
+    class: 'field col-12 required',
+    validation: z.object({
+      id: z.string().min(1, 'The type field is required'),
+      name: z.string().min(1, 'The type field is required'),
+    })
+  },
+  {
     field: 'paramName',
     header: 'Param Name',
     dataType: 'text',
-    class: 'field col-12',
-    validation: z.string().trim()
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The param name field is required').max(50, 'Maximum 100 characters')
   },
   {
     field: 'label',
@@ -112,7 +124,7 @@ const itemTemp = ref<GenericObject>(
     module: '',
     service: '',
     label: '',
-    reportId: ''
+    reportId: props.reportConfig
   }
 )
 
@@ -128,9 +140,9 @@ const columns: IColumn[] = [
   { field: 'reportId', header: 'Report', type: 'text', objApi: { moduleApi: 'report', uriApi: 'jasper-report-template' }, showFilter: false, sortable: false },
   { field: 'paramName', header: 'Param Name', type: 'text' },
   { field: 'label', header: 'Label', type: 'text' },
-  { field: 'type', header: 'Type', type: 'text' },
-  { field: 'module', header: 'Module', type: 'text' },
-  { field: 'service', header: 'Service', type: 'text' },
+  { field: 'type', header: 'Type', type: 'local-select', localItems: FORM_FIELD_TYPE, sortable: true },
+  // { field: 'module', header: 'Module', type: 'text' },
+  // { field: 'service', header: 'Service', type: 'text' },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -145,7 +157,14 @@ const options = ref({
 })
 const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
-  filter: [],
+  filter: [
+    {
+      key: 'jasperReportTemplate.id',
+      operator: 'LIKE',
+      value: props.reportConfig?.id || '',
+      logicalOperation: 'AND'
+    },
+  ],
   query: '',
   pageSize: 20,
   page: 0,
@@ -171,8 +190,6 @@ function clearForm() {
   else {
     item.value.reportId = props.reportConfig
   }
-  regionList.value = []
-  hotelList.value = []
 }
 
 async function getList() {
@@ -299,6 +316,7 @@ async function getItemById(id: string) {
       if (response) {
         item.value = { ...response }
         item.value.id = response.id
+        item.value.type = FORM_FIELD_TYPE.find(x => x.id === response.type)
         item.value.reportId = response.jasperReportTemplate
           ? {
               id: response.jasperReportTemplate.id,
@@ -327,6 +345,7 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.reportId = typeof payload.reportId === 'object' ? payload.reportId.id : payload.reportId
+    payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
@@ -444,6 +463,10 @@ function onSortField(event: any) {
   }
 }
 
+// function initData() {
+//   item.value.reportId = props.reportConfig
+// }
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -465,7 +488,7 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(async () => {
-  // initData()
+  clearForm()
   // filterToSearch.value.criterial = ENUM_FILTER[0]
 
   await getList()
@@ -511,11 +534,13 @@ onMounted(async () => {
             :fields="fields"
             :item="item"
             :show-actions="true"
+            :error-list="errorsListParent"
             :loading-save="loadingSaveAll"
             :loading-delete="loadingDelete"
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
+            @update:errors-list="errorsListParent = $event"
           >
             <template #field-reportId="{ item: data, onUpdate }">
               <DebouncedAutoCompleteComponent
@@ -526,8 +551,40 @@ onMounted(async () => {
                 :model="data.reportId"
                 :suggestions="reportList"
                 :disabled="fields[0].disabled"
-                @change="($event) => onUpdate('reportId', $event)"
+                @change="($event) => {
+                  onUpdate('reportId', $event)
+                }"
                 @load="($event) => getReportList($event)"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-type="{ item: data, onUpdate }">
+              <Dropdown
+                v-if="!loadingSaveAll"
+                v-model="data.type"
+                :options="[...FORM_FIELD_TYPE]"
+                option-label="name"
+                :return-object="false"
+                @update:model-value="($event) => {
+                  onUpdate('type', $event)
+                  if ($event && $event?.id === 'select') {
+                    updateFieldProperty(fields, 'module', 'class', 'field col-12 required')
+                    updateFieldProperty(fields, 'module', 'validation', z.string().trim().min(1, 'The module field is required').max(50, 'Maximum 50 characters'))
+
+                    updateFieldProperty(fields, 'service', 'class', 'field col-12 required')
+                    updateFieldProperty(fields, 'service', 'validation', z.string().trim().min(1, 'The service field is required').max(50, 'Maximum 50 characters'))
+
+                  }
+                  else {
+                    updateFieldProperty(fields, 'module', 'class', 'field col-12')
+                    updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+                    delete errorsListParent.module
+
+                    updateFieldProperty(fields, 'service', 'class', 'field col-12')
+                    updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+                    delete errorsListParent.service
+                  }
+                }"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
@@ -537,7 +594,16 @@ onMounted(async () => {
                   <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
                 </IfCan>
                 <IfCan :perms="['AGENCY:DELETE']">
-                  <Button v-tooltip.top="'Delete'" class="w-3rem" severity="danger" outlined :loading="loadingDelete" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                  <Button
+                    v-tooltip.top="'Delete'"
+                    class="w-3rem"
+                    severity="danger"
+                    outlined
+                    :disabled="idItem === null || idItem === undefined || idItem === ''"
+                    :loading="loadingDelete"
+                    icon="pi pi-trash"
+                    @click="props.item.deleteItem($event)"
+                  />
                 </IfCan>
               </div>
             </template>
