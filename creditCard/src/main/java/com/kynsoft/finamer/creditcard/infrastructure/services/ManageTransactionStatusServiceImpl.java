@@ -213,11 +213,6 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Transaction Status not found.")));
     }
 
-    public ManageTransactionStatusDto findByCardNetResponseCode(String responseCode) {
-        CardNetResponseStatus pairedStatus = CardNetResponseStatus.valueOfCode(responseCode);
-        return findByMerchantResponseStatus(pairedStatus.transactionStatus());
-    }
-
     public ManageTransactionStatusDto findByMerchantResponseStatus(ETransactionResultStatus status) {
         switch (status) {
             case SUCCESS -> {

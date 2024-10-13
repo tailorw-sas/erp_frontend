@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetTransactionDataResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageStatusTransactionService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
@@ -65,13 +66,15 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             );
 
             //Obtener estado de la transacción correspondiente dado el responseCode del merchant
-            ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByCardNetResponseCode(transactionResponse.getResponseCode());
+            CardNetResponseStatus pairedStatus = CardNetResponseStatus.valueOfCode(transactionResponse.getResponseCode());
+            ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(pairedStatus.transactionStatus());
+            transactionResponse.setMerchantStatus(pairedStatus.toDTO());
 
             TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
 
             // 1- Actualizar data en vcc_transaction
             transactionDto.setCardNumber(transactionResponse.getCreditCardNumber());
-            transactionDto.setReferenceNumber(transactionResponse.getRetrievalReferenceNumber());
+//            transactionDto.setReferenceNumber(transactionResponse.getRetrievalReferenceNumber());
             transactionDto.setCreditCardType(creditCardTypeDto);
             transactionDto.setStatus(transactionStatusDto);
 
