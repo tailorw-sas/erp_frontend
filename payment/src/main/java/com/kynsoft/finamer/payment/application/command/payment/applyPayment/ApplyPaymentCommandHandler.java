@@ -70,11 +70,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                             }
                             while (depositAmount > 0) {
                                 double amountToApply = Math.min(depositAmount, amountBalance);// Debe de compararse con el amountBalance, porque puede venir de haber sido rebajado en el flujo anterior.
-                                System.err.println("##########################");
-                                System.err.println("##########################");
-                                System.err.println("########################## " + amountToApply);
-                                System.err.println("##########################");
-                                System.err.println("##########################");
                                 CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate()));// quite *-1
                                 command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId()));
                                 depositAmount = depositAmount - amountToApply;
@@ -88,28 +83,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                                 break;
                             }
                         }
-//                        for (PaymentDetailDto paymentDetailTypeDeposit : deposits) {
-//                        //for (UUID deposit : command.getDeposits()) {
-//                            PaymentDetailDto useDetailDto = this.paymentDetailService.findById(paymentDetailTypeDeposit.getId());
-//                            if (useDetailDto.getApplyDepositValue() == 0) {
-//                                continue;
-//                            }
-//                            double depositAmount = useDetailDto.getApplyDepositValue();
-//                            //double depositAmount = paymentDetailTypeDeposit.getAmount() * -1;
-//
-//                            //double amountToApply = Math.min(depositAmount, Math.min(notApplied, bookingDto.getAmountBalance()));
-//                            //double amountToApply = Math.min(depositAmount,bookingDto.getAmountBalance());
-//                            double amountToApply = Math.min(depositAmount,amountBalance);// Debe de compararse con el amountBalance, porque puede venir de haber sido rebajado en el flujo anterior.
-//                            CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate()));// quite *-1
-//                            command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId()));
-//
-//                            //notApplied = notApplied - amountToApply;
-//                            amountBalance = amountBalance - amountToApply;
-//                            depositBalance = depositBalance - amountToApply;
-//                            if (amountBalance == 0 || depositBalance == 0) {
-//                                break;
-//                            }
-//                        }
                     } else {
                         break;
                     }
