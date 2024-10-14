@@ -22,6 +22,7 @@ public class JasperReportParameter extends BaseEntity {
     private String paramName;
 
     private String type;
+    private String componentType;
 
     private String module;
 
@@ -48,6 +49,7 @@ public class JasperReportParameter extends BaseEntity {
         this.module = jasperReportParameterDto.getModule();
         this.service = jasperReportParameterDto.getService();
         this.label = jasperReportParameterDto.getLabel();
+        this.componentType = jasperReportParameterDto.getComponentType();
         this.jasperReportTemplate = new JasperReportTemplate(jasperReportParameterDto.getJasperReportTemplate());
     }
 
@@ -59,6 +61,7 @@ public class JasperReportParameter extends BaseEntity {
                 module,
                 service,
                 label,
+                componentType,
                 jasperReportTemplate.toAggregate()
         );
     }

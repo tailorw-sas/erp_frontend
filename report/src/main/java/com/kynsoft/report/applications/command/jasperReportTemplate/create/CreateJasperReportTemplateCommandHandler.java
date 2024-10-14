@@ -62,7 +62,6 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
                 command.getDescription(),
                 command.getFile(),
                 command.getType(),
-                command.getParameters(),
                 command.getParentIndex(),
                 command.getMenuPosition(),
                 command.getLanPath(),
@@ -107,7 +106,7 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
 
                 this.reportParameterService.create(new JasperReportParameterDto(
                         UUID.randomUUID(), param.getName(), param.getValueClassName(), "",
-                        "", "", reportTemplateDto
+                        "", "","", reportTemplateDto
                 ));
             }
         }

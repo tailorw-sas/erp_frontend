@@ -39,7 +39,6 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setDescription, command.getDescription(), updateDto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setFile, command.getFile(), updateDto.getFile(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setName, command.getName(), updateDto.getName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setParameters, command.getParameters(), updateDto.getParameters(), update::setUpdate);
 
         UpdateIfNotNull.updateDouble(updateDto::setParentIndex, command.getParentIndex(), updateDto.getParentIndex(), update::setUpdate);
         UpdateIfNotNull.updateDouble(updateDto::setMenuPosition, command.getMenuPosition(), updateDto.getMenuPosition(), update::setUpdate);
@@ -56,7 +55,7 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setLanguage, command.getLanguage(), updateDto.getLanguage(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setQuery, command.getQuery(), updateDto.getQuery(), update::setUpdate);
 
-        this.updateConection(updateDto::setDbConection, command.getDbConection(), updateDto.getDbConection() != null ? updateDto.getDbConection().getId() : null);
+        this.updateConection(updateDto::setDbConectionDto, command.getDbConection(), updateDto.getDbConectionDto() != null ? updateDto.getDbConectionDto().getId() : null);
 
         if (update.getUpdate() > 0) {
             this.service.update(updateDto);

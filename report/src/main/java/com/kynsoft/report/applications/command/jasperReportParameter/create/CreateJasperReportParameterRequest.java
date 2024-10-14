@@ -18,5 +18,6 @@ public class CreateJasperReportParameterRequest {
     private String module;
     private String service;
     private String label;
+    private String componentType;
     private UUID reportId;
 }
