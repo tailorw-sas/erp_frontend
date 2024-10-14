@@ -1,6 +1,8 @@
 package com.kynsoft.finamer.creditcard.application.command.manageRedirect;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
@@ -24,6 +26,10 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
     @Override
     public void handle(CreateRedirectCommand command) {
         TransactionDto transactionDto = transactionService.findById(command.getRequestDto().getTransactionId());
+        // No procesar transacciones completadas
+        if (!transactionDto.getStatus().isSentStatus()) {
+            throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
+        }
 
         command.setResult(formPaymentService.redirectToMerchant(transactionDto, command.getManageMerchantResponse().getMerchantConfigResponse()).getBody());
 

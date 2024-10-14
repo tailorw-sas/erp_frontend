@@ -32,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -197,17 +198,20 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 data.getNumber()
         );
     }
+
     public boolean hasPastDueBooking(List<ManageBooking> bookings) {
-        LocalDateTime currentDate = LocalDateTime.now(); // Obtener la fecha y hora actual
+        LocalDate currentDate = LocalDate.now(); // Obtener la fecha actual (sin hora)
         if (bookings != null && !bookings.isEmpty()) {
             for (ManageBooking booking : bookings) {
-                if (booking.getCheckOut() != null && booking.getCheckOut().isBefore(currentDate)) {
-                    return true;
+                if (booking.getCheckOut() != null &&
+                        (booking.getCheckOut().toLocalDate().isBefore(currentDate) ||
+                                booking.getCheckOut().toLocalDate().isEqual(currentDate))) {
+                    return true; // Si checkOut es antes o igual a currentDate, devolver true
                 }
             }
         }
 
-        return false; // Si no se encontró ningún booking con checkOut anterior, devolver false
+        return false; // Si no se encontró ningún booking con checkOut anterior o igual, devolver false
     }
 
     private PaginatedResponse getPaginatedResponseToPayment(Page<ManageInvoice> data) {

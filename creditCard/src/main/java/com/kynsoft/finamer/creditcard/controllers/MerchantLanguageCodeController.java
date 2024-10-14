@@ -19,6 +19,7 @@ import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.fin
 import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.findMerchantLanguage.FindMerchantLanguageRequest;
 import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.findMerchantLanguage.FindMerchantLanguageResponse;
 import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.getById.FindMerchantLanguageCodeByIdQuery;
+import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.paginatedLanguages.GetPaginatedLanguagesQuery;
 import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.search.GetSearchMerchantLanguageCodeQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -95,8 +96,19 @@ public class MerchantLanguageCodeController {
     @PostMapping("/merchant-language")
     public ResponseEntity<?> getMerchantCode(@RequestBody FindMerchantLanguageRequest request) {
 
-        FindMerchantLanguageQuery query = new FindMerchantLanguageQuery(request.getMerchantId(), request.getLanguageId());
+        FindMerchantLanguageQuery query = FindMerchantLanguageQuery.fromRequest(request);
         FindMerchantLanguageResponse data = mediator.send(query);
+
+        return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/languages")
+    public ResponseEntity<?> searchLanguages(@RequestBody SearchRequest request) {
+
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetPaginatedLanguagesQuery query = new GetPaginatedLanguagesQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse data = mediator.send(query);
 
         return ResponseEntity.ok(data);
     }
