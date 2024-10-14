@@ -93,25 +93,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             sendFtp(command, invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
         }
 
-        // Agrupar facturas por agencia
-
-//
-//            if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
-//                try {
-//                    bavel(agency, agencyInvoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
-//                } catch (DocumentException | IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//
-//            if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
-//                try {
-//                    sendFtp(command, agency, agencyInvoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
-//                } catch (DocumentException | IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//        }
         command.setResult(true);
     }
 
@@ -135,14 +116,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                     )
             );
         }
-
-//        invoice.setStatus(EInvoiceStatus.SENT);
-//        invoice.setManageInvoiceStatus(manageInvoiceStatus);
-//        if (!invoice.getStatus().equals(EInvoiceStatus.SENT)) {
-//            invoice.setReSend(true);
-//        }
-//        this.service.update(invoice);
-
     }
 
     private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
@@ -267,7 +240,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         }
     }
 
-    private static void updateInvoices(List<ManageInvoiceDto> invoices) {
+    private  void updateInvoices(List<ManageInvoiceDto> invoices) {
         for (ManageInvoiceDto manageInvoiceDto : invoices) {
             if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.RECONCILED)) {
                 manageInvoiceDto.setStatus(EInvoiceStatus.SENT);
@@ -275,7 +248,9 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 manageInvoiceDto.setReSend(true);
                 manageInvoiceDto.setReSendDate(LocalDate.now());
             }
+            service.update(manageInvoiceDto);
         }
+
     }
 
     private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds, SendInvoiceCommand command) throws DocumentException, IOException {
