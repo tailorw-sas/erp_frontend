@@ -1455,11 +1455,12 @@ onMounted(async () => {
                   @click="handleDialogOpen()"
                 />
               </IfCan>
-
+              <!--
               <Button
                 v-if="route.query.type !== InvoiceType.OLD_CREDIT" v-tooltip.top="'Update'" class="w-3rem mx-1"
                 icon="pi pi-replay" :loading="loadingSaveAll"
               />
+               -->
               <Button
                 v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times"
                 @click="goToList"
