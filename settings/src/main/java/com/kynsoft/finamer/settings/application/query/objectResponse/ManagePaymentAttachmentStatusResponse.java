@@ -27,7 +27,11 @@ public class ManagePaymentAttachmentStatusResponse implements IResponse {
     private Boolean defaults;
     private String permissionCode;
     private String description;
-    
+    private boolean nonNone;
+    private boolean patWithAttachment;
+    private boolean pwaWithOutAttachment;
+    private boolean supported;
+
     public ManagePaymentAttachmentStatusResponse(ManagePaymentAttachmentStatusDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -39,5 +43,9 @@ public class ManagePaymentAttachmentStatusResponse implements IResponse {
         this.defaults = dto.getDefaults();
         this.permissionCode = dto.getPermissionCode();
         this.description = dto.getDescription();
+        this.nonNone = dto.isNonNone();
+        this.patWithAttachment = dto.isPatWithAttachment();
+        this.pwaWithOutAttachment = dto.isPwaWithOutAttachment();
+        this.supported = dto.isSupported();
     }
 }

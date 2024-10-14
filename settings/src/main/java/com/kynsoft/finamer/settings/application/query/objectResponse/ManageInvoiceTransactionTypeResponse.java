@@ -28,6 +28,8 @@ public class ManageInvoiceTransactionTypeResponse implements IResponse {
     private Integer minNumberOfCharacters;
     private String defaultRemark;
 
+    private boolean defaults;
+
     public ManageInvoiceTransactionTypeResponse(ManageInvoiceTransactionTypeDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -40,5 +42,6 @@ public class ManageInvoiceTransactionTypeResponse implements IResponse {
         this.isRemarkRequired = dto.getIsRemarkRequired();
         this.minNumberOfCharacters = dto.getMinNumberOfCharacters();
         this.defaultRemark = dto.getDefaultRemark();
+        this.defaults = dto.isDefaults();
     }
 }

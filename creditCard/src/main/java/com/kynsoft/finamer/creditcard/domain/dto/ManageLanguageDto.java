@@ -16,5 +16,5 @@ public class ManageLanguageDto {
     private UUID id;
     private String code;
     private String name;
-
+    private Boolean defaults;
 }

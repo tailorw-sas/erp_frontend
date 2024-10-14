@@ -17,8 +17,11 @@ import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchRes
 import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeResponse;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.event.createAttachment.CreateAttachmentEvent;
+import com.kynsoft.finamer.invoicing.domain.services.InvoiceReconcileImportService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAttachmentType;
 import io.jsonwebtoken.lang.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Pageable;
@@ -34,9 +37,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class CreateAttachmentEventHandler implements ApplicationListener<CreateAttachmentEvent> {
+    private final Logger log = LoggerFactory.getLogger(CreateAttachmentEventHandler.class);
     @Value("${file.service.url}")
     private String UPLOAD_FILE_URL;
     private final RestTemplate restTemplate;
@@ -109,7 +114,7 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
         HttpEntity<byte[]> fileEntity = new HttpEntity<>(event.getFile(), contentDispositionMap);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-
+        log.info("El attachment viene null {}:", Objects.isNull(event.getFile()));
         body.add("file", fileEntity);
 
        return  new HttpEntity<>(body, headers);

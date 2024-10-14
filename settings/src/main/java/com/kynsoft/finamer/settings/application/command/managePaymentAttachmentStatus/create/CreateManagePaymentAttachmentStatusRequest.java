@@ -19,4 +19,8 @@ public class CreateManagePaymentAttachmentStatusRequest {
     private Boolean defaults;
     private String permissionCode;
     private String description;
+    private boolean nonNone;
+    private boolean patWithAttachment;
+    private boolean pwaWithOutAttachment;
+    private boolean supported;
 }

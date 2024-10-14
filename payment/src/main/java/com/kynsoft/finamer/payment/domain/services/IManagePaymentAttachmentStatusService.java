@@ -23,4 +23,12 @@ public interface IManagePaymentAttachmentStatusService {
     ManagePaymentAttachmentStatusDto findByDefaults();
 
     ManagePaymentAttachmentStatusDto findByCode(String code);
+
+    ManagePaymentAttachmentStatusDto findByNonNone();
+
+    ManagePaymentAttachmentStatusDto findByPatWithAttachment();
+
+    ManagePaymentAttachmentStatusDto findByPwaWithOutAttachment();
+
+    ManagePaymentAttachmentStatusDto findBySupported();
 }

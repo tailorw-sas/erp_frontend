@@ -2,7 +2,6 @@ package com.kynsoft.finamer.payment.application.query.payment.excelExporter;
 
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.domain.request.FilterCriteria;
-import com.kynsoft.finamer.payment.domain.dtoEnum.PaymentExcelExporterEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,5 +17,5 @@ public class GetPaymentExcelExporterQuery implements IQuery {
     private Pageable pageable;
     private List<FilterCriteria> filter;
     private String query;
-    private PaymentExcelExporterEnum exportEnum;
+    private String fileName;
 }

@@ -49,8 +49,10 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
         AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(command.getAttachmentType());
         ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(command.getResourceType());
 
+        boolean paymentSupport = false;
         if (manageAttachmentTypeDto.getDefaults()) {
             RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule(this.masterPaymentAttachmentService, resource.getId(), command.getFileName()));
+            paymentSupport = true;
         }
 
         Long attachmentId = this.masterPaymentAttachmentService.create(new MasterPaymentAttachmentDto(
@@ -65,6 +67,10 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
                 command.getRemark(),
                 0L
         ));
+        if (paymentSupport) {
+            resource.setPaymentSupport(true);// Si paso la regla es porque no tenia Payment Support agregados.
+            this.paymentService.update(resource);
+        }
         this.updateAttachmentStatusHistory(employeeDto, resource, command.getFileName(), attachmentId);
 //        this.createPaymentAttachmentStatusHistory(employeeDto, resource, command.getFileName());
     }

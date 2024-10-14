@@ -19,7 +19,8 @@ public class CreateManageLanguageCommandHandler implements ICommandHandler<Creat
         service.create(new ManageLanguageDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
+                command.getName(),
+                command.getDefaults()
         ));
     }
 }

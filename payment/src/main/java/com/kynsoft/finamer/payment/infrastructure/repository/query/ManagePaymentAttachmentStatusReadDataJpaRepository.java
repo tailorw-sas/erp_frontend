@@ -16,5 +16,17 @@ public interface ManagePaymentAttachmentStatusReadDataJpaRepository extends JpaR
     @Query("SELECT b FROM ManagePaymentAttachmentStatus b WHERE b.defaults = true")
     Optional<ManagePaymentAttachmentStatus> findByDefault();
 
+    @Query("SELECT b FROM ManagePaymentAttachmentStatus b WHERE b.nonNone = true")
+    Optional<ManagePaymentAttachmentStatus> findByNonNone();
+
+    @Query("SELECT b FROM ManagePaymentAttachmentStatus b WHERE b.patWithAttachment = true")
+    Optional<ManagePaymentAttachmentStatus> findByPatWithAttachment();
+
+    @Query("SELECT b FROM ManagePaymentAttachmentStatus b WHERE b.pwaWithOutAttachment = true")
+    Optional<ManagePaymentAttachmentStatus> findByPwaWithOutAttachment();
+
+    @Query("SELECT b FROM ManagePaymentAttachmentStatus b WHERE b.supported = true")
+    Optional<ManagePaymentAttachmentStatus> findBySupported();
+
     Optional<ManagePaymentAttachmentStatus> findManagePaymentAttachmentStatusByCodeAndStatus(String code,String status);
 }

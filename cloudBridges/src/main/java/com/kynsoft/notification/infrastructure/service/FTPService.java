@@ -21,6 +21,7 @@ public class FTPService implements IFTPService {
     public void uploadFile(String remotePath, InputStream inputStream, String fileName, String server, String user,
                            String password, int port) {
         System.out.println("Inicio FTP");
+       // remotePath = remotePath.replace("", "/");
 
         FTPClient ftpClient = new FTPClient();
         try {
@@ -34,7 +35,13 @@ public class FTPService implements IFTPService {
             ftpClient.setConnectTimeout(ftpConfig.getConnectTimeout());
             ftpClient.setSoTimeout(ftpConfig.getSoTimeout());
 
-            boolean success = ftpClient.storeFile(remotePath, inputStream);
+            // Crear directorio si no existe
+            if (!createDirectories(remotePath, ftpClient)) {
+                System.out.println("No se pudo crear el directorio en el FTP.");
+                return;
+            }
+
+            boolean success = ftpClient.storeFile(remotePath+"/"+fileName, inputStream);
             if (success) {
                 System.out.println("El archivo se subió exitosamente.");
             } else {
@@ -51,5 +58,23 @@ public class FTPService implements IFTPService {
                 System.out.println("Error al desconectar: " + ex.getMessage());
             }
         }
+    }
+
+    private boolean createDirectories(String remotePath, FTPClient ftpClient) throws IOException {
+        String[] folders = remotePath.split("/");
+        for (String folder : folders) {
+            if (folder.length() > 0) {
+                boolean dirExists = ftpClient.changeWorkingDirectory(folder);
+                if (!dirExists) {
+                    boolean created = ftpClient.makeDirectory(folder);
+                    if (!created) {
+                        System.out.println("No se pudo crear el directorio: " + folder);
+                        return false; // Falla si no se puede crear el directorio
+                    }
+                    ftpClient.changeWorkingDirectory(folder);
+                }
+            }
+        }
+        return true;
     }
 }

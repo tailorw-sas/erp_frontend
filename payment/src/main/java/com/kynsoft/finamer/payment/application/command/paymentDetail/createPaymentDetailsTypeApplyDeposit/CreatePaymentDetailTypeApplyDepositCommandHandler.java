@@ -59,7 +59,13 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
         }
         updateChildrens.add(newDetailDto);
         command.getParentDetailDto().setChildren(updateChildrens);
-        command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - (newDetailDto.getAmount() * -1));//*-1
+        if (command.getParentDetailDto().getApplyDepositValue() < 0) {
+            command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - newDetailDto.getAmount() * -1);
+        } else {
+            command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - newDetailDto.getAmount());
+        }
+        //command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - newDetailDto.getAmount());
+        //command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - (newDetailDto.getAmount() * -1));//*-1
         paymentDetailService.update(command.getParentDetailDto());
 
         if (command.isApplyPayment()) {
@@ -70,12 +76,14 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
     }
 
     private void calculate(PaymentDto paymentDto, PaymentDetailDto newDetailDto) {
-        paymentDto.setDepositBalance(paymentDto.getDepositBalance() - newDetailDto.getAmount());
-        paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
-        paymentDto.setIdentified(paymentDto.getIdentified() + newDetailDto.getAmount());
-        paymentDto.setNotIdentified(paymentDto.getPaymentAmount() - paymentDto.getIdentified());
+        PaymentDto save = this.paymentService.findById(paymentDto.getId());
+        save.setDepositBalance(save.getDepositBalance() - newDetailDto.getAmount());
+        //paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
+        save.setApplied(save.getApplied() + newDetailDto.getAmount()); // TODO: Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
+        save.setIdentified(save.getIdentified() + newDetailDto.getAmount());
+        save.setNotIdentified(save.getPaymentAmount() - paymentDto.getIdentified());
 
-        this.paymentService.update(paymentDto);
+        this.paymentService.update(save);
     }
 
 }

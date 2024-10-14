@@ -3,8 +3,8 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -98,6 +98,8 @@ public class ManageInvoice {
 
     private String sendStatusError;
 
+    private Boolean hasAttachments;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -136,7 +138,7 @@ public class ManageInvoice {
                 : null;
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
-        this.invoiceNumberPrefix= InvoiceUtils.getInvoiceNumberPrefix(dto.getInvoiceNumber());
+        this.invoiceNumberPrefix= InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" +dto.getInvoiceNo();
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
@@ -169,12 +171,25 @@ public class ManageInvoice {
                 parent != null ? parent.toAggregateSample() : null, credits);
     }
 
+    public ManageInvoiceDto toAggregateSearch() {
+
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+                invoiceAmount, dueAmount,
+                hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
+                autoRec, null, null, reSend, reSendDate,
+                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
+                parent != null ? parent.toAggregateSample() : null, credits);
+        manageInvoiceDto.setSendStatusError(sendStatusError);
+        return manageInvoiceDto;
+    }
+
     @PostLoad
     public void initDefaultValue() {
         if (dueAmount == null) {
             dueAmount = 0.0;
         }
-
+        hasAttachments = (attachments != null && !attachments.isEmpty());
     }
 
 }

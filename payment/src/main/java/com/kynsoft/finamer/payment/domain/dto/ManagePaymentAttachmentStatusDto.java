@@ -16,5 +16,8 @@ public class ManagePaymentAttachmentStatusDto {
     private String name;
     private String status;
     private Boolean defaults;
-
+    private boolean nonNone;
+    private boolean patWithAttachment;
+    private boolean pwaWithOutAttachment;
+    private boolean supported;
 }

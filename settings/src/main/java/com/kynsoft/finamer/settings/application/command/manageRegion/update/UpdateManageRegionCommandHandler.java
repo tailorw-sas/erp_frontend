@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageRegion.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ManageRegionKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageRegionDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageRegionService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRegion.ProducerUpdateManageRegionService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -17,8 +19,11 @@ public class UpdateManageRegionCommandHandler implements ICommandHandler<UpdateM
 
     private final IManageRegionService service;
 
-    public UpdateManageRegionCommandHandler(IManageRegionService service) {
+    private final ProducerUpdateManageRegionService producer;
+
+    public UpdateManageRegionCommandHandler(IManageRegionService service, ProducerUpdateManageRegionService producer) {
         this.service = service;
+        this.producer = producer;
     }
 
     @Override
@@ -35,6 +40,9 @@ public class UpdateManageRegionCommandHandler implements ICommandHandler<UpdateM
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
+            this.producer.update(new ManageRegionKafka(
+                    dto.getId(), dto.getCode(), dto.getName()
+            ));
         }
     }
 

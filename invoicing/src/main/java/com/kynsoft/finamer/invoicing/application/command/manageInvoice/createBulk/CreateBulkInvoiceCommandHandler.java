@@ -2,18 +2,25 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBu
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
+import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckAdultsAndChildrenRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckInCheckOutRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -169,11 +176,14 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         }
 
         for (int i = 0; i < command.getRoomRateCommands().size(); i++) {
+//            RulesChecker.checkRule(new ManageRoomRateCheckInCheckOutRule(command.getRoomRateCommands().get(i).getCheckIn(), command.getRoomRateCommands().get(i).getCheckOut()));
+//            RulesChecker.checkRule(new ManageRoomRateCheckAdultsAndChildrenRule(command.getRoomRateCommands().get(i).getAdults(), command.getRoomRateCommands().get(i).getChildren()));
             Double invoiceAmount = command.getRoomRateCommands().get(i).getInvoiceAmount();
             if (command.getInvoiceCommand().getInvoiceType().compareTo(EInvoiceType.CREDIT) == 0
                     && invoiceAmount > 0) {
                 invoiceAmount = -invoiceAmount;
             }
+//            Long nights = this.calculateNights(command.getRoomRateCommands().get(i).getCheckIn(), command.getRoomRateCommands().get(i).getCheckOut());
             ManageRoomRateDto roomRateDto = new ManageRoomRateDto(
                     command.getRoomRateCommands().get(i).getId(),
                     null,
@@ -183,12 +193,17 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     command.getRoomRateCommands().get(i).getRoomNumber(),
                     command.getRoomRateCommands().get(i).getAdults(),
                     command.getRoomRateCommands().get(i).getChildren(),
+//                    this.calculateRateAdult(invoiceAmount, nights, command.getRoomRateCommands().get(i).getAdults()),
                     command.getRoomRateCommands().get(i).getRateAdult(),
+//                    this.calculateRateChild(invoiceAmount, nights, command.getRoomRateCommands().get(i).getChildren()),
                     command.getRoomRateCommands().get(i).getRateChild(),
                     command.getRoomRateCommands().get(i).getHotelAmount(),
                     command.getRoomRateCommands().get(i).getRemark(),
                     null,
-                    new LinkedList<>(), null);
+                    new LinkedList<>(), 
+//                    nights
+                    null
+            );
 
             if (command.getRoomRateCommands().get(i).getBooking() != null) {
                 for (ManageBookingDto bookingDto : bookings) {
@@ -267,10 +282,16 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         }
 
+        int cont = 0;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
+            RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
+                    command.getAttachmentCommands().get(i).getFile()
+            ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
-
+            if(attachmentType.isAttachInvDefault()) {
+                cont++;
+            }
             ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
                     command.getAttachmentCommands().get(i).getId(),
                     null,
@@ -283,7 +304,12 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
             attachmentDtos.add(attachmentDto);
         }
-
+        if(cont == 0){
+            throw new BusinessException(
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+            );
+        }
         for (ManageBookingDto booking : bookings) {
             this.calculateBookingHotelAmount(booking);
 
@@ -388,6 +414,18 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             dto.setHotelAmount(HotelAmount);
 
         }
+    }
+
+    private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {
+        return adults == 0 ? 0.0 : rateAmount/(nights*adults);
+    }
+
+    private Double calculateRateChild(Double rateAmount, Long nights, Integer children) {
+        return children == 0 ? 0.0 : rateAmount/(nights*children);
+    }
+
+    private Long calculateNights(LocalDateTime checkIn, LocalDateTime checkOut) {
+        return ChronoUnit.DAYS.between(checkIn.toLocalDate(), checkOut.toLocalDate());
     }
 
 }

@@ -26,7 +26,7 @@ public class ConsumerUpdateManageAgencyService {
                     objKafka.getAddress(),objKafka.getSentB2BPartner(),
                     objKafka.getCityState(),objKafka.getCountry(), objKafka.getMailingAddress(),
                     objKafka.getZipCode(),
-                    objKafka.getCity(), objKafka.getCreditDay(), objKafka.getAutoReconcile()
+                    objKafka.getCity(), objKafka.getCreditDay(), objKafka.getAutoReconcile(), objKafka.getValidateCheckout()
             );
             mediator.send(command);
         } catch (Exception ex) {

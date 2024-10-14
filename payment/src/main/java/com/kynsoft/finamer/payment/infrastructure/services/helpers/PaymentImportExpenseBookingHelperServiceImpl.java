@@ -30,6 +30,7 @@ import com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBookin
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseBookingErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.expenseBooking.PaymentExpenseBookingImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.utils.PaymentUploadAttachmentUtil;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,9 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,8 +62,11 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private final IManagePaymentSourceService paymentSourceService;
     private final IManagePaymentStatusService paymentStatusService;
     private final IManagePaymentTransactionTypeService transactionTypeService;
-
     private final IManagePaymentAttachmentStatusService paymentAttachmentStatusService;
+    private final IManageAttachmentTypeService attachmentTypeService;
+    private final IManageResourceTypeService resourceTypeService;
+
+    private final IStorageService storageService;
     private final ServiceLocator<IMediator> serviceLocator;
 
     @Value("${payment.source.expense.code}")
@@ -68,6 +75,10 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private String PAYMENT_STATUS_APPLY_CODE;
     @Value("${payment.attachment.status.code}")
     private String PAYMENT_ATTACHMENT_STATUS_CODE;
+    @Value("${payment.resource.type.code}")
+    private String PAYMENT_EXPENSE_BOOKING_RESOURCE_TYPE;
+    @Value("${payment.attachment.type.code}")
+    private String PAYMENT_EXPENSE_BOOKING_ATTACHMENT_TYPE;
 
 
     public PaymentImportExpenseBookingHelperServiceImpl(PaymentExpenseBookingImportCacheRepository cacheRepository,
@@ -79,7 +90,11 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                                                         IPaymentCloseOperationService closeOperationService,
                                                         IManagePaymentSourceService paymentSourceService,
                                                         IManagePaymentStatusService paymentStatusService,
-                                                        IManagePaymentTransactionTypeService transactionTypeService, IManagePaymentAttachmentStatusService paymentAttachmentStatusService,
+                                                        IManagePaymentTransactionTypeService transactionTypeService,
+                                                        IManagePaymentAttachmentStatusService paymentAttachmentStatusService,
+                                                        IManageAttachmentTypeService attachmentTypeService,
+                                                        IManageResourceTypeService resourceTypeService,
+                                                        IStorageService storageService,
                                                         ServiceLocator<IMediator> serviceLocator
     ) {
         super(redisTemplate);
@@ -94,11 +109,15 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         this.paymentStatusService = paymentStatusService;
         this.transactionTypeService = transactionTypeService;
         this.paymentAttachmentStatusService = paymentAttachmentStatusService;
+        this.attachmentTypeService = attachmentTypeService;
+        this.resourceTypeService = resourceTypeService;
+        this.storageService = storageService;
         this.serviceLocator = serviceLocator;
         this.availableClient = new ArrayList<>();
     }
 
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        this.totalProcessRow=0;
         availableClient.clear();
         readerConfiguration.setStrictHeaderOrder(false);
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
@@ -113,6 +132,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                 row.setClientName(getClientName(row.getBookingId()));
                 availableClient.add(row.getClientName());
                 cachingPaymentImport(row);
+                this.totalProcessRow++;
             }
         }
     }
@@ -132,6 +152,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             cacheRepository.deleteAll(cacheList.getContent());
             pageable = pageable.next();
         } while (cacheList.hasNext());
+        storageService.deleteAll(importProcessId);
     }
 
     @Override
@@ -181,12 +202,12 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     }
 
     private UUID createPayment(UUID hotelId, UUID employeeId, ManageAgencyDto agencyDto, double amount) {
-        PaymentCloseOperationDto closeOperationDto = closeOperationService.findByHotelIds(hotelId);
+
         ManagePaymentSourceDto paymentSource = paymentSourceService.findByCodeActive(PAYMENT_SOURCE_EXP_CODE);
         ManagePaymentStatusDto paymentStatus = paymentStatusService.findByCode(PAYMENT_STATUS_APPLY_CODE);
         ManagePaymentAttachmentStatusDto attachmentStatusDto = paymentAttachmentStatusService.findByCode(PAYMENT_ATTACHMENT_STATUS_CODE);
         CreatePaymentCommand createPaymentCommand = new CreatePaymentCommand(Status.ACTIVE, paymentSource.getId(), "",
-                closeOperationDto.getEndDate(), paymentStatus.getId(),
+                getTransactionDate(hotelId), paymentStatus.getId(),
                 agencyDto.getClient().getId(), agencyDto.getId(), hotelId, null, attachmentStatusDto.getId(), amount,
                 "Expense generated from action of import files", null, employeeId,true);
         CreatePaymentMessage createPaymentMessage = serviceLocator.getBean(IMediator.class).send(createPaymentCommand);
@@ -209,23 +230,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                     .filter(File::isFile)
                     .collect(Collectors.toMap(File::getName, file -> file));
 
-            FilterCriteria filterDefault = new FilterCriteria();
-            filterDefault.setKey("defaults");
-            filterDefault.setValue(true);
-            filterDefault.setOperator(SearchOperation.EQUALS);
-            filterDefault.setLogicalOperation(LogicalOperation.AND);
-
-            FilterCriteria statusActive = new FilterCriteria();
-            statusActive.setKey("status");
-            statusActive.setValue(Status.ACTIVE);
-            statusActive.setOperator(SearchOperation.EQUALS);
-
-            GetSearchManageResourceTypeQuery resourceTypeQuery = new GetSearchManageResourceTypeQuery(Pageable.unpaged(), List.of(filterDefault,statusActive), "");
-            GetSearchAttachmentTypeQuery attachmentTypeQuery = new GetSearchAttachmentTypeQuery(Pageable.unpaged(), List.of(filterDefault,statusActive), "");
-            PaginatedResponse resourceType = serviceLocator.getBean(IMediator.class).send(resourceTypeQuery);
-            PaginatedResponse attachmentType = serviceLocator.getBean(IMediator.class).send(attachmentTypeQuery);
-            ResourceTypeResponse resourceTypeResponse = (ResourceTypeResponse)resourceType.getData().get(0);
-            AttachmentTypeResponse attachmentTypeResponse =  (AttachmentTypeResponse)attachmentType.getData().get(0);
+            ResourceTypeDto resourceTypeDto = resourceTypeService.findByCode(PAYMENT_EXPENSE_BOOKING_RESOURCE_TYPE);
+            AttachmentTypeDto attachmentTypeDto = attachmentTypeService.findByCode(PAYMENT_EXPENSE_BOOKING_ATTACHMENT_TYPE);
 
             for (Map.Entry<String, File> attachment : attachmentFields.entrySet()) {
                try(FileInputStream fileInputStream = new FileInputStream(attachment.getValue())) {
@@ -236,7 +242,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                    CreateMasterPaymentAttachmentCommand createMasterPaymentAttachmentCommand =
                            new CreateMasterPaymentAttachmentCommand(Status.ACTIVE, employeeId,
                                    paymentId
-                                   , resourceTypeResponse.getId(), attachmentTypeResponse.getId(),
+                                   , resourceTypeDto.getId(), attachmentTypeDto.getId(),
                                    attachment.getKey(), response.get("url"),
                                    "Attachment added automatically when the payment was imported",
                                    String.valueOf(fileContent.length));
@@ -246,5 +252,14 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private LocalDate getTransactionDate(UUID hotelId){
+        PaymentCloseOperationDto closeOperationDto = closeOperationService.findByHotelIds(hotelId);
+        LocalDate firstDateOgMonth = LocalDate.now().withDayOfMonth(1);
+        if (closeOperationDto.getEndDate().isBefore(firstDateOgMonth)){
+            return closeOperationDto.getEndDate();
+        }
+            return LocalDate.now();
     }
 }

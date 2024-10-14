@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.query.payment.excelExporter;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
+import com.kynsoft.finamer.payment.domain.dtoEnum.PaymentExcelExporterEnum;
 import com.kynsoft.finamer.payment.infrastructure.services.ExcelExporterService;
 import org.springframework.stereotype.Component;
 
@@ -19,8 +20,8 @@ public class GetPaymentExcelExporterQueryHandler implements IQueryHandler<GetPay
     public PaymentExcelExporterResponse handle(GetPaymentExcelExporterQuery query) {
 
         try {
-            byte[] response = this.service.exportToExcel(query.getPageable(),query.getFilter(), query.getExportEnum());
-            return new PaymentExcelExporterResponse(response);
+            byte[] response = this.service.exportToExcel(query.getPageable(),query.getFilter(), PaymentExcelExporterEnum.EXPORT_SUMMARY);
+            return new PaymentExcelExporterResponse(response, query.getFileName());
         } catch (Exception ex) {
             Logger.getLogger(GetPaymentExcelExporterQueryHandler.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -8,7 +8,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
-import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionSearchResponse;
+import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionSearchResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
@@ -143,4 +143,5 @@ public class TransactionServiceImpl implements ITransactionService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
 }

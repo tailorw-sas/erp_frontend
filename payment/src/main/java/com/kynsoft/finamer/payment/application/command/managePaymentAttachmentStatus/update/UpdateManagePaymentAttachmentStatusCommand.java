@@ -15,12 +15,21 @@ public class UpdateManagePaymentAttachmentStatusCommand implements ICommand {
     private String name;
     private String status;
     private Boolean defaults;
-    
-    public UpdateManagePaymentAttachmentStatusCommand(UUID id, final String name, String status, Boolean defaults) {
+    private boolean nonNone;
+    private boolean patWithAttachment;
+    private boolean pwaWithOutAttachment;
+    private boolean supported;
+
+    public UpdateManagePaymentAttachmentStatusCommand(UUID id, final String name, String status, Boolean defaults, 
+            boolean nonNone, boolean patWithAttachment, boolean pwaWithOutAttachment, boolean supported) {
         this.id = id;
         this.name = name;
         this.status = status;
         this.defaults = defaults;
+        this.nonNone = nonNone;
+        this.patWithAttachment = patWithAttachment;
+        this.pwaWithOutAttachment = pwaWithOutAttachment;
+        this.supported = supported;
     }
 
     @Override

@@ -11,7 +11,9 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsof.share.utils.UrlGetBase;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.*;
 import com.kynsoft.finamer.creditcard.domain.services.*;
@@ -49,7 +51,9 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
     private final MailService mailService;
 
-    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService, TokenService tokenService, MailService mailService) {
+    private final IManageMerchantConfigService merchantConfigService;
+
+    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService, TokenService tokenService, MailService mailService, IManageMerchantConfigService merchantConfigService) {
         this.service = service;
         this.merchantService = merchantService;
         this.hotelService = hotelService;
@@ -63,6 +67,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         this.closeOperationService = closeOperationService;
         this.tokenService = tokenService;
         this.mailService = mailService;
+        this.merchantConfigService = merchantConfigService;
     }
 
     @Override
@@ -89,7 +94,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "No active parameterization")));
         }
 
-        ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByCode(parameterizationDto.getTransactionStatusCode());
+        ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.SENT);
         ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionCategory());
         ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionSubCategory());
 
@@ -132,6 +137,27 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ));
         command.setId(id);
 
+        //Send Mail after create the transaction to the HotelEmailContact in case of this exist
+        if(command.getHotelContactEmail() != null){
+            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+            request.setTemplateId(6371592); // Cambiar en configuración
+
+            // Variables para el template de email, cambiar cuando keimer genere la plantilla
+            List<MailJetVar> vars = Arrays.asList(
+                    new MailJetVar("topic", "Transaction Verification"),
+                    new MailJetVar("name", command.getGuestName())
+            );
+            request.setMailJetVars(vars);
+
+            // Recipients
+            List<MailJetRecipient> recipients = new ArrayList<>();
+            recipients.add(new MailJetRecipient(command.getHotelContactEmail(), command.getGuestName()));
+            request.setRecipientEmail(recipients);
+
+            mailService.sendMail(request);
+        }
+
+        //Send Mail in case the methodType be Link
         if(command.getMethodType() == MethodType.LINK){
         //Send mail after the crate transaction
         String token = tokenService.generateToken(command.getTransactionUuid());
@@ -139,9 +165,12 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
             request.setTemplateId(6324713); // Cambiar en configuración
 
+            ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(merchantDto.getId());
+            String baseUrl = UrlGetBase.getBaseUrl(merchantConfigDto.getSuccessUrl());
+
             // Variables para el template de email
             List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("payment_link", "http://localhost:3000/" + "payment?token="+ token),
+                    new MailJetVar("payment_link", baseUrl + "payment?token="+ token),
                     new MailJetVar("invoice_amount", command.getAmount().toString())
             );
             request.setMailJetVars(vars);

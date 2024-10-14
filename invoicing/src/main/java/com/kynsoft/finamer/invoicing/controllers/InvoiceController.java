@@ -33,6 +33,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.Up
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.ExportInvoiceQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.GetSearchInvoiceQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageInvoice.sendList.SendListInvoiceQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.toPayment.search.GetSearchInvoiceToPaymentQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ExportInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
@@ -63,30 +64,14 @@ public class InvoiceController {
         ManageInvoiceResponse resp = mediator.send(query);
 
         this.mediator.send(
-                new UpdateInvoiceCommand(response.getId(), null, null, null, null, null, null, null, null, null, null));
+                new UpdateInvoiceCommand(response.getId(), null, null, null, null));
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("bulk")
     public ResponseEntity<CreateBulkInvoiceMessage> createBulk(@RequestBody CreateBulkInvoiceRequest request) {
-
         CreateBulkInvoiceCommand command = CreateBulkInvoiceCommand.fromRequest(request);
-
         CreateBulkInvoiceMessage message = this.mediator.send(command);
-
-//        this.mediator.send(
-//                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
-//                    return b.getId();
-//                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
-//                    return rr.getId();
-//                }).collect(Collectors.toList())));
-
-//        this.mediator.send(new CreateInvoiceStatusHistoryCommand(message.getId(), command.getEmployee()));
-//
-//        for (CreateAttachmentMessage attachmentMessage : message.getAttachmentMessages()) {
-//            this.mediator.send(new CreateAttachmentStatusHistoryCommand(attachmentMessage.getId()));
-//        }
-
         return ResponseEntity.ok(message);
 
     }
@@ -140,11 +125,20 @@ public class InvoiceController {
         return ResponseEntity.ok(data);
     }
 
+    @PostMapping("/send-list")
+    public ResponseEntity<?> send(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchInvoiceQuery query = new GetSearchInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
     @PostMapping("/search-payment/search")
     public ResponseEntity<?> searchToPayment(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchInvoiceToPaymentQuery query = new GetSearchInvoiceToPaymentQuery(pageable, request.getFilter(), request.getQuery());
+        SendListInvoiceQuery query = new SendListInvoiceQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }

@@ -61,6 +61,9 @@ public class PaymentDetail implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean applayPayment;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean reverseTransaction;
+
     private Double bookingId;
     private String invoiceId;
     private OffsetDateTime transactionDate;
@@ -72,6 +75,11 @@ public class PaymentDetail implements Serializable {
     private Integer childrens;
 
     @OneToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "payment_detail_payment_detail",
+            joinColumns = @JoinColumn(name = "paymentdetail_id"),
+            inverseJoinColumns = @JoinColumn(name = "children_id")
+    )
     private List<PaymentDetail> children = new ArrayList<>();
 
     //@CreationTimestamp
@@ -112,6 +120,7 @@ public class PaymentDetail implements Serializable {
         this.manageBooking = dto.getManageBooking() != null ? new ManageBooking(dto.getManageBooking()) : null;
         this.applayPayment = dto.getApplayPayment();
         this.reverseFrom = dto.getReverseFrom();
+        this.reverseTransaction = dto.isReverseTransaction();
     }
 
     public PaymentDetailDto toAggregate() {
@@ -139,7 +148,8 @@ public class PaymentDetail implements Serializable {
                 parentId,
                 applyDepositValue,
                 applayPayment,
-                reverseFrom != null ? reverseFrom : null
+                reverseFrom != null ? reverseFrom : null,
+                reverseTransaction
         );
     }
 
@@ -168,7 +178,8 @@ public class PaymentDetail implements Serializable {
                 parentId,
                 applyDepositValue,
                 applayPayment,
-                null
+                null,
+                reverseTransaction
         );
     }
 
@@ -197,7 +208,8 @@ public class PaymentDetail implements Serializable {
                 parentId,
                 applyDepositValue,
                 applayPayment,
-                reverseFrom != null ? reverseFrom : null
+                reverseFrom != null ? reverseFrom : null,
+                reverseTransaction
         );
     }
 }

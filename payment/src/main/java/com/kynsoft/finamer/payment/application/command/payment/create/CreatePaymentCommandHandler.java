@@ -123,8 +123,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 0.0,
                 0.0,
                 command.getPaymentAmount(),
-                command.getPaymentAmount(),//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                0.0,
+                command.getPaymentAmount(),//Aplicar la formula del Payment Balance
+                0.0,//Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
                 command.getRemark(),
                 null,
                 null,
@@ -132,14 +132,16 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 EAttachment.NONE
         );
 
-        command.setPayment(this.paymentService.create(paymentDto));
+        PaymentDto save = this.paymentService.create(paymentDto);
+
         if (command.getAttachments() != null) {
-            paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto));
-            this.createAttachmentStatusHistory(employeeDto, paymentDto);
+            paymentDto.setAttachments(this.createAttachment(command.getAttachments(), save));
+            this.createAttachmentStatusHistory(employeeDto, save);
             //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
 
-        this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
+        command.setPayment(save);
+        this.createPaymentAttachmentStatusHistory(employeeDto, save);
     }
 
     //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
@@ -157,7 +159,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
     private List<MasterPaymentAttachmentDto> createAttachment(List<CreateAttachmentRequest> attachments, PaymentDto paymentDto) {
         List<MasterPaymentAttachmentDto> dtos = new ArrayList<>();
-        Integer countDefaults = 0;
+        Integer countDefaults = 0;//El objetivo de este contador es controlar cuantos Payment Support han sido agregados.
         for (CreateAttachmentRequest attachment : attachments) {
             AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(attachment.getAttachmentType());
             ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(attachment.getResourceType());
@@ -180,6 +182,16 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
         RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule(countDefaults));
         this.masterPaymentAttachmentService.create(dtos);
+
+        if (countDefaults > 0) {
+            paymentDto.setPaymentSupport(true);
+            paymentDto.setAttachmentStatus(this.attachmentStatusService.findBySupported());
+        } else {
+            paymentDto.setAttachmentStatus(this.attachmentStatusService.findByNonNone());
+            paymentDto.setPaymentSupport(false);
+        }
+
+        this.paymentService.update(paymentDto);
         return dtos;
     }
 

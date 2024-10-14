@@ -1,9 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageInvoiceTransactionType;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageInvoiceTransactionTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoiceTransactionType.update.UpdateManageInvoiceTransactionTypeCommand;
@@ -30,7 +26,8 @@ public class ConsumerUpdateManageInvoiceTransactionType {
 
             UpdateManageInvoiceTransactionTypeCommand command = new UpdateManageInvoiceTransactionTypeCommand(
                     objKafka.getId(),
-                    objKafka.getName());
+                    objKafka.getName(),
+                    objKafka.isDefaults());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageInvoiceTransactionType.class.getName()).log(Level.SEVERE, null, ex);

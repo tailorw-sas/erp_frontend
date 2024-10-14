@@ -124,7 +124,17 @@ public class ManageAgency {
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, status, name, cif, agencyAlias, audit, zipCode, address, mailingAddress, phone, alternativePhone, email, alternativeEmail, contactName, autoReconcile, creditDay, rfc, validateCheckout, bookingCouponFormat, description, city, generationType, sentFileFormat, agencyType.toAggregate(), client.toAggregate(), sentB2BPartner.toAggregate(), country.toAggregate(), cityState.toAggregate(), isDefault
+                id, code, status, name, cif, agencyAlias, audit,
+                zipCode, address, mailingAddress, phone, alternativePhone,
+                email, alternativeEmail, contactName, autoReconcile, creditDay,
+                rfc, validateCheckout, bookingCouponFormat, description, city,
+                generationType, sentFileFormat,
+                agencyType != null ? agencyType.toAggregate() : null,
+                client != null ? client.toAggregate() : null,
+                sentB2BPartner != null ? sentB2BPartner.toAggregate() : null,
+                country != null ? country.toAggregate() : null,
+                cityState != null ? cityState.toAggregate() : null,
+                isDefault
         );
     }
 
@@ -133,8 +143,12 @@ public class ManageAgency {
                 id, code, status, name, cif, agencyAlias, audit, zipCode,
                 address, mailingAddress, phone, alternativePhone, email, alternativeEmail,
                 contactName, autoReconcile, creditDay, rfc, validateCheckout, bookingCouponFormat,
-                description, city, generationType, sentFileFormat, agencyType.toAggregate(),
-                null, sentB2BPartner.toAggregate(), country.toAggregate(), cityState.toAggregate(),
+                description, city, generationType, sentFileFormat,
+                agencyType != null ? agencyType.toAggregate() : null,
+                null,
+                sentB2BPartner != null ? sentB2BPartner.toAggregate() : null,
+                country != null ? country.toAggregate() : null,
+                cityState != null ? cityState.toAggregate() : null,
                 isDefault
         );
     }

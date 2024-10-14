@@ -12,4 +12,5 @@ import lombok.Setter;
 @Setter
 public class PaymentExcelExporterResponse implements IResponse {
     private byte[] excel;
+    private String fileName;
 }

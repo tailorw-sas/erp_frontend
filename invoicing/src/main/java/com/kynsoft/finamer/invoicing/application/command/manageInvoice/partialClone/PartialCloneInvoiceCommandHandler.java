@@ -1,11 +1,16 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 
+import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
@@ -34,6 +39,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageInvoiceTransactionTypeService transactionTypeService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
+    private final IInvoiceCloseOperationService closeOperationService;
 
     public PartialCloneInvoiceCommandHandler(
 
@@ -45,7 +51,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
             IInvoiceStatusHistoryService invoiceStatusHistoryService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
             IManageInvoiceTransactionTypeService transactionTypeService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService) {
+            IManagePaymentTransactionTypeService paymentTransactionTypeService, IInvoiceCloseOperationService closeOperationService) {
 
         this.service = service;
 
@@ -59,13 +65,14 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.transactionTypeService = transactionTypeService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     @Transactional
     public void handle(PartialCloneInvoiceCommand command) {
-
         ManageInvoiceDto invoiceToClone = this.service.findById(command.getInvoice());
+
         List<ManageBookingDto> bookingDtos = new ArrayList<>();
 
         List<ManageRoomRateDto> roomRateDtos = new ArrayList<>();
@@ -95,6 +102,11 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         for (PartialCloneInvoiceAdjustmentRelation adjustmentRequest : command.getRoomRateAdjustments()) {
             for (ManageRoomRateDto roomRate : roomRateDtos) {
                 if (adjustmentRequest.getRoomRate().equals(roomRate.getId())) {
+                    RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+                            this.closeOperationService,
+                            adjustmentRequest.getAdjustment().getDate().toLocalDate(),
+                            invoiceToClone.getHotel().getId()
+                    ));
                     Double adjustmentAmount = adjustmentRequest.getAdjustment().getAmount();
                     roomRate.setInvoiceAmount(roomRate.getInvoiceAmount() + adjustmentAmount);
                     List<ManageAdjustmentDto> adjustmentDtoList = roomRate.getAdjustments() != null ? roomRate.getAdjustments() : new LinkedList<>();
@@ -135,10 +147,16 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
         List<ManageAttachmentDto> attachmentDtos = new LinkedList<>();
 
+        int cont = 0;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
+            RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
+                    command.getAttachmentCommands().get(i).getFile()
+            ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
-
+            if(attachmentType.isAttachInvDefault()) {
+                cont++;
+            }
             ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
                     command.getAttachmentCommands().get(i).getId(),
                     null,
@@ -151,12 +169,22 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
             attachmentDtos.add(attachmentDto);
         }
+        if(cont == 0){
+            throw new BusinessException(
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+            );
+        }
 
         for (ManageBookingDto booking : bookingDtos) {
             this.calculateBookingHotelAmount(booking);
-
         }
-
+        if(!validateManageAdjustments(bookingDtos)){
+            throw new BusinessException(
+                    DomainErrorMessage.MANAGE_BOOKING_ADJUSTMENT,
+                    DomainErrorMessage.MANAGE_BOOKING_ADJUSTMENT.getReasonPhrase()
+            );
+        }
         String invoiceNumber = InvoiceType.getInvoiceTypeCode(invoiceToClone.getInvoiceType());
 
         if (invoiceToClone.getHotel().getManageTradingCompanies() != null
@@ -240,5 +268,28 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
         }
     }
+
+    public boolean validateManageAdjustments(List<ManageBookingDto> bookings) {
+        for (ManageBookingDto booking : bookings) {
+            if (booking.getRoomRates() != null) {
+                boolean hasAdjustment = false;
+                for (ManageRoomRateDto roomRate : booking.getRoomRates()) {
+                    if (roomRate.getAdjustments() != null && !roomRate.getAdjustments().isEmpty()) {
+                        hasAdjustment = true;
+                        break;
+                    }
+                }
+                if (!hasAdjustment) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        // Si todos los ManageBooking tienen al menos un ManageAdjustment, retornamos true
+        return true;
+    }
+
 
 }

@@ -16,6 +16,7 @@ public class CreateManageLanguageCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
+    private Boolean defaults;
 
     @Override
     public ICommandMessage getMessage() {

@@ -53,10 +53,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     private final IManagePaymentTransactionTypeService transactionTypeService;
     private final PaymentImportAntiErrorRepository antiErrorRepository;
     private final PaymentImportErrorRepository paymentImportErrorRepository;
-    private final IManageEmployeeService employeeService;
-    private final ServiceLocator<IMediator> serviceLocator;
-
-
     public PaymentImportAntiIncomeHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
                                                     PaymentAntiValidatorFactory paymentAntiValidatorFactory,
                                                     RedisTemplate<String, String> redisTemplate,
@@ -64,9 +60,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                                                     ApplicationEventPublisher applicationEventPublisher,
                                                     IManagePaymentTransactionTypeService transactionTypeService,
                                                     PaymentImportAntiErrorRepository antiErrorRepository,
-                                                    PaymentImportErrorRepository paymentImportErrorRepository,
-                                                    IManageEmployeeService employeeService,
-                                                    ServiceLocator<IMediator> serviceLocator) {
+                                                    PaymentImportErrorRepository paymentImportErrorRepository) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentAntiValidatorFactory = paymentAntiValidatorFactory;
@@ -75,12 +69,11 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         this.transactionTypeService = transactionTypeService;
         this.antiErrorRepository = antiErrorRepository;
         this.paymentImportErrorRepository = paymentImportErrorRepository;
-        this.employeeService = employeeService;
-        this.serviceLocator = serviceLocator;
     }
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        this.totalProcessRow=0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
         paymentAntiValidatorFactory.createValidators();
         ExcelBeanReader<AntiToIncomeRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, AntiToIncomeRow.class);
@@ -90,6 +83,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             row.setImportType(request.getImportPaymentType().name());
             if (paymentAntiValidatorFactory.validate(row)) {
                 cachingPaymentImport(row);
+                totalProcessRow++;
             }
         }
     }
@@ -208,6 +202,5 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         ManagePaymentTransactionTypeResponse response1 = (ManagePaymentTransactionTypeResponse) response.getData().get(0);
         return response1.getId();
     }
-
 
 }

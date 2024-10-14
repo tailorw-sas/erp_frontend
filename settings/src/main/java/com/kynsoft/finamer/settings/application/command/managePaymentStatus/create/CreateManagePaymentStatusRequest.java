@@ -14,4 +14,5 @@ public class CreateManagePaymentStatusRequest {
     private String description;
     private Boolean defaults;
     private Boolean applied;
+    private boolean confirmed;
 }

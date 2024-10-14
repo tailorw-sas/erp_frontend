@@ -2,15 +2,15 @@ package com.kynsoft.report.applications.command.dbconection.delete;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.report.domain.dto.DBConectionDto;
-import com.kynsoft.report.domain.services.IDBConectionService;
+import com.kynsoft.report.domain.services.IDBConnectionService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DeleteDBConectionCommandHandler implements ICommandHandler<DeleteDBConectionCommand> {
 
-    private final IDBConectionService service;
+    private final IDBConnectionService service;
 
-    public DeleteDBConectionCommandHandler(IDBConectionService service) {
+    public DeleteDBConectionCommandHandler(IDBConnectionService service) {
         this.service = service;
     }
 

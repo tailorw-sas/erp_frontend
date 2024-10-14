@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.kynsoft.finamer.invoicing.domain.dto.ManageCurrencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -76,6 +77,10 @@ public class ManageHotel implements Serializable {
     @OneToOne(mappedBy = "hotel", cascade = CascadeType.REMOVE)
     private InvoiceCloseOperation closeOperation;  // Relación uno a uno con InvoiceCloseOperation
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "currency_id")
+    private ManageCurrency manageCurrency;
+
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -93,6 +98,7 @@ public class ManageHotel implements Serializable {
         this.manageCityState = dto.getManageCityState() != null ? new ManageCityState(dto.getManageCityState()) : null;
         this.manageCountry = dto.getManageCountry() != null ? new ManageCountry(dto.getManageCountry()) : null;
         this.city = dto.getCity();
+        this.manageCurrency = dto.getManageCurrency() != null ? new ManageCurrency(dto.getManageCurrency()) : null;
     }
 
     public ManageHotelDto toAggregate() {
@@ -103,7 +109,8 @@ public class ManageHotel implements Serializable {
                 babelCode,
                 manageCountry != null ? manageCountry.toAggregate() : null,
                 manageCityState != null ? manageCityState.toAggregateSimple() : null,
-                city
+                city,
+                manageCurrency != null ? manageCurrency.toAggregate() : null
         );
     }
 }
