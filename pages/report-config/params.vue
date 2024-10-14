@@ -67,6 +67,22 @@ const fields: Array<FieldDefinitionType> = [
     })
   },
   {
+    field: 'componentType',
+    header: 'Component Type',
+    dataType: 'text',
+    class: 'field col-12 required',
+    disabled: true,
+    validation: z.string().trim().min(1, 'The component type field is required').max(50, 'Maximum 100 characters')
+  },
+  {
+    field: 'paramName',
+    header: 'Param Name',
+    dataType: 'text',
+    class: 'field col-12 required',
+    disabled: true,
+    validation: z.string().trim().min(1, 'The param name field is required').max(50, 'Maximum 100 characters')
+  },
+  {
     field: 'type',
     header: 'Type',
     dataType: 'select',
@@ -75,13 +91,6 @@ const fields: Array<FieldDefinitionType> = [
       id: z.string().min(1, 'The type field is required'),
       name: z.string().min(1, 'The type field is required'),
     })
-  },
-  {
-    field: 'paramName',
-    header: 'Param Name',
-    dataType: 'text',
-    class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The param name field is required').max(50, 'Maximum 100 characters')
   },
   {
     field: 'label',
@@ -109,6 +118,7 @@ const fields: Array<FieldDefinitionType> = [
 const item = ref<GenericObject>(
   {
     paramName: '',
+    componentType: '',
     type: '',
     module: '',
     service: '',
@@ -120,6 +130,7 @@ const item = ref<GenericObject>(
 const itemTemp = ref<GenericObject>(
   {
     paramName: '',
+    componentType: '',
     type: '',
     module: '',
     service: '',
