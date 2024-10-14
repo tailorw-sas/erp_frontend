@@ -1,7 +1,8 @@
 package com.kynsoft.finamer.audit.application.service;
 
-import com.kynsof.share.core.domain.response.PaginatedResponse;
+
 import com.kynsoft.finamer.audit.domain.dto.AuditRecordDto;
+import com.kynsoft.finamer.audit.domain.response.PaginatedResponse;
 import org.springframework.data.domain.Pageable;
 
 public interface AuditService {

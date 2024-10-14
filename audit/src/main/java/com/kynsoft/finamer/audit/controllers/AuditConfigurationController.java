@@ -1,23 +1,22 @@
 package com.kynsoft.finamer.audit.controllers;
 
-import com.kynsof.share.core.domain.request.PageableUtil;
-import com.kynsof.share.core.domain.request.SearchRequest;
-import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.audit.application.command.configuration.update.UpdateConfigurationCommand;
 import com.kynsoft.finamer.audit.application.command.configuration.update.UpdateConfigurationMessage;
 import com.kynsoft.finamer.audit.application.command.configuration.update.UpdateConfigurationRequest;
 import com.kynsoft.finamer.audit.application.query.configuration.getall.GetAllConfigurationQuery;
 import com.kynsoft.finamer.audit.application.query.configuration.getbyid.GetConfigurationByIdQuery;
-import com.kynsoft.finamer.audit.application.query.configuration.getbyid.GetConfigurationByIdResponse;
+import com.kynsoft.finamer.audit.application.query.configuration.getbyid.getConfigurationByIdResponse;
 import com.kynsoft.finamer.audit.application.query.configuration.search.SearchConfigurationQuery;
 import com.kynsoft.finamer.audit.application.query.configuration.search.SearchConfigurationResponse;
+import com.kynsoft.finamer.audit.domain.request.PageableUtil;
+import com.kynsoft.finamer.audit.domain.request.SearchRequest;
+import com.kynsoft.finamer.audit.infrastructure.bus.IMediator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,7 +31,7 @@ public class AuditConfigurationController {
     }
 
     @GetMapping()
-    public ResponseEntity<GetConfigurationByIdResponse> getAll(Pageable pageable) {
+    public ResponseEntity<getConfigurationByIdResponse> getAll(Pageable pageable) {
         GetAllConfigurationQuery query = new GetAllConfigurationQuery(pageable);
         return mediator.send(query);
     }

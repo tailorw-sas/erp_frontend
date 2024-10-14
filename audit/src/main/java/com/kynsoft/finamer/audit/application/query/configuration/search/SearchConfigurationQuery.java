@@ -1,8 +1,7 @@
 package com.kynsoft.finamer.audit.application.query.configuration.search;
 
-import com.kynsof.share.core.domain.bus.query.IQuery;
-import com.kynsof.share.core.domain.bus.query.IResponse;
-import com.kynsof.share.core.domain.request.FilterCriteria;
+import com.kynsoft.finamer.audit.domain.bus.query.IQuery;
+import com.kynsoft.finamer.audit.domain.request.FilterCriteria;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.data.domain.Pageable;

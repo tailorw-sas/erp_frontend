@@ -1,8 +1,9 @@
 package com.kynsoft.finamer.audit.controllers;
 
-import com.kynsof.share.core.infrastructure.bus.IMediator;
+
 import com.kynsoft.finamer.audit.application.query.audit.getall.AuditResponse;
 import com.kynsoft.finamer.audit.application.query.audit.getall.FindAllAuditQuery;
+import com.kynsoft.finamer.audit.infrastructure.bus.IMediator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

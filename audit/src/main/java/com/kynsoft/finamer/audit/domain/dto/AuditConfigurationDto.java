@@ -1,7 +1,20 @@
 package com.kynsoft.finamer.audit.domain.dto;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.index.Indexed;
 
-public record AuditConfigurationDto (String id,String entityName,boolean auditCreation,boolean auditUpdate,boolean auditDelete) {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
+
+import java.util.UUID;
+
+@ToString
+@Getter
+@AllArgsConstructor
+public class AuditConfigurationDto {
+    private UUID id;
+    private boolean auditCreate;
+    private boolean auditUpdate;
+    private boolean auditDelete;
+    private String serviceName;
+
 }

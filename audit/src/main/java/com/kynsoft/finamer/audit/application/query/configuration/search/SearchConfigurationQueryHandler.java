@@ -1,7 +1,8 @@
 package com.kynsoft.finamer.audit.application.query.configuration.search;
 
-import com.kynsof.share.core.domain.bus.query.IQueryHandler;
+
 import com.kynsoft.finamer.audit.application.service.AuditConfigurationService;
+import com.kynsoft.finamer.audit.domain.bus.query.IQueryHandler;
 import org.springframework.stereotype.Component;
 
 @Component

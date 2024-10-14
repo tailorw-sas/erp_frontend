@@ -23,12 +23,12 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.kynsoft.finamer</groupId>
-            <artifactId>share</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.kynsoft.finamer</groupId>-->
+<!--            <artifactId>share</artifactId>-->
+<!--            <version>0.0.1-SNAPSHOT</version>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>commons-io</groupId>

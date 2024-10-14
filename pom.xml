@@ -24,6 +24,8 @@
         <module>invoicing</module>
         <module>insis</module>
         <module>creditCard</module>
+        <module>audit</module>
+        <module>audit-agent</module>
     </modules>
     <build>
     </build>

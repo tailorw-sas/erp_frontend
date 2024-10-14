@@ -1,7 +1,8 @@
 package com.kynsoft.finamer.audit.application.command.configuration.update;
 
-import com.kynsof.share.core.domain.bus.command.ICommand;
-import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+
+import com.kynsoft.finamer.audit.domain.bus.command.ICommand;
+import com.kynsoft.finamer.audit.domain.bus.command.ICommandMessage;
 import lombok.Getter;
 
 import java.util.UUID;

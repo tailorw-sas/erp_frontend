@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
+@EntityListeners(value = AuditEntityListener.class)
 @Table(name = "manage_invoice")
 public class ManageInvoice {
 
