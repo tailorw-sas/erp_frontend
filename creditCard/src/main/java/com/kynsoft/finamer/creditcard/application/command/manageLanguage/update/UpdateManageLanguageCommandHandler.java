@@ -19,6 +19,7 @@ public class UpdateManageLanguageCommandHandler implements ICommandHandler<Updat
         ManageLanguageDto dto = service.findById(command.getId());
         dto.setName(command.getName());
         dto.setDefaults(command.getDefaults());
+        dto.setStatus(command.getStatus());
         this.service.update(dto);
     }
 }

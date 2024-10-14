@@ -48,7 +48,7 @@ public class UpdateManagerLanguageCommandHandler implements ICommandHandler<Upda
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageLanguageService.update(new UpdateManageLanguageKafka(dto.getId(), dto.getName(), dto.getDefaults()));
+            this.producerUpdateManageLanguageService.update(new UpdateManageLanguageKafka(dto.getId(), dto.getName(), dto.getDefaults(), dto.getStatus().name()));
         }
 
     }
