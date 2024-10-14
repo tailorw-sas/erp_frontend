@@ -423,51 +423,65 @@ async function getAgencyList(query: string) {
   }
 }
 
-async function getLanguageList(query: string, isDefault: boolean = false) {
+async function getLanguageByMerchantList(query: string, isDefault: boolean = false) {
   try {
+    if (!item.value.merchant) {
+      return // No listar si no hay merchant seleccionado
+    }
     if (isDefault) {
       loadingDefaultLanguage.value = true
     }
     const payload = {
       filter: isDefault
         ? [{
-            key: 'defaults',
+            key: 'manageLanguage.defaults',
             operator: 'EQUALS',
             value: true,
             logicalOperation: 'AND'
           }, {
-            key: 'code',
+            key: 'manageLanguage.code',
             operator: 'LIKE',
             value: query,
             logicalOperation: 'OR'
           }, {
-            key: 'name',
+            key: 'manageLanguage.name',
             operator: 'LIKE',
             value: query,
             logicalOperation: 'OR'
-          }, {
-            key: 'status',
+          }, /* {
+            key: 'manageLanguage.status',
             operator: 'EQUALS',
             value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }, */ {
+            key: 'manageMerchant.id',
+            operator: 'EQUALS',
+            value: item.value.merchant.id,
             logicalOperation: 'AND'
           }]
         : [
             {
-              key: 'name',
+              key: 'manageLanguage.name',
               operator: 'LIKE',
               value: query,
               logicalOperation: 'OR'
             },
             {
-              key: 'code',
+              key: 'manageLanguage.code',
               operator: 'LIKE',
               value: query,
               logicalOperation: 'OR'
             },
+            // {
+            //   key: 'status',
+            //   operator: 'EQUALS',
+            //   value: 'ACTIVE',
+            //   logicalOperation: 'AND'
+            // },
             {
-              key: 'status',
+              key: 'manageMerchant.id',
               operator: 'EQUALS',
-              value: 'ACTIVE',
+              value: item.value.merchant.id,
               logicalOperation: 'AND'
             }
           ],
@@ -477,12 +491,12 @@ async function getLanguageList(query: string, isDefault: boolean = false) {
       pageSize: 20,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-language', payload)
+    const response = await GenericService.create('creditcard', 'merchant-language-code/languages', payload)
     const { data: dataList } = response
     LanguageList.value = []
 
     for (const iterator of dataList) {
-      LanguageList.value = [...LanguageList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      LanguageList.value = [...LanguageList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status || 'ACTIVE' }]
     }
 
     if (isDefault && LanguageList.value.length > 0) {
@@ -535,8 +549,8 @@ watch(() => props.openDialog, async (newValue) => {
   if (newValue) {
     clearForm()
     handleMethodTypeChange('')
-    getLanguageList('', true)
     await getMerchantList('', true)
+    getLanguageByMerchantList('', true)
     // getHotelList('')
   }
 })
@@ -577,6 +591,11 @@ watch(() => props.openDialog, async (newValue) => {
               if (item.hotel) {
                 onUpdate('hotel', null)
               }
+              if (item.language) {
+                item.language = null
+                onUpdate('language', null)
+              }
+              getLanguageByMerchantList('', true)
             }"
             @load="($event) => getMerchantList($event)"
           />
@@ -641,7 +660,7 @@ watch(() => props.openDialog, async (newValue) => {
             @change="($event) => {
               onUpdate('language', $event)
             }"
-            @load="($event) => getLanguageList($event)"
+            @load="($event) => getLanguageByMerchantList($event)"
           />
           <Skeleton v-else height="2rem" class="" />
         </template>

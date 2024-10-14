@@ -507,6 +507,11 @@ export const model = ref([
             icon: 'pi pi-fw pi-folder',
             to: '/settings/merchant-config'
           },
+          {
+            label: 'Merchant Language',
+            icon: 'pi pi-fw pi-folder',
+            to: '/settings/merchant-language'
+          },
           // {
           //   label: 'Reconcile Status',
           //   icon: 'pi pi-fw pi-folder',
@@ -926,6 +931,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'Merchant Config',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/merchant-config'),
+              items: []
+            },
+            {
+              label: 'Merchant Language',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/merchant-language'),
               items: []
             },
             {
