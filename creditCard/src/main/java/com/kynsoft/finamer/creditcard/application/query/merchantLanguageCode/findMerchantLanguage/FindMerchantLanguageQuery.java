@@ -11,4 +11,8 @@ import java.util.UUID;
 public class FindMerchantLanguageQuery implements IQuery {
     private final UUID merchantId;
     private final UUID languageId;
+
+    public static FindMerchantLanguageQuery fromRequest(FindMerchantLanguageRequest request){
+        return new FindMerchantLanguageQuery(request.getMerchantId(), request.getLanguageId());
+    }
 }
