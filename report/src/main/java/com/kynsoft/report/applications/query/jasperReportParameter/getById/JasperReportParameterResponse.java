@@ -25,6 +25,7 @@ public class JasperReportParameterResponse implements IResponse {
     private String module;
     private String service;
     private String label;
+    private String componentType;
     private JasperReportTemplateResponse jasperReportTemplate;
 
     public JasperReportParameterResponse(JasperReportParameterDto dto){
@@ -34,6 +35,7 @@ public class JasperReportParameterResponse implements IResponse {
          module = dto.getModule();
          service = dto.getService();
          label = dto.getLabel();
+         componentType = dto.getComponentType();
          jasperReportTemplate = new JasperReportTemplateResponse(dto.getJasperReportTemplate());
     }
 }

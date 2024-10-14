@@ -95,13 +95,13 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
         }
 
         // Preparar el mapa para almacenar los detalles de los parámetros
-        Map<String, Map<String, String>> paramMap = new HashMap<>();
+       // Map<String, Map<String, String>> paramMap = new HashMap<>();
         for (JRParameter param : jasperReport.getParameters()) {
             if (!param.isSystemDefined() && param.isForPrompting()) { // Solo parámetros definidos por el usuario y que son promptables
-                Map<String, String> details = new HashMap<>();
-                details.put("description", param.getDescription() != null ? param.getDescription() : "No description");
-                details.put("type", param.getValueClassName());  // Añadir tipo de dato
-                paramMap.put(param.getName(), details);
+//                Map<String, String> details = new HashMap<>();
+//                details.put("description", param.getDescription() != null ? param.getDescription() : "No description");
+//                details.put("type", param.getValueClassName());  // Añadir tipo de dato
+//                paramMap.put(param.getName(), details);
 
                 this.reportParameterService.create(new JasperReportParameterDto(
                         UUID.randomUUID(), param.getName(), param.getValueClassName(), "",
