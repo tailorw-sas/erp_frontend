@@ -71,13 +71,13 @@ const fields: Array<FieldDefinitionType> = [
     field: 'defaults',
     header: 'Default',
     dataType: 'check',
-    class: 'field col-12 mb-3',
+    class: 'field col-12 ',
   },
   {
     field: 'isRemarkRequired',
     header: 'Remark Required',
     dataType: 'check',
-    class: 'field col-12 mb-3',
+    class: 'field col-12 mb-3 font-bold',
   },
   {
     field: 'minNumberOfCharacters',
