@@ -27,10 +27,10 @@ public class TransactionPaymentLogs implements Serializable {
     @Column(name = "transaction_id", unique = true)
     private UUID transactionId;
 
-    @Column(name= "merchant_request" ,columnDefinition = "TEXT")
+    @Column(name= "merchant_request", columnDefinition = "TEXT")
     private String merchantRequest;
 
-    @Column(name= "merchant_response")
+    @Column(name= "merchant_response", columnDefinition = "TEXT")
     private String merchantResponse;
 
     @CreationTimestamp

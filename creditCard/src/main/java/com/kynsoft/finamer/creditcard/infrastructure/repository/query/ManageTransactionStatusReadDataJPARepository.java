@@ -39,4 +39,16 @@ public interface ManageTransactionStatusReadDataJPARepository extends JpaReposit
 
     @Query("SELECT b FROM ManageTransactionStatus b WHERE b.receivedStatus = true")
     Optional<ManageTransactionStatus> findByReceivedStatus();
+
+    @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.cancelledStatus = true AND b.id <> :id")
+    Long countByCancelledStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.cancelledStatus = true")
+    Optional<ManageTransactionStatus> findByCancelledStatus();
+
+    @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.declinedStatus = true AND b.id <> :id")
+    Long countByDeclinedStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.declinedStatus = true")
+    Optional<ManageTransactionStatus> findByDeclinedStatus();
 }

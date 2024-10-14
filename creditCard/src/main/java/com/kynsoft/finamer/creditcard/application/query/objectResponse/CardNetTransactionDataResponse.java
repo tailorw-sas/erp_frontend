@@ -1,6 +1,8 @@
 package com.kynsoft.finamer.creditcard.application.query.objectResponse;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kynsoft.finamer.creditcard.domain.dto.CardNetStatusResponseDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
 import lombok.Data;
 
 @Data
@@ -29,4 +31,7 @@ public class CardNetTransactionDataResponse {
 
     @JsonProperty("TransactionID")
     private String transactionID;
+
+    @JsonProperty("merchantStatus")
+    private CardNetStatusResponseDto merchantStatus;
 }

@@ -6,15 +6,15 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.rules.dbconection.DBConectionOldPasswordCheckRule;
-import com.kynsoft.report.domain.services.IDBConectionService;
+import com.kynsoft.report.domain.services.IDBConnectionService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ChangePasswordDBConectionCommandHandler implements ICommandHandler<ChangePasswordDBConectionCommand> {
 
-    private final IDBConectionService service;
+    private final IDBConnectionService service;
 
-    public ChangePasswordDBConectionCommandHandler(IDBConectionService service) {
+    public ChangePasswordDBConectionCommandHandler(IDBConnectionService service) {
         this.service = service;
     }
 

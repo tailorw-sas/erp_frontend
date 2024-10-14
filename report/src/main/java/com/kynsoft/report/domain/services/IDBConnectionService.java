@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.UUID;
 
-public interface IDBConectionService {
+public interface IDBConnectionService {
 
     void create(DBConectionDto object);
 

@@ -16,11 +16,12 @@ public class UpdateJasperReportParameterCommandHandler implements ICommandHandle
 
     @Override
     public void handle(UpdateJasperReportParameterCommand command) {
-        JasperReportParameterDto reportParameterDto = service.findById(command.getReportId());
+        JasperReportParameterDto reportParameterDto = service.findById(command.getId());
         reportParameterDto.setService(command.getService());
         reportParameterDto.setLabel(command.getLabel());
         reportParameterDto.setModule(command.getModule());
         reportParameterDto.setType(command.getType());
+        reportParameterDto.setComponentType(command.getComponentType());
         this.service.update(reportParameterDto);
 
     }

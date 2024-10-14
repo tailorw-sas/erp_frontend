@@ -1,6 +1,5 @@
 package com.kynsoft.report.domain.dto;
 
-import com.kynsoft.report.infrastructure.entity.JasperReportParameter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +19,7 @@ public class JasperReportParameterDto {
     private String module;
     private String service;
     private String label;
+    private String componentType;
     private JasperReportTemplateDto jasperReportTemplate;
 
 }

@@ -7,9 +7,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
-import com.kynsoft.finamer.creditcard.domain.rules.manageTransactionStatus.ManageTransactionReceivedStatusMustBeUniqueRule;
-import com.kynsoft.finamer.creditcard.domain.rules.manageTransactionStatus.ManageTransactionRefundStatusMustBeUniqueRule;
-import com.kynsoft.finamer.creditcard.domain.rules.manageTransactionStatus.ManageTransactionSentStatusMustBeUniqueRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageTransactionStatus.*;
 import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +38,13 @@ public class UpdateManageTransactionStatusCommandHandler implements ICommandHand
         if (command.isReceivedStatus()){
             RulesChecker.checkRule(new ManageTransactionReceivedStatusMustBeUniqueRule(this.service, command.getId()));
         }
+        if (command.isCancelledStatus()){
+            RulesChecker.checkRule(new ManageTransactionCancelledStatusMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.isDeclinedStatus()){
+            RulesChecker.checkRule(new ManageTransactionDeclinedStatusMustBeUniqueRule(this.service, command.getId()));
+        }
+
         ManageTransactionStatusDto dto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -51,6 +56,8 @@ public class UpdateManageTransactionStatusCommandHandler implements ICommandHand
         UpdateIfNotNull.updateBoolean(dto::setSentStatus, command.isSentStatus(), dto.isSentStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setRefundStatus, command.isRefundStatus(), dto.isRefundStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setReceivedStatus, command.isReceivedStatus(), dto.isReceivedStatus(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setCancelledStatus, command.isCancelledStatus(), dto.isCancelledStatus(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setDeclinedStatus, command.isDeclinedStatus(), dto.isDeclinedStatus(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         updateNavigate(dto::setNavigate, command.getNavigate(), dto.getNavigate().stream().map(ManageTransactionStatusDto::getId).collect(Collectors.toList()), update::setUpdate);
 
