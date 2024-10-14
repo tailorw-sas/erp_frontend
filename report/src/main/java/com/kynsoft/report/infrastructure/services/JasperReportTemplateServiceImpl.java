@@ -27,15 +27,19 @@ import java.util.UUID;
 @Service
 public class JasperReportTemplateServiceImpl implements IJasperReportTemplateService {
 
-    @Autowired
-    private JasperReportTemplateWriteDataJPARepository commandRepository;
+    private final JasperReportTemplateWriteDataJPARepository commandRepository;
 
-    @Autowired
-    private JasperReportTemplateReadDataJPARepository queryRepository;
+    private final JasperReportTemplateReadDataJPARepository queryRepository;
+
+    public JasperReportTemplateServiceImpl(JasperReportTemplateWriteDataJPARepository commandRepository,
+                                           JasperReportTemplateReadDataJPARepository queryRepository) {
+        this.commandRepository = commandRepository;
+        this.queryRepository = queryRepository;
+    }
 
     @Override
-    public void create(JasperReportTemplateDto object) {
-        this.commandRepository.save(new JasperReportTemplate(object));
+    public UUID create(JasperReportTemplateDto object) {
+        return this.commandRepository.save(new JasperReportTemplate(object)).getId();
     }
 
     @Override

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IJasperReportTemplateService {
-    void create(JasperReportTemplateDto object);
+    UUID create(JasperReportTemplateDto object);
     void update(JasperReportTemplateDto object);
     void delete(JasperReportTemplateDto object);
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
