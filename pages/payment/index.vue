@@ -101,6 +101,7 @@ const isPrintByRightClick = ref(false)
 const idPaymentSelectedForPrint = ref('')
 const paymentSelectedForPrintList = ref<any[]>([])
 const openPrint = ref(false)
+const openModalExportToExcel = ref(false)
 const loadingPrintDetail = ref(false)
 const loadingSaveAll = ref(false)
 const formReload = ref(0)
@@ -687,7 +688,42 @@ const applyPaymentPaginationOtherDeduction = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+
+const confApiPaymentExportToExcel = reactive({
+  moduleApi: 'payment',
+  uriApi: 'payment/excel-exporter',
+})
+
 const applyPaymentOnChangePageOtherDeduction = ref<PageState>()
+
+const loadingExportToExcel = ref(false)
+const fieldExportToExcel = ref<FieldDefinitionType[]>([
+  {
+    field: 'exportSumary',
+    header: 'Export Sumary',
+    dataType: 'check',
+    disabled: true,
+    class: 'field col-12 md:col-6 required mb-3',
+  },
+  {
+    field: 'fileName',
+    header: 'File Name',
+    dataType: 'text',
+    class: 'field col-12 required mb-2',
+  },
+])
+
+const objExportToExcel = ref<GenericObject>({
+  search: payload.value,
+  fileName: '',
+  exportSumary: false
+})
+
+const objExportToExcelTemp = ref<GenericObject>({
+  search: payload.value,
+  fileName: '',
+  exportSumary: false
+})
 
 interface DataListItemEmployee {
   id: string
@@ -2248,18 +2284,16 @@ function assingFunctionsToExportMenuInItemMenuList() {
   const itemsExportToExcel: any = itemMenuList.value.find(item => item.id === 'export')
   if (itemsExportToExcel) {
     itemsExportToExcel.menuItems = itemsExportToExcel.menuItems.map((item: any) => {
-      console.log(item)
       const objExportHierarchy = item.items.find((obj: any) => obj.id === 'export-hierarchy')
       if (objExportHierarchy) {
         objExportHierarchy.command = function () {
-          console.log('Esto es una prueba')
         }
       }
 
       const objExportSummary = item.items.find((obj: any) => obj.id === 'export-summary')
       if (objExportSummary) {
         objExportSummary.command = function () {
-          exportToExcel()
+          openDialogExportToExcel()
         }
       }
 
@@ -2335,6 +2369,59 @@ async function closeDialogPrint() {
   itemPrint.value = JSON.parse(JSON.stringify(itemTempPrint.value))
   openPrint.value = false
   isPrintByRightClick.value = false
+}
+
+async function paymentExportToExcel(event: any) {
+  try {
+    loadingExportToExcel.value = true
+    let nameOfPdf = ''
+    const payloadTemp: { fileName: string, search: IQueryRequest } = {
+      fileName: objExportToExcel.value.fileName,
+      search: payload.value
+    }
+
+    const response: any = await GenericService.create(confApiPaymentExportToExcel.moduleApi, confApiPaymentExportToExcel.uriApi, payloadTemp)
+
+    // Asignar el nombre al archivo Excel
+    nameOfPdf = objExportToExcel.value.fileName ? objExportToExcel.value.fileName : `payment-list-${dayjs().format('YYYY-MM-DD')}-excel.xlsx`
+
+    // Convertir Base64 a Blob
+    const byteCharacters = atob(response.excel) // Decodifica la cadena Base64
+    const byteNumbers = Array.from({ length: byteCharacters.length }).fill(null).map((_, i) => byteCharacters.charCodeAt(i))
+    const byteArray = new Uint8Array(byteNumbers)
+    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+
+    // Crear URL y descargar el archivo
+    const url = window.URL.createObjectURL(blob)
+
+    if (url) {
+      const a = document.createElement('a')
+      a.href = url
+      a.download = nameOfPdf
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    }
+
+    loadingExportToExcel.value = false
+  }
+  catch (error) {
+    loadingExportToExcel.value = false
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was failed', life: 3000 })
+  }
+  finally {
+    loadingExportToExcel.value = false
+    openModalExportToExcel.value = false
+  }
+}
+
+async function openDialogExportToExcel() {
+  openModalExportToExcel.value = true
+}
+
+async function closeDialogExportToExcel() {
+  openModalExportToExcel.value = false
 }
 
 function handleAcctions(itemId: any) {
@@ -3003,7 +3090,8 @@ onMounted(async () => {
       @on-change-filter="parseDataTableFilter"
       @on-list-item="resetListItems"
       @on-sort-field="onSortField"
-      @update:clicked-item="handleAcctions($event)"
+      @update:clicked-item="
+        ($event)"
       @on-row-double-click="goToFormInNewTab($event)"
       @on-row-right-click="onRowContextMenu($event)"
     >
@@ -3521,7 +3609,7 @@ onMounted(async () => {
             container-class="grid pt-3"
             :show-actions="true"
             :loading-save="loadingSaveAll"
-            @cancel="closeDialogPrint"
+            @cancel="closeDialogExportToExcel"
             @submit="paymentPrint($event)"
           >
             <template #field-paymentSupport="{ item: data, onUpdate }">
@@ -3591,9 +3679,124 @@ onMounted(async () => {
                 Invoice Related With Supports
               </label>
             </template>
+
             <template #form-footer="props">
               <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
               <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" />
+            </template>
+          </EditFormV2>
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- Export To Excel -->
+    <Dialog
+      v-model:visible="openModalExportToExcel"
+      modal
+      class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border"
+      :style="{ width: 'auto' }"
+      :pt="{
+        root: {
+          class: 'custom-dialog',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+        // mask: {
+        //   style: 'backdrop-filter: blur(5px)',
+        // },
+      }"
+      @hide="closeDialogExportToExcel()"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Export To Excel
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-3">
+          <EditFormV2
+            :key="formReload"
+            class="mt-3"
+            :fields="fieldExportToExcel"
+            :item="objExportToExcel"
+            container-class="grid pt-3"
+            :show-actions="true"
+            :loading-save="loadingSaveAll"
+            @cancel="closeDialogPrint"
+            @submit="paymentExportToExcel($event)"
+          >
+            <template #field-exportSumary="{ item: data, onUpdate }">
+              <Checkbox
+                id="exportSumary"
+                v-model="data.exportSumary"
+                :binary="true"
+                disabled
+                @update:model-value="($event) => {
+                  onUpdate('exportSumary', $event)
+                }"
+              />
+              <label for="exportSumary" class="ml-2 font-bold">
+                Export Sumary
+              </label>
+            </template>
+
+            <template #field-allPaymentsSupport="{ item: data, onUpdate }">
+              <Checkbox
+                id="allPaymentsSupport"
+                v-model="data.allPaymentsSupport"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('allPaymentsSupport', $event)
+                  if ($event) {
+                    onUpdate('paymentSupport', false)
+                  }
+                }"
+              />
+              <label for="allPaymentsSupport" class="ml-2 font-bold">
+                All Payment Supports
+              </label>
+            </template>
+
+            <template #field-invoiceRelated="{ item: data, onUpdate }">
+              <Checkbox
+                id="invoiceRelated"
+                v-model="data.invoiceRelated"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('invoiceRelated', $event)
+                  if ($event) {
+                    onUpdate('invoiceRelatedWithSupport', false)
+                  }
+                }"
+              />
+              <label for="invoiceRelated" class="ml-2 font-bold">
+                Invoice Related
+              </label>
+            </template>
+
+            <template #field-invoiceRelatedWithSupport="{ item: data, onUpdate }">
+              <Checkbox
+                id="invoiceRelatedWithSupport"
+                v-model="data.invoiceRelatedWithSupport"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('invoiceRelatedWithSupport', $event)
+                  if ($event) {
+                    onUpdate('invoiceRelated', false)
+                  }
+                }"
+              />
+              <label for="invoiceRelatedWithSupport" class="ml-2 font-bold">
+                Invoice Related With Supports
+              </label>
+            </template>
+            <template #form-footer="props">
+              <Button v-tooltip.top="'Export'" :loading="loadingExportToExcel" class="w-3rem ml-1 sticky" icon="pi pi-save" @click="props.item.submitForm($event)" />
+              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogExportToExcel" />
             </template>
           </EditFormV2>
         </div>

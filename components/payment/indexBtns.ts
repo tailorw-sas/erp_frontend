@@ -194,6 +194,7 @@ export const itemMenuList = ref<MenuItem[]>([
     btnAriaControls: 'overlay_menu6',
     btnDisabled: false,
     menuId: 'overlay_menu6',
+    btnOnClick: () => {},
     menuRef: null as MenuRefType,
     menuItems: itemsExportToExcel.value,
     permission: ['PAYMENT-MANAGEMENT:EXPORT'],

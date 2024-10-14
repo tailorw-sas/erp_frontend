@@ -2744,6 +2744,7 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
+
         <template #field-paymentSource="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
@@ -2771,6 +2772,7 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
+
         <template #field-transactionDate="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
@@ -2821,6 +2823,7 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
+
         <template #field-hotel="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
@@ -2871,6 +2874,7 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
+
         <template #field-bankAccount="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
