@@ -579,9 +579,14 @@ const createItems = ref([
   //   command: () => navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${expandedInvoice.value}`),
   //   disabled: computedShowMenuItemCredit
   // },
+  // {
+  //   label: 'Old Credit',
+  //   command: () => navigateTo(`invoice/create?type=${InvoiceType.OLD_CREDIT}`, { open: { target: '_blank' } }),
+  //   disabled: computedShowMenuItemOldCredit
+  // },
   {
     label: 'Old Credit',
-    command: () => navigateTo(`invoice/create?type=${InvoiceType.OLD_CREDIT}`, { open: { target: '_blank' } }),
+    command: () => navigateTo(`invoice/old-credit/create`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemOldCredit
   },
 ])

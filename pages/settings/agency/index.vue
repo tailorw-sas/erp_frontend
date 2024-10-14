@@ -190,6 +190,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
     validation: z.string().email('Invalid email').or(z.string().length(0))
   },
   {
@@ -198,6 +199,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
     validation: z.string().email('Invalid email').or(z.string().length(0))
   },
   {
@@ -206,6 +208,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
   },
   {
     field: 'isDefault',
@@ -532,7 +535,6 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-
       if (response) {
         item.value.id = response.id
         item.value.code = response.code

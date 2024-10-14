@@ -84,7 +84,7 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'emailContact',
     header: 'Email Contact',
-    dataType: 'text',
+    dataType: 'textarea',
     class: 'field col-12 required',
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 100 characters')
   },

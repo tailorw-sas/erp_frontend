@@ -308,7 +308,7 @@ onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
   if (props.isCreationDialog) {
-    showTabs.value = route.query.type !== InvoiceType.CREDIT
+    showTabs.value = true // route.query.type !== InvoiceType.CREDIT
   }
 })
 </script>
