@@ -197,17 +197,19 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 data.getNumber()
         );
     }
+
     public boolean hasPastDueBooking(List<ManageBooking> bookings) {
         LocalDateTime currentDate = LocalDateTime.now(); // Obtener la fecha y hora actual
         if (bookings != null && !bookings.isEmpty()) {
             for (ManageBooking booking : bookings) {
-                if (booking.getCheckOut() != null && booking.getCheckOut().isBefore(currentDate)) {
-                    return true;
+                if (booking.getCheckOut() != null &&
+                        (booking.getCheckOut().isBefore(currentDate) || booking.getCheckOut().isEqual(currentDate))) {
+                    return true; // Si checkOut es antes o igual a currentDate, devolver true
                 }
             }
         }
 
-        return false; // Si no se encontró ningún booking con checkOut anterior, devolver false
+        return false; // Si no se encontró ningún booking con checkOut anterior o igual, devolver false
     }
 
     private PaginatedResponse getPaginatedResponseToPayment(Page<ManageInvoice> data) {
