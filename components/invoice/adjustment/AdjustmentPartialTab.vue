@@ -702,9 +702,9 @@ onMounted(() => {
       logicalOperation: 'AND'
     }]
   }
-  if (!props.isCreationDialog) {
-    getAdjustmentList()
-  }
+  //if (!props.isCreationDialog) {
+  //  getAdjustmentList()
+ // }
 })
 </script>
 
