@@ -9,11 +9,10 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.report.applications.query.dbconection.getById.DBConectionResponse;
 import com.kynsoft.report.domain.dto.DBConectionDto;
-import com.kynsoft.report.domain.services.IDBConectionService;
+import com.kynsoft.report.domain.services.IDBConnectionService;
 import com.kynsoft.report.infrastructure.entity.DBConection;
 import com.kynsoft.report.infrastructure.repository.command.DBConectionWriteDataJPARepository;
 import com.kynsoft.report.infrastructure.repository.query.DBConectionReadDataJPARepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class DBConectionServiceImpl implements IDBConectionService {
+public class DBConectionServiceImpl implements IDBConnectionService {
 
     private final DBConectionWriteDataJPARepository repositoryCommand;
 

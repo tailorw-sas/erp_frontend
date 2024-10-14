@@ -9,7 +9,7 @@ import com.kynsoft.report.domain.rules.jasperReport.ManageJasperReportCodeMustBe
 import com.kynsoft.report.domain.rules.jasperReport.ManageReportCodeMustBeNullRule;
 import com.kynsoft.report.domain.rules.jasperReport.ManageReportNameMustBeNullRule;
 import com.kynsoft.report.domain.rules.jasperReport.ManageReportParentIndexMustBeNullRule;
-import com.kynsoft.report.domain.services.IDBConectionService;
+import com.kynsoft.report.domain.services.IDBConnectionService;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 import com.kynsoft.report.domain.services.IReportParameterService;
 import com.kynsoft.report.domain.services.IReportService;
@@ -32,16 +32,15 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
 
     private final IJasperReportTemplateService service;
     private final IReportParameterService reportParameterService;
-
-    private final IDBConectionService connectionService;
-    private final IReportService reportService;
+    private final IDBConnectionService connectionService;
     private final RestTemplate restTemplate;
 
-    public CreateJasperReportTemplateCommandHandler(IJasperReportTemplateService service, IReportParameterService reportParameterService, IDBConectionService conectionService, IReportService reportService, RestTemplate restTemplate) {
+    public CreateJasperReportTemplateCommandHandler(IJasperReportTemplateService service,
+                                                    IReportParameterService reportParameterService,
+                                                    IDBConnectionService connectionService, RestTemplate restTemplate) {
         this.service = service;
         this.reportParameterService = reportParameterService;
-        this.connectionService = conectionService;
-        this.reportService = reportService;
+        this.connectionService = connectionService;
         this.restTemplate = restTemplate;
     }
 

@@ -2,7 +2,6 @@ package com.kynsoft.report.applications.query.jasperReportParameter.search;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.report.domain.services.IDBConectionService;
 import com.kynsoft.report.domain.services.IReportParameterService;
 import org.springframework.stereotype.Component;
 

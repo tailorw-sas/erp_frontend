@@ -1,9 +1,7 @@
 package com.kynsoft.report.applications.query.jasperReportParameter.getById;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
-import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.dto.JasperReportParameterDto;
-import com.kynsoft.report.domain.services.IDBConectionService;
 import com.kynsoft.report.domain.services.IReportParameterService;
 import org.springframework.stereotype.Component;
 

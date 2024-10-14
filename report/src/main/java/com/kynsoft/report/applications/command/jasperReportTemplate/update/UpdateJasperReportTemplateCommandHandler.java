@@ -9,7 +9,7 @@ import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
 import com.kynsoft.report.domain.dto.status.Status;
-import com.kynsoft.report.domain.services.IDBConectionService;
+import com.kynsoft.report.domain.services.IDBConnectionService;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 
 import java.util.UUID;
@@ -21,9 +21,9 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
 
     private final IJasperReportTemplateService service;
 
-    private final IDBConectionService conectionService;
+    private final IDBConnectionService conectionService;
 
-    public UpdateJasperReportTemplateCommandHandler(IJasperReportTemplateService service, IDBConectionService conectionService) {
+    public UpdateJasperReportTemplateCommandHandler(IJasperReportTemplateService service, IDBConnectionService conectionService) {
         this.service = service;
         this.conectionService = conectionService;
     }
