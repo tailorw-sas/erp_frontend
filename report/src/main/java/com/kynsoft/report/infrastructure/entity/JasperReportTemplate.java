@@ -33,9 +33,6 @@ public class JasperReportTemplate extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private Status status;
-
-    private String parameters;
-
     private Double parentIndex;
     private Double menuPosition;
     private String lanPath;
@@ -72,7 +69,6 @@ public class JasperReportTemplate extends BaseEntity {
         this.description = jasperReportTemplateDto.getDescription();
         this.file = jasperReportTemplateDto.getFile();
         this.type = jasperReportTemplateDto.getType();
-        this.parameters = jasperReportTemplateDto.getParameters();
 
         this.parentIndex = jasperReportTemplateDto.getParentIndex();
         this.menuPosition = jasperReportTemplateDto.getMenuPosition();
@@ -87,7 +83,7 @@ public class JasperReportTemplate extends BaseEntity {
         this.rootIndex = jasperReportTemplateDto.getRootIndex();
         this.language = jasperReportTemplateDto.getLanguage();
         this.status = jasperReportTemplateDto.getStatus();
-        this.dbConection = jasperReportTemplateDto.getDbConection() != null ? new DBConection(jasperReportTemplateDto.getDbConection()) : null;
+        this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConection(jasperReportTemplateDto.getDbConectionDto()) : null;
         this.query = jasperReportTemplateDto.getQuery();
     }
 
@@ -102,7 +98,6 @@ public class JasperReportTemplate extends BaseEntity {
                 templateContentUrlS,
                 type,
                 status,
-                parameters,
                 createdAt,
                 parentIndex,
                 menuPosition,

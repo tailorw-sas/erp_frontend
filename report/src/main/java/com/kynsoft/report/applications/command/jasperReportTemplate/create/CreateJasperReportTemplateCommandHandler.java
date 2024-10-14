@@ -62,7 +62,6 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
                 command.getDescription(),
                 command.getFile(),
                 command.getType(),
-                command.getParameters(),
                 command.getParentIndex(),
                 command.getMenuPosition(),
                 command.getLanPath(),
