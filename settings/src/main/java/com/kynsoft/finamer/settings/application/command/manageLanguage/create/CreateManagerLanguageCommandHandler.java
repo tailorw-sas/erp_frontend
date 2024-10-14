@@ -43,6 +43,6 @@ public class CreateManagerLanguageCommandHandler implements ICommandHandler<Crea
                 command.getIsEnabled(),
                 command.getDefaults()
         ));
-        this.producerReplicateManageLanguageService.create(new ReplicateManageLanguageKafka(command.getId(), command.getCode(), command.getName()));
+        this.producerReplicateManageLanguageService.create(new ReplicateManageLanguageKafka(command.getId(), command.getCode(), command.getName(), command.getDefaults()));
     }
 }
