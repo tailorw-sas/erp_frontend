@@ -16,6 +16,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -159,6 +160,8 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             Map<String, String> requestData = new HashMap<>();
             String successUrl = merchantConfigDto.getSuccessUrl();
             String cancelUrl = merchantConfigDto.getErrorUrl();
+            String amountString = BigDecimal.valueOf(transactionDto.getAmount()).multiply(new BigDecimal(100)).stripTrailingZeros()
+                    .toPlainString();
 
             requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
             requestData.put("CurrencyCode", "214"); // dejar 214 por ahora que es el peso dominicano. El usd es 840
@@ -175,7 +178,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             requestData.put("OrdenId", transactionDto.getId().toString()); //Viene en el request
             requestData.put("MerchantName", merchantConfigDto.getName()); //Campo name de Merchant Config
             requestData.put("IpClient", ""); // Campo ip del b2b partner del merchant
-            requestData.put("Amount", transactionDto.getAmount().toString()); //Viene en el request
+            requestData.put("Amount", amountString); //Viene en el request
 
             // Enviar la solicitud POST y obtener la respuesta
             RestTemplate restTemplate = new RestTemplate();

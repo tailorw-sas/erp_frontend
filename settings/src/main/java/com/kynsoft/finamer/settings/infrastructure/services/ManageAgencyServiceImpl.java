@@ -74,7 +74,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
-    @Cacheable(cacheNames = "manageAgency", key = "#id", unless = "#result == null")
+    //@Cacheable(cacheNames = "manageAgency", key = "#id", unless = "#result == null")
     public ManageAgencyDto findById(UUID id) {
         Optional<ManageAgency> optionalEntity = repositoryQuery.findById(id);
         return optionalEntity.map(ManageAgency::toAggregate)
