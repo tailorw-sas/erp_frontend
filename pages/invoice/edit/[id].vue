@@ -723,6 +723,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.dueDate = item?.dueDate
   payload.reSend = item.reSend
   payload.reSendDate = item.reSendDate
+  payload.invoiceStatus = item.invoiceStatus?.id
 
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
   navigateTo(
@@ -896,12 +897,9 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
 }
 
 function disabledInvoiceStatus(payload: any) {  
-  console.log(item.value);
-  console.log(dueAmount.value);
-  console.log(payload);
   let result = true
   //Verificar si esta en estado Sent o Reconciled (En estos estados solo se puede editar la agencia)
-  if (item.value.invoiceAmount === dueAmount.value && isInCloseOperation.value){
+  if (item.value.invoiceAmount !== dueAmount.value || !isInCloseOperation.value){
     result = true
   }
   else if (payload && (payload.sentStatus || payload.reconciledStatus)) {
