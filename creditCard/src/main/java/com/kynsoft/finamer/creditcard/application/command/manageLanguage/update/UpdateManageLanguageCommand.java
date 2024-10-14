@@ -13,6 +13,7 @@ public class UpdateManageLanguageCommand implements ICommand {
 
     private UUID id;
     private String name;
+    private Boolean defaults;
 
     @Override
     public ICommandMessage getMessage() {
