@@ -2428,7 +2428,7 @@ async function closeDialogExportToExcel() {
   openModalExportToExcel.value = false
 }
 
-function handleAcctions(itemId: any) {
+function assingFuntionsForPrint(itemId: any) {
   if (itemId && itemId.length > 0) {
     idPaymentSelectedForPrint.value = itemId[0]
     paymentSelectedForPrintList.value = itemId
@@ -2656,6 +2656,7 @@ watch(filterToSearch, (newValue) => {
 onMounted(async () => {
   havePermissionMenu()
   assingFunctionsToExportMenuInItemMenuList()
+  assingFuntionsForPrint()
 
   startOfMonth.value = getMonthStartAndEnd(new Date()).startOfMonth
   endOfMonth.value = getMonthStartAndEnd(new Date()).endOfMonth
@@ -3094,8 +3095,7 @@ onMounted(async () => {
       @on-change-filter="parseDataTableFilter"
       @on-list-item="resetListItems"
       @on-sort-field="onSortField"
-      @update:clicked-item="
-        ($event)"
+      @update:clicked-item="assingFuntionsForPrint($event)"
       @on-row-double-click="goToFormInNewTab($event)"
       @on-row-right-click="onRowContextMenu($event)"
     >
