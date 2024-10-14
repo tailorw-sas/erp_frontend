@@ -107,7 +107,7 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
 
                 this.reportParameterService.create(new JasperReportParameterDto(
                         UUID.randomUUID(), param.getName(), param.getValueClassName(), "",
-                        "", "", reportTemplateDto
+                        "", "","", reportTemplateDto
                 ));
             }
         }
