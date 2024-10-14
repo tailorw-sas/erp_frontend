@@ -2387,7 +2387,7 @@ async function paymentExportToExcel(event: any) {
     const response: any = await GenericService.create(confApiPaymentExportToExcel.moduleApi, confApiPaymentExportToExcel.uriApi, payloadTemp)
 
     // Asignar el nombre al archivo Excel
-    nameOfPdf = event.fileName ? event.fileName : `payment-summary-${dayjs().format('YYYY-MM-DD')}-excel.xlsx`
+    nameOfPdf = event.fileName ? event.fileName : `export-summary-${dayjs().format('YYYY-MM-DD')}-excel.xlsx`
 
     // Convertir Base64 a Blob
     const byteCharacters = atob(response.excel) // Decodifica la cadena Base64
