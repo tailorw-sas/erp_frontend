@@ -709,14 +709,15 @@ const fieldExportToExcel = ref<FieldDefinitionType[]>([
     field: 'fileName',
     header: 'File Name',
     dataType: 'text',
-    class: 'field col-12 required mb-2',
+    class: 'field col-12 required mb-2 flex align-items-center',
+    headerClass: 'mr-6',
   },
 ])
 
 const objExportToExcel = ref<GenericObject>({
   search: payload.value,
   fileName: '',
-  exportSumary: false
+  exportSumary: true
 })
 
 const objExportToExcelTemp = ref<GenericObject>({
@@ -2376,14 +2377,14 @@ async function paymentExportToExcel(event: any) {
     loadingExportToExcel.value = true
     let nameOfPdf = ''
     const payloadTemp: { fileName: string, search: IQueryRequest } = {
-      fileName: objExportToExcel.value.fileName,
+      fileName: event.fileName,
       search: payload.value
     }
 
     const response: any = await GenericService.create(confApiPaymentExportToExcel.moduleApi, confApiPaymentExportToExcel.uriApi, payloadTemp)
 
     // Asignar el nombre al archivo Excel
-    nameOfPdf = objExportToExcel.value.fileName ? objExportToExcel.value.fileName : `payment-list-${dayjs().format('YYYY-MM-DD')}-excel.xlsx`
+    nameOfPdf = event.fileName ? event.fileName : `payment-list-${dayjs().format('YYYY-MM-DD')}-excel.xlsx`
 
     // Convertir Base64 a Blob
     const byteCharacters = atob(response.excel) // Decodifica la cadena Base64
@@ -3695,7 +3696,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: 'auto' }"
+      :style="{ width: '340px' }"
       :pt="{
         root: {
           class: 'custom-dialog',
@@ -3712,7 +3713,7 @@ onMounted(async () => {
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
-            Export To Excel
+            Export Setting
           </h5>
         </div>
       </template>
@@ -3723,13 +3724,15 @@ onMounted(async () => {
             class="mt-3"
             :fields="fieldExportToExcel"
             :item="objExportToExcel"
-            container-class="grid pt-3"
             :show-actions="true"
             :loading-save="loadingSaveAll"
             @cancel="closeDialogPrint"
             @submit="paymentExportToExcel($event)"
           >
             <template #field-exportSumary="{ item: data, onUpdate }">
+              <label for="exportSumary" class="mr-2 font-bold">
+                Export Sumary
+              </label>
               <Checkbox
                 id="exportSumary"
                 v-model="data.exportSumary"
@@ -3739,61 +3742,21 @@ onMounted(async () => {
                   onUpdate('exportSumary', $event)
                 }"
               />
-              <label for="exportSumary" class="ml-2 font-bold">
-                Export Sumary
-              </label>
             </template>
 
-            <template #field-allPaymentsSupport="{ item: data, onUpdate }">
-              <Checkbox
-                id="allPaymentsSupport"
-                v-model="data.allPaymentsSupport"
-                :binary="true"
-                @update:model-value="($event) => {
-                  onUpdate('allPaymentsSupport', $event)
-                  if ($event) {
-                    onUpdate('paymentSupport', false)
-                  }
-                }"
-              />
-              <label for="allPaymentsSupport" class="ml-2 font-bold">
-                All Payment Supports
-              </label>
-            </template>
+            <!-- <template #field-fileName="{ item: data, onUpdate }">
+              <div style="background-color: aqua; width: 100%;">
+                <InputText
+                  v-if="!loadingExportToExcel"
+                  id="fileName"
+                  v-model="data.fileName"
+                  @input="onUpdate('fileName', $event)"
+                />
 
-            <template #field-invoiceRelated="{ item: data, onUpdate }">
-              <Checkbox
-                id="invoiceRelated"
-                v-model="data.invoiceRelated"
-                :binary="true"
-                @update:model-value="($event) => {
-                  onUpdate('invoiceRelated', $event)
-                  if ($event) {
-                    onUpdate('invoiceRelatedWithSupport', false)
-                  }
-                }"
-              />
-              <label for="invoiceRelated" class="ml-2 font-bold">
-                Invoice Related
-              </label>
-            </template>
+                <Skeleton v-else height="2rem" class="mb-2" />
+              </div>
+            </template> -->
 
-            <template #field-invoiceRelatedWithSupport="{ item: data, onUpdate }">
-              <Checkbox
-                id="invoiceRelatedWithSupport"
-                v-model="data.invoiceRelatedWithSupport"
-                :binary="true"
-                @update:model-value="($event) => {
-                  onUpdate('invoiceRelatedWithSupport', $event)
-                  if ($event) {
-                    onUpdate('invoiceRelated', false)
-                  }
-                }"
-              />
-              <label for="invoiceRelatedWithSupport" class="ml-2 font-bold">
-                Invoice Related With Supports
-              </label>
-            </template>
             <template #form-footer="props">
               <Button v-tooltip.top="'Export'" :loading="loadingExportToExcel" class="w-3rem ml-1 sticky" icon="pi pi-save" @click="props.item.submitForm($event)" />
               <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogExportToExcel" />
