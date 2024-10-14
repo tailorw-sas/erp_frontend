@@ -25,4 +25,6 @@ public interface IMerchantLanguageCodeService {
     List<ManageLanguageDto> findManageLanguageByMerchantId(UUID merchantId);
 
     String findMerchantLanguageByMerchantIdAndLanguageId(UUID merchantId, UUID languageId);
+
+    PaginatedResponse findManageLanguages(Pageable pageable, List<FilterCriteria> filterCriteria);
 }
