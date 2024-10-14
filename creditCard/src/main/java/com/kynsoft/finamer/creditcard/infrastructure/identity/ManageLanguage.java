@@ -28,6 +28,9 @@ public class ManageLanguage implements Serializable {
 
     private String name;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean defaults;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -39,9 +42,10 @@ public class ManageLanguage implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.defaults = dto.getDefaults();
     }
 
     public ManageLanguageDto toAggregate(){
-        return new ManageLanguageDto(id, code, name);
+        return new ManageLanguageDto(id, code, name, defaults);
     }
 }

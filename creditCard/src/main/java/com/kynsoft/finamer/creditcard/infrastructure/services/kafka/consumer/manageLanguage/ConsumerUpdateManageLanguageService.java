@@ -21,7 +21,7 @@ public class ConsumerUpdateManageLanguageService {
     @KafkaListener(topics = "finamer-update-manage-language", groupId = "vcc-entity-replica")
     public void listen(UpdateManageLanguageKafka objKafka) {
         try {
-            UpdateManageLanguageCommand command = new UpdateManageLanguageCommand(objKafka.getId(), objKafka.getName());
+            UpdateManageLanguageCommand command = new UpdateManageLanguageCommand(objKafka.getId(), objKafka.getName(), objKafka.getDefaults());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageLanguageService.class.getName()).log(Level.SEVERE, null, ex);
