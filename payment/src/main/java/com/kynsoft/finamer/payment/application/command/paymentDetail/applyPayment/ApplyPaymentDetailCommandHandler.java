@@ -70,7 +70,7 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         } catch (Exception e) {
         }
 
-        if (paymentDto.getNotApplied() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
+        if (paymentDto.getNotApplied() == 0 && paymentDto.getDepositBalance() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
             paymentDto.setPaymentStatus(this.statusService.findByApplied());
         }
         paymentDto.setApplyPayment(true);
