@@ -57,6 +57,8 @@ const agencyList = ref<any[]>([])
 const invoiceTypeList = ref<any[]>([])
 
 const invoiceStatus = ref<any>(null)
+const dueAmount = ref<number>(0)
+const isInCloseOperation = ref<boolean>(false)
 
 const confhotelListApi = reactive({
   moduleApi: 'settings',
@@ -300,6 +302,7 @@ const item = ref<GenericObject>({
   hotel: null,
   agency: null,
   invoiceType: null,
+  dueAmount: '0.00',
 })
 
 const itemTemp = ref<GenericObject>({
@@ -311,6 +314,7 @@ const itemTemp = ref<GenericObject>({
   hotel: null,
   agency: null,
   invoiceType: null,
+  dueAmount: '0.00',
 })
 
 
@@ -406,8 +410,6 @@ async function getHotelList(query = '') {
     console.error('Error loading hotel list:', error)
   }
 }
-
-
 
 function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
@@ -589,7 +591,6 @@ async function getInvoiceStatusListDefault(moduleApi: string, uriApi: string, qu
   }
 }
 
-
 async function loadDefaultsValues() {
   const objQueryToSearch = {
     query: '',
@@ -649,6 +650,7 @@ async function getItemById(id: string) {
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
         invoiceAmount.value = response.invoiceAmount
+        dueAmount.value = response.dueAmount
         item.value.reSend = response.reSend
         item.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate
         item.value.hotel = response.hotel
@@ -659,7 +661,7 @@ async function getItemById(id: string) {
         item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
         invoiceStatus.value = response.status
         item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
-
+        
         item.value.invoiceStatus = response.manageInvoiceStatus ? {
           id: response.manageInvoiceStatus.id,
           name: `${response.manageInvoiceStatus.code} - ${response.manageInvoiceStatus.name}`,
@@ -672,6 +674,7 @@ async function getItemById(id: string) {
         idClientForAgencyFilter.value = response.agency?.client?.id
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
+        isInCloseOperation.value = response.isInCloseOperation
       }
 
       formReload.value += 1
@@ -894,10 +897,14 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
 
 function disabledInvoiceStatus(payload: any) {  
   console.log(item.value);
-  
+  console.log(dueAmount.value);
+  console.log(payload);
   let result = true
-  // Verificar si esta en estado Sent o Reconciled (En estos estados solo se puede editar la agencia)
-  if (payload && (payload.sentStatus || payload.reconciledStatus)) {
+  //Verificar si esta en estado Sent o Reconciled (En estos estados solo se puede editar la agencia)
+  if (item.value.invoiceAmount === dueAmount.value && isInCloseOperation.value){
+    result = true
+  }
+  else if (payload && (payload.sentStatus || payload.reconciledStatus)) {
     result = true
   } else if (payload && payload.processStatus) {
     result = false
@@ -927,7 +934,7 @@ function disableBtnSave() {
     return true
   } else {
     let result = true
-    if (invoiceStatus.value !== InvoiceStatus.PROCECSED && invoiceStatus.value !== InvoiceStatus.SENT && invoiceStatus.value !== InvoiceStatus.RECONCILED) {
+    if ( invoiceStatus.value !== InvoiceStatus.PROCECSED && invoiceStatus.value !== InvoiceStatus.SENT && invoiceStatus.value !== InvoiceStatus.RECONCILED) {
       result = true
     } else {
       result = false
@@ -997,7 +1004,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.invoiceStatus" 
             :suggestions="[...invoiceStatusList]"
-            :disabled="disabledInvoiceStatus(item.invoiceStatus)"  
+            :disabled="disabledInvoiceStatus(data.invoiceStatus)" 
             @change="async ($event) => {
               onUpdate('invoiceStatus', $event)
             }" 
@@ -1027,6 +1034,7 @@ onMounted(async () => {
             option-label="name"
             return-object="false" 
             show-clear 
+            :disabled="(data.invoiceAmount < 0 && isInCloseOperation)"
             @update:model-value="($event) => {
               onUpdate('status', $event)
             }">

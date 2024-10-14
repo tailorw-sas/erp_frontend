@@ -151,7 +151,7 @@ async function getList() {
     listItems.value = []
     clickedItem.value = []
     const newListItems = []
-    const response = await GenericService.search(confApi.moduleApi, confApi.uriApi, payload.value)
+    const response = await GenericService.sendList(confApi.moduleApi, confApi.uriApi, payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
     pagination.value.page = page
     pagination.value.limit = size
@@ -402,7 +402,7 @@ function searchAndFilter() {
 }
 
 function clearFilterToSearch() {
-  //payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  // payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   payload.value = {
     filter: [],
     query: '',
@@ -410,7 +410,7 @@ function clearFilterToSearch() {
     page: 0,
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.DESC
-  } 
+  }
   filterToSearch.value = {
     criteria: null,
     search: '',
@@ -464,6 +464,7 @@ async function send() {
   loadingSaveAll.value = true
   options.value.loading = true
   let completed = false
+
   try {
     if (!clickedItem.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one item', life: 10000 })
@@ -475,7 +476,7 @@ async function send() {
       groupByClient: payloadOfCheckBox.value.groupByClient,
       withAttachment: payloadOfCheckBox.value.withAttachment
     }
-    await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload)
+    await GenericService.sendList(confSendApi.moduleApi, confSendApi.uriApi, payload)
     completed = true
     tableRef.value?.clearSelectedItems()
   }
