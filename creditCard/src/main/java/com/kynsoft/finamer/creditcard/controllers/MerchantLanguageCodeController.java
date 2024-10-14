@@ -95,7 +95,7 @@ public class MerchantLanguageCodeController {
     @PostMapping("/merchant-language")
     public ResponseEntity<?> getMerchantCode(@RequestBody FindMerchantLanguageRequest request) {
 
-        FindMerchantLanguageQuery query = new FindMerchantLanguageQuery(request.getMerchantId(), request.getLanguageId());
+        FindMerchantLanguageQuery query = FindMerchantLanguageQuery.fromRequest(request);
         FindMerchantLanguageResponse data = mediator.send(query);
 
         return ResponseEntity.ok(data);
