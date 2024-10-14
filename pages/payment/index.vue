@@ -2962,8 +2962,8 @@ onMounted(async () => {
                     </div>
                   </div>
                 </div>
-                <div class="col-12 md:col-1 w-auto">
-                  <div class="flex justify-content-end">
+                <div class="col-12 md:col-1 w-auto pr-0">
+                  <div class="flex justify-content-end w-auto">
                     <Checkbox
                       v-model="filterAllDateRange"
                       binary
@@ -2975,7 +2975,7 @@ onMounted(async () => {
                         }
                       }"
                     />
-                    <label for="" class="mr-2 font-bold">All</label>
+                    <label for="" class="font-bold">All</label>
                   </div>
                 </div>
               </div>
