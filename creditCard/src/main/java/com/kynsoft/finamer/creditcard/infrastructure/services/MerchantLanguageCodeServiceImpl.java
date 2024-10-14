@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.MerchantLanguageCodeLanguageResponse;
 import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.MerchantLanguageCodeResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageLanguageDto;
 import com.kynsoft.finamer.creditcard.domain.dto.MerchantLanguageCodeDto;
@@ -100,10 +101,26 @@ public class MerchantLanguageCodeServiceImpl implements IMerchantLanguageCodeSer
         return this.repositoryQuery.findMerchantLanguageByMerchantIdAndLanguageId(merchantId, languageId).orElse("");
     }
 
+    @Override
+    public PaginatedResponse findManageLanguages(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        GenericSpecificationsBuilder<MerchantLanguageCode> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<MerchantLanguageCode> data = this.repositoryQuery.findAll(specifications, pageable);
+        return getPaginatedLanguagesResponse(data);
+    }
+
     private PaginatedResponse getPaginatedResponse(Page<MerchantLanguageCode> data) {
         List<MerchantLanguageCodeResponse> responses = new ArrayList<>();
         for (MerchantLanguageCode p : data.getContent()) {
             responses.add(new MerchantLanguageCodeResponse(p.toAggregate()));
+        }
+        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    private PaginatedResponse getPaginatedLanguagesResponse(Page<MerchantLanguageCode> data) {
+        List<MerchantLanguageCodeLanguageResponse> responses = new ArrayList<>();
+        for (MerchantLanguageCode p : data.getContent()) {
+            responses.add(new MerchantLanguageCodeLanguageResponse(p.getManageLanguage().toAggregate()));
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
