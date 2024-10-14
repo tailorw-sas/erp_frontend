@@ -340,7 +340,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_TRANSACTION_STATUS_CANCELLED_NOT_FOUND(1118, Series.DOMAIN_ERROR,"There is no transaction status of type cancelled selected by default."),
     MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND(1119, Series.DOMAIN_ERROR,"There is no transaction status of type declined selected by default."),
     MANAGE_TRANSACTION_STATUS_CHECK_CANCELLED(1120, Series.DOMAIN_ERROR,"Another item already exists with cancelled status."),
-    MANAGE_TRANSACTION_STATUS_CHECK_DECLINED(1121, Series.DOMAIN_ERROR,"Another item already exists with declined status.");
+    MANAGE_TRANSACTION_STATUS_CHECK_DECLINED(1121, Series.DOMAIN_ERROR,"Another item already exists with declined status."),
+    MANAGE_TRANSACTION_ALREADY_PROCESSED(1122, Series.DOMAIN_ERROR,"The transaction has already been processed.");
 
     private static final DomainErrorMessage[] VALUES;
 

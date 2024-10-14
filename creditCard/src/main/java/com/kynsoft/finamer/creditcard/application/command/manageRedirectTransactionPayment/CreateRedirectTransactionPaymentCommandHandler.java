@@ -1,6 +1,8 @@
 package com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
@@ -37,6 +39,11 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
 
         Claims claims = tokenService.validateToken(command.getToken());
         TransactionDto transactionDto = transactionService.findByUuid(UUID.fromString(claims.get("transactionUuid").toString()));
+        // No procesar transacciones completadas
+        if (!transactionDto.getStatus().isSentStatus()) {
+           throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
+        }
+
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
         command.setResult(formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto).getBody());
 
