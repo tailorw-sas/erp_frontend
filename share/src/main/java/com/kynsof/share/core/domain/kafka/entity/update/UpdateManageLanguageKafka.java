@@ -16,4 +16,5 @@ public class UpdateManageLanguageKafka {
     private UUID id;
     private String name;
     private Boolean defaults;
+    private String status;
 }
