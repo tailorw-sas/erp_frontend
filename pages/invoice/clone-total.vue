@@ -326,7 +326,7 @@ function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
 
-async function getHotelList(query = '',currentTradingCompany,currentHotelId) {
+async function getHotelList(query = '',currentTradingCompany:any,currentHotelId:any) {
   try {
     const payload = {
       filter: [
@@ -1731,7 +1731,7 @@ onMounted(async () => {
         <DebouncedAutoCompleteComponent
           v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
           :disabled="false" :model="data.hotel" :suggestions="hotelList"   @change="($event) => {
-      const currentHotel = data.hotel;
+      const currentHotel =data.hotel
 
       if (currentHotel && $event) {
         const currentManageTradingCompany = currentHotel.manageTradingCompanies.company;
@@ -1832,7 +1832,7 @@ onMounted(async () => {
           <AttachmentDialogTotal
             :close-dialog="() => {
               attachmentDialogOpen = false;
-              getItemById(idItem)
+              //getItemById(idItem)
             }" :is-creation-dialog="idItemCreated === ''" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
             :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item" :list-items="LocalAttachmentList"
             :is-save-in-total-clone="isSaveInTotalClone" @update:list-items="($event) => LocalAttachmentList = [...LocalAttachmentList, $event]"
