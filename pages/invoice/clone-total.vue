@@ -1795,7 +1795,7 @@ onMounted(async () => {
             :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
             :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
             :is-creation-dialog="true" :selected-invoice="selectedInvoice as any" :booking-list="bookingList"
-            :update-booking="updateBooking" :adjustment-list="ListItems" :add-adjustment="addAdjustment"
+            :update-booking="updateBooking"  :adjustment-list="[]" :add-adjustment="addAdjustment"
             :update-adjustment="updateAdjustment" :active="active" :bookings-total-obj="objBookingsTotals"
             :room-rate-total-obj="objRoomRateTotals" :adjustment-total-obj="objAdjustmentTotals" :set-active="($event) => {
 
