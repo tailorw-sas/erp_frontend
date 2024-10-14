@@ -2284,28 +2284,31 @@ async function exportToExcel() {
 function assingFunctionsToExportMenuInItemMenuList() {
   const itemsExportToExcel: any = itemMenuList.value.find(item => item.id === 'export')
   if (itemsExportToExcel) {
-    itemsExportToExcel.menuItems = itemsExportToExcel.menuItems.map((item: any) => {
-      const objExportHierarchy = item.items.find((obj: any) => obj.id === 'export-hierarchy')
-      if (objExportHierarchy) {
-        objExportHierarchy.command = function () {
-        }
-      }
+    itemsExportToExcel.btnOnClick = function () {
+      openDialogExportToExcel()
+    }
+    // itemsExportToExcel.menuItems = itemsExportToExcel.menuItems.map((item: any) => {
+    //   const objExportHierarchy = item.items.find((obj: any) => obj.id === 'export-hierarchy')
+    //   if (objExportHierarchy) {
+    //     objExportHierarchy.command = function () {
+    //     }
+    //   }
 
-      const objExportSummary = item.items.find((obj: any) => obj.id === 'export-summary')
-      if (objExportSummary) {
-        objExportSummary.command = function () {
-          openDialogExportToExcel()
-        }
-      }
+    //   const objExportSummary = item.items.find((obj: any) => obj.id === 'export-summary')
+    //   if (objExportSummary) {
+    //     objExportSummary.command = function () {
+    //       openDialogExportToExcel()
+    //     }
+    //   }
 
-      const objExportInvoice = item.items.find((obj: any) => obj.id === 'export-invoice')
-      if (objExportInvoice) {
-        objExportInvoice.command = function () {
-          console.log('Esto es una prueba')
-        }
-      }
-      return item
-    })
+    //   const objExportInvoice = item.items.find((obj: any) => obj.id === 'export-invoice')
+    //   if (objExportInvoice) {
+    //     objExportInvoice.command = function () {
+    //       console.log('Esto es una prueba')
+    //     }
+    //   }
+    //   return item
+    // })
   }
 }
 // paymentSelectedForPrintList
