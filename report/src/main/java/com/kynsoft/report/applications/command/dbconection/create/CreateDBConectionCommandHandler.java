@@ -4,15 +4,15 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.rules.dbconection.DBConectionCodeMustBeUniqueRule;
-import com.kynsoft.report.domain.services.IDBConectionService;
+import com.kynsoft.report.domain.services.IDBConnectionService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CreateDBConectionCommandHandler implements ICommandHandler<CreateDBConectionCommand> {
 
-    private final IDBConectionService service;
+    private final IDBConnectionService service;
 
-    public CreateDBConectionCommandHandler(IDBConectionService service) {
+    public CreateDBConectionCommandHandler(IDBConnectionService service) {
         this.service = service;
     }
 
