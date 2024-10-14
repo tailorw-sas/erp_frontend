@@ -1149,9 +1149,12 @@ onMounted(async () => {
     if (idItem.value) {
       await getItemById(idItem.value)
     }
+    else {
+      await clearFormAndReload()
+    }
   }
   else {
-    loadDefaultsValues()
+    await clearFormAndReload()
   }
 })
 </script>
