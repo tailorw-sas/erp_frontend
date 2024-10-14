@@ -156,7 +156,7 @@ async function getList() {
     listItems.value = []
     clickedItem.value = []
     const newListItems = []
-    const response = await GenericService.search(confApi.moduleApi, confApi.uriApi, payload.value)
+    const response = await GenericService.sendList(confApi.moduleApi, confApi.uriApi, payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
     pagination.value.page = page
     pagination.value.limit = size
