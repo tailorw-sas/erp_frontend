@@ -129,7 +129,7 @@ public class InvoiceController {
     public ResponseEntity<?> send(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchInvoiceQuery query = new GetSearchInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        SendListInvoiceQuery query = new SendListInvoiceQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
@@ -138,7 +138,7 @@ public class InvoiceController {
     public ResponseEntity<?> searchToPayment(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        SendListInvoiceQuery query = new SendListInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        GetSearchInvoiceToPaymentQuery query = new GetSearchInvoiceToPaymentQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
