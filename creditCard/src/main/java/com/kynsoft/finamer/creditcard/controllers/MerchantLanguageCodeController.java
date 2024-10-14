@@ -13,6 +13,11 @@ import com.kynsoft.finamer.creditcard.application.command.merchantLanguageCode.u
 import com.kynsoft.finamer.creditcard.application.command.merchantLanguageCode.update.UpdateMerchantLanguageCodeMessage;
 import com.kynsoft.finamer.creditcard.application.command.merchantLanguageCode.update.UpdateMerchantLanguageCodeRequest;
 import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.MerchantLanguageCodeResponse;
+import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.findLanguageByMerchant.FindLanguageByMerchantQuery;
+import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.findLanguageByMerchant.FindLanguageByMerchantResponse;
+import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.findMerchantLanguage.FindMerchantLanguageQuery;
+import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.findMerchantLanguage.FindMerchantLanguageRequest;
+import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.findMerchantLanguage.FindMerchantLanguageResponse;
 import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.getById.FindMerchantLanguageCodeByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.search.GetSearchMerchantLanguageCodeQuery;
 import org.springframework.data.domain.Pageable;
@@ -76,5 +81,23 @@ public class MerchantLanguageCodeController {
         UpdateMerchantLanguageCodeMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/languages/{id}")
+    public ResponseEntity<?> getLanguagesByMerchant(@PathVariable UUID id) {
+
+        FindLanguageByMerchantQuery query = new FindLanguageByMerchantQuery(id);
+        FindLanguageByMerchantResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/merchant-language")
+    public ResponseEntity<?> getMerchantCode(@RequestBody FindMerchantLanguageRequest request) {
+
+        FindMerchantLanguageQuery query = new FindMerchantLanguageQuery(request.getMerchantId(), request.getLanguageId());
+        FindMerchantLanguageResponse data = mediator.send(query);
+
+        return ResponseEntity.ok(data);
     }
 }

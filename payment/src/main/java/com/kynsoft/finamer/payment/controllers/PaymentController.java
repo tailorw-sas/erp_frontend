@@ -21,6 +21,7 @@ import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaym
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentResponse;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.GetPaymentExcelExporterQuery;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.PaymentExcelExporterResponse;
+import com.kynsoft.finamer.payment.application.query.payment.excelExporter.SearchExcelExporter;
 import com.kynsoft.finamer.payment.application.query.payment.getById.FindPaymentByIdQuery;
 import com.kynsoft.finamer.payment.application.query.payment.search.GetSearchPaymentQuery;
 import com.kynsoft.finamer.payment.domain.dtoEnum.PaymentExcelExporterEnum;
@@ -100,11 +101,11 @@ public class PaymentController {
         return ResponseEntity.ok(data);
     }
 
-    @PostMapping("/excel-exporter/{eenum}")
-    public ResponseEntity<?> excelExporter(@RequestBody SearchRequest request, @PathVariable PaymentExcelExporterEnum eenum) {
-        Pageable pageable = PageableUtil.createPageable(request);
+    @PostMapping("/excel-exporter")
+    public ResponseEntity<?> excelExporter(@RequestBody SearchExcelExporter request) {
+        Pageable pageable = PageableUtil.createPageable(request.getSearch());
 
-        GetPaymentExcelExporterQuery query = new GetPaymentExcelExporterQuery(pageable, request.getFilter(), request.getQuery(), eenum);
+        GetPaymentExcelExporterQuery query = new GetPaymentExcelExporterQuery(pageable, request.getSearch().getFilter(), request.getSearch().getQuery(), request.getFileName());
         PaymentExcelExporterResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }

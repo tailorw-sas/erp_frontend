@@ -8,8 +8,10 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.merchantLanguageCode.MerchantLanguageCodeResponse;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageLanguageDto;
 import com.kynsoft.finamer.creditcard.domain.dto.MerchantLanguageCodeDto;
 import com.kynsoft.finamer.creditcard.domain.services.IMerchantLanguageCodeService;
+import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageLanguage;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.MerchantLanguageCode;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.MerchantLanguageCodeWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.MerchantLanguageCodeReadDataJPARepository;
@@ -81,6 +83,21 @@ public class MerchantLanguageCodeServiceImpl implements IMerchantLanguageCodeSer
     @Override
     public Long countByManageMerchantAndMerchantLanguageAndNotId(UUID manageMerchant, UUID manageLanguage, UUID id) {
         return this.repositoryQuery.countByManageMerchantAndMerchantLanguageAndNotId(manageMerchant, manageLanguage, id);
+    }
+
+    @Override
+    public List<ManageLanguageDto> findManageLanguageByMerchantId(UUID merchantId) {
+        List<ManageLanguage> languageList = this.repositoryQuery.findManageLanguageByMerchantId(merchantId);
+        List<ManageLanguageDto> languageDtoList = new ArrayList<>();
+        for (ManageLanguage entity : languageList){
+            languageDtoList.add(entity.toAggregate());
+        }
+        return languageDtoList;
+    }
+
+    @Override
+    public String findMerchantLanguageByMerchantIdAndLanguageId(UUID merchantId, UUID languageId) {
+        return this.repositoryQuery.findMerchantLanguageByMerchantIdAndLanguageId(merchantId, languageId).orElse("");
     }
 
     private PaginatedResponse getPaginatedResponse(Page<MerchantLanguageCode> data) {
