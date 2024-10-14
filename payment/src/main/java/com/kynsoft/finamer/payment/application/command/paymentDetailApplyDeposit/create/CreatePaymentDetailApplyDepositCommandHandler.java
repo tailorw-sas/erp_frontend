@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
@@ -109,7 +110,9 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
         this.paymentService.update(paymentUpdate);
 
         if (Objects.nonNull(command.getApplyPayment()) && command.getApplyPayment()) {
-            command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking()));
+            ApplyPaymentDetailMessage message = command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking()));
+            paymentUpdate.setApplyPayment(message.getPayment().isApplyPayment());
+            paymentUpdate.setPaymentStatus(message.getPayment().getPaymentStatus());
         }
 
 //        createPaymentAttachmentStatusHistory(employeeDto, paymentUpdate, paymentDetailId, "Creating New Apply Deposit with ID: ");
