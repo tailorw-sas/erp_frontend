@@ -742,6 +742,7 @@ async function createPartialClonation(item: { [key: string]: any }) {
     payload.invoice = globalSelectedInvoicing
 
     const adjustments: any = [...adjustmentList.value]
+    console.log(adjustments,'que me esta imprimiendo aqui')
     const attachments = []
 
     // Agregar los attachments localmente al payload
@@ -773,7 +774,8 @@ async function createPartialClonation(item: { [key: string]: any }) {
           adjustment: {
             id: adjustment.id,
             amount: adjustment.amount,
-            transaction: adjustment.transaction,
+            transactionType: adjustment.transaction.id,
+            description:adjustment.description,
             date: adjustment.date,
             employee: adjustment.employee
           }
@@ -1560,6 +1562,7 @@ function addAdjustment(adjustment: any) {
 
     }
   ]
+  console.log(adjustmentList.value,'que imprimes aqui en transaction')
   calcInvoiceAmountByAdjustment()
   calcInvoiceAmountInBookingByRoomRate()
 }
