@@ -37,7 +37,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
 
         PaymentDetailDto delete = this.service.findById(command.getId());
 
-        PaymentDto update = delete.getPayment();
+        PaymentDto update = this.paymentService.findById(delete.getPayment().getId());
         //RulesChecker.checkRule(new CheckValidateHourForDeleteRule(delete.getCreatedAt()));
         if (!command.isUndoApplication()) {
             if (delete.getTransactionType().getCash() || delete.getTransactionType().getApplyDeposit()) {
@@ -83,6 +83,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
 
                 UpdateIfNotNull.updateDouble(update::setPaymentBalance, update.getPaymentBalance() - delete.getAmount(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() - delete.getAmount(), updatePayment::setUpdate);
+                update.setPaymentStatus(this.statusService.findByConfirmed());
                 service.delete(delete);
             }
         }
@@ -93,6 +94,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
                 UpdateIfNotNull.updateDouble(update::setIdentified, update.getIdentified() - delete.getAmount(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setNotIdentified, update.getPaymentAmount() - update.getIdentified(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setApplied, update.getApplied() - delete.getAmount(), updatePayment::setUpdate);
+                update.setPaymentStatus(this.statusService.findByConfirmed());
             }
             //Para este caso no se elimina, dado que el objeto esta relacionado con otro objeto del mismo tipo, por tanto voy a actuar modificando
             //los valores y poniendo en inactivo el apply deposit que se trata de eliminar.
