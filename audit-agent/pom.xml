@@ -22,6 +22,25 @@
         <jsonwebtoken.version>0.11.5</jsonwebtoken.version>
     </properties>
 
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<properties>
+				<env>dev</env>
+			</properties>
+		</profile>
+		<profile>
+			<id>qa</id>
+			<properties>
+				<env>qa</env>
+			</properties>
+		</profile>
+	</profiles>
+	
+	<build>
+		<finalName>${artifactId}-${env}</finalName>
+	</build>
+
     <dependencies>
 <!--        <dependency>-->
 <!--            <groupId>com.kynsoft.finamer</groupId>-->
@@ -128,7 +147,7 @@
         <repository>
             <id>github</id>
             <name>GitHub OWNER Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/kmontes198910/finamer-backend</url>
+            <url>https://maven.pkg.github.com/tailorw-sas/erp_backend</url>
         </repository>
     </distributionManagement>
 </project>
