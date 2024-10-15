@@ -730,7 +730,8 @@ const columns: IColumn[] = [
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
   // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
   // { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'local-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+  // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'select', objApi: objApis.value.status, sortable: true },
+  { field: 'invoiceStatus', header: 'Status', width: '100px', frozen: true, type: 'select', objApi: objApis.value.status, sortable: true },
 ]
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
@@ -1693,6 +1694,8 @@ function onSortField(event: any) {
 }
 
 function getStatusBadgeBackgroundColor(code: string) {
+  console.log(code);
+  
   switch (code) {
     case 'PROCECSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
@@ -1707,8 +1710,7 @@ function getStatusBadgeBackgroundColor(code: string) {
 
 function getStatusName(code: string) {
   switch (code) {
-    case 'PROCECSED': return 'Processed'
-
+    case 'PROCESSED': return 'Processed'
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
     case 'CANCELED': return 'Canceled'
@@ -2347,9 +2349,14 @@ const legend = ref(
             :set-active="($event) => { active = $event }" :is-detail-view="true"  />
         </template>
 
-        <template #column-status="props">
+        <!-- <template #column-status="props">
           <Badge :value="getStatusName(props.item)"
             :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item)}`" />
+        </template> -->
+
+        <template #column-invoiceStatus="props">
+          <Badge v-if="props.item" :value="getStatusName(props.item?.name?.toUpperCase())"
+            :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item?.name?.toUpperCase())}`" />
         </template>
 
         <template #datatable-footer>

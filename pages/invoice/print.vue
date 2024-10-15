@@ -11,34 +11,19 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import type { IData } from '~/components/table/interfaces/IModelData'
 
 const toast = useToast()
-const listItems = ref<any[]>([])
 const totalInvoiceAmount = ref(0)
 const idItemToLoadFirstTime = ref('')
 const listPrintItems = ref<any[]>([])
 
 const totalDueAmount = ref(0)
 
-const filterAllDateRange = ref(false)
-const loadingSearch = ref(false)
-
-const loadingSaveAll = ref(false)
-
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
-const groupByClient = ref(false)
-const invoiceSupport = ref(false)
-const invoiceAndBookings = ref(true)
 
 const objPayloadOfCheckBox = ref({
   groupByClient: false,
   invoiceSupport: false,
   invoiceAndBookings: true
 })
-
-const objPayloadOfCheckBoxTemp = {
-  groupByClient: false,
-  invoiceSupport: false,
-  invoiceAndBookings: true
-}
 
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -67,10 +52,7 @@ const confinvoiceApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
 })
-const confinvoiceStatusApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-invoice-status',
-})
+
 const confhotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
@@ -84,7 +66,6 @@ const confagencyListApi = reactive({
 // VARIABLES -----------------------------------------------------------------------------------------
 
 //
-const idItem = ref('')
 const ENUM_FILTER = [
   { id: 'id', name: 'Id' },
 ]
