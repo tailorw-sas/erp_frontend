@@ -41,6 +41,7 @@ public class TransactionDto {
     private ManageVCCTransactionTypeDto transactionSubCategory;
     private Double netAmount;
     private Boolean permitRefund;
+    private ManagerMerchantCurrencyDto merchantCurrency;
 
     public TransactionDto(
             Long id, UUID transactionUuid, LocalDate checkIn, String reservationNumber,
@@ -62,7 +63,8 @@ public class TransactionDto {
             String cardNumber, ManageCreditCardTypeDto creditCardType, Double commission,
             ManageTransactionStatusDto status, TransactionDto parent,
             ManageVCCTransactionTypeDto transactionCategory,
-            ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount, Boolean permitRefund) {
+            ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount, Boolean permitRefund,
+            ManagerMerchantCurrencyDto merchantCurrency) {
         this.transactionUuid = transactionUuid;
         this.merchant = merchant;
         this.methodType = methodType;
@@ -86,6 +88,7 @@ public class TransactionDto {
         this.transactionSubCategory = transactionSubCategory;
         this.netAmount = netAmount;
         this.permitRefund = permitRefund;
+        this.merchantCurrency = merchantCurrency;
     }
 
     public TransactionDto(

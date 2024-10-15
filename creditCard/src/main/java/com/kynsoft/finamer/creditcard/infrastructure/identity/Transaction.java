@@ -46,6 +46,10 @@ public class Transaction implements Serializable {
     @JoinColumn(name = "manage_language_id")
     private ManageLanguage language;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_merchant_currency_id")
+    private ManagerMerchantCurrency merchantCurrency;
+
     private Double amount;
 
     private LocalDate checkIn;
@@ -123,6 +127,7 @@ public class Transaction implements Serializable {
         if(dto.getPermitRefund() != null){
             this.permitRefund = dto.getPermitRefund();
         }
+        this.merchantCurrency = dto.getMerchantCurrency() != null ? new ManagerMerchantCurrency(dto.getMerchantCurrency()) : null;
         transactionUuid= dto.getTransactionUuid();
     }
 
@@ -151,7 +156,7 @@ public class Transaction implements Serializable {
                 createdAt.toLocalDate(),
                 transactionCategory != null ? transactionCategory.toAggregate() : null,
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
-                netAmount, permitRefund
+                netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null
         );
     }
 }
