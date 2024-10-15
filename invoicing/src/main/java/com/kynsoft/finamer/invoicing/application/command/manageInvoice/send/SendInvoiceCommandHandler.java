@@ -100,21 +100,22 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         for (ManageInvoiceDto manageInvoiceDto : invoices) {
             if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.RECONCILED)) {
                 manageInvoiceDto.setStatus(EInvoiceStatus.SENT);
+                manageInvoiceDto.setManageInvoiceStatus(manageInvoiceStatus);
+                this.invoiceStatusHistoryService.create(
+                        new InvoiceStatusHistoryDto(
+                                UUID.randomUUID(),
+                                manageInvoiceDto,
+                                "The invoice data was inserted.",
+                                null,
+                                employee,
+                                EInvoiceStatus.SENT
+                        )
+                );
             }if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
                 manageInvoiceDto.setReSend(true);
                 manageInvoiceDto.setReSendDate(LocalDate.now());
             }
             this.service.update(manageInvoiceDto);
-            this.invoiceStatusHistoryService.create(
-                    new InvoiceStatusHistoryDto(
-                            UUID.randomUUID(),
-                            manageInvoiceDto,
-                            "The invoice data was inserted.",
-                            null,
-                            employee,
-                            EInvoiceStatus.SENT
-                    )
-            );
         }
     }
 
@@ -212,7 +213,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
                 request.setMailJetAttachments(attachments);
                 mailService.sendMail(request);
-                updateInvoices(invoices);
+                updateInvoices(invoices, manageInvoiceStatus, employee);
 //                System.out.println("\tHotel ID: " + hotelId);
 //                for (ManageInvoiceDto invoice : invoicesHotel) {
 //                    // Aquí puedes procesar cada factura individualmente
@@ -293,10 +294,21 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         return recipients;
     }
 
-    private  void updateInvoices(List<ManageInvoiceDto> invoices) {
+    private  void updateInvoices(List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
         for (ManageInvoiceDto manageInvoiceDto : invoices) {
             if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.RECONCILED)) {
                 manageInvoiceDto.setStatus(EInvoiceStatus.SENT);
+                manageInvoiceDto.setManageInvoiceStatus(manageInvoiceStatus);
+                this.invoiceStatusHistoryService.create(
+                        new InvoiceStatusHistoryDto(
+                                UUID.randomUUID(),
+                                manageInvoiceDto,
+                                "The invoice data was inserted.",
+                                null,
+                                employee,
+                                EInvoiceStatus.SENT
+                        )
+                );
             }if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
                 manageInvoiceDto.setReSend(true);
                 manageInvoiceDto.setReSendDate(LocalDate.now());

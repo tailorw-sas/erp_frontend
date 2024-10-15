@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.settings.application.query.objectResponse;
+package com.kynsoft.finamer.settings.application.query.manageHotel.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.settings.domain.dto.*;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManageHotelResponse implements IResponse, Serializable {
+public class ManageHotelSearchResponse implements IResponse, Serializable {
 
     private UUID id;
     private String code;
@@ -23,12 +23,6 @@ public class ManageHotelResponse implements IResponse, Serializable {
     private Status status;
     private String name;
     private String babelCode;
-    private ManagerCountryDto manageCountry;
-    private ManageCityStateDto manageCityState;
-    private String city;
-    private String address;
-    private ManagerCurrencyDto manageCurrency;
-    private ManageRegionDto manageRegion;
     private ManageTradingCompaniesDto manageTradingCompanies;
     private Boolean applyByTradingCompany;
     private String prefixToInvoice;
@@ -37,19 +31,13 @@ public class ManageHotelResponse implements IResponse, Serializable {
     private Boolean isApplyByVCC;
     private Boolean autoApplyCredit;
 
-    public ManageHotelResponse(ManageHotelDto dto) {
+    public ManageHotelSearchResponse(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
         this.name = dto.getName();
         this.babelCode = dto.getBabelCode();
-        this.manageCountry = dto.getManageCountry();
-        this.manageCityState = dto.getManageCityState();
-        this.city = dto.getCity();
-        this.address = dto.getAddress();
-        this.manageCurrency = dto.getManageCurrency();
-        this.manageRegion = dto.getManageRegion();
         this.manageTradingCompanies = dto.getManageTradingCompanies();
         this.applyByTradingCompany = dto.getApplyByTradingCompany();
         this.prefixToInvoice = dto.getPrefixToInvoice();
