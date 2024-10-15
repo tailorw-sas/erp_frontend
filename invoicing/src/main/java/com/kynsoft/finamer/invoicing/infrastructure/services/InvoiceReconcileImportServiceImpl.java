@@ -112,6 +112,7 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
                 return false;
             }
         } catch (Exception e) {
+            log.error(e.getMessage());
             processError("File name is not valid: " + invoiceId, importProcessId, file.getName());
             return false;
         }
