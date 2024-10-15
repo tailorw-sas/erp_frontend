@@ -11,6 +11,7 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupBy;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportRowErrorRedisRepository;
@@ -35,6 +36,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private final IManageInvoiceService invoiceService;
 
+    private final IManageBookingService bookingService;
+
     private final IManageRatePlanService ratePlanService;
 
     private final IManageRoomTypeService roomTypeService;
@@ -53,7 +56,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     public BookingImportHelperServiceImpl(IManageAgencyService agencyService,
                                           IManageHotelService manageHotelService,
-                                          IManageInvoiceService invoiceService,
+                                          IManageInvoiceService invoiceService, IManageBookingService bookingService,
                                           IManageRatePlanService ratePlanService,
                                           IManageRoomTypeService roomTypeService,
                                           BookingImportCacheRedisRepository repository,
@@ -64,6 +67,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.invoiceService = invoiceService;
+        this.bookingService = bookingService;
         this.ratePlanService = ratePlanService;
         this.roomTypeService = roomTypeService;
         this.repository = repository;
@@ -196,18 +200,24 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             bookingDto.setRatePlan(ratePlanDto);
             bookingDto.setRoomType(roomTypeDto);
             bookingDto.setId(UUID.randomUUID());
-            ManageRoomRateDto manageRoomRateDto = new ManageRoomRateDto();
-            manageRoomRateDto.setId(UUID.randomUUID());
-            manageRoomRateDto.setAdults(bookingDto.getAdults());
-            manageRoomRateDto.setChildren(bookingDto.getChildren());
-            manageRoomRateDto.setCheckIn(bookingDto.getCheckIn());
-            manageRoomRateDto.setCheckOut(bookingDto.getCheckOut());
-            manageRoomRateDto.setHotelAmount(bookingDto.getHotelAmount());
-            manageRoomRateDto.setNights(bookingDto.getNights());
-            manageRoomRateDto.setRoomNumber(bookingDto.getRoomNumber());
-            bookingDto.setRoomRates(List.of(manageRoomRateDto));
+            bookingDto.setRoomRates(List.of(createRoomRateDto(bookingRow)));
             return bookingDto;
         }).toList();
+    }
+
+    private ManageRoomRateDto createRoomRateDto(BookingRow bookingRow){
+        ManageBookingDto bookingDto = bookingRow.toAggregate();
+        ManageRoomRateDto manageRoomRateDto = new ManageRoomRateDto();
+        manageRoomRateDto.setId(UUID.randomUUID());
+        manageRoomRateDto.setAdults(bookingDto.getAdults());
+        manageRoomRateDto.setChildren(bookingDto.getChildren());
+        manageRoomRateDto.setCheckIn(bookingDto.getCheckIn());
+        manageRoomRateDto.setCheckOut(bookingDto.getCheckOut());
+        manageRoomRateDto.setHotelAmount(bookingDto.getHotelAmount());
+        manageRoomRateDto.setNights(bookingDto.getNights());
+        manageRoomRateDto.setRoomNumber(bookingDto.getRoomNumber());
+        manageRoomRateDto.setInvoiceAmount(bookingDto.getInvoiceAmount());
+        return manageRoomRateDto;
     }
 
     private double calculateInvoiceAmount(List<BookingRow> bookingRowList) {
