@@ -37,4 +37,6 @@ public interface IManageInvoiceStatusService {
     Long countByCanceledStatusAndNotId(UUID id);
 
     Long countByProcessStatusAndNotId(UUID id);
+
+    ManageInvoiceStatusDto findByCanceledStatus();
 }
