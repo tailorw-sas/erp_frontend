@@ -38,6 +38,6 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Publish package
-        run: cd audit-agent && mvn --batch-mode -f pom.xml -P$BRANCH_NAME deploy
+        run: cd audit-agent && mvn --batch-mode -f pom.xml -Denv=$BRANCH_NAME deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
