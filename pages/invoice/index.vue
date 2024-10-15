@@ -1490,12 +1490,12 @@ async function getStatusListTemp() {
     const response = await GenericService.search(objApis.value.status.moduleApi, objApis.value.status.uriApi, payloadForStatus.value)
     if (response) {
       filterToSearch.value.status = [
-        { id: 'All', name: 'All', code: 'All' }, 
+        // { id: 'All', name: 'All', code: 'All' }, 
         ...response.data.map((item: any) => ({ id: item.id, name: item.name, code: item.code })),
         
       ]
       statusList.value = [
-        { id: 'All', name: 'All', code: 'All' }, 
+        // { id: 'All', name: 'All', code: 'All' }, 
         ...response.data.map((item: any) => ({ id: item.id, name: item.name, code: item.code })),
         
       ]
@@ -1876,10 +1876,7 @@ watch(filterToSearch, () => {
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-  console.log('----------------------------------');
-  await getStatusListTemp()
-  console.log('----------------------------------');
-  
+  await getStatusListTemp()  
   getList()
   
 })
