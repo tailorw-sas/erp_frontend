@@ -77,7 +77,7 @@ const filterToSearch = ref<IData>({
   client: [allDefaultItem],
   agency: [allDefaultItem],
   hotel: [allDefaultItem],
-  status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
+  status: [],
   invoiceType: [allDefaultItem],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
