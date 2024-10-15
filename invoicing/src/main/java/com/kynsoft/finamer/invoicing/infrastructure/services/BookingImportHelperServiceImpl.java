@@ -150,12 +150,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 //    }
 
     private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList) {
-        ManageInvoiceStatusDto invoiceStatus = null;
-        try {
-            ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-            invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getProcessed()) : null;
-        } catch (Exception ignored) {
-        }
+        ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
         manageInvoiceDto.setAgency(agency);
