@@ -1068,7 +1068,7 @@ function searchAndFilter() {
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
         payload.value.filter = [...payload.value.filter, {
-          key: 'invoiceStatus',
+          key: 'manageInvoiceStatus.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND'
@@ -1684,7 +1684,8 @@ function onRowRightClick(event: any) {
 
     // Mostrar Clone Complete solo para Reconciled,Sent y e iguales amounts. Debe estar en close operation el invoice date
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
-      && event?.data.dueAmount === event?.data.invoiceAmount && event.data.isInCloseOperation) {
+      && event?.data.dueAmount === event?.data.invoiceAmount && event.data.isInCloseOperation &&
+      event?.data.dueAmount > 0) {
       findMenuItemByLabelSetShow('Clone Complete', invoiceContextMenuItems.value, true)
     }
   }
