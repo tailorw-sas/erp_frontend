@@ -519,7 +519,7 @@ function ClearForm() {
 }
 
 function onRowRightClick(event: any) {
-  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED && route.query.type !== InvoiceType.INCOME) {
     return
   }
   selectedRoomRate.value = event.data
