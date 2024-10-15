@@ -1,0 +1,45 @@
+package com.kynsoft.finamer.audit.domain.exception;
+
+
+import com.kynsoft.finamer.audit.domain.rules.BusinessRule;
+
+public class BusinessRuleValidationException extends RuntimeException {
+
+    private final BusinessRule brokenRule;
+
+    private final int status;
+
+    private final String message;
+
+    private final String details;
+
+    public BusinessRuleValidationException(BusinessRule brokenRule) {
+        super(brokenRule.getError().getReasonPhrase());
+
+        this.brokenRule = brokenRule;
+        this.status = brokenRule.getError().value();
+        this.message = brokenRule.getError().getReasonPhrase();
+        this.details = brokenRule.getErrorField().getMessage();
+    }
+
+    public BusinessRule getBrokenRule() {
+        return brokenRule;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getDetails() {
+        return details;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s: %s", brokenRule.getClass().getName(), this.getMessage());
+    }
+}

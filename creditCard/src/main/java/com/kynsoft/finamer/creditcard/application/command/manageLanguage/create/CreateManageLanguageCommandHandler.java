@@ -20,7 +20,8 @@ public class CreateManageLanguageCommandHandler implements ICommandHandler<Creat
                 command.getId(),
                 command.getCode(),
                 command.getName(),
-                command.getDefaults()
+                command.getDefaults(),
+                command.getStatus()
         ));
     }
 }

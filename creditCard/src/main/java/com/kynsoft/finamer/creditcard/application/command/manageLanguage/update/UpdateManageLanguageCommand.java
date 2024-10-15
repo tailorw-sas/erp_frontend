@@ -14,6 +14,7 @@ public class UpdateManageLanguageCommand implements ICommand {
     private UUID id;
     private String name;
     private Boolean defaults;
+    private String status;
 
     @Override
     public ICommandMessage getMessage() {

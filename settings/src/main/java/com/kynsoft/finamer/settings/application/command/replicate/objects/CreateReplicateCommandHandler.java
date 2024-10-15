@@ -243,7 +243,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_LANGUAGE -> {
                     for (ManagerLanguageDto managerLanguageDto : this.managerLanguageService.findAllToReplicate()) {
-                        this.replicateManageLanguageService.create(new ReplicateManageLanguageKafka(managerLanguageDto.getId(), managerLanguageDto.getCode(), managerLanguageDto.getName(), managerLanguageDto.getDefaults()));
+                        this.replicateManageLanguageService.create(new ReplicateManageLanguageKafka(managerLanguageDto.getId(), managerLanguageDto.getCode(), managerLanguageDto.getName(), managerLanguageDto.getDefaults(), managerLanguageDto.getStatus().name()));
                     }
                 }
                 case MANAGE_INVOICE_TYPE -> {
