@@ -119,8 +119,8 @@ function checkValuesForValidation(item: any) {
   else {
     const decimalSchema = z.object(
       {
-        invoiceAmount: z.number({ invalid_type_error: 'The Rate amount field is required' }).safe()
-          .min(1, 'The Rate amount field is required')
+        invoiceAmount: z.number().safe()
+          .min(0, 'The Rate amount field is required')
           .refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
       },
     )
@@ -173,25 +173,25 @@ onMounted(() => {
                 delete errorsListParent.children
               }
 
-              if (data?.children && data?.children > 0) {
+              if (data?.adults && data?.adults > 0) {
                 const decimalSchema = z.object(
                   {
-                    adults: z
+                    children: z
                       .number()
-                      .refine(value => !Number.isNaN(value) && +value >= 0, 'The adults field must be greater than 0').nullable(),
+                      .refine(value => !Number.isNaN(value) && +value >= 0, 'The children field must be greater than 0').nullable(),
                   },
                 )
-                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+                updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
               }
               else {
                 const decimalSchema = z.object(
                   {
-                    adults: z
+                    children: z
                       .number()
-                      .refine(value => !Number.isNaN(value) && +value > 0, 'The adults field must be greater than 0').nullable(),
+                      .refine(value => !Number.isNaN(value) && +value > 0, 'The children field must be greater than 0').nullable(),
                   },
                 )
-                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+                updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
               }
             }"
           />
@@ -208,25 +208,25 @@ onMounted(() => {
                 delete errorsListParent.adults
               }
 
-              if (data?.adults && data?.adults > 0) {
+              if (data?.children && data?.children > 0) {
                 const decimalSchema = z.object(
                   {
-                    children: z
+                    adults: z
                       .number()
-                      .refine(value => +value >= 0, 'The children field must be greater than 0').nullable(),
+                      .refine(value => +value >= 0, 'The adults field must be greater than 0').nullable(),
                   },
                 )
-                updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
               }
               else {
                 const decimalSchema = z.object(
                   {
-                    children: z
+                    adults: z
                       .number()
-                      .refine(value => +value > 0, 'The children field must be greater than 0').nullable(),
+                      .refine(value => +value > 0, 'The adults field must be greater than 0').nullable(),
                   },
                 )
-                updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
               }
             }"
           />
