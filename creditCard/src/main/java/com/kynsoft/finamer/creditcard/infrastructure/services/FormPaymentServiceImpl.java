@@ -75,7 +75,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 String merchantId = merchantConfigDto.getMerchantNumber(); //Campo merchantNumber de Merchant Config
                 String merchantName = merchantConfigDto.getName(); //Campo name de Merchant Config
                 String merchantType = merchantConfigDto.getMerchantType(); //Campo merchantType de Merchant Config
-                String currencyCode = "$"; //Valor $ por ahora
+                String currencyCode = transactionDto.getMerchantCurrency().getValue(); //Valor $ por ahora
                 String orderNumber = transactionDto.getId().toString(); //Viene en el request
 
                 double amountValue = transactionDto.getAmount() * 100;
@@ -177,9 +177,10 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                     transactionDto.getMerchant().getId(),
                     transactionDto.getLanguage().getId()
             );
+            String currencyCode = transactionDto.getMerchantCurrency().getValue();
 
             requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
-            requestData.put("CurrencyCode", "214"); // dejar 214 por ahora que es el peso dominicano. El usd es 840
+            requestData.put("CurrencyCode", currencyCode); // dejar 214 por ahora que es el peso dominicano. El usd es 840
             requestData.put("Tax", "0"); // 0 por defecto
             requestData.put("AcquiringInstitutionCode", merchantConfigDto.getInstitutionCode()); //Campo institutionCode de Merchant Config
             requestData.put("MerchantType", merchantConfigDto.getMerchantType()); //Campo merchantType de Merchant Config
