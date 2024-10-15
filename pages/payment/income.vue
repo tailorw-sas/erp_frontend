@@ -196,7 +196,7 @@ const objApisLoading = ref({
 
 const columns: IColumn[] = [
   { field: 'bookingId', header: 'ID', type: 'text' },
- // { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
+  // { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text' },
   { field: 'cuponNumber', header: 'Coupon No.', type: 'text' },
@@ -222,14 +222,14 @@ const adjustmentColumns: IColumn[] = [
 
 const roomRateColumns: IColumn[] = [
   { field: 'roomRateId', header: 'Id', type: 'text' },
- // { field: 'fullName', header: 'Full Name', type: 'text' },
+  // { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'checkIn', header: 'Check In', type: 'date' },
   { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'adults', header: 'Adults', type: 'text' },
   { field: 'children', header: 'Children', type: 'text' },
-  //{ field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
+  // { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
   { field: 'nights', header: 'Nights', type: 'text' },
- // { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
+  // { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
   { field: 'invoiceAmount', header: 'Rate Amount', type: 'text' },
 ]
@@ -1408,7 +1408,7 @@ onMounted(async () => {
       <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
       <Button v-tooltip.top="'Import'" class="w-3rem ml-1" disabled icon="pi pi-download" />
 
-      <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
+      <Button v-if="false" v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
 
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-1" icon="pi pi-times" severity="secondary" @click="() => navigateTo('/payment')" />
     </div>

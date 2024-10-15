@@ -1256,6 +1256,7 @@ onMounted(async () => {
               </IfCan>
 
               <Button
+                v-if="false"
                 v-tooltip.top="'Update'"
                 class="w-3rem mx-1"
                 icon="pi pi-replay"
