@@ -448,12 +448,12 @@ async function getLanguageByMerchantList(query: string, isDefault: boolean = fal
             operator: 'LIKE',
             value: query,
             logicalOperation: 'OR'
-          }, /* {
+          }, {
             key: 'manageLanguage.status',
             operator: 'EQUALS',
             value: 'ACTIVE',
             logicalOperation: 'AND'
-          }, */ {
+          }, {
             key: 'manageMerchant.id',
             operator: 'EQUALS',
             value: item.value.merchant.id,
@@ -472,12 +472,12 @@ async function getLanguageByMerchantList(query: string, isDefault: boolean = fal
               value: query,
               logicalOperation: 'OR'
             },
-            // {
-            //   key: 'status',
-            //   operator: 'EQUALS',
-            //   value: 'ACTIVE',
-            //   logicalOperation: 'AND'
-            // },
+            {
+              key: 'manageLanguage.status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            },
             {
               key: 'manageMerchant.id',
               operator: 'EQUALS',
