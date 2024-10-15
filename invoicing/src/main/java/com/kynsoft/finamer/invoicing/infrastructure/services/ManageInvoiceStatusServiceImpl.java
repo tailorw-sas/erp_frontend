@@ -9,7 +9,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceStatusResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ParameterizationDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceStatusService;
@@ -59,13 +58,14 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
 
         entity.setUpdatedAt(LocalDateTime.now());
 
-        repositoryCommand.save(entity);    }
+        repositoryCommand.save(entity);
+    }
 
     @Override
     public void delete(ManageInvoiceStatusDto dto) {
-        try{
+        try {
             this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
@@ -74,7 +74,7 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
     public ManageInvoiceStatusDto findById(UUID id) {
         Optional<ManageInvoiceStatus> optionalEntity = repositoryQuery.findById(id);
 
-        if(optionalEntity.isPresent()){
+        if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
 
@@ -93,7 +93,7 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
 
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
-        return repositoryQuery.countByCodeAndNotId(code,id);
+        return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
     @Override
@@ -139,7 +139,7 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
     @Override
     public ManageInvoiceStatusDto findByEInvoiceStatus(EInvoiceStatus invoiceStatus) {
         ManageInvoiceStatusDto invoiceStatusDto = null;
-        switch (invoiceStatus){
+        switch (invoiceStatus) {
             case PROCECSED, PROCESSED -> {
                 invoiceStatusDto = this.repositoryQuery.findByProcessStatus().map(ManageInvoiceStatus::toAggregate).orElse(null);
             }
@@ -185,5 +185,16 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
     @Override
     public Long countByProcessStatusAndNotId(UUID id) {
         return this.repositoryQuery.countByProcessStatusAndNotId(id);
+    }
+
+    @Override
+    public ManageInvoiceStatusDto findByCanceledStatus() {
+        Optional<ManageInvoiceStatus> optionalEntity = repositoryQuery.findByCanceledStatus();
+
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND, new ErrorField("id", "The source not found.")));
     }
 }

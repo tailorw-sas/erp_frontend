@@ -39,8 +39,8 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
     @Override
     public void handle(UpdateBookingCommand command) {
         ManageBookingDto dto = this.bookingService.findById(command.getId());
-        RulesChecker.checkRule(new ManageBookingCheckBookingAmountAndBookingBalanceRule(dto.getInvoiceAmount(), dto.getDueAmount()));
-        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, dto.getInvoice().getInvoiceDate().toLocalDate(), dto.getInvoice().getHotel().getId()));
+        //RulesChecker.checkRule(new ManageBookingCheckBookingAmountAndBookingBalanceRule(dto.getInvoiceAmount(), dto.getDueAmount()));
+        //RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, dto.getInvoice().getInvoiceDate().toLocalDate(), dto.getInvoice().getHotel().getId()));
 //        command.setInvoice(dto.getInvoice().getId());
         ConsumerUpdate update = new ConsumerUpdate();
 
