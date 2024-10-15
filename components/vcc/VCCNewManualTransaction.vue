@@ -184,8 +184,8 @@ const AgencyList = ref<any[]>([])
 const LanguageList = ref<any[]>([])
 
 const ENUM_METHOD_TYPE = [
-  { id: 'LINK', name: 'Link' },
   { id: 'POST', name: 'Post' },
+  { id: 'LINK', name: 'Link' },
 ]
 
 async function getObjectValues($event: any) {
@@ -200,6 +200,7 @@ function onClose(isCancel: boolean) {
 
 function clearForm() {
   item.value = { ...itemTemp.value }
+
   formReload.value++
 }
 
@@ -548,6 +549,7 @@ watch(() => props.openDialog, async (newValue) => {
   dialogVisible.value = newValue
   if (newValue) {
     clearForm()
+    item.value.methodType = ENUM_METHOD_TYPE[0]
     handleMethodTypeChange('')
     await getMerchantList('', true)
     getLanguageByMerchantList('', true)
