@@ -1697,7 +1697,7 @@ function getStatusBadgeBackgroundColor(code: string) {
   console.log(code);
   
   switch (code) {
-    case 'PROCECSED': return '#FF8D00'
+    case 'PROCESSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
     case 'CANCELED': return '#F90303'
