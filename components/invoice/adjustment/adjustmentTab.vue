@@ -297,7 +297,9 @@ const route = useRoute()
 
 const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
-  filter: [],
+  filter: [
+   
+  ],
   query: '',
   pageSize: 10,
   page: 0,
@@ -692,7 +694,12 @@ onMounted(() => {
       operator: 'EQUALS',
       value: props.selectedInvoice,
       logicalOperation: 'AND'
-    }]
+    }, {
+        key: 'roomRate.booking.invoice.isCloned',
+        operator: 'EQUALS', // Usamos 'EQUALS' para igualar
+        value: false,   // Buscamos aquellos que no están clonados
+        logicalOperation: 'AND' // Operación lógica
+      }]
   }
   if (!props.isCreationDialog) {
     getAdjustmentList()
