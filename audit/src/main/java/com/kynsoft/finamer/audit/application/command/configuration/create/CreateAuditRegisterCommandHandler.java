@@ -23,7 +23,7 @@ public class CreateAuditRegisterCommandHandler implements ICommandHandler<Create
 
     @Override
     public void handle(CreateAuditRegisterCommand command) {
-        AuditConfigurationDto auditConfiguration = new AuditConfigurationDto(command.getAuditRegisterId(),true,true,true,command.getServiceName());
+        AuditConfigurationDto auditConfiguration = new AuditConfigurationDto(command.getAuditRegisterId(),true,true,true,command.getServiceName(),command.getEntityName());
         logger.info("Recibiendo evento de registro {}:",auditConfiguration);
         Optional<AuditConfigurationDto> configuration = configurationService.findByServiceNameAndRegisterId(command.getServiceName(), command.getAuditRegisterId());
         if (configuration.isEmpty()){

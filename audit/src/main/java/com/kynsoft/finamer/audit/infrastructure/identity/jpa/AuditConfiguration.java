@@ -26,8 +26,9 @@ public class AuditConfiguration implements Serializable {
     private boolean auditCreate;
     private boolean auditDelete;
     private String serviceName;
+    private String entityName;
 
     public AuditConfigurationDto toAggregate(){
-        return  new AuditConfigurationDto(id,auditCreate,auditUpdate,auditDelete,serviceName);
+        return  new AuditConfigurationDto(id,auditCreate,auditUpdate,auditDelete,serviceName,entityName);
     }
 }

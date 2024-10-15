@@ -12,4 +12,5 @@ import java.io.Serializable;
 public class AuditRegisterKafka implements Serializable {
     private String auditRegisterId;
     private String serviceName;
+    private String entityName;
 }

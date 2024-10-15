@@ -16,5 +16,6 @@ public class AuditConfigurationDto {
     private boolean auditUpdate;
     private boolean auditDelete;
     private String serviceName;
+    private String entityName;
 
 }

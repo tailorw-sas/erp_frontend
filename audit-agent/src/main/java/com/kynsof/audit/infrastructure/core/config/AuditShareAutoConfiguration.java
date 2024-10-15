@@ -5,8 +5,10 @@ import com.kynsof.audit.infrastructure.service.AuditLoader;
 import com.kynsof.audit.infrastructure.service.kafka.ProducerAuditEventService;
 import com.kynsof.audit.infrastructure.service.kafka.ProducerAuditRegisterEventService;
 import com.kynsof.audit.infrastructure.utils.SpringContext;
+import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +23,8 @@ public class AuditShareAutoConfiguration {
 
     @Autowired
     private KafkaTemplate<String,Object> kafkaTemplate;
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
 
     @Primary
     @Bean
@@ -40,6 +44,6 @@ public class AuditShareAutoConfiguration {
 
     @Bean
     public AuditLoader getAuditLoader(){
-        return new AuditLoader(getProducerAuditRegisterEventService());
+        return new AuditLoader(getProducerAuditRegisterEventService(),entityManagerFactory);
     }
 }

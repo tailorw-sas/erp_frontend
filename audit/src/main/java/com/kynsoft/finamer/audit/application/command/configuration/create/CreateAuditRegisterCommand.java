@@ -14,6 +14,7 @@ public class CreateAuditRegisterCommand implements ICommand {
 
     private UUID auditRegisterId;
     private String serviceName;
+    private String entityName;
 
     @Override
     public ICommandMessage getMessage() {

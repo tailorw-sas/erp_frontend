@@ -67,7 +67,7 @@ public class AuditConfigurationServiceImpl implements AuditConfigurationService 
     @Override
     public void registerServiceAudit(AuditConfigurationDto auditConfigurationDto) {
         AuditConfiguration auditConfiguration = new AuditConfiguration(auditConfigurationDto.getId(),auditConfigurationDto.isAuditUpdate(),
-                auditConfigurationDto.isAuditCreate(),auditConfigurationDto.isAuditDelete(),auditConfigurationDto.getServiceName());
+                auditConfigurationDto.isAuditCreate(),auditConfigurationDto.isAuditDelete(),auditConfigurationDto.getServiceName(),auditConfigurationDto.getEntityName());
         auditConfigurationRepository.save(auditConfiguration);
     }
 

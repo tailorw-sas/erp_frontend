@@ -25,7 +25,7 @@ public class ConsumerAuditRegisterEvent {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             AuditRegisterKafka auditKafka = objectMapper.readValue(event, AuditRegisterKafka.class);
-            CreateAuditRegisterCommand createAuditCommand=new CreateAuditRegisterCommand(UUID.fromString(auditKafka.getAuditRegisterId()), auditKafka.getServiceName()) ;
+            CreateAuditRegisterCommand createAuditCommand=new CreateAuditRegisterCommand(UUID.fromString(auditKafka.getAuditRegisterId()), auditKafka.getServiceName(),auditKafka.getEntityName()) ;
             mediator.send(createAuditCommand);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerAuditEventService.class.getName()).log(Level.SEVERE, null, ex);

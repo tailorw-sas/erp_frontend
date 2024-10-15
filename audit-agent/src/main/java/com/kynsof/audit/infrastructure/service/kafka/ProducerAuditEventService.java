@@ -20,8 +20,7 @@ import reactor.core.publisher.Mono;
 public class ProducerAuditEventService {
     @Value("${spring.application.name}")
     private String serviceName;
-    @Value("${audit.register.id}")
-    private String auditRegisterId;
+
 
     private final KafkaTemplate<String, Object> producer;
     private final ObjectMapper objectMapper;
@@ -39,7 +38,6 @@ public class ProducerAuditEventService {
         try {
             auditKafka.setUsername("KIKI");
             auditKafka.setServiceName(serviceName);
-            auditKafka.setAuditRegisterId(auditRegisterId);
             String json = objectMapper.writeValueAsString(auditKafka);
             this.producer.send("audit-topic", json);
         } catch (JsonProcessingException e) {

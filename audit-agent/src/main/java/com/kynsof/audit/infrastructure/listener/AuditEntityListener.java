@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.kynsof.audit.domain.EventType;
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.identity.kafka.AuditKafka;
 import com.kynsof.audit.infrastructure.service.kafka.ProducerAuditEventService;
 import com.kynsof.audit.infrastructure.utils.SpringContext;
@@ -51,7 +52,9 @@ public class AuditEntityListener {
         ProducerAuditEventService procedure = SpringContext.getBean(ProducerAuditEventService.class);
         AuditKafka auditKafka = new AuditKafka();
   //      auditKafka.setData(data);
-        auditKafka.setEntityName(object.getClass().getName());
+        RemoteAudit remoteAudit =object.getClass().getAnnotation(RemoteAudit.class);
+        auditKafka.setAuditRegisterId(remoteAudit.id());
+        auditKafka.setEntityName(remoteAudit.name());
         auditKafka.setAction(eventType.name());
         auditKafka.setTime(LocalDateTime.now());
         procedure.send(auditKafka);
