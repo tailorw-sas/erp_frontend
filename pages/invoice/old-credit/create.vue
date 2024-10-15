@@ -558,7 +558,7 @@ async function createItem(item: { [key: string]: any }) {
       if (booking?.invoiceAmount !== 0) {
         bookings.push({
           ...booking,
-          invoiceAmount: booking?.invoiceAmount,
+          invoiceAmount: toNegative(booking?.invoiceAmount),
           ratePlan: booking.ratePlan?.id,
           roomCategory: booking.roomCategory?.id,
           roomType: booking.roomType?.id,

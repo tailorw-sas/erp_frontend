@@ -73,20 +73,21 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.object({
       id: z.string().min(1, 'The region field is required'),
       name: z.string().min(1, 'The region field is required'),
-    })
+    }).nullable().refine(value => value && value.id && value.name, { message: 'The region field is a required' }),
   },
   {
     field: 'manageHotel',
     header: 'Hotels',
     dataType: 'multi-select',
     class: 'field col-12 required',
+    validation: validateEntitiesForSelectMultiple('hotel').nonempty('The hotel field is required'),
   },
   {
     field: 'emailContact',
     header: 'Email Contact',
     dataType: 'textarea',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 100 characters')
+    validation: z.string().trim().min(1, 'The email contact field is required').max(500, 'Maximum 500 characters')
   },
 ]
 
@@ -134,14 +135,7 @@ const options = ref({
 })
 const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
-  filter: [{
-    key: 'manageAgency.id',
-    operator: 'EQUALS',
-    value: item.value?.manageAgency?.id,
-    logicalOperation: 'AND',
-    type: 'filterSearch',
-
-  }],
+  filter: [],
   query: '',
   pageSize: 20,
   page: 0,
@@ -201,6 +195,14 @@ async function getList() {
     listItems.value = []
     const newListItems = []
 
+    const staticPayload = [{
+      key: 'manageAgency.id',
+      operator: 'EQUALS',
+      value: item.value?.manageAgency?.id,
+      logicalOperation: 'AND'
+    }]
+    payload.value.filter = [...payload.value.filter, ...staticPayload]
+
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -247,24 +249,32 @@ function searchAndFilter() {
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.ASC
   }
-  newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  // newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
-    newPayload.filter.push({
+    newPayload.filter = [{
       key: 'manageRegion.id',
       operator: 'LIKE',
       value: filterToSearch.value.search.id,
       logicalOperation: 'AND',
       type: 'filterSearch',
-    })
+    }]
   }
-  payload.value = newPayload
+  payload.value.filter = newPayload.filter // Asignar el nuevo payload al newPayload
   getList()
 }
 
 function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  // payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''
+  payload.value = {
+    filter: [],
+    query: '',
+    pageSize: 20,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
+  }
 
   getList()
 }
@@ -353,21 +363,9 @@ async function getHotelList(query: string = '') {
     payloadHotel.value = {
       filter: [
         {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
           key: 'manageRegion.id',
           operator: 'EQUALS',
-          value: regionSelected.value.id,
+          value: regionSelected.value,
           logicalOperation: 'AND'
         },
         {
@@ -382,6 +380,19 @@ async function getHotelList(query: string = '') {
       page: 0,
       sortBy: 'name',
       sortType: ENUM_SHORT_TYPE.ASC
+    }
+    if (query) {
+      payloadHotel.value.filter.push({
+        key: 'name',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      },)
     }
 
     hotelList.value = []
@@ -408,6 +419,7 @@ async function getItemById(id: string) {
         item.value.manageAgency = response.manageAgency
         item.value.manageRegion = response.manageRegion
         regionSelected.value = response.manageRegion.id
+
         await getHotelList()
         item.value.manageHotel = response.manageHotel.map((hotel: any) => {
           return { id: hotel.id, name: `${hotel.code} - ${hotel.name}`, status: hotel.status }
@@ -497,46 +509,36 @@ async function saveItem(item: { [key: string]: any }) {
 }
 
 function requireConfirmationToSave(item: any) {
-  if (!useRuntimeConfig().public.showSaveConfirm) {
-    saveItem(item)
-  }
-  else {
-    const { event } = item
-    confirm.require({
-      target: event.currentTarget,
-      group: 'headless',
-      header: 'Save the record',
-      message: 'Do you want to save the change?',
-      rejectLabel: 'Cancel',
-      acceptLabel: 'Accept',
-      accept: () => {
-        saveItem(item)
-      },
-      reject: () => {
-        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-      }
-    })
-  }
+  const { event } = item
+  confirm.require({
+    target: event.currentTarget,
+    group: 'headless',
+    header: 'Save the record',
+    message: 'Do you want to save the change?',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Accept',
+    accept: () => {
+      saveItem(item)
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+    }
+  })
 }
 function requireConfirmationToDelete(event: any) {
-  if (!useRuntimeConfig().public.showDeleteConfirm) {
-    deleteItem(idItem.value)
-  }
-  else {
-    confirm.require({
-      target: event.currentTarget,
-      group: 'headless',
-      header: 'Save the record',
-      message: 'Do you want to save the change?',
-      acceptClass: 'p-button-danger',
-      rejectLabel: 'Cancel',
-      acceptLabel: 'Accept',
-      accept: () => {
-        deleteItem(idItem.value)
-      },
-      reject: () => {}
-    })
-  }
+  confirm.require({
+    target: event.currentTarget,
+    group: 'headless',
+    header: 'Save the record',
+    message: 'Do you want to save the change?',
+    acceptClass: 'p-button-danger',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Accept',
+    accept: () => {
+      deleteItem(idItem.value)
+    },
+    reject: () => {}
+  })
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
