@@ -258,7 +258,6 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
     validation:
     z.number()
-      .min(1, 'The Rate amount field is required')
       .refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
   },
   {
@@ -402,7 +401,7 @@ const item = ref<GenericObject>({
   roomRateId: '',
   checkIn: dayjs(props.bookingObj?.checkIn).toDate(),
   checkOut: dayjs(props.bookingObj?.checkOut).toDate(),
-  invoiceAmount: '0',
+  invoiceAmount: 0,
   roomNumber: '0',
   adults: 0,
   children: 0,
@@ -417,7 +416,7 @@ const itemTemp = ref<GenericObject>({
   roomRateId: '',
   checkIn: dayjs(props.bookingObj?.checkIn).toDate(),
   checkOut: dayjs(props.bookingObj?.checkOut).toDate(),
-  invoiceAmount: '0',
+  invoiceAmount: 0,
   roomNumber: '0',
   adults: 0,
   children: 0,

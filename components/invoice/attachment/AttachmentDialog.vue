@@ -726,7 +726,12 @@ const haveAttachmentWithAttachmentTypeInv = computed(() => {
 function isFieldDisabled() {
   if (!props.isCreationDialog) {
     // !ListItems.value.some(item => item.type?.attachInvDefault)
-    return true
+    if (item.value && item.value.id) {
+      return true
+    }
+    else {
+      return !ListItems.value.some(item => item.type?.attachInvDefault)
+    }
   }
   else if (props.isCreationDialog) {
     if (item.value && item.value.id) {
@@ -740,50 +745,27 @@ function isFieldDisabled() {
 }
 
 function disabledBtnSave(propsValue: any): boolean {
-  if (props.isCreationDialog) {
-    if (item.value && item.value.id) {
-      return true
-    }
-    else if (propsValue.item.fieldValues.file) {
-      return false
-    }
-    else {
-      return true
-    }
+  if (item.value && item.value.id) {
+    return true
+  }
+  else if (propsValue.item.fieldValues.file) {
+    return false
   }
   else {
     return true
   }
 }
 function disabledFields(): boolean {
-  // if (data && data.file) {
-  //   console.log(data.file)
-  // }
-
-  if (props.isCreationDialog) {
-    if (item.value && item.value.id) {
-      return true
-    }
-    else {
-      return false
-    }
+  if (item.value && item.value.id) {
+    return true
   }
   else {
-    return true
+    return false
   }
 }
 
 function disabledBtnCreate(): boolean {
-  // if (data && data.file) {
-  //   console.log(data.file)
-  // }
-
-  if (props.isCreationDialog) {
-    return false
-  }
-  else {
-    return true
-  }
+  return false
 }
 
 watch(() => props.selectedInvoiceObj, () => {
