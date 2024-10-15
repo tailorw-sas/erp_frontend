@@ -35,7 +35,27 @@
 				<env>dev</env>
 			</properties>
 			<build>
-				<finalName>audit-agent-dev</finalName>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<version>3.3.0</version>
+						<configuration>
+							<finalName>audit-agent-dev</finalName>
+							<applicationName>${project.build.finalName}</applicationName>
+						</configuration>
+						<executions>
+							<execution>
+								<id>make-assembly</id>
+								<phase>package</phase>
+								<goals>
+									<goal>single</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+				<applicationName>${project.build.finalName}</applicationName>
 			</build>
 		</profile>
 		<profile>
@@ -50,12 +70,30 @@
 				<env>qa</env>
 			</properties>
 			<build>
-				<finalName>audit-agent-qa</finalName>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<version>3.3.0</version>
+						<configuration>
+							<finalName>audit-agent-qa</finalName>
+							<applicationName>${project.build.finalName}</applicationName>
+						</configuration>
+						<executions>
+							<execution>
+								<id>make-assembly</id>
+								<phase>package</phase>
+								<goals>
+									<goal>single</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+				
 			</build>
 		</profile>
 	</profiles>
-	
-	<applicationName>${project.build.finalName}</applicationName>
 
     <dependencies>
 <!--        <dependency>-->
