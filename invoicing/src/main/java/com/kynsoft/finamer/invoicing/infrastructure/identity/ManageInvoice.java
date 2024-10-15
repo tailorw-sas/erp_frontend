@@ -98,7 +98,7 @@ public class ManageInvoice {
     private Double credits;
 
     private String sendStatusError;
-
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean hasAttachments;
 
     @CreationTimestamp

@@ -176,7 +176,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             invoiceNumber += "-" + hotel.getCode();
         }
         manageInvoiceDto.setInvoiceNumber(invoiceNumber);
-        invoiceService.create(manageInvoiceDto);
+        manageInvoiceDto =invoiceService.create(manageInvoiceDto);
 
         //TODO: aqui se envia a crear el invoice con sun booking en payment
         try {
