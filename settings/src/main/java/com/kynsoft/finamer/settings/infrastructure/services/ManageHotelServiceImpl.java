@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.settings.application.query.manageHotel.search.ManageHotelSearchResponse;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageHotelResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -124,9 +125,9 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageHotel> data) {
-        List<ManageHotelResponse> responseList = new ArrayList<>();
+        List<ManageHotelSearchResponse> responseList = new ArrayList<>();
         for (ManageHotel entity : data.getContent()) {
-            responseList.add(new ManageHotelResponse(entity.toAggregate()));
+            responseList.add(new ManageHotelSearchResponse(entity.toAggregate()));
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(), data.getTotalElements(), data.getSize(), data.getNumber());
     }
