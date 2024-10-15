@@ -251,7 +251,7 @@ async function getItemById(id: string) {
           item.value.b2bPartner = {
             id: response.b2bPartner.id,
             name: `${response.b2bPartner.code} - ${response.b2bPartner.name}`,
-            status: statusToBoolean(response.b2bPartner.status)
+            status: response.b2bPartner.status
           }
         }
       }
