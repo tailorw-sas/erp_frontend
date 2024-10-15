@@ -3,7 +3,9 @@ package com.kynsoft.finamer.audit.application.query.configuration.getall;
 
 import com.kynsoft.finamer.audit.application.service.AuditConfigurationService;
 import com.kynsoft.finamer.audit.domain.bus.query.IQueryHandler;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GetAllConfigurationQueryHandler implements IQueryHandler<GetAllConfigurationQuery, GetAllConfigurationResponse> {
 
     private final AuditConfigurationService auditConfigurationService;

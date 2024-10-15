@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class getConfigurationByIdResponse implements IResponse {
+public class GetConfigurationByIdResponse implements IResponse {
 
     private final AuditConfigurationDto auditConfigurationDto;
 

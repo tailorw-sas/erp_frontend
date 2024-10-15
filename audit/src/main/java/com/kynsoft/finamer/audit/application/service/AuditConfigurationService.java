@@ -1,9 +1,6 @@
 package com.kynsoft.finamer.audit.application.service;
 
-import com.kynsoft.finamer.audit.application.command.configuration.update.UpdateConfigurationMessage;
-import com.kynsoft.finamer.audit.application.command.configuration.update.UpdateConfigurationRequest;
-import com.kynsoft.finamer.audit.application.query.configuration.getbyid.getConfigurationByIdResponse;
-import com.kynsoft.finamer.audit.application.query.configuration.search.SearchConfigurationResponse;
+import com.kynsoft.finamer.audit.application.query.configuration.getbyid.GetConfigurationByIdResponse;
 import com.kynsoft.finamer.audit.domain.dto.AuditConfigurationDto;
 import com.kynsoft.finamer.audit.domain.request.FilterCriteria;
 import com.kynsoft.finamer.audit.domain.response.PaginatedResponse;
@@ -18,9 +15,9 @@ public interface AuditConfigurationService {
     public Optional<AuditConfigurationDto> findByServiceNameAndRegisterId(String serviceName,UUID registerId);
     public PaginatedResponse findAll(Pageable pageable);
 
-    public getConfigurationByIdResponse findById(UUID id);
-    public SearchConfigurationResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, String query);
+    public GetConfigurationByIdResponse findById(UUID id);
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, String query);
 
-    public UpdateConfigurationMessage update(UUID id, UpdateConfigurationRequest updateConfigurationRequest);
+    public void update(AuditConfigurationDto auditConfigurationDto);
     public void registerServiceAudit(AuditConfigurationDto auditConfigurationDto);
 }

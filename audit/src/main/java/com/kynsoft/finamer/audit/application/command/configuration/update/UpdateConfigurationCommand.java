@@ -13,6 +13,8 @@ public class UpdateConfigurationCommand implements ICommand {
     private boolean auditUpdate;
     private boolean auditDelete;
     private boolean auditCreation;
+    private String serviceName;
+    private String entityName;
 
 
     public UpdateConfigurationCommand(UpdateConfigurationRequest updateConfigurationRequest,UUID id) {
@@ -20,6 +22,8 @@ public class UpdateConfigurationCommand implements ICommand {
         this.auditCreation=updateConfigurationRequest.isAuditCreate();
         this.auditUpdate=updateConfigurationRequest.isAuditUpdate();
         this.auditDelete=updateConfigurationRequest.isAuditDelete();
+        this.serviceName=updateConfigurationRequest.getServiceName();
+        this.entityName=updateConfigurationRequest.getEntityName();
     }
 
     @Override

@@ -1,9 +1,6 @@
 package com.kynsoft.finamer.audit.infrastructure.service;
 
-import com.kynsoft.finamer.audit.application.command.configuration.update.UpdateConfigurationMessage;
-import com.kynsoft.finamer.audit.application.command.configuration.update.UpdateConfigurationRequest;
-import com.kynsoft.finamer.audit.application.query.configuration.getbyid.getConfigurationByIdResponse;
-import com.kynsoft.finamer.audit.application.query.configuration.search.SearchConfigurationResponse;
+import com.kynsoft.finamer.audit.application.query.configuration.getbyid.GetConfigurationByIdResponse;
 import com.kynsoft.finamer.audit.application.service.AuditConfigurationService;
 import com.kynsoft.finamer.audit.domain.dto.AuditConfigurationDto;
 import com.kynsoft.finamer.audit.domain.exception.BusinessNotFoundException;
@@ -14,6 +11,7 @@ import com.kynsoft.finamer.audit.domain.response.ErrorField;
 import com.kynsoft.finamer.audit.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.audit.infrastructure.identity.jpa.AuditConfiguration;
 import com.kynsoft.finamer.audit.infrastructure.repository.AuditConfigurationRepository;
+import com.kynsoft.finamer.audit.infrastructure.specifications.GenericSpecificationsBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,26 +40,36 @@ public class AuditConfigurationServiceImpl implements AuditConfigurationService 
     }
 
     @Override
-    public getConfigurationByIdResponse findById(UUID id) {
+    public GetConfigurationByIdResponse findById(UUID id) {
        Optional<AuditConfigurationDto> result= auditConfigurationRepository.findById(id.toString()).map(AuditConfiguration::toAggregate);
 
        if (result.isPresent()){
            AuditConfigurationDto auditConfigurationDto = result.get();
-           return new getConfigurationByIdResponse(auditConfigurationDto);
+           return new GetConfigurationByIdResponse(auditConfigurationDto);
        }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id","The source not found")));
 
     }
 
     @Override
-    public SearchConfigurationResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, String query) {
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, String query) {
+        GenericSpecificationsBuilder<AuditConfiguration> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<AuditConfiguration> data = auditConfigurationRepository.findAll(specifications, pageable);
 
-        return null;
+
+        return getPageResponse(data);
     }
 
     @Override
-    public UpdateConfigurationMessage update(UUID id, UpdateConfigurationRequest updateConfigurationRequest) {
-        return null;
+    public void update(AuditConfigurationDto auditConfigurationDto) {
+       Optional<AuditConfiguration> auditConfiguration = auditConfigurationRepository.findById(auditConfigurationDto.getId().toString());
+       auditConfiguration.ifPresent(auditConfiguration1 -> {
+           auditConfiguration1.setAuditUpdate(auditConfigurationDto.isAuditUpdate());
+           auditConfiguration1.setAuditDelete(auditConfigurationDto.isAuditDelete());
+           auditConfiguration1.setAuditCreate(auditConfigurationDto.isAuditCreate());
+           auditConfigurationRepository.save(auditConfiguration1);
+       });
+
     }
 
     @Override
