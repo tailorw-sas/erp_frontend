@@ -144,7 +144,6 @@ const confBookingApi = reactive({
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
 function handleDialogOpen() {
-  console.log(active)
   switch (active.value) {
     case 0:
       bookingDialogOpen.value = true
@@ -362,9 +361,6 @@ async function getInvoiceAmountById(id: string) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
       }
     }
-    finally {
-
-    }
   }
 }
 
@@ -487,7 +483,6 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       successOperation = false
-      console.log(error)
 
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
@@ -1175,8 +1170,12 @@ async function onCellEditRoomRate(event: any) {
     id: newData.id
   }
   try {
-    await updateRoomRate(payload)
-    reloadBookingItem(idItem.value)
+    debugger
+    console.log(item.value)
+    data[field] = newValue
+    // item.value[field] = newValue
+    // await updateRoomRate(payload)
+    // reloadBookingItem(idItem.value)
   }
   catch (error: any) {
     console.log(error)
