@@ -342,7 +342,9 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_TRANSACTION_STATUS_CHECK_CANCELLED(1120, Series.DOMAIN_ERROR,"Another item already exists with cancelled status."),
     MANAGE_TRANSACTION_STATUS_CHECK_DECLINED(1121, Series.DOMAIN_ERROR,"Another item already exists with declined status."),
     MANAGE_TRANSACTION_ALREADY_PROCESSED(1122, Series.DOMAIN_ERROR,"The transaction has already been processed."),
-    MANAGE_EDIT_BOOKING_AMOUNT_AND_BOOKING_BALANCE(1123, Series.DOMAIN_ERROR,"El valor del Booking amount debe ser igual al Booking balance.");
+    MANAGE_EDIT_BOOKING_AMOUNT_AND_BOOKING_BALANCE(1123, Series.DOMAIN_ERROR,"El valor del Booking amount debe ser igual al Booking balance."),
+    MANAGE_INVOICE_CHANGE_STATUS(1124, Series.DOMAIN_ERROR,"Cambio de estado incorrecto."),
+    MANAGE_INVOICE_CHANGE_AGENCY(1125, Series.DOMAIN_ERROR,"En el estado actual del invoice, no se puede modificar la agencia.");
 
     private static final DomainErrorMessage[] VALUES;
 
