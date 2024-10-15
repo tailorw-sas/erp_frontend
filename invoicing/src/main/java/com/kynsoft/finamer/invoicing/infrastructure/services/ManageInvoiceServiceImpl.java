@@ -180,7 +180,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     private PaginatedResponse getPaginatedSendListResponse(Page<ManageInvoice> data) {
-        List<ManageInvoiceSearchResponse> responseList = data.getContent().stream()
+        // Filtramos el contenido de acuerdo a las condiciones
+        List<ManageInvoiceSearchResponse> filteredResponseList = data.getContent().stream()
                 .filter(entity -> {
                     ManageAgency agency = entity.getAgency();
                     List<ManageBooking> bookings = entity.getBookings();
@@ -189,13 +190,21 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 .map(entity -> new ManageInvoiceSearchResponse(entity.toAggregateSearch(), null, null))
                 .collect(Collectors.toList());
 
+        // Calculamos el total de elementos después del filtrado
+        int totalFilteredElements = filteredResponseList.size();
+
+        // Calculamos el total de páginas según el tamaño original de la página
+        int pageSize = data.getSize();
+        int totalPages = (int) Math.ceil((double) totalFilteredElements / pageSize);
+
+        // Devolvemos la respuesta paginada con los datos filtrados y calculados
         return new PaginatedResponse(
-                responseList,
-                data.getTotalPages(),
-                data.getNumberOfElements(),
-                data.getTotalElements(),
-                data.getSize(),
-                data.getNumber()
+                filteredResponseList,              // Lista de datos filtrados
+                totalPages,                        // Total de páginas basado en los datos filtrados
+                totalFilteredElements,             // Total de elementos después del filtrado
+                (long) totalFilteredElements,      // Total de elementos
+                pageSize,                          // Tamaño de la página original
+                data.getNumber()                   // Número de la página actual (0-indexado)
         );
     }
 
