@@ -1,9 +1,12 @@
 package com.kynsoft.finamer.invoicing.application.command.manageBooking.update;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingCheckBookingAmountAndBookingBalanceRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -19,26 +22,29 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
     private final IManageNightTypeService nightTypeService;
     private final IManageRoomTypeService roomTypeService;
     private final IManageRoomCategoryService roomCategoryService;
+    private final IInvoiceCloseOperationService closeOperationService;
 
     public UpdateBookingCommandHandler(IManageBookingService bookingService,
             IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
-            IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService) {
+            IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
+            IInvoiceCloseOperationService closeOperationService) {
         this.bookingService = bookingService;
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
         this.roomTypeService = roomTypeService;
         this.roomCategoryService = roomCategoryService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     public void handle(UpdateBookingCommand command) {
         ManageBookingDto dto = this.bookingService.findById(command.getId());
-
+        RulesChecker.checkRule(new ManageBookingCheckBookingAmountAndBookingBalanceRule(dto.getInvoiceAmount(), dto.getDueAmount()));
+        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, dto.getInvoice().getInvoiceDate().toLocalDate(), dto.getInvoice().getHotel().getId()));
 //        command.setInvoice(dto.getInvoice().getId());
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateLocalDateTime(dto::setHotelCreationDate, command.getHotelCreationDate(),
-                dto.getHotelCreationDate(), update::setUpdate);
+        UpdateIfNotNull.updateLocalDateTime(dto::setHotelCreationDate, command.getHotelCreationDate(), dto.getHotelCreationDate(), update::setUpdate);
 
         UpdateIfNotNull.updateLocalDateTime(dto::setBookingDate, command.getBookingDate(), dto.getBookingDate(), update::setUpdate);
 //        UpdateIfNotNull.updateLocalDateTime(dto::setCheckIn, command.getCheckIn(), dto.getCheckIn(), update::setUpdate);
