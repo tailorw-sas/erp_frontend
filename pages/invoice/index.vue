@@ -94,7 +94,7 @@ const objApis = ref({
   client: { moduleApi: 'settings', uriApi: 'manage-client' },
   agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
   hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
-  status: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
+  status: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' },
   invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
 })
 
@@ -798,6 +798,15 @@ const paginationPrint = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+
+const payloadForStatus = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -1002,7 +1011,6 @@ async function getPrintList() {
   }
 }
 
-console.log(listItems,'ver que trae aqui')
 const openEditDialog = async (item: any, type: string) => await navigateTo({ path: `invoice/edit/${item}`, query: { type: type } }, { open: { target: '_blank' } })
 
 async function resetListItems() {
@@ -1065,8 +1073,12 @@ function searchAndFilter() {
 
     if (filterToSearch.value.status?.length > 0) {
       const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
+      console.log(filteredItems, 'filteredItems');
+      
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
+        console.log(itemIds, 'itemIds');
+        
         payload.value.filter = [...payload.value.filter, {
           key: 'manageInvoiceStatus.id',
           operator: 'IN',
@@ -1361,6 +1373,46 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
+interface DataListItemForStatus {
+  id: string
+  name: string
+  code: string
+  status: string
+  description?: string
+  invoiceStatus: {
+    sentStatus: boolean
+    reconciledStatus: boolean
+    canceledStatus: boolean
+    processStatus: boolean
+  }
+}
+
+interface ListItemForStatus {
+  id: string
+  name: string
+  status: boolean | string
+  code?: string
+  description?: string
+  sentStatus?: boolean
+  reconciledStatus?: boolean
+  canceledStatus?: boolean
+  processStatus?: boolean
+}
+
+function mapFunctionStatus(data: DataListItemForStatus): ListItemForStatus {  
+  return {
+    id: data.id,
+    name: `${data.name}`,
+    status: data.status,
+    code: data.code,
+    description: data.description,
+    sentStatus: data.invoiceStatus.sentStatus,
+    reconciledStatus: data.invoiceStatus.reconciledStatus,
+    canceledStatus: data.invoiceStatus.canceledStatus,
+    processStatus: data.invoiceStatus.processStatus
+  }
+}
+
 function mapFunctionForType(data: DataListItem): ListItem {
   return {
     id: data.id,
@@ -1402,6 +1454,58 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   statusList.value = [...statusList.value, ...statusTemp]
 }
 
+// async function getStatusListLoadValuesByDefaults(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+//   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+// }
+
+async function getStatusListTemp() {
+  try {
+    const filter: FilterCriteria[] = [
+      {
+        key: 'status',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+      },
+      {
+        key: 'processStatus',
+        logicalOperation: 'OR',
+        operator: 'EQUALS',
+        value: true
+      },
+      {
+        key: 'sentStatus',
+        logicalOperation: 'OR',
+        operator: 'EQUALS',
+        value: true
+      },
+      {
+        key: 'reconciledStatus',
+        logicalOperation: 'OR',
+        operator: 'EQUALS',
+        value: true
+      }
+    ]
+    payloadForStatus.value.filter = filter
+    const response = await GenericService.search(objApis.value.status.moduleApi, objApis.value.status.uriApi, payloadForStatus.value)
+    if (response) {
+      filterToSearch.value.status = [
+        { id: 'All', name: 'All', code: 'All' }, 
+        ...response.data.map((item: any) => ({ id: item.id, name: item.name, code: item.code })),
+        
+      ]
+      statusList.value = [
+        { id: 'All', name: 'All', code: 'All' }, 
+        ...response.data.map((item: any) => ({ id: item.id, name: item.name, code: item.code })),
+        
+      ]
+    }    
+    
+  }
+  catch (error) {
+    console.error('Error loading status list:', error)
+  }
+}
 
 // async function getStatusList(query = '') {
 //   try {
@@ -1770,9 +1874,12 @@ watch(filterToSearch, () => {
 // -------------------------------------------------------------------------------------------------------
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
-onMounted(() => {
+onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-
+  console.log('----------------------------------');
+  await getStatusListTemp()
+  console.log('----------------------------------');
+  
   getList()
   
 })
