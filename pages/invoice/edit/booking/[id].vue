@@ -859,7 +859,6 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-      debugger
       if (response) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
@@ -1172,12 +1171,9 @@ async function onCellEditRoomRate(event: any) {
     id: newData.id
   }
   try {
-    debugger
-    console.log(item.value)
-    data[field] = newValue
-    // item.value[field] = newValue
-    // await updateRoomRate(payload)
-    // reloadBookingItem(idItem.value)
+    await updateRoomRate(payload)
+    // await updateItem(item.value)
+    reloadBookingItem(idItem.value)
   }
   catch (error: any) {
     console.log(error)

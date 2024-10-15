@@ -636,7 +636,7 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id) 
-      debugger     
+           
       if (response) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
@@ -696,7 +696,6 @@ async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-    debugger
     payload.invoiceId = item.invoiceId
     payload.invoiceNumber = item.invoiceNumber
     payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
@@ -713,7 +712,6 @@ async function createItem(item: { [key: string]: any }) {
 const nightTypeRequired = ref(false)
 
 async function updateItem(item: { [key: string]: any }) {
-  debugger
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
   payload.employee = userData?.value?.user?.name
@@ -726,7 +724,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.reSendDate = item.reSendDate
   payload.invoiceStatus = item.invoiceStatus?.id
 
-  //await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
+  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
   navigateTo(
     '/invoice'
   )
@@ -899,7 +897,6 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
 
 function disabledInvoiceStatus(payload: any) {  
   let result = true
-  
   if (item.value.invoiceAmount !== dueAmount.value || !isInCloseOperation.value){
     result = true
   }
@@ -986,7 +983,7 @@ onMounted(async () => {
             v-model="data.invoiceDate" 
             date-format="yy-mm-dd" 
             :max-date="new Date()" 
-            :disabled="invoiceStatus !== InvoiceStatus.PROCECSED"
+            :disabled="invoiceStatus !== InvoiceStatus.PROCECSED "
             @update:model-value="($event) => {
               onUpdate('invoiceDate', $event)
             }" 
@@ -1004,7 +1001,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.invoiceStatus" 
             :suggestions="[...invoiceStatusList]"
-            :disabled="disabledInvoiceStatus(data.invoiceStatus)" 
+            :disabled="disabledInvoiceStatus(item.invoiceStatus)" 
             @change="async ($event) => {
               onUpdate('invoiceStatus', $event)
             }" 
