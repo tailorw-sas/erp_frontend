@@ -39,14 +39,14 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
-    @CachePut(cacheNames = "manageHotel", key = "#result")
+    @CacheEvict(cacheNames = {"manageHotel", "manageHotelAll", "manageHotelToReplicate"}, allEntries = true)
     public UUID create(ManageHotelDto dto) {
         ManageHotel entity = new ManageHotel(dto);
         return repositoryCommand.save(entity).getId();
     }
 
     @Override
-    @CachePut(cacheNames = "manageHotel", key = "#dto.id")
+    @CacheEvict(cacheNames = {"manageHotel", "manageHotelAll", "manageHotelToReplicate"}, allEntries = true)
     public void update(ManageHotelDto dto) {
         ManageHotel entity = new ManageHotel(dto);
         entity.setUpdatedAt(LocalDateTime.now());
