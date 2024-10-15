@@ -54,573 +54,6 @@ const invoiceTypeList = ref<any[]>([])
 
 const invoiceStatus = ref<any>(null)
 
-const confhotelListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-hotel',
-})
-
-const confagencyListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-agency',
-})
-
-const confinvoiceTypeListtApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-invoice-type',
-})
-
-// VARIABLES -----------------------------------------------------------------------------------------
-
-const objApis = ref({
-  invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
-  invoiceStatus: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
-  agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
-  hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
-  bankAccount: { moduleApi: 'settings', uriApi: 'manage-bank-account' },
-  paymentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-status' },
-  attachmentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' },
-})
-
-//
-const confirm = useConfirm()
-const formReload = ref(0)
-
-const idItem = ref('')
-const idItemToLoadFirstTime = ref('')
-const filterToSearch = ref<IData>({
-  criterial: null,
-  search: '',
-})
-
-const item = ref<GenericObject>({
-  invoiceId: '',
-  invoiceNumber: '',
-  invoiceDate: new Date(),
-  isManual: true,
-  invoiceAmount: '0.00',
-  hotel: null,
-  agency: null,
-  invoiceType: null,
-})
-
-const itemTemp = ref<GenericObject>({
-  invoiceId: '',
-  invoiceNumber: '',
-  invoiceDate: new Date(),
-  isManual: true,
-  invoiceAmount: '0.00',
-  hotel: null,
-  agency: null,
-  invoiceType: null,
-})
-
-// -------------------------------------------------------------------------------------------------------
-
-// -------------------------------------------------------------------------------------------------------
-const ENUM_FILTER = [
-  { id: 'code', name: 'Code' },
-  { id: 'name', name: 'Name' },
-  { id: 'description', name: 'Description' },
-]
-// TABLE OPTIONS -----------------------------------------------------------------------------------------
-const options = ref({
-  tableName: 'Invoice',
-  moduleApi: 'invoicing',
-  uriApi: 'manage-invoice',
-  loading: false,
-  showDelete: false,
-  showFilters: true,
-  actionsAsMenu: false,
-  messageToDelete: 'Do you want to save the change?'
-})
-
-const confBookingApi = reactive({
-  moduleApi: 'invoicing',
-  uriApi: 'manage-booking',
-})
-
-// -------------------------------------------------------------------------------------------------------
-
-// FUNCTIONS ---------------------------------------------------------------------------------------------
-
-function handleDialogOpen() {
-  switch (active.value) {
-    case 0:
-      bookingDialogOpen.value = true
-      break
-
-    case 1:
-      roomRateDialogOpen.value = true
-      break
-
-    case 2:
-      adjustmentDialogOpen.value = true
-      break
-
-    default:
-      break
-  }
-
-  console.log(bookingDialogOpen)
-}
-
-async function getHotelList(query = '') {
-  try {
-    const payload
-      = {
-        filter: [
-          {
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'code',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
-    const { data: dataList } = response
-    hotelList.value = []
-    for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
-
-function handleAttachmentHistoryDialogOpen() {
-  attachmentHistoryDialogOpen.value = true
-}
-
-async function getAgencyList(query = '') {
-  try {
-    const payload
-      = {
-        filter: [
-          {
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'code',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
-    const { data: dataList } = response
-    agencyList.value = []
-    for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading agency list:', error)
-  }
-}
-
-async function getInvoiceTypeList() {
-  try {
-    const payload
-      = {
-        filter: [],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    const response = await GenericService.search(confinvoiceTypeListtApi.moduleApi, confinvoiceTypeListtApi.uriApi, payload)
-    const { data: dataList } = response
-    invoiceTypeList.value = []
-    for (const iterator of dataList) {
-      invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
-
-function refetchInvoice() {
-  getInvoiceAmountById(route.params.id as string)
-  update()
-}
-
-function clearForm() {
-  item.value = { ...itemTemp.value }
-  idItem.value = ''
-
-  formReload.value++
-}
-
-const objApisLoading = ref({
-  invoiceType: false,
-  invoiceStatus: false,
-})
-
-function mapFunction(data: any): any {
-  return {
-    id: data.id,
-    name: `${data.code} - ${data.name}`,
-    status: data.status
-  }
-}
-
-async function getInvoiceStatusListDefault(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  try {
-    objApisLoading.value.invoiceStatus = true
-    const additionalFilter: FilterCriteria[] = [
-      {
-        key: 'name',
-        logicalOperation: 'AND',
-        operator: 'EQUALS',
-        value: 'Sent'
-      }
-    ]
-    const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
-    if (filteredList.length > 0) {
-      invoiceStatusList.value = [filteredList[0]]
-      item.value.invoiceStatus = invoiceStatusList.value[0]
-    }
-    else {
-      invoiceStatusList.value = []
-    }
-    formReload.value++
-  }
-  finally {
-    objApisLoading.value.invoiceStatus = false
-  }
-}
-
-async function loadDefaultsValues() {
-  const objQueryToSearch = {
-    query: '',
-    keys: ['name', 'code'],
-  }
-  const filter: FilterCriteria[] = [{
-    key: 'status',
-    logicalOperation: 'AND',
-    operator: 'EQUALS',
-    value: 'ACTIVE',
-  }]
-
-  getInvoiceStatusListDefault(objApis.value.invoiceStatus.moduleApi, objApis.value.invoiceStatus.uriApi, objQueryToSearch, filter)
-}
-
-async function getInvoiceAmountById(id: string) {
-  if (id) {
-    idItem.value = id
-
-    try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-
-      if (response) {
-        item.value.invoiceAmount = response.invoiceAmount
-        invoiceAmount.value = response.invoiceAmount
-      }
-    }
-    catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
-      }
-    }
-  }
-}
-
-async function getItemById(id: string) {
-  if (id) {
-    idItem.value = id
-    loadingSaveAll.value = true
-    try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-
-      if (response) {
-        item.value.id = response.id
-        item.value.invoiceId = response.invoiceId
-        item.value.dueDate = response.dueDate
-
-        const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
-
-        item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
-        item.value.invoiceNumber = item.value.invoiceNumber.replace('OLD', 'CRE')
-
-        item.value.invoiceDate = dayjs(response.invoiceDate).format('YYYY-MM-DD')
-        item.value.isManual = response.isManual
-        item.value.invoiceAmount = response.invoiceAmount
-        invoiceAmount.value = response.invoiceAmount
-        item.value.reSend = response.reSend
-        item.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate
-        item.value.hotel = response.hotel
-        item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
-        item.value.agency = response.agency
-        item.value.hasAttachments = response.hasAttachments
-        item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
-        item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
-        invoiceStatus.value = response.status
-        item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
-        await getInvoiceAgency(response.agency?.id)
-        await getInvoiceHotel(response.hotel?.id)
-      }
-
-      formReload.value += 1
-    }
-    catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
-      }
-    }
-    finally {
-      loadingSaveAll.value = false
-    }
-  }
-}
-
-async function createItem(item: { [key: string]: any }) {
-  if (item) {
-    loadingSaveAll.value = true
-    const payload: { [key: string]: any } = { ...item }
-
-    payload.invoiceId = item.invoiceId
-    payload.invoiceNumber = item.invoiceNumber
-    payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
-    payload.isManual = item.isManual
-    payload.invoiceAmount = 0.00
-    payload.hotel = item.hotel.id
-    payload.invoiceType = item?.invoiceType?.id
-    payload.agency = item.agency.id
-
-    await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
-  }
-}
-
-// const nightTypeRequired = ref(false)
-
-async function updateItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  const payload: { [key: string]: any } = {}
-
-  payload.id = route.params.id
-  payload.hotelCreationDate = dayjs(item.hotelCreationDate).toISOString()
-  payload.bookingDate = dayjs(item.bookingDate).toISOString()
-  payload.hotelBookingNumber = item.hotelBookingNumber
-  payload.fullName = `${item.firstName} ${item.lastName}`
-  payload.firstName = item.firstName
-  payload.lastName = item.lastName
-  payload.roomNumber = item.roomNumber
-  payload.couponNumber = item.couponNumber
-  payload.hotelInvoiceNumber = item.hotelInvoiceNumber
-  payload.folioNumber = item.folioNumber
-  payload.description = item.description
-  payload.contract = item.contract
-  payload.ratePlan = item.ratePlan ? item.ratePlan.id : null
-  payload.nightType = item.nightType ? item.nightType.id : null
-  payload.roomType = item.roomType ? item.roomType.id : null
-  payload.roomCategory = item.roomCategory ? item.roomCategory.id : null
-
-  await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
-  navigateTo('/invoice')
-}
-
-async function deleteItem(id: string) {
-  try {
-    loadingDelete.value = true
-    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
-    clearForm()
-  }
-  catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
-    loadingDelete.value = false
-  }
-  finally {
-    loadingDelete.value = false
-  }
-}
-
-async function saveItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  let successOperation = true
-  if (idItem.value) {
-    try {
-      await updateItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-    catch (error: any) {
-      successOperation = false
-
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-    idItem.value = ''
-  }
-  else {
-    try {
-      await createItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-  }
-  loadingSaveAll.value = false
-  if (successOperation) {
-    clearForm()
-  }
-}
-const goToList = async () => await navigateTo('/invoice')
-
-function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
-}
-function requireConfirmationToDelete(event: any) {
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    acceptClass: 'p-button-danger',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      deleteItem(idItem.value)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
-}
-
-function toggleForceUpdate() {
-  forceUpdate.value = !forceUpdate.value
-}
-
-function update() {
-  forceUpdate.value = true
-
-  setTimeout(() => {
-    forceUpdate.value = false
-  }, 100)
-}
-
-function openAdjustmentDialog(roomRate?: any) {
-  active.value = 2
-
-  if (roomRate?.id) {
-    selectedRoomRate.value = roomRate?.id
-  }
-
-  adjustmentDialogOpen.value = true
-}
-
-async function getInvoiceHotel(id) {
-  try {
-    const hotel = await GenericService.getById(confhotelListApi.moduleApi, confhotelListApi.uriApi, id)
-
-    if (hotel) {
-      invoiceHotel.value = { ...hotel }
-
-      requiresFlatRate.value = hotel?.requiresFlatRate
-    }
-  }
-  catch (err) {
-
-  }
-}
-async function getInvoiceAgency(id) {
-  try {
-    console.log(id)
-    const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
-
-    if (agency) {
-      invoiceAgency.value = { ...agency }
-
-      nightTypeRequired.value = agency?.client?.isNightType
-
-      console.log(agency)
-    }
-  }
-  catch (err) {
-
-  }
-}
-
-function handleAttachmentDialogOpen() {
-  attachmentDialogOpen.value = true
-}
-
-const invoiceStatusList = ref<any[]>([])
-
-async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  const additionalFilter: FilterCriteria[] = [
-    {
-      key: 'name',
-      logicalOperation: 'AND',
-      operator: 'EQUALS',
-      value: 'Sent'
-    }
-  ]
-
-  const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
-
-  if (filteredList.length > 0) {
-    invoiceStatusList.value = [filteredList[0]]
-  }
-  else {
-    invoiceStatusList.value = []
-  }
-}
-
 const fieldsV2: Array<FieldDefinitionType> = [
   // Booking Id
 
@@ -1060,6 +493,8 @@ const columnsRoomRate: IColumn[] = [
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: false, editable: true },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'rateAdult', header: 'Rate Adult', type: 'text', sortable: false, editable: false },
+  { field: 'rateChildren', header: 'Rate Children', type: 'text', sortable: false, editable: false },
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: false, editable: true },
   { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: false, editable: true },
 ]
@@ -1107,6 +542,573 @@ const paginationAdjustment = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+
+const confhotelListApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-hotel',
+})
+
+const confagencyListApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-agency',
+})
+
+const confinvoiceTypeListtApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-invoice-type',
+})
+
+// VARIABLES -----------------------------------------------------------------------------------------
+
+const objApis = ref({
+  invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
+  invoiceStatus: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
+  agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
+  hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
+  bankAccount: { moduleApi: 'settings', uriApi: 'manage-bank-account' },
+  paymentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-status' },
+  attachmentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' },
+})
+
+//
+const confirm = useConfirm()
+const formReload = ref(0)
+
+const idItem = ref('')
+const idItemToLoadFirstTime = ref('')
+const filterToSearch = ref<IData>({
+  criterial: null,
+  search: '',
+})
+
+const item = ref<GenericObject>({
+  invoiceId: '',
+  invoiceNumber: '',
+  invoiceDate: new Date(),
+  isManual: true,
+  invoiceAmount: '0.00',
+  hotel: null,
+  agency: null,
+  invoiceType: null,
+})
+
+const itemTemp = ref<GenericObject>({
+  invoiceId: '',
+  invoiceNumber: '',
+  invoiceDate: new Date(),
+  isManual: true,
+  invoiceAmount: '0.00',
+  hotel: null,
+  agency: null,
+  invoiceType: null,
+})
+
+// -------------------------------------------------------------------------------------------------------
+
+// -------------------------------------------------------------------------------------------------------
+const ENUM_FILTER = [
+  { id: 'code', name: 'Code' },
+  { id: 'name', name: 'Name' },
+  { id: 'description', name: 'Description' },
+]
+// TABLE OPTIONS -----------------------------------------------------------------------------------------
+const options = ref({
+  tableName: 'Invoice',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+
+const confBookingApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-booking',
+})
+
+// -------------------------------------------------------------------------------------------------------
+
+// FUNCTIONS ---------------------------------------------------------------------------------------------
+
+function handleDialogOpen() {
+  switch (active.value) {
+    case 0:
+      bookingDialogOpen.value = true
+      break
+
+    case 1:
+      roomRateDialogOpen.value = true
+      break
+
+    case 2:
+      adjustmentDialogOpen.value = true
+      break
+
+    default:
+      break
+  }
+
+  console.log(bookingDialogOpen)
+}
+
+async function getHotelList(query = '') {
+  try {
+    const payload
+      = {
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
+
+    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
+    const { data: dataList } = response
+    hotelList.value = []
+    for (const iterator of dataList) {
+      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+}
+
+function handleAttachmentHistoryDialogOpen() {
+  attachmentHistoryDialogOpen.value = true
+}
+
+async function getAgencyList(query = '') {
+  try {
+    const payload
+      = {
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
+
+    const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
+    const { data: dataList } = response
+    agencyList.value = []
+    for (const iterator of dataList) {
+      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading agency list:', error)
+  }
+}
+
+async function getInvoiceTypeList() {
+  try {
+    const payload
+      = {
+        filter: [],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
+
+    const response = await GenericService.search(confinvoiceTypeListtApi.moduleApi, confinvoiceTypeListtApi.uriApi, payload)
+    const { data: dataList } = response
+    invoiceTypeList.value = []
+    for (const iterator of dataList) {
+      invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+}
+
+function refetchInvoice() {
+  getInvoiceAmountById(route.params.id as string)
+  update()
+}
+
+function clearForm() {
+  item.value = { ...itemTemp.value }
+  idItem.value = ''
+
+  formReload.value++
+}
+
+const objApisLoading = ref({
+  invoiceType: false,
+  invoiceStatus: false,
+})
+
+function mapFunction(data: any): any {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status
+  }
+}
+
+async function getInvoiceStatusListDefault(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  try {
+    objApisLoading.value.invoiceStatus = true
+    const additionalFilter: FilterCriteria[] = [
+      {
+        key: 'name',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'Sent'
+      }
+    ]
+    const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+    if (filteredList.length > 0) {
+      invoiceStatusList.value = [filteredList[0]]
+      item.value.invoiceStatus = invoiceStatusList.value[0]
+    }
+    else {
+      invoiceStatusList.value = []
+    }
+    formReload.value++
+  }
+  finally {
+    objApisLoading.value.invoiceStatus = false
+  }
+}
+
+async function loadDefaultsValues() {
+  const objQueryToSearch = {
+    query: '',
+    keys: ['name', 'code'],
+  }
+  const filter: FilterCriteria[] = [{
+    key: 'status',
+    logicalOperation: 'AND',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+  }]
+
+  getInvoiceStatusListDefault(objApis.value.invoiceStatus.moduleApi, objApis.value.invoiceStatus.uriApi, objQueryToSearch, filter)
+}
+
+async function getInvoiceAmountById(id: string) {
+  if (id) {
+    idItem.value = id
+
+    try {
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+
+      if (response) {
+        item.value.invoiceAmount = response.invoiceAmount
+        invoiceAmount.value = response.invoiceAmount
+      }
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+      }
+    }
+  }
+}
+
+async function getItemById(id: string) {
+  if (id) {
+    idItem.value = id
+    loadingSaveAll.value = true
+    try {
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+      debugger
+      if (response) {
+        item.value.id = response.id
+        item.value.invoiceId = response.invoiceId
+        item.value.dueDate = response.dueDate
+
+        const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
+
+        item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
+        item.value.invoiceNumber = item.value.invoiceNumber.replace('OLD', 'CRE')
+
+        item.value.invoiceDate = dayjs(response.invoiceDate).format('YYYY-MM-DD')
+        item.value.isManual = response.isManual
+        item.value.invoiceAmount = response.invoiceAmount
+        invoiceAmount.value = response.invoiceAmount
+        item.value.reSend = response.reSend
+        item.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate
+        item.value.hotel = response.hotel
+        item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
+        item.value.agency = response.agency
+        item.value.hasAttachments = response.hasAttachments
+        item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
+        item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
+        invoiceStatus.value = response.status
+        item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
+        await getInvoiceAgency(response.agency?.id)
+        await getInvoiceHotel(response.hotel?.id)
+      }
+
+      formReload.value += 1
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+      }
+    }
+    finally {
+      loadingSaveAll.value = false
+    }
+  }
+}
+
+async function createItem(item: { [key: string]: any }) {
+  if (item) {
+    loadingSaveAll.value = true
+    const payload: { [key: string]: any } = { ...item }
+
+    payload.invoiceId = item.invoiceId
+    payload.invoiceNumber = item.invoiceNumber
+    payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
+    payload.isManual = item.isManual
+    payload.invoiceAmount = 0.00
+    payload.hotel = item.hotel.id
+    payload.invoiceType = item?.invoiceType?.id
+    payload.agency = item.agency.id
+
+    await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+  }
+}
+
+// const nightTypeRequired = ref(false)
+
+async function updateItem(item: { [key: string]: any }) {
+  loadingSaveAll.value = true
+  const payload: { [key: string]: any } = {}
+
+  payload.id = route.params.id
+  payload.hotelCreationDate = dayjs(item.hotelCreationDate).toISOString()
+  payload.bookingDate = dayjs(item.bookingDate).toISOString()
+  payload.hotelBookingNumber = item.hotelBookingNumber
+  payload.fullName = `${item.firstName} ${item.lastName}`
+  payload.firstName = item.firstName
+  payload.lastName = item.lastName
+  payload.roomNumber = item.roomNumber
+  payload.couponNumber = item.couponNumber
+  payload.hotelInvoiceNumber = item.hotelInvoiceNumber
+  payload.folioNumber = item.folioNumber
+  payload.description = item.description
+  payload.contract = item.contract
+  payload.ratePlan = item.ratePlan ? item.ratePlan.id : null
+  payload.nightType = item.nightType ? item.nightType.id : null
+  payload.roomType = item.roomType ? item.roomType.id : null
+  payload.roomCategory = item.roomCategory ? item.roomCategory.id : null
+
+  await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
+  navigateTo('/invoice')
+}
+
+async function deleteItem(id: string) {
+  try {
+    loadingDelete.value = true
+    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+    clearForm()
+  }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
+    loadingDelete.value = false
+  }
+  finally {
+    loadingDelete.value = false
+  }
+}
+
+async function saveItem(item: { [key: string]: any }) {
+  loadingSaveAll.value = true
+  let successOperation = true
+  if (idItem.value) {
+    try {
+      await updateItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    }
+    catch (error: any) {
+      successOperation = false
+
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+    idItem.value = ''
+  }
+  else {
+    try {
+      await createItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    }
+    catch (error: any) {
+      successOperation = false
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+  }
+  loadingSaveAll.value = false
+  if (successOperation) {
+    clearForm()
+  }
+}
+const goToList = async () => await navigateTo('/invoice')
+
+function requireConfirmationToSave(item: any) {
+  const { event } = item
+  confirm.require({
+    target: event.currentTarget,
+    group: 'headless',
+    header: 'Save the record',
+    message: 'Do you want to save the change?',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Accept',
+    accept: () => {
+      saveItem(item)
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+    }
+  })
+}
+function requireConfirmationToDelete(event: any) {
+  confirm.require({
+    target: event.currentTarget,
+    group: 'headless',
+    header: 'Save the record',
+    message: 'Do you want to save the change?',
+    acceptClass: 'p-button-danger',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Accept',
+    accept: () => {
+      deleteItem(idItem.value)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+    }
+  })
+}
+
+function toggleForceUpdate() {
+  forceUpdate.value = !forceUpdate.value
+}
+
+function update() {
+  forceUpdate.value = true
+
+  setTimeout(() => {
+    forceUpdate.value = false
+  }, 100)
+}
+
+function openAdjustmentDialog(roomRate?: any) {
+  active.value = 2
+
+  if (roomRate?.id) {
+    selectedRoomRate.value = roomRate?.id
+  }
+
+  adjustmentDialogOpen.value = true
+}
+
+async function getInvoiceHotel(id: string) {
+  try {
+    const hotel = await GenericService.getById(confhotelListApi.moduleApi, confhotelListApi.uriApi, id)
+
+    if (hotel) {
+      invoiceHotel.value = { ...hotel }
+
+      requiresFlatRate.value = hotel?.requiresFlatRate
+    }
+  }
+  catch (err) {
+
+  }
+}
+async function getInvoiceAgency(id: string) {
+  try {
+    console.log(id)
+    const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
+
+    if (agency) {
+      invoiceAgency.value = { ...agency }
+
+      nightTypeRequired.value = agency?.client?.isNightType
+
+      console.log(agency)
+    }
+  }
+  catch (err) {
+
+  }
+}
+
+function handleAttachmentDialogOpen() {
+  attachmentDialogOpen.value = true
+}
+
+const invoiceStatusList = ref<any[]>([])
+
+async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  const additionalFilter: FilterCriteria[] = [
+    {
+      key: 'name',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'Sent'
+    }
+  ]
+
+  const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+
+  if (filteredList.length > 0) {
+    invoiceStatusList.value = [filteredList[0]]
+  }
+  else {
+    invoiceStatusList.value = []
+  }
+}
 
 function clearFormRoomRate() {
   // item2.value = { ...itemTemp2.value }
@@ -1260,7 +1262,9 @@ async function getRoomRateList() {
     totalHotelAmount.value = 0
     for (const iterator of dataList) {
       countRR++
-
+      // Rate Adult= RateAmount/(Ctdad noches*Ctdad Adults) y Rate Children= RateAmount/(Ctdad noches*Ctdad Children)
+      const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
+      const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
         checkIn: dayjs(iterator?.checkIn).format('YYYY-MM-DD'),
@@ -1274,7 +1278,9 @@ async function getRoomRateList() {
         roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
-        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
+        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` },
+        rateAdult,
+        rateChildren
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
@@ -1619,6 +1625,7 @@ async function getBookingItemById(id: string) {
 
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'validation', decimalSchema.shape.hotelInvoiceNumber)
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'class', `${objField?.class} required`)
+        updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'disabled', false)
       }
       else {
         const decimalSchema = z.object(
@@ -1636,6 +1643,7 @@ async function getBookingItemById(id: string) {
         const objField = fieldsV2.find(field => field.field === 'hotelInvoiceNumber')
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'validation', decimalSchema.shape.hotelInvoiceNumber)
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'class', `${objField?.class}`)
+        updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'disabled', true)
       }
       requiresFlatRateCheck.value = response?.invoice?.hotel?.requiresFlatRate
       if (response?.invoice?.hotel?.requiresFlatRate) {
@@ -1921,7 +1929,7 @@ onMounted(async () => {
                         <ColumnGroup type="footer" class="flex align-items-center">
                           <Row>
                             <Column
-                              footer="Totals:" :colspan="6"
+                              footer="Totals:" :colspan="8"
                               footer-style="text-align:right; font-weight: 700"
                             />
                             <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2))" footer-style="font-weight: 700" />

@@ -80,7 +80,10 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Hotels',
     dataType: 'multi-select',
     class: 'field col-12 required',
-    validation: validateEntitiesForSelectMultiple('hotel').nonempty('The hotel field is required'),
+    validation: z.array(z.object({
+      id: z.string().min(1, 'The hotel field is required'),
+      name: z.string().min(1, 'The hotel field is required'),
+    })).nullable().refine(value => value && value.length > 0, { message: 'The hotel field is a required' }),
   },
   {
     field: 'emailContact',
@@ -365,7 +368,7 @@ async function getHotelList(query: string = '') {
         {
           key: 'manageRegion.id',
           operator: 'EQUALS',
-          value: regionSelected.value,
+          value: regionSelected.value.id,
           logicalOperation: 'AND'
         },
         {
@@ -418,7 +421,7 @@ async function getItemById(id: string) {
         item.value.id = response.id
         item.value.manageAgency = response.manageAgency
         item.value.manageRegion = response.manageRegion
-        regionSelected.value = response.manageRegion.id
+        regionSelected.value = response.manageRegion
 
         await getHotelList()
         item.value.manageHotel = response.manageHotel.map((hotel: any) => {

@@ -324,6 +324,18 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'manageHotelCode') {
+      event.sortField = 'hotel.name'
+    }
+    if (event.sortField === 'manageinvoiceCode') {
+      event.sortField = 'invoiceNumber'
+    }
+    if (event.sortField === 'manageAgencyCode') {
+      event.sortField = 'agency.code'
+    }
+    if (event.sortField === 'manageAgencyName') {
+      event.sortField = 'agency.name'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     getList()
@@ -476,7 +488,7 @@ async function send() {
       groupByClient: payloadOfCheckBox.value.groupByClient,
       withAttachment: payloadOfCheckBox.value.withAttachment
     }
-    await GenericService.sendList(confSendApi.moduleApi, confSendApi.uriApi, payload)
+    await GenericService.create(confSendApi.moduleApi, confSendApi.uriApi, payload)
     completed = true
     tableRef.value?.clearSelectedItems()
   }

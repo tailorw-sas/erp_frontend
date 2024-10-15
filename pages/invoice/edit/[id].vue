@@ -635,7 +635,8 @@ async function getItemById(id: string) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)      
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id) 
+      debugger     
       if (response) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
@@ -695,7 +696,7 @@ async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-
+    debugger
     payload.invoiceId = item.invoiceId
     payload.invoiceNumber = item.invoiceNumber
     payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
@@ -705,14 +706,14 @@ async function createItem(item: { [key: string]: any }) {
     payload.invoiceType = item?.invoiceType?.id
     payload.agency = item.agency.id
 
-    await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+    //await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
   }
 }
 
 const nightTypeRequired = ref(false)
 
 async function updateItem(item: { [key: string]: any }) {
-
+  debugger
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
   payload.employee = userData?.value?.user?.name
@@ -725,7 +726,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.reSendDate = item.reSendDate
   payload.invoiceStatus = item.invoiceStatus?.id
 
-  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
+  //await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
   navigateTo(
     '/invoice'
   )
@@ -898,10 +899,11 @@ async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj:
 
 function disabledInvoiceStatus(payload: any) {  
   let result = true
-  //Verificar si esta en estado Sent o Reconciled (En estos estados solo se puede editar la agencia)
+  
   if (item.value.invoiceAmount !== dueAmount.value || !isInCloseOperation.value){
     result = true
   }
+  //Verificar si esta en estado Sent o Reconciled (En estos estados solo se puede editar la agencia)
   else if (payload && (payload.sentStatus || payload.reconciledStatus)) {
     result = true
   } else if (payload && payload.processStatus) {
@@ -1032,7 +1034,7 @@ onMounted(async () => {
             option-label="name"
             return-object="false" 
             show-clear 
-            :disabled="(data.invoiceAmount < 0 && isInCloseOperation)"
+            :disabled="(data.invoiceAmount !== dueAmount || !isInCloseOperation)"
             @update:model-value="($event) => {
               onUpdate('status', $event)
             }">
