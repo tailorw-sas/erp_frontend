@@ -91,6 +91,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'textarea',
     class: 'field col-12 required',
     validation: z.string().trim().min(1, 'The email contact field is required').max(500, 'Maximum 500 characters')
+      .regex(/^(\s*[\w.%+-]+@[a-z0-9.-]+\.[a-z]{2,}\s*;)*\s*[\w.%+-]+@[a-z0-9.-]+\.[a-z]{2,}\s*$/i, 'Invalid format email contact')
   },
 ]
 
@@ -512,21 +513,26 @@ async function saveItem(item: { [key: string]: any }) {
 }
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    saveItem(item)
+  }
+  else {
+    const { event } = item
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        saveItem(item)
+      },
+      reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+      }
+    })
+  }
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
