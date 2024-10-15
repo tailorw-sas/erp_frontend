@@ -60,6 +60,42 @@ public class FTPService implements IFTPService {
         }
     }
 
+    // Método para descargar un archivo
+    public InputStream downloadFile(String remoteFilePath, String server, String user, String password, int port)  {
+        FTPClient ftpClient = new FTPClient();
+        InputStream inputStream = null;
+        try {
+            ftpClient.connect(server, port);
+            ftpClient.login(user, password);
+            ftpClient.enterLocalPassiveMode();
+            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+            ftpClient.setBufferSize(ftpConfig.getBufferSize());
+            ftpClient.setConnectTimeout(ftpConfig.getConnectTimeout());
+            ftpClient.setSoTimeout(ftpConfig.getSoTimeout());
+
+            // Descargar el archivo
+            inputStream = ftpClient.retrieveFileStream(remoteFilePath);
+            if (inputStream == null) {
+                throw new IOException("No se pudo descargar el archivo desde: " + remoteFilePath);
+            }
+
+            System.out.println("Archivo descargado desde el FTP: " + remoteFilePath);
+            ftpClient.logout();
+        } catch (IOException ex) {
+            System.out.println("Error al descargar el archivo: " + ex.getMessage());
+
+        } finally {
+            try {
+                if (ftpClient.isConnected()) {
+                    ftpClient.disconnect();
+                }
+            } catch (IOException ex) {
+                System.out.println("Error al desconectar: " + ex.getMessage());
+            }
+        }
+        return inputStream; // Devuelve el InputStream para que el archivo pueda ser leído
+    }
+
     private boolean createDirectories(String remotePath, FTPClient ftpClient) throws IOException {
         String[] folders = remotePath.split("/");
         for (String folder : folders) {
