@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,6 +14,5 @@ public interface CardnetJobReadDataJPARepository extends JpaRepository<CardnetJo
         JpaSpecificationExecutor<CardnetJob> {
     Optional<CardnetJob> findByTransactionId(UUID uuid);
     Optional<CardnetJob> findBySession(String session);
-
-
+    List<CardnetJob> findByIsProcessedFalse();
 }

@@ -178,66 +178,119 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
     private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
 
-        // Agrupar facturas por agencia
-        Map<UUID, List<ManageInvoiceDto>> invoicesByAgency = invoices.stream()
-                .collect(Collectors.groupingBy(invoice -> invoice.getAgency().getId()));
+//        // Agrupar facturas por agencia
+//        Map<UUID, List<ManageInvoiceDto>> invoicesByAgency = invoices.stream()
+//                .collect(Collectors.groupingBy(invoice -> invoice.getAgency().getId()));
 
-        for (Map.Entry<UUID, List<ManageInvoiceDto>> agencyEntry : invoicesByAgency.entrySet()) {
-            List<ManageInvoiceDto> agencyInvoices = agencyEntry.getValue();
-            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-            request.setTemplateId(6285030);
-            List<MailJetRecipient> recipients = new ArrayList<>();
-            recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
-            recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName() + " " + employeeDto.getLastName()));
-            recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
-            recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
+        Map<UUID, Map<UUID, List<ManageInvoiceDto>>> invoicesByAgencyAndHotel = invoices.stream()
+                .collect(Collectors.groupingBy(
+                        invoice -> invoice.getAgency().getId(), // Primero agrupamos por agencia
+                        Collectors.groupingBy(invoice -> invoice.getHotel().getId()) // Luego agrupamos por hotel
+                ));
 
-            ManageAgencyDto manageAgencyDto = agencyInvoices.get(0).getAgency();
-            ManageHotelDto manageHotelDto = agencyInvoices.get(0).getHotel();
-            List<ManageAgencyContact> contactList = manageAgencyContactService.findContactsByHotelAndAgency(manageHotelDto.getId(), manageAgencyDto.getId());
-            if (!contactList.isEmpty()) {
-                // Dividimos la cadena en un array de correos
-                String[] emailAddresses = contactList.get(0).getEmailContact().split(";");
-                for (String email : emailAddresses) {
-                    email = email.trim();
-                    if (!email.isEmpty()) {
-                        recipients.add(new MailJetRecipient(email, "Contact"));
-                    }
+        for (Map.Entry<UUID, Map<UUID, List<ManageInvoiceDto>>> agencyEntry : invoicesByAgencyAndHotel.entrySet()) {
+            UUID agencyId = agencyEntry.getKey(); // ID de la agencia
+            Map<UUID, List<ManageInvoiceDto>> invoicesByHotel = agencyEntry.getValue(); // Facturas agrupadas por hotel
+
+            System.out.println("Agencia ID: " + agencyId);
+
+            for (Map.Entry<UUID, List<ManageInvoiceDto>> hotelEntry : invoicesByHotel.entrySet()) {
+                UUID hotelId = hotelEntry.getKey(); // ID del hotel
+                List<ManageInvoiceDto> invoicesHotel = hotelEntry.getValue(); // Lista de facturas para este hotel
+
+
+                SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+                List<MailJetRecipient> recipients = getMailJetRecipients(agency, employeeDto, request, invoicesHotel);
+                request.setRecipientEmail(recipients);
+                //Var
+                List<MailJetVar> vars = getMailJetVars(agency, request, invoicesHotel);
+
+                request.setMailJetVars(vars);
+
+                //Adjuntos
+                List<MailJetAttachment> attachments = getMailJetAttachments(invoicesHotel);
+
+                request.setMailJetAttachments(attachments);
+                mailService.sendMail(request);
+                updateInvoices(invoices);
+//                System.out.println("\tHotel ID: " + hotelId);
+//                for (ManageInvoiceDto invoice : invoicesHotel) {
+//                    // Aquí puedes procesar cada factura individualmente
+//                    System.out.println("\t\tFactura: " + invoice);
+//                }
+            }
+        }
+//        for (Map.Entry<UUID, List<ManageInvoiceDto>> agencyEntry : invoicesByAgency.entrySet()) {
+//            List<ManageInvoiceDto> agencyInvoices = agencyEntry.getValue();
+//
+//            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+//            List<MailJetRecipient> recipients = getMailJetRecipients(agency, employeeDto, request, agencyInvoices);
+//            request.setRecipientEmail(recipients);
+//            //Var
+//            List<MailJetVar> vars = getMailJetVars(agency, request, agencyInvoices);
+//
+//            request.setMailJetVars(vars);
+//
+//            //Adjuntos
+//            List<MailJetAttachment> attachments = getMailJetAttachments(agencyInvoices);
+//
+//            request.setMailJetAttachments(attachments);
+//            mailService.sendMail(request);
+//            updateInvoices(invoices);
+//        }
+    }
+
+    private List<MailJetAttachment> getMailJetAttachments(List<ManageInvoiceDto> agencyInvoices) {
+        List<MailJetAttachment> attachments = new ArrayList<>();
+        List<UUID> ids = agencyInvoices.stream().map(ManageInvoiceDto::getId).toList();
+        SendAccountStatementRequest sendAccountStatementRequest = new SendAccountStatementRequest(ids);
+        SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
+
+        MailJetAttachment attachment = new MailJetAttachment(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Content-Type para archivo .xlsx
+                "AccountStatement.xlsx",  // Nombre del archivo
+                sendAccountStatementResponse.getFile()
+        );
+        attachments.add(attachment);
+        return attachments;
+    }
+
+    private static List<MailJetVar> getMailJetVars(ManageAgencyDto agency, SendMailJetEMailRequest request, List<ManageInvoiceDto> agencyInvoices) {
+        request.setSubject("INVOICES for -" + agency.getCode() + "-" + agency.getName());
+        double totalAmount = agencyInvoices.stream()
+                .mapToDouble(invoice -> invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount() : 0.0)
+                .sum();
+        String invoiceAmount = String.format("%.2f", totalAmount);
+
+        // Variables para el template de email
+        return Arrays.asList(
+                new MailJetVar("invoice_date", new Date().toString()),
+                new MailJetVar("invoice_amount", invoiceAmount)
+        );
+    }
+
+    private List<MailJetRecipient> getMailJetRecipients(ManageAgencyDto agency, ManageEmployeeDto employeeDto, SendMailJetEMailRequest request, List<ManageInvoiceDto> agencyInvoices) {
+        request.setTemplateId(6285030);
+        List<MailJetRecipient> recipients = new ArrayList<>();
+        recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
+        recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName() + " " + employeeDto.getLastName()));
+        recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
+        recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
+
+        ManageAgencyDto manageAgencyDto = agencyInvoices.get(0).getAgency();
+        ManageHotelDto manageHotelDto = agencyInvoices.get(0).getHotel();
+        List<ManageAgencyContact> contactList = manageAgencyContactService.findContactsByHotelAndAgency(manageHotelDto.getId(), manageAgencyDto.getId());
+        if (!contactList.isEmpty()) {
+            // Dividimos la cadena en un array de correos
+            String[] emailAddresses = contactList.get(0).getEmailContact().split(";");
+            for (String email : emailAddresses) {
+                email = email.trim();
+                if (!email.isEmpty()) {
+                    recipients.add(new MailJetRecipient(email, "Contact"));
                 }
             }
-            request.setRecipientEmail(recipients);
-            //Var
-            request.setSubject("INVOICES for -" + agency.getCode() + "-" + agency.getName());
-            double totalAmount = agencyInvoices.stream()
-                    .mapToDouble(invoice -> invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount() : 0.0)
-                    .sum();
-            String invoiceAmount = String.format("%.2f", totalAmount);
-
-            // Variables para el template de email
-            List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("invoice_date", new Date().toString()),
-                    new MailJetVar("invoice_amount", invoiceAmount)
-            );
-
-            request.setMailJetVars(vars);
-
-            //Adjuntos
-            List<MailJetAttachment> attachments = new ArrayList<>();
-            List<UUID> ids = agencyInvoices.stream().map(ManageInvoiceDto::getId).toList();
-            SendAccountStatementRequest sendAccountStatementRequest = new SendAccountStatementRequest(ids);
-            SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
-
-            MailJetAttachment attachment = new MailJetAttachment(
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Content-Type para archivo .xlsx
-                    "AccountStatement.xlsx",  // Nombre del archivo
-                    sendAccountStatementResponse.getFile()
-            );
-            attachments.add(attachment);
-
-            request.setMailJetAttachments(attachments);
-            mailService.sendMail(request);
-            updateInvoices(invoices);
         }
+        return recipients;
     }
 
     private  void updateInvoices(List<ManageInvoiceDto> invoices) {

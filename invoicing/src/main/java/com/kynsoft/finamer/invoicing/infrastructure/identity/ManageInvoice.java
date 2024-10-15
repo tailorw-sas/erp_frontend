@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
+//@EntityListeners(value = AuditEntityListener.class)
 @Table(name = "manage_invoice")
 public class ManageInvoice {
 
