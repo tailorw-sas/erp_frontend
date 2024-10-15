@@ -260,7 +260,7 @@ const fields: Array<FieldDefinitionType> = [
     validation:
     z.number()
       // .min(1, 'The Rate amount field is required')
-      .refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
+      .refine(val => +val >= 0, 'The Rate amount field must be greater than 0')
   },
   {
     field: 'hotelAmount',

@@ -106,26 +106,6 @@ function checkValuesForValidation(item: any) {
     )
     updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
   }
-
-  if (route.query.type === InvoiceType.OLD_CREDIT) {
-    const decimalSchema = z.object(
-      {
-        invoiceAmount: z
-          .number({ invalid_type_error: 'The Rate amount field is required' }).safe()
-      },
-    )
-    updateFieldProperty(props.fields, 'invoiceAmount', 'validation', decimalSchema.shape.invoiceAmount)
-  }
-  else {
-    const decimalSchema = z.object(
-      {
-        invoiceAmount: z.number().safe()
-          .min(0, 'The Rate amount field is required')
-          .refine((val) => { return route.query.type === InvoiceType.INVOICE ? +val > 0 : true }, 'The Rate amount field must be greater than 0')
-      },
-    )
-    updateFieldProperty(props.fields, 'invoiceAmount', 'validation', decimalSchema.shape.invoiceAmount)
-  }
 }
 
 onMounted(() => {
