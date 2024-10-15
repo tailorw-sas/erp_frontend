@@ -25,20 +25,32 @@
 	<profiles>
 		<profile>
 			<id>dev</id>
+			<activation>
+				<property>
+					<name>env</name>
+					<value>dev</value>
+				</property>
+			</activation>
 			<properties>
 				<env>dev</env>
 			</properties>
 		</profile>
 		<profile>
 			<id>qa</id>
+			<activation>
+				<property>
+					<name>env</name>
+					<value>qa</value>
+				</property>
+			</activation>
 			<properties>
-				<env>qa</env>
+				<env>dev</env>
 			</properties>
 		</profile>
 	</profiles>
 	
 	<build>
-		<finalName>${artifactId}-${env}</finalName>
+		<finalName>${project.artifactId}-${env}</finalName>
 	</build>
 
     <dependencies>
