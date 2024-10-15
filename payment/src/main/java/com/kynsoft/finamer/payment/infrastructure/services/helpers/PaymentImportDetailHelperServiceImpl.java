@@ -172,7 +172,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                           UUID transactionTypeIdForAdjustment, String remarks) {
         CreatePaymentDetailApplyDepositCommand createPaymentDetailApplyDepositCommand =
                 new CreatePaymentDetailApplyDepositCommand(Status.ACTIVE, paymentDetail, transactionType, amount, remarks, employee, transactionTypeIdForAdjustment);
-        ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand);
+        ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand,false);
         applicationEventPublisher.publishEvent(applyDepositEvent);
 
     }
