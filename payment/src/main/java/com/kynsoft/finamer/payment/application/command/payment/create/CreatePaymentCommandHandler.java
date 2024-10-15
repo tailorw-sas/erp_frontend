@@ -185,6 +185,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
         if (countDefaults > 0) {
             paymentDto.setPaymentSupport(true);
+            paymentDto.setAttachmentStatus(this.attachmentStatusService.findBySupported());
         } else {
             paymentDto.setAttachmentStatus(this.attachmentStatusService.findByNonNone());
             paymentDto.setPaymentSupport(false);

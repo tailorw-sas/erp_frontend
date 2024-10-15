@@ -333,7 +333,15 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_TRANSACTION_STATUS_SENT_NOT_FOUND(1111, Series.DOMAIN_ERROR,"There is no transaction status of type sent selected by default."),
     MANAGE_TRANSACTION_STATUS_REFUND_NOT_FOUND(1112, Series.DOMAIN_ERROR,"There is no transaction status of type refund selected by default."),
     MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND(1113, Series.DOMAIN_ERROR,"There is no transaction status of type received selected by default."),
-    MANAGE_BOOKING_ADJUSTMENT(1114, Series.DOMAIN_ERROR, "Each booking must have at least one adjustment.");
+    MANAGE_BOOKING_ADJUSTMENT(1114, Series.DOMAIN_ERROR, "Each booking must have at least one adjustment."),
+    VCC_TRANSACTION_RESULT_CARDNET_ERROR(1115, Series.DOMAIN_ERROR, "Could not obtain the transaction result from Cardnet."),
+    MERCHANT_LANGUAGE_MUST_BE_UNIQUE(1116, Series.DOMAIN_ERROR, "There cannot be more than one relationship between Merchant and Merchant Language Code."),
+    MERCHANT_LANGUAGE_NOT_FOUND(1117, Series.DOMAIN_ERROR, "The relationship between Merchant and Merchant Language Code not found."),
+    MANAGE_TRANSACTION_STATUS_CANCELLED_NOT_FOUND(1118, Series.DOMAIN_ERROR,"There is no transaction status of type cancelled selected by default."),
+    MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND(1119, Series.DOMAIN_ERROR,"There is no transaction status of type declined selected by default."),
+    MANAGE_TRANSACTION_STATUS_CHECK_CANCELLED(1120, Series.DOMAIN_ERROR,"Another item already exists with cancelled status."),
+    MANAGE_TRANSACTION_STATUS_CHECK_DECLINED(1121, Series.DOMAIN_ERROR,"Another item already exists with declined status."),
+    MANAGE_TRANSACTION_ALREADY_PROCESSED(1122, Series.DOMAIN_ERROR,"The transaction has already been processed.");
 
     private static final DomainErrorMessage[] VALUES;
 

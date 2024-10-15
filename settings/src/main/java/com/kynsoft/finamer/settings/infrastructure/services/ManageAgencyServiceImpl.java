@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.settings.application.query.manageAgency.search.ManageAgencyListResponse;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageAgencyResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -15,6 +16,10 @@ import com.kynsoft.finamer.settings.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageAgencyWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageAgencyReadDataJPARepository;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +32,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@EnableCaching
 public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     private final ManageAgencyWriteDataJPARepository repositoryCommand;
@@ -39,6 +45,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
     @Transactional
+    @CachePut(cacheNames = "manageAgency", key = "#result")
     public UUID create(ManageAgencyDto dto) {
         ManageAgency entity = new ManageAgency(dto);
         return repositoryCommand.save(entity).getId();
@@ -46,6 +53,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
     @Transactional
+    @CachePut(cacheNames = "manageAgency", key = "#dto.id")
     public void update(ManageAgencyDto dto) {
         ManageAgency entity = new ManageAgency(dto);
         entity.setUpdatedAt(LocalDateTime.now());
@@ -54,30 +62,33 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "manageAgency", key = "#id")
     public void delete(UUID id) {
         try {
             ManageAgency entity = this.repositoryQuery.findById(id)
                     .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", "Entity not found."))));
             this.repositoryCommand.delete(entity);
-            // Verificar si la entidad se ha eliminado correctamente
-            if (repositoryCommand.existsById(id)) {
-               String a = "aqio";
-            }
         } catch (Exception e) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
 
     @Override
+    //@Cacheable(cacheNames = "manageAgency", key = "#id", unless = "#result == null")
     public ManageAgencyDto findById(UUID id) {
         Optional<ManageAgency> optionalEntity = repositoryQuery.findById(id);
-        if (optionalEntity.isPresent()) {
-            return optionalEntity.get().toAggregate();
-        }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+        return optionalEntity.map(ManageAgency::toAggregate)
+                .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found."))));
     }
 
     @Override
+    @Cacheable(cacheNames = "manageAgencyAll", unless = "#result == null or #result.isEmpty()")
+    public List<ManageAgencyDto> findAll() {
+        return repositoryQuery.findAll().stream().map(ManageAgency::toAggregate).collect(Collectors.toList());
+    }
+
+    @Override
+    @Cacheable(cacheNames = "manageAgencyAll", unless = "#result == null")
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
@@ -93,11 +104,6 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     @Override
     public List<ManageAgencyDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(ManageAgency::toAggregate).toList();
-    }
-
-    @Override
-    public List<ManageAgencyDto> findAll() {
-        return repositoryQuery.findAll().stream().map(ManageAgency::toAggregate).collect(Collectors.toList());
     }
 
     @Override
@@ -119,23 +125,21 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageAgency> data) {
-        List<ManageAgencyResponse> responseList = new ArrayList<>();
+        List<ManageAgencyListResponse> responseList = new ArrayList<>();
         for (ManageAgency entity : data.getContent()) {
-            responseList.add(new ManageAgencyResponse(entity.toAggregate()));
+            responseList.add(new ManageAgencyListResponse(entity.toAggregate()));
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(), data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
-    
     @Override
+    @Cacheable(cacheNames = "manageAgencyToReplicate", unless = "#result == null or #result.isEmpty()")
     public List<ManageAgencyDto> findAllToReplicate() {
         List<ManageAgency> objects = this.repositoryQuery.findAll();
         List<ManageAgencyDto> objectDtos = new ArrayList<>();
-
         for (ManageAgency object : objects) {
             objectDtos.add(object.toAggregate());
         }
-
         return objectDtos;
     }
 

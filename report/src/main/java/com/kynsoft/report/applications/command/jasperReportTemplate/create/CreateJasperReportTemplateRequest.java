@@ -20,7 +20,6 @@ public class CreateJasperReportTemplateRequest {
     private JasperReportTemplateType type;
     private Status status;
     private String file;
-    private String parameters;
 
     private Double parentIndex;
     private Double menuPosition;

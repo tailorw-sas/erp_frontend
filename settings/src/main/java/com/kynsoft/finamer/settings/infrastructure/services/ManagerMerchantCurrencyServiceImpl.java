@@ -93,4 +93,16 @@ public class ManagerMerchantCurrencyServiceImpl implements IManagerMerchantCurre
         return this.repositoryQuery.countByManagerMerchantAndManagerCurrencyNotId(id, managerMerchant, managerCurrency);
     }
 
+    @Override
+    public List<ManagerMerchantCurrencyDto> findAllToReplicate() {
+        List<ManagerMerchantCurrency> entityList = this.repositoryQuery.findAll();
+        List<ManagerMerchantCurrencyDto> dtoList = new ArrayList<>();
+
+        for (ManagerMerchantCurrency entity : entityList){
+            dtoList.add(entity.toAggregate());
+        }
+
+        return dtoList;
+    }
+
 }

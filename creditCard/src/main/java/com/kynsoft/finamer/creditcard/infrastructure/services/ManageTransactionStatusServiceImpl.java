@@ -10,6 +10,8 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageTransactionStatusResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionResultStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
@@ -151,6 +153,16 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
     }
 
     @Override
+    public Long countByCancelledStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByCancelledStatusAndNotId(id);
+    }
+
+    @Override
+    public Long countByDeclinedStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByDeclinedStatusAndNotId(id);
+    }
+
+    @Override
     public ManageTransactionStatusDto findByETransactionStatus(ETransactionStatus status) {
        switch (status) {
            case SENT -> {
@@ -173,11 +185,47 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
                                DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND,
                                DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECEIVED_NOT_FOUND.getReasonPhrase())
                );
+           } case CANCELLED -> {
+               return this.repositoryQuery.findByCancelledStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_CANCELLED_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_CANCELLED_NOT_FOUND.getReasonPhrase())
+               );
+           } case DECLINED -> {
+               return this.repositoryQuery.findByDeclinedStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND.getReasonPhrase())
+               );
            }
        }
        throw new BusinessException(
                DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND,
                DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND.getReasonPhrase());
+    }
+
+
+    public ManageTransactionStatusDto findByETransactionStatus() {
+        Optional<ManageTransactionStatus> transactionStatus = this.repositoryQuery.findByReceivedStatus();
+        if (transactionStatus.isPresent()) {
+            return transactionStatus.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Transaction Status not found.")));
+    }
+
+    public ManageTransactionStatusDto findByMerchantResponseStatus(ETransactionResultStatus status) {
+        switch (status) {
+            case SUCCESS -> {
+                return findByETransactionStatus(ETransactionStatus.RECEIVE);
+            }
+            case DECLINED -> {
+                return findByETransactionStatus(ETransactionStatus.DECLINED);
+            }
+            case CANCELLED -> {
+                return findByETransactionStatus(ETransactionStatus.CANCELLED);
+            }
+            default -> throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Transaction Status not found.")));
+        }
     }
 
 }

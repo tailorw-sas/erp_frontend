@@ -24,7 +24,9 @@ public class CreateManageInvoiceTransactionTypeCommand implements ICommand {
     private Integer minNumberOfCharacters;
     private String defaultRemark;
 
-    public CreateManageInvoiceTransactionTypeCommand(String code, String description, Status status, String name, Boolean isAgencyRateAmount, Boolean isNegative, Boolean isPolicyCredit, Boolean isRemarkRequired, Integer minNumberOfCharacters, String defaultRemark) {
+    private boolean defaults;
+
+    public CreateManageInvoiceTransactionTypeCommand(String code, String description, Status status, String name, Boolean isAgencyRateAmount, Boolean isNegative, Boolean isPolicyCredit, Boolean isRemarkRequired, Integer minNumberOfCharacters, String defaultRemark, boolean defaults) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
@@ -36,6 +38,7 @@ public class CreateManageInvoiceTransactionTypeCommand implements ICommand {
         this.isRemarkRequired = isRemarkRequired;
         this.minNumberOfCharacters = minNumberOfCharacters;
         this.defaultRemark = defaultRemark;
+        this.defaults = defaults;
     }
 
     public static CreateManageInvoiceTransactionTypeCommand fromRequest(CreateManageInvoiceTransactionTypeRequest request){
@@ -49,7 +52,8 @@ public class CreateManageInvoiceTransactionTypeCommand implements ICommand {
                 request.getIsPolicyCredit(),
                 request.getIsRemarkRequired(),
                 request.getMinNumberOfCharacters(),
-                request.getDefaultRemark()
+                request.getDefaultRemark(),
+                request.isDefaults()
         );
     }
 

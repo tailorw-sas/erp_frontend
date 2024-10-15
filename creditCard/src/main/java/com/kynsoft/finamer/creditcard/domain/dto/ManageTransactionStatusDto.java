@@ -27,4 +27,6 @@ public class ManageTransactionStatusDto {
     private boolean sentStatus;
     private boolean refundStatus;
     private boolean receivedStatus;
+    private boolean cancelledStatus;
+    private boolean declinedStatus;
 }

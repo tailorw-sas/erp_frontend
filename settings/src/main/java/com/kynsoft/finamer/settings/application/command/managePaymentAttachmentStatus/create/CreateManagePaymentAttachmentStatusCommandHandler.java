@@ -62,7 +62,7 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
                 new ManagePaymentAttachmentStatusDto(command.getId(), command.getCode(), command.getName(),
                         command.getStatus(),  moduleDto, command.getShow(), command.getDefaults(), command.getPermissionCode(),
                         command.getDescription(), managePaymentAttachmentStatusDtoList, command.isNonNone(), command.isPatWithAttachment(), 
-                        command.isPwaWithOutAttachment()));
+                        command.isPwaWithOutAttachment(), command.isSupported()));
 
         this.paymentAttachmentStatusService.create(new ReplicateManagePaymentAttachmentStatusKafka(
                 command.getId(), 
@@ -72,7 +72,8 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
                 command.getDefaults(),
                 command.isNonNone(),
                 command.isPatWithAttachment(),
-                command.isPwaWithOutAttachment()
+                command.isPwaWithOutAttachment(),
+                command.isSupported()
         ));
     }
 }

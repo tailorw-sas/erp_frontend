@@ -8,6 +8,7 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePaymentDetailsApplyPaymentRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePaymentDetailsDepositRule;
+import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 
@@ -21,11 +22,14 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
 
     private final IPaymentDetailService service;
     private final IPaymentService paymentService;
+    private final IManagePaymentStatusService statusService;
 
     public DeletePaymentDetailCommandHandler(IPaymentDetailService service,
-            IPaymentService paymentService) {
+            IPaymentService paymentService,
+            IManagePaymentStatusService statusService) {
         this.service = service;
         this.paymentService = paymentService;
+        this.statusService = statusService;
     }
 
     @Override
@@ -33,7 +37,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
 
         PaymentDetailDto delete = this.service.findById(command.getId());
 
-        PaymentDto update = delete.getPayment();
+        PaymentDto update = this.paymentService.findById(delete.getPayment().getId());
         //RulesChecker.checkRule(new CheckValidateHourForDeleteRule(delete.getCreatedAt()));
         if (!command.isUndoApplication()) {
             if (delete.getTransactionType().getCash() || delete.getTransactionType().getApplyDeposit()) {
@@ -52,6 +56,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
                 UpdateIfNotNull.updateDouble(update::setNotIdentified, update.getNotIdentified() + delete.getAmount(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setApplied, update.getApplied() - delete.getAmount(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() + delete.getAmount(), updatePayment::setUpdate);
+                update.setPaymentStatus(this.statusService.findByConfirmed());
 
                 //El valor del Detalle de tipo cash fue restado al Payment Amount en el create, en el delete debe de ser sumado.
                 UpdateIfNotNull.updateDouble(update::setPaymentBalance, update.getPaymentBalance() + delete.getAmount(), updatePayment::setUpdate);
@@ -78,6 +83,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
 
                 UpdateIfNotNull.updateDouble(update::setPaymentBalance, update.getPaymentBalance() - delete.getAmount(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() - delete.getAmount(), updatePayment::setUpdate);
+                update.setPaymentStatus(this.statusService.findByConfirmed());
                 service.delete(delete);
             }
         }
@@ -88,6 +94,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
                 UpdateIfNotNull.updateDouble(update::setIdentified, update.getIdentified() - delete.getAmount(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setNotIdentified, update.getPaymentAmount() - update.getIdentified(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setApplied, update.getApplied() - delete.getAmount(), updatePayment::setUpdate);
+                update.setPaymentStatus(this.statusService.findByConfirmed());
             }
             //Para este caso no se elimina, dado que el objeto esta relacionado con otro objeto del mismo tipo, por tanto voy a actuar modificando
             //los valores y poniendo en inactivo el apply deposit que se trata de eliminar.

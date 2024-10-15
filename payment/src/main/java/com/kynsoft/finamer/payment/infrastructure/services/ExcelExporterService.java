@@ -12,6 +12,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.List;
 
 @Service
@@ -62,12 +65,21 @@ public class ExcelExporterService {
 
             case EXPORT_SUMMARY -> {
                 createHeaderPayment(sheet, workbook);
+                Double pBalance = 0.0;
+                Double dAmount = 0.0;
+                Double applied = 0.0;
+                Double notApplied = 0.0;                
                 for (PaymentDto entity : responses) {
                     Row dataRow = sheet.createRow(rowNum++);
+                    pBalance = pBalance + entity.getPaymentBalance();
+                    dAmount = dAmount + entity.getDepositAmount();
+                    applied = applied + entity.getApplied();
+                    notApplied = notApplied + entity.getNotApplied();
 
                     CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.BLUE);
                     addPaymentData(entity, style, dataRow);
                 }
+                createHeaderTotalPayment(sheet, workbook, rowNum, pBalance, dAmount, applied, notApplied);
             }
 
             default -> throw new IllegalArgumentException("No se ha especificado una opción válida en PaymentExcelExporterEnum");
@@ -79,50 +91,116 @@ public class ExcelExporterService {
     }
 
     private void addPaymentData(PaymentDto entity, CellStyle style, Row dataRow) {
+
+        BigDecimal pBalanceBigDecimal = new BigDecimal(String.valueOf(entity.getPaymentBalance())).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal dAmountBigDecimal = new BigDecimal(String.valueOf(entity.getDepositBalance())).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal appliedBigDecimal = new BigDecimal(String.valueOf(entity.getApplied() != null ? entity.getApplied() : 0.00)).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal notAppliedBigDecimal = new BigDecimal(String.valueOf(entity.getNotApplied() != null ? entity.getNotApplied() : 0.00)).setScale(2, RoundingMode.HALF_UP);
+
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         dataRow.createCell(0).setCellValue(entity.getPaymentId());
         dataRow.getCell(0).setCellStyle(style);
 
         dataRow.createCell(1).setCellValue(entity.getPaymentSource().getName());
         dataRow.getCell(1).setCellStyle(style);
 
-        dataRow.createCell(2).setCellValue(entity.getTransactionDate());
+        dataRow.createCell(2).setCellValue(entity.getTransactionDate().toString());
         dataRow.getCell(2).setCellStyle(style);
 
-        dataRow.createCell(3).setCellValue(entity.getPaymentStatus().getName());
+        dataRow.createCell(3).setCellValue(entity.getHotel().getName());
         dataRow.getCell(3).setCellStyle(style);
 
-        dataRow.createCell(4).setCellValue(entity.getHotel().getName());
+        dataRow.createCell(4).setCellValue(entity.getClient().getName());
         dataRow.getCell(4).setCellStyle(style);
 
-        dataRow.createCell(5).setCellValue(entity.getClient().getName());
+        dataRow.createCell(5).setCellValue(entity.getAgency().getName());
         dataRow.getCell(5).setCellStyle(style);
 
         dataRow.createCell(6).setCellValue(entity.getAgency().getAgencyType().getName());
         dataRow.getCell(6).setCellStyle(style);
 
-        dataRow.createCell(7).setCellValue(entity.getAgency().getName());
+        dataRow.createCell(7).setCellValue(entity.getBankAccount() != null ? entity.getBankAccount().getNameOfBank() : null);
         dataRow.getCell(7).setCellStyle(style);
 
-        dataRow.createCell(8).setCellValue("A.T");
+        dataRow.createCell(8).setCellValue(decimalFormat.format(entity.getPaymentBalance()));
         dataRow.getCell(8).setCellStyle(style);
 
-        dataRow.createCell(9).setCellValue(entity.getBankAccount() != null ? entity.getBankAccount().getNameOfBank() : null);
+        dataRow.createCell(9).setCellValue(decimalFormat.format(entity.getDepositBalance()));
         dataRow.getCell(9).setCellStyle(style);
 
-        dataRow.createCell(10).setCellValue(entity.getPaymentAmount());
+        dataRow.createCell(10).setCellValue(decimalFormat.format(entity.getApplied() != null ? entity.getApplied() : 0.00));
         dataRow.getCell(10).setCellStyle(style);
 
-        dataRow.createCell(11).setCellValue(entity.getDepositBalance());
+        dataRow.createCell(11).setCellValue(decimalFormat.format(entity.getNotApplied() != null ? entity.getNotApplied() : 0.00));
         dataRow.getCell(11).setCellStyle(style);
 
-        dataRow.createCell(12).setCellValue(entity.getApplied());
+        dataRow.createCell(12).setCellValue(entity.getRemark());
         dataRow.getCell(12).setCellStyle(style);
 
-        dataRow.createCell(13).setCellValue(entity.getNotApplied());
+        dataRow.createCell(13).setCellValue(entity.getPaymentStatus().getName());
         dataRow.getCell(13).setCellStyle(style);
 
-        dataRow.createCell(14).setCellValue(entity.getRemark());
-        dataRow.getCell(14).setCellStyle(style);
+    }
+
+    private void createHeaderPayment(Sheet sheet, Workbook workbook) {
+        Row headerRow = sheet.createRow(0);
+        CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.WHITE);
+        headerRow.createCell(0).setCellValue("Id");
+        headerRow.getCell(0).setCellStyle(style);
+        headerRow.createCell(1).setCellValue("P. Source");
+        headerRow.getCell(1).setCellStyle(style);
+        headerRow.createCell(2).setCellValue("Trans. Date");
+        headerRow.getCell(2).setCellStyle(style);
+        headerRow.createCell(3).setCellValue("Hotel");
+        headerRow.getCell(3).setCellStyle(style);
+        headerRow.createCell(4).setCellValue("Client");
+        headerRow.getCell(4).setCellStyle(style);
+        headerRow.createCell(5).setCellValue("Agency");
+        headerRow.getCell(5).setCellStyle(style);
+        headerRow.createCell(6).setCellValue("Agency Type");
+        headerRow.getCell(6).setCellStyle(style);
+        headerRow.createCell(7).setCellValue("Bank Acc.");
+        headerRow.getCell(7).setCellStyle(style);
+        headerRow.createCell(8).setCellValue("P. Amount");
+        headerRow.getCell(8).setCellStyle(style);
+        headerRow.createCell(9).setCellValue("D. Balance");
+        headerRow.getCell(9).setCellStyle(style);
+        headerRow.createCell(10).setCellValue("Applied");
+        headerRow.getCell(10).setCellStyle(style);
+        headerRow.createCell(11).setCellValue("Not Applied");
+        headerRow.getCell(11).setCellStyle(style);
+        headerRow.createCell(12).setCellValue("Remark");
+        headerRow.getCell(12).setCellStyle(style);
+        headerRow.createCell(13).setCellValue("Status");
+        headerRow.getCell(13).setCellStyle(style);
+    }
+
+    private void createHeaderTotalPayment(Sheet sheet, Workbook workbook, int rowNum, Double pBalance, Double dAmount, Double applied, Double notApplied) {
+        Row headerRow = sheet.createRow(rowNum);
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+
+        CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.WHITE);
+        headerRow.createCell(7).setCellValue("Totals");
+        headerRow.getCell(7).setCellStyle(style);
+        headerRow.createCell(8).setCellValue(decimalFormat.format(pBalance));
+        headerRow.getCell(8).setCellStyle(style);
+        headerRow.createCell(9).setCellValue(decimalFormat.format(dAmount));
+        headerRow.getCell(9).setCellStyle(style);
+        headerRow.createCell(10).setCellValue(decimalFormat.format(applied));
+        headerRow.getCell(10).setCellStyle(style);
+        headerRow.createCell(11).setCellValue(decimalFormat.format(notApplied));
+        headerRow.getCell(11).setCellStyle(style);
+    }
+
+    private CellStyle createFont(Workbook workbook, PaymentExcelExporterCellColorEnum color) {
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setFontName("Arial");
+
+        font.setFontHeightInPoints((short)12);
+
+        style.setFont(font);
+        return style;
     }
 
     private void addPaymentDetailsData(PaymentDetailDto entity, CellStyle style, Row dataRow) {
@@ -185,41 +263,6 @@ public class ExcelExporterService {
         dataRow.getCell(15).setCellStyle(style);
     }
 
-    private void createHeaderPayment(Sheet sheet, Workbook workbook) {
-        Row headerRow = sheet.createRow(0);
-        CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.WHITE);
-        headerRow.createCell(0).setCellValue("Id");
-        headerRow.getCell(0).setCellStyle(style);
-        headerRow.createCell(1).setCellValue("P.S.");
-        headerRow.getCell(1).setCellStyle(style);
-        headerRow.createCell(2).setCellValue("Trans. Date");
-        headerRow.getCell(2).setCellStyle(style);
-        headerRow.createCell(3).setCellValue("Status");
-        headerRow.getCell(3).setCellStyle(style);
-        headerRow.createCell(4).setCellValue("Hotel");
-        headerRow.getCell(4).setCellStyle(style);
-        headerRow.createCell(5).setCellValue("Client");
-        headerRow.getCell(5).setCellStyle(style);
-        headerRow.createCell(6).setCellValue("Agency Cd");
-        headerRow.getCell(6).setCellStyle(style);
-        headerRow.createCell(7).setCellValue("Agency");
-        headerRow.getCell(7).setCellStyle(style);
-        headerRow.createCell(8).setCellValue("A.T.");
-        headerRow.getCell(8).setCellStyle(style);
-        headerRow.createCell(9).setCellValue("Bank Acc.");
-        headerRow.getCell(9).setCellStyle(style);
-        headerRow.createCell(10).setCellValue("T. Amount");
-        headerRow.getCell(10).setCellStyle(style);
-        headerRow.createCell(11).setCellValue("D. Balance");
-        headerRow.getCell(11).setCellStyle(style);
-        headerRow.createCell(12).setCellValue("Applied");
-        headerRow.getCell(12).setCellStyle(style);
-        headerRow.createCell(13).setCellValue("Not Applied");
-        headerRow.getCell(13).setCellStyle(style);
-        headerRow.createCell(14).setCellValue("Remark");
-        headerRow.getCell(14).setCellStyle(style);
-    }
-
     private void createHeaderPaymentDetails(Sheet sheet, Workbook workbook, int rowNum) {
         Row headerRow = sheet.createRow(rowNum);
         CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.WHITE);
@@ -255,20 +298,5 @@ public class ExcelExporterService {
         headerRow.getCell(14).setCellStyle(style);
         headerRow.createCell(15).setCellValue("Remark");
         headerRow.getCell(15).setCellStyle(style);
-    }
-
-    private CellStyle createFont(Workbook workbook, PaymentExcelExporterCellColorEnum color) {
-        CellStyle style = workbook.createCellStyle();
-        Font font = workbook.createFont();
-//        if (color.BLUE.equals(PaymentExcelExporterCellColorEnum.BLUE)) {
-//            font.setColor(IndexedColors.BLUE.index);
-//        } else if (color.GREEN.equals(PaymentExcelExporterCellColorEnum.GREEN)){
-//            font.setColor(IndexedColors.GREEN.index);
-//        } else {
-//            font.setColor(IndexedColors.WHITE.index);
-//        }
-
-        style.setFont(font);
-        return style;
     }
 }

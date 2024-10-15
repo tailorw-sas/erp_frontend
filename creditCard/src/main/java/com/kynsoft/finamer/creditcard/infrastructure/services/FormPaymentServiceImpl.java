@@ -5,8 +5,9 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSessionResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
+import com.kynsoft.finamer.creditcard.domain.services.ICardNetJobService;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
-import com.kynsoft.finamer.creditcard.domain.services.IFormService;
+import com.kynsoft.finamer.creditcard.domain.services.IMerchantLanguageCodeService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TransactionPaymentLogs;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageTransactionsRedirectLogsWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionPaymentLogsReadDataJPARepository;
@@ -16,6 +17,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -33,17 +35,20 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     private final ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand;
     private final TransactionPaymentLogsReadDataJPARepository repositoryQuery;
 
-    private final IFormService formService;
+    private final ICardNetJobService cardNetJobService;
+
+    private final IMerchantLanguageCodeService merchantLanguageCodeService;
 
     public FormPaymentServiceImpl(ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand,
                                   TransactionPaymentLogsReadDataJPARepository repositoryQuery,
-                                  IFormService formService){
+                                  ICardNetJobService cardNetJobService, IMerchantLanguageCodeService merchantLanguageCodeService){
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
-        this.formService = formService;
+        this.cardNetJobService = cardNetJobService;
+        this.merchantLanguageCodeService = merchantLanguageCodeService;
     }
 
-    public ResponseEntity<String> redirectToLink(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+    public ResponseEntity<String> redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
 
         if (compareDates(transactionDto.getTransactionDate())) {
             try {
@@ -93,6 +98,12 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                         useCustomField1, customField1Label, customField1Value, useCustomField2, customField2Label, customField2Value, privateKey);
                 String authHash = createAuthHash(data);
 
+                //obtener el language
+                String locale = this.merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(
+                        transactionDto.getMerchant().getId(),
+                        transactionDto.getLanguage().getId()
+                );
+
                 // Generar el formulario HTML
                 String htmlForm = "<html lang=\"en\">" +
                         "<head></head>" +
@@ -103,7 +114,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                         "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantConfigDto.getMerchantType() + "\">" +
                         "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
                         "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
-                        "<input type=\"hidden\" name=\"Locale\" value=\"" + "EN" + "\">" +
+                        "<input type=\"hidden\" name=\"Locale\" value=\"" + (locale.isBlank() ? "EN" : locale) + "\">" +
                         "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
                         "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
                         "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + approvedUrl + "\">" +
@@ -159,6 +170,13 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             Map<String, String> requestData = new HashMap<>();
             String successUrl = merchantConfigDto.getSuccessUrl();
             String cancelUrl = merchantConfigDto.getErrorUrl();
+            String amountString = BigDecimal.valueOf(transactionDto.getAmount()).multiply(new BigDecimal(100)).stripTrailingZeros()
+                    .toPlainString();
+            //obtener el language
+            String pageLanguaje = this.merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(
+                    transactionDto.getMerchant().getId(),
+                    transactionDto.getLanguage().getId()
+            );
 
             requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
             requestData.put("CurrencyCode", "214"); // dejar 214 por ahora que es el peso dominicano. El usd es 840
@@ -170,12 +188,12 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
 //            requestData.put("MerchantTerminal_amex", paymentRequest.getMerchantTerminalAmex()); //No enviar por ahora
             requestData.put("ReturnUrl", successUrl); //Campo successUrl de Merchant Config
             requestData.put("CancelUrl", cancelUrl); //Campo errorUrl de Merchant Config
-            requestData.put("PageLanguaje", "ENG"); //Se envia por ahora ENG
+            requestData.put("PageLanguaje", pageLanguaje.isBlank() ? "ING" : pageLanguaje); //Se envia por ahora ENG
             requestData.put("TransactionId", String.valueOf(transactionDto.getId())); //Viene en el request
             requestData.put("OrdenId", transactionDto.getId().toString()); //Viene en el request
             requestData.put("MerchantName", merchantConfigDto.getName()); //Campo name de Merchant Config
             requestData.put("IpClient", ""); // Campo ip del b2b partner del merchant
-            requestData.put("Amount", transactionDto.getAmount().toString()); //Viene en el request
+            requestData.put("Amount", amountString); //Viene en el request
 
             // Enviar la solicitud POST y obtener la respuesta
             RestTemplate restTemplate = new RestTemplate();
@@ -204,15 +222,15 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                     "</body>" +
                     "</html>";
 
-            CardnetJobDto cardnetJobDto = formService.findByTransactionId(transactionDto.getTransactionUuid());
+            CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
             if(cardnetJobDto == null){
                 cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), sessionData.getSession().toString(), sessionData.getSessionKey().toString(), Boolean.FALSE);
-                formService.create(cardnetJobDto);
+                cardNetJobService.create(cardnetJobDto);
             }
             else{
                 cardnetJobDto.setSession(sessionData.getSession());
                 cardnetJobDto.setSessionKey(sessionData.getSessionKey());
-                formService.update(cardnetJobDto);
+                cardNetJobService.update(cardnetJobDto);
             }
             String concatenatedBody = htmlForm + requestData;
             return ResponseEntity.ok()

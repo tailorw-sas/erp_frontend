@@ -60,7 +60,7 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
         JasperReport jasperReport = getJasperReport(reportPath);
 
         // Create and configure the data source
-        logger.error("Antes de crear  la base de datos: {}",    reportTemplateDto.getDbConection().getName());
+        logger.error("Antes de crear  la base de datos: {}",    reportTemplateDto.getDbConectionDto().getName());
         JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
 
 //        // Obtain the parameters
@@ -96,8 +96,8 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
 
     private JdbcTemplate getJdbcTemplate(JasperReportTemplateDto reportTemplateDto) {
         //DataSource dataSource = createDataSource("jdbc:postgresql://localhost:6432/finamer-payments", "finamer_rw", "5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc");
-        DataSource dataSource = createDataSource(reportTemplateDto.getDbConection().getUrl(), reportTemplateDto.getDbConection().getUsername(),
-                reportTemplateDto.getDbConection().getPassword());
+        DataSource dataSource = createDataSource(reportTemplateDto.getDbConectionDto().getUrl(), reportTemplateDto.getDbConectionDto().getUsername(),
+                reportTemplateDto.getDbConectionDto().getPassword());
         return new JdbcTemplate(dataSource);
     }
 

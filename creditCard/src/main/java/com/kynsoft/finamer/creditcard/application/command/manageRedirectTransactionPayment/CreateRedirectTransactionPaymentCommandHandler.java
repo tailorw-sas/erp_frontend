@@ -1,6 +1,8 @@
 package com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
@@ -37,8 +39,13 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
 
         Claims claims = tokenService.validateToken(command.getToken());
         TransactionDto transactionDto = transactionService.findByUuid(UUID.fromString(claims.get("transactionUuid").toString()));
+        // No procesar transacciones completadas
+        if (!transactionDto.getStatus().isSentStatus()) {
+           throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
+        }
+
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
-        command.setResult(formPaymentService.redirectToLink(transactionDto, merchantConfigDto).getBody());
+        command.setResult(formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto).getBody());
 
         String[] dataForm = split(command.getResult());
           TransactionPaymentLogsDto dto = this.formPaymentService.findByTransactionId(transactionDto.getTransactionUuid());
@@ -46,11 +53,11 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
           if(dto == null) {
               if(merchantConfigDto.getMethod().equals(Method.AZUL.toString())){
                   formPaymentService.create(new TransactionPaymentLogsDto(
-                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null)
+                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null, false)
             );}
               if(merchantConfigDto.getMethod().equals(Method.CARDNET.toString())){
                   formPaymentService.create(new TransactionPaymentLogsDto(
-                     UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null)
+                     UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null, false)
                   );
               }
               }

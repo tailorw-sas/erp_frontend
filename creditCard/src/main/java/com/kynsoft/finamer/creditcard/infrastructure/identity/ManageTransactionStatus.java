@@ -65,6 +65,12 @@ public class ManageTransactionStatus implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean receivedStatus;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean cancelledStatus;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean declinedStatus;
+
     public ManageTransactionStatus(ManageTransactionStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -79,6 +85,8 @@ public class ManageTransactionStatus implements Serializable {
         this.sentStatus = dto.isSentStatus();
         this.refundStatus = dto.isRefundStatus();
         this.receivedStatus = dto.isReceivedStatus();
+        this.cancelledStatus = dto.isCancelledStatus();
+        this.declinedStatus = dto.isDeclinedStatus();
     }
 
     public ManageTransactionStatusDto toAggregate() {
@@ -86,14 +94,16 @@ public class ManageTransactionStatus implements Serializable {
                 id, code, name, description,
                 navigate != null ? navigate.stream().map(ManageTransactionStatus::toAggregateSample).toList() : null,
                 enablePayment, visible, status,
-                sentStatus, refundStatus, receivedStatus);
+                sentStatus, refundStatus, receivedStatus,
+                cancelledStatus, declinedStatus);
     }
 
     public ManageTransactionStatusDto toAggregateSample() {
         return new ManageTransactionStatusDto(
                 id, code, name, description,
                 null, enablePayment, visible, status,
-                sentStatus, refundStatus, receivedStatus);
+                sentStatus, refundStatus, receivedStatus,
+                cancelledStatus, declinedStatus);
     }
 
 }

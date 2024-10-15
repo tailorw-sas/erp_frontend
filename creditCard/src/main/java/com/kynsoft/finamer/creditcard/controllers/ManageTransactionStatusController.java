@@ -4,6 +4,9 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.creditcard.application.command.manageStatusTransactionBlue.update.UpdateManageStatusTransactionBlueCommand;
+import com.kynsoft.finamer.creditcard.application.command.manageStatusTransactionBlue.update.UpdateManageStatusTransactionBlueCommandMessage;
+import com.kynsoft.finamer.creditcard.application.command.manageStatusTransactionBlue.update.UpdateManageStatusTransactionBlueCommandRequest;
 import com.kynsoft.finamer.creditcard.application.command.managerTransactionStatus.create.CreateManageTransactionStatusCommand;
 import com.kynsoft.finamer.creditcard.application.command.managerTransactionStatus.create.CreateManageTransactionStatusMessage;
 import com.kynsoft.finamer.creditcard.application.command.managerTransactionStatus.create.CreateManageTransactionStatusRequest;
@@ -12,6 +15,8 @@ import com.kynsoft.finamer.creditcard.application.command.managerTransactionStat
 import com.kynsoft.finamer.creditcard.application.command.managerTransactionStatus.update.UpdateManageTransactionStatusCommand;
 import com.kynsoft.finamer.creditcard.application.command.managerTransactionStatus.update.UpdateManageTransactionStatusMessage;
 import com.kynsoft.finamer.creditcard.application.command.managerTransactionStatus.update.UpdateManageTransactionStatusRequest;
+import com.kynsoft.finamer.creditcard.application.command.processingPendingJob.update.UpdateProcessingPendingJobCommand;
+import com.kynsoft.finamer.creditcard.application.command.processingPendingJob.update.UpdateProcessingPendingJobCommandMessage;
 import com.kynsoft.finamer.creditcard.application.query.manageTransactionStatus.getById.FindManageTransactionStatusByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageTransactionStatus.search.GetSearchManageTransactionStatusQuery;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageTransactionStatusResponse;
@@ -72,6 +77,13 @@ public class ManageTransactionStatusController {
 
         UpdateManageTransactionStatusCommand command = UpdateManageTransactionStatusCommand.fromRequest(request, id);
         UpdateManageTransactionStatusMessage response = mediator.send(command);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping(path = "/UpdateProcessingPendingJob")
+    public ResponseEntity<?> updatePendingJob(){
+        UpdateProcessingPendingJobCommand command = new UpdateProcessingPendingJobCommand();
+        UpdateProcessingPendingJobCommandMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
     }
 }

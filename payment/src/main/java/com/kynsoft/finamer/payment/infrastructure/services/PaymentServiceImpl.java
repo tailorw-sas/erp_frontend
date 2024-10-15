@@ -63,7 +63,7 @@ public class PaymentServiceImpl implements IPaymentService {
     public PaymentDto findById(UUID id) {
         Optional<Payment> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
-            return userSystem.get().toAggregate();
+            return userSystem.get().toAggregateWihtDetails();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
     }

@@ -27,10 +27,10 @@ public class TransactionPaymentLogs implements Serializable {
     @Column(name = "transaction_id", unique = true)
     private UUID transactionId;
 
-    @Column(name= "merchant_request" ,columnDefinition = "TEXT")
+    @Column(name= "merchant_request", columnDefinition = "TEXT")
     private String merchantRequest;
 
-    @Column(name= "merchant_response")
+    @Column(name= "merchant_response", columnDefinition = "TEXT")
     private String merchantResponse;
 
     @CreationTimestamp
@@ -40,16 +40,19 @@ public class TransactionPaymentLogs implements Serializable {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "is_processed")
+    private  Boolean isProcessed;
+
     public TransactionPaymentLogs(TransactionPaymentLogsDto dto) {
         this.id = dto.getId();
         this.transactionId = dto.getTransactionId();
         this.merchantRequest = dto.getMerchantRequest();
         this.merchantResponse = dto.getMerchantResponse();
-
+        this.isProcessed = dto.getIsProcessed();
     }
     public TransactionPaymentLogsDto toAggregate(){
         return new TransactionPaymentLogsDto(
-                 id,transactionId, merchantRequest, merchantResponse
+                 id,transactionId, merchantRequest, merchantResponse, isProcessed
         );
     }
 }

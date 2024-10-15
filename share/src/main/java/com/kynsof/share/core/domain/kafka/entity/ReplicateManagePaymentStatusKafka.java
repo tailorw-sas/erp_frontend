@@ -22,5 +22,6 @@ public class ReplicateManagePaymentStatusKafka implements Serializable {
     @JsonProperty("status")
     private String status;
     private Boolean applied;
+    private boolean confirmed;
 
 }

@@ -6,15 +6,15 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.rules.dbconection.DBConectionCodeMustBeUniqueRule;
-import com.kynsoft.report.domain.services.IDBConectionService;
+import com.kynsoft.report.domain.services.IDBConnectionService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateDBConectionCommandHandler implements ICommandHandler<UpdateDBConectionCommand> {
 
-    private final IDBConectionService service;
+    private final IDBConnectionService service;
 
-    public UpdateDBConectionCommandHandler(IDBConectionService service) {
+    public UpdateDBConectionCommandHandler(IDBConnectionService service) {
         this.service = service;
     }
 

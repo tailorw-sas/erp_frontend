@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageMerchantCurrency.
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageMerchantCurrencyKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -15,6 +16,8 @@ import com.kynsoft.finamer.settings.domain.services.IManagerMerchantCurrencyServ
 import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
 import java.util.UUID;
 import java.util.function.Consumer;
+
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantCurency.ProducerUpdateManageMerchantCurrencyService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,13 +26,15 @@ public class UpdateManagerMerchantCurrencyCommandHandler implements ICommandHand
     private final IManagerMerchantService serviceMerchantService;
     private final IManagerCurrencyService serviceCurrencyService;
     private final IManagerMerchantCurrencyService serviceMerchantCurrency;
+    private final ProducerUpdateManageMerchantCurrencyService producer;
 
     public UpdateManagerMerchantCurrencyCommandHandler(IManagerMerchantService serviceMerchantService,
                                                        IManagerCurrencyService serviceCurrencyService,
-                                                       IManagerMerchantCurrencyService serviceMerchantCurrency) {
+                                                       IManagerMerchantCurrencyService serviceMerchantCurrency, ProducerUpdateManageMerchantCurrencyService producer) {
         this.serviceMerchantService = serviceMerchantService;
         this.serviceCurrencyService = serviceCurrencyService;
         this.serviceMerchantCurrency = serviceMerchantCurrency;
+        this.producer = producer;
     }
 
     @Override
@@ -53,6 +58,10 @@ public class UpdateManagerMerchantCurrencyCommandHandler implements ICommandHand
         updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
         if (update.getUpdate() > 0) {
             this.serviceMerchantCurrency.update(test);
+            this.producer.update(new ReplicateManageMerchantCurrencyKafka(
+                    command.getId(), command.getManagerMerchant(), command.getManagerCurrency(),
+                    command.getValue(), command.getDescription(), command.getStatus().name()
+            ));
         }
 
     }

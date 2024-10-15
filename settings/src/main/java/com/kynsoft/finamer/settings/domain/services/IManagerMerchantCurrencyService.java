@@ -22,4 +22,6 @@ public interface IManagerMerchantCurrencyService {
     Long countByCodeAndNotId(UUID managerMerchant, UUID managerCurrency);
 
     Long countByManagerMerchantANDManagerCurrencyIdNotId(UUID id, UUID managerMerchant, UUID managerCurrency);
+
+    List<ManagerMerchantCurrencyDto> findAllToReplicate();
 }

@@ -25,12 +25,15 @@ public class CreateManageTransactionStatusCommand implements ICommand {
     private boolean sentStatus;
     private boolean refundStatus;
     private boolean receivedStatus;
+    private boolean cancelledStatus;
+    private boolean declinedStatus;
 
     public CreateManageTransactionStatusCommand(
             String code, String description, String name,
             Set<UUID> navigate, Boolean enablePayment,
             Boolean visible, Status status, boolean sentStatus,
-            boolean refundStatus, boolean receivedStatus) {
+            boolean refundStatus, boolean receivedStatus,
+            boolean cancelledStatus, boolean declinedStatus) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
@@ -42,6 +45,8 @@ public class CreateManageTransactionStatusCommand implements ICommand {
         this.sentStatus = sentStatus;
         this.refundStatus = refundStatus;
         this.receivedStatus = receivedStatus;
+        this.cancelledStatus = cancelledStatus;
+        this.declinedStatus = declinedStatus;
     }
 
     public static CreateManageTransactionStatusCommand fromRequest(CreateManageTransactionStatusRequest request) {
@@ -55,7 +60,9 @@ public class CreateManageTransactionStatusCommand implements ICommand {
                 request.getStatus(),
                 request.isSentStatus(),
                 request.isRefundStatus(),
-                request.isReceivedStatus()
+                request.isReceivedStatus(),
+                request.isCancelledStatus(),
+                request.isDeclinedStatus()
         );
     }
 

@@ -49,6 +49,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final ServiceLocator<IMediator> serviceLocator;
+    private final IManageInvoiceTypeService iManageInvoiceTypeService;
 
     public BookingImportHelperServiceImpl(IManageAgencyService agencyService,
                                           IManageHotelService manageHotelService,
@@ -59,7 +60,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                                           BookingImportRowErrorRedisRepository errorRedisRepository,
                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
                                           IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService,
-                                          ServiceLocator serviceLocator) {
+                                          ServiceLocator serviceLocator, IManageInvoiceTypeService iManageInvoiceTypeService) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.invoiceService = invoiceService;
@@ -71,6 +72,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         this.parameterizationService = parameterizationService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.serviceLocator = serviceLocator;
+        this.iManageInvoiceTypeService = iManageInvoiceTypeService;
     }
 
     @Override
@@ -121,7 +123,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             grouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking2(agency, hotel, value);
+                this.createInvoiceWithBooking(agency, hotel, value);
 
             });
         }
@@ -132,82 +134,81 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         bookingImportCacheStream.forEach(bookingImportCache -> {
             ManageAgencyDto agency = agencyService.findByCode(bookingImportCache.toAggregate().getManageAgencyCode());
             ManageHotelDto hotel = manageHotelService.findByCode(bookingImportCache.toAggregate().getManageHotelCode());
-            this.createInvoiceWithBooking2(agency, hotel, List.of(bookingImportCache.toAggregate()));
+            this.createInvoiceWithBooking(agency, hotel, List.of(bookingImportCache.toAggregate()));
         });
     }
 
-    private void createInvoiceWithBooking2(ManageAgencyDto agencyDto, ManageHotelDto hotelDto,
-                                           List<BookingRow> bookingRowList) {
-        BookingRow sample = bookingRowList.get(0);
-        CreateInvoiceCommand createInvoiceCommand = createInvoiceCommand(getInvoiceDate(sample), LocalDate.now(),
-                false, calculateInvoiceAmount(bookingRowList), hotelDto.getId(), agencyDto.getId(), EInvoiceType.INVOICE);
-        List<CreateBookingCommand> createBookingCommands = createBookings(createInvoiceCommand.getId(), bookingRowList);
-        List<CreateRoomRateCommand> createRoomRateCommands = createRateRoomS(createBookingCommands);
-        IMediator mediator = serviceLocator.getBean(IMediator.class);
-        mediator.send(createInvoiceCommand);
-        createBookingCommands.forEach(mediator::send);
-        createRoomRateCommands.forEach(mediator::send);
+//    private void createInvoiceWithBooking2(ManageAgencyDto agencyDto, ManageHotelDto hotelDto,
+//                                           List<BookingRow> bookingRowList) {
+//        BookingRow sample = bookingRowList.get(0);
+//        CreateInvoiceCommand createInvoiceCommand = createInvoiceCommand(getInvoiceDate(sample), LocalDate.now(),
+//                false, calculateInvoiceAmount(bookingRowList), hotelDto.getId(), agencyDto.getId(), EInvoiceType.INVOICE);
+//        List<CreateBookingCommand> createBookingCommands = createBookings(createInvoiceCommand.getId(), bookingRowList);
+//        IMediator mediator = serviceLocator.getBean(IMediator.class);
+//        mediator.send(createInvoiceCommand);
+//        createBookingCommands.forEach(mediator::send);
+//    }
 
+    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList) {
+        ManageInvoiceStatusDto invoiceStatus = null;
+        try {
+            ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
+            invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getProcessed()) : null;
+        } catch (Exception ignored) {
+        }
+        ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
+        manageInvoiceDto.setAgency(agency);
+        manageInvoiceDto.setHotel(hotel);
+        manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);
+        manageInvoiceDto.setManageInvoiceType(invoiceTypeDto);
+        manageInvoiceDto.setIsManual(false);
+        manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
+        manageInvoiceDto.setBookings(createBooking(bookingRowList));
+        manageInvoiceDto.setId(UUID.randomUUID());
+        manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
+        manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
+        manageInvoiceDto.setInvoiceAmount(calculateInvoiceAmount(bookingRowList));
+        manageInvoiceDto.setDueAmount(calculateInvoiceAmount(bookingRowList));
+        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
+        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
+            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
+        } else {
+            invoiceNumber += "-" + hotel.getCode();
+        }
+        manageInvoiceDto.setInvoiceNumber(invoiceNumber);
+        invoiceService.create(manageInvoiceDto);
+
+        //TODO: aqui se envia a crear el invoice con sun booking en payment
+        try {
+            this.producerReplicateManageInvoiceService.create(manageInvoiceDto);
+        } catch (Exception e) {
+        }
     }
 
-//    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList) {
-//        ManageInvoiceStatusDto invoiceStatus = null;
-//        try {
-//            ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-//            invoiceStatus = parameterization != null ? this.manageInvoiceStatusService.findByCode(parameterization.getProcessed()) : null;
-//        } catch (Exception ignored) {
-//        }
-//        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
-//        manageInvoiceDto.setAgency(agency);
-//        manageInvoiceDto.setHotel(hotel);
-//        manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);
-//        manageInvoiceDto.setIsManual(false);
-//        manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
-//        manageInvoiceDto.setBookings(createBooking(bookingRowList));
-//        manageInvoiceDto.setId(UUID.randomUUID());
-//        manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
-//        manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
-//        manageInvoiceDto.setInvoiceAmount(calculateInvoiceAmount(bookingRowList));
-//        manageInvoiceDto.setDueAmount(calculateInvoiceAmount(bookingRowList));
-//        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
-//        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-//            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-//        } else {
-//            invoiceNumber += "-" + hotel.getCode();
-//        }
-//        manageInvoiceDto.setInvoiceNumber(invoiceNumber);
-//        invoiceService.create(manageInvoiceDto);
-//
-//        //TODO: aqui se envia a crear el invoice con sun booking en payment
-//        try {
-//            this.producerReplicateManageInvoiceService.create(manageInvoiceDto);
-//        } catch (Exception e) {
-//        }
-//    }
-
-//    private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList) {
-//        return bookingRowList.stream().map(bookingRow -> {
-//            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ?
-//                    ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
-//            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ?
-//                    roomTypeService.findByCode(bookingRow.getRoomType()) : null;
-//            ManageBookingDto bookingDto = bookingRow.toAggregate();
-//            bookingDto.setRatePlan(ratePlanDto);
-//            bookingDto.setRoomType(roomTypeDto);
-//            bookingDto.setId(UUID.randomUUID());
-//            ManageRoomRateDto manageRoomRateDto = new ManageRoomRateDto();
-//            manageRoomRateDto.setId(UUID.randomUUID());
-//            manageRoomRateDto.setAdults(bookingDto.getAdults());
-//            manageRoomRateDto.setChildren(bookingDto.getChildren());
-//            manageRoomRateDto.setCheckIn(bookingDto.getCheckIn());
-//            manageRoomRateDto.setCheckOut(bookingDto.getCheckOut());
-//            manageRoomRateDto.setHotelAmount(bookingDto.getHotelAmount());
-//            manageRoomRateDto.setNights(bookingDto.getNights());
-//            manageRoomRateDto.setRoomNumber(bookingDto.getRoomNumber());
-//            bookingDto.setRoomRates(List.of(manageRoomRateDto));
-//            return bookingDto;
-//        }).toList();
-//    }
+    private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList) {
+        return bookingRowList.stream().map(bookingRow -> {
+            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ?
+                    ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
+            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ?
+                    roomTypeService.findByCode(bookingRow.getRoomType()) : null;
+            ManageBookingDto bookingDto = bookingRow.toAggregate();
+            bookingDto.setRatePlan(ratePlanDto);
+            bookingDto.setRoomType(roomTypeDto);
+            bookingDto.setId(UUID.randomUUID());
+            ManageRoomRateDto manageRoomRateDto = new ManageRoomRateDto();
+            manageRoomRateDto.setId(UUID.randomUUID());
+            manageRoomRateDto.setAdults(bookingDto.getAdults());
+            manageRoomRateDto.setChildren(bookingDto.getChildren());
+            manageRoomRateDto.setCheckIn(bookingDto.getCheckIn());
+            manageRoomRateDto.setCheckOut(bookingDto.getCheckOut());
+            manageRoomRateDto.setHotelAmount(bookingDto.getHotelAmount());
+            manageRoomRateDto.setNights(bookingDto.getNights());
+            manageRoomRateDto.setRoomNumber(bookingDto.getRoomNumber());
+            bookingDto.setRoomRates(List.of(manageRoomRateDto));
+            return bookingDto;
+        }).toList();
+    }
 
     private double calculateInvoiceAmount(List<BookingRow> bookingRowList) {
         return bookingRowList.stream().mapToDouble(BookingRow::getInvoiceAmount).sum();
@@ -231,41 +232,40 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         repository.save(bookingImportCache);
     }
 
-    private CreateInvoiceCommand createInvoiceCommand(LocalDateTime invoiceDate, LocalDate dueDate,
-                                                      boolean isManuel, double invoiceAmount, UUID hotel, UUID agency, EInvoiceType invoiceType) {
-        return new CreateInvoiceCommand(invoiceDate, dueDate, isManuel, invoiceAmount, hotel, agency, invoiceType, UUID.randomUUID());
-    }
-
-    private List<CreateBookingCommand> createBookings(UUID invoiceId, List<BookingRow> bookingRowList) {
-        return bookingRowList.stream().map(bookingRow -> {
-                            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ?
-                                    ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
-                            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ?
-                                    roomTypeService.findByCode(bookingRow.getRoomType()) : null;
-                            return new CreateBookingCommand(UUID.randomUUID(),
-                                    null,
-                                    DateUtil.parseDateToDateTime(bookingRow.getBookingDate()),
-                                    DateUtil.parseDateToDateTime(bookingRow.getCheckIn()),
-                                    DateUtil.parseDateToDateTime(bookingRow.getCheckOut()),
-                                    bookingRow.getHotelBookingNumber(),
-                                    bookingRow.getFirstName() + " " + bookingRow.getLastName(),
-                                    bookingRow.getFirstName(), bookingRow.getLastName(),
-                                    bookingRow.getInvoiceAmount(),
-                                    bookingRow.getRoomNumber(),
-                                    bookingRow.getCoupon(),
-                                    Objects.nonNull(bookingRow.getAdults()) ? bookingRow.getAdults().intValue() : 0,
-                                    Objects.nonNull(bookingRow.getChildren()) ? bookingRow.getChildren().intValue() : 0,
-                                    0.0, 0.0, bookingRow.getHotelInvoiceNumber(),
-                                    "", bookingRow.getHotelInvoiceAmount(),
-                                    bookingRow.getRemarks(),
-                                    invoiceId, Objects.nonNull(ratePlanDto)?ratePlanDto.getId():null, null,
-                                    Objects.nonNull(roomTypeDto)?roomTypeDto.getId():null, null, null
-                            );
-                        }
-
-                )
-                .toList();
-    }
+//    private CreateInvoiceCommand createInvoiceCommand(LocalDateTime invoiceDate, LocalDate dueDate,
+//                                                      boolean isManuel, double invoiceAmount, UUID hotel, UUID agency, EInvoiceType invoiceType) {
+//        return new CreateInvoiceCommand(invoiceDate, dueDate, isManuel, invoiceAmount, hotel, agency, invoiceType, UUID.randomUUID());
+//    }
+//
+//    private List<CreateBookingCommand> createBookings(UUID invoiceId, List<BookingRow> bookingRowList) {
+//        return bookingRowList.stream().map(bookingRow -> {
+//                            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ?
+//                                    ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
+//                            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ?
+//                                    roomTypeService.findByCode(bookingRow.getRoomType()) : null;
+//                            return new CreateBookingCommand(UUID.randomUUID(),
+//                                    null,
+//                                    DateUtil.parseDateToDateTime(bookingRow.getBookingDate()),
+//                                    DateUtil.parseDateToDateTime(bookingRow.getCheckIn()),
+//                                    DateUtil.parseDateToDateTime(bookingRow.getCheckOut()),
+//                                    bookingRow.getHotelBookingNumber(),
+//                                    bookingRow.getFirstName() + " " + bookingRow.getLastName(),
+//                                    bookingRow.getFirstName(), bookingRow.getLastName(),
+//                                    bookingRow.getInvoiceAmount(),
+//                                    bookingRow.getRoomNumber(),
+//                                    bookingRow.getCoupon(),
+//                                    Objects.nonNull(bookingRow.getAdults()) ? bookingRow.getAdults().intValue() : 0,
+//                                    Objects.nonNull(bookingRow.getChildren()) ? bookingRow.getChildren().intValue() : 0,
+//                                    0.0, 0.0, bookingRow.getHotelInvoiceNumber(),
+//                                    "", bookingRow.getHotelInvoiceAmount(),
+//                                    bookingRow.getRemarks(),
+//                                    invoiceId, ratePlanDto.getId(), null, roomTypeDto.getId(), null, null
+//                            );
+//                        }
+//
+//                )
+//                .toList();
+//    }
 
     private List<CreateRoomRateCommand> createRateRoomS(List<CreateBookingCommand> bookingCommands ){
         List<CreateRoomRateCommand> roomRateCommands = new ArrayList<>();

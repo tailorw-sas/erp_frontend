@@ -26,6 +26,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageLanguage.ProducerReplicateManageLanguageService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchant.ProducerReplicateManageMerchantService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantConfig.ProducerReplicateManageMerchantConfigService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantCurency.ProducerReplicateManageMerchantCurrencyService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentAttachmentStatus.ProducerReplicateManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentSource.ProducerReplicateManagePaymentSourceService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentStatus.ProducerReplicateManagePaymentStatusService;
@@ -117,6 +118,9 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final IManageCreditCardTypeService creditCardTypeService;
     private final ProducerReplicateManageCreditCardTypeService producerReplicateManageCreditCardTypeService;
 
+    private final IManagerMerchantCurrencyService merchantCurrencyService;
+    private final ProducerReplicateManageMerchantCurrencyService producerReplicateManageMerchantCurrencyService;
+
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService,
                                          IManagerPaymentStatusService paymentStatusService,
                                          IManagePaymentSourceService paymentSourceService,
@@ -155,7 +159,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
                                          ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService,
                                          IManageContactService manageContactService,
-                                         ProducerReplicateManageContactService producerReplicateManageContactService, IManagerCurrencyService currencyService, ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService, IManageRegionService regionService, ProducerReplicateManageRegionService producerReplicateManageRegionService, IManageAgencyContactService agencyContactService, ProducerReplicateManageAgencyContactService producerReplicateManageAgencyContactService, IManageCreditCardTypeService creditCardTypeService, ProducerReplicateManageCreditCardTypeService producerReplicateManageCreditCardTypeService) {
+                                         ProducerReplicateManageContactService producerReplicateManageContactService, IManagerCurrencyService currencyService, ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService, IManageRegionService regionService, ProducerReplicateManageRegionService producerReplicateManageRegionService, IManageAgencyContactService agencyContactService, ProducerReplicateManageAgencyContactService producerReplicateManageAgencyContactService, IManageCreditCardTypeService creditCardTypeService, ProducerReplicateManageCreditCardTypeService producerReplicateManageCreditCardTypeService, IManagerMerchantCurrencyService merchantCurrencyService, ProducerReplicateManageMerchantCurrencyService producerReplicateManageMerchantCurrencyService) {
         this.tradingCompaniesService = tradingCompaniesService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerLanguageService = managerLanguageService;
@@ -214,6 +218,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.producerReplicateManageAgencyContactService = producerReplicateManageAgencyContactService;
         this.creditCardTypeService = creditCardTypeService;
         this.producerReplicateManageCreditCardTypeService = producerReplicateManageCreditCardTypeService;
+        this.merchantCurrencyService = merchantCurrencyService;
+        this.producerReplicateManageMerchantCurrencyService = producerReplicateManageMerchantCurrencyService;
     }
 
     @Override
@@ -237,7 +243,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_LANGUAGE -> {
                     for (ManagerLanguageDto managerLanguageDto : this.managerLanguageService.findAllToReplicate()) {
-                        this.replicateManageLanguageService.create(new ReplicateManageLanguageKafka(managerLanguageDto.getId(), managerLanguageDto.getCode(), managerLanguageDto.getName()));
+                        this.replicateManageLanguageService.create(new ReplicateManageLanguageKafka(managerLanguageDto.getId(), managerLanguageDto.getCode(), managerLanguageDto.getName(), managerLanguageDto.getDefaults(), managerLanguageDto.getStatus().name()));
                     }
                 }
                 case MANAGE_INVOICE_TYPE -> {
@@ -275,7 +281,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 agencyDto.getZipCode(),
                                 agencyDto.getCity(),
                                 agencyDto.getCreditDay(),
-                                agencyDto.getAutoReconcile()
+                                agencyDto.getAutoReconcile(),
+                                agencyDto.getValidateCheckout()
                         ));
                     }
                 }
@@ -299,7 +306,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 paymentAttachmentStatusDto.getDefaults(),
                                 paymentAttachmentStatusDto.isNonNone(),
                                 paymentAttachmentStatusDto.isPatWithAttachment(),
-                                paymentAttachmentStatusDto.isPwaWithOutAttachment()
+                                paymentAttachmentStatusDto.isPwaWithOutAttachment(),
+                                paymentAttachmentStatusDto.isSupported()
                         ));
                     }
                 }
@@ -315,12 +323,12 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_INVOICE_TRANSACTION_TYPE -> {
                     for (ManageInvoiceTransactionTypeDto invoiceTransactionTypeDto : this.invoiceTransactionTypeService.findAllToReplicate()) {
-                        this.replicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(invoiceTransactionTypeDto.getId(), invoiceTransactionTypeDto.getCode(), invoiceTransactionTypeDto.getName()));
+                        this.replicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(invoiceTransactionTypeDto.getId(), invoiceTransactionTypeDto.getCode(), invoiceTransactionTypeDto.getName(), invoiceTransactionTypeDto.isDefaults()));
                     }
                 }
                 case MANAGE_PAYMENT_STATUS -> {
                     for (ManagerPaymentStatusDto paymentStatusDto : this.paymentStatusService.findAllToReplicate()) {
-                        this.replicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(paymentStatusDto.getId(), paymentStatusDto.getCode(), paymentStatusDto.getName(), paymentStatusDto.getStatus().name(), paymentStatusDto.getApplied()));
+                        this.replicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(paymentStatusDto.getId(), paymentStatusDto.getCode(), paymentStatusDto.getName(), paymentStatusDto.getStatus().name(), paymentStatusDto.getApplied(), paymentStatusDto.isConfirmed()));
                     }
                 }
                 case MANAGE_PAYMENT_SOURCE -> {
@@ -488,6 +496,14 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                     for (ManageCreditCardTypeDto dto : this.creditCardTypeService.findAllToReplicate()){
                         this.producerReplicateManageCreditCardTypeService.create(new ReplicateManageCreditCardTypeKafka(
                                 dto.getId(), dto.getCode(), dto.getName()
+                        ));
+                    }
+                } case MANAGE_MERCHANT_CURRENCY -> {
+                    for (ManagerMerchantCurrencyDto dto : this.merchantCurrencyService.findAllToReplicate()){
+                        this.producerReplicateManageMerchantCurrencyService.create(new ReplicateManageMerchantCurrencyKafka(
+                                dto.getId(), dto.getManagerMerchant().getId(),
+                                dto.getManagerCurrency().getId(), dto.getValue(),
+                                dto.getDescription(), dto.getStatus().name()
                         ));
                     }
                 }

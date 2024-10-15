@@ -67,7 +67,8 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
                     dto.getZipCode(),
                     dto.getCity(),
                     dto.getCreditDay(),
-                    dto.getAutoReconcile()
+                    dto.getAutoReconcile(),
+                    dto.getValidateCheckout()
             ));
         }
     }
@@ -98,7 +99,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     private void updateRelationships(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
         updateEntity(dto::setAgencyType, command.getAgencyType(), dto.getAgencyType().getId(), agencyTypeService::findById, update::setUpdate);
         updateEntity(dto::setCityState, command.getCityState(), dto.getCityState().getId(), cityStateService::findById, update::setUpdate);
-        updateEntity(dto::setClient, command.getClient(), dto.getClient().getId(), managerClientService::findById, update::setUpdate);
+        updateEntity(dto::setClient, command.getClient(), dto.getClient() != null ? dto.getClient().getId() : null, managerClientService::findById, update::setUpdate);
         updateEntity(dto::setCountry, command.getCountry(), dto.getCountry().getId(), countryService::findById, update::setUpdate);
         updateEntity(dto::setSentB2BPartner, command.getSentB2BPartner(), dto.getSentB2BPartner().getId(), managerB2BPartnerService::findById, update::setUpdate);
         updateEnum(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);

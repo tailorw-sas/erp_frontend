@@ -14,7 +14,7 @@ public interface IManageInvoiceTransactionTypeService {
 
     ManageInvoiceTransactionTypeDto findById(UUID id);
 
-
-
     Long countByCodeAndNotId(String code, UUID id);
+
+    ManageInvoiceTransactionTypeDto findByDefaults();
 }
