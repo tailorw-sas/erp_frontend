@@ -45,7 +45,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
     @Transactional
-    @CachePut(cacheNames = "manageAgency", key = "#result")
+    @CacheEvict(cacheNames = {"manageAgency", "manageAgencyAll", "manageAgencyToReplicate"}, allEntries = true)
     public UUID create(ManageAgencyDto dto) {
         ManageAgency entity = new ManageAgency(dto);
         return repositoryCommand.save(entity).getId();
@@ -53,7 +53,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
     @Transactional
-    @CachePut(cacheNames = "manageAgency", key = "#dto.id")
+    @CacheEvict(cacheNames = {"manageAgency", "manageAgencyAll", "manageAgencyToReplicate"}, allEntries = true)
     public void update(ManageAgencyDto dto) {
         ManageAgency entity = new ManageAgency(dto);
         entity.setUpdatedAt(LocalDateTime.now());
@@ -62,7 +62,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "manageAgency", key = "#id")
+    @CacheEvict(cacheNames = {"manageAgency", "manageAgencyAll", "manageAgencyToReplicate"}, allEntries = true)
     public void delete(UUID id) {
         try {
             ManageAgency entity = this.repositoryQuery.findById(id)
@@ -74,7 +74,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
-    //@Cacheable(cacheNames = "manageAgency", key = "#id", unless = "#result == null")
+    @Cacheable(cacheNames = "manageAgency", key = "#id", unless = "#result == null")
     public ManageAgencyDto findById(UUID id) {
         Optional<ManageAgency> optionalEntity = repositoryQuery.findById(id);
         return optionalEntity.map(ManageAgency::toAggregate)
