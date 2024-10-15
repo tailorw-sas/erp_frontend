@@ -164,12 +164,7 @@ onMounted(() => {
             @update:model-value="($event) => {
               console.log(invoiceObj)
               let value: any = $event
-              if (route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.CREDIT){
-                value = toNegative(value)
-              }
-              else {
-                value = toPositive(value)
-              }
+              value = toNegative(value)
               onUpdate('invoiceAmount', String(value))
             }"
           />
