@@ -11,8 +11,6 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
-import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckAdultsAndChildrenRule;
-import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckInCheckOutRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -107,7 +105,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                         command.getBookingCommands().get(i).getHotelBookingNumber()
                                 .split("\\s+")[command.getBookingCommands().get(i).getHotelBookingNumber()
                                         .split("\\s+").length - 1],
-                        command.getInvoiceCommand().getHotel()));
+                        command.getInvoiceCommand().getHotel(), command.getBookingCommands().get(i).getHotelBookingNumber()));
             }
 
             ManageNightTypeDto nightTypeDto = command.getBookingCommands().get(i).getNightType() != null
