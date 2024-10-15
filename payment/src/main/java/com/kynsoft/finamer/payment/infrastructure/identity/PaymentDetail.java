@@ -64,6 +64,9 @@ public class PaymentDetail implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean reverseTransaction;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean createByCredit;//Para identificar cuando un Details fue creado por un proceso automatico de la HU154.
+
     private Double bookingId;
     private String invoiceId;
     private OffsetDateTime transactionDate;
@@ -121,6 +124,7 @@ public class PaymentDetail implements Serializable {
         this.applayPayment = dto.getApplayPayment();
         this.reverseFrom = dto.getReverseFrom();
         this.reverseTransaction = dto.isReverseTransaction();
+        this.createByCredit = dto.isCreateByCredit();
     }
 
     public PaymentDetailDto toAggregate() {
@@ -149,7 +153,8 @@ public class PaymentDetail implements Serializable {
                 applyDepositValue,
                 applayPayment,
                 reverseFrom != null ? reverseFrom : null,
-                reverseTransaction
+                reverseTransaction,
+                createByCredit
         );
     }
 
@@ -179,7 +184,8 @@ public class PaymentDetail implements Serializable {
                 applyDepositValue,
                 applayPayment,
                 null,
-                reverseTransaction
+                reverseTransaction,
+                createByCredit
         );
     }
 
@@ -209,7 +215,8 @@ public class PaymentDetail implements Serializable {
                 applyDepositValue,
                 applayPayment,
                 reverseFrom != null ? reverseFrom : null,
-                reverseTransaction
+                reverseTransaction,
+                createByCredit
         );
     }
 }

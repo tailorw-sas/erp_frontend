@@ -15,12 +15,14 @@ public class CreatePaymentDetailTypeDepositCommand implements ICommand {
 
     private PaymentDto payment;
     private UUID id;
+    private boolean createByCredit;
 
     private PaymentDetailDto newDetailDto;
 
-    public CreatePaymentDetailTypeDepositCommand(PaymentDto payment) {
+    public CreatePaymentDetailTypeDepositCommand(PaymentDto payment, boolean createByCredit) {
         this.id = UUID.randomUUID();
         this.payment = payment;
+        this.createByCredit = createByCredit;
     }
 
     @Override

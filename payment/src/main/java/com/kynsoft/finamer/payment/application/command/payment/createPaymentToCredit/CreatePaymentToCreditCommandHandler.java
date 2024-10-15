@@ -116,6 +116,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 EAttachment.NONE
         );
 
+        paymentDto.setCreateByCredit(true);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         PaymentDetailDto parentDetailDto = this.createPaymentDetailsToCreditDeposit(paymentSave, command);
 //        if (command.getInvoiceDto().getBookings() != null) {
@@ -182,6 +183,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 EAttachment.NONE
         );
 
+        paymentDto.setCreateByCredit(true);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         if (command.getInvoiceDto().getBookings() != null) {
             for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
@@ -204,19 +206,19 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     }
 
     private void createPaymentDetailsToCreditCash(PaymentDto paymentCash, ManageBookingDto booking, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance() * -1, false, command.getInvoiceDto().getInvoiceDate()));
+        CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance() * -1, false, command.getInvoiceDto().getInvoiceDate(), true));
         if (command.isAutoApplyCredit()) {
             command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), booking.getId()));
         }
     }
 
     private PaymentDetailDto createPaymentDetailsToCreditDeposit(PaymentDto payment, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeDepositCommand(payment));
+        CreatePaymentDetailTypeDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeDepositCommand(payment, true));
         return message.getNewDetailDto();
     }
 
     private PaymentDetailDto createPaymentDetailsToCreditApplyDeposit(PaymentDto payment, ManageBookingDto booking, PaymentDetailDto parentDetailDto, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, booking.getAmountBalance() * -1, parentDetailDto, false, command.getInvoiceDto().getInvoiceDate()));
+        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, booking.getAmountBalance() * -1, parentDetailDto, false, command.getInvoiceDto().getInvoiceDate(), true));
         command.getMediator().send(new ApplyPaymentToCreditDetailCommand(message.getNewDetailDto().getId(), booking.getId()));
         return message.getNewDetailDto();
     }

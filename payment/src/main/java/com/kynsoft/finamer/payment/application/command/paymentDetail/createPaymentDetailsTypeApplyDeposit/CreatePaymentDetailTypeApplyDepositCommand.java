@@ -20,16 +20,18 @@ public class CreatePaymentDetailTypeApplyDepositCommand implements ICommand {
     private UUID id;
     private boolean applyPayment;
     private LocalDateTime invoiceDate;
+    private boolean createByCredit;
 
     private PaymentDetailDto newDetailDto;
 
-    public CreatePaymentDetailTypeApplyDepositCommand(PaymentDto payment, double amount, PaymentDetailDto parentDetailDto, boolean applyPayment, LocalDateTime invoiceDate) {
+    public CreatePaymentDetailTypeApplyDepositCommand(PaymentDto payment, double amount, PaymentDetailDto parentDetailDto, boolean applyPayment, LocalDateTime invoiceDate, boolean createByCredit) {
         this.payment = payment;
         this.amount = amount;
         this.parentDetailDto = parentDetailDto;
         this.id = UUID.randomUUID();
         this.applyPayment = applyPayment;
         this.invoiceDate = invoiceDate;
+        this.createByCredit = createByCredit;
     }
 
     @Override

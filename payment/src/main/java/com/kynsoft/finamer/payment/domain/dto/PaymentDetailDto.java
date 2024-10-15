@@ -41,6 +41,7 @@ public class PaymentDetailDto {
     private Boolean applayPayment;
     private Long reverseFrom;
     private boolean reverseTransaction;
+    private boolean createByCredit;//Para identificar cuando un Details fue creado por un proceso automatico de la HU154.
 
     public PaymentDetailDto(UUID id, Status status, PaymentDto payment, ManagePaymentTransactionTypeDto transactionType, Double amount, String remark, List<PaymentDetailDto> children, Double bookingId, String invoiceId, OffsetDateTime transactionDate, String firstName, String lastName, String reservation, String couponNo, Integer adults, Integer childrens, Boolean applayPayment) {
         this.id = id;
