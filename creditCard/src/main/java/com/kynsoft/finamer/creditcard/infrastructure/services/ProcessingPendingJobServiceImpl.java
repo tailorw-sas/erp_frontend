@@ -1,5 +1,8 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommand;
+import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommandMessage;
 import com.kynsoft.finamer.creditcard.domain.services.IProcessingPendingJobService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.CardnetJob;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.CardnetJobReadDataJPARepository;
@@ -14,17 +17,17 @@ import java.util.List;
 
 @Service
 public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobService {
-
     @Autowired
     private RestTemplate restTemplate; // Necesario para llamar a otro endpoint (Enpoint para verificar si se peude actualizar la transacción)
 
     @Autowired
     private CardnetJobReadDataJPARepository repositoryQuery;
 
+    private final IMediator mediator;
 
-    public ProcessingPendingJobServiceImpl(CardnetJobReadDataJPARepository repositoryQuery) {
-
+    public ProcessingPendingJobServiceImpl(CardnetJobReadDataJPARepository repositoryQuery, IMediator mediator) {
         this.repositoryQuery = repositoryQuery;
+        this.mediator = mediator;
     }
 
     @Scheduled(fixedRate = 600000)  // se ejecuta el método cada 600000 ms = 10 minutos
@@ -42,8 +45,10 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
         if (index < list.size()) {
             try {
                 // Acción a ejecutar en cada elemento
-                String url = "http://localhost:9094/api/processMerchantCardNetResponse/{id}";
-                restTemplate.getForEntity(url, String.class, list.get(index).getSession());
+                UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()
+                        .session(list.get(index).getSession())
+                        .build();
+                mediator.send(updateManageStatusTransactionCommandRequest);
             } catch (Exception e) {
                 // Manejo de la excepción, por ejemplo, registrar el error
                 System.err.println("Error al procesar el índice " + index + ": " + e.getMessage());
