@@ -34,6 +34,9 @@
 			<properties>
 				<env>dev</env>
 			</properties>
+			<build>
+				<finalName>audit-agent-dev</finalName>
+			</build>
 		</profile>
 		<profile>
 			<id>qa</id>
@@ -44,14 +47,15 @@
 				</property>
 			</activation>
 			<properties>
-				<env>dev</env>
+				<env>qa</env>
 			</properties>
+			<build>
+				<finalName>audit-agent-qa</finalName>
+			</build>
 		</profile>
 	</profiles>
 	
-	<build>
-		<finalName>${project.artifactId}-${env}</finalName>
-	</build>
+	<applicationName>${project.build.finalName}</applicationName>
 
     <dependencies>
 <!--        <dependency>-->
