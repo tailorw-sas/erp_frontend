@@ -107,6 +107,9 @@ public class Payment implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean paymentSupport;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean createByCredit;
+
     //@CreationTimestamp
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -145,6 +148,7 @@ public class Payment implements Serializable {
         this.eAttachment = dto.getEAttachment();
         this.applyPayment = dto.isApplyPayment();
         this.paymentSupport = dto.isPaymentSupport();
+        this.createByCredit = dto.isCreateByCredit();
     }
 
     public PaymentDto toAggregate() {
@@ -219,7 +223,8 @@ public class Payment implements Serializable {
                         }).collect(Collectors.toList()) : null,
                 eAttachment != null ? eAttachment : EAttachment.NONE,
                 applyPayment,
-                paymentSupport
+                paymentSupport,
+                createByCredit
         );
     }
 

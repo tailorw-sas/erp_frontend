@@ -50,6 +50,7 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
                 false
         );
 
+        newDetailDto.setCreateByCredit(command.isCreateByCredit());
         newDetailDto.setParentId(command.getParentDetailDto().getPaymentDetailId());
         this.paymentDetailService.create(newDetailDto);
 

@@ -19,14 +19,16 @@ public class CreatePaymentDetailTypeCashCommand implements ICommand {
     private double invoiceAmount;
     private LocalDateTime invoiceDate;
     private boolean applyPayment;
+    private boolean createByCredit;
 
-    public CreatePaymentDetailTypeCashCommand(PaymentDto paymentCash, UUID booking, double invoiceAmount, boolean applyPayment, LocalDateTime invoiceDate) {
+    public CreatePaymentDetailTypeCashCommand(PaymentDto paymentCash, UUID booking, double invoiceAmount, boolean applyPayment, LocalDateTime invoiceDate, boolean createByCredit) {
         this.id = UUID.randomUUID();
         this.paymentCash = paymentCash;
         this.booking = booking;
         this.invoiceAmount = invoiceAmount;
         this.applyPayment = applyPayment;
         this.invoiceDate = invoiceDate;
+        this.createByCredit = createByCredit;
     }
 
     @Override

@@ -48,6 +48,7 @@ public class CreatePaymentDetailTypeCashCommandHandler implements ICommandHandle
                 null,
                 false
         );
+        newDetailDto.setCreateByCredit(command.isCreateByCredit());
         this.paymentDetailService.create(newDetailDto);
         if (command.isApplyPayment()) {
             this.calculate(command.getPaymentCash(), command.getInvoiceAmount());

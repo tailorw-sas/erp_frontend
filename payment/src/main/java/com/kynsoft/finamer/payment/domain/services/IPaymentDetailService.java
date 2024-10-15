@@ -28,4 +28,6 @@ public interface IPaymentDetailService {
     List<UUID> bulk(List<PaymentDetailDto> toSave);
 
     PaymentDetailDto findByPaymentDetailId(Long paymentDetailId);
+
+    Long countByApplyPaymentAndPaymentId(UUID id);
 }

@@ -37,6 +37,7 @@ public class PaymentDetailResponse implements IResponse {
     private Boolean hasApplyDeposit;
     private Boolean applyPayment;
     private Long reverseFrom;
+    private boolean createByCredit;
     private ManageBookingResponse manageBooking;
 
     public PaymentDetailResponse(PaymentDetailDto dto) {
@@ -62,6 +63,7 @@ public class PaymentDetailResponse implements IResponse {
         this.manageBooking = dto.getManageBooking() != null ? new ManageBookingResponse(dto.getManageBooking()) : null;
         this.applyPayment = dto.getApplayPayment();
         this.reverseFrom = dto.getReverseFrom() != null ? dto.getReverseFrom() : null;
+        this.createByCredit = dto.isCreateByCredit();
     }
 
 }
