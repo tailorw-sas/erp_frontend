@@ -65,7 +65,9 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
             RulesChecker.checkRule(new ManageInvoiceValidateChangeAgencyRule(dto.getStatus()));
             this.updateAgency(dto::setAgency, command.getAgency(), dto.getAgency().getId(), update::setUpdate);
         }
-        if (!dto.getStatus().equals(EInvoiceStatus.CANCELED) && command.getStatus().equals(EInvoiceStatus.CANCELED)) {
+        ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findById(command.getInvoiceStatus());
+        //if (!dto.getStatus().equals(EInvoiceStatus.CANCELED) && command.getStatus().equals(EInvoiceStatus.CANCELED)) {
+        if (!dto.getStatus().equals(EInvoiceStatus.CANCELED) && invoiceStatusDto.isCanceledStatus()) {
             RulesChecker.checkRule(new ManageInvoiceValidateChangeStatusRule(dto.getStatus()));
             dto.setStatus(EInvoiceStatus.CANCELED);
             dto.setManageInvoiceStatus(this.invoiceStatusService.findByCanceledStatus());
