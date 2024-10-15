@@ -1971,7 +1971,7 @@ function onRowContextMenu(event: any) {
     }
   }
 
-  if (event && event.data && event.data.hasAttachment) {
+  if (event && event.data && event.data.hasAttachment && event.data.attachmentStatus.supported === false) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
