@@ -33,6 +33,7 @@ const dialogVisible = ref(props.openDialog)
 const loadingSaveAll = ref(false)
 const loadingDefaultMerchant = ref(false)
 const loadingDefaultLanguage = ref(false)
+const loadingDefaultCurrency = ref(false)
 const confApi = reactive({
   moduleApi: 'creditcard',
   uriApi: 'transactions/manual',
@@ -146,6 +147,13 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-6',
     validation: z.string().trim().email('Invalid email').or(z.string().length(0))
   },
+  {
+    field: 'merchantCurrency',
+    header: 'Merchant Currency',
+    dataType: 'select',
+    class: 'field col-12 md:col-6 required',
+    validation: validateEntityStatus('merchant currency'),
+  },
 ]
 
 const item = ref<GenericObject>({
@@ -161,6 +169,7 @@ const item = ref<GenericObject>({
   hotelContactEmail: '',
   guestName: '',
   email: '',
+  merchantCurrency: null
 })
 
 const itemTemp = ref<GenericObject>({
@@ -176,12 +185,14 @@ const itemTemp = ref<GenericObject>({
   hotelContactEmail: '',
   guestName: '',
   email: '',
+  merchantCurrency: null
 })
 
 const MerchantList = ref<any[]>([])
 const HotelList = ref<any[]>([])
 const AgencyList = ref<any[]>([])
 const LanguageList = ref<any[]>([])
+const CurrencyList = ref<any[]>([])
 
 const ENUM_METHOD_TYPE = [
   { id: 'POST', name: 'Post' },
@@ -263,6 +274,7 @@ async function save(item: { [key: string]: any }) {
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
     payload.methodType = typeof payload.methodType === 'object' ? payload.methodType.id : payload.methodType
+    payload.merchantCurrency = typeof payload.merchantCurrency === 'object' ? payload.merchantCurrency.id : payload.merchantCurrency
     delete payload.event
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
@@ -515,6 +527,65 @@ async function getLanguageByMerchantList(query: string, isDefault: boolean = fal
   }
 }
 
+async function getCurrencyByMerchantList(query: string, isDefault: boolean = false) {
+  try {
+    if (!item.value.merchant) {
+      return // No listar si no hay merchant seleccionado
+    }
+    if (isDefault) {
+      loadingDefaultCurrency.value = true
+    }
+    const payload = {
+      filter: [{
+        key: 'managerCurrency.code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'managerCurrency.name',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }, {
+        key: 'managerMerchant.id',
+        operator: 'EQUALS',
+        value: item.value.merchant.id,
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      sortBy: 'managerCurrency.code',
+      sortType: 'ASC',
+      pageSize: 20,
+      page: 0,
+    }
+    const response = await GenericService.search('settings', 'manage-merchant-currency', payload)
+    const { data: dataList } = response
+    CurrencyList.value = []
+
+    for (const iterator of dataList) {
+      CurrencyList.value = [...CurrencyList.value, { id: iterator.id, name: `${iterator.managerCurrency.code} - ${iterator.managerCurrency.name}`, status: iterator.status || 'ACTIVE' }]
+    }
+
+    if (isDefault && CurrencyList.value.length > 0) {
+      item.value.merchantCurrency = CurrencyList.value[0]
+      formReload.value += 1
+    }
+  }
+  catch (error) {
+    console.error('Error loading currency list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultCurrency.value = false
+    }
+  }
+}
+
 function saveSubmit(event: Event) {
   forceSave.value = true
   submitEvent = event
@@ -553,6 +624,7 @@ watch(() => props.openDialog, async (newValue) => {
     handleMethodTypeChange('')
     await getMerchantList('', true)
     getLanguageByMerchantList('', true)
+    getCurrencyByMerchantList('', true)
     // getHotelList('')
   }
 })
@@ -598,6 +670,7 @@ watch(() => props.openDialog, async (newValue) => {
                 onUpdate('language', null)
               }
               getLanguageByMerchantList('', true)
+              getCurrencyByMerchantList('', true)
             }"
             @load="($event) => getMerchantList($event)"
           />
@@ -663,6 +736,22 @@ watch(() => props.openDialog, async (newValue) => {
               onUpdate('language', $event)
             }"
             @load="($event) => getLanguageByMerchantList($event)"
+          />
+          <Skeleton v-else height="2rem" class="" />
+        </template>
+        <template #field-merchantCurrency="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingDefaultCurrency && !loadingSaveAll"
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :disabled="CurrencyList.length === 1 && data.merchantCurrency"
+            :model="data.merchantCurrency"
+            :suggestions="CurrencyList"
+            @change="($event) => {
+              onUpdate('merchantCurrency', $event)
+            }"
+            @load="($event) => getCurrencyByMerchantList($event)"
           />
           <Skeleton v-else height="2rem" class="" />
         </template>
