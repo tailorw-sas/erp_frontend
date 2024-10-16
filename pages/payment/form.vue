@@ -878,6 +878,18 @@ function navigateToInvoice($event: any) {
       const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id}`
       window.open(url, '_blank')
     }
+    else {
+      if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
+        const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
+        window.open(url, '_blank')
+      }
+    }
+  }
+  else {
+    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
+      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
+      window.open(url, '_blank')
+    }
   }
 }
 
