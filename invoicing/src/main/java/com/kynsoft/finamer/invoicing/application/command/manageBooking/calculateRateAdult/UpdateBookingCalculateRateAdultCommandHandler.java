@@ -1,7 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateRateAdult;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,7 +14,8 @@ public class UpdateBookingCalculateRateAdultCommandHandler implements ICommandHa
     public void handle(UpdateBookingCalculateRateAdultCommand command) {
 
         double total = command.getBookingDto().getRoomRates().stream()
-                .mapToDouble(ManageRoomRateDto::getRateAdult)
+                .mapToDouble(rate -> Optional.ofNullable(rate.getRateAdult())
+                .orElse(0.0))
                 .sum();
         command.getBookingDto().setRateAdult(total);
     }
