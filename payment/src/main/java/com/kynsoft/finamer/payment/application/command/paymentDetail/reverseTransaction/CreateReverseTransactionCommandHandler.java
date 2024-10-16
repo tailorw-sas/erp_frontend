@@ -68,6 +68,8 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         } else if (paymentDetailDto.getTransactionType().getCash()) {
             this.calculateReverseCash(reverseFrom.getPayment(), reverseFrom.getAmount());
             paymentDetailDto.setTransactionDate(null);
+        } else {
+            this.calculateReverseOtherDeductions(reverseFrom.getPayment(), reverseFrom.getAmount());
         }
 
         ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
@@ -93,6 +95,12 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
         paymentDto.setIdentified(paymentDto.getIdentified() + newDetailDto.getAmount());
         paymentDto.setNotIdentified(paymentDto.getPaymentAmount() - paymentDto.getIdentified());
+
+        this.paymentService.update(paymentDto);
+    }
+
+    private void calculateReverseOtherDeductions(PaymentDto paymentDto, double amount) {
+        paymentDto.setOtherDeductions(paymentDto.getOtherDeductions() + amount);
 
         this.paymentService.update(paymentDto);
     }
