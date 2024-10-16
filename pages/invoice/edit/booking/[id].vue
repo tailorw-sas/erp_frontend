@@ -942,6 +942,7 @@ async function updateItemByRef(item: { [key: string]: any }) {
   payload.roomCategory = item.roomCategory ? item.roomCategory.id : null
 
   await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
+  onSaveButtonByRef.value = false
 }
 
 async function deleteItem(id: string) {
