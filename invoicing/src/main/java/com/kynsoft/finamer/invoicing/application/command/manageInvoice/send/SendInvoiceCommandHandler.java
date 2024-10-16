@@ -111,11 +111,14 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                                 EInvoiceStatus.SENT
                         )
                 );
-            }if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
+                this.service.update(manageInvoiceDto);
+            }
+            else if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
                 manageInvoiceDto.setReSend(true);
                 manageInvoiceDto.setReSendDate(LocalDate.now());
+                this.service.update(manageInvoiceDto);
             }
-            this.service.update(manageInvoiceDto);
+
         }
     }
 
