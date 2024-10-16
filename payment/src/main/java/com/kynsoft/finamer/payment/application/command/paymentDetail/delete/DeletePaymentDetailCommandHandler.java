@@ -71,8 +71,8 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             if (!delete.isReverseTransaction()) {
                 UpdateIfNotNull.updateDouble(update::setOtherDeductions, update.getOtherDeductions() - delete.getAmount(), updatePayment::setUpdate);
                 update.setApplyPayment(this.service.countByApplyPaymentAndPaymentId(update.getId()) > 0);
-                service.delete(delete);
             }
+            service.delete(delete);
         }
 
         //Deposit Amount and Deposit Balance
@@ -87,8 +87,8 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
                 UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() - delete.getAmount(), updatePayment::setUpdate);
                 update.setPaymentStatus(this.statusService.findByConfirmed());
                 update.setApplyPayment(this.service.countByApplyPaymentAndPaymentId(update.getId()) > 0);
-                service.delete(delete);
             }
+            service.delete(delete);
         }
 
         if (delete.getTransactionType().getApplyDeposit()) {
@@ -114,7 +114,6 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             parent.setApplyDepositValue(parent.getApplyDepositValue() + delete.getAmount());
             this.service.update(parent);
             this.service.delete(delete);
-            //service.delete(delete);
         }
 
         paymentService.update(update);
