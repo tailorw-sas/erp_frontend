@@ -22,6 +22,8 @@ const { data: userData } = useAuth()
 const forceSave = ref(false)
 const forceUpdate = ref(false)
 const active = ref(0)
+const saveButton = ref(null)
+const onSaveButtonByRef = ref(false)
 
 const route = useRoute()
 
@@ -743,35 +745,6 @@ async function getAgencyList(query = '') {
   }
 }
 
-async function getInvoiceTypeList() {
-  try {
-    const payload
-      = {
-        filter: [],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    const response = await GenericService.search(confinvoiceTypeListtApi.moduleApi, confinvoiceTypeListtApi.uriApi, payload)
-    const { data: dataList } = response
-    invoiceTypeList.value = []
-    for (const iterator of dataList) {
-      invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
-
-function refetchInvoice() {
-  getInvoiceAmountById(route.params.id as string)
-  update()
-}
-
 function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
@@ -946,6 +919,31 @@ async function updateItem(item: { [key: string]: any }) {
   navigateTo('/invoice')
 }
 
+async function updateItemByRef(item: { [key: string]: any }) {
+  loadingSaveAll.value = true
+  const payload: { [key: string]: any } = {}
+
+  payload.id = route.params.id
+  payload.hotelCreationDate = dayjs(item.hotelCreationDate).toISOString()
+  payload.bookingDate = dayjs(item.bookingDate).toISOString()
+  payload.hotelBookingNumber = item.hotelBookingNumber
+  payload.fullName = `${item.firstName} ${item.lastName}`
+  payload.firstName = item.firstName
+  payload.lastName = item.lastName
+  payload.roomNumber = item.roomNumber
+  payload.couponNumber = item.couponNumber
+  payload.hotelInvoiceNumber = item.hotelInvoiceNumber
+  payload.folioNumber = item.folioNumber
+  payload.description = item.description
+  payload.contract = item.contract
+  payload.ratePlan = item.ratePlan ? item.ratePlan.id : null
+  payload.nightType = item.nightType ? item.nightType.id : null
+  payload.roomType = item.roomType ? item.roomType.id : null
+  payload.roomCategory = item.roomCategory ? item.roomCategory.id : null
+
+  await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
+}
+
 async function deleteItem(id: string) {
   try {
     loadingDelete.value = true
@@ -994,21 +992,27 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  if (onSaveButtonByRef.value === false) {
+    const { event } = item
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        saveItem(item)
+      },
+      reject: () => {
+        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+      }
+    })
+  }
+  else {
+    updateItemByRef(item)
+    // saveItem(item)
+  }
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -1126,12 +1130,6 @@ function clearFormAdjustment() {
 async function onCellEditRoomRate(event: any) {
   const { data, newValue, field, newData } = event
 
-  console.log('--------------------------------------------------------')
-
-  console.log('event', event)
-
-  console.log('--------------------------------------------------------')
-
   if (data[field] === newValue) { return }
 
   if (field === 'hotelAmount') {
@@ -1171,8 +1169,18 @@ async function onCellEditRoomRate(event: any) {
     id: newData.id
   }
   try {
+<<<<<<< HEAD
     await updateRoomRate(payload)
     // await updateItem(item.value)
+=======
+    data[field] = newValue
+    item.value[field] = newValue
+    await updateRoomRate(payload)
+    onSaveButtonByRef.value = true
+    if (saveButton.value) {
+      saveButton.value.$el.click()
+    }
+>>>>>>> 123c13a (Se ha corregido que cuando se edita un booking y se cambia los valores de los room rate y los rate plan y luego se edita el hotel amount se pierden los datos que se seleccionaron arriba.)
     reloadBookingItem(idItem.value)
   }
   catch (error: any) {
@@ -1718,6 +1726,8 @@ onMounted(async () => {
     getRoomRateList()
     getAdjustmentList()
   }
+
+  // saveButton.value.$el.click()
 })
 </script>
 
@@ -1749,9 +1759,11 @@ onMounted(async () => {
               onUpdate('hotelCreationDate', $event)
             }"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText
+            v-if="!loadingSaveAll"
             v-model="data.invoiceAmount"
             show-clear
             :disabled="!!item2?.id && route.query.type !== InvoiceType.CREDIT"
@@ -1766,14 +1778,17 @@ onMounted(async () => {
               onUpdate('invoiceAmount', String(value))
             }"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-hotelAmount="{ onUpdate, item: data, fields, field }">
           <InputText
+            v-if="!loadingSaveAll"
             v-model="data.hotelAmount"
             show-clear
             :disabled="fields.find((f) => f.field === field)?.disabled"
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-checkIn="{ item: data, onUpdate, fields, field }">
           <Calendar
@@ -1786,6 +1801,7 @@ onMounted(async () => {
               onUpdate('checkIn', $event)
             }"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-checkOut="{ item: data, onUpdate, fields, field }">
           <Calendar
@@ -1798,6 +1814,7 @@ onMounted(async () => {
               onUpdate('checkOut', $event)
             }"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-ratePlan="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
@@ -1816,6 +1833,7 @@ onMounted(async () => {
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
             </template>
           </DebouncedAutoCompleteComponent>
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-roomCategory="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
@@ -1828,6 +1846,7 @@ onMounted(async () => {
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
             </template>
           </DebouncedAutoCompleteComponent>
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-bookingDate="{ item: data, onUpdate }">
           <Calendar
@@ -1839,6 +1858,7 @@ onMounted(async () => {
               onUpdate('bookingDate', $event)
             }"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-roomType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
@@ -1851,6 +1871,7 @@ onMounted(async () => {
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
             </template>
           </DebouncedAutoCompleteComponent>
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
         <!-- <template #header-nightType="{ field }">
@@ -1877,6 +1898,7 @@ onMounted(async () => {
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
             </template>
           </DebouncedAutoCompleteComponent>
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #form-footer="props">
           <div class="grid w-full p-0 m-0">
@@ -1999,6 +2021,7 @@ onMounted(async () => {
             </div>
             <div class="col-12 flex justify-content-end">
               <Button
+                ref="saveButton"
                 v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
                 @click="props.item.submitForm($event)"
               />
