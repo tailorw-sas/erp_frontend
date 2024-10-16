@@ -7,28 +7,25 @@ import com.kynsoft.finamer.settings.domain.services.IManageVCCTransactionTypeSer
 
 import java.util.UUID;
 
-public class ManageVCCTransactionTypeCodeMustBeUniqueRule extends BusinessRule {
+public class ManageVCCTransactionTypeIsDefaultMustBeUniqueRule extends BusinessRule {
 
     private final IManageVCCTransactionTypeService service;
 
-    private final String code;
-
     private final UUID id;
 
-    public ManageVCCTransactionTypeCodeMustBeUniqueRule(IManageVCCTransactionTypeService service,
-            String code, UUID id) {
+    public ManageVCCTransactionTypeIsDefaultMustBeUniqueRule(IManageVCCTransactionTypeService service,
+                                                             UUID id) {
         super(
-                DomainErrorMessage.ITEM_ALREADY_EXITS,
-                new ErrorField("code", DomainErrorMessage.ITEM_ALREADY_EXITS.getReasonPhrase())
+                DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_CHECK_DEFAULT,
+                new ErrorField("isDefault", DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_CHECK_DEFAULT.getReasonPhrase())
         );
         this.service = service;
-        this.code = code;
         this.id = id;
     }
 
     @Override
     public boolean isBroken() {
-        return this.service.countByCodeAndNotId(code, id) > 0;
+        return this.service.countByIsDefaultsAndNotId(id) > 0;
     }
 
 }

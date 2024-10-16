@@ -16,4 +16,5 @@ public class ReplicateManageVCCTransactionTypeKafka {
     private UUID id;
     private String code;
     private String name;
+    private Boolean isDefault;
 }

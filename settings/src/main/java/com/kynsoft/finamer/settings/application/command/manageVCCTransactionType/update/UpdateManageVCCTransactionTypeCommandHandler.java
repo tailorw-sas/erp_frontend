@@ -8,6 +8,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeIsDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageVCCTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerUpdateManageVCCTransactionTypeService;
 import org.springframework.stereotype.Component;
@@ -30,7 +31,9 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
     public void handle(UpdateManageVCCTransactionTypeCommand command) {
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Module ID cannot be null."));
-
+        if(command.getIsDefault()) {
+            RulesChecker.checkRule(new ManageVCCTransactionTypeIsDefaultMustBeUniqueRule(service, command.getId()));
+        }
         ManageVCCTransactionTypeDto dto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -52,7 +55,7 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageVCCTransactionTypeService.update(new UpdateManageVCCTransactionTypeKafka(dto.getId(), dto.getName()));
+            this.producerUpdateManageVCCTransactionTypeService.update(new UpdateManageVCCTransactionTypeKafka(dto.getId(), dto.getName(), dto.getIsDefault()));
         }
     }
 
