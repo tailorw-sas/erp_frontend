@@ -195,6 +195,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             bookingDto.setRatePlan(ratePlanDto);
             bookingDto.setRoomType(roomTypeDto);
             bookingDto.setId(UUID.randomUUID());
+            bookingDto.setHotelCreationDate(DateUtil.parseDateToDateTime(bookingRow.getTransactionDate()));
             bookingDto.setRoomRates(List.of(createRoomRateDto(bookingRow)));
             return bookingDto;
         }).toList();
