@@ -34,14 +34,12 @@
 				</property>
 				<activeByDefault>true</activeByDefault>
 			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>com.kynsoft.finamer</groupId>
-						<artifactId>audit-agent-dev</artifactId>
-					</plugin>
-				</plugins>
-			</build>
+			<dependencies>
+				<dependency>
+					<groupId>com.kynsoft.finamer</groupId>
+					<artifactId>audit-agent-dev</artifactId>
+				</dependency>
+			</dependencies>
 		</profile>
 		<profile>
 			<id>qa</id>
@@ -51,14 +49,12 @@
 					<value>qa</value>
 				</property>
 			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>com.kynsoft.finamer</groupId>
-						<artifactId>audit-agent-qa</artifactId>
-					</plugin>
-				</plugins>
-			</build>
+			<dependencies>
+				<dependency>
+					<groupId>com.kynsoft.finamer</groupId>
+					<artifactId>audit-agent-qa</artifactId>
+				</dependency>
+			</dependencies>
 		</profile>
 	</profiles>
 	
