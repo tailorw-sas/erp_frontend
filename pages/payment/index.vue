@@ -2612,6 +2612,10 @@ function isRowSelectable(rowData: any) {
   return rowData.applyDepositValue > 0
 }
 
+function onRowSelectAll(event: any) {
+  paymentDetailsTypeDepositSelected.value = event.filter(item => item.applyDepositValue > 0)
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -3259,7 +3263,6 @@ onMounted(async () => {
           <BlockUI v-if="objItemSelectedForRightClickApplyPayment?.hasDetailTypeDeposit" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
             <DataTable
               v-model:selection="paymentDetailsTypeDepositSelected"
-              :selectable-rows="isRowSelectable"
               :value="paymentDetailsTypeDepositList"
               striped-rows
               show-gridlines
@@ -3267,9 +3270,8 @@ onMounted(async () => {
               data-key="id"
               selection-mode="multiple"
               style="background-color: #F5F5F5;"
+              @update:selection="onRowSelectAll"
             >
-              <!-- @update:selection="onSelectionChange($event)" -->
-              <!-- @selection-change="onSelectionChange" -->
               <Column selection-mode="multiple" header-style="width: 3rem" />
               <Column v-for="column of columnsPaymentDetailTypeDeposit" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
               <template #empty>
@@ -3288,6 +3290,7 @@ onMounted(async () => {
                 </div>
               </template>
             </DataTable>
+            <pre>{{ paymentDetailsTypeDepositSelected }}</pre>
           </BlockUI>
 
           <DynamicTable
