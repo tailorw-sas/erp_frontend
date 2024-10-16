@@ -17,6 +17,7 @@ import com.kynsoft.finamer.payment.application.command.shareFile.update.UpdatePa
 import com.kynsoft.finamer.payment.application.query.manageAgency.search.GetSearchAgencyQuery;
 import com.kynsoft.finamer.payment.application.query.objectResponse.AttachmentTypeResponse;
 import com.kynsoft.finamer.payment.application.query.shareFile.getById.FindPaymentShareFileByIdQuery;
+import com.kynsoft.finamer.payment.application.query.shareFile.search.GetShareFileQuery;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EImportPaymentType;
 import org.aspectj.bridge.IMessage;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -46,7 +47,7 @@ public class SharedFileController {
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchAgencyQuery query = new GetSearchAgencyQuery(pageable, request.getFilter(), request.getQuery());
+        GetShareFileQuery query = new GetShareFileQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
