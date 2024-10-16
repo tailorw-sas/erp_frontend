@@ -16,6 +16,7 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
+    private Boolean isDefault;
 
     @Override
     public ICommandMessage getMessage() {
