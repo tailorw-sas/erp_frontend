@@ -1169,10 +1169,6 @@ async function onCellEditRoomRate(event: any) {
     id: newData.id
   }
   try {
-<<<<<<< HEAD
-    await updateRoomRate(payload)
-    // await updateItem(item.value)
-=======
     data[field] = newValue
     item.value[field] = newValue
     await updateRoomRate(payload)
@@ -1180,7 +1176,6 @@ async function onCellEditRoomRate(event: any) {
     if (saveButton.value) {
       saveButton.value.$el.click()
     }
->>>>>>> 123c13a (Se ha corregido que cuando se edita un booking y se cambia los valores de los room rate y los rate plan y luego se edita el hotel amount se pierden los datos que se seleccionaron arriba.)
     reloadBookingItem(idItem.value)
   }
   catch (error: any) {
