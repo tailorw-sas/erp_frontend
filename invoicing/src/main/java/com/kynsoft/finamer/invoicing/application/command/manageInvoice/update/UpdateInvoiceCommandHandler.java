@@ -67,9 +67,6 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         }
         if (command.getInvoiceStatus() != null) {
 
-            System.err.println("###############################################################################################################################");
-            System.err.println("LLEGO AQUI");
-            System.err.println("###############################################################################################################################");
             ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findById(command.getInvoiceStatus());
             //if (!dto.getStatus().equals(EInvoiceStatus.CANCELED) && command.getStatus().equals(EInvoiceStatus.CANCELED)) {
             if (!dto.getStatus().equals(EInvoiceStatus.CANCELED) && invoiceStatusDto.isCanceledStatus()) {
