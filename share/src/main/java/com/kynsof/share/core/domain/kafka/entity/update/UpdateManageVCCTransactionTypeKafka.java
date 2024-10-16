@@ -15,4 +15,5 @@ public class UpdateManageVCCTransactionTypeKafka {
 
     private UUID id;
     private String name;
+    private Boolean isDefault;
 }

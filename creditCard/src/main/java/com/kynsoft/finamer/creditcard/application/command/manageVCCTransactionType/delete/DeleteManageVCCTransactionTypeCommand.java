@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.manageVCCTransactionType.update;
+package com.kynsoft.finamer.creditcard.application.command.manageVCCTransactionType.delete;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
@@ -11,14 +11,12 @@ import java.util.UUID;
 @Getter
 @Setter
 @AllArgsConstructor
-public class UpdateManageVCCTransactionTypeCommand implements ICommand {
+public class DeleteManageVCCTransactionTypeCommand implements ICommand {
 
     private UUID id;
-    private String name;
-    private Boolean isDefault;
 
     @Override
     public ICommandMessage getMessage() {
-        return new UpdateManageVCCTransactionTypeMessage(id);
+        return new DeleteManageVCCTransactionTypeMessage(id);
     }
 }

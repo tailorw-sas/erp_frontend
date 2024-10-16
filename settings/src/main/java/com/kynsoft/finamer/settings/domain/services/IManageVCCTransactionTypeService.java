@@ -23,4 +23,6 @@ public interface IManageVCCTransactionTypeService {
     Long countByCodeAndNotId(String code, UUID id);
 
     List<ManageVCCTransactionTypeDto> findAllToReplicate();
+
+    Long countByIsDefaultsAndNotId(UUID id);
 }

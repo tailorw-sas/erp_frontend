@@ -93,14 +93,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
         ManageCreditCardTypeDto creditCardTypeDto = null;
 
-        ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
-        if (Objects.isNull(parameterizationDto)) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "No active parameterization")));
-        }
-
         ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.SENT);
-        ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionCategory());
-        ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findByCode(parameterizationDto.getTransactionSubCategory());
+        ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByIsDefault();
 
         if (command.getMethodType().compareTo(MethodType.LINK) == 0) {
             RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getGuestName(), "gestName", "Guest name cannot be null."));
@@ -135,7 +129,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 transactionStatusDto,
                 null,
                 transactionCategory,
-                transactionSubCategory,
+                null,
                 netAmount,
                 true,
                 merchantCurrencyDto

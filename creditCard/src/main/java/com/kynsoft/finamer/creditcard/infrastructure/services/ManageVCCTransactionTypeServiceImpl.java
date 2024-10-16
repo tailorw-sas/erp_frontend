@@ -48,11 +48,9 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
 
     @Override
     public void delete(ManageVCCTransactionTypeDto dto) {
-        try {
-            this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
-        }
+        ManageVCCTransactionType type = new ManageVCCTransactionType(dto);
+        type.setIsDefault(false);
+        repositoryCommand.save(type);
     }
 
     @Override
@@ -90,6 +88,11 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
             return userSystem.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Transaction Type not found.")));
+    }
+
+    @Override
+    public ManageVCCTransactionTypeDto findByIsDefault() {
+        return this.repositoryQuery.findByIsDefault().map(ManageVCCTransactionType::toAggregate).orElse(null);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageVCCTransactionType> data) {
