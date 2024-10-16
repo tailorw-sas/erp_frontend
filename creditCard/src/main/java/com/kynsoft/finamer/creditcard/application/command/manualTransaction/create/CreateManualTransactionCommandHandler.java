@@ -53,7 +53,9 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
     private final IManageMerchantConfigService merchantConfigService;
 
-    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService, TokenService tokenService, MailService mailService, IManageMerchantConfigService merchantConfigService) {
+    private final IManagerMerchantCurrencyService merchantCurrencyService;
+
+    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService, TokenService tokenService, MailService mailService, IManageMerchantConfigService merchantConfigService, IManagerMerchantCurrencyService merchantCurrencyService) {
         this.service = service;
         this.merchantService = merchantService;
         this.hotelService = hotelService;
@@ -68,6 +70,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         this.tokenService = tokenService;
         this.mailService = mailService;
         this.merchantConfigService = merchantConfigService;
+        this.merchantCurrencyService = merchantCurrencyService;
     }
 
     @Override
@@ -83,6 +86,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageLanguageDto languageDto = this.languageService.findById(command.getLanguage());
+        ManagerMerchantCurrencyDto merchantCurrencyDto = this.merchantCurrencyService.findById(command.getMerchantCurrency());
 
 //        RulesChecker.checkRule(new ManualTransactionAgencyBookingFormatRule(agencyDto.getBookingCouponFormat()));
 //        RulesChecker.checkRule(new ManualTransactionReservationNumberRule(command.getReservationNumber(), agencyDto.getBookingCouponFormat()));
@@ -133,7 +137,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 transactionCategory,
                 transactionSubCategory,
                 netAmount,
-                true
+                true,
+                merchantCurrencyDto
         ));
         command.setId(id);
 
