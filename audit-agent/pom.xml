@@ -30,7 +30,7 @@
 					<name>env</name>
 					<value>dev</value>
 				</property>
-				<activateByDefault>true</activateByDefault>
+				<activeByDefault>true</activeByDefault>
 			</activation>
 			<properties>
 				<packaging.artifactId>audit-agent-dev</packaging.artifactId>
