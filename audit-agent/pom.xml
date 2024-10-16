@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.kynsoft.finamer</groupId>
-    <artifactId>audit-agent</artifactId>
+    <artifactId>${packaging.artifactId}</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>audit-agent</name>
     <packaging>jar</packaging>
@@ -22,6 +22,56 @@
         <jsonwebtoken.version>0.11.5</jsonwebtoken.version>
     </properties>
 
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<activation>
+				<property>
+					<name>env</name>
+					<value>dev</value>
+				</property>
+				<activateByDefault>true</activateByDefault>
+			</activation>
+			<properties>
+				<packaging.artifactId>audit-agent-dev</packaging.artifactId>
+			</properties>
+		</profile>
+		<profile>
+			<id>qa</id>
+			<activation>
+				<property>
+					<name>env</name>
+					<value>qa</value>
+				</property>
+			</activation>
+			<properties>
+				<packaging.artifactId>audit-agent-qa</packaging.artifactId>
+			</properties>
+			
+		</profile>
+	</profiles>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+			
+			
+			
     <dependencies>
 <!--        <dependency>-->
 <!--            <groupId>com.kynsoft.finamer</groupId>-->
