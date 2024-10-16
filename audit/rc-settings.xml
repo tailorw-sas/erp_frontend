@@ -25,7 +25,7 @@
         <server>
             <id>github</id>
             <username>tailorwr</username>
-            <password></password>
+            <password>GIT_TOKEN</password>
         </server>
     </servers>
 </settings>
