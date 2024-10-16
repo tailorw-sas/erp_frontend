@@ -2608,6 +2608,10 @@ async function getTransactionTypeList(moduleApi: string, uriApi: string, queryOb
   transactionTypeList.value = await getDataList<DataListItemForOtherDeduction, ListItemForOtherDeduction>(moduleApi, uriApi, filter, queryObj, mapFunctionForTransactionType, short)
 }
 
+function isRowSelectable(rowData: any) {
+  return rowData.applyDepositValue > 0
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -3255,9 +3259,11 @@ onMounted(async () => {
           <BlockUI v-if="objItemSelectedForRightClickApplyPayment?.hasDetailTypeDeposit" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
             <DataTable
               v-model:selection="paymentDetailsTypeDepositSelected"
+              :selectable-rows="isRowSelectable"
               :value="paymentDetailsTypeDepositList"
               striped-rows
               show-gridlines
+              :row-class="(row) => isRowSelectable(row) ? 'p-selectable-row' : 'p-disabled p-text-disabled'"
               data-key="id"
               selection-mode="multiple"
               style="background-color: #F5F5F5;"
@@ -3818,6 +3824,9 @@ onMounted(async () => {
 .text-applied {
   background-color: #00b816;
   color: #fff;
+}
+.p-text-disabled {
+  color: #888888;
 }
 
 // :deep(.p-datatable-tbody) {
