@@ -7,8 +7,10 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMerchantCommissionResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantCommissionService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageMerchantCommission;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageMerchantCommissionWriteDataJPARepository;
@@ -107,4 +109,22 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND.getReasonPhrase())));
     }
+
+    @Override
+    public Double calculateCommission(double amount, UUID merchantId, UUID creditCardTypeId) {
+        List<ManageMerchantCommissionDto> merchantCommissionDtoList = findAllByMerchantAndCreditCardType(merchantId, creditCardTypeId);
+        double commission = 0;
+        if (!merchantCommissionDtoList.isEmpty()) {
+            ManageMerchantCommissionDto first = merchantCommissionDtoList.get(0);
+            if (first.getCalculationType() == CalculationType.PER) {
+                commission = (first.getCommission() / 100.0) * amount;
+                // Aplicar redondeo de banquero con dos decimales por ahora, despues la cantidad de decimales se toma de la config
+                commission = BankerRounding.round(commission, 2);
+            } else {
+                commission = first.getCommission();
+            }
+        }
+        return commission;
+    }
+
 }

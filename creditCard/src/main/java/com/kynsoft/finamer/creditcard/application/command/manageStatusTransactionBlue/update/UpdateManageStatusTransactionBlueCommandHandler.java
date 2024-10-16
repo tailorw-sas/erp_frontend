@@ -3,10 +3,7 @@ package com.kynsoft.finamer.creditcard.application.command.manageStatusTransacti
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
-import com.kynsoft.finamer.creditcard.infrastructure.services.CardNetJobServiceImpl;
-import com.kynsoft.finamer.creditcard.infrastructure.services.ManageCreditCardTypeServiceImpl;
-import com.kynsoft.finamer.creditcard.infrastructure.services.ManageTransactionStatusServiceImpl;
-import com.kynsoft.finamer.creditcard.infrastructure.services.TransactionPaymentLogsService;
+import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,13 +13,16 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
     private final ManageCreditCardTypeServiceImpl creditCardTypeService;
     private final ManageTransactionStatusServiceImpl transactionStatusService;
     private final TransactionPaymentLogsService transactionPaymentLogsService;
+    private final ManageMerchantCommissionServiceImpl merchantCommissionService;
     public UpdateManageStatusTransactionBlueCommandHandler(ITransactionService transactionService, ManageCreditCardTypeServiceImpl creditCardTypeService,
                                                            ManageTransactionStatusServiceImpl transactionStatusService,
-                                                           TransactionPaymentLogsService transactionPaymentLogsService){
+                                                           TransactionPaymentLogsService transactionPaymentLogsService,
+                                                           ManageMerchantCommissionServiceImpl merchantCommissionService) {
         this.transactionService = transactionService;
         this.creditCardTypeService = creditCardTypeService;
         this.transactionStatusService = transactionStatusService;
         this.transactionPaymentLogsService = transactionPaymentLogsService;
+        this.merchantCommissionService = merchantCommissionService;
     }
 
     @Override
@@ -31,12 +31,15 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(Character.getNumericValue(command.getRequest().getCardNumber().charAt(0)));
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(command.getRequest().getStatus());
         TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
-
+        double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId());
+        double netAmount = transactionDto.getAmount() - commission;
 
         //Comenzar a actualizar lo referente a la transaccion en las diferntes tablas
         //1- Actualizar data in vcc_transaction
         transactionDto.setCardNumber(command.getRequest().getCardNumber());
         transactionDto.setCreditCardType(creditCardTypeDto);
+        transactionDto.setCommission(commission);
+        transactionDto.setNetAmount(netAmount);
         transactionDto.setStatus(transactionStatusDto);
         this.transactionService.update(transactionDto);
 
