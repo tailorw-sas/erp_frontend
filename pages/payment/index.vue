@@ -1955,7 +1955,7 @@ function onRowContextMenu(event: any) {
   }
   objItemSelectedForRightClickApplyPayment.value = event.data
   objItemSelectedForRightClickPaymentWithOrNotAttachment.value = event.data
-  if (event && event.data && (event.data.notApplied !== '' || event.data.notApplied !== null) && event.data.notApplied.replace(/,/g, '') > 0 && (event.data.paymentStatus && event.data.paymentStatus.code !== 'CAN')) {
+  if (event && event.data && ((event.data.notApplied !== '' || event.data.notApplied !== null && event.data.notApplied.replace(/,/g, '') > 0) || (event.data.depositBalance !== '' || event.data.depositBalance !== null && event.data.depositBalance.replace(/,/g, '') > 0)) && (event.data.paymentStatus && event.data.paymentStatus.code !== 'CAN')) {
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
       menuItemApplayPayment.disabled = false
