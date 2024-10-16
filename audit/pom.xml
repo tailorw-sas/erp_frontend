@@ -38,6 +38,7 @@
 				<dependency>
 					<groupId>com.kynsoft.finamer</groupId>
 					<artifactId>audit-agent-dev</artifactId>
+					<version>0.0.1-SNAPSHOT</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -53,6 +54,7 @@
 				<dependency>
 					<groupId>com.kynsoft.finamer</groupId>
 					<artifactId>audit-agent-qa</artifactId>
+					<version>0.0.1-SNAPSHOT</version>
 				</dependency>
 			</dependencies>
 		</profile>
