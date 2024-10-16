@@ -3290,7 +3290,6 @@ onMounted(async () => {
                 </div>
               </template>
             </DataTable>
-            <pre>{{ paymentDetailsTypeDepositSelected }}</pre>
           </BlockUI>
 
           <DynamicTable
