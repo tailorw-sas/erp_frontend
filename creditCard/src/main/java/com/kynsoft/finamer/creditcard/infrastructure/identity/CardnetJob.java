@@ -46,17 +46,21 @@ public class CardnetJob implements Serializable {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "number_of_attempts")
+    private Integer numberOfAttempts;
+
     public CardnetJob(CardnetJobDto dto) {
         this.id = dto.getId();
         this.transactionId = dto.getTransactionId();
         this.session = dto.getSession();
         this.sessionKey = dto.getSessionKey();
         this.isProcessed = dto.getIsProcessed();
+        this.numberOfAttempts = dto.getNumberOfAttempts();
 
     }
     public CardnetJobDto toAggregate(){
         return new CardnetJobDto(
-                id,transactionId, session, sessionKey, isProcessed
+                id,transactionId, session, sessionKey, isProcessed, numberOfAttempts
         );
     }
 }

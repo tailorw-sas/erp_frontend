@@ -11,13 +11,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-public class CardnetJobDto {
+public class CardnetProcessErrorLogDto {
 
-    private UUID id;
+    private Long id;
     private UUID transactionId;
     private String session;
-    private String sessionKey;
-    private Boolean isProcessed;
-    private Integer numberOfAttempts;
-
+    private String error;
 }
