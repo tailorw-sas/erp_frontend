@@ -23,4 +23,5 @@ public class CreateManualTransactionRequest {
     private String hotelContactEmail;
     private String guestName;
     private String email;
+    private UUID merchantCurrency;
 }

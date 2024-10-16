@@ -172,7 +172,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                         remarks,
                         employee,
                         transactionTypeIdForAdjustment);
-        ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand);
+        ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand,true);
         applicationEventPublisher.publishEvent(applyDepositEvent);
 
     }
