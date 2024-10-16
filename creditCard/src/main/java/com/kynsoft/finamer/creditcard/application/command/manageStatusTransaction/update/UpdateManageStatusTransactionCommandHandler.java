@@ -9,10 +9,7 @@ import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageStatusTransactionService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
-import com.kynsoft.finamer.creditcard.infrastructure.services.CardNetJobServiceImpl;
-import com.kynsoft.finamer.creditcard.infrastructure.services.ManageCreditCardTypeServiceImpl;
-import com.kynsoft.finamer.creditcard.infrastructure.services.ManageTransactionStatusServiceImpl;
-import com.kynsoft.finamer.creditcard.infrastructure.services.TransactionPaymentLogsService;
+import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
 import java.util.concurrent.CompletableFuture;
 
@@ -26,10 +23,11 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
     private final ManageTransactionStatusServiceImpl transactionStatusService;
     private final CardNetJobServiceImpl cardnetJobService;
     private final TransactionPaymentLogsService transactionPaymentLogsService;
+    private final ManageMerchantCommissionServiceImpl merchantCommissionService;
 
     public UpdateManageStatusTransactionCommandHandler(ITransactionService transactionService, IManageStatusTransactionService statusTransactionService, IManageMerchantConfigService merchantConfigService,
                                                        ManageCreditCardTypeServiceImpl creditCardTypeService, ManageTransactionStatusServiceImpl transactionStatusService, CardNetJobServiceImpl cardnetJobService,
-                                                       TransactionPaymentLogsService transactionPaymentLogsService) {
+                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService) {
 
         this.transactionService = transactionService;
         this.statusTransactionService = statusTransactionService;
@@ -38,6 +36,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
         this.transactionStatusService = transactionStatusService;
         this.cardnetJobService = cardnetJobService;
         this.transactionPaymentLogsService = transactionPaymentLogsService;
+        this.merchantCommissionService = merchantCommissionService;
     }
 
     @Override
@@ -64,6 +63,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(
                     Character.getNumericValue(transactionResponse.getCreditCardNumber().charAt(0))
             );
+            double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId());
 
             //Obtener estado de la transacción correspondiente dado el responseCode del merchant
             CardNetResponseStatus pairedStatus = CardNetResponseStatus.valueOfCode(transactionResponse.getResponseCode());
@@ -77,6 +77,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
 //            transactionDto.setReferenceNumber(transactionResponse.getRetrievalReferenceNumber());
             transactionDto.setCreditCardType(creditCardTypeDto);
             transactionDto.setStatus(transactionStatusDto);
+            transactionDto.setCommission(commission);
 
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);
