@@ -8,7 +8,6 @@ import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
-import com.kynsoft.finamer.creditcard.domain.dto.ParameterizationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.Objects;
 import java.util.UUID;
 
 @Component
@@ -77,11 +75,6 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
             }
         }
 
-
-        ParameterizationDto parameterizationDto = parameterizationService.findActiveParameterization();
-        if(Objects.isNull(parameterizationDto)){
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "No active parameterization")));
-        }
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus(ETransactionStatus.REFUND);
 
         Long id = this.service.create(new TransactionDto(
