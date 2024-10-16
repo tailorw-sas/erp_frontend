@@ -225,7 +225,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
 
             CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
             if(cardnetJobDto == null){
-                cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), sessionData.getSession().toString(), sessionData.getSessionKey().toString(), Boolean.FALSE);
+                cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), sessionData.getSession().toString(), sessionData.getSessionKey().toString(), Boolean.FALSE, 0);
                 cardNetJobService.create(cardnetJobDto);
             }
             else{
