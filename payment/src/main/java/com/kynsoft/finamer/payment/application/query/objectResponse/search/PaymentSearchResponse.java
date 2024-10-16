@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.query.objectResponse.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsof.share.utils.ScaleAmount;
+import com.kynsoft.finamer.payment.application.query.objectResponse.ManageHotelResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
@@ -30,7 +31,7 @@ public class PaymentSearchResponse implements IResponse {
     private ManagePaymentStatusSearchResponse paymentStatus;
     private ManageClientSearchResponse client;
     private ManageAgencySearchResponse agency;
-    private ManageHotelSearchResponse hotel;
+    private ManageHotelResponse hotel;
     private ManageBankAccountSearchResponse bankAccount;
     private ManagePaymentAttachmentStatusSearchResponse attachmentStatus;
 
@@ -61,7 +62,7 @@ public class PaymentSearchResponse implements IResponse {
         this.paymentStatus = dto.getPaymentStatus() != null ? new ManagePaymentStatusSearchResponse(dto.getPaymentStatus()) : null;
         this.client = dto.getClient() != null ? new ManageClientSearchResponse(dto.getClient()) : null;
         this.agency = dto.getAgency() != null ? new ManageAgencySearchResponse(dto.getAgency()) : null;
-        this.hotel = dto.getHotel() != null ? new ManageHotelSearchResponse(dto.getHotel()) : null;
+        this.hotel = dto.getHotel() != null ? new ManageHotelResponse(dto.getHotel()) : null;
         this.bankAccount = dto.getBankAccount() != null ? new ManageBankAccountSearchResponse(dto.getBankAccount()) : null;
         this.attachmentStatus = dto.getAttachmentStatus() != null ? new ManagePaymentAttachmentStatusSearchResponse(dto.getAttachmentStatus()) : null;
         this.paymentAmount = ScaleAmount.scaleAmount(dto.getPaymentAmount());
