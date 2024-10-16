@@ -64,6 +64,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
                     Character.getNumericValue(transactionResponse.getCreditCardNumber().charAt(0))
             );
             double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId());
+            double netAmount = transactionDto.getAmount() - commission;
 
             //Obtener estado de la transacción correspondiente dado el responseCode del merchant
             CardNetResponseStatus pairedStatus = CardNetResponseStatus.valueOfCode(transactionResponse.getResponseCode());
@@ -78,6 +79,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             transactionDto.setCreditCardType(creditCardTypeDto);
             transactionDto.setStatus(transactionStatusDto);
             transactionDto.setCommission(commission);
+            transactionDto.setNetAmount(netAmount);
 
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);

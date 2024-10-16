@@ -32,12 +32,14 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(command.getRequest().getStatus());
         TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
         double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId());
+        double netAmount = transactionDto.getAmount() - commission;
 
         //Comenzar a actualizar lo referente a la transaccion en las diferntes tablas
         //1- Actualizar data in vcc_transaction
         transactionDto.setCardNumber(command.getRequest().getCardNumber());
         transactionDto.setCreditCardType(creditCardTypeDto);
         transactionDto.setCommission(commission);
+        transactionDto.setNetAmount(netAmount);
         transactionDto.setStatus(transactionStatusDto);
         this.transactionService.update(transactionDto);
 
