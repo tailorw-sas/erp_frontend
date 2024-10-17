@@ -16,12 +16,16 @@ public class PaymentShareFileResponse implements IResponse {
     private final PaymentResponse payment;
     private final String fileName;
     private final String fileUrl;
+    private final int shareFileYear;
+    private final int shareFileMonth;
 
     public PaymentShareFileResponse(PaymentShareFileDto shareFile) {
         this.id = shareFile.getId();
         this.payment = new PaymentResponse(shareFile.getPayment());
         this.fileName = shareFile.getFileName();
         this.fileUrl = shareFile.getFileUrl();
+        this.shareFileYear = shareFile.getShareFileYear();
+        this.shareFileMonth = shareFile.getShareFileMonth();
     }
 
 }

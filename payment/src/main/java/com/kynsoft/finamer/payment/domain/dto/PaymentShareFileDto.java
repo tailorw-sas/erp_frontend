@@ -16,4 +16,13 @@ public class PaymentShareFileDto {
     private PaymentDto payment;
     private String fileName;
     private String fileUrl;
+    private int shareFileYear;
+    private int shareFileMonth;
+
+    public PaymentShareFileDto(UUID id, PaymentDto payment, String fileName, String fileUrl) {
+        this.id = id;
+        this.payment = payment;
+        this.fileName = fileName;
+        this.fileUrl = fileUrl;
+    }
 }
