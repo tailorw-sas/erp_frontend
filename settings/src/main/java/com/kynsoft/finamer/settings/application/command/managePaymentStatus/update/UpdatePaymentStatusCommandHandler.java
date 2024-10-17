@@ -38,6 +38,7 @@ public class UpdatePaymentStatusCommandHandler implements ICommandHandler<Update
         UpdateIfNotNull.updateBoolean(dto::setCollected, command.getCollected(), dto.getCollected(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setConfirmed, command.isConfirmed(), dto.isConfirmed(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setCancelled, command.isCancelled(), dto.isCancelled(), update::setUpdate);
         if (UpdateIfNotNull.updateBoolean(dto::setApplied, command.getApplied(), dto.getApplied(), update::setUpdate)) {
             RulesChecker.checkRule(new ManagePaymentStatusAppliedMustBeUniqueRule(service, command.getId()));
         }
@@ -46,7 +47,14 @@ public class UpdatePaymentStatusCommandHandler implements ICommandHandler<Update
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManagePaymentStatusService.update(new UpdateManagePaymentStatusKafka(dto.getId(), dto.getName(), command.getStatus().name(), command.getApplied(), command.isConfirmed()));
+            this.producerUpdateManagePaymentStatusService.update(new UpdateManagePaymentStatusKafka(
+                    dto.getId(), 
+                    dto.getName(), 
+                    command.getStatus().name(), 
+                    command.getApplied(), 
+                    command.isConfirmed(),
+                    command.isCancelled()
+            ));
         }
     }
 
