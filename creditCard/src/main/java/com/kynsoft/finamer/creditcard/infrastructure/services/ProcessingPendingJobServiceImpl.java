@@ -2,7 +2,6 @@ package com.kynsoft.finamer.creditcard.infrastructure.services;
 
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommand;
-import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommandMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.CardnetJobDto;
 import com.kynsoft.finamer.creditcard.domain.dto.CardnetProcessErrorLogDto;
 import com.kynsoft.finamer.creditcard.domain.services.IProcessingPendingJobService;
@@ -38,14 +37,18 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
     @Autowired
     private CardnetJobReadDataJPARepository repositoryQuery;
 
+    @Autowired
+    TransactionServiceImpl transactionService;
+
     private final IMediator mediator;
 
-    public ProcessingPendingJobServiceImpl(CardnetProcessErrorLogReadDataJPARepository repositoryCradentProcessErrorQuery,CardnetProcessErrorLogWriteDataJPARepository repositoryCradentProcessErrorCommand, CardNetJobServiceImpl cardnetJobService, CardnetJobReadDataJPARepository repositoryQuery, IMediator mediator) {
+    public ProcessingPendingJobServiceImpl(CardnetProcessErrorLogReadDataJPARepository repositoryCradentProcessErrorQuery,CardnetProcessErrorLogWriteDataJPARepository repositoryCradentProcessErrorCommand, CardNetJobServiceImpl cardnetJobService, CardnetJobReadDataJPARepository repositoryQuery, IMediator mediator, TransactionServiceImpl transactionService) {
         this.cardnetJobService = cardnetJobService;
         this.repositoryQuery = repositoryQuery;
         this.mediator = mediator;
         this.repositoryCradentProcessErrorCommand = repositoryCradentProcessErrorCommand;
         this.repositoryCradentProcessErrorQuery = repositoryCradentProcessErrorQuery;
+        this.transactionService = transactionService;
     }
 
     @Scheduled(fixedRate = 600000)  // se ejecuta el método cada 600000 ms = 10 minutos
@@ -77,6 +80,11 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
                 cardnetProcessErrorLogDto.setTransactionId(list.get(index).getTransactionId());
                 cardnetProcessErrorLogDto.setError("There is no mistake in this iteration");
                 createOrUpdate(cardnetProcessErrorLogDto);
+
+                //Verificamos que ya la transaccion este en estado RECIVIDO, si es TRUE mandamos el correo
+                if(transactionService.confirmCreateTransaction(list.get(index).getTransactionId())){
+                    transactionService.confirmTransactionMail(list.get(index).getTransactionId());
+                }
 
             } catch (Exception e) {
                 // Manejo de la excepción, por ejemplo, registrar el error

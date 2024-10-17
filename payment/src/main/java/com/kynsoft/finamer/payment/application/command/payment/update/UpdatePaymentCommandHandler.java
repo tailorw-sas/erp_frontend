@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.rules.payment.UpdatePaymentValidateChangeStatusRule;
 import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -64,7 +65,7 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
 
         this.updateDate(paymentDto::setTransactionDate, command.getTransactionDate(), paymentDto.getTransactionDate(), update::setUpdate);
         this.updateManagePaymentSource(paymentDto::setPaymentSource, command.getPaymentSource(), paymentDto.getPaymentSource().getId(), update::setUpdate);
-        this.updateManagePaymentStatus(paymentDto::setPaymentStatus, command.getPaymentStatus(), paymentDto.getPaymentStatus().getId(), update::setUpdate);
+        this.updateManagePaymentStatus(paymentDto::setPaymentStatus, command.getPaymentStatus(), paymentDto.getPaymentStatus().getId(), update::setUpdate, paymentDto);
         this.updateManageClient(paymentDto::setClient, command.getClient(), paymentDto.getClient().getId(), update::setUpdate);
         this.updateManageAgency(paymentDto::setAgency, command.getAgency(), paymentDto.getAgency().getId(), update::setUpdate);
         this.updateManageHotel(paymentDto::setHotel, command.getHotel(), paymentDto.getHotel().getId(), update::setUpdate);
@@ -88,9 +89,10 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
         return false;
     }
 
-    private boolean updateManagePaymentStatus(Consumer<ManagePaymentStatusDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+    private boolean updateManagePaymentStatus(Consumer<ManagePaymentStatusDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update, PaymentDto paymentDto) {
         if (newValue != null && !newValue.equals(oldValue)) {
             ManagePaymentStatusDto paymentStatusDto = this.statusService.findById(newValue);
+            RulesChecker.checkRule(new UpdatePaymentValidateChangeStatusRule(paymentDto.getPaymentStatus(), paymentStatusDto, paymentDto.isApplyPayment()));
             setter.accept(paymentStatusDto);
             update.accept(1);
 

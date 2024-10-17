@@ -29,4 +29,8 @@ public interface ITransactionService {
     boolean compareParentTransactionAmount(Long parentId, Double amount);
 
     Double findSumOfAmountByParentId(Long parentId);
+
+    boolean confirmCreateTransaction(UUID transactionUUID);
+
+    void confirmTransactionMail(UUID transactionUUID);
 }
