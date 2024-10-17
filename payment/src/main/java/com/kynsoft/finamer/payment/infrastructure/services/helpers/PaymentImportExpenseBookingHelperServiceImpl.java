@@ -190,9 +190,10 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         for (String clientName : availableClient) {
             do {
                 elements = cacheRepository.findAllByImportProcessIdAndClientName(importProcessId, clientName, pageable);
-                group.merge(clientName, elements.getContent(), (oldList, newList) -> {
-                    oldList.addAll(newList);
-                    return oldList;
+                group.merge(clientName,new ArrayList<>(elements.getContent()), (oldList, newList) -> {
+                    List<PaymentExpenseBookingImportCache> combinedList = new ArrayList<>(oldList); // Creamos una nueva lista mutable
+                    combinedList.addAll(newList);
+                    return combinedList;
                 });
                 pageable = pageable.next();
             } while (elements.hasNext());
