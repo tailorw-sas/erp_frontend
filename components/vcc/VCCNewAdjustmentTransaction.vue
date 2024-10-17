@@ -401,8 +401,16 @@ watch(() => props.openDialog, (newValue) => {
     v-model:visible="dialogVisible"
     modal
     header="New Adjustment Transaction"
-    class="w-8 md:w-6 lg:w-4 card p-0"
-    content-class="border-round-bottom border-top-1 surface-border pb-0"
+    :style="{ width: '50rem' }"
+    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+    }"
     @hide="onClose(true)"
   >
     <div class="mt-4 p-4">

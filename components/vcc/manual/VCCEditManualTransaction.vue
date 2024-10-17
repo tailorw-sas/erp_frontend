@@ -36,6 +36,7 @@ const confirm = useConfirm()
 const dialogVisible = ref(props.openDialog)
 const loadingSaveAll = ref(false)
 const loadingDefaultLanguage = ref(false)
+const idItem = ref('')
 const confApi = reactive({
   moduleApi: 'creditcard',
   uriApi: 'transactions/manual',
@@ -99,6 +100,7 @@ const fields: Array<FieldDefinitionType> = [
 ]
 
 const item = ref<GenericObject>({
+  id: '',
   agency: null,
   language: null,
   checkIn: '',
@@ -108,6 +110,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
+  id: '',
   agency: null,
   language: null,
   checkIn: '',
@@ -119,11 +122,6 @@ const itemTemp = ref<GenericObject>({
 const AgencyList = ref<any[]>([])
 const LanguageList = ref<any[]>([])
 
-async function getObjectValues($event: any) {
-  forceSave.value = false
-  item.value = $event
-}
-
 function onClose(isCancel: boolean) {
   dialogVisible.value = false
   emits('onCloseDialog', isCancel)
@@ -131,13 +129,12 @@ function onClose(isCancel: boolean) {
 
 function clearForm() {
   item.value = { ...itemTemp.value }
-
   formReload.value++
 }
 
 async function requireConfirmationToSave(item: any) {
   if (!useRuntimeConfig().public.showSaveConfirm) {
-    // await save(item)
+    await save(item)
   }
   else {
     confirm.require({
@@ -148,7 +145,7 @@ async function requireConfirmationToSave(item: any) {
       rejectLabel: 'Cancel',
       acceptLabel: 'Accept',
       accept: async () => {
-        // await save(item)
+        await save(item)
       },
       reject: () => {}
     })
@@ -159,16 +156,11 @@ async function save(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   try {
-    payload.merchant = typeof payload.merchant === 'object' ? payload.merchant.id : payload.merchant
-    payload.amount = Number(payload.amount)
     payload.checkIn = payload.checkIn ? dayjs(payload.checkIn).format('YYYY-MM-DD') : ''
-    payload.hotel = typeof payload.hotel === 'object' ? payload.hotel.id : payload.hotel
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
-    payload.methodType = typeof payload.methodType === 'object' ? payload.methodType.id : payload.methodType
-    payload.merchantCurrency = typeof payload.merchantCurrency === 'object' ? payload.merchantCurrency.id : payload.merchantCurrency
     delete payload.event
-    const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    const response: any = await GenericService.update(confApi.moduleApi, 'transactions', idItem.value, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
     item.id = response.id
     onClose(false)
@@ -183,15 +175,28 @@ async function save(item: { [key: string]: any }) {
 
 async function getItemById(id: string) {
   if (id) {
+    idItem.value = id
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, 'transactions', id)
       if (response) {
-        item.value.agency = response.agency
-        AgencyList.value = [response.agency]
-        item.value.language = response.language
-        LanguageList.value = [response.language]
-        item.value.checkIn = response.checkIn
+        const objAgency = {
+          id: response.agency.id,
+          name: `${response.agency.code} ${response.agency.name ? `- ${response.agency.name}` : ''}`,
+          status: response.agency.status || 'ACTIVE'
+        }
+        item.value.agency = objAgency
+        AgencyList.value = [objAgency]
+        const objLanguage = {
+          id: response.language.id,
+          name: `${response.language.code} ${response.language.name ? `- ${response.language.name}` : ''}`,
+          status: response.language.status || 'ACTIVE'
+        }
+        item.value.language = objLanguage
+        LanguageList.value = [objLanguage]
+        item.value.merchant = response.merchant
+        const viewDate2 = dayjs(response.checkIn, 'YYYY-MM-DD')
+        item.value.checkIn = viewDate2.toDate()
         item.value.reservationNumber = response.reservationNumber
         item.value.referenceNumber = response.referenceNumber
         item.value.hotelContactEmail = response.hotelContactEmail
@@ -363,9 +368,17 @@ watch(() => props.openDialog, async (newValue) => {
   <Dialog
     v-model:visible="dialogVisible"
     modal
-    header="New Manual Transaction"
-    class="w-10 lg:w-6 card p-0"
-    content-class="border-round-bottom border-top-1 surface-border pb-0"
+    header="Edit Manual Transaction"
+    :style="{ width: '50rem' }"
+    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+    }"
     @hide="onClose(true)"
   >
     <div class="mt-4 p-4">
@@ -378,7 +391,7 @@ watch(() => props.openDialog, async (newValue) => {
         :loading-save="loadingSaveAll"
         :force-save="forceSave"
         @force-save="forceSave = $event"
-        @submit="getObjectValues($event)"
+        @submit="requireConfirmationToSave($event)"
       >
         <template #field-agency="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
