@@ -48,5 +48,10 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         transactionPaymentLogsDto.setIsProcessed(true);
         this.transactionPaymentLogsService.update(transactionPaymentLogsDto);
 
+        //Verificamos que ya la transaccion este en estado RECIVIDO, si es TRUE mandamos el correo
+        if(transactionService.confirmCreateTransaction(transactionDto.getTransactionUuid())){
+            transactionService.confirmTransactionMail(transactionDto.getTransactionUuid());
+        }
+
     }
 }
