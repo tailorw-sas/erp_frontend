@@ -254,10 +254,9 @@ async function getList() {
       key: 'payment.id',
       logicalOperation: 'AND',
       operator: 'EQUALS',
-      value: externalProps.selectedPayment?.id || ''
+      value: externalProps.selectedPayment?.id
     })
-
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    const response = await GenericService.searchShareFile(options.value.moduleApi, options.value.uriApi, payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     Pagination.value.page = page
@@ -332,7 +331,7 @@ async function createItem(item: { [key: string]: any }) {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('paymentId', payload.paymentId)
-      formData.append('fileName', 'document.pdf')
+      formData.append('fileName', payload.fileName)
       await GenericService.sendFormData(options.value.moduleApi, options.value.uriApi, formData)
     }
   }
@@ -346,7 +345,7 @@ async function updateItem(item: { [key: string]: any }) {
   formData.append('file', file)
   formData.append('paymentId', payload.paymentId)
   formData.append('fileName', payload.fileName)
-  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
+  // await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
