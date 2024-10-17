@@ -683,7 +683,7 @@ const itemsMenuImport = ref([
 
 const itemsMenuSend = ref([
   {
-    label: 'By Ftp',
+    label: 'By FTP',
     command: () => navigateTo(`invoice/sendInvoice-ftp?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromFile
   },
