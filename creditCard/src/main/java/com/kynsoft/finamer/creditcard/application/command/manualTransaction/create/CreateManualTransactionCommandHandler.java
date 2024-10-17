@@ -132,7 +132,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 null,
                 netAmount,
                 true,
-                merchantCurrencyDto
+                merchantCurrencyDto,
+                true
         ));
         command.setId(id);
 

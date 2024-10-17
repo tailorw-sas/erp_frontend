@@ -101,7 +101,8 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
                 parentTransaction.getTransactionSubCategory(),
                 netAmount,
                 false,
-                parentTransaction.getMerchantCurrency()
+                parentTransaction.getMerchantCurrency(),
+                false
         ));
         command.setId(id);
         if(this.service.findSumOfAmountByParentId(parentTransaction.getId()) >= parentTransaction.getAmount()){

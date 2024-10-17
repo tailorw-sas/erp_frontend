@@ -32,6 +32,7 @@ public class TransactionSearchResponse implements IResponse {
     private Double netAmount;
     private Boolean permitRefund;
     private MethodType methodType;
+    private boolean manual;
 
     public TransactionSearchResponse(TransactionDto dto){
         this.id = dto.getId();
@@ -48,5 +49,6 @@ public class TransactionSearchResponse implements IResponse {
         this.netAmount = dto.getNetAmount();
         this.permitRefund = dto.getPermitRefund();
         this.methodType = dto.getMethodType();
+        this.manual = dto.isManual();
     }
 }

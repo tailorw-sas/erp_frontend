@@ -101,6 +101,9 @@ public class Transaction implements Serializable {
     @Column(name = "permit_refund")
     private Boolean permitRefund = true;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean manual;
+
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
         this.merchant = dto.getMerchant() != null ? new ManageMerchant(dto.getMerchant()) : null;
@@ -129,6 +132,7 @@ public class Transaction implements Serializable {
         }
         this.merchantCurrency = dto.getMerchantCurrency() != null ? new ManagerMerchantCurrency(dto.getMerchantCurrency()) : null;
         transactionUuid= dto.getTransactionUuid();
+        this.manual = dto.isManual();
     }
 
     private TransactionDto toAggregateParent() {
@@ -156,7 +160,8 @@ public class Transaction implements Serializable {
                 createdAt.toLocalDate(),
                 transactionCategory != null ? transactionCategory.toAggregate() : null,
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
-                netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null
+                netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null,
+                manual
         );
     }
 }
