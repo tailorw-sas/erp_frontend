@@ -34,9 +34,7 @@ public class ProducerAuditEventService {
 
     @Retryable(value = Exception.class, maxAttempts = 5, backoff = @Backoff(delay = 3000))
     public void send(AuditKafka auditKafka) {
-        Mono<String> userName=this.getAuthenticateUser();
         try {
-            auditKafka.setUsername("KIKI");
             auditKafka.setServiceName(serviceName);
             String json = objectMapper.writeValueAsString(auditKafka);
             this.producer.send("audit-topic", json);
@@ -46,11 +44,4 @@ public class ProducerAuditEventService {
 
     }
 
-    private Mono<String> getAuthenticateUser(){
-       Authentication authentication1= SecurityContextHolder.getContext().getAuthentication();
-       return ReactiveSecurityContextHolder.getContext().map(securityContext -> {
-            Authentication authentication = securityContext.getAuthentication();
-            return authentication.getName();
-        });
-    }
 }
