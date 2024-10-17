@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create;
+package com.kynsoft.finamer.creditcard.application.command.transaction.adjustment;
 
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import lombok.Getter;

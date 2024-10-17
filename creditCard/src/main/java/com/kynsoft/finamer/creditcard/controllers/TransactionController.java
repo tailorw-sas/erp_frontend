@@ -7,9 +7,9 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommandMessage;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommandRequest;
-import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionCommand;
-import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionMessage;
-import com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create.CreateAdjustmentTransactionRequest;
+import com.kynsoft.finamer.creditcard.application.command.transaction.adjustment.CreateAdjustmentTransactionCommand;
+import com.kynsoft.finamer.creditcard.application.command.transaction.adjustment.CreateAdjustmentTransactionMessage;
+import com.kynsoft.finamer.creditcard.application.command.transaction.adjustment.CreateAdjustmentTransactionRequest;
 import com.kynsoft.finamer.creditcard.application.command.manageRedirect.CreateRedirectCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageRedirect.CreateRedirectCommandMessage;
 import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransactionPayment.CreateRedirectTransactionPaymentCommand;
@@ -18,15 +18,18 @@ import com.kynsoft.finamer.creditcard.application.command.manageRedirectTransact
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransactionBlue.update.UpdateManageStatusTransactionBlueCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransactionBlue.update.UpdateManageStatusTransactionBlueCommandMessage;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransactionBlue.update.UpdateManageStatusTransactionBlueCommandRequest;
-import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionCommand;
-import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionMessage;
-import com.kynsoft.finamer.creditcard.application.command.manualTransaction.create.CreateManualTransactionRequest;
-import com.kynsoft.finamer.creditcard.application.command.refundTransaction.create.CreateRefundTransactionCommand;
-import com.kynsoft.finamer.creditcard.application.command.refundTransaction.create.CreateRefundTransactionMessage;
-import com.kynsoft.finamer.creditcard.application.command.refundTransaction.create.CreateRefundTransactionRequest;
+import com.kynsoft.finamer.creditcard.application.command.transaction.manual.CreateManualTransactionCommand;
+import com.kynsoft.finamer.creditcard.application.command.transaction.manual.CreateManualTransactionMessage;
+import com.kynsoft.finamer.creditcard.application.command.transaction.manual.CreateManualTransactionRequest;
+import com.kynsoft.finamer.creditcard.application.command.transaction.refund.CreateRefundTransactionCommand;
+import com.kynsoft.finamer.creditcard.application.command.transaction.refund.CreateRefundTransactionMessage;
+import com.kynsoft.finamer.creditcard.application.command.transaction.refund.CreateRefundTransactionRequest;
 import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailCommand;
 import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailMessage;
 import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailRequest;
+import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionCommand;
+import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionMessage;
+import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionRequest;
 import com.kynsoft.finamer.creditcard.application.query.managerMerchant.getById.FindManagerMerchantByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMerchantResponse;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
@@ -134,6 +137,15 @@ public class TransactionController {
                 .build();
 
         UpdateManageStatusTransactionBlueCommandMessage response = mediator.send(updateManageStatusTransactionBlueCommand);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping(path = "/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UpdateTransactionRequest request) {
+
+        UpdateTransactionCommand command = UpdateTransactionCommand.fromRequest(request, id);
+        UpdateTransactionMessage response = mediator.send(command);
+
         return ResponseEntity.ok(response);
     }
 

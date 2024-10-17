@@ -14,6 +14,7 @@ import lombok.Setter;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,6 +33,7 @@ public class ManageInvoiceToPaymentResponse implements IResponse {
     private EInvoiceStatus status;
 
     private List<ManageBookingDto> bookings;
+    private String couponNumbers;
 
     public ManageInvoiceToPaymentResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -45,6 +47,10 @@ public class ManageInvoiceToPaymentResponse implements IResponse {
         this.invoiceNo = dto.getInvoiceNo();
         this.bookings = dto.getBookings();
         this.status = dto.getStatus();
+       this.couponNumbers = bookings.stream()
+                .map(ManageBookingDto::getCouponNumber)
+                .filter(coupon -> coupon != null && !coupon.isEmpty())
+                .collect(Collectors.joining(","));
     }
 
     private String deleteHotelInfo(String input) {
