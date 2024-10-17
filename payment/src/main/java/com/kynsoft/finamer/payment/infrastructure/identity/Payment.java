@@ -14,6 +14,7 @@ import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -48,6 +49,8 @@ public class Payment implements Serializable {
     private ManagePaymentSource paymentSource;
     private String reference;
     private LocalDate transactionDate;
+
+    private LocalTime dateTime;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "payment_status_id")
@@ -149,6 +152,7 @@ public class Payment implements Serializable {
         this.applyPayment = dto.isApplyPayment();
         this.paymentSupport = dto.isPaymentSupport();
         this.createByCredit = dto.isCreateByCredit();
+        this.dateTime = dto.getTransactionDateTime() != null ? dto.getTransactionDateTime() : LocalTime.now();
     }
 
     public PaymentDto toAggregate() {
@@ -180,7 +184,8 @@ public class Payment implements Serializable {
                             return b.toAggregateSimple();
                         }).collect(Collectors.toList()) : null,
                 createdAt,
-                eAttachment != null ? eAttachment : EAttachment.NONE
+                eAttachment != null ? eAttachment : EAttachment.NONE,
+                dateTime
         );
     }
 
@@ -224,7 +229,8 @@ public class Payment implements Serializable {
                 eAttachment != null ? eAttachment : EAttachment.NONE,
                 applyPayment,
                 paymentSupport,
-                createByCredit
+                createByCredit,
+                dateTime
         );
     }
 

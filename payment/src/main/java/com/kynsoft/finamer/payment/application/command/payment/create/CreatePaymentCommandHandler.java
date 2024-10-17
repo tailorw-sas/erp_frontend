@@ -11,6 +11,7 @@ import com.kynsoft.finamer.payment.domain.rules.payment.CheckIfTransactionDateIs
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentAmountGreaterThanZeroRule;
 import com.kynsoft.finamer.payment.domain.services.*;
+import java.time.LocalTime;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -129,7 +130,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 null,
                 null,
                 null,
-                EAttachment.NONE
+                EAttachment.NONE,
+                LocalTime.now()
         );
 
         PaymentDto save = this.paymentService.create(paymentDto);
