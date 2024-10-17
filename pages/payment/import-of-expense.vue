@@ -26,7 +26,7 @@ const confApi = reactive({
 
 const confPaymentApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment-detail',
+  uriApi: 'payment',
 })
 // VARIABLES -----------------------------------------------------------------------------------------
 const idItem = ref('')
