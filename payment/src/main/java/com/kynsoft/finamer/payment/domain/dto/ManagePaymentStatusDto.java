@@ -18,4 +18,5 @@ public class ManagePaymentStatusDto {
     private String status;
     private Boolean applied;
     private boolean confirmed;
+    private boolean cancelled;
 }
