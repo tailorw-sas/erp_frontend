@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.PaymentExcelExporterCellColorEnum;
@@ -12,8 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -27,7 +26,8 @@ public class ExcelExporterService {
     }
 
     public byte[] exportToExcel(Pageable pageable, List<FilterCriteria> filterCriteria, PaymentExcelExporterEnum eenum) throws Exception {
-        List<PaymentDto> responses = this.paymentService.searchExcelExporter(pageable, filterCriteria).getData();
+        PaginatedResponse responseAll = this.paymentService.searchExcelExporter(pageable, filterCriteria);
+        List<PaymentDto> responses = responseAll.getData();
 
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Paginated Results");
@@ -71,15 +71,15 @@ public class ExcelExporterService {
                 Double notApplied = 0.0;                
                 for (PaymentDto entity : responses) {
                     Row dataRow = sheet.createRow(rowNum++);
-                    pBalance = pBalance + entity.getPaymentBalance();
-                    dAmount = dAmount + entity.getDepositAmount();
+                    pBalance = pBalance + entity.getPaymentAmount();
+                    dAmount = dAmount + entity.getDepositBalance();
                     applied = applied + entity.getApplied();
                     notApplied = notApplied + entity.getNotApplied();
 
                     CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.BLUE);
                     addPaymentData(entity, style, dataRow);
                 }
-                createHeaderTotalPayment(sheet, workbook, rowNum, pBalance, dAmount, applied, notApplied);
+                createHeaderTotalPayment(sheet, workbook, rowNum, pBalance, dAmount, applied, notApplied, responseAll.getTotalElementsPage());
             }
 
             default -> throw new IllegalArgumentException("No se ha especificado una opción válida en PaymentExcelExporterEnum");
@@ -92,53 +92,51 @@ public class ExcelExporterService {
 
     private void addPaymentData(PaymentDto entity, CellStyle style, Row dataRow) {
 
-        BigDecimal pBalanceBigDecimal = new BigDecimal(String.valueOf(entity.getPaymentBalance())).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal dAmountBigDecimal = new BigDecimal(String.valueOf(entity.getDepositBalance())).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal appliedBigDecimal = new BigDecimal(String.valueOf(entity.getApplied() != null ? entity.getApplied() : 0.00)).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal notAppliedBigDecimal = new BigDecimal(String.valueOf(entity.getNotApplied() != null ? entity.getNotApplied() : 0.00)).setScale(2, RoundingMode.HALF_UP);
-
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         dataRow.createCell(0).setCellValue(entity.getPaymentId());
         dataRow.getCell(0).setCellStyle(style);
 
-        dataRow.createCell(1).setCellValue(entity.getPaymentSource().getName());
+        dataRow.createCell(1).setCellValue(!entity.getAttachments().isEmpty());
         dataRow.getCell(1).setCellStyle(style);
 
-        dataRow.createCell(2).setCellValue(entity.getTransactionDate().toString());
+        dataRow.createCell(2).setCellValue(entity.getPaymentSource().getName());
         dataRow.getCell(2).setCellStyle(style);
 
-        dataRow.createCell(3).setCellValue(entity.getHotel().getName());
+        dataRow.createCell(3).setCellValue(entity.getTransactionDate().toString());
         dataRow.getCell(3).setCellStyle(style);
 
-        dataRow.createCell(4).setCellValue(entity.getClient().getName());
+        dataRow.createCell(4).setCellValue(entity.getHotel().getName());
         dataRow.getCell(4).setCellStyle(style);
 
-        dataRow.createCell(5).setCellValue(entity.getAgency().getName());
+        dataRow.createCell(5).setCellValue(entity.getClient().getName());
         dataRow.getCell(5).setCellStyle(style);
 
-        dataRow.createCell(6).setCellValue(entity.getAgency().getAgencyType().getName());
+        dataRow.createCell(6).setCellValue(entity.getAgency().getName());
         dataRow.getCell(6).setCellStyle(style);
 
-        dataRow.createCell(7).setCellValue(entity.getBankAccount() != null ? entity.getBankAccount().getNameOfBank() : null);
+        dataRow.createCell(7).setCellValue(entity.getAgency().getAgencyType().getName());
         dataRow.getCell(7).setCellStyle(style);
 
-        dataRow.createCell(8).setCellValue(decimalFormat.format(entity.getPaymentBalance()));
+        dataRow.createCell(8).setCellValue(entity.getBankAccount() != null ? entity.getBankAccount().getNameOfBank() : null);
         dataRow.getCell(8).setCellStyle(style);
 
-        dataRow.createCell(9).setCellValue(decimalFormat.format(entity.getDepositBalance()));
+        dataRow.createCell(9).setCellValue(decimalFormat.format(entity.getPaymentAmount()));
         dataRow.getCell(9).setCellStyle(style);
 
-        dataRow.createCell(10).setCellValue(decimalFormat.format(entity.getApplied() != null ? entity.getApplied() : 0.00));
+        dataRow.createCell(10).setCellValue(decimalFormat.format(entity.getDepositBalance()));
         dataRow.getCell(10).setCellStyle(style);
 
-        dataRow.createCell(11).setCellValue(decimalFormat.format(entity.getNotApplied() != null ? entity.getNotApplied() : 0.00));
+        dataRow.createCell(11).setCellValue(decimalFormat.format(entity.getApplied() != null ? entity.getApplied() : 0.00));
         dataRow.getCell(11).setCellStyle(style);
 
-        dataRow.createCell(12).setCellValue(entity.getRemark());
+        dataRow.createCell(12).setCellValue(decimalFormat.format(entity.getNotApplied() != null ? entity.getNotApplied() : 0.00));
         dataRow.getCell(12).setCellStyle(style);
 
-        dataRow.createCell(13).setCellValue(entity.getPaymentStatus().getName());
+        dataRow.createCell(13).setCellValue(entity.getRemark());
         dataRow.getCell(13).setCellStyle(style);
+
+        dataRow.createCell(14).setCellValue(entity.getPaymentStatus().getName());
+        dataRow.getCell(14).setCellStyle(style);
 
     }
 
@@ -147,49 +145,55 @@ public class ExcelExporterService {
         CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.WHITE);
         headerRow.createCell(0).setCellValue("Id");
         headerRow.getCell(0).setCellStyle(style);
-        headerRow.createCell(1).setCellValue("P. Source");
+        headerRow.createCell(1).setCellValue("Has Attachment");
         headerRow.getCell(1).setCellStyle(style);
-        headerRow.createCell(2).setCellValue("Trans. Date");
+        headerRow.createCell(2).setCellValue("P. Source");
         headerRow.getCell(2).setCellStyle(style);
-        headerRow.createCell(3).setCellValue("Hotel");
+        headerRow.createCell(3).setCellValue("Trans. Date");
         headerRow.getCell(3).setCellStyle(style);
-        headerRow.createCell(4).setCellValue("Client");
+        headerRow.createCell(4).setCellValue("Hotel");
         headerRow.getCell(4).setCellStyle(style);
-        headerRow.createCell(5).setCellValue("Agency");
+        headerRow.createCell(5).setCellValue("Client");
         headerRow.getCell(5).setCellStyle(style);
-        headerRow.createCell(6).setCellValue("Agency Type");
+        headerRow.createCell(6).setCellValue("Agency");
         headerRow.getCell(6).setCellStyle(style);
-        headerRow.createCell(7).setCellValue("Bank Acc.");
+        headerRow.createCell(7).setCellValue("Agency Type");
         headerRow.getCell(7).setCellStyle(style);
-        headerRow.createCell(8).setCellValue("P. Amount");
+        headerRow.createCell(8).setCellValue("Bank Acc.");
         headerRow.getCell(8).setCellStyle(style);
-        headerRow.createCell(9).setCellValue("D. Balance");
+        headerRow.createCell(9).setCellValue("P. Amount");
         headerRow.getCell(9).setCellStyle(style);
-        headerRow.createCell(10).setCellValue("Applied");
+        headerRow.createCell(10).setCellValue("D. Balance");
         headerRow.getCell(10).setCellStyle(style);
-        headerRow.createCell(11).setCellValue("Not Applied");
+        headerRow.createCell(11).setCellValue("Applied");
         headerRow.getCell(11).setCellStyle(style);
-        headerRow.createCell(12).setCellValue("Remark");
+        headerRow.createCell(12).setCellValue("Not Applied");
         headerRow.getCell(12).setCellStyle(style);
-        headerRow.createCell(13).setCellValue("Status");
+        headerRow.createCell(13).setCellValue("Remark");
         headerRow.getCell(13).setCellStyle(style);
+        headerRow.createCell(14).setCellValue("Status");
+        headerRow.getCell(14).setCellStyle(style);
     }
 
-    private void createHeaderTotalPayment(Sheet sheet, Workbook workbook, int rowNum, Double pBalance, Double dAmount, Double applied, Double notApplied) {
+    private void createHeaderTotalPayment(Sheet sheet, Workbook workbook, int rowNum, Double pBalance, Double dAmount, Double applied, Double notApplied, int total) {
         Row headerRow = sheet.createRow(rowNum);
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
 
         CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.WHITE);
-        headerRow.createCell(7).setCellValue("Totals");
-        headerRow.getCell(7).setCellStyle(style);
-        headerRow.createCell(8).setCellValue(decimalFormat.format(pBalance));
+        headerRow.createCell(0).setCellValue("Total");
+        headerRow.getCell(0).setCellStyle(style);
+        headerRow.createCell(1).setCellValue(total);
+        headerRow.getCell(1).setCellStyle(style);
+        headerRow.createCell(8).setCellValue("Totals");
         headerRow.getCell(8).setCellStyle(style);
-        headerRow.createCell(9).setCellValue(decimalFormat.format(dAmount));
+        headerRow.createCell(9).setCellValue(decimalFormat.format(pBalance));
         headerRow.getCell(9).setCellStyle(style);
-        headerRow.createCell(10).setCellValue(decimalFormat.format(applied));
+        headerRow.createCell(10).setCellValue(decimalFormat.format(dAmount));
         headerRow.getCell(10).setCellStyle(style);
-        headerRow.createCell(11).setCellValue(decimalFormat.format(notApplied));
+        headerRow.createCell(11).setCellValue(decimalFormat.format(applied));
         headerRow.getCell(11).setCellStyle(style);
+        headerRow.createCell(12).setCellValue(decimalFormat.format(notApplied));
+        headerRow.getCell(12).setCellStyle(style);
     }
 
     private CellStyle createFont(Workbook workbook, PaymentExcelExporterCellColorEnum color) {
