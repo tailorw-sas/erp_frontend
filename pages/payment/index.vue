@@ -3461,6 +3461,12 @@ onMounted(async () => {
                           value: false,
                         },
                         {
+                          key: 'applyDeposit',
+                          logicalOperation: 'AND',
+                          operator: 'EQUALS',
+                          value: false,
+                        },
+                        {
                           key: 'status',
                           logicalOperation: 'AND',
                           operator: 'EQUALS',
