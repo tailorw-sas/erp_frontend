@@ -102,7 +102,8 @@ public class ExcelExporterService {
         dataRow.createCell(2).setCellValue(entity.getPaymentSource().getName());
         dataRow.getCell(2).setCellStyle(style);
 
-        dataRow.createCell(3).setCellValue(entity.getTransactionDate().toString());
+        String time = entity.getTransactionDateTime() != null ? entity.getTransactionDateTime().toString() : "00:00:00";
+        dataRow.createCell(3).setCellValue(entity.getTransactionDate().toString() + " " + time);
         dataRow.getCell(3).setCellStyle(style);
 
         dataRow.createCell(4).setCellValue(entity.getHotel().getName());
