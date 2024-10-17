@@ -8,6 +8,7 @@ import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.services.ICardNetJobService;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
 import com.kynsoft.finamer.creditcard.domain.services.IMerchantLanguageCodeService;
+import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TransactionPaymentLogs;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageTransactionsRedirectLogsWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionPaymentLogsReadDataJPARepository;
@@ -247,10 +248,10 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     }
 
     private Boolean compareDates(UUID id) {
-        if(transactionRepositoryQuery.findByTransactionUuid(id).isPresent()) {
-            LocalDateTime date1 = transactionRepositoryQuery.findByTransactionUuid(id).get().getCreatedAt();
-
-            LocalDate currentDate = LocalDate.now();
+        Optional<Transaction> transaction = transactionRepositoryQuery.findByTransactionUuid(id);
+        if(transaction.isPresent()) {
+            LocalDateTime date1 = transaction.get().getCreatedAt();
+            LocalDateTime currentDate = LocalDateTime.now();
             // Calcular la diferencia en minutos
             Duration difernce = Duration.between(date1, currentDate);
             //Comprobar que la diferncia sea menor que una semana
