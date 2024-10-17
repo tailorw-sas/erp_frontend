@@ -493,7 +493,7 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: false, showFilter: false },
@@ -505,7 +505,7 @@ const columnsExpandTable: IColumn[] = [
   { field: 'fullName', header: 'Full Name', width: '200px', type: 'text', sortable: false },
   { field: 'reservationNumber', header: 'Reservation No.', width: '120px', type: 'text', sortable: false },
   // { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
-  { field: 'couponNumber', header: 'Coupon No.', width: '120px', type: 'text', sortable: false },
+  { field: 'couponNumbers', header: 'Coupon No.', width: '120px', type: 'text', sortable: false },
   // { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
   { field: 'checkIn', header: 'Check In', width: '120px', type: 'text', sortable: false },
   { field: 'checkOut', header: 'Check Out', width: '120px', type: 'text', sortable: false },
@@ -1482,6 +1482,7 @@ async function applyPaymentGetList() {
     }
 
     const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
+    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
