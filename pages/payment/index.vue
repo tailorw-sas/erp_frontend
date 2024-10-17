@@ -949,6 +949,9 @@ async function getList() {
         else if (iterator.attachmentStatus?.pwaWithOutAttachment) {
           color = listColor.ATTACHMENT_WITH_ERROR
         }
+        else if (iterator.attachmentStatus?.nonNone) {
+          color = listColor.NONE
+        }
       }
 
       // "paymentAmount": 1000,
