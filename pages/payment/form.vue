@@ -3,10 +3,10 @@ import dayjs from 'dayjs'
 import { z } from 'zod'
 import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
-import { get } from 'lodash'
+import { filter, get } from 'lodash'
 import { formatNumber, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { FieldDefinitionType } from '~/components/form/EditFormV2'
+import type { FieldDefinition, FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -995,13 +995,36 @@ async function saveItem(item: { [key: string]: any }) {
   // }
 }
 
+function disabledFields(objItem: { [key: string]: any }, fields: FieldDefinition[]) {
+  updateFieldProperty(fields, 'paymentAmount', 'disabled', true)
+  updateFieldProperty(fields, 'hotel', 'disabled', true)
+  updateFieldProperty(fields, 'paymentSource', 'disabled', true)
+  updateFieldProperty(fields, 'reference', 'disabled', true)
+  updateFieldProperty(fields, 'transactionDate', 'disabled', true)
+  updateFieldProperty(fields, 'status', 'disabled', false)
+  if (actionOfModal.value !== 'split-deposit') {
+    updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${objItem.paymentBalance}`)
+  }
+  if (!objItem.paymentStatus.confirmed && !objItem.paymentStatus.applied) {
+    updateFieldProperty(fields, 'remark', 'disabled', true)
+  }
+  else {
+    updateFieldProperty(fields, 'remark', 'disabled', false)
+  }
+  if (!objItem.paymentStatus.confirmed) {
+    updateFieldProperty(fields, 'client', 'disabled', true)
+  }
+  else {
+    updateFieldProperty(fields, 'client', 'disabled', false)
+  }
+}
+
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-
       if (response) {
         item.value.id = id
         item.value.paymentId = response.paymentId
@@ -1082,7 +1105,9 @@ async function getItemById(id: string) {
               name: `${response.paymentStatus.code} - ${response.paymentStatus.name}`,
               code: response.paymentStatus.code,
               originalName: response.paymentStatus.name,
-              status: response.paymentStatus.status
+              status: response.paymentStatus.status,
+              applied: response.paymentStatus.applied,
+              confirmed: response.paymentStatus.confirmed
             }
           : null
         paymentStatusList.value = [paymentStatusTemp]
@@ -1102,16 +1127,8 @@ async function getItemById(id: string) {
       // item.value = { ...formatNumbersInObject(item.value, ['paymentAmount', 'depositAmount', 'otherDeductions', 'identified', 'notIdentified']) }
 
       fields[0].disabled = true
-      updateFieldProperty(fields, 'status', 'disabled', false)
-      if (actionOfModal.value !== 'split-deposit') {
-        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${item.value.paymentBalance}`)
-      }
-      if (item.value.paymentStatus.name !== 'CON - Confirmed') {
-        updateFieldProperty(fields, 'remark', 'disabled', true)
-      }
-      else {
-        updateFieldProperty(fields, 'remark', 'disabled', false)
-      }
+
+      disabledFields(item.value, fields)
 
       formReload.value += 1
 
@@ -1127,6 +1144,10 @@ async function getItemById(id: string) {
     }
   }
 }
+
+const somePaymenWithApplyPayment = computed(() => {
+  return paymentDetailsList.value.some(item => item.applyPayment)
+})
 
 async function getListPaymentDetail() {
   const count: SubTotals = { depositAmount: 0 }
@@ -1222,6 +1243,9 @@ async function getListPaymentDetail() {
     }
 
     paymentDetailsList.value = [...paymentDetailsList.value, ...newListItems]
+    if (somePaymenWithApplyPayment.value === false && item.value?.paymentStatus?.confirmed === true) {
+      updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
+    }
   }
   catch (error) {
     console.error(error)
@@ -2563,18 +2587,6 @@ function disableBankAccount(data: any) {
   return result
 }
 
-function disableByStatusConfirmed(data: any) {
-  let result = false
-  if (data && data.paymentStatus && data.paymentStatus.name === 'CON - Confirmed') {
-    result = false
-  }
-  else {
-    result = true
-  }
-
-  return result
-}
-
 watch(() => hasBeenEdited.value, async (newValue) => {
   if (newValue) {
     if (route?.query?.id) {
@@ -2661,12 +2673,13 @@ onMounted(async () => {
         @submit="handleSave($event)"
         @delete="requireConfirmationToDelete($event)"
       >
-        <template #field-paymentAmount="{ item: data, onUpdate }">
+        <template #field-paymentAmount="{ item: data, onUpdate, fields: listFields, field }">
           <InputNumber
             v-if="!loadingSaveAll"
             v-model="data.paymentAmount"
             show-clear
             mode="decimal"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             :readonly="idItem !== ''"
             :min-fraction-digits="2"
             :max-fraction-digits="4"
@@ -2680,36 +2693,60 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #field-paymentStatus="{ item: data, onUpdate }">
+        <template #field-paymentStatus="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
             :model="data.paymentStatus"
-            :disabled="true"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled"
             :suggestions="[...paymentStatusList]"
             @change="($event) => {
               onUpdate('paymentStatus', $event)
             }"
             @load="async($event) => {
+              console.log(data.paymentStatus);
+
               const objQueryToSearch = {
                 query: $event,
                 keys: ['name', 'code'],
               }
-              const filter: FilterCriteria[] = [{
-                key: 'status',
-                logicalOperation: 'AND',
-                operator: 'EQUALS',
-                value: 'ACTIVE',
-              }]
+              const filter: FilterCriteria[] = somePaymenWithApplyPayment === false ? [
+                {
+                  key: 'status',
+                  logicalOperation: 'AND',
+                  operator: 'EQUALS',
+                  value: 'ACTIVE',
+                },
+                {
+                  key: 'id',
+                  logicalOperation: 'OR',
+                  operator: 'EQUALS',
+                  value: data.paymentStatus?.id,
+                },
+                {
+                  key: 'code',
+                  logicalOperation: 'OR',
+                  operator: 'EQUALS',
+                  value: 'CAN',
+                },
+              ] : [
+                {
+                  key: 'status',
+                  logicalOperation: 'AND',
+                  operator: 'EQUALS',
+                  value: 'ACTIVE',
+                },
+              ]
+
               await getPaymentStatusList(objApis.paymentStatus.moduleApi, objApis.paymentStatus.uriApi, objQueryToSearch, filter)
             }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #field-client="{ item: data, onUpdate }">
+        <template #field-client="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
@@ -2717,7 +2754,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.client"
             :suggestions="[...clientList]"
-            :disabled="disableByStatusConfirmed(data)"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             @change="async ($event) => {
               onUpdate('client', $event)
               const filter: FilterCriteria[] = [
@@ -2757,7 +2794,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #field-paymentSource="{ item: data, onUpdate }">
+        <template #field-paymentSource="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
@@ -2765,6 +2802,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.paymentSource"
             :suggestions="[...paymentSourceList]"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             @change="($event) => {
               onUpdate('paymentSource', $event)
             }"
@@ -2785,12 +2823,13 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #field-transactionDate="{ item: data, onUpdate }">
+        <template #field-transactionDate="{ item: data, onUpdate, fields: listFields, field }">
           <Calendar
             v-if="!loadingSaveAll"
             v-model="data.transactionDate"
             date-format="yy-mm-dd"
             :max-date="new Date()"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             @update:model-value="($event) => {
               onUpdate('transactionDate', $event)
             }"
@@ -2836,7 +2875,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #field-hotel="{ item: data, onUpdate }">
+        <template #field-hotel="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
@@ -2844,6 +2883,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.hotel"
             :suggestions="[...hotelList]"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             @change="async ($event) => {
               onUpdate('hotel', $event)
 
