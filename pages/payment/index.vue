@@ -493,7 +493,7 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: false, showFilter: false },
@@ -1482,6 +1482,7 @@ async function applyPaymentGetList() {
     }
 
     const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
+    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
