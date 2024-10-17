@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.manualTransaction.create;
+package com.kynsoft.finamer.creditcard.application.command.transaction.manual;
 
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import lombok.Getter;

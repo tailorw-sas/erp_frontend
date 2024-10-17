@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.adjustmentTransaction.create;
+package com.kynsoft.finamer.creditcard.application.command.transaction.adjustment;
 
 import lombok.Getter;
 import lombok.Setter;

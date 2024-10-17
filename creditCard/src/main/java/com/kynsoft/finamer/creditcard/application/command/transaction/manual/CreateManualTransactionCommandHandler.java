@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.manualTransaction.create;
+package com.kynsoft.finamer.creditcard.application.command.transaction.manual;
 
 import com.kynsof.share.core.application.mailjet.MailJetRecipient;
 import com.kynsof.share.core.application.mailjet.MailJetVar;

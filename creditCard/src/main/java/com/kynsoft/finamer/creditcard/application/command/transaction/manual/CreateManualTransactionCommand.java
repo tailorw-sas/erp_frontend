@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.manualTransaction.create;
+package com.kynsoft.finamer.creditcard.application.command.transaction.manual;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
