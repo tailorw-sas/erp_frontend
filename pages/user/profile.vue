@@ -197,7 +197,7 @@ function errorInfForm() {
 
       <div class="card">
         <div class="flex justify-content-end">
-          <Button class="w-8rem mr-3" outlined severity="secondary" icon="pi pi-times" label="Cancelar" @click="cancelEdit()" />
+          <Button class="w-8rem mr-3" severity="secondary" icon="pi pi-times" label="Cancelar" @click="cancelEdit()" />
           <Button class="w-8rem" label="Modificar" :loading="loadingSaveAll" :disabled="errorInfForm()" @click="saveAll" />
         </div>
       </div>
