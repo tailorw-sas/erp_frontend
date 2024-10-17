@@ -52,7 +52,10 @@ public class PaymentShareFile implements Serializable {
     }
 
     public PaymentShareFileDto toAggregate(){
-        return new PaymentShareFileDto(this.id,this.payment.toAggregate(), this.fileName, this.fileUrl);
+        PaymentShareFileDto paymentShareFileDto = new PaymentShareFileDto(this.id,this.payment.toAggregate(), this.fileName, this.fileUrl);
+        paymentShareFileDto.setShareFileYear(createdAt.getYear());  // Obtener el año
+        paymentShareFileDto.setShareFileMonth(createdAt.getMonthValue());
+        return paymentShareFileDto;
     }
 
 }
