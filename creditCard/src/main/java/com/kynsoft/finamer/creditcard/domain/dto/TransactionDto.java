@@ -42,7 +42,9 @@ public class TransactionDto {
     private Double netAmount;
     private Boolean permitRefund;
     private ManagerMerchantCurrencyDto merchantCurrency;
+    private boolean manual;
 
+    //uso -> toAggregateParent
     public TransactionDto(
             Long id, UUID transactionUuid, LocalDate checkIn, String reservationNumber,
             String referenceNumber, LocalDate transactionDate) {
@@ -55,6 +57,7 @@ public class TransactionDto {
         this.transactionDate = transactionDate;
     }
 
+    //uso -> manual transaction, refund transaction
     public TransactionDto(
             UUID transactionUuid, ManageMerchantDto merchant, MethodType methodType, ManageHotelDto hotel,
             ManageAgencyDto agency, ManageLanguageDto language, Double amount,
@@ -64,7 +67,7 @@ public class TransactionDto {
             ManageTransactionStatusDto status, TransactionDto parent,
             ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount, Boolean permitRefund,
-            ManagerMerchantCurrencyDto merchantCurrency) {
+            ManagerMerchantCurrencyDto merchantCurrency, boolean manual) {
         this.transactionUuid = transactionUuid;
         this.merchant = merchant;
         this.methodType = methodType;
@@ -89,8 +92,10 @@ public class TransactionDto {
         this.netAmount = netAmount;
         this.permitRefund = permitRefund;
         this.merchantCurrency = merchantCurrency;
+        this.manual = manual;
     }
 
+    //uso -> adjustment transaction
     public TransactionDto(
             UUID transactionUuid, ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,

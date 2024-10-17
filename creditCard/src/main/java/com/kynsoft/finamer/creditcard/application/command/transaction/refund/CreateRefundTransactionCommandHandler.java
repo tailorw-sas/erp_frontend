@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.refundTransaction.create;
+package com.kynsoft.finamer.creditcard.application.command.transaction.refund;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
@@ -101,7 +101,8 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
                 parentTransaction.getTransactionSubCategory(),
                 netAmount,
                 false,
-                parentTransaction.getMerchantCurrency()
+                parentTransaction.getMerchantCurrency(),
+                false
         ));
         command.setId(id);
         if(this.service.findSumOfAmountByParentId(parentTransaction.getId()) >= parentTransaction.getAmount()){

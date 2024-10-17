@@ -15,7 +15,9 @@ import com.kynsoft.finamer.settings.infrastructure.identity.ManagePaymentTransac
 
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManagePaymentTransactionTypeWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManagePaymentTransactionTypeReadDataJPARepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,51 +28,59 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@EnableCaching
 public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTransactionTypeService {
 
-    @Autowired
-    private ManagePaymentTransactionTypeReadDataJPARepository repositoryQuery;
+    private final ManagePaymentTransactionTypeReadDataJPARepository repositoryQuery;
+    private final ManagePaymentTransactionTypeWriteDataJPARepository repositoryCommand;
 
-    @Autowired
-    private ManagePaymentTransactionTypeWriteDataJPARepository repositoryCommand;
+    public ManagePaymentTransactionTypeServiceImpl(ManagePaymentTransactionTypeReadDataJPARepository repositoryQuery,
+                                                   ManagePaymentTransactionTypeWriteDataJPARepository repositoryCommand) {
+        this.repositoryQuery = repositoryQuery;
+        this.repositoryCommand = repositoryCommand;
+    }
 
     @Override
+    @CacheEvict(cacheNames = {"managePaymentTransactionType", "managePaymentTransactionTypeAll"}, allEntries = true)
     public UUID create(ManagePaymentTransactionTypeDto dto) {
         ManagePaymentTransactionType entity = new ManagePaymentTransactionType(dto);
         ManagePaymentTransactionType saved = repositoryCommand.save(entity);
-
         return saved.getId();
     }
 
     @Override
+    @CacheEvict(cacheNames = {"managePaymentTransactionType", "managePaymentTransactionTypeAll"}, allEntries = true)
     public void update(ManagePaymentTransactionTypeDto dto) {
         repositoryCommand.save(new ManagePaymentTransactionType(dto));
     }
 
     @Override
+    @CacheEvict(cacheNames = {"managePaymentTransactionType", "managePaymentTransactionTypeAll"}, allEntries = true)
     public void delete(ManagePaymentTransactionTypeDto dto) {
-        try{
+        try {
             this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE,
+                    new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
 
     @Override
+    @Cacheable(cacheNames = "managePaymentTransactionType", key = "#id", unless = "#result == null")
     public ManagePaymentTransactionTypeDto findById(UUID id) {
         Optional<ManagePaymentTransactionType> optionalEntity = repositoryQuery.findById(id);
-        if(optionalEntity.isPresent()){
+        if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
-
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", "The manager payment source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND,
+                new ErrorField("id", "The manager payment source not found.")));
     }
 
     @Override
+    @Cacheable(cacheNames = "managePaymentTransactionTypeAll", unless = "#result == null")
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         GenericSpecificationsBuilder<ManagePaymentTransactionType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManagePaymentTransactionType> data = this.repositoryQuery.findAll(specifications, pageable);
-
         return getPaginatedResponse(data);
     }
 
@@ -94,21 +104,20 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
+    @Cacheable(cacheNames = "managePaymentTransactionTypeAll", unless = "#result == null")
     public PaginatedResponse findWithApplyDepositAndDepositFalse(Boolean applyDeposit, Boolean deposit, Boolean defaults, Pageable pageable) {
         Page<ManagePaymentTransactionType> data = this.repositoryQuery.findWithApplyDepositAndDepositFalse(applyDeposit, deposit, defaults, pageable);
-
         return getPaginatedResponse(data);
     }
 
     @Override
+    @Cacheable(cacheNames = "managePaymentTransactionTypeAll", unless = "#result == null or #result.isEmpty()")
     public List<ManagePaymentTransactionTypeDto> findAllToReplicate() {
         List<ManagePaymentTransactionType> objects = this.repositoryQuery.findAll();
         List<ManagePaymentTransactionTypeDto> objectDtos = new ArrayList<>();
-
         for (ManagePaymentTransactionType object : objects) {
             objectDtos.add(object.toAggregate());
         }
-
         return objectDtos;
     }
 
@@ -131,5 +140,4 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     public Long countByPaymentInvoiceAndNotId(UUID id) {
         return this.repositoryQuery.countByPaymentInvoiceAndNotId(id);
     }
-
 }

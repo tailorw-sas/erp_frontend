@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.refundTransaction.create;
+package com.kynsoft.finamer.creditcard.application.command.transaction.refund;
 
 import lombok.Getter;
 import lombok.Setter;
