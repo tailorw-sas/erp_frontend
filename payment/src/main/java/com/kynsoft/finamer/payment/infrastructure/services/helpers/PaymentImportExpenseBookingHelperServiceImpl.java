@@ -172,7 +172,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             ManagePaymentTransactionTypeDto paymentTransactionType = transactionTypeService.findByCode(sampleCache.getTransactionType());
             String remarks = Objects.isNull(sampleCache.getRemarks()) || sampleCache.getRemarks().isEmpty() ? paymentTransactionType.getDefaultRemark() : sampleCache.getRemarks();
             UUID paymentId = createPayment(request.getHotelId(), request.getEmployeeId(), manageBooking.getInvoice().getAgency(), paymentAmount);
-           // createAttachment(request.getImportProcessId(), request.getEmployeeId(), paymentId);
+            createAttachment(request.getImportProcessId(), request.getEmployeeId(), paymentId);
             createPaymentDetails(bookingDtos,paymentTransactionType.getId(),request.getEmployeeId(),paymentId,sampleCache.getBalance(),remarks);
 
         }
@@ -242,14 +242,13 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             for (Map.Entry<String, File> attachment : attachmentFields.entrySet()) {
                try(FileInputStream fileInputStream = new FileInputStream(attachment.getValue())) {
                    byte[] fileContent = fileInputStream.readAllBytes();
-
-                 //  LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent(attachment.getKey(), fileContent);
+                   LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent(attachment.getKey(), fileContent);
 
                    CreateMasterPaymentAttachmentCommand createMasterPaymentAttachmentCommand =
                            new CreateMasterPaymentAttachmentCommand(Status.ACTIVE, employeeId,
                                    paymentId
                                    , resourceTypeDto.getId(), attachmentTypeDto.getId(),
-                                   attachment.getKey(), /*response.get("url")*/ "www.google.com",
+                                   attachment.getKey(), response.get("url") ,
                                    "Attachment added automatically when the payment was imported",
                                    String.valueOf(fileContent.length));
                    serviceLocator.getBean(IMediator.class).send(createMasterPaymentAttachmentCommand);
