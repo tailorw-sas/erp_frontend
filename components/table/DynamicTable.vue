@@ -805,7 +805,6 @@ defineExpose({ clearSelectedItems })
             <Button type="button" label="Clear" severity="secondary" @click="clearIndividualFilter(field)" />
           </template>
           <template v-if="column.type === 'date-editable'" #editor="{ data, field }">
-            <pre>{{ data[field] }}</pre>
             <Calendar
               v-model="data[field]" :manual-input="false"
               style="width: 100%" :view="column.props?.calendarMode || 'month'"
