@@ -437,7 +437,6 @@ function onSortField(event: any) {
 
 function haveFilterApplay(filtersValue: any, column: any) {
   let result = false
-
   if (column.type === 'bool') {
     result = filtersValue[column.field].value !== null
   }

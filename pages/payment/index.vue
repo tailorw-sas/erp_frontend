@@ -13,6 +13,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import { itemMenuList } from '~/components/payment/indexBtns'
 import IfCan from '~/components/auth/IfCan.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
+import PaymentShareFilesDialog from '~/components/payment/PaymentShareFilesDialog.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const route = useRoute()
@@ -53,6 +54,11 @@ const paymentBalance = ref(0)
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 const paymentSelectedForAttachment = ref<GenericObject>({})
+
+// Share Files
+const shareFilesDialogOpen = ref<boolean>(false)
+const shareFilesList = ref<any[]>([])
+const paymentSelectedForShareFiles = ref<GenericObject>({})
 
 // CHange Agency
 const idPaymentSelectedForPrintChangeAgency = ref('')
@@ -322,8 +328,8 @@ const allMenuListItems = ref([
     viewBox: '',
     width: '24px',
     height: '24px',
-    command: ($event: any) => {},
-    disabled: true,
+    command: ($event: any) => handleShareFilesDialogOpen($event),
+    disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
   },
   {
@@ -784,6 +790,10 @@ async function checkAttachment(code: string) {
   catch (error) {
     console.log(error)
   }
+}
+
+function handleShareFilesDialogOpen() {
+  shareFilesDialogOpen.value = true
 }
 
 function getStatusBadgeBackgroundColor(code: string) {
@@ -1951,10 +1961,14 @@ function onRowContextMenu(event: any) {
   if (event && event.data) {
     paymentSelectedForAttachment.value = event.data
     objItemSelectedForRightClickApplyPaymentOtherDeduction.value = event.data
+    // share files
+    paymentSelectedForShareFiles.value = event.data
   }
   else {
     paymentSelectedForAttachment.value = {}
     objItemSelectedForRightClickApplyPaymentOtherDeduction.value = {}
+    // share files
+    paymentSelectedForShareFiles.value = {}
   }
   objItemSelectedForRightClickApplyPayment.value = event.data
   objItemSelectedForRightClickPaymentWithOrNotAttachment.value = event.data
@@ -3796,6 +3810,24 @@ onMounted(async () => {
       :update-item="updateAttachment"
       :selected-payment="paymentSelectedForAttachment"
       @update:list-items="attachmentList = $event"
+    />
+  </div>
+
+  <div v-if="shareFilesDialogOpen">
+    <PaymentShareFilesDialog
+      is-create-or-edit-payment="edit"
+      :add-item="addAttachment"
+      :close-dialog="() => {
+        shareFilesDialogOpen = false
+        getList()
+      }"
+      :is-creation-dialog="true"
+      header="Share Files"
+      :list-items="shareFilesList"
+      :open-dialog="shareFilesDialogOpen"
+      :update-item="updateAttachment"
+      :selected-payment="paymentSelectedForShareFiles"
+      @update:list-items="shareFilesList = $event"
     />
   </div>
 

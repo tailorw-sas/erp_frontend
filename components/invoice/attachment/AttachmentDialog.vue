@@ -572,6 +572,9 @@ async function saveItem(item: { [key: string]: any }) {
     await getList()
   }
 }
+function disabledBtnDeleteAttachment() {
+  return (ListItems.value.length <= 1) || (disableDeleteBtn.value === false ? (!idItem.value || (!props.isCreationDialog && props.selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)) : true)
+}
 
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -1041,7 +1044,7 @@ onMounted(async () => {
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
                   <Button
                     v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
-                    :disabled="disableDeleteBtn === false ? (!idItem || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)) : true"
+                    :disabled="disabledBtnDeleteAttachment()"
                     @click="requireConfirmationToDelete"
                   />
                 </IfCan>

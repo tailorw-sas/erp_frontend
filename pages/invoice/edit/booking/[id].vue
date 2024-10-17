@@ -489,7 +489,7 @@ const columnsRoomRate: IColumn[] = [
   { field: 'roomRateId', header: 'Id', type: 'text', sortable: false },
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'checkIn', header: 'Check In', type: 'date-editable', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
-  { field: 'checkOut', header: 'Check Out', type: 'date', sortable: false, editable: true },
+  { field: 'checkOut', header: 'Check Out', type: 'date-editable', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
   { field: 'adults', header: 'Adults', type: 'text', sortable: false, editable: true },
   { field: 'children', header: 'Children', type: 'text', sortable: false, editable: true },
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
@@ -1263,8 +1263,8 @@ async function getRoomRateList() {
     for (const iterator of dataList) {
       countRR++
       // Rate Adult= RateAmount/(Ctdad noches*Ctdad Adults) y Rate Children= RateAmount/(Ctdad noches*Ctdad Children)
-      const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
-      const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
+      // const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
+      // const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
         checkIn: dayjs(iterator?.checkIn).format('YYYY-MM-DD'),
@@ -1279,8 +1279,8 @@ async function getRoomRateList() {
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
         agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` },
-        rateAdult,
-        rateChildren
+        rateAdult: iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0,
+        rateChildren: iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
@@ -1743,7 +1743,7 @@ onMounted(async () => {
         container-class="grid pt-5"
         @cancel="clearForm"
         @delete="requireConfirmationToDelete($event)"
-        @submit="requireConfirmationToSave($event)"
+        @submit="saveItem($event)"
       >
         <template #field-hotelCreationDate="{ item: data, onUpdate }">
           <Calendar

@@ -1007,7 +1007,7 @@ onMounted(async () => {
             }" 
             @load="async ($event) => {
             const objQueryToSearch = {
-              query: $event,
+              query: $event,  
               keys: ['name', 'code'],
             }
             const filter: FilterCriteria[] = [
