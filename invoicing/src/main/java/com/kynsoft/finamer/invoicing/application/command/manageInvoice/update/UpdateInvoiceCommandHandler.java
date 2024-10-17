@@ -56,7 +56,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         ManageInvoiceDto dto = this.service.findById(command.getId());
         RulesChecker.checkRule(new ManageBookingCheckBookingAmountAndBookingBalanceRule(dto.getInvoiceAmount(), dto.getDueAmount()));
         ConsumerUpdate update = new ConsumerUpdate();
-        if (!command.getInvoiceDate().equals(dto.getInvoiceDate())) {
+        if (command.getInvoiceDate() != null && !command.getInvoiceDate().equals(dto.getInvoiceDate())) {
             RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, dto.getInvoiceDate().toLocalDate(), dto.getHotel().getId()));
             this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(), update::setUpdate);
         }
