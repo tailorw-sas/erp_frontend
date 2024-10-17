@@ -234,4 +234,15 @@ export const GenericService = {
 
     })
   },
+
+  async searchShareFile(MODULE_NAME: string, URI_API: string, payload: IQueryRequest) {
+    const { $api } = useNuxtApp()
+
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+    return $api<SearchResponse>(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
 }
