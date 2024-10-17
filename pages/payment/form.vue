@@ -2490,9 +2490,10 @@ function onRowContextMenu(event: any) {
   // }
 
   // Validacion para el undo application
-  const dateOfItemForReverse = dayjs(event.data?.transactionDate)
-  const currentDateForReverse = dayjs().format('YYYY-MM-DD')
-  if (event && event.data && event.data.applyPayment === true && dateOfItemForReverse.isBefore(currentDateForReverse)) {
+  // const dateOfItemForReverse = dayjs(event.data?.transactionDate)
+  // const currentDateForReverse = dayjs().format('YYYY-MM-DD')
+  // // && dateOfItemForReverse.isBefore(currentDateForReverse)
+  if (event && event.data && event.data.applyPayment === true) {
     objItemSelectedForRightClickReverseTransaction.value = event.data
     const menuItemReverseTransaction = allMenuListItems.value.find(item => item.id === 'reverseTransaction')
     if (menuItemReverseTransaction) {
