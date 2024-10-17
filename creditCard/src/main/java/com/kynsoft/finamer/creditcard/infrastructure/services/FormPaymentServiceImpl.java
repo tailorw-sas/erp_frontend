@@ -173,9 +173,14 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         try {
             // Paso 1: Enviar los datos para generar la sesión
             //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
-            Map<String, String> requestData = new HashMap<>();
+
             String successUrl = merchantConfigDto.getSuccessUrl();
             String cancelUrl = merchantConfigDto.getErrorUrl();
+            CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
+            String cardNetSession = "";
+            String cardNetSessionKey = "";
+
+            Map<String, String> requestData = new HashMap<>();
             String amountString = BigDecimal.valueOf(transactionDto.getAmount()).multiply(new BigDecimal(100)).stripTrailingZeros()
                     .toPlainString();
             //obtener el language
@@ -202,18 +207,19 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             requestData.put("IpClient", ""); // Campo ip del b2b partner del merchant
             requestData.put("Amount", amountString); //Viene en el request
 
-            // Enviar la solicitud POST y obtener la respuesta
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestData, headers);
-
-            ResponseEntity<CardNetSessionResponse> sessionResponse = restTemplate.exchange(merchantConfigDto.getAltUrl(), HttpMethod.POST, entity, CardNetSessionResponse.class);
-
-            // Convertir la respuesta en objeto
-            CardNetSessionResponse sessionData = sessionResponse.getBody();
-            if (sessionData == null || sessionData.getSession() == null) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al generar la sesión.");
+            // Solo invocar al servicio de obtener sesion si no se ha hecho previamente.
+            if (cardnetJobDto == null) {
+                CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
+                if (sessionResponse == null || sessionResponse.getSession() == null) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al generar la sesión.");
+                }
+                cardNetSession = sessionResponse.getSession();
+                cardNetSessionKey = sessionResponse.getSessionKey();
+                // Insertar nueva referencia de session.
+                cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), cardNetSession, cardNetSessionKey, Boolean.FALSE, 0);
+                cardNetJobService.create(cardnetJobDto);
+            } else {
+                cardNetSession = cardnetJobDto.getSession();
             }
 
             // Paso 2: Generar Formulario
@@ -221,7 +227,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                     "<head></head>" +
                     "<body>" +
                     "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
-                    "<input type=\"hidden\" name=\"SESSION\" value=\"" + sessionData.getSession() + "\"/>" +
+                    "<input type=\"hidden\" name=\"SESSION\" value=\"" + cardNetSession + "\"/>" +
                     "<input type=\"hidden\" name=\"ReturnUrl\" value=\"" + successUrl + "\"/>" +
                     "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\"/>" +
                     "</form>" +
@@ -229,16 +235,6 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                     "</body>" +
                     "</html>";
 
-            CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
-            if(cardnetJobDto == null){
-                cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), sessionData.getSession().toString(), sessionData.getSessionKey().toString(), Boolean.FALSE, 0);
-                cardNetJobService.create(cardnetJobDto);
-            }
-            else{
-                cardnetJobDto.setSession(sessionData.getSession());
-                cardnetJobDto.setSessionKey(sessionData.getSessionKey());
-                cardNetJobService.update(cardnetJobDto);
-            }
             String concatenatedBody = htmlForm + requestData;
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_HTML)
@@ -260,6 +256,19 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             //Comprobar que la diferncia sea menor que una semana
             return difernce.toDays() <= 7;
         } else return false;
+    }
+
+    private CardNetSessionResponse getCardNetSession(Map<String, String> requestData, String url) {
+        // Enviar la solicitud POST y obtener la respuesta
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestData, headers);
+
+        ResponseEntity<CardNetSessionResponse> sessionResponse = restTemplate.exchange(url, HttpMethod.POST, entity, CardNetSessionResponse.class);
+
+        // Convertir la respuesta en objeto
+        return sessionResponse.getBody();
     }
 
     public UUID create(TransactionPaymentLogsDto dto) {
