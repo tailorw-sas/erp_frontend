@@ -19,8 +19,8 @@ import PaymentShareFilesDialog from '~/components/payment/PaymentShareFilesDialo
 const route = useRoute()
 const toast = useToast()
 const authStore = useAuthStore()
-const { status, data } = useAuth()
-const isAdmin = (data.value?.user as any)?.isAdmin === true
+const { status, data: userData } = useAuth()
+const isAdmin = (userData.value?.user as any)?.isAdmin === true
 
 const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
 const listItems = ref<any[]>([])
@@ -780,7 +780,8 @@ function updateAttachment(attachment: any) {
 async function checkAttachment(code: string) {
   const payload = {
     payment: idPaymentSelectedForPrint.value || '',
-    status: code
+    status: code,
+    employee: userData.value?.user?.userId || ''
   }
   try {
     await GenericService.create('payment', 'payment/change-attachment-status', payload)
