@@ -21,6 +21,7 @@ import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -113,7 +114,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 command.getInvoiceDto(),
                 null,
                 null,
-                EAttachment.NONE
+                EAttachment.NONE,
+                LocalTime.now()
         );
 
         paymentDto.setCreateByCredit(true);
@@ -180,7 +182,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 command.getInvoiceDto(),
                 null,
                 null,
-                EAttachment.NONE
+                EAttachment.NONE,
+                LocalTime.now()
         );
 
         paymentDto.setCreateByCredit(true);
