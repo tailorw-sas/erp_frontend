@@ -20,6 +20,7 @@ public class UpdateManagePaymentStatusCommandHandler implements ICommandHandler<
         update.setStatus(command.getStatus());
         update.setApplied(command.getApplied());
         update.setConfirmed(command.isConfirmed());
+        update.setCancelled(command.isCancelled());
         service.update(update);
     }
 }

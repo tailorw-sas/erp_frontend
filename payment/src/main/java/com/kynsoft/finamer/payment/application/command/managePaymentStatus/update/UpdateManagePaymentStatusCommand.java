@@ -16,13 +16,15 @@ public class UpdateManagePaymentStatusCommand implements ICommand {
     private String status;
     private Boolean applied;
     private boolean confirmed;
+    private boolean cancelled;
 
-    public UpdateManagePaymentStatusCommand(UUID id, String name, String status, Boolean applied, boolean confirmed) {
+    public UpdateManagePaymentStatusCommand(UUID id, String name, String status, Boolean applied, boolean confirmed, boolean cancelled) {
         this.id = id;
         this.name = name;
         this.status = status;
         this.applied = applied;
         this.confirmed = confirmed;
+        this.cancelled = cancelled;
     }
 
     @Override

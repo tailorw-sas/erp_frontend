@@ -15,4 +15,5 @@ public class UpdatePaymentStatusRequest {
     private Boolean defaults;
     private Boolean applied;
     private boolean confirmed;
+    private boolean cancelled;
 }

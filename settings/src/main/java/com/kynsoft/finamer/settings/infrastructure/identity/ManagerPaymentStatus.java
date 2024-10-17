@@ -42,6 +42,9 @@ public class ManagerPaymentStatus {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean confirmed;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean cancelled;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -59,6 +62,7 @@ public class ManagerPaymentStatus {
         this.defaults = dto.getDefaults();
         this.applied = dto.getApplied();
         this.confirmed = dto.isConfirmed();
+        this.cancelled = dto.isCancelled();
     }
     
     public ManagerPaymentStatusDto toAggregate() {
@@ -71,7 +75,8 @@ public class ManagerPaymentStatus {
                 description, 
                 defaults != null ? defaults : null,
                 applied,
-                confirmed
+                confirmed,
+                cancelled
         );
     }
 }

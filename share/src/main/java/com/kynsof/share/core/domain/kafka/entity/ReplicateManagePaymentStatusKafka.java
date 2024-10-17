@@ -23,5 +23,6 @@ public class ReplicateManagePaymentStatusKafka implements Serializable {
     private String status;
     private Boolean applied;
     private boolean confirmed;
+    private boolean cancelled;
 
 }
