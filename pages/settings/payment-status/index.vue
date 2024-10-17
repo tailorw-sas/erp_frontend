@@ -75,6 +75,12 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 mb-3 mt-3',
   },
   {
+    field: 'cancelled',
+    header: 'Cancelled',
+    dataType: 'check',
+    class: 'field col-12 mb-3 mt-3',
+  },
+  {
     field: 'description',
     header: 'Description',
     dataType: 'textarea',
@@ -97,6 +103,7 @@ const item = ref<GenericObject>({
   code: '',
   description: '',
   defaults: false,
+  cancelled: false,
   collected: false,
   confirmed: false,
   applied: false,
@@ -108,6 +115,7 @@ const itemTemp = ref<GenericObject>({
   code: '',
   description: '',
   defaults: false,
+  cancelled: false,
   collected: false,
   confirmed: false,
   applied: false,
@@ -262,6 +270,7 @@ async function getItemById(id: string) {
         item.value.defaults = response.defaults
         item.value.applied = response.applied
         item.value.confirmed = response.confirmed
+        item.value.cancelled = response.cancelled
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
