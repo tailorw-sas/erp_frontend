@@ -221,4 +221,17 @@ export const GenericService = {
       body: payload
     })
   },
+
+  async sendFormData(MODULE_NAME: string, URI_API: string, formData: FormData) {
+    const { $api } = useNuxtApp()
+    // const formData = new FormData()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+
+    return $api(url, {
+      method: 'POST',
+      body: formData
+
+    })
+  },
 }

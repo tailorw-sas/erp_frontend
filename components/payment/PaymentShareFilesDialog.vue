@@ -326,7 +326,6 @@ async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-    debugger
 
     if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
       const file = payload.path.files[0]
@@ -334,7 +333,7 @@ async function createItem(item: { [key: string]: any }) {
       formData.append('file', file)
       formData.append('paymentId', payload.paymentId)
       formData.append('fileName', 'document.pdf')
-      await GenericService.importFile(options.value.moduleApi, options.value.uriApi, formData)
+      await GenericService.sendFormData(options.value.moduleApi, options.value.uriApi, formData)
     }
   }
 }
