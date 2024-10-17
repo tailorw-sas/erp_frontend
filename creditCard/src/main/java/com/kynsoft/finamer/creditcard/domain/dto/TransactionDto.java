@@ -44,6 +44,7 @@ public class TransactionDto {
     private ManagerMerchantCurrencyDto merchantCurrency;
     private boolean manual;
 
+    //uso -> toAggregateParent
     public TransactionDto(
             Long id, UUID transactionUuid, LocalDate checkIn, String reservationNumber,
             String referenceNumber, LocalDate transactionDate) {
@@ -56,6 +57,7 @@ public class TransactionDto {
         this.transactionDate = transactionDate;
     }
 
+    //uso -> manual transaction, refund transaction
     public TransactionDto(
             UUID transactionUuid, ManageMerchantDto merchant, MethodType methodType, ManageHotelDto hotel,
             ManageAgencyDto agency, ManageLanguageDto language, Double amount,
@@ -93,6 +95,7 @@ public class TransactionDto {
         this.manual = manual;
     }
 
+    //uso -> adjustment transaction
     public TransactionDto(
             UUID transactionUuid, ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
