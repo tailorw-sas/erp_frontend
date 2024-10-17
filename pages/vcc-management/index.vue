@@ -17,6 +17,7 @@ const isAdmin = (data.value?.user as any)?.isAdmin === true
 
 const listItems = ref<any[]>([])
 const newManualTransactionDialogVisible = ref(false)
+const editManualTransactionDialogVisible = ref(false)
 const newAdjustmentTransactionDialogVisible = ref(false)
 const newRefundDialogVisible = ref(false)
 const loadingSaveAll = ref(false)
@@ -34,6 +35,7 @@ const filterToSearch = ref<IData>({
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
+const selectedTransactionId = ref('')
 const contextMenu = ref()
 
 enum MenuType {
@@ -683,6 +685,13 @@ async function openNewRefundDialog() {
   newRefundDialogVisible.value = true
 }
 
+async function onCloseEditManualTransactionDialog(isCancel: boolean) {
+  editManualTransactionDialogVisible.value = false
+  if (!isCancel) {
+    getList()
+  }
+}
+
 async function onCloseNewManualTransactionDialog(isCancel: boolean) {
   newManualTransactionDialogVisible.value = false
   if (!isCancel) {
@@ -702,6 +711,12 @@ async function onCloseNewRefundDialog(isCancel: boolean = true) {
   if (!isCancel) {
     getList()
   }
+}
+
+function onDoubleClick(item: any) {
+  const id = item.hasOwnProperty('id') ? item.id : item
+  selectedTransactionId.value = id
+  editManualTransactionDialogVisible.value = true
 }
 
 const disabledSearch = computed(() => {
@@ -973,6 +988,7 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
         @on-row-right-click="onRowRightClick"
+        @on-row-double-click="onDoubleClick($event)"
       >
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
@@ -991,6 +1007,7 @@ onMounted(() => {
     <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />
     <VCCNewAdjustmentTransaction :open-dialog="newAdjustmentTransactionDialogVisible" @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" />
     <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog($event)" />
+    <VCCEditManualTransaction :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="onCloseEditManualTransactionDialog($event)" />
   </div>
 </template>
 
