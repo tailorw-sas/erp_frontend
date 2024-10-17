@@ -11,6 +11,7 @@ import com.kynsoft.finamer.creditcard.domain.services.IMerchantLanguageCodeServi
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TransactionPaymentLogs;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageTransactionsRedirectLogsWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionPaymentLogsReadDataJPARepository;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -18,9 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -39,18 +40,23 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
 
     private final IMerchantLanguageCodeService merchantLanguageCodeService;
 
+    @Autowired
+    private final TransactionReadDataJPARepository transactionRepositoryQuery;
+
     public FormPaymentServiceImpl(ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand,
                                   TransactionPaymentLogsReadDataJPARepository repositoryQuery,
-                                  ICardNetJobService cardNetJobService, IMerchantLanguageCodeService merchantLanguageCodeService){
+                                  ICardNetJobService cardNetJobService, IMerchantLanguageCodeService merchantLanguageCodeService,
+                                  TransactionReadDataJPARepository transactionRepositoryQuery){
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.cardNetJobService = cardNetJobService;
         this.merchantLanguageCodeService = merchantLanguageCodeService;
+        this.transactionRepositoryQuery = transactionRepositoryQuery;
     }
 
     public ResponseEntity<String> redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
 
-        if (compareDates(transactionDto.getTransactionDate())) {
+        if (compareDates(transactionDto.getTransactionUuid())) {
             try {
                 if (merchantConfigDto.getMethod().equals(Method.AZUL.toString())) {
                     return redirectToAzul(transactionDto, merchantConfigDto);
@@ -68,7 +74,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
 
     private ResponseEntity<String> redirectToAzul(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
 
-        if (compareDates(transactionDto.getTransactionDate())) {
+        if (compareDates(transactionDto.getTransactionUuid())) {
             try {
                 // Extraer los parámetros del objeto PaymentRequest
                 //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
@@ -244,16 +250,16 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         }
     }
 
-    private Boolean compareDates(LocalDate date1) {
-        LocalDate currentDate = LocalDate.now();
-        // Calcular la diferencia en minutos
-        Period diferencia = Period.between(date1, currentDate);
-        //Comprobar que la diferncia sea menor que una semana
-        if (diferencia.getDays() <= 7 && diferencia.getMonths()<1 && diferencia.getYears()<1) {
-            return true;
-        }else {
-            return false;
-        }
+    private Boolean compareDates(UUID id) {
+        if(transactionRepositoryQuery.findByTransactionUuid(id).isPresent()) {
+            LocalDateTime date1 = transactionRepositoryQuery.findByTransactionUuid(id).get().getCreatedAt();
+
+            LocalDate currentDate = LocalDate.now();
+            // Calcular la diferencia en minutos
+            Duration difernce = Duration.between(date1, currentDate);
+            //Comprobar que la diferncia sea menor que una semana
+            return difernce.toDays() <= 7;
+        } else return false;
     }
 
     public UUID create(TransactionPaymentLogsDto dto) {

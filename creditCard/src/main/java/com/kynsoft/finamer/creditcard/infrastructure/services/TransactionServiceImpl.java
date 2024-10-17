@@ -1,5 +1,9 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.application.mailjet.MailJetRecipient;
+import com.kynsof.share.core.application.mailjet.MailJetVar;
+import com.kynsof.share.core.application.mailjet.MailService;
+import com.kynsof.share.core.application.mailjet.SendMailJetEMailRequest;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -21,10 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class TransactionServiceImpl implements ITransactionService {
@@ -35,9 +36,17 @@ public class TransactionServiceImpl implements ITransactionService {
     @Autowired
     private final TransactionReadDataJPARepository repositoryQuery;
 
-    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand, TransactionReadDataJPARepository repositoryQuery) {
+    @Autowired
+    private final ManageTransactionStatusServiceImpl statusService;
+
+    @Autowired
+    private final MailService mailService;
+
+    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand, TransactionReadDataJPARepository repositoryQuery, ManageTransactionStatusServiceImpl statusService, MailService mailService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.statusService = statusService;
+        this.mailService = mailService;
     }
 
     @Override
@@ -142,6 +151,50 @@ public class TransactionServiceImpl implements ITransactionService {
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    //Verificar que una transaccion este actualizada a RECIVIDA
+    public boolean confirmCreateTransaction(UUID transactionUUID){
+        return findByUuid(transactionUUID).getStatus() == statusService.findByETransactionStatus();
+    }
+
+    //Conformar el correo para confirmar que la transaccion fue Recivida
+    public void confirmTransactionMail(UUID transactionUUID){
+
+        TransactionDto transactionDto = findByUuid(transactionUUID);
+        //Send Mail after create the transaction to the HotelEmailContact in case of this exist
+        if(transactionDto.getEmail() != null){
+            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+            request.setTemplateId(6371592); // Cambiar en configuración
+
+            // Variables para el template de email, cambiar cuando keimer genere la plantilla
+            List<MailJetVar> vars = Arrays.asList(
+                    new MailJetVar("comerce", "Finamer Do"),
+                    new MailJetVar("merchant", "CardNet"),
+                    new MailJetVar("hotel", transactionDto.getHotel().getName()),
+                    new MailJetVar("numberId", transactionDto.getReservationNumber()),
+                    new MailJetVar("hotelId", transactionDto.getReservationNumber()),
+                    new MailJetVar("transactionType", "Sale"),
+                    new MailJetVar("status", transactionDto.getStatus().getStatus()),
+                    new MailJetVar("paymentDate", transactionDto.getTransactionDate()),
+                    new MailJetVar("authorizationNumber", "N/A"),
+                    new MailJetVar("cardType", transactionDto.getCreditCardType().getName()),
+                    new MailJetVar("cardNumber", transactionDto.getCardNumber()),
+                    new MailJetVar("amount", transactionDto.getAmount()),
+                    new MailJetVar("itbis", "0.00$"),
+                    new MailJetVar("reference", transactionDto.getReferenceNumber()),
+                    new MailJetVar("user", transactionDto.getGuestName()),
+                    new MailJetVar("madality", "POST")
+            );
+            request.setMailJetVars(vars);
+
+            // Recipients
+            List<MailJetRecipient> recipients = new ArrayList<>();
+            recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
+            request.setRecipientEmail(recipients);
+
+            mailService.sendMail(request);
+        }
     }
 
 }
