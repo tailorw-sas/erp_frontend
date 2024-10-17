@@ -345,7 +345,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_EDIT_BOOKING_AMOUNT_AND_BOOKING_BALANCE(1123, Series.DOMAIN_ERROR,"It is not possible to edit the invoice because the value of the booking amount does not equal the booking balance."),
     MANAGE_INVOICE_CHANGE_STATUS(1124, Series.DOMAIN_ERROR,"The invoice can only be changed to the Cancelled status if it is currently in the Processed status."),
     MANAGE_INVOICE_CHANGE_AGENCY(1125, Series.DOMAIN_ERROR,"In the current state of the invoice, the agency cannot be modified."),
-    MANAGE_VCC_TRANSACTION_TYPE_CHECK_DEFAULT(1126, Series.DOMAIN_ERROR,"Another item already exists with default.");
+    MANAGE_VCC_TRANSACTION_TYPE_CHECK_DEFAULT(1126, Series.DOMAIN_ERROR,"Another item already exists with default."),
+    UPDATE_PAYMENT_VALIDATE_CHANGE_STATUS(1127, Series.DOMAIN_ERROR,"It is not possible to change the status from confirmed to canceled if there is an applied payment.");
 
     private static final DomainErrorMessage[] VALUES;
 
