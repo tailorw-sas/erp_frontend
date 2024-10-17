@@ -41,7 +41,7 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
-    @CacheEvict(cacheNames = {"managePaymentTransactionType", "managePaymentTransactionTypeAll"}, allEntries = true)
+    //@CacheEvict(cacheNames = {"managePaymentTransactionType", "managePaymentTransactionTypeAll"}, allEntries = true)
     public UUID create(ManagePaymentTransactionTypeDto dto) {
         ManagePaymentTransactionType entity = new ManagePaymentTransactionType(dto);
         ManagePaymentTransactionType saved = repositoryCommand.save(entity);
@@ -49,13 +49,13 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
-    @CacheEvict(cacheNames = {"managePaymentTransactionType", "managePaymentTransactionTypeAll"}, allEntries = true)
+   // @CacheEvict(cacheNames = {"managePaymentTransactionType", "managePaymentTransactionTypeAll"}, allEntries = true)
     public void update(ManagePaymentTransactionTypeDto dto) {
         repositoryCommand.save(new ManagePaymentTransactionType(dto));
     }
 
     @Override
-    @CacheEvict(cacheNames = {"managePaymentTransactionType", "managePaymentTransactionTypeAll"}, allEntries = true)
+   // @CacheEvict(cacheNames = {"managePaymentTransactionType", "managePaymentTransactionTypeAll"}, allEntries = true)
     public void delete(ManagePaymentTransactionTypeDto dto) {
         try {
             this.repositoryCommand.deleteById(dto.getId());
@@ -66,7 +66,7 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
-    @Cacheable(cacheNames = "managePaymentTransactionType", key = "#id", unless = "#result == null")
+   // @Cacheable(cacheNames = "managePaymentTransactionType", key = "#id", unless = "#result == null")
     public ManagePaymentTransactionTypeDto findById(UUID id) {
         Optional<ManagePaymentTransactionType> optionalEntity = repositoryQuery.findById(id);
         if (optionalEntity.isPresent()) {
@@ -77,7 +77,7 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
-    @Cacheable(cacheNames = "managePaymentTransactionTypeAll", unless = "#result == null")
+   // @Cacheable(cacheNames = "managePaymentTransactionTypeAll", unless = "#result == null")
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         GenericSpecificationsBuilder<ManagePaymentTransactionType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManagePaymentTransactionType> data = this.repositoryQuery.findAll(specifications, pageable);
