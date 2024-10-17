@@ -714,9 +714,11 @@ async function onCloseNewRefundDialog(isCancel: boolean = true) {
 }
 
 function onDoubleClick(item: any) {
-  const id = item.hasOwnProperty('id') ? item.id : item
-  selectedTransactionId.value = id
-  editManualTransactionDialogVisible.value = true
+  if (item.manual) {
+    const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
+    selectedTransactionId.value = id
+    editManualTransactionDialogVisible.value = true
+  }
 }
 
 const disabledSearch = computed(() => {
