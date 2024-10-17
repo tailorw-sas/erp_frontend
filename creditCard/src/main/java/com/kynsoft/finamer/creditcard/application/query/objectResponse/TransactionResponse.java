@@ -41,6 +41,7 @@ public class TransactionResponse implements IResponse {
     private ManageVCCTransactionTypeResponse transactionSubCategory;
     private Double netAmount;
     private Boolean permitRefund;
+    private boolean manual;
 
     public TransactionResponse(TransactionDto dto){
         this.id = dto.getId();
@@ -71,5 +72,6 @@ public class TransactionResponse implements IResponse {
         this.transactionSubCategory = dto.getTransactionSubCategory() != null ? new ManageVCCTransactionTypeResponse(dto.getTransactionSubCategory()) : null;
         this.netAmount = dto.getNetAmount();
         this.permitRefund = dto.getPermitRefund();
+        this.manual = dto.isManual();
     }
 }

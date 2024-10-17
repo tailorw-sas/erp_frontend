@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.manualTransaction.create;
+package com.kynsoft.finamer.creditcard.application.command.transaction.manual;
 
 import com.kynsof.share.core.application.mailjet.MailJetRecipient;
 import com.kynsof.share.core.application.mailjet.MailJetVar;
@@ -6,10 +6,6 @@ import com.kynsof.share.core.application.mailjet.MailService;
 import com.kynsof.share.core.application.mailjet.SendMailJetEMailRequest;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
-import com.kynsof.share.core.domain.exception.DomainErrorMessage;
-import com.kynsof.share.core.domain.exception.GlobalBusinessException;
-import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.UrlGetBase;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
@@ -132,7 +128,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 null,
                 netAmount,
                 true,
-                merchantCurrencyDto
+                merchantCurrencyDto,
+                true
         ));
         command.setId(id);
 
