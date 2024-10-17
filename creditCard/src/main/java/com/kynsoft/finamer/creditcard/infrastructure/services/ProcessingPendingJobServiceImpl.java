@@ -48,7 +48,7 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
         this.repositoryCradentProcessErrorQuery = repositoryCradentProcessErrorQuery;
     }
 
-    @Scheduled(fixedRate = 600000)  // se ejecuta el método cada 600000 ms = 10 minutos
+//    @Scheduled(fixedRate = 600000)  // se ejecuta el método cada 600000 ms = 10 minutos
     public void checkIsProcessedAndCallTransactionStatus() {
 
         LocalDate yesterdaynew = LocalDate.now().minusDays(1);
