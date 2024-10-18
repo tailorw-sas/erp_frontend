@@ -2707,8 +2707,6 @@ onMounted(async () => {
               onUpdate('paymentStatus', $event)
             }"
             @load="async($event) => {
-              console.log(data.paymentStatus);
-
               const objQueryToSearch = {
                 query: $event,
                 keys: ['name', 'code'],
