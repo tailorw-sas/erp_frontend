@@ -165,29 +165,32 @@ public class TransactionServiceImpl implements ITransactionService {
 
             // Variables para el template de email, cambiar cuando keimer genere la plantilla
             List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("comerce", "Finamer Do"),
+                    new MailJetVar("commerce", "Finamer Do"),
                     new MailJetVar("merchant", "CardNet"),
                     new MailJetVar("hotel", transactionDto.getHotel().getName()),
-                    new MailJetVar("numberId", transactionDto.getReservationNumber()),
-                    new MailJetVar("hotelId", transactionDto.getReservationNumber()),
-                    new MailJetVar("transactionType", "Sale"),
+                    new MailJetVar("number_id", transactionDto.getReservationNumber()),
+                    new MailJetVar("transaction_type", "Sale"),
                     new MailJetVar("status", transactionDto.getStatus().getStatus()),
-                    new MailJetVar("paymentDate", transactionDateStr),
-                    new MailJetVar("authorizationNumber", "N/A"),
-                    new MailJetVar("cardType", transactionDto.getCreditCardType().getName()),
-                    new MailJetVar("cardNumber", transactionDto.getCardNumber()),
-                    new MailJetVar("amount", transactionDto.getAmount()),
-                    new MailJetVar("itbis", "0.00$"),
+                    new MailJetVar("payment_date", transactionDateStr),
+                    new MailJetVar("authorization_number", "N/A"),
+                    new MailJetVar("card_type", transactionDto.getCreditCardType().getName()),
+                    new MailJetVar("card_number", transactionDto.getCardNumber()),
+                    new MailJetVar("amount_usd", transactionDto.getAmount()),
+                    new MailJetVar("ibtis_usd", "$0.00"),
                     new MailJetVar("reference", transactionDto.getReferenceNumber()),
                     new MailJetVar("user", transactionDto.getGuestName()),
-                    new MailJetVar("madality", transactionDto.getMethodType().name())
+                    new MailJetVar("modality", transactionDto.getMethodType().name())
             );
             request.setMailJetVars(vars);
 
             // Recipients
             List<MailJetRecipient> recipients = new ArrayList<>();
-            recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
-            recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getHotel().getName()));
+            if (transactionDto.getEmail() != null && !transactionDto.getEmail().isEmpty()) {
+                recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
+            }
+            if (transactionDto.getHotelContactEmail() != null && !transactionDto.getHotelContactEmail().isEmpty()) {
+                recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
+            }
             request.setRecipientEmail(recipients);
 
             mailService.sendMail(request);
