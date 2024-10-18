@@ -165,7 +165,7 @@ public class TransactionServiceImpl implements ITransactionService {
         //Send Mail after create the transaction to the HotelEmailContact in case of this exist
         if(transactionDto.getEmail() != null){
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-            request.setTemplateId(6371592); // Cambiar en configuración
+            request.setTemplateId(6395138); // Cambiar en configuración
 
             // Variables para el template de email, cambiar cuando keimer genere la plantilla
             List<MailJetVar> vars = Arrays.asList(
