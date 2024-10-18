@@ -68,7 +68,19 @@ public class ExcelExporterService {
                 Double pBalance = 0.0;
                 Double dAmount = 0.0;
                 Double applied = 0.0;
-                Double notApplied = 0.0;                
+                Double notApplied = 0.0;
+
+                //Status
+                int appliedStatus = 0;
+                int confirmedStatus = 0;
+                int cancelledStatus = 0;
+                int transitStatus = 0;
+
+                //Importe por Status
+                Double appliedImpStatus = 0.0;
+                Double confirmedImpStatus = 0.0;
+                Double cancelledImpStatus = 0.0;
+                Double transitImpStatus = 0.0;
                 for (PaymentDto entity : responses) {
                     Row dataRow = sheet.createRow(rowNum++);
                     pBalance = pBalance + entity.getPaymentAmount();
@@ -76,10 +88,23 @@ public class ExcelExporterService {
                     applied = applied + entity.getApplied();
                     notApplied = notApplied + entity.getNotApplied();
 
+                    if (entity.getPaymentStatus().getApplied()) {
+                        appliedStatus ++;
+                        appliedImpStatus = appliedImpStatus + entity.getPaymentAmount();
+                    }
+                    if (entity.getPaymentStatus().isCancelled()) {
+                        cancelledStatus ++;
+                        cancelledImpStatus = cancelledImpStatus + entity.getPaymentAmount();
+                    }
+                    if (entity.getPaymentStatus().isConfirmed()) {
+                        confirmedStatus ++;
+                        confirmedImpStatus = confirmedImpStatus + entity.getPaymentAmount();
+                    }
                     CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.BLUE);
                     addPaymentData(entity, style, dataRow);
                 }
-                createHeaderTotalPayment(sheet, workbook, rowNum, pBalance, dAmount, applied, notApplied, responseAll.getTotalElementsPage());
+                createHeaderTotalPayment(sheet, workbook, rowNum, pBalance, dAmount, applied, notApplied, responseAll.getTotalElementsPage(), appliedStatus, confirmedStatus, 
+                                         cancelledStatus, transitStatus, confirmedImpStatus, appliedImpStatus, cancelledImpStatus, transitImpStatus);
             }
 
             default -> throw new IllegalArgumentException("No se ha especificado una opción válida en PaymentExcelExporterEnum");
@@ -176,25 +201,110 @@ public class ExcelExporterService {
         headerRow.getCell(14).setCellStyle(style);
     }
 
-    private void createHeaderTotalPayment(Sheet sheet, Workbook workbook, int rowNum, Double pBalance, Double dAmount, Double applied, Double notApplied, int total) {
+    private void createHeaderTotalPayment(Sheet sheet, Workbook workbook, int rowNum, Double pBalance, Double dAmount, Double applied, Double notApplied, int total,
+                                          int appliedStatus, int confirmedStatus, int cancelledStatus, int transitStatus, Double confirmedImpStatus, Double appliedImpStatus,
+                                          Double cancelledImpStatus, Double transitImpStatus) {
         Row headerRow = sheet.createRow(rowNum);
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
 
         CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.WHITE);
-        headerRow.createCell(0).setCellValue("Total");
+        headerRow.createCell(0).setCellValue("Total #" + total);
         headerRow.getCell(0).setCellStyle(style);
-        headerRow.createCell(1).setCellValue(total);
+
+        headerRow.createCell(3).setCellValue("Transit #" + transitStatus);
+        headerRow.getCell(3).setCellStyle(style);
+
+        headerRow.createCell(4).setCellValue("Can. #" + cancelledStatus);
+        headerRow.getCell(4).setCellStyle(style);
+
+        headerRow.createCell(5).setCellValue("Conf. #" + confirmedStatus);
+        headerRow.getCell(5).setCellStyle(style);
+
+        headerRow.createCell(6).setCellValue("Appl. #" + appliedStatus);
+        headerRow.getCell(6).setCellStyle(style);
+
+        Row headerRow1 = sheet.createRow(rowNum + 1);
+        headerRow1.createCell(0).setCellValue("Total $"  + decimalFormat.format(pBalance));
+        headerRow1.getCell(0).setCellStyle(style);
+
+        headerRow1.createCell(3).setCellValue("Transit $" + transitImpStatus);
+        headerRow1.getCell(3).setCellStyle(style);
+
+        headerRow1.createCell(4).setCellValue("Can. $" + cancelledImpStatus);
+        headerRow1.getCell(4).setCellStyle(style);
+
+        headerRow1.createCell(5).setCellValue("Conf. $" + confirmedImpStatus);
+        headerRow1.getCell(5).setCellStyle(style);
+
+        headerRow1.createCell(6).setCellValue("Applied. $" + appliedImpStatus);
+        headerRow1.getCell(6).setCellStyle(style);
+
+        headerRow1.createCell(9).setCellValue("P. Amount" + decimalFormat.format(pBalance));
+        headerRow1.getCell(9).setCellStyle(style);
+        headerRow1.createCell(10).setCellValue("Dep. $" + decimalFormat.format(dAmount));
+        headerRow1.getCell(10).setCellStyle(style);
+        headerRow1.createCell(11).setCellValue("Appl. $" + decimalFormat.format(applied));
+        headerRow1.getCell(11).setCellStyle(style);
+        headerRow1.createCell(12).setCellValue("N. Appl." + decimalFormat.format(notApplied));
+        headerRow1.getCell(12).setCellStyle(style);
+    }
+//
+//    private void createHeaderTotalPayment(Sheet sheet, Workbook workbook, int rowNum, Double pBalance, Double dAmount, Double applied, Double notApplied, int total) {
+//        Row headerRow = sheet.createRow(rowNum);
+//        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+//
+//        CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.WHITE);
+//        headerRow.createCell(0).setCellValue("Total #");
+//        headerRow.getCell(0).setCellStyle(style);
+//        headerRow.createCell(1).setCellValue(total);
+//        headerRow.getCell(1).setCellStyle(style);
+//        headerRow.createCell(8).setCellValue("Totals");
+//        headerRow.getCell(8).setCellStyle(style);
+//        headerRow.createCell(9).setCellValue(decimalFormat.format(pBalance));
+//        headerRow.getCell(9).setCellStyle(style);
+//        headerRow.createCell(10).setCellValue(decimalFormat.format(dAmount));
+//        headerRow.getCell(10).setCellStyle(style);
+//        headerRow.createCell(11).setCellValue(decimalFormat.format(applied));
+//        headerRow.getCell(11).setCellStyle(style);
+//        headerRow.createCell(12).setCellValue(decimalFormat.format(notApplied));
+//        headerRow.getCell(12).setCellStyle(style);
+//    }
+
+    private void createHeaderTotalForStatusPayment(Sheet sheet, Workbook workbook, int rowNum, Double confirmedImpStatus, Double appliedImpStatus, 
+                                                   Double cancelledImpStatus, int appliedStatus, int confirmedStatus, int cancelledStatus) {
+        Row headerRow = sheet.createRow(rowNum + 1);
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+        CellStyle style = createFont(workbook, PaymentExcelExporterCellColorEnum.WHITE);
+
+        headerRow.createCell(0).setCellValue("Confirmed #");
+        headerRow.getCell(0).setCellStyle(style);
+        headerRow.createCell(1).setCellValue(confirmedStatus);
         headerRow.getCell(1).setCellStyle(style);
-        headerRow.createCell(8).setCellValue("Totals");
-        headerRow.getCell(8).setCellStyle(style);
-        headerRow.createCell(9).setCellValue(decimalFormat.format(pBalance));
-        headerRow.getCell(9).setCellStyle(style);
-        headerRow.createCell(10).setCellValue(decimalFormat.format(dAmount));
-        headerRow.getCell(10).setCellStyle(style);
-        headerRow.createCell(11).setCellValue(decimalFormat.format(applied));
-        headerRow.getCell(11).setCellStyle(style);
-        headerRow.createCell(12).setCellValue(decimalFormat.format(notApplied));
-        headerRow.getCell(12).setCellStyle(style);
+        headerRow.createCell(2).setCellValue("Confirmed $");
+        headerRow.getCell(2).setCellStyle(style);
+        headerRow.createCell(3).setCellValue(decimalFormat.format(confirmedImpStatus));
+        headerRow.getCell(3).setCellStyle(style);
+
+        Row headerRow1 = sheet.createRow(rowNum + 2);
+        headerRow1.createCell(0).setCellValue("Cancelled #");
+        headerRow1.getCell(0).setCellStyle(style);
+        headerRow1.createCell(1).setCellValue(cancelledStatus);
+        headerRow1.getCell(1).setCellStyle(style);
+        headerRow1.createCell(2).setCellValue("Cancelled $");
+        headerRow1.getCell(2).setCellStyle(style);
+        headerRow1.createCell(3).setCellValue(decimalFormat.format(cancelledImpStatus));
+        headerRow1.getCell(3).setCellStyle(style);
+
+        Row headerRow2 = sheet.createRow(rowNum + 3);
+        headerRow2.createCell(0).setCellValue("Applied #");
+        headerRow2.getCell(0).setCellStyle(style);
+        headerRow2.createCell(1).setCellValue(appliedStatus);
+        headerRow2.getCell(1).setCellStyle(style);
+        headerRow2.createCell(2).setCellValue("Applied $");
+        headerRow2.getCell(2).setCellStyle(style);
+        headerRow2.createCell(3).setCellValue(decimalFormat.format(appliedImpStatus));
+        headerRow2.getCell(3).setCellStyle(style);
+
     }
 
     private CellStyle createFont(Workbook workbook, PaymentExcelExporterCellColorEnum color) {
