@@ -2727,10 +2727,10 @@ onMounted(async () => {
                   value: data.paymentStatus?.id,
                 },
                 {
-                  key: 'code',
+                  key: 'cancelled',
                   logicalOperation: 'OR',
                   operator: 'EQUALS',
-                  value: 'CAN',
+                  value: true,
                 },
               ] : [
                 {
@@ -2738,6 +2738,12 @@ onMounted(async () => {
                   logicalOperation: 'AND',
                   operator: 'EQUALS',
                   value: 'ACTIVE',
+                },
+                {
+                  key: 'code',
+                  logicalOperation: 'AND',
+                  operator: 'NOT_EQUALS',
+                  value: 'TRA',
                 },
               ]
 

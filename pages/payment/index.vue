@@ -2946,6 +2946,12 @@ onMounted(async () => {
                               operator: 'EQUALS',
                               value: 'ACTIVE',
                             },
+                            {
+                              key: 'code',
+                              logicalOperation: 'AND',
+                              operator: 'NOT_EQUALS',
+                              value: 'TRA',
+                            },
                           ]
                           const objQueryToSearch = {
                             query: $event,
