@@ -67,8 +67,8 @@ const fields: Array<FieldDefinitionType> = [
     })
   },
   {
-    field: 'componentType',
-    header: 'Component Type',
+    field: 'type',
+    header: 'Type',
     dataType: 'text',
     class: 'field col-12 required',
     disabled: true,
@@ -82,9 +82,10 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     validation: z.string().trim().min(1, 'The param name field is required').max(50, 'Maximum 100 characters')
   },
+
   {
-    field: 'type',
-    header: 'Type',
+    field: 'componentType',
+    header: 'Component Type',
     dataType: 'select',
     class: 'field col-12 required',
     validation: z.object({
@@ -151,8 +152,8 @@ const columns: IColumn[] = [
   { field: 'reportId', header: 'Report', type: 'text', objApi: { moduleApi: 'report', uriApi: 'jasper-report-template' }, showFilter: false, sortable: false },
   { field: 'paramName', header: 'Param Name', type: 'text' },
   { field: 'label', header: 'Label', type: 'text' },
-  { field: 'type', header: 'Type', type: 'local-select', localItems: FORM_FIELD_TYPE, sortable: true },
-  // { field: 'module', header: 'Module', type: 'text' },
+  { field: 'type', header: 'Type', type: 'text' },
+  // { field: 'type', header: 'Type', type: 'local-select', localItems: FORM_FIELD_TYPE, sortable: true },
   // { field: 'service', header: 'Service', type: 'text' },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -327,7 +328,7 @@ async function getItemById(id: string) {
       if (response) {
         item.value = { ...response }
         item.value.id = response.id
-        item.value.type = FORM_FIELD_TYPE.find(x => x.id === response.type)
+        item.value.componentType = FORM_FIELD_TYPE.find(x => x.id === response.componentType)
         item.value.reportId = response.jasperReportTemplate
           ? {
               id: response.jasperReportTemplate.id,
@@ -365,6 +366,7 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.reportId = typeof payload.reportId === 'object' ? payload.reportId.id : payload.reportId
+  payload.componentType = typeof payload.componentType === 'object' ? payload.componentType.id : payload.componentType
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -569,15 +571,15 @@ onMounted(async () => {
               />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
-            <template #field-type="{ item: data, onUpdate }">
+            <template #field-componentType="{ item: data, onUpdate }">
               <Dropdown
                 v-if="!loadingSaveAll"
-                v-model="data.type"
+                v-model="data.componentType"
                 :options="[...FORM_FIELD_TYPE]"
                 option-label="name"
                 :return-object="false"
                 @update:model-value="($event) => {
-                  onUpdate('type', $event)
+                  onUpdate('componentType', $event)
                   if ($event && $event?.id === 'select') {
                     updateFieldProperty(fields, 'module', 'class', 'field col-12 required')
                     updateFieldProperty(fields, 'module', 'validation', z.string().trim().min(1, 'The module field is required').max(50, 'Maximum 50 characters'))
