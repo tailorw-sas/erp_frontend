@@ -21,8 +21,9 @@ public class CreateManagePaymentStatusCommand implements ICommand {
     private Boolean applied;
     private boolean confirmed;
     private boolean cancelled;
+    private boolean transit;
 
-    public CreateManagePaymentStatusCommand(final String code, final String name, final Status status, final Boolean collected, final String description, Boolean defaults, Boolean applied, boolean confirmed, boolean cancelled) {
+    public CreateManagePaymentStatusCommand(final String code, final String name, final Status status, final Boolean collected, final String description, Boolean defaults, Boolean applied, boolean confirmed, boolean cancelled, boolean transit) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -33,6 +34,7 @@ public class CreateManagePaymentStatusCommand implements ICommand {
         this.applied = applied;
         this.confirmed = confirmed;
         this.cancelled = cancelled;
+        this.transit = transit;
     }
 
     public static CreateManagePaymentStatusCommand fromRequest(CreateManagePaymentStatusRequest request) {
@@ -45,7 +47,8 @@ public class CreateManagePaymentStatusCommand implements ICommand {
                 request.getDefaults(), 
                 request.getApplied(), 
                 request.isConfirmed(),
-                request.isCancelled()
+                request.isCancelled(),
+                request.isTransit()
         );
     }
 

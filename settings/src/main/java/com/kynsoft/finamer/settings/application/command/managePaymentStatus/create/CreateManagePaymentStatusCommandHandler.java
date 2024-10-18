@@ -42,7 +42,8 @@ public class CreateManagePaymentStatusCommandHandler implements ICommandHandler<
                 command.getDefaults(), 
                 command.getApplied(), 
                 command.isConfirmed(),
-                command.isCancelled()
+                command.isCancelled(),
+                command.isTransit()
         ));
         this.producerReplicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(
                 command.getId(), 
@@ -51,7 +52,8 @@ public class CreateManagePaymentStatusCommandHandler implements ICommandHandler<
                 command.getStatus().name(), 
                 command.getApplied(), 
                 command.isConfirmed(),
-                command.isCancelled()
+                command.isCancelled(),
+                command.isTransit()
         ));
     }
 }

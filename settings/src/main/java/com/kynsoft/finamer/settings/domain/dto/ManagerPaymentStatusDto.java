@@ -23,4 +23,5 @@ public class ManagerPaymentStatusDto {
     private Boolean applied;
     private boolean confirmed;
     private boolean cancelled;
+    private boolean transit;
 }

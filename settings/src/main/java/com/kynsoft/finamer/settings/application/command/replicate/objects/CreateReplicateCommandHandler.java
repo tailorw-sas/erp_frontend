@@ -336,7 +336,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 paymentStatusDto.getStatus().name(), 
                                 paymentStatusDto.getApplied(), 
                                 paymentStatusDto.isConfirmed(),
-                                paymentStatusDto.isCancelled()
+                                paymentStatusDto.isCancelled(),
+                                paymentStatusDto.isTransit()
                         ));
                     }
                 }
