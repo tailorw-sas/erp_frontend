@@ -72,6 +72,7 @@ const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 
 const paymentDetailsList = ref<any[]>([])
+const paymentStatusOfGetById = ref({} as GenericObject)
 
 const contextMenu = ref()
 const objItemSelectedForRightClick = ref({} as GenericObject)
@@ -977,6 +978,11 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       // successOperation = false
+      if (error.data.data.error && error.data.data.error.status === 1127) {
+        item.paymentStatus = paymentStatusOfGetById.value
+        formReload.value++
+      }
+
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
@@ -1112,6 +1118,9 @@ async function getItemById(id: string) {
           : null
         paymentStatusList.value = [paymentStatusTemp]
         item.value.paymentStatus = paymentStatusTemp
+        if (paymentStatusTemp) {
+          paymentStatusOfGetById.value = paymentStatusTemp
+        }
 
         const paymentSourceTemp = response.paymentSource
           ? {
@@ -1243,9 +1252,9 @@ async function getListPaymentDetail() {
     }
 
     paymentDetailsList.value = [...paymentDetailsList.value, ...newListItems]
-    if (somePaymenWithApplyPayment.value === false && item.value?.paymentStatus?.confirmed === true) {
-      updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
-    }
+    // if (paymentDetailsList.value.length === 0 && item.value?.paymentStatus?.confirmed === true) {
+    //   updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
+    // }
   }
   catch (error) {
     console.error(error)
@@ -2613,6 +2622,12 @@ watch(() => hasBeenCreated.value, async (newValue) => {
 // Watcher
 watch(() => paymentDetailsList.value, (newValue) => {
   enableDepositSummaryAction.value = hasDepositSummaryTransaction(newValue)
+  if (paymentDetailsList.value.length === 0) {
+    updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
+  }
+  else {
+    updateFieldProperty(fields, 'paymentStatus', 'disabled', true)
+  }
 })
 
 watch(() => route?.query?.id, async (newValue) => {
@@ -2722,7 +2737,7 @@ onMounted(async () => {
                   key: 'id',
                   logicalOperation: 'OR',
                   operator: 'EQUALS',
-                  value: data.paymentStatus?.id,
+                  value: paymentStatusOfGetById?.id || '',
                 },
                 {
                   key: 'cancelled',

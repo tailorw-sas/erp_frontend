@@ -849,12 +849,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/payment/attachment-type'),
               items: []
             },
-            {
-              label: 'Payment Transaction Status',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/payment-transaction-status'),
-              items: []
-            }
           ]
         }
       ],
@@ -949,6 +943,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'Transaction Status',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/transaction-status'),
+              items: []
+            },
+            {
+              label: 'Payment Transaction Status',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/payment-transaction-status'),
               items: []
             }
           ]
