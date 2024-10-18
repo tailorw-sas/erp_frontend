@@ -81,11 +81,6 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
                 cardnetProcessErrorLogDto.setError("There is no mistake in this iteration");
                 createOrUpdate(cardnetProcessErrorLogDto);
 
-                //Verificamos que ya la transaccion este en estado RECIVIDO, si es TRUE mandamos el correo
-                if(transactionService.confirmCreateTransaction(list.get(index).getTransactionId())){
-                    transactionService.confirmTransactionMail(list.get(index).getTransactionId());
-                }
-
             } catch (Exception e) {
                 // Manejo de la excepción, por ejemplo, registrar el error
                 cardnetProcessErrorLogDto.setSession(list.get(index).getSession());

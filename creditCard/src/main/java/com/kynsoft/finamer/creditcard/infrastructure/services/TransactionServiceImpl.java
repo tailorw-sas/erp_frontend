@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -153,19 +154,14 @@ public class TransactionServiceImpl implements ITransactionService {
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
-    //Verificar que una transaccion este actualizada a RECIVIDA
-    public boolean confirmCreateTransaction(UUID transactionUUID){
-        return findByUuid(transactionUUID).getStatus() == statusService.findByETransactionStatus();
-    }
-
     //Conformar el correo para confirmar que la transaccion fue Recivida
-    public void confirmTransactionMail(UUID transactionUUID){
-
-        TransactionDto transactionDto = findByUuid(transactionUUID);
-        //Send Mail after create the transaction to the HotelEmailContact in case of this exist
+    public void confirmTransactionMail(TransactionDto transactionDto){
         if(transactionDto.getEmail() != null){
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
             request.setTemplateId(6395138); // Cambiar en configuración
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String transactionDateStr = transactionDto.getTransactionDate().format(formatter);
 
             // Variables para el template de email, cambiar cuando keimer genere la plantilla
             List<MailJetVar> vars = Arrays.asList(
@@ -176,7 +172,7 @@ public class TransactionServiceImpl implements ITransactionService {
                     new MailJetVar("hotelId", transactionDto.getReservationNumber()),
                     new MailJetVar("transactionType", "Sale"),
                     new MailJetVar("status", transactionDto.getStatus().getStatus()),
-                    new MailJetVar("paymentDate", transactionDto.getTransactionDate()),
+                    new MailJetVar("paymentDate", transactionDateStr),
                     new MailJetVar("authorizationNumber", "N/A"),
                     new MailJetVar("cardType", transactionDto.getCreditCardType().getName()),
                     new MailJetVar("cardNumber", transactionDto.getCardNumber()),
@@ -184,7 +180,7 @@ public class TransactionServiceImpl implements ITransactionService {
                     new MailJetVar("itbis", "0.00$"),
                     new MailJetVar("reference", transactionDto.getReferenceNumber()),
                     new MailJetVar("user", transactionDto.getGuestName()),
-                    new MailJetVar("madality", "POST")
+                    new MailJetVar("madality", transactionDto.getMethodType().name())
             );
             request.setMailJetVars(vars);
 
