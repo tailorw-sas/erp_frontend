@@ -4,23 +4,24 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.kynsof.audit.domain.EventType;
+import com.kynsof.audit.infrastructure.core.UserContext;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.identity.kafka.AuditKafka;
 import com.kynsof.audit.infrastructure.service.kafka.ProducerAuditEventService;
 import com.kynsof.audit.infrastructure.utils.SpringContext;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
 @Component
 public class AuditEntityListener {
-
+    private Logger logger = LoggerFactory.getLogger(AuditEntityListener.class);
 
     private final ObjectMapper objectMapper;
 
@@ -47,21 +48,23 @@ public class AuditEntityListener {
     }
 
     private void sendAuditRecord(Object object, EventType eventType) {
-//         try {
-   //     String data = objectMapper.writeValueAsString(object);
-        ProducerAuditEventService procedure = SpringContext.getBean(ProducerAuditEventService.class);
-        AuditKafka auditKafka = new AuditKafka();
-  //      auditKafka.setData(data);
-        RemoteAudit remoteAudit =object.getClass().getAnnotation(RemoteAudit.class);
-        auditKafka.setAuditRegisterId(remoteAudit.id());
-        auditKafka.setEntityName(remoteAudit.name());
-        auditKafka.setAction(eventType.name());
-        auditKafka.setTime(LocalDateTime.now());
-        procedure.send(auditKafka);
+        String username = UserContext.getCurrentUser();
+        try {
+            String data = objectMapper.writeValueAsString(object);
+            ProducerAuditEventService procedure = SpringContext.getBean(ProducerAuditEventService.class);
+            AuditKafka auditKafka = new AuditKafka();
+            auditKafka.setData(data);
+            RemoteAudit remoteAudit = object.getClass().getAnnotation(RemoteAudit.class);
+            auditKafka.setAuditRegisterId(remoteAudit.id());
+            auditKafka.setEntityName(remoteAudit.name());
+            auditKafka.setAction(eventType.name());
+            auditKafka.setTime(LocalDateTime.now());
+            auditKafka.setUsername(username);
+            procedure.send(auditKafka);
 
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException(e);
-//         }
+        } catch (JsonProcessingException e) {
+           logger.error("Ha ocurrido un error al procesar la entidad");
+        }
 
     }
 

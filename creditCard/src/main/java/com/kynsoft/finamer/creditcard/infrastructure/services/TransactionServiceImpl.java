@@ -191,6 +191,7 @@ public class TransactionServiceImpl implements ITransactionService {
             // Recipients
             List<MailJetRecipient> recipients = new ArrayList<>();
             recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
+            recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getHotel().getName()));
             request.setRecipientEmail(recipients);
 
             mailService.sendMail(request);

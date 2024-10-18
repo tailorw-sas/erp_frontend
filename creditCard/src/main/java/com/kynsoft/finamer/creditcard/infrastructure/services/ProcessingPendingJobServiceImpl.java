@@ -11,6 +11,7 @@ import com.kynsoft.finamer.creditcard.infrastructure.repository.command.CardnetP
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.CardnetJobReadDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.CardnetProcessErrorLogReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -50,7 +51,7 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
         this.transactionService = transactionService;
     }
 
-//    @Scheduled(fixedRate = 600000)  // se ejecuta el método cada 600000 ms = 10 minutos
+    @Scheduled(fixedRate = 600000)  // se ejecuta el método cada 600000 ms = 10 minutos
     public void checkIsProcessedAndCallTransactionStatus() {
 
         LocalDate yesterdaynew = LocalDate.now().minusDays(1);
@@ -63,10 +64,10 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
 
     // Método recursivo que procesa la lista
     private void processedCardnetJobListRecursive(List<CardnetJob> list, int index) {
-        CardnetJobDto cardnetJobDto = cardnetJobService.findByTransactionId(list.get(index).getTransactionId());
-        CardnetProcessErrorLogDto cardnetProcessErrorLogDto = new CardnetProcessErrorLogDto();
         // Verificamos si hemos llegado al final de la lista(Condición de parada)
         if (index < list.size()) {
+            CardnetJobDto cardnetJobDto = cardnetJobService.findByTransactionId(list.get(index).getTransactionId());
+            CardnetProcessErrorLogDto cardnetProcessErrorLogDto = new CardnetProcessErrorLogDto();
             try {
                 // Acción a ejecutar en cada elemento
                 UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()
