@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -163,19 +164,22 @@ public class TransactionServiceImpl implements ITransactionService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String transactionDateStr = transactionDto.getTransactionDate().format(formatter);
 
+            NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
+            String formattedAmount = currencyFormatter.format(transactionDto.getAmount());
+
             // Variables para el template de email, cambiar cuando keimer genere la plantilla
             List<MailJetVar> vars = Arrays.asList(
                     new MailJetVar("commerce", "Finamer Do"),
-                    new MailJetVar("merchant", "CardNet"),
+                    new MailJetVar("merchant", transactionDto.getMerchant().getDescription()),
                     new MailJetVar("hotel", transactionDto.getHotel().getName()),
-                    new MailJetVar("number_id", transactionDto.getReservationNumber()),
+                    new MailJetVar("number_id", transactionDto.getId()),
                     new MailJetVar("transaction_type", "Sale"),
-                    new MailJetVar("status", transactionDto.getStatus().getStatus()),
+                    new MailJetVar("status", transactionDto.getStatus().getName()),
                     new MailJetVar("payment_date", transactionDateStr),
                     new MailJetVar("authorization_number", "N/A"),
                     new MailJetVar("card_type", transactionDto.getCreditCardType().getName()),
                     new MailJetVar("card_number", transactionDto.getCardNumber()),
-                    new MailJetVar("amount_usd", transactionDto.getAmount()),
+                    new MailJetVar("amount_usd", formattedAmount),
                     new MailJetVar("ibtis_usd", "$0.00"),
                     new MailJetVar("reference", transactionDto.getReferenceNumber()),
                     new MailJetVar("user", transactionDto.getGuestName()),
