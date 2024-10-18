@@ -2745,6 +2745,12 @@ onMounted(async () => {
                   operator: 'NOT_EQUALS',
                   value: 'TRA',
                 },
+                {
+                  key: 'applied',
+                  logicalOperation: 'OR',
+                  operator: 'NOT_EQUALS',
+                  value: true,
+                },
               ]
 
               await getPaymentStatusList(objApis.paymentStatus.moduleApi, objApis.paymentStatus.uriApi, objQueryToSearch, filter)
