@@ -93,7 +93,9 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             transactionPaymentLogsDto.setIsProcessed(true);
             transactionPaymentLogsService.update(transactionPaymentLogsDto);
 
-            // Devolver un Mono vacío para indicar que el procesamiento está completo
+            //Enviar correo (voucher) de confirmacion a las personas implicadas
+            transactionService.confirmTransactionMail(transactionDto);
+
             command.setResult(transactionResponse);
         } else {
             throw new BusinessException(DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR, DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR.getReasonPhrase());

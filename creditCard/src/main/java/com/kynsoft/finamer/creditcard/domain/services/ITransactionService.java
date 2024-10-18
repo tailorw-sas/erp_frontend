@@ -30,7 +30,5 @@ public interface ITransactionService {
 
     Double findSumOfAmountByParentId(Long parentId);
 
-    boolean confirmCreateTransaction(UUID transactionUUID);
-
-    void confirmTransactionMail(UUID transactionUUID);
+    void confirmTransactionMail(TransactionDto transactionDto);
 }
