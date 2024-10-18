@@ -64,10 +64,10 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
 
     // Método recursivo que procesa la lista
     private void processedCardnetJobListRecursive(List<CardnetJob> list, int index) {
-        CardnetJobDto cardnetJobDto = cardnetJobService.findByTransactionId(list.get(index).getTransactionId());
-        CardnetProcessErrorLogDto cardnetProcessErrorLogDto = new CardnetProcessErrorLogDto();
         // Verificamos si hemos llegado al final de la lista(Condición de parada)
         if (index < list.size()) {
+            CardnetJobDto cardnetJobDto = cardnetJobService.findByTransactionId(list.get(index).getTransactionId());
+            CardnetProcessErrorLogDto cardnetProcessErrorLogDto = new CardnetProcessErrorLogDto();
             try {
                 // Acción a ejecutar en cada elemento
                 UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()

@@ -25,8 +25,10 @@ public class Transaction implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "transaction_uuid")
+
+    @Column(name = "transaction_uuid", unique = true)
     private UUID transactionUuid;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_merchant_id")
     private ManageMerchant merchant;
