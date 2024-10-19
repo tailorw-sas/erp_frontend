@@ -1782,11 +1782,9 @@ function onRowRightClick(event: any) {
     }
 
     // Mostrar undo import solo para Processed y no sea manual (Solo para invoice)
-    // Codigo comentado hasta que se impplemente la importacion de Inssist, ya que otra condicion es que se muestre para las importadas desde Inssist
-    // No Borrar.
-    /*if (event?.data?.status === InvoiceStatus.PROCECSED && !event.data.isManual) {
+    if (event?.data?.status === InvoiceStatus.PROCECSED && !event.data.isManual) {
       findMenuItemByLabelSetShow('Undo Import', invoiceContextMenuItems.value, true)
-    }*/
+    }
 
     // Mostrar Clone Complete solo para Reconciled,Sent y e iguales amounts. Debe estar en close operation el invoice date
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
@@ -1828,7 +1826,7 @@ function onRowRightClick(event: any) {
   }
 
   // From Invoice // Solo se debe mostrar la opcion si el parentId no es null, o sea, si es un Credit
-  if (event?.data?.status === InvoiceStatus.CANCELED && [InvoiceType.CREDIT].includes(event.data?.invoiceType)
+  if ([InvoiceType.CREDIT].includes(event.data?.invoiceType)
       && selectedInvoiceObj.value.parent) { //indica si es de tipo credit, ya que los old-credit no tienen padre
     findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
   }
