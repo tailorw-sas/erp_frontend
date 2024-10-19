@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,5 +49,11 @@ public class CardNetJobServiceImpl implements ICardNetJobService {
             return optional.get().toAggregate();
         }else return null;
 
+    }
+
+    @Override
+    public List<CardnetJobDto> listUnProcessedTransactions(LocalDateTime date) {
+        List<CardnetJob> list = this.repositoryQuery.findByIsProcessedFalse(date);
+        return list.stream().map(CardnetJob::toAggregate).toList();
     }
 }
