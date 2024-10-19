@@ -25,6 +25,7 @@ public class ManagerPaymentStatusResponse implements IResponse {
     private Boolean applied;
     private boolean confirmed;
     private boolean cancelled;
+    private boolean transit;
 
     public ManagerPaymentStatusResponse(ManagerPaymentStatusDto dto) {
         this.id = dto.getId();
@@ -37,5 +38,6 @@ public class ManagerPaymentStatusResponse implements IResponse {
         this.applied = dto.getApplied();
         this.confirmed = dto.isConfirmed();
         this.cancelled = dto.isCancelled();
+        this.transit = dto.isTransit();
     }
 }
