@@ -131,19 +131,19 @@ public class ExcelExporterService {
         dataRow.createCell(3).setCellValue(entity.getTransactionDate().toString() + " " + time);
         dataRow.getCell(3).setCellStyle(style);
 
-        dataRow.createCell(4).setCellValue(entity.getHotel().getName());
+        dataRow.createCell(4).setCellValue(entity.getHotel().getCode() + "-" + entity.getHotel().getName());
         dataRow.getCell(4).setCellStyle(style);
 
-        dataRow.createCell(5).setCellValue(entity.getClient().getName());
+        dataRow.createCell(5).setCellValue(entity.getClient().getCode() + "-" + entity.getClient().getName());
         dataRow.getCell(5).setCellStyle(style);
 
-        dataRow.createCell(6).setCellValue(entity.getAgency().getName());
+        dataRow.createCell(6).setCellValue(entity.getAgency().getCode() + "-" + entity.getAgency().getName());
         dataRow.getCell(6).setCellStyle(style);
 
-        dataRow.createCell(7).setCellValue(entity.getAgency().getAgencyType().getName());
+        dataRow.createCell(7).setCellValue(entity.getAgency().getAgencyType().getCode() + "-" + entity.getAgency().getAgencyType().getName());
         dataRow.getCell(7).setCellStyle(style);
 
-        dataRow.createCell(8).setCellValue(entity.getBankAccount() != null ? entity.getBankAccount().getNameOfBank() : null);
+        dataRow.createCell(8).setCellValue(entity.getBankAccount() != null ? entity.getBankAccount().getAccountNumber() + "-" + entity.getBankAccount().getNameOfBank() : null);
         dataRow.getCell(8).setCellStyle(style);
 
         dataRow.createCell(9).setCellValue(decimalFormat.format(entity.getPaymentAmount()));
