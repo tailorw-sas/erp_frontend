@@ -152,4 +152,9 @@ public class PaymentServiceImpl implements IPaymentService {
         return this.repositoryQuery.countByAgency(agencyId);
     }
 
+    @Override
+    public Long countByAgencyOther(UUID agencyId) {
+        return this.repositoryQuery.countByAgencyOther(agencyId);
+    }
+
 }
