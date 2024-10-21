@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUID>,
@@ -19,4 +21,7 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
     boolean existsPaymentByPaymentId(long paymentId);
 
     Optional<Payment> findPaymentByPaymentId(long paymentId);
+
+    @Query("SELECT COUNT(b) FROM Payment b WHERE b.agency.id = :agencyId AND paymentBalance > 0 OR depositBalance > 0")
+    Long countByAgency(@Param("agencyId") UUID agencyId);
 }
