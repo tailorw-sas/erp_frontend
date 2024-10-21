@@ -81,6 +81,12 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 mb-3 mt-3',
   },
   {
+    field: 'transit',
+    header: 'Transit',
+    dataType: 'check',
+    class: 'field col-12 mb-3 mt-3',
+  },
+  {
     field: 'description',
     header: 'Description',
     dataType: 'textarea',
@@ -106,6 +112,7 @@ const item = ref<GenericObject>({
   cancelled: false,
   collected: false,
   confirmed: false,
+  transit: false,
   applied: false,
   status: true
 })
@@ -118,6 +125,7 @@ const itemTemp = ref<GenericObject>({
   cancelled: false,
   collected: false,
   confirmed: false,
+  transit: false,
   applied: false,
   status: true
 })
@@ -271,6 +279,7 @@ async function getItemById(id: string) {
         item.value.applied = response.applied
         item.value.confirmed = response.confirmed
         item.value.cancelled = response.cancelled
+        item.value.transit = response.transit
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -532,23 +541,7 @@ onMounted(() => {
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
-            <template #field-confirmed="{ item: data, onUpdate }">
-              <Checkbox
-                id="confirmed"
-                v-model="data.confirmed"
-                :binary="true"
-                @update:model-value="($event) => {
-                  onUpdate('confirmed', $event)
-                  if ($event) {
-                    onUpdate('applied', false)
-                  }
-                }"
-              />
-              <label for="confirmed" class="ml-2 font-bold">
-                Confirmed
-              </label>
-            </template>
-            <template #field-applied="{ item: data, onUpdate }">
+            <template #field-applied="{ item: data, onUpdate, fields: listFields, field }">
               <Checkbox
                 id="applied"
                 v-model="data.applied"
@@ -557,11 +550,67 @@ onMounted(() => {
                   onUpdate('applied', $event)
                   if ($event) {
                     onUpdate('confirmed', false)
+                    onUpdate('cancelled', false)
+                    onUpdate('transit', false)
                   }
                 }"
               />
               <label for="applied" class="ml-2 font-bold">
-                Applied
+                {{ listFields.find((f: FieldDefinitionType) => f.field === field)?.header }}
+              </label>
+            </template>
+            <template #field-cancelled="{ item: data, onUpdate, fields: listFields, field }">
+              <Checkbox
+                id="cancelled"
+                v-model="data.cancelled"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('cancelled', $event)
+                  if ($event) {
+                    onUpdate('applied', false)
+                    onUpdate('confirmed', false)
+                    onUpdate('transit', false)
+                  }
+                }"
+              />
+              <label for="cancelled" class="ml-2 font-bold">
+                {{ listFields.find((f: FieldDefinitionType) => f.field === field)?.header }}
+              </label>
+            </template>
+            <template #field-confirmed="{ item: data, onUpdate, fields: listFields, field }">
+              <Checkbox
+                id="confirmed"
+                v-model="data.confirmed"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('confirmed', $event)
+                  if ($event) {
+                    onUpdate('applied', false)
+                    onUpdate('cancelled', false)
+                    onUpdate('transit', false)
+                  }
+                }"
+              />
+              <label for="confirmed" class="ml-2 font-bold">
+                {{ listFields.find((f: FieldDefinitionType) => f.field === field)?.header }}
+              </label>
+            </template>
+            <template #field-transit="{ item: data, onUpdate, fields: listFields, field }">
+              <Checkbox
+                id="transit"
+                v-model="data.transit"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('transit', $event)
+                  if ($event) {
+                    onUpdate('applied', false)
+                    onUpdate('confirmed', false)
+                    onUpdate('cancelled', false)
+                  }
+                }"
+              />
+              <label for="transit" class="ml-2 font-bold">
+                {{ listFields.find((f: FieldDefinitionType) => f.field === field)?.header }}
               </label>
             </template>
           </EditFormV2>
