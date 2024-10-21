@@ -15,4 +15,5 @@ public class ApplyPaymentRequest {
     private boolean applyPaymentBalance;
     private List<UUID> invoices;
     private List<UUID> deposits;
+    private UUID employee;
 }

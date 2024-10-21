@@ -13,6 +13,7 @@ public class CreateApplyOtherDeductionsRequest {
     private UUID payment;
     private UUID transactionType;
     private String remark;
+    private UUID employee;
 
     private List<CreateApplyOtherDeductionsBookingRequest> booking;
 }

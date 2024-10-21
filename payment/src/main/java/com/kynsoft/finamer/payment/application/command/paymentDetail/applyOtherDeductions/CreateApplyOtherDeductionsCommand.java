@@ -22,13 +22,15 @@ public class CreateApplyOtherDeductionsCommand implements ICommand {
 
     private PaymentDto paymentResponse;
     private final IMediator mediator;
+    private UUID employee;
 
-    public CreateApplyOtherDeductionsCommand(UUID payment, UUID transactionType, String remark, List<CreateApplyOtherDeductionsBookingRequest> booking, IMediator mediator) {
+    public CreateApplyOtherDeductionsCommand(UUID payment, UUID transactionType, String remark, List<CreateApplyOtherDeductionsBookingRequest> booking, IMediator mediator, UUID employee) {
         this.payment = payment;
         this.transactionType = transactionType;
         this.remark = remark;
         this.booking = booking;
         this.mediator = mediator;
+        this.employee = employee;
     }
 
     public static CreateApplyOtherDeductionsCommand fromRequest(CreateApplyOtherDeductionsRequest request, IMediator mediator) {
@@ -37,7 +39,8 @@ public class CreateApplyOtherDeductionsCommand implements ICommand {
                 request.getTransactionType(),
                 request.getRemark(),
                 request.getBooking(),
-                mediator
+                mediator,
+                request.getEmployee()
         );
     }
 

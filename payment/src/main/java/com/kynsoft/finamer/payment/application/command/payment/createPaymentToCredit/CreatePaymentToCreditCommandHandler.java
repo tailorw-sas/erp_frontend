@@ -211,7 +211,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     private void createPaymentDetailsToCreditCash(PaymentDto paymentCash, ManageBookingDto booking, CreatePaymentToCreditCommand command) {
         CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance() * -1, false, command.getInvoiceDto().getInvoiceDate(), true));
         if (command.isAutoApplyCredit()) {
-            command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), booking.getId()));
+            command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), booking.getId(), null));
         }
     }
 

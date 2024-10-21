@@ -14,18 +14,21 @@ public class ApplyPaymentDetailCommand implements ICommand {
 
     private UUID paymentDetail;
     private UUID booking;
+    private UUID employee;
 
     private PaymentDto paymentResponse;
 
-    public ApplyPaymentDetailCommand(UUID paymentDetail, UUID booking) {
+    public ApplyPaymentDetailCommand(UUID paymentDetail, UUID booking, UUID employee) {
         this.paymentDetail = paymentDetail;
         this.booking = booking;
+        this.employee = employee;
     }
 
     public static ApplyPaymentDetailCommand fromRequest(ApplyPaymentDetailRequest request) {
         return new ApplyPaymentDetailCommand(
                 request.getPaymentDetail(),
-                request.getBooking()
+                request.getBooking(),
+                request.getEmployee()
         );
     }
 

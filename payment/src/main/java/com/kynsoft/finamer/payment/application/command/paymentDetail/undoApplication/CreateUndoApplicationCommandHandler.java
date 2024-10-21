@@ -33,6 +33,6 @@ public class CreateUndoApplicationCommandHandler implements ICommandHandler<Crea
         if (!paymentDetailDto.isReverseTransaction()) {
             command.getMediator().send(new UndoApplyPaymentDetailCommand(paymentDetailDto.getId(), bookingDto.getId()));
         }
-        command.getMediator().send(new DeletePaymentDetailCommand(command.getPaymentDetail(), null, true));//TODO: es posible que tengamos que agregar el employee a la peticion.
+        command.getMediator().send(new DeletePaymentDetailCommand(command.getPaymentDetail(), command.getEmployee(), true));//TODO: es posible que tengamos que agregar el employee a la peticion.
     }
 }

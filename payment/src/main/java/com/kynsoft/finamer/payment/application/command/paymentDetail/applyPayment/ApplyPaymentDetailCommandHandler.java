@@ -7,18 +7,23 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
+import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.UUID;
 
 @Component
 public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPaymentDetailCommand> {
@@ -29,16 +34,23 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
     private final ProducerUpdateBookingService producerUpdateBookingService;
     private final IManagePaymentStatusService statusService;
 
+    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IManageEmployeeService manageEmployeeService;
+
     public ApplyPaymentDetailCommandHandler(IPaymentDetailService paymentDetailService,
             IManageBookingService manageBookingService,
             IPaymentService paymentService,
             ProducerUpdateBookingService producerUpdateBookingService,
-            IManagePaymentStatusService statusService) {
+            IManagePaymentStatusService statusService,
+            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IManageEmployeeService manageEmployeeService) {
         this.paymentDetailService = paymentDetailService;
         this.manageBookingService = manageBookingService;
         this.paymentService = paymentService;
         this.producerUpdateBookingService = producerUpdateBookingService;
         this.statusService = statusService;
+        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.manageEmployeeService = manageEmployeeService;
     }
 
     @Override
@@ -72,11 +84,26 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
 
         if (paymentDto.getNotApplied() == 0 && paymentDto.getDepositBalance() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
             paymentDto.setPaymentStatus(this.statusService.findByApplied());
+            ManageEmployeeDto employeeDto = command.getEmployee() != null ? this.manageEmployeeService.findById(command.getEmployee()) : null;
+            this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
         paymentDto.setApplyPayment(true);
         this.paymentService.update(paymentDto);
 
         command.setPaymentResponse(paymentDto);
+    }
+
+    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
+    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Update Payment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+
+        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
 }
