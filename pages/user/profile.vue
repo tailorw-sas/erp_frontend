@@ -157,7 +157,7 @@ const formOptionsToEdit = ref({
 })
 
 function messageSaveProfile() {
-  toast.add({ severity: 'success', summary: 'Guardado', detail: 'Perfil de usuario guardado correctamente.', life: 3000 })
+  toast.add({ severity: 'success', summary: 'Saved', detail: 'User profile saved successfully', life: 5000 })
   dialogReload.value += 1
 }
 

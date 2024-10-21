@@ -140,12 +140,12 @@ const menuItems = ref([
   {
     items: [
       {
-        label: 'Editar',
+        label: 'Edit',
         icon: 'pi pi-pencil',
         action: 'edit'
       },
       {
-        label: 'Eliminar',
+        label: 'Delete',
         icon: 'pi pi-trash',
         action: 'delete'
       }
@@ -780,13 +780,13 @@ getOptionsList()
                 aria-controls="overlay_menu" :loading="data.loadingEdit" @click="onAttend(data)"
               />
               <Button
-                v-if="options?.hasOwnProperty('showEdit') ? options?.showEdit : true" v-tooltip.left="'Editar'"
+                v-if="options?.hasOwnProperty('showEdit') ? options?.showEdit : true" v-tooltip.left="'Edit'"
                 type="button" icon="pi pi-pencil" severity="primary" class="mx-1" text aria-haspopup="true"
                 aria-controls="overlay_menu" :loading="data.loadingEdit" @click="onEdit(data)"
               />
               <Button
                 v-if="options?.hasOwnProperty('showDelete') ? options?.showDelete : true"
-                v-tooltip.left="'Eliminar'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
+                v-tooltip.left="'Delete'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
                 aria-haspopup="true" aria-controls="overlay_menu" :loading="data.loadingDelete"
                 @click="showConfirmDelete(data)"
               />
@@ -794,7 +794,7 @@ getOptionsList()
               <!-- Local -->
               <Button
                 v-if="options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false"
-                v-tooltip.left="'Eliminar'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
+                v-tooltip.left="'Delete'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
                 aria-haspopup="true" aria-controls="overlay_menu" :loading="data.loadingDelete"
                 @click="showConfirmDelete(data)"
               />
@@ -830,7 +830,7 @@ getOptionsList()
   <!-- Dialog Delete -->
   <DialogDelete
     v-if="clickedItem" :open-dialog="openDialogDelete" :data="clickedItem"
-    :message="props.options?.messageToDelete ? props.options.messageToDelete : '¿Estás seguro que desea eliminar el elemento seleccionado?'"
+    :message="props.options?.messageToDelete ? props.options.messageToDelete : 'Are you sure you want to delete the selected item?'"
     @on-close-dialog="closeDialogDelete"
     @on-delete-confirmed="deleteItem($event, options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false)"
   />

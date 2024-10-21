@@ -154,12 +154,12 @@ const menuItems = ref([
   {
     items: [
       {
-        label: 'Editar',
+        label: 'Edit',
         icon: 'pi pi-pencil',
         action: 'edit'
       },
       {
-        label: 'Eliminar',
+        label: 'Delete',
         icon: 'pi pi-trash',
         action: 'delete'
       }
@@ -914,7 +914,7 @@ defineExpose({ clearSelectedItems })
     v-if="clickedItem"
     :open-dialog="openDialogDelete"
     :data="clickedItem"
-    :message="props.options?.messageToDelete ? props.options.messageToDelete : '¿Estás seguro que desea eliminar el elemento seleccionado?'"
+    :message="props.options?.messageToDelete ? props.options.messageToDelete : 'Are you sure you want to delete the selected item?'"
     @on-close-dialog="closeDialogDelete"
     @on-delete-confirmed="deleteItem($event, options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false)"
   />

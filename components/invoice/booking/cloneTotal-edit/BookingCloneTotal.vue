@@ -14,10 +14,46 @@ import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
-import { CALENDAR_MODE } from '~/utils/Enums'
+
+const props = defineProps({
+  isDialogOpen: {
+    type: Boolean,
+    required: true
+  },
+  selectedInvoice: {
+    type: String,
+    required: true
+  },
+  closeDialog: {
+    type: Function as any,
+    required: true
+  },
+  openDialog: {
+    type: Function as any,
+    required: true
+  },
+  // openRoomRateDialog: {
+  //   type: Function as any,
+  //   required: true
+  // },
+  // isCreationDialog: {
+  //   type: Boolean,
+  //   required: true
+  // },
+  listItems: {
+    type: Array,
+    required: false
+  },
+  invoiceObj: {
+    type: Object as any,
+    required: false
+  },
+})
 
 const toast = useToast()
 const { data: userData } = useAuth()
+
+const dialogVisible = ref(props.openDialog)
 
 const forceSave = ref(false)
 const forceUpdate = ref(false)
@@ -27,10 +63,9 @@ const onSaveButtonByRef = ref(false)
 
 const route = useRoute()
 
-// @ts-expect-error
-const selectedInvoice = ref<string>(route.params.id.toString())
+// const selectedInvoice = ref<string>(route.params.id.toString())
 const nightTypeRequired = ref(route.query?.nightTypeRequired as string)
-const selectedBooking = ref<string>('')
+const selectedInvoice = ref<string>('')
 const selectedRoomRate = ref<string>('')
 
 const loadingSaveAll = ref(false)
@@ -53,8 +88,12 @@ const attachmentDialogOpen = ref<boolean>(false)
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 const invoiceTypeList = ref<any[]>([])
-
+const invoiceStatusList = ref<any[]>([])
 const invoiceStatus = ref<any>(null)
+
+// Temporal
+const bookingTemp = ref<any>(null)
+const roomRateTempList = ref<any[]>([])
 
 const fieldsV2: Array<FieldDefinitionType> = [
   // Booking Id
@@ -1092,8 +1131,6 @@ function handleAttachmentDialogOpen() {
   attachmentDialogOpen.value = true
 }
 
-const invoiceStatusList = ref<any[]>([])
-
 async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   const additionalFilter: FilterCriteria[] = [
     {
@@ -1172,12 +1209,13 @@ async function onCellEditRoomRate(event: any) {
   try {
     data[field] = newValue
     item.value[field] = newValue
+
     await updateRoomRate(payload)
     onSaveButtonByRef.value = true
-    if (saveButton.value) {
-      saveButton.value.$el.click()
-    }
-    reloadBookingItem(idItem.value)
+    // if (saveButton.value) {
+    //   saveButton.value.$el.click()
+    // }
+    reloadBookingItem()
   }
   catch (error: any) {
     console.log(error)
@@ -1186,7 +1224,8 @@ async function onCellEditRoomRate(event: any) {
 
 async function updateRoomRate(itemRoomRate: { [key: string]: any }) {
   const payload: { [key: string]: any } = { ...itemRoomRate }
-  await GenericService.update(confApi.roomRate.moduleApi, confApi.roomRate.uriApi, itemRoomRate.id || '', payload)
+  roomRateList.value = roomRateList.value.map((rr: any) => rr.id === itemRoomRate.id ? payload : rr)
+  // await GenericService.update(confApi.roomRate.moduleApi, confApi.roomRate.uriApi, itemRoomRate.id || '', payload)
 }
 
 function onRowRightClick(event: any) {
@@ -1242,6 +1281,7 @@ async function getRoomRateList() {
     idItemToLoadFirstTime.value = ''
     optionsRoomRate.value.loading = true
     roomRateList.value = []
+    roomRateTempList.value = []
     payloadRoomRate.value.filter = [...payloadRoomRate.value.filter, {
       key: 'booking.id',
       operator: 'EQUALS',
@@ -1694,20 +1734,45 @@ async function getBookingItemById(id: string) {
   }
 }
 
-async function reloadBookingItem(id: string) {
-  await getBookingItemById(id)
-  getRoomRateList()
-  getAdjustmentList()
+async function reloadBookingItem() {
+  item2.value.hotelCreationDate = new Date(item.value.hotelCreationDate)
+  item2.value.bookingDate = item.value.bookingDate ? new Date(item.value.bookingDate) : ''
+  item2.value.contract = item.value.contract
+  item2.value.dueAmount = item.value.dueAmount
+  item2.value.checkIn = new Date(item.value.checkIn)
+  item2.value.checkOut = new Date(item.value.checkOut)
+  item2.value.hotelBookingNumber = item.value.hotelBookingNumber
+  item2.value.fullName = item.value.fullName
+  item2.value.firstName = item.value.firstName
+  item2.value.lastName = item.value.lastName
+
+  item2.value.invoiceAmount = item.value.invoiceAmount ? String(item.value?.invoiceAmount) : '0'
+  item2.value.roomNumber = item.value.roomNumber
+  item2.value.couponNumber = item.value.couponNumber
+  item2.value.adults = item.value.adults
+  item2.value.children = item.value.children
+  item2.value.rateAdult = item.value.rateAdult
+  item2.value.rateChild = item.value.rateChild
+  item2.value.hotelInvoiceNumber = item.value.hotelInvoiceNumber
+  item2.value.folioNumber = item.value.folioNumber
+  item2.value.hotelAmount = String(item.value.hotelAmount)
+  item2.value.description = item.value.description
+  item2.value.invoice = item.value.invoice
+  item2.value.invoiceOriginalAmount = item.value.invoice.invoiceAmount
+  item2.value.ratePlan = item.value.ratePlan?.name === '-' ? null : item.value.ratePlan
+  item2.value.nightType = item.value.nightType
+  item2.value.roomType = item.value.roomType?.name === '-' ? null : item.value.roomType
+  item2.value.roomCategory = item.value.roomCategory
+  formReload.value += 1
+  // await getBookingItemById(id)
+  // getRoomRateList()
+  // getAdjustmentList()
 }
 
-// watch(() => idItemToLoadFirstTime.value, async (newValue) => {
-//   if (!newValue) {
-//     clearForm()
-//   }
-//   else {
-//     await getItemById(newValue)
-//   }
-// })
+async function saveEditBookingCloneTotal() {
+  console.log(roomRateList.value)
+  console.log(item2.value)
+}
 
 onMounted(async () => {
   // filterToSearch.value.criterial = ENUM_FILTER[0]
@@ -1715,9 +1780,9 @@ onMounted(async () => {
   // await getItemById(route.params.id.toString())
 
   // await loadDefaultsValues()
-
-  if (route.params && 'id' in route.params && route.params.id) {
-    await getBookingItemById(route.params.id as string)
+  if (props.selectedInvoice) {
+    selectedInvoice.value = props.selectedInvoice
+    await getBookingItemById(props.selectedInvoice as string)
     getRoomRateList()
     getAdjustmentList()
   }
@@ -1727,272 +1792,278 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="justify-content-center align-center ">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      Edit Booking
-    </div>
-    <div class="p-4">
-      <EditFormV2
-        v-if="true"
-        :key="formReload"
-        :fields="fieldsV2"
-        :item="item2"
-        :show-actions="true"
-        :loading-save="loadingSaveAll"
-        container-class="grid pt-5"
-        @cancel="clearForm"
-        @delete="requireConfirmationToDelete($event)"
-        @submit="saveItem($event)"
-      >
-        <template #field-hotelCreationDate="{ item: data, onUpdate }">
-          <Calendar
-            v-if="!loadingSaveAll"
-            v-model="data.hotelCreationDate"
-            date-format="yy-mm-dd"
-            :max-date="new Date()"
-            @update:model-value="($event) => {
-              onUpdate('hotelCreationDate', $event)
-            }"
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
-            v-if="!loadingSaveAll"
-            v-model="data.invoiceAmount"
-            show-clear
-            :disabled="!!item2?.id && route.query.type !== InvoiceType.CREDIT"
-            @update:model-value="($event) => {
-              let value: any = $event
-              if (route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT){
-                value = toNegative(value)
-              }
-              else {
-                value = toPositive(value)
-              }
-              onUpdate('invoiceAmount', String(value))
-            }"
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-hotelAmount="{ onUpdate, item: data, fields, field }">
-          <InputText
-            v-if="!loadingSaveAll"
-            v-model="data.hotelAmount"
-            show-clear
-            :disabled="fields.find((f) => f.field === field)?.disabled"
-            @update:model-value="onUpdate('hotelAmount', $event)"
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-checkIn="{ item: data, onUpdate, fields, field }">
-          <Calendar
-            v-if="!loadingSaveAll"
-            v-model="data.checkIn"
-            date-format="yy-mm-dd"
-            :disabled="fields.find((f) => f.field === field)?.disabled"
-            :max-date="data.checkOut ? new Date(data.checkOut) : undefined"
-            @update:model-value="($event) => {
-              onUpdate('checkIn', $event)
-            }"
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-checkOut="{ item: data, onUpdate, fields, field }">
-          <Calendar
-            v-if="!loadingSaveAll"
-            v-model="data.checkOut"
-            date-format="yy-mm-dd"
-            :disabled="fields.find((f) => f.field === field)?.disabled"
-            :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
-            @update:model-value="($event) => {
-              onUpdate('checkOut', $event)
-            }"
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-ratePlan="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
-            id="autocomplete"
-            field="name"
-            item-value="id"
-            :model="data.ratePlan"
-            :suggestions="ratePlanList"
-            @change="($event) => {
-              onUpdate('ratePlan', $event)
-            }"
-            @load="($event) => getratePlanList($event)"
+  <Dialog
+    v-model:visible="dialogVisible" modal class="p-4 h-full w-full "
+    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
+    style="width: 900px;" @hide="closeDialog"
+  >
+    <div class=" h-full overflow-hidden p-2 w-full">
+      <div class="justify-content-center align-center w-full">
+        <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+          Edit Booking
+        </div>
+        <div class="p-4">
+          <EditFormV2
+            v-if="true"
+            :key="formReload"
+            :fields="fieldsV2"
+            :item="item2"
+            :show-actions="true"
+            :loading-save="loadingSaveAll"
+            container-class="grid pt-5"
+            @cancel="clearForm"
+            @delete="requireConfirmationToDelete($event)"
+            @submit="saveItem($event)"
           >
-            <template #option="props">
-              <span>{{ props.item.code }} - {{ props.item.name }}</span>
+            <template #field-hotelCreationDate="{ item: data, onUpdate }">
+              <Calendar
+                v-if="!loadingSaveAll"
+                v-model="data.hotelCreationDate"
+                date-format="yy-mm-dd"
+                :max-date="new Date()"
+                @update:model-value="($event) => {
+                  onUpdate('hotelCreationDate', $event)
+                }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
             </template>
-          </DebouncedAutoCompleteComponent>
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-roomCategory="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.roomCategory" :suggestions="roomCategoryList" @change="($event) => {
-              onUpdate('roomCategory', $event)
-            }" @load="($event) => getRoomCategoryList($event)"
-          >
-            <template #option="props">
-              <span>{{ props.item.code }} - {{ props.item.name }}</span>
+            <template #field-invoiceAmount="{ onUpdate, item: data }">
+              <InputText
+                v-if="!loadingSaveAll"
+                v-model="data.invoiceAmount"
+                show-clear
+                :disabled="!!item2?.id && route.query.type !== InvoiceType.CREDIT"
+                @update:model-value="($event) => {
+                  let value: any = $event
+                  if (route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT){
+                    value = toNegative(value)
+                  }
+                  else {
+                    value = toPositive(value)
+                  }
+                  onUpdate('invoiceAmount', String(value))
+                }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
             </template>
-          </DebouncedAutoCompleteComponent>
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-bookingDate="{ item: data, onUpdate }">
-          <Calendar
-            v-if="!loadingSaveAll"
-            v-model="data.bookingDate"
-            date-format="yy-mm-dd"
-            :max-date="new Date()"
-            @update:model-value="($event) => {
-              onUpdate('bookingDate', $event)
-            }"
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #field-roomType="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.roomType" :suggestions="roomTypeList" @change="($event) => {
-              onUpdate('roomType', $event)
-            }" @load="($event) => getRoomTypeList($event)"
-          >
-            <template #option="props">
-              <span>{{ props.item.code }} - {{ props.item.name }}</span>
+            <template #field-hotelAmount="{ onUpdate, item: data, fields, field }">
+              <InputText
+                v-if="!loadingSaveAll"
+                v-model="data.hotelAmount"
+                show-clear
+                :disabled="fields.find((f) => f.field === field)?.disabled"
+                @update:model-value="onUpdate('hotelAmount', $event)"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
             </template>
-          </DebouncedAutoCompleteComponent>
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
+            <template #field-checkIn="{ item: data, onUpdate, fields, field }">
+              <Calendar
+                v-if="!loadingSaveAll"
+                v-model="data.checkIn"
+                date-format="yy-mm-dd"
+                :disabled="fields.find((f) => f.field === field)?.disabled"
+                :max-date="data.checkOut ? new Date(data.checkOut) : undefined"
+                @update:model-value="($event) => {
+                  onUpdate('checkIn', $event)
+                }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-checkOut="{ item: data, onUpdate, fields, field }">
+              <Calendar
+                v-if="!loadingSaveAll"
+                v-model="data.checkOut"
+                date-format="yy-mm-dd"
+                :disabled="fields.find((f) => f.field === field)?.disabled"
+                :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
+                @update:model-value="($event) => {
+                  onUpdate('checkOut', $event)
+                }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-ratePlan="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.ratePlan"
+                :suggestions="ratePlanList"
+                @change="($event) => {
+                  onUpdate('ratePlan', $event)
+                }"
+                @load="($event) => getratePlanList($event)"
+              >
+                <template #option="props">
+                  <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                </template>
+              </DebouncedAutoCompleteComponent>
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-roomCategory="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+                :model="data.roomCategory" :suggestions="roomCategoryList" @change="($event) => {
+                  onUpdate('roomCategory', $event)
+                }" @load="($event) => getRoomCategoryList($event)"
+              >
+                <template #option="props">
+                  <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                </template>
+              </DebouncedAutoCompleteComponent>
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-bookingDate="{ item: data, onUpdate }">
+              <Calendar
+                v-if="!loadingSaveAll"
+                v-model="data.bookingDate"
+                date-format="yy-mm-dd"
+                :max-date="new Date()"
+                @update:model-value="($event) => {
+                  onUpdate('bookingDate', $event)
+                }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-roomType="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
+                :model="data.roomType" :suggestions="roomTypeList" @change="($event) => {
+                  onUpdate('roomType', $event)
+                }" @load="($event) => getRoomTypeList($event)"
+              >
+                <template #option="props">
+                  <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                </template>
+              </DebouncedAutoCompleteComponent>
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
 
-        <!-- <template #header-nightType="{ field }">
+            <!-- <template #header-nightType="{ field }">
           <strong>
             {{ typeof field.header === 'function' ? field.header() : field.header }}
           </strong>
           <span v-if="isNightTypeRequired" class="p-error">*</span>
         </template> -->
 
-        <template #field-nightType="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
-            id="autocomplete"
-            field="name"
-            item-value="id"
-            :model="data.nightType"
-            :suggestions="nightTypeList"
-            @change="($event) => {
-              onUpdate('nightType', $event)
-            }"
-            @load="($event) => getNightTypeList($event)"
-          >
-            <template #option="props">
-              <span>{{ props.item.code }} - {{ props.item.name }}</span>
+            <template #field-nightType="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.nightType"
+                :suggestions="nightTypeList"
+                @change="($event) => {
+                  onUpdate('nightType', $event)
+                }"
+                @load="($event) => getNightTypeList($event)"
+              >
+                <template #option="props">
+                  <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                </template>
+              </DebouncedAutoCompleteComponent>
+              <Skeleton v-else height="2rem" class="mb-2" />
             </template>
-          </DebouncedAutoCompleteComponent>
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-        <template #form-footer="props">
-          <div class="grid w-full p-0 m-0">
-            <div class="col-12 mb-5 justify-content-center align-center">
-              <div style="width: 100%; height: 100%;">
-                <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
-                  <TabPanel>
-                    <template #header>
-                      <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
-                        <i class="pi pi-receipt" style="font-size: 1.5rem" />
-                        <span class="font-bold">
-                          Room Rates
-                          <!-- <i
+            <template #form-footer="props">
+              <div class="grid w-full p-0 m-0">
+                <div class="col-12 mb-5 justify-content-center align-center">
+                  <div style="width: 100%; height: 100%;">
+                    <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
+                      <TabPanel>
+                        <template #header>
+                          <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+                            <i class="pi pi-receipt" style="font-size: 1.5rem" />
+                            <span class="font-bold">
+                              Room Rates
+                              <!-- <i
                             v-if="errorInTab.tabGeneralData" class="pi p-error pi-question-circle"
                             style="font-size: 1.2rem"
                           /> -->
-                        </span>
-                      </div>
-                    </template>
-                    <DynamicTable
-                      :data="roomRateList"
-                      :columns="columnsRoomRate"
-                      :options="optionsRoomRate"
-                      :pagination="paginationRoomRate"
-                      @on-confirm-create="clearFormRoomRate"
-                      @on-change-pagination="payloadOnChangePageRoomRate = $event"
-                      @on-row-right-click="onRowRightClick"
-                      @on-change-filter="parseDataTableFilterRoomRate"
-                      @on-list-item="resetListItemsRoomRate"
-                      @on-sort-field="onSortFieldRoomRate"
-                      @on-table-cell-edit-complete="onCellEditRoomRate($event)"
-                      @on-row-double-click="($event) => {
+                            </span>
+                          </div>
+                        </template>
+                        <DynamicTable
+                          :data="roomRateList"
+                          :columns="columnsRoomRate"
+                          :options="optionsRoomRate"
+                          :pagination="paginationRoomRate"
+                          @on-confirm-create="clearFormRoomRate"
+                          @on-change-pagination="payloadOnChangePageRoomRate = $event"
+                          @on-row-right-click="onRowRightClick"
+                          @on-change-filter="parseDataTableFilterRoomRate"
+                          @on-list-item="resetListItemsRoomRate"
+                          @on-sort-field="onSortFieldRoomRate"
+                          @on-table-cell-edit-complete="onCellEditRoomRate($event)"
+                          @on-row-double-click="($event) => {
 
-                        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
-                        //   return;
-                        // }
+                            // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
+                            //   return;
+                            // }
 
-                        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
-                        //   return;
-                        // }
-                        openEditDialog($event)
+                            // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
+                            //   return;
+                            // }
+                            openEditDialog($event)
 
-                      }"
-                    >
-                      <template #datatable-footer>
-                        <ColumnGroup type="footer" class="flex align-items-center">
-                          <Row>
-                            <Column
-                              footer="Totals:" :colspan="8"
-                              footer-style="text-align:right; font-weight: 700"
-                            />
-                            <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2))" footer-style="font-weight: 700" />
-                            <Column :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))" footer-style="font-weight: 700" />
-                          </Row>
-                        </ColumnGroup>
-                      </template>
-                    </DynamicTable>
-                  </TabPanel>
-                  <TabPanel>
-                    <template #header>
-                      <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
-                        <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
-                        <span class="font-bold white-space-nowrap">
-                          Adjustments
-                          <!-- <i
+                          }"
+                        >
+                          <template #datatable-footer>
+                            <ColumnGroup type="footer" class="flex align-items-center">
+                              <Row>
+                                <Column
+                                  footer="Totals:" :colspan="8"
+                                  footer-style="text-align:right; font-weight: 700"
+                                />
+                                <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2))" footer-style="font-weight: 700" />
+                                <Column :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))" footer-style="font-weight: 700" />
+                              </Row>
+                            </ColumnGroup>
+                          </template>
+                        </DynamicTable>
+                      </TabPanel>
+                      <TabPanel>
+                        <template #header>
+                          <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+                            <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
+                            <span class="font-bold white-space-nowrap">
+                              Adjustments
+                              <!-- <i
                             v-if="errorInTab.tabGeneralData" class="pi p-error pi-question-circle"
                             style="font-size: 1.2rem"
                           /> -->
-                        </span>
-                      </div>
-                    </template>
-                    <DynamicTable
-                      :data="adjustmentList"
-                      :columns="columnsAdjustment"
-                      :options="optionsAdjustment"
-                      :pagination="paginationAdjustment"
-                      @on-confirm-create="clearFormAdjustment"
-                      @on-change-pagination="payloadOnChangePageAdjustment = $event"
-                      @on-row-right-click="onRowRightClick"
-                      @on-change-filter="parseDataTableFilterAdjustment"
-                      @on-list-item="resetListItemsAdjustment"
-                      @on-sort-field="onSortFieldAdjustment"
-                      @on-row-double-click="($event) => {}"
-                    >
-                      <template #datatable-footer>
-                        <ColumnGroup type="footer" class="flex align-items-center">
-                          <Row>
-                            <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-                            <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2))" footer-style="font-weight: 700" />
+                            </span>
+                          </div>
+                        </template>
+                        <DynamicTable
+                          :data="adjustmentList"
+                          :columns="columnsAdjustment"
+                          :options="optionsAdjustment"
+                          :pagination="paginationAdjustment"
+                          @on-confirm-create="clearFormAdjustment"
+                          @on-change-pagination="payloadOnChangePageAdjustment = $event"
+                          @on-row-right-click="onRowRightClick"
+                          @on-change-filter="parseDataTableFilterAdjustment"
+                          @on-list-item="resetListItemsAdjustment"
+                          @on-sort-field="onSortFieldAdjustment"
+                          @on-row-double-click="($event) => {}"
+                        >
+                          <template #datatable-footer>
+                            <ColumnGroup type="footer" class="flex align-items-center">
+                              <Row>
+                                <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
+                                <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2))" footer-style="font-weight: 700" />
 
-                            <Column :colspan="6" />
-                          </Row>
-                        </ColumnGroup>
-                      </template>
-                    </DynamicTable>
-                  </TabPanel>
-                </TabView>
+                                <Column :colspan="6" />
+                              </Row>
+                            </ColumnGroup>
+                          </template>
+                        </DynamicTable>
+                      </TabPanel>
+                    </TabView>
 
-                <!-- <InvoiceTabView
+                    <!-- <InvoiceTabView
                   :requires-flat-rate="requiresFlatRate"
                   :get-invoice-hotel="getInvoiceHotel"
                   :get-invoice-agency="getInvoiceAgency"
@@ -2000,7 +2071,7 @@ onMounted(async () => {
                   :is-dialog-open="bookingDialogOpen"
                   :close-dialog="() => { bookingDialogOpen = false }"
                   :open-dialog="handleDialogOpen"
-                  :selected-booking="selectedBooking"
+                  :selected-booking="selectedInvoice"
                   :force-update="forceUpdate"
                   :toggle-force-update="update"
                   :invoice-obj="item2"
@@ -2012,50 +2083,51 @@ onMounted(async () => {
                   :showTotals="true"
                   :invoiceType="route.query?.type?.toString()"
                 /> -->
+                  </div>
+                </div>
+                <div class="col-12 flex justify-content-end">
+                  <Button
+                    ref="saveButton"
+                    v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+                    @click="saveEditBookingCloneTotal($event)"
+                  />
+                  <Button
+                    v-tooltip.top="'Cancel'"
+                    severity="secondary"
+                    class="w-3rem mx-1"
+                    icon="pi pi-times"
+                    @click="navigateTo('/invoice')"
+                  />
+                </div>
               </div>
-            </div>
-            <div class="col-12 flex justify-content-end">
-              <Button
-                ref="saveButton"
-                v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-                @click="props.item.submitForm($event)"
-              />
-              <Button
-                v-tooltip.top="'Cancel'"
-                severity="secondary"
-                class="w-3rem mx-1"
-                icon="pi pi-times"
-                @click="navigateTo('/invoice')"
-              />
-            </div>
-          </div>
-        </template>
-      </EditFormV2>
-    </div>
+            </template>
+          </EditFormV2>
+        </div>
 
-    <div v-if="attachmentDialogOpen">
-      <AttachmentDialog
-        :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
-        :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
-        :selected-invoice="selectedInvoice" :selected-invoice-obj="item"
-      />
+        <div v-if="attachmentDialogOpen">
+          <AttachmentDialog
+            :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
+            :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
+            :selected-invoice="selectedInvoice" :selected-invoice-obj="item"
+          />
+        </div>
+      </div>
+      <div v-if="attachmentHistoryDialogOpen">
+        <AttachmentHistoryDialog
+          selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+          header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
+          :selected-invoice-obj="item" :is-creation-dialog="false"
+        />
+      </div>
+      <div v-if="exportAttachmentsDialogOpen">
+        <PrintInvoiceDialog
+          :close-dialog="() => { exportAttachmentsDialogOpen = false }"
+          :open-dialog="exportAttachmentsDialogOpen"
+          :invoice="item"
+        />
+      </div>
     </div>
-  </div>
-  <div v-if="attachmentHistoryDialogOpen">
-    <AttachmentHistoryDialog
-      selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
-      header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
-      :selected-invoice-obj="item" :is-creation-dialog="false"
-    />
-  </div>
-  <div v-if="exportAttachmentsDialogOpen">
-    <PrintInvoiceDialog
-      :close-dialog="() => { exportAttachmentsDialogOpen = false }"
-      :open-dialog="exportAttachmentsDialogOpen"
-      :invoice="item"
-    />
-  </div>
-
+  </Dialog>
   <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
 </template>
 
