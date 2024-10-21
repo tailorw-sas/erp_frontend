@@ -37,4 +37,6 @@ public interface IPaymentService {
     List<PaymentDto> createBulk(List<PaymentDto> dtoList);
 
     Long countByAgency(UUID agencyId);
+
+    Long countByAgencyOther(UUID agencyId);
 }
