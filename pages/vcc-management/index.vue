@@ -9,6 +9,7 @@ import type { IColumn, IPagination, IStatusClass } from '~/components/table/inte
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import type { MenuItem } from '~/components/menu/MenuItems'
+import { formatNumber } from '~/pages/payment/utils/helperFilters'
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
 const authStore = useAuthStore()
@@ -179,7 +180,7 @@ const columns: IColumn[] = [
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'netAmount', header: 'T.Amount', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
+  { field: 'status', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
@@ -258,15 +259,15 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
-        iterator.amount = String(iterator.amount)
+        iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
         count.commission += iterator.commission
-        iterator.commission = String(iterator.commission)
+        iterator.commission = formatNumber(iterator.commission)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
         count.net += iterator.netAmount
-        iterator.netAmount = iterator.netAmount ? String(iterator.netAmount) : '0'
+        iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
@@ -996,9 +997,9 @@ onMounted(() => {
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
               <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
-              <Column :footer="Math.round((subTotals.amount + Number.EPSILON) * 100) / 100" />
-              <Column :footer="Math.round((subTotals.commission + Number.EPSILON) * 100) / 100" />
-              <Column :footer="Math.round((subTotals.net + Number.EPSILON) * 100) / 100" />
+              <Column :footer="formatNumber(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)" />
+              <Column :footer="formatNumber(Math.round((subTotals.commission + Number.EPSILON) * 100) / 100)" />
+              <Column :footer="formatNumber(Math.round((subTotals.net + Number.EPSILON) * 100) / 100)" />
               <Column :colspan="2" />
             </Row>
           </ColumnGroup>
