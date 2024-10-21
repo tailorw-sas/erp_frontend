@@ -6,11 +6,11 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentShareFileDto;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentShareFileService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -20,6 +20,22 @@ public class CreatePaymentShareFileCommandHandler implements ICommandHandler<Cre
     private final IPaymentService paymentService;
     private final IPaymentShareFileService paymentShareFileService;
     private final IFtpService ftpService;
+
+    @Value("${ftp.server.address}")
+    private String ftpServerAddress;
+
+    @Value("${ftp.server.port}")
+    private int ftpServerPort;
+
+    @Value("${ftp.username}")
+    private String ftpUsername;
+
+    @Value("${ftp.password}")
+    private String ftpPassword;
+
+    @Value("${ftp.base.path}")
+    private String ftpBasePath;
+
     public CreatePaymentShareFileCommandHandler(IPaymentService paymentService, IPaymentShareFileService paymentShareFileService, IFtpService ftpService) {
         this.paymentService = paymentService;
         this.paymentShareFileService = paymentShareFileService;
@@ -28,7 +44,6 @@ public class CreatePaymentShareFileCommandHandler implements ICommandHandler<Cre
 
     @Override
     public void handle(CreatePaymentShareFileCommand command) {
-
 
         PaymentDto paymentDto = this.paymentService.findById(command.getPaymentId());
         InputStream inputStream = new ByteArrayInputStream(command.getFileData());
@@ -44,17 +59,17 @@ public class CreatePaymentShareFileCommandHandler implements ICommandHandler<Cre
         String monthFormatted = currentDate.format(DateTimeFormatter.ofPattern("MM"));
         String dayFormatted = currentDate.format(DateTimeFormatter.ofPattern("dd"));
 
-        String path = "payment/"+currentDate.getYear() + "/" + monthFormatted + "/" + dayFormatted + "/"
-                + paymentDto.getHotel().getCode()+"/"+paymentDto.getClient().getName();
+        String path = ftpBasePath + "/" + currentDate.getYear() + "/" + monthFormatted + "/" + dayFormatted + "/"
+                + paymentDto.getHotel().getCode() + "/" + paymentDto.getClient().getName();
 
-        ftpService.sendFile(inputStream, command.getFileName(), "172.20.41.96",
-                "usrftp01", "usuarioftp01*", 21, path);
+        ftpService.sendFile(inputStream, command.getFileName(), ftpServerAddress,
+                ftpUsername, ftpPassword, ftpServerPort, path);
 
         paymentShareFileService.create(new PaymentShareFileDto(
                 command.getId(),
-                 paymentDto,
+                paymentDto,
                 command.getFileName(),
-                path+"/"+command.getFileName()
+                path + "/" + command.getFileName()
         ));
     }
 }
