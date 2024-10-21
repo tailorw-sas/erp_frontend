@@ -11,7 +11,7 @@ const props = defineProps({
   selectedPayment: { type: Object, required: true },
   isSplitAction: { type: Boolean, default: false },
   action: {
-    type: String as PropType<'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment'>,
+    type: String as PropType<'new-detail' | 'edit-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment'>,
     default: 'new-detail'
   }
 })
