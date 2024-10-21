@@ -511,11 +511,6 @@ async function getLanguageByMerchantList(query: string, isDefault: boolean = fal
     for (const iterator of dataList) {
       LanguageList.value = [...LanguageList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status || 'ACTIVE' }]
     }
-
-    if (isDefault && LanguageList.value.length > 0) {
-      item.value.language = LanguageList.value[0]
-      formReload.value += 1
-    }
   }
   catch (error) {
     console.error('Error loading language list:', error)
@@ -570,11 +565,6 @@ async function getCurrencyByMerchantList(query: string, isDefault: boolean = fal
     for (const iterator of dataList) {
       CurrencyList.value = [...CurrencyList.value, { id: iterator.id, name: `${iterator.managerCurrency.code} - ${iterator.managerCurrency.name}`, status: iterator.status || 'ACTIVE' }]
     }
-
-    if (isDefault && CurrencyList.value.length > 0) {
-      item.value.merchantCurrency = CurrencyList.value[0]
-      formReload.value += 1
-    }
   }
   catch (error) {
     console.error('Error loading currency list:', error)
@@ -616,6 +606,32 @@ watch(() => item.value, async (newValue) => {
   }
 })
 
+async function getDefaultLanguages(onUpdate?: (fieldKey: string, value: any) => void) {
+  await getLanguageByMerchantList('', true)
+  if (onUpdate) {
+    onUpdate('language' ?? '', LanguageList.value[0] || null)
+  }
+  else {
+    if (LanguageList.value.length > 0) {
+      item.value.language = LanguageList.value[0]
+      formReload.value += 1
+    }
+  }
+}
+
+async function getDefaultCurrency(onUpdate?: (fieldKey: string, value: any) => void) {
+  await getCurrencyByMerchantList('', true)
+  if (onUpdate) {
+    onUpdate('merchantCurrency' ?? '', CurrencyList.value[0] || null)
+  }
+  else {
+    if (CurrencyList.value.length > 0) {
+      item.value.merchantCurrency = CurrencyList.value[0]
+      formReload.value += 1
+    }
+  }
+}
+
 watch(() => props.openDialog, async (newValue) => {
   dialogVisible.value = newValue
   if (newValue) {
@@ -623,8 +639,8 @@ watch(() => props.openDialog, async (newValue) => {
     item.value.methodType = ENUM_METHOD_TYPE[0]
     handleMethodTypeChange('')
     await getMerchantList('', true)
-    getLanguageByMerchantList('', true)
-    getCurrencyByMerchantList('', true)
+    getDefaultLanguages()
+    getDefaultCurrency()
     // getHotelList('')
   }
 })
@@ -671,14 +687,15 @@ watch(() => props.openDialog, async (newValue) => {
               onUpdate('merchant', $event)
               item.merchant = $event
               if (item.hotel) {
+                item.hotel = null
                 onUpdate('hotel', null)
               }
               if (item.language) {
                 item.language = null
                 onUpdate('language', null)
               }
-              getLanguageByMerchantList('', true)
-              getCurrencyByMerchantList('', true)
+              getDefaultLanguages(onUpdate)
+              getDefaultCurrency(onUpdate)
             }"
             @load="($event) => getMerchantList($event)"
           />
