@@ -27,6 +27,7 @@ interface FieldDefinition {
   validation?: z.ZodTypeAny
   backendValidation?: Array<ValidationErrorType>
   helpText?: string
+  helpTextClass?: string
   onUpdate?: (value: any) => void
 }
 
