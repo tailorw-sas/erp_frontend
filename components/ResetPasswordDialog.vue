@@ -127,7 +127,7 @@ onMounted(async () => {
   <Dialog
     v-model:visible="dialogVisible"
     modal
-    header="Cambiar contraseña"
+    header="Change Password"
     class="mx-3 sm:mx-0 sm:w-full md:w-3"
     content-class="border-round-bottom border-top-1 surface-border"
     @hide="dialogVisible = false"
@@ -170,8 +170,8 @@ onMounted(async () => {
       </div>
     </div>
     <template #footer>
-      <Button label="Cancelar" icon="pi pi-times" severity="secondary" text @click="cancelResetPassword" />
-      <Button label="Cambiar contraseña" icon="pi pi-check" text :disabled="loading" @click="resetPassword" />
+      <Button label="Cancel" icon="pi pi-times" severity="secondary" text @click="cancelResetPassword" />
+      <Button label="Change Password" icon="pi pi-check" text :disabled="loading" @click="resetPassword" />
     </template>
   </Dialog>
 </template>

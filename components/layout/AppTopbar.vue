@@ -44,7 +44,7 @@ function onConfigButtonClick() {
 
 async function openDialogConfirm() {
   if (bussinessSelected.value != null) {
-    messageDialog.value = `Deseas cambiar de empresa de ${currentBussiness.value.name} a ${bussinessSelected.value.name}`
+    messageDialog.value = `You want to change companies ${currentBussiness.value.name} to ${bussinessSelected.value.name}`
     dialogConfirm.value = true
   }
 }
@@ -67,7 +67,7 @@ async function handleChange() {
 }
 
 async function openDialogConfirmChangePassword() {
-  messageDialog.value = `¿Está seguro que desea cambiar su contraseña?`
+  messageDialog.value = `Are you sure you want to change your password?`
   dialogConfirmChangePassword.value = true
   dialogConfirm.value = false
 }
@@ -152,7 +152,7 @@ async function openResetPassword() {
                 class="flex align-items-center hover:text-primary-500 transition-duration-200"
               >
                 <i class="pi pi-fw pi-folder mr-2" />
-                <span>Mi Empresa</span>
+                <span>My Business</span>
               </a>
             </li>
 
@@ -162,7 +162,7 @@ async function openResetPassword() {
                 href="#" class="flex align-items-center hover:text-primary-500 transition-duration-200"
               >
                 <i class="pi pi-fw pi-key mr-2" />
-                <span>Cambiar contraseña</span>
+                <span>Change Password</span>
               </a>
             </li>
             <li role="menuitem" class="m-0" @click="signOut({ callbackUrl: '/auth/login' })">
@@ -171,7 +171,7 @@ async function openResetPassword() {
                 href="#" class="flex align-items-center hover:text-primary-500 transition-duration-200"
               >
                 <i class="pi pi-fw pi-sign-out mr-2" />
-                <span>Salir</span>
+                <span>Sign Out</span>
               </a>
             </li>
           </ul>
@@ -211,7 +211,7 @@ async function openResetPassword() {
     </div>
     <template #footer>
       <Button label="No" icon="pi pi-times" text @click="dialogConfirm = false" />
-      <Button label="Si" icon="pi pi-check" text severity="danger" :disabled="loading" @click="handleChange" />
+      <Button label="Yes" icon="pi pi-check" text severity="danger" :disabled="loading" @click="handleChange" />
     </template>
   </Dialog>
 
@@ -222,7 +222,7 @@ async function openResetPassword() {
     </div>
     <template #footer>
       <Button label="No" icon="pi pi-times" text @click="dialogConfirmChangePassword = false" />
-      <Button label="Si" icon="pi pi-check" text severity="danger" :disabled="loading" @click="openResetPassword" />
+      <Button label="Yes" icon="pi pi-check" text severity="danger" :disabled="loading" @click="openResetPassword" />
     </template>
   </Dialog>
 </template>
