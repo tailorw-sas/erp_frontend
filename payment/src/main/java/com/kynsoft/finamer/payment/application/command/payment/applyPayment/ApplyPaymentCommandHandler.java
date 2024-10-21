@@ -53,7 +53,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                 if (notApplied > 0 && paymentBalance > 0 && command.isApplyPaymentBalance() && amountBalance > 0) {
                     double amountToApply = Math.min(notApplied, amountBalance);
                     CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true, manageInvoiceDto.getInvoiceDate(), false));
-                    command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId()));
+                    command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId(), command.getEmployee()));
                     notApplied = notApplied - amountToApply;
                     paymentBalance = paymentBalance - amountToApply;
                     amountBalance = amountBalance - amountToApply;
@@ -71,7 +71,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                             while (depositAmount > 0) {
                                 double amountToApply = Math.min(depositAmount, amountBalance);// Debe de compararse con el amountBalance, porque puede venir de haber sido rebajado en el flujo anterior.
                                 CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate(), false));// quite *-1
-                                command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId()));
+                                command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId(), command.getEmployee()));
                                 depositAmount = depositAmount - amountToApply;
                                 amountBalance = amountBalance - amountToApply;
                                 depositBalance = depositBalance - amountToApply;

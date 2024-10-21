@@ -77,7 +77,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
             );
 
             this.paymentDetailService.create(newDetailDto);
-            command.getMediator().send(new ApplyPaymentDetailCommand(newDetailDto.getId(), bookingDto.getId()));
+            command.getMediator().send(new ApplyPaymentDetailCommand(newDetailDto.getId(), bookingDto.getId(), command.getEmployee()));
         }
 
         paymentDto.setApplyPayment(true);

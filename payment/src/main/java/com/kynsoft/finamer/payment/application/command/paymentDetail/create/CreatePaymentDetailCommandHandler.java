@@ -6,7 +6,6 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
@@ -28,27 +27,17 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IPaymentService paymentService;
 
-    private final IManageEmployeeService manageEmployeeService;
-
-    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
-
     public CreatePaymentDetailCommandHandler(IPaymentDetailService paymentDetailService,
             IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentService paymentService,
-            IManageEmployeeService manageEmployeeService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService) {
+            IPaymentService paymentService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
-        this.manageEmployeeService = manageEmployeeService;
-        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
     }
 
     @Override
     //@Transactional
     public void handle(CreatePaymentDetailCommand command) {
-        //RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "id", "Employee ID cannot be null."));
-        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(command.getEmployee());
 
         ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.paymentTransactionTypeService.findById(command.getTransactionType());
         PaymentDto paymentDto = this.paymentService.findById(command.getPayment());
@@ -58,7 +47,6 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(command.getAmount()));
         RulesChecker.checkRule(new CheckIfNewPaymentDetailIsApplyDepositRule(paymentTransactionTypeDto.getApplyDeposit()));
 
-        String msg = "";
         //identified and notIdentified
         if (paymentTransactionTypeDto.getCash()) {
             RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyRule(command.getAmount(), paymentDto.getPaymentBalance()));
@@ -77,7 +65,6 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
                 //RulesChecker.checkRule(new CheckMinNumberOfCharacterInRemarkRule(paymentTransactionTypeDto.getMinNumberOfCharacter(), command.getRemark()));
 //                command.setRemark(paymentTransactionTypeDto.getDefaultRemark());
             }
-            msg = "Creating new Payment Detail with ID: ";
         }
 
         //Other Deductions
@@ -90,7 +77,6 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
 //                command.setRemark(paymentTransactionTypeDto.getDefaultRemark());
             }
 
-            msg = "Creating new Payment Detail with ID: ";
         }
 
         //Deposit Amount and Deposit Balance
@@ -128,7 +114,6 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             newDetailDto.setApplyDepositValue(command.getAmount());
             //Validar el Close Operation
             newDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
-            msg = "Creating New Deposit Detail with ID: ";
         }
 
         this.paymentDetailService.create(newDetailDto);
@@ -138,24 +123,11 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
 //            createPaymentAttachmentStatusHistory(employeeDto, paymentDto, paymentDetail, msg);
         }
         if (command.getApplyPayment() && paymentTransactionTypeDto.getCash()) {
-            ApplyPaymentDetailMessage message = command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking()));
+            ApplyPaymentDetailMessage message = command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking(), command.getEmployee()));
             paymentDto.setApplyPayment(message.getPayment().isApplyPayment());
             paymentDto.setPaymentStatus(message.getPayment().getPaymentStatus());
         }
 
         command.setPaymentResponse(paymentDto);
     }
-
-    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
-//    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, Long paymentDetail, String msg) {
-//
-//        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
-//        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-//        attachmentStatusHistoryDto.setDescription(msg + paymentDetail);
-//        attachmentStatusHistoryDto.setEmployee(employeeDto);
-//        attachmentStatusHistoryDto.setPayment(payment);
-//        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
-//
-//        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
-//    }
 }

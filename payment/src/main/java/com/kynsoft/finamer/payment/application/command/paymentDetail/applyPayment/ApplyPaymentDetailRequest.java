@@ -11,4 +11,5 @@ public class ApplyPaymentDetailRequest {
 
     private UUID paymentDetail;
     private UUID booking;
+    private UUID employee;
 }

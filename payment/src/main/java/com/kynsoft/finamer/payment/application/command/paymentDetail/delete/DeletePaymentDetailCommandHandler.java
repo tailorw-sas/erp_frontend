@@ -4,16 +4,21 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePaymentDetailsApplyPaymentRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDeletePaymentDetailsDepositRule;
+import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
@@ -23,13 +28,19 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
     private final IPaymentDetailService service;
     private final IPaymentService paymentService;
     private final IManagePaymentStatusService statusService;
+    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IManageEmployeeService manageEmployeeService;
 
     public DeletePaymentDetailCommandHandler(IPaymentDetailService service,
             IPaymentService paymentService,
-            IManagePaymentStatusService statusService) {
+            IManagePaymentStatusService statusService,
+            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IManageEmployeeService manageEmployeeService) {
         this.service = service;
         this.paymentService = paymentService;
         this.statusService = statusService;
+        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.manageEmployeeService = manageEmployeeService;
     }
 
     @Override
@@ -57,6 +68,8 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
                 UpdateIfNotNull.updateDouble(update::setApplied, update.getApplied() - delete.getAmount(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() + delete.getAmount(), updatePayment::setUpdate);
                 update.setPaymentStatus(this.statusService.findByConfirmed());
+                ManageEmployeeDto employeeDto = command.getEmployee() != null ? this.manageEmployeeService.findById(command.getEmployee()) : null;
+                this.createPaymentAttachmentStatusHistory(employeeDto, update);
                 update.setApplyPayment(this.service.countByApplyPaymentAndPaymentId(update.getId()) > 0);
 
                 //El valor del Detalle de tipo cash fue restado al Payment Amount en el create, en el delete debe de ser sumado.
@@ -86,6 +99,8 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
                 UpdateIfNotNull.updateDouble(update::setPaymentBalance, update.getPaymentBalance() - delete.getAmount(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setNotApplied, update.getNotApplied() - delete.getAmount(), updatePayment::setUpdate);
                 update.setPaymentStatus(this.statusService.findByConfirmed());
+                ManageEmployeeDto employeeDto = command.getEmployee() != null ? this.manageEmployeeService.findById(command.getEmployee()) : null;
+                this.createPaymentAttachmentStatusHistory(employeeDto, update);
                 update.setApplyPayment(this.service.countByApplyPaymentAndPaymentId(update.getId()) > 0);
             }
             service.delete(delete);
@@ -98,6 +113,8 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
                 UpdateIfNotNull.updateDouble(update::setNotIdentified, update.getPaymentAmount() - update.getIdentified(), updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(update::setApplied, update.getApplied() - delete.getAmount(), updatePayment::setUpdate);
                 update.setPaymentStatus(this.statusService.findByConfirmed());
+                ManageEmployeeDto employeeDto = command.getEmployee() != null ? this.manageEmployeeService.findById(command.getEmployee()) : null;
+                this.createPaymentAttachmentStatusHistory(employeeDto, update);
                 update.setApplyPayment(this.service.countByApplyPaymentAndPaymentId(update.getId()) > 0);
             }
             //Para este caso no se elimina, dado que el objeto esta relacionado con otro objeto del mismo tipo, por tanto voy a actuar modificando
@@ -117,6 +134,19 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
         }
 
         paymentService.update(update);
+    }
+
+    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
+    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Update Payment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+
+        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
 }
