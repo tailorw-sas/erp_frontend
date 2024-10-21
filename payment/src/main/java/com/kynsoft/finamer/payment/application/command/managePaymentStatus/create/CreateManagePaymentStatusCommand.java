@@ -18,8 +18,9 @@ public class CreateManagePaymentStatusCommand implements ICommand {
     private Boolean applied;
     private boolean confirmed;
     private boolean cancelled;
+    private boolean transit;
 
-    public CreateManagePaymentStatusCommand(UUID id, String code, String name, String status, Boolean applied, boolean confirmed, boolean cancelled) {
+    public CreateManagePaymentStatusCommand(UUID id, String code, String name, String status, Boolean applied, boolean confirmed, boolean cancelled, boolean transit) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -27,6 +28,7 @@ public class CreateManagePaymentStatusCommand implements ICommand {
         this.applied = applied;
         this.confirmed = confirmed;
         this.cancelled = cancelled;
+        this.transit = transit;
     }
 
     @Override

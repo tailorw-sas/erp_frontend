@@ -14,4 +14,5 @@ public class ChangeAttachmentStatusRequest {
 
     private EAttachment status;
     private UUID payment;
+    private UUID employee;
 }

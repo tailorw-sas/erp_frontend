@@ -64,6 +64,9 @@ public class ManagePaymentAttachmentStatus {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean supported;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean otherSupport;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -98,12 +101,13 @@ public class ManagePaymentAttachmentStatus {
         this.patWithAttachment = dto.isPatWithAttachment();
         this.pwaWithOutAttachment = dto.isPwaWithOutAttachment();
         this.supported = dto.isSupported();
+        this.otherSupport = dto.isOtherSupport();
     }
 
     public ManagePaymentAttachmentStatusDto toAggregateSample() {
         return new ManagePaymentAttachmentStatusDto(
                 id, code, name, status, module != null ? module.toAggregate() : null, show, defaults, permissionCode, description,
-                null, nonNone, patWithAttachment, pwaWithOutAttachment, supported
+                null, nonNone, patWithAttachment, pwaWithOutAttachment, supported, otherSupport
         );
     }
 
@@ -111,7 +115,7 @@ public class ManagePaymentAttachmentStatus {
         return new ManagePaymentAttachmentStatusDto(
                 id, code, name, status, module != null ? module.toAggregate() : null, show, defaults, permissionCode, description,
                 relatedStatuses != null ? relatedStatuses.stream().map(ManagePaymentAttachmentStatus::toAggregateSample).toList() : null,
-                nonNone, patWithAttachment, pwaWithOutAttachment, supported
+                nonNone, patWithAttachment, pwaWithOutAttachment, supported, otherSupport
         );
     }
 }

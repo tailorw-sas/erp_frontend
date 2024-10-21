@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -16,4 +18,5 @@ public class UpdateManageStatusTransactionBlueCommandRequest {
     private String merchantResponse;
     private String isoCode;
     private ETransactionResultStatus status;
+    private LocalDateTime paymentDate;
 }

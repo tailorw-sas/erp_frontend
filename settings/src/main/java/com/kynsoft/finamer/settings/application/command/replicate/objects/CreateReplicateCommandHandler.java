@@ -307,11 +307,12 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 paymentAttachmentStatusDto.isNonNone(),
                                 paymentAttachmentStatusDto.isPatWithAttachment(),
                                 paymentAttachmentStatusDto.isPwaWithOutAttachment(),
-                                paymentAttachmentStatusDto.isSupported()
+                                paymentAttachmentStatusDto.isSupported(),
+                                paymentAttachmentStatusDto.isOtherSupport()
                         ));
                     }
                 }
-                case MANEGE_CLIENT -> {//
+                case MANEGE_CLIENT -> {
                     for (ManageClientDto clientDto : this.managerClientService.findAllToReplicate()) {
                         this.replicateManageClientService.create(new ReplicateManageClientKafka(clientDto.getId(), clientDto.getCode(), clientDto.getName(), clientDto.getStatus().name(), clientDto.getIsNightType()));
                     }
@@ -335,7 +336,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 paymentStatusDto.getStatus().name(), 
                                 paymentStatusDto.getApplied(), 
                                 paymentStatusDto.isConfirmed(),
-                                paymentStatusDto.isCancelled()
+                                paymentStatusDto.isCancelled(),
+                                paymentStatusDto.isTransit()
                         ));
                     }
                 }

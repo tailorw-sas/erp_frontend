@@ -19,12 +19,13 @@ import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaym
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentMessage;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentRequest;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentResponse;
+import com.kynsoft.finamer.payment.application.query.payment.countByAgency.CountAgencyByPaymentBalanceAndDepositBalanceQuery;
+import com.kynsoft.finamer.payment.application.query.payment.countByAgency.CountAgencyByPaymentBalanceAndDepositBalanceResponse;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.GetPaymentExcelExporterQuery;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.PaymentExcelExporterResponse;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.SearchExcelExporter;
 import com.kynsoft.finamer.payment.application.query.payment.getById.FindPaymentByIdQuery;
 import com.kynsoft.finamer.payment.application.query.payment.search.GetSearchPaymentQuery;
-import com.kynsoft.finamer.payment.domain.dtoEnum.PaymentExcelExporterEnum;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -88,6 +89,15 @@ public class PaymentController {
 
         FindPaymentByIdQuery query = new FindPaymentByIdQuery(id);
         PaymentResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/agency/{agencyId}")
+    public ResponseEntity<?> CountAgencyByPaymentBalanceAndDepositBalance(@PathVariable UUID agencyId) {
+
+        CountAgencyByPaymentBalanceAndDepositBalanceQuery query = new CountAgencyByPaymentBalanceAndDepositBalanceQuery(agencyId);
+        CountAgencyByPaymentBalanceAndDepositBalanceResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }

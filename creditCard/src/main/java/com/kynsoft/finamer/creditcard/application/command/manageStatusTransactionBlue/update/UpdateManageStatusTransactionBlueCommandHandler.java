@@ -40,6 +40,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         transactionDto.setCreditCardType(creditCardTypeDto);
         transactionDto.setCommission(commission);
         transactionDto.setNetAmount(netAmount);
+        transactionDto.setPaymentDate(command.getRequest().getPaymentDate());
         transactionDto.setStatus(transactionStatusDto);
         this.transactionService.update(transactionDto);
 
@@ -48,10 +49,8 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         transactionPaymentLogsDto.setIsProcessed(true);
         this.transactionPaymentLogsService.update(transactionPaymentLogsDto);
 
-        //Verificamos que ya la transaccion este en estado RECIVIDO, si es TRUE mandamos el correo
-        if(transactionService.confirmCreateTransaction(transactionDto.getTransactionUuid())){
-            transactionService.confirmTransactionMail(transactionDto.getTransactionUuid());
-        }
+        //Enviar correo (voucher) de confirmacion a las personas implicadas
+        transactionService.confirmTransactionMail(transactionDto);
 
     }
 }

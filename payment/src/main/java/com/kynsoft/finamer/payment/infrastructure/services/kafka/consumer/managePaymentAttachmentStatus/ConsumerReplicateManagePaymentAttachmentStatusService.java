@@ -31,7 +31,8 @@ public class ConsumerReplicateManagePaymentAttachmentStatusService {
                     objKafka.isNonNone(),
                     objKafka.isPatWithAttachment(),
                     objKafka.isPwaWithOutAttachment(),
-                    objKafka.isSupported()
+                    objKafka.isSupported(),
+                    objKafka.isOtherSupport()
             );
             mediator.send(command);
         } catch (Exception ex) {

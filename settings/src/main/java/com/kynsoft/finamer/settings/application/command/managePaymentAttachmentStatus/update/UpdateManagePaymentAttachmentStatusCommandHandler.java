@@ -69,6 +69,7 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         UpdateIfNotNull.updateBoolean(dto::setPatWithAttachment, command.isPatWithAttachment(), dto.isPatWithAttachment(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setPwaWithOutAttachment, command.isPwaWithOutAttachment(), dto.isPwaWithOutAttachment(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setSupported, command.isSupported(), dto.isSupported(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setOtherSupport, command.isOtherSupport(), dto.isOtherSupport(), update::setUpdate);
 
         List<ManagePaymentAttachmentStatusDto> managePaymentAttachmentStatusDtoList = service.findByIds(command.getNavigate());
         dto.setRelatedStatuses(managePaymentAttachmentStatusDtoList);
@@ -84,7 +85,8 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
                 dto.isNonNone(), 
                 dto.isPatWithAttachment(), 
                 dto.isPwaWithOutAttachment(),
-                dto.isSupported()
+                dto.isSupported(),
+                dto.isOtherSupport()
         ));
     }
 

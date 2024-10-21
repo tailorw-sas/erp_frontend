@@ -1,5 +1,6 @@
 package com.kynsof.audit.infrastructure.core.config;
 
+import com.kynsof.audit.infrastructure.core.SecurityContextThreadLocalFilter;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.audit.infrastructure.service.AuditLoader;
 import com.kynsof.audit.infrastructure.service.kafka.ProducerAuditEventService;
@@ -45,5 +46,9 @@ public class AuditShareAutoConfiguration {
     @Bean
     public AuditLoader getAuditLoader(){
         return new AuditLoader(getProducerAuditRegisterEventService(),entityManagerFactory);
+    }
+    @Bean
+    public SecurityContextThreadLocalFilter getSecurityContextThreadLocalFilter(){
+        return new SecurityContextThreadLocalFilter();
     }
 }

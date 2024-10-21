@@ -22,7 +22,8 @@ public class CreateManagePaymentStatusCommandHandler implements ICommandHandler<
                 command.getStatus(),
                 command.getApplied(),
                 command.isConfirmed(),
-                command.isCancelled()
+                command.isCancelled(),
+                command.isTransit()
         ));
     }
 }
