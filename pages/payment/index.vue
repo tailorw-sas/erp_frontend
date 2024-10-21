@@ -437,7 +437,7 @@ const columns: IColumn[] = [
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'agencyType', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
   // { field: 'agencyTypeResponse', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
-  { field: 'bankAccount', header: 'Bank Acc', tooltip: 'Bank Account', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-bank-account', keyValue: 'accountNumber' } },
+  { field: 'bankAccount', header: 'Bank Acc', tooltip: 'Bank Account', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-bank-account', keyValue: 'name' } },
   { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'text' },
   { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'text' },
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'text' },
@@ -910,6 +910,34 @@ async function getList() {
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
         iterator.agencyType = iterator.agency.agencyTypeResponse
+        iterator.agency = {
+          ...iterator.agency,
+          name: `${iterator.agency.code} - ${iterator.agency.name}`
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'client')) {
+        iterator.client = {
+          ...iterator.client,
+          name: `${iterator.client.code} - ${iterator.client.name}`
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel')) {
+        iterator.hotel = {
+          ...iterator.hotel,
+          name: `${iterator.hotel.code} - ${iterator.hotel.name}`
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'bankAccount')) {
+        if (iterator.bankAccount && iterator.bankAccount.id) {
+          iterator.bankAccount = {
+            id: iterator.bankAccount.id,
+            name: `${iterator.bankAccount.accountNumber} - ${iterator.bankAccount.nameOfBank}`,
+            accountNumber: `${iterator.bankAccount.accountNumber} - ${iterator.bankAccount.nameOfBank}`,
+          }
+        }
       }
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'paymentId')) {
@@ -1218,6 +1246,16 @@ interface ListItem {
 }
 
 function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    code: data.code,
+    description: data.description
+  }
+}
+
+function mapFunctionForStatus(data: DataListItem): ListItem {
   return {
     id: data.id,
     name: `${data.name}`,
