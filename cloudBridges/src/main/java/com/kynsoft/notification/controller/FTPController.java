@@ -45,7 +45,7 @@ public class FTPController {
     @GetMapping("/download")
     public Mono<ResponseEntity<byte[]>> downloadFile(@RequestParam("remoteFilePath") String remoteFilePath) {
         return Mono.fromCallable(() -> {
-                    InputStream inputStream = ftpService.downloadFile(remoteFilePath, "162.55.193.5",
+                    InputStream inputStream = ftpService.downloadFile(remoteFilePath, "172.20.41.96",
                             "usrftp01", "usuarioftp01*", 21);
 
                     if (inputStream == null) {
