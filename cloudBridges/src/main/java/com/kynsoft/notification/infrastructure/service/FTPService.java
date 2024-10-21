@@ -4,6 +4,7 @@ import com.kynsoft.notification.domain.service.IFTPService;
 import com.kynsoft.notification.infrastructure.config.FTPConfig;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -13,6 +14,18 @@ import java.io.InputStream;
 public class FTPService implements IFTPService {
 
     private final FTPConfig ftpConfig;
+
+    @Value("${ftp.server.address}")
+    private String ftpServerAddress;
+
+    @Value("${ftp.server.port}")
+    private int ftpServerPort;
+
+    @Value("${ftp.username}")
+    private String ftpUsername;
+
+    @Value("${ftp.password}")
+    private String ftpPassword;
 
     public FTPService(FTPConfig ftpConfig) {
         this.ftpConfig = ftpConfig;
@@ -61,12 +74,12 @@ public class FTPService implements IFTPService {
     }
 
     // Método para descargar un archivo
-    public InputStream downloadFile(String remoteFilePath, String server, String user, String password, int port)  {
+    public InputStream downloadFile(String remoteFilePath)  {
         FTPClient ftpClient = new FTPClient();
         InputStream inputStream = null;
         try {
-            ftpClient.connect(server, port);
-            ftpClient.login(user, password);
+            ftpClient.connect(ftpServerAddress, ftpServerPort);
+            ftpClient.login(ftpUsername, ftpPassword);
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             ftpClient.setBufferSize(ftpConfig.getBufferSize());

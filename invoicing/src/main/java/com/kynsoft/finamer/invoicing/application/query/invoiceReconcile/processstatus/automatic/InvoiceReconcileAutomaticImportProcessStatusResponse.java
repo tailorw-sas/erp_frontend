@@ -6,7 +6,9 @@ import lombok.Getter;
 @Getter
 public class InvoiceReconcileAutomaticImportProcessStatusResponse implements IResponse {
     private final String status;
-    public InvoiceReconcileAutomaticImportProcessStatusResponse(String status) {
+    private final int total;
+    public InvoiceReconcileAutomaticImportProcessStatusResponse(String status, int total) {
         this.status = status;
+        this.total = total;
     }
 }
