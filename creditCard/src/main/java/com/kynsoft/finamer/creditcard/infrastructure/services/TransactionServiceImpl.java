@@ -161,8 +161,8 @@ public class TransactionServiceImpl implements ITransactionService {
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
             request.setTemplateId(6395138); // Cambiar en configuración
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            String transactionDateStr = transactionDto.getTransactionDate().format(formatter);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String transactionDateStr = transactionDto.getPaymentDate() != null ? transactionDto.getPaymentDate().format(formatter) : "";
 
             NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
             String formattedAmount = currencyFormatter.format(transactionDto.getAmount());
@@ -187,7 +187,7 @@ public class TransactionServiceImpl implements ITransactionService {
             );
             request.setMailJetVars(vars);
 
-            // Recipients
+            // All Recipients
             List<MailJetRecipient> recipients = new ArrayList<>();
             if (transactionDto.getEmail() != null && !transactionDto.getEmail().isEmpty()) {
                 recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));

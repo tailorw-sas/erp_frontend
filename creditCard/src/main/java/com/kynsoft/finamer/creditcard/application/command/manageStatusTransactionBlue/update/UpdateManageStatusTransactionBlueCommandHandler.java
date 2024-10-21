@@ -40,6 +40,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         transactionDto.setCreditCardType(creditCardTypeDto);
         transactionDto.setCommission(commission);
         transactionDto.setNetAmount(netAmount);
+        transactionDto.setPaymentDate(command.getRequest().getPaymentDate());
         transactionDto.setStatus(transactionStatusDto);
         this.transactionService.update(transactionDto);
 

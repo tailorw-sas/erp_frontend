@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -43,6 +44,7 @@ public class TransactionDto {
     private Boolean permitRefund;
     private ManagerMerchantCurrencyDto merchantCurrency;
     private boolean manual;
+    private LocalDateTime paymentDate;
 
     //uso -> toAggregateParent
     public TransactionDto(
