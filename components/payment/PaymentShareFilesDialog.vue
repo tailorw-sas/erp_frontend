@@ -151,7 +151,7 @@ const item = ref<GenericObject>({
   shareFileMonth: dayjs().format('MMMM') || '',
   hotel: `${externalProps.selectedPayment.hotel.code}-${externalProps.selectedPayment.hotel.name}` || '',
   agency: `${externalProps.selectedPayment.agency.code}-${externalProps.selectedPayment.agency.name}` || '',
-  fileName: externalProps.selectedPayment.paymentAmount ? `${listItems.value.length + 1}_${externalProps.selectedPayment.paymentAmount}.pdf` : '',
+  fileName: externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
   path: '',
 })
 
@@ -161,7 +161,7 @@ const itemTemp = ref<GenericObject>({
   shareFileMonth: dayjs().format('MMMM') || '',
   hotel: `${externalProps.selectedPayment.hotel.code}-${externalProps.selectedPayment.hotel.name}` || '',
   agency: `${externalProps.selectedPayment.agency.code}-${externalProps.selectedPayment.agency.name}` || '',
-  fileName: externalProps.selectedPayment.paymentAmount ? `${listItems.value.length + 1}_${externalProps.selectedPayment.paymentAmount}.pdf` : '',
+  fileName: externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
   path: '',
 })
 
@@ -236,7 +236,7 @@ async function clearForm() {
   updateFieldProperty(fieldsV2, 'hotel', 'disabled', true)
   updateFieldProperty(fieldsV2, 'agency', 'disabled', true)
   item.value = { ...itemTemp.value }
-  item.value.fileName = externalProps.selectedPayment.paymentAmount ? `${Pagination.value.totalElements + 1}_${externalProps.selectedPayment.paymentAmount}.pdf` : ''
+  item.value.fileName = externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${Pagination.value.totalElements + 1}.pdf` : ''
   idItem.value = ''
 
   formReload.value++
@@ -628,7 +628,7 @@ onMounted(async () => {
                       customBase64Uploader($event, fieldsV2, 'path');
                       onUpdate('path', $event)
                       if ($event && $event.files.length > 0) {
-                        onUpdate('fileName', `${Pagination.totalElements + 1}_${paymentSelect.paymentAmount}.${$event?.files[0]?.name.split('.').pop()}`)
+                        onUpdate('fileName', `${paymentSelect.paymentAmount}_${Pagination.totalElements + 1}.${$event?.files[0]?.name.split('.').pop()}`)
                         onUpdate('fileSize', formatSize($event?.files[0]?.size))
                       }
                       else {
