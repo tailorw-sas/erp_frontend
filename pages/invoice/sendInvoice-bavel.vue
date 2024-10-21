@@ -440,7 +440,7 @@ function getStatusBadgeBackgroundColor(code: string) {
     case 'PROCECSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
-    case 'CANCELED': return '#F90303'
+    case 'CANCELED': return '#888888'
     case 'PENDING': return '#686868'
 
     default:
@@ -454,7 +454,7 @@ function getStatusName(code: string) {
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
-    case 'CANCELED': return 'Canceled'
+    case 'CANCELED': return 'Cancelled'
     case 'PENDING': return 'Pending'
 
     default:

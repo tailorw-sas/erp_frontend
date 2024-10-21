@@ -981,7 +981,7 @@ onMounted(async () => {
                       <div class="flex gap-2">
                         <Button
                           id="btn-choose" class="p-2" icon="pi pi-plus"
-                          :disabled="disabledFields(data)" text @click="chooseCallback()"
+                          :disabled="idItem !== '' || idItem === null" text @click="chooseCallback()"
                         />
                         <Button
                           icon="pi pi-times" class="ml-2" severity="danger"

@@ -509,7 +509,7 @@ function getStatusName(code: string) {
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
-    case 'CANCELED': return 'Canceled'
+    case 'CANCELED': return 'Cancelled'
     case 'PENDING': return 'Pending'
 
     default:
@@ -521,7 +521,7 @@ function getStatusBadgeBackgroundColor(code: string) {
     case 'PROCECSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
-    case 'CANCELED': return '#F90303'
+    case 'CANCELED': return '#888888'
     case 'PENDING': return '#686868'
 
     default:
@@ -801,7 +801,7 @@ onMounted(async () => {
                     <div class="w-full" style=" z-index:5 ">
                       <Calendar
                         v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :min-date="new Date(startOfMonth)"   :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
+                        show-icon icon-display="input" class="w-full" :min-date="new Date(startOfMonth)" :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
                       />
                     </div>
                   </div>
@@ -810,7 +810,7 @@ onMounted(async () => {
                     <div class="w-full">
                       <Calendar
                         v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full"  :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
+                        icon-display="input" class="w-full" :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
                       />
                     </div>
                   </div>

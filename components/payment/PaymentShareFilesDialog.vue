@@ -72,6 +72,7 @@ const paymentSelect = ref<any>()
 const listItemsCount = ref(0)
 
 const idItem = ref('')
+const pathLoaded = ref('')
 
 const toast = useToast()
 
@@ -474,6 +475,18 @@ async function getItemById(id: string) {
   }
 }
 
+function disabledBtnSave(propsValue: any): boolean {
+  if (item.value && item.value.id) {
+    return true
+  }
+  else if (propsValue.item.fieldValues.path) {
+    return false
+  }
+  else {
+    return true
+  }
+}
+
 function requireConfirmationToSave(item: any) {
   if (!useRuntimeConfig().public.showSaveConfirm) {
     saveItem(item)
@@ -627,9 +640,11 @@ onMounted(async () => {
                     @uploader="($event: any) => {
                       customBase64Uploader($event, fieldsV2, 'path');
                       onUpdate('path', $event)
+                      pathLoaded = $event
                       if ($event && $event.files.length > 0) {
                         onUpdate('fileName', `${paymentSelect.paymentAmount}_${Pagination.totalElements + 1}.${$event?.files[0]?.name.split('.').pop()}`)
                         onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                        disabledBtnSave({ item: data })
                       }
                       else {
                         onUpdate('fileName', '')
@@ -674,7 +689,7 @@ onMounted(async () => {
                   <Button
                     v-tooltip.top="'Save'"
                     :loading="loadingSaveAll"
-                    :disabled="idItem !== '' && idItem !== null && item.path !== null && item.path?.files.length === 0" class="w-3rem sticky" icon="pi pi-save"
+                    :disabled="disabledBtnSave(props)" class="w-3rem sticky" icon="pi pi-save"
                     @click="props.item.submitForm($event)"
                   />
                   <!-- </IfCan>

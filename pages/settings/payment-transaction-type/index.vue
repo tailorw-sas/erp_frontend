@@ -122,20 +122,20 @@ const fields: Array<FieldDefinitionType> = [
     field: 'incomeDefault',
     header: 'Income Default',
     dataType: 'check',
-    class: 'field col-12 mb-3',
+    class: 'field col-12',
   },
   {
     field: 'paymentInvoice',
     header: 'Payment Invoice',
     dataType: 'check',
-    class: 'field col-12 mb-3',
+    class: 'field col-12',
     validation: z.boolean()
   },
   {
     field: 'antiToIncome',
     header: 'Anti To Income',
     dataType: 'check',
-    class: 'field col-12 mb-3',
+    class: 'field col-12',
     validation: z.boolean()
   },
   {
@@ -655,7 +655,7 @@ onMounted(() => {
                   }
                 }"
               />
-              <label for="cash" class="ml-2 font-bold">
+              <label for="cash" class="ml-1 font-bold">
                 Cash
               </label>
             </template>
@@ -673,7 +673,7 @@ onMounted(() => {
                   }
                 }"
               />
-              <label for="cash" class="ml-2 font-bold">
+              <label for="cash" class="ml-1 font-bold">
                 Deposit
               </label>
             </template>
@@ -691,7 +691,7 @@ onMounted(() => {
                   }
                 }"
               />
-              <label for="cash" class="ml-2 font-bold">
+              <label for="cash" class="ml-1 font-bold">
                 Apply Deposit
               </label>
             </template>
@@ -706,7 +706,7 @@ onMounted(() => {
                   onUpdate('minNumberOfCharacter', 0)
                 }"
               />
-              <label for="remarkRequired" class="ml-2 font-bold">
+              <label for="remarkRequired" class="ml-1 font-bold">
                 Remark Required
                 <span :class="fields.find(field => field.field === 'remarkRequired')?.class.includes('required') ? 'p-error font-semibold' : ''" />
               </label>
