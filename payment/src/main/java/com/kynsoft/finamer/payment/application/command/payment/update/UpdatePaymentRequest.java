@@ -21,4 +21,5 @@ public class UpdatePaymentRequest {
     private UUID hotel;
     private UUID bankAccount;
     private UUID attachmentStatus;
+    private UUID employee;
 }
