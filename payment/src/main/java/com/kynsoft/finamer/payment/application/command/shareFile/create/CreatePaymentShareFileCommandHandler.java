@@ -47,7 +47,7 @@ public class CreatePaymentShareFileCommandHandler implements ICommandHandler<Cre
         String path = "payment/"+currentDate.getYear() + "/" + monthFormatted + "/" + dayFormatted + "/"
                 + paymentDto.getHotel().getCode()+"/"+paymentDto.getClient().getName();
 
-        ftpService.sendFile(inputStream, command.getFileName(), "162.55.193.5",
+        ftpService.sendFile(inputStream, command.getFileName(), "172.20.41.96",
                 "usrftp01", "usuarioftp01*", 21, path);
 
         paymentShareFileService.create(new PaymentShareFileDto(
