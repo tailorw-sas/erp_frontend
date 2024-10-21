@@ -1030,8 +1030,6 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
 // childrenTotalValue: number;
 
 function openDialogPaymentDetailsEdit(idDetail: any = null) {
-  console.log(idDetail, 'idDetail')
-
   if (idDetail && idDetail.id) {
     itemDetailsForEdit.value = JSON.parse(JSON.stringify(itemDetailsTempForEdit.value))
     itemDetailsForEdit.value = idDetail
@@ -2824,7 +2822,7 @@ watch(() => hasBeenCreated.value, async (newValue) => {
 // Watcher
 watch(() => paymentDetailsList.value, (newValue) => {
   enableDepositSummaryAction.value = hasDepositSummaryTransaction(newValue)
-  if (paymentDetailsList.value.length === 0) {
+  if (paymentDetailsList.value.length === 0 && item.value.paymentStatus.cancelled === false) {
     updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
   }
   else {
