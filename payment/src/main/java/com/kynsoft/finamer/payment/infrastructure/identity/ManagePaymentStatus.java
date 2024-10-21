@@ -33,6 +33,9 @@ public class ManagePaymentStatus {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean cancelled;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean transit;
+
     public ManagePaymentStatus(ManagePaymentStatusDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -41,9 +44,10 @@ public class ManagePaymentStatus {
         this.applied = dto.getApplied();
         this.confirmed = dto.isConfirmed();
         this.cancelled = dto.isCancelled();
+        this.transit = dto.isTransit();
     }
     
     public ManagePaymentStatusDto toAggregate(){
-        return new ManagePaymentStatusDto(id, code, name, status, applied, confirmed, cancelled);
+        return new ManagePaymentStatusDto(id, code, name, status, applied, confirmed, cancelled, transit);
     }
 }

@@ -4,6 +4,10 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommand;
 import com.kynsoft.finamer.creditcard.domain.dto.CardnetJobDto;
 import com.kynsoft.finamer.creditcard.domain.dto.CardnetProcessErrorLogDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionResultStatus;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.services.IProcessingPendingJobService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.CardnetJob;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.CardnetProcessErrorLog;
@@ -35,20 +39,19 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
     private RestTemplate restTemplate; // Necesario para llamar a otro endpoint (Enpoint para verificar si se peude actualizar la transacción)
 
     @Autowired
-    private CardnetJobReadDataJPARepository repositoryQuery;
-
-    @Autowired
     TransactionServiceImpl transactionService;
+
+    private final ManageTransactionStatusServiceImpl transactionStatusService;
 
     private final IMediator mediator;
 
-    public ProcessingPendingJobServiceImpl(CardnetProcessErrorLogReadDataJPARepository repositoryCradentProcessErrorQuery,CardnetProcessErrorLogWriteDataJPARepository repositoryCradentProcessErrorCommand, CardNetJobServiceImpl cardnetJobService, CardnetJobReadDataJPARepository repositoryQuery, IMediator mediator, TransactionServiceImpl transactionService) {
+    public ProcessingPendingJobServiceImpl(CardnetProcessErrorLogReadDataJPARepository repositoryCradentProcessErrorQuery, CardnetProcessErrorLogWriteDataJPARepository repositoryCradentProcessErrorCommand, CardNetJobServiceImpl cardnetJobService, IMediator mediator, TransactionServiceImpl transactionService, ManageTransactionStatusServiceImpl transactionStatusService) {
         this.cardnetJobService = cardnetJobService;
-        this.repositoryQuery = repositoryQuery;
         this.mediator = mediator;
         this.repositoryCradentProcessErrorCommand = repositoryCradentProcessErrorCommand;
         this.repositoryCradentProcessErrorQuery = repositoryCradentProcessErrorQuery;
         this.transactionService = transactionService;
+        this.transactionStatusService = transactionStatusService;
     }
 
     @Scheduled(fixedRate = 600000)  // se ejecuta el método cada 600000 ms = 10 minutos
@@ -56,50 +59,47 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
 
         LocalDate yesterdaynew = LocalDate.now().minusDays(1);
         LocalDateTime yesterdaydate = yesterdaynew.atStartOfDay();
-        List<CardnetJob> list = repositoryQuery.findByIsProcessedFalse(yesterdaydate);
+        List<CardnetJobDto> list = cardnetJobService.listUnProcessedTransactions(yesterdaydate);
         if (!list.isEmpty()) {
-            processedCardnetJobListRecursive(list, 0);
+            processCardNetPendingTransactions(list);
         }
     }
 
     // Método recursivo que procesa la lista
-    private void processedCardnetJobListRecursive(List<CardnetJob> list, int index) {
-        // Verificamos si hemos llegado al final de la lista(Condición de parada)
-        if (index < list.size()) {
-            CardnetJobDto cardnetJobDto = cardnetJobService.findByTransactionId(list.get(index).getTransactionId());
-            CardnetProcessErrorLogDto cardnetProcessErrorLogDto = new CardnetProcessErrorLogDto();
-            try {
-                // Acción a ejecutar en cada elemento
-                UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()
-                        .session(list.get(index).getSession())
-                        .build();
-                mediator.send(updateManageStatusTransactionCommandRequest);
-                cardnetJobDto.setNumberOfAttempts(list.get(index).getNumberOfAttempts() + 1);
-                cardnetJobService.update(cardnetJobDto);
-                cardnetProcessErrorLogDto.setSession(list.get(index).getSession());
-                cardnetProcessErrorLogDto.setTransactionId(list.get(index).getTransactionId());
-                cardnetProcessErrorLogDto.setError("There is no mistake in this iteration");
-                createOrUpdate(cardnetProcessErrorLogDto);
-
-                //Verificamos que ya la transaccion este en estado RECIVIDO, si es TRUE mandamos el correo
-                if(transactionService.confirmCreateTransaction(list.get(index).getTransactionId())){
-                    transactionService.confirmTransactionMail(list.get(index).getTransactionId());
+    private void processCardNetPendingTransactions(List<CardnetJobDto> list) {
+        list.forEach(cardnetJobDto -> {
+            if (cardnetJobDto.getNumberOfAttempts() < 4) {
+                CardnetProcessErrorLogDto cardnetProcessErrorLogDto = new CardnetProcessErrorLogDto();
+                try {
+                    // Acción a ejecutar en cada elemento
+                    UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()
+                            .session(cardnetJobDto.getSession())
+                            .build();
+                    mediator.send(updateManageStatusTransactionCommandRequest);
+                    cardnetJobDto.setNumberOfAttempts(cardnetJobDto.getNumberOfAttempts() + 1);
+                    cardnetJobDto.setIsProcessed(true);
+                    cardnetJobService.update(cardnetJobDto);
+                } catch (Exception e) {
+                    cardnetJobDto.setNumberOfAttempts(cardnetJobDto.getNumberOfAttempts() + 1);
+                    cardnetJobService.update(cardnetJobDto);
+                    // Manejo de la excepción, por ejemplo, registrar el error
+                    cardnetProcessErrorLogDto.setSession(cardnetJobDto.getSession());
+                    cardnetProcessErrorLogDto.setTransactionId(cardnetJobDto.getTransactionId());
+                    cardnetProcessErrorLogDto.setError(e.getMessage());
+                    createOrUpdate(cardnetProcessErrorLogDto);
                 }
+            } else {
+                // Cancelar transaccion y marcarla como procesada
+                TransactionDto transactionDto = transactionService.findByUuid(cardnetJobDto.getTransactionId());
+                ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(ETransactionResultStatus.CANCELLED);
+                transactionDto.setStatus(transactionStatusDto);
+                transactionService.update(transactionDto);
 
-            } catch (Exception e) {
-                // Manejo de la excepción, por ejemplo, registrar el error
-                cardnetProcessErrorLogDto.setSession(list.get(index).getSession());
-                cardnetProcessErrorLogDto.setTransactionId(list.get(index).getTransactionId());
-                cardnetProcessErrorLogDto.setError(e.getMessage());
-                createOrUpdate(cardnetProcessErrorLogDto);
-
-            } finally {
-                // Llamada recursiva con el siguiente índice, ya sea que haya ocurrido o no una excepción
-
-                processedCardnetJobListRecursive(list, index + 1);
+                cardnetJobDto.setIsProcessed(true);
+                cardnetJobService.update(cardnetJobDto);
             }
-        }
 
+        });
     }
 
     public void update(CardnetProcessErrorLogDto dto) {

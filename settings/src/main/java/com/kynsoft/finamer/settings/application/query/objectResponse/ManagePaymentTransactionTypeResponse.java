@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.settings.application.query.objectResponse;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
@@ -16,7 +17,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManagePaymentTransactionTypeResponse  implements IResponse {
+public class ManagePaymentTransactionTypeResponse  implements IResponse, Serializable {
     private UUID id;
     private String code;
     private Status status;

@@ -25,4 +25,5 @@ public class ManagePaymentAttachmentStatusDto {
     private boolean patWithAttachment;
     private boolean pwaWithOutAttachment;
     private boolean supported;
+    private boolean otherSupport;
 }
