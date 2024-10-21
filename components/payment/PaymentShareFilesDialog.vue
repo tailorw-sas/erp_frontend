@@ -89,7 +89,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
   {
     field: 'shareFileYear',
     header: 'Year',
-    dataType: 'number',
+    dataType: 'text',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
     disabled: true
