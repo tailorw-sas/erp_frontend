@@ -140,7 +140,7 @@ const columns: IColumn[] = [
   { field: 'sent', header: 'Sent', type: 'text' },
   { field: 'reconciled', header: 'Reconciled', type: 'text' },
   { field: 'processed', header: 'Processed', type: 'text' },
-  { field: 'canceled', header: 'Canceled', type: 'text' },
+  { field: 'canceled', header: 'Cancelled', type: 'text' },
   { field: 'pending', header: 'Pending', type: 'text' },
   { field: 'typeInvoice', header: 'Invoice Type', type: 'text' },
   { field: 'typeIncome', header: 'Income Type', type: 'text' },

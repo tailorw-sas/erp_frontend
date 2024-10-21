@@ -44,7 +44,7 @@ export const OBJ_ENUM_INVOICE_STATUS = {
   RECONCILED: 'Reconciled',
   SENT: 'Sent',
   PENDING: 'Pending',
-  CANCELED: 'Canceled'
+  CANCELLED: 'Cancelled'
 }
 export const OBJ_ENUM_INVOICE_TYPE_CODE = {
   INVOICE: 'INV',
@@ -63,7 +63,7 @@ export const ENUM_INVOICE_CRITERIA = [
 ]
 
 export const ENUM_INVOICE_STATUS = [
-  { id: 'CANCELED', name: 'Canceled', code: 'CANC' },
+  { id: 'CANCELED', name: 'Cancelled', code: 'CANC' },
   { id: 'PENDING', name: 'Pending', code: 'PEND' },
   { id: 'PROCECSED', name: 'Processed', code: 'PRO' },
   { id: 'RECONCILED', name: 'Reconciled', code: 'REC' },
@@ -74,7 +74,7 @@ export enum InvoiceStatus {
   PROCECSED = 'PROCECSED',
   RECONCILED = 'RECONCILED',
   SENT = 'SENT',
-  CANCELED = 'CANCELED',
+  CANCELED = 'CANCELLED',
   PENDING = 'PENDING'
 }
 
@@ -272,7 +272,7 @@ export const ENUM_HOURS = [
 ]
 
 export const ENUM_INVOICE_STATUS_NAVIGATE = [
-  { id: 'Canceled', name: 'Canceled' },
+  { id: 'Cancelled', name: 'Cancelled' },
   { id: 'Pending', name: 'Pending' },
   { id: 'Processed', name: 'Processed' },
   { id: 'Reconciled', name: 'Reconciled' },
@@ -282,7 +282,7 @@ export const ENUM_INVOICE_STATUS_NAVIGATE = [
 
 export const ENUM_TRANSACTION_STATUS_NAVIGATE = [
   { id: 'Created', name: 'Created' },
-  { id: 'Canceled', name: 'Canceled' },
+  { id: 'Cancelled', name: 'Cancelled' },
   { id: 'Declined', name: 'Declined' },
   { id: 'Paid', name: 'Paid' },
   { id: 'Received', name: 'Received' },
@@ -298,7 +298,7 @@ export const ENUM_RECONCILE_TRANSACTION_STATUS_NAVIGATE = [
 
 export const ENUM_PAYMENT_TRANSACTION_STATUS_NAVIGATE = [
   { id: 'InProgress', name: 'In Progress' },
-  { id: 'Canceled', name: 'Canceled' },
+  { id: 'Cancelled', name: 'Cancelled' },
   { id: 'Completed', name: 'Completed' },
   { id: 'Applied', name: 'Applied' },
 ]
