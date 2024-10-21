@@ -32,8 +32,8 @@ const enableSplitAction = ref(false)
 const enableDepositSummaryAction = ref(false)
 const formReload = ref(0)
 const formReloadAgency = ref(0)
-const refPaymentDetailForm = ref(0)
 const dialogPaymentDetailFormReload = ref(0)
+const dialogPaymentDetailFormReloadEdit = ref(0)
 const amountOfDetailItem = ref(0) // Temp
 
 const loadingSaveAll = ref(false)
@@ -52,10 +52,11 @@ const bankAccountList = ref<any[]>([])
 const paymentStatusList = ref<any[]>([])
 const attachmentStatusList = ref<any[]>([])
 const onOffDialogPaymentDetail = ref(false)
+const onOffDialogPaymentDetailEdit = ref(false)
 const onOffDialogPaymentDetailSummary = ref(false)
 const hasBeenEdited = ref(0)
 const hasBeenCreated = ref(0)
-const actionOfModal = ref<'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined>(undefined)
+const actionOfModal = ref<'new-detail' | 'edit-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined>(undefined)
 
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
@@ -637,6 +638,136 @@ const itemDetailsTemp = ref({
   childrenTotalValue: 0,
 })
 
+const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
+  {
+    field: 'paymentDetailId',
+    header: 'Id',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'transactionDate',
+    header: 'Create Date',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'bookingId',
+    header: 'Booking Id',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'invoiceNumber',
+    header: 'Invoice No.',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'fullName',
+    header: 'Full Name',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'couponNumber',
+    header: 'Coupon No.',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'checkIn',
+    header: 'Check In',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'checkOut',
+    header: 'Check Out',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'adults',
+    header: 'Adult',
+    dataType: 'number',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'children',
+    header: 'Children',
+    dataType: 'number',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'bookingDate',
+    header: 'Booking Date',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12',
+  },
+  {
+    field: 'transactionType',
+    header: 'Payment Transaction Type',
+    dataType: 'select',
+    class: 'field col-12 md:col-6',
+    validation: validateEntityStatus('transaction category'),
+  },
+  {
+    field: 'amount',
+    header: 'Amount',
+    dataType: 'text',
+    disabled: false,
+    helpText: `Max amount: ${item.value.paymentBalance.toString()}`,
+    class: 'field col-12 md:col-6 required',
+    validation: decimalSchema.shape.amount
+  },
+  {
+    field: 'remark',
+    header: 'Remark',
+    dataType: 'textarea',
+    class: 'field col-12',
+  },
+])
+
+const itemDetailsForEdit = ref({
+  id: '',
+  payment: '',
+  transactionType: null,
+  amount: '0',
+  remark: '',
+  status: '',
+  oldAmount: '',
+  paymentDetail: '',
+  applyDepositValue: '0',
+  children: [],
+  childrenTotalValue: 0,
+})
+
+const itemDetailsTempForEdit = ref({
+  id: '',
+  payment: '',
+  transactionType: null,
+  amount: '0',
+  remark: '',
+  status: '',
+  oldAmount: '',
+  paymentDetail: '',
+  applyDepositValue: '0',
+  children: [],
+  childrenTotalValue: 0,
+})
+
 const options = ref({
   tableName: 'Payment Details',
   moduleApi: 'payment',
@@ -666,10 +797,12 @@ function isObjectEmpty(obj) {
   return Object.keys(obj).length === 0
 }
 
-function getNameByActions(action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined) {
+function getNameByActions(action: 'new-detail' | 'edit-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined) {
   switch (action) {
     case 'new-detail':
       return itemDetails.value.id ? 'Edit Payment Details' : 'New Payment Details'
+    case 'edit-detail':
+      return 'Edit Payment Details'
     case 'deposit-transfer':
       return 'New Deposit Detail'
     case 'split-deposit':
@@ -854,6 +987,13 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
   }
 
   onOffDialogPaymentDetail.value = true
+}
+
+function openDialogPaymentDetailsEdit(idDetail: any = null) {
+  if (idDetail && idDetail.id) {
+    console.log(idDetail)
+  }
+  onOffDialogPaymentDetailEdit.value = true
 }
 
 function dialogPaymentDetailSummary() {
@@ -1836,6 +1976,18 @@ function onCloseDialog($event: any) {
   itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
   dialogPaymentDetailFormReload.value += 1
   onOffDialogPaymentDetail.value = $event
+}
+
+function onCloseDialogEdit($event: any) {
+  if ($event === false) {
+    isSplitAction.value = false
+    actionOfModal.value = 'new-detail'
+    payloadToApplyPayment.value.applyPayment = false
+    payloadToApplyPayment.value.booking = ''
+  }
+  itemDetailsForEdit.value = JSON.parse(JSON.stringify(itemDetailsTempForEdit.value))
+  dialogPaymentDetailFormReloadEdit.value += 1
+  onOffDialogPaymentDetailEdit.value = $event
 }
 
 function onCloseDialogSummary($event: any) {
@@ -3030,7 +3182,7 @@ onMounted(async () => {
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
       @on-row-right-click="onRowContextMenu($event)"
-      @on-row-double-click="openDialogPaymentDetailsByAction($event, 'new-detail', 'edit')"
+      @on-row-double-click="openDialogPaymentDetailsEdit($event)"
     >
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
@@ -3119,6 +3271,23 @@ onMounted(async () => {
         @update:amount="amountOfDetailItem = $event"
       />
     </div>
+
+    <div v-show="onOffDialogPaymentDetailEdit">
+      <DialogPaymentDetailFormEdit
+        :key="dialogPaymentDetailFormReloadEdit"
+        :visible="onOffDialogPaymentDetailEdit"
+        :fields="fieldPaymentDetailsForEdit"
+        :item="itemDetailsForEdit"
+        :title="getNameByActions(actionOfModal)"
+        :selected-payment="item"
+        action="new-detail"
+        @apply-payment="openModalApplyPayment($event)"
+        @update:visible="onCloseDialogEdit($event)"
+        @save="saveAndReload($event)"
+        @update:amount="amountOfDetailItem = $event"
+      />
+    </div>
+
     <div v-if="attachmentDialogOpen">
       <PaymentAttachmentDialog
         :is-create-or-edit-payment="route?.query?.id ? 'edit' : 'create'"

@@ -449,18 +449,18 @@ watch(() => amountLocalTemp.value, async (newValue) => {
 })
 
 onMounted(async () => {
-  if (!props.item?.id) {
-    loadDefaultsValues()
-  }
-  else if (props.action === 'apply-deposit') {
-    loadDefaultsValues()
-  }
-  else if (props.action === 'deposit-transfer') {
-    loadDefaultsValues()
-  }
-  else if (props.action === 'split-deposit') {
-    loadDefaultsValues()
-  }
+  // if (!props.item?.id) {
+  //   loadDefaultsValues()
+  // }
+  // else if (props.action === 'apply-deposit') {
+  //   loadDefaultsValues()
+  // }
+  // else if (props.action === 'deposit-transfer') {
+  //   loadDefaultsValues()
+  // }
+  // else if (props.action === 'split-deposit') {
+  //   loadDefaultsValues()
+  // }
 })
 
 function processValidation($event: any, data: any) {
@@ -602,6 +602,7 @@ function processValidation($event: any, data: any) {
         :item="item"
         :show-actions="false"
         :force-save="forceSave"
+        container-class="grid pt-5"
         :loading-save="props.loadingSaveAll"
         @cancel="closeDialog"
         @force-save="forceSave = $event"
