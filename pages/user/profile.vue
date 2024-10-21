@@ -33,7 +33,7 @@ const formConfig = ref<IFormField>(
     },
     name: {
       value: '',
-      label: 'Nombre',
+      label: 'Name',
       type: 'text',
       isRequired: true,
       showRequiredLabel: true,
@@ -46,7 +46,7 @@ const formConfig = ref<IFormField>(
     },
     lastName: {
       value: '',
-      label: 'Apellidos',
+      label: 'Last Name',
       type: 'text',
       isRequired: true,
       showRequiredLabel: true,
@@ -58,7 +58,7 @@ const formConfig = ref<IFormField>(
     },
     email: {
       value: '',
-      label: 'Correo Electrónico',
+      label: 'Email',
       type: 'text',
       isRequired: true,
       showRequiredLabel: true,
@@ -70,7 +70,7 @@ const formConfig = ref<IFormField>(
     },
     userName: {
       value: '',
-      label: 'Usuario',
+      label: 'Username',
       type: 'text',
       isRequired: true,
       showRequiredLabel: true,
@@ -96,11 +96,11 @@ const formConfig = ref<IFormField>(
     // },
     userType: {
       value: '',
-      label: 'Tipo de Usuario',
+      label: 'User Type',
       type: 'select',
       isRequired: true,
       showRequiredLabel: true,
-      placeholder: 'Seleccione un tipo de usuario',
+      placeholder: 'Select a user type',
       localItems: ENUM_USER_TYPE,
       errorMessage: [],
       haveError: false,
@@ -111,11 +111,11 @@ const formConfig = ref<IFormField>(
     },
     status: {
       value: '',
-      label: 'Estado',
+      label: 'Status',
       type: 'select',
       isRequired: true,
       showRequiredLabel: true,
-      placeholder: 'Seleccione un estado',
+      placeholder: 'Select a status',
       localItems: ENUM_STATUS,
       errorMessage: [],
       haveError: false,
@@ -148,8 +148,8 @@ const formOptionsToEdit = ref({
   moduleApi: 'identity',
   uriApi: 'users',
   itemId: userId,
-  btnTextSave: 'Siguiente',
-  btnTextCancel: 'Cancelar',
+  btnTextSave: 'Next',
+  btnTextCancel: 'Cancel',
   showBtnCancel: false,
   showBtnSave: false,
   showBtnActions: false,
@@ -197,8 +197,8 @@ function errorInfForm() {
 
       <div class="card">
         <div class="flex justify-content-end">
-          <Button class="w-8rem mr-3" severity="secondary" icon="pi pi-times" label="Cancelar" @click="cancelEdit()" />
-          <Button class="w-8rem" label="Modificar" :loading="loadingSaveAll" :disabled="errorInfForm()" @click="saveAll" />
+          <Button class="w-8rem mr-3" severity="secondary" icon="pi pi-times" label="Cancel" @click="cancelEdit()" />
+          <Button class="w-8rem" label="Modify" :loading="loadingSaveAll" :disabled="errorInfForm()" @click="saveAll" />
         </div>
       </div>
     </div>

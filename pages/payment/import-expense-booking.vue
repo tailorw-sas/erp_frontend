@@ -30,12 +30,12 @@ const totalImportedRows = ref(0)
 
 const confApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment-detail/import',
+  uriApi: 'payment/import',
 })
 
 const confPaymentApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment-detail',
+  uriApi: 'payment',
 })
 
 const hotelList = ref<any[]>([])
@@ -68,7 +68,7 @@ const columns: IColumn[] = [
 const options = ref({
   tableName: 'Payment Import Expense to booking',
   moduleApi: 'payment',
-  uriApi: 'payment-detail/import',
+  uriApi: 'payment/import',
   loading: false,
   showDelete: false,
   showFilters: true,

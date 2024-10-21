@@ -622,7 +622,7 @@ onMounted(async () => {
               >
                 <template #field-path="{ item: data, onUpdate }">
                   <FileUpload
-                    v-if="!loadingSaveAll" :max-file-size="1000000" :disabled="idItem !== '' || idItem === null" :multiple="false"
+                    v-if="!loadingSaveAll" :max-file-size="10000000" :disabled="idItem !== '' || idItem === null" :multiple="false"
                     auto custom-upload accept="application/pdf,text/plain,application/octet-stream, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                     @uploader="($event: any) => {
                       customBase64Uploader($event, fieldsV2, 'path');
@@ -674,7 +674,7 @@ onMounted(async () => {
                   <Button
                     v-tooltip.top="'Save'"
                     :loading="loadingSaveAll"
-                    :disabled="idItem !== '' && idItem !== null" class="w-3rem sticky" icon="pi pi-save"
+                    :disabled="idItem !== '' && idItem !== null && item.path !== null && item.path?.files.length === 0" class="w-3rem sticky" icon="pi pi-save"
                     @click="props.item.submitForm($event)"
                   />
                   <!-- </IfCan>
