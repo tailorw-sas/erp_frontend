@@ -37,6 +37,7 @@ const dialogPaymentDetailFormReloadEdit = ref(0)
 const amountOfDetailItem = ref(0) // Temp
 
 const loadingSaveAll = ref(false)
+const loadingSaveAllForEdit = ref(false)
 const loadingDelete = ref(false)
 const loadingPrintDetail = ref(false)
 
@@ -647,13 +648,6 @@ const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
     class: 'field col-12 md:col-6',
   },
   {
-    field: 'transactionDate',
-    header: 'Create Date',
-    dataType: 'text',
-    disabled: true,
-    class: 'field col-12 md:col-6',
-  },
-  {
     field: 'bookingId',
     header: 'Booking Id',
     dataType: 'text',
@@ -668,8 +662,22 @@ const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
     class: 'field col-12 md:col-6',
   },
   {
+    field: 'transactionDate',
+    header: 'Transaction Date',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
     field: 'fullName',
     header: 'Full Name',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'reservationNumber',
+    header: 'Reservation No.',
     dataType: 'text',
     disabled: true,
     class: 'field col-12 md:col-6',
@@ -681,20 +689,20 @@ const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
     disabled: true,
     class: 'field col-12 md:col-6',
   },
-  {
-    field: 'checkIn',
-    header: 'Check In',
-    dataType: 'text',
-    disabled: true,
-    class: 'field col-12 md:col-6',
-  },
-  {
-    field: 'checkOut',
-    header: 'Check Out',
-    dataType: 'text',
-    disabled: true,
-    class: 'field col-12 md:col-6',
-  },
+  // {
+  //   field: 'checkIn',
+  //   header: 'Check In',
+  //   dataType: 'text',
+  //   disabled: true,
+  //   class: 'field col-12 md:col-6',
+  // },
+  // {
+  //   field: 'checkOut',
+  //   header: 'Check Out',
+  //   dataType: 'text',
+  //   disabled: true,
+  //   class: 'field col-12 md:col-6',
+  // },
   {
     field: 'adults',
     header: 'Adult',
@@ -703,7 +711,7 @@ const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
     class: 'field col-12 md:col-6',
   },
   {
-    field: 'children',
+    field: 'childrens',
     header: 'Children',
     dataType: 'number',
     disabled: true,
@@ -714,23 +722,38 @@ const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
     header: 'Booking Date',
     dataType: 'text',
     disabled: true,
-    class: 'field col-12',
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'amount',
+    header: 'D. Amount',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+    // helpText: `Max amount: ${item.value.paymentBalance.toString()}`,
+    // validation: decimalSchema.shape.amount
   },
   {
     field: 'transactionType',
     header: 'Payment Transaction Type',
     dataType: 'select',
+    disabled: true,
     class: 'field col-12 md:col-6',
     validation: validateEntityStatus('transaction category'),
   },
   {
-    field: 'amount',
-    header: 'Amount',
-    dataType: 'text',
-    disabled: false,
-    helpText: `Max amount: ${item.value.paymentBalance.toString()}`,
-    class: 'field col-12 md:col-6 required',
-    validation: decimalSchema.shape.amount
+    field: 'reconciledManually',
+    header: 'Reconciled Manually',
+    dataType: 'check',
+    class: 'field col-12 md:col-6 mt-3 mb-3',
+    disabled: true,
+  },
+  {
+    field: 'deposit',
+    header: 'Deposit',
+    dataType: 'check',
+    class: 'field col-12 md:col-6 mt-3',
+    disabled: true,
   },
   {
     field: 'remark',
@@ -750,7 +773,7 @@ const itemDetailsForEdit = ref({
   oldAmount: '',
   paymentDetail: '',
   applyDepositValue: '0',
-  children: [],
+  childrens: 0,
   childrenTotalValue: 0,
 })
 
@@ -764,7 +787,7 @@ const itemDetailsTempForEdit = ref({
   oldAmount: '',
   paymentDetail: '',
   applyDepositValue: '0',
-  children: [],
+  childrens: 0,
   childrenTotalValue: 0,
 })
 
@@ -800,7 +823,7 @@ function isObjectEmpty(obj) {
 function getNameByActions(action: 'new-detail' | 'edit-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined) {
   switch (action) {
     case 'new-detail':
-      return itemDetails.value.id ? 'Edit Payment Details' : 'New Payment Details'
+      return itemDetailsForEdit.value.id ? 'Edit Payment Details' : 'New Payment Details'
     case 'edit-detail':
       return 'Edit Payment Details'
     case 'deposit-transfer':
@@ -820,6 +843,11 @@ function clearForm() {
 
 function clearFormDetails() {
   itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
+  actionOfModal.value = 'new-detail'
+}
+
+function clearFormDetailsForEdit() {
+  itemDetailsForEdit.value = JSON.parse(JSON.stringify(itemDetailsTempForEdit.value))
   actionOfModal.value = 'new-detail'
 }
 
@@ -989,11 +1017,27 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
   onOffDialogPaymentDetail.value = true
 }
 
+// id: string;
+// payment: string;
+// transactionType: null;
+// amount: string;
+// remark: string;
+// status: string;
+// oldAmount: string;
+// paymentDetail: string;
+// applyDepositValue: string;
+// children: never[];
+// childrenTotalValue: number;
+
 function openDialogPaymentDetailsEdit(idDetail: any = null) {
+  console.log(idDetail, 'idDetail')
+
   if (idDetail && idDetail.id) {
-    console.log(idDetail)
+    itemDetailsForEdit.value = JSON.parse(JSON.stringify(itemDetailsTempForEdit.value))
+    itemDetailsForEdit.value = idDetail
   }
   onOffDialogPaymentDetailEdit.value = true
+  dialogPaymentDetailFormReloadEdit.value += 1
 }
 
 function dialogPaymentDetailSummary() {
@@ -1550,62 +1594,68 @@ async function createPaymentDetails(item: { [key: string]: any }) {
 
 async function updatePaymentDetails(item: { [key: string]: any }) {
   if (item) {
-    // loadingSaveAll.value = true
+    loadingSaveAllForEdit.value = true
     const payload: { [key: string]: any } = { ...item }
-    payload.payment = idItem.value || ''
-    payload.amount = Number.parseFloat(payload.amount)
-    payload.employee = userData?.value?.user?.userId || ''
-    payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+    // payload.payment = idItem.value || ''
+    // payload.amount = Number.parseFloat(payload.amount)
+    // payload.employee = userData?.value?.user?.userId || ''
+    // payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
 
     try {
-      switch (actionOfModal.value) {
-        case 'new-detail':
-          confApiPaymentDetail.uriApi = 'payment-detail'
-          await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
-          break
-        case 'deposit-transfer':
-          confApiPaymentDetail.uriApi = 'payment-detail'
-          await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
-          break
-        case 'split-deposit': {
-          const payloadSplit = {
-            amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
-            paymentDetail: item.id,
-            remark: item.remark,
-            transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
-            status: 'ACTIVE'
-          }
-          confApiPaymentDetail.uriApi = 'payment-detail/split'
-          await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payloadSplit)
-          break
-        }
-        case 'apply-deposit':{
-          const payloadApplyDeposit = {
-            amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
-            paymentDetail: item.id,
-            remark: item.remark,
-            employee: userData?.value?.user?.userId || '',
-            transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
-            status: 'ACTIVE'
-          }
-          confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
-          await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadApplyDeposit)
-          actionOfModal.value = 'new-detail'
-          break
-        }
-        default:
-          throw new Error('Invalid action')
-      }
+      await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, {
+        remark: payload.remark
+      })
 
-      onOffDialogPaymentDetail.value = false
-      clearFormDetails()
+      // switch (actionOfModal.value) {
+      //   case 'new-detail':
+      //     confApiPaymentDetail.uriApi = 'payment-detail'
+      //     await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
+      //     break
+      //   case 'deposit-transfer':
+      //     confApiPaymentDetail.uriApi = 'payment-detail'
+      //     await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
+      //     break
+      //   case 'split-deposit': {
+      //     const payloadSplit = {
+      //       amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
+      //       paymentDetail: item.id,
+      //       remark: item.remark,
+      //       transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
+      //       status: 'ACTIVE'
+      //     }
+      //     confApiPaymentDetail.uriApi = 'payment-detail/split'
+      //     await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payloadSplit)
+      //     break
+      //   }
+      //   case 'apply-deposit':{
+      //     const payloadApplyDeposit = {
+      //       amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
+      //       paymentDetail: item.id,
+      //       remark: item.remark,
+      //       employee: userData?.value?.user?.userId || '',
+      //       transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
+      //       status: 'ACTIVE'
+      //     }
+      //     confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
+      //     await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadApplyDeposit)
+      //     actionOfModal.value = 'new-detail'
+      //     break
+      //   }
+      //   default:
+      //     throw new Error('Invalid action')
+      // }
+
+      onOffDialogPaymentDetailEdit.value = false
+      loadingSaveAllForEdit.value = false
+      clearFormDetailsForEdit()
     }
     catch (error) {
+      loadingSaveAllForEdit.value = false
       console.error('Error updating payment details:', error)
       // Handle error (e.g., show error message to the user)
     }
     finally {
-      // loadingSaveAll.value = false
+      loadingSaveAllForEdit.value = false
       actionOfModal.value = 'new-detail'
     }
   }
@@ -3281,7 +3331,7 @@ onMounted(async () => {
         :title="getNameByActions(actionOfModal)"
         :selected-payment="item"
         action="new-detail"
-        @apply-payment="openModalApplyPayment($event)"
+        :loading-save-all="loadingSaveAllForEdit"
         @update:visible="onCloseDialogEdit($event)"
         @save="saveAndReload($event)"
         @update:amount="amountOfDetailItem = $event"

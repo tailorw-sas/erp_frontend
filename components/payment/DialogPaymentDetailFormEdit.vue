@@ -609,14 +609,14 @@ function processValidation($event: any, data: any) {
         @submit="handleSaveForm($event)"
       >
         <!-- || props.action === 'split-deposit' -->
-        <template #field-transactionType="{ item: data, onUpdate }">
+        <template #field-transactionType="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!props.loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
             :model="data.transactionType"
-            :disabled="props.action === 'deposit-transfer' || props.action === 'apply-deposit' || props.action === 'split-deposit'"
+            :disabled="listFields.find((element: any) => element.field === field)?.disabled"
             :suggestions="[...transactionTypeList]"
             @change="($event) => {
               onUpdate('transactionType', $event)
@@ -721,11 +721,13 @@ function processValidation($event: any, data: any) {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-        <template #field-amount="{ item: data, onUpdate }">
+        <template #field-amount="{ item: data, onUpdate, fields: listFields, field }">
+          <!-- <pre>{{ listFields }}</pre> -->
           <InputText
             v-if="!props.loadingSaveAll"
             v-model="data.amount"
             class="w-full"
+            :disabled="listFields.find((element: any) => element.field === field)?.disabled"
             @update:model-value="($event) => {
               onUpdate('amount', $event)
               amountLocalTemp = $event
@@ -737,7 +739,7 @@ function processValidation($event: any, data: any) {
     </template>
 
     <template #footer>
-      <IfCan :perms="['PAYMENT-MANAGEMENT:APPLY-PAYMENT']">
+      <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:APPLY-PAYMENT']">
         <Button
           v-if="(action === 'new-detail' || action === 'apply-deposit') && disabledBtnApplyPaymentByTransactionType"
           v-tooltip.top="'Apply Payment'"
@@ -750,10 +752,10 @@ function processValidation($event: any, data: any) {
             Apply Payment
           </span>
         </Button>
-      </IfCan>
+      </IfCan> -->
       <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
       </IfCan> -->
-      <Button v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
+      <Button v-tooltip.top="'Save'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
       <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" />
       <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
     </template>
