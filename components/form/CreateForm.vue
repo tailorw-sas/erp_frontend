@@ -539,8 +539,8 @@ watch(() => props.forceSave, (newValue) => {
     </div>
     <div v-if="props.formOptions.hasOwnProperty('showBtnActions') ? props.formOptions.showBtnActions : true" class="grid p-fluid formgrid">
       <div class="col-12 flex justify-content-end mt-4">
-        <Button v-if="props.formOptions.hasOwnProperty('showBtnCancel') ? props.formOptions.showBtnCancel : true" v-tooltip.top="'Cancelar'" class="w-8rem mr-3" outlined severity="secondary" icon="pi pi-times" :label="props.formOptions.btnTextCancel ? props.formOptions.btnTextCancel : 'Cancel'" @click="onClose()" />
-        <Button v-if="props.formOptions.hasOwnProperty('showBtnSave') ? props.formOptions.showBtnSave : true" v-tooltip.top="'Guardar'" class="w-8rem" icon="pi pi-check" :label="props.formOptions.btnTextSave ? props.formOptions.btnTextSave : 'Save'" :loading="loadingForm" :disabled="disabledForm" @click="saveItem()" />
+        <Button v-if="props.formOptions.hasOwnProperty('showBtnCancel') ? props.formOptions.showBtnCancel : true" v-tooltip.top="'Cancel'" class="w-8rem mr-3" outlined severity="secondary" icon="pi pi-times" :label="props.formOptions.btnTextCancel ? props.formOptions.btnTextCancel : 'Cancel'" @click="onClose()" />
+        <Button v-if="props.formOptions.hasOwnProperty('showBtnSave') ? props.formOptions.showBtnSave : true" v-tooltip.top="'Save'" class="w-8rem" icon="pi pi-check" :label="props.formOptions.btnTextSave ? props.formOptions.btnTextSave : 'Save'" :loading="loadingForm" :disabled="disabledForm" @click="saveItem()" />
       </div>
     </div>
   </div>

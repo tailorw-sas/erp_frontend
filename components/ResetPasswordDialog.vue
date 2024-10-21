@@ -10,7 +10,7 @@ const props = defineProps({
   message: {
     type: String,
     required: false,
-    default: '¿Estás seguro que desea eliminar el registro seleccionado?'
+    default: 'Are you sure you want to delete the selected record?'
   },
   openDialog: {
     type: Boolean,

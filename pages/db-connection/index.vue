@@ -50,8 +50,8 @@ const item = ref<GenericObject>({
 const itemPassword = ref<GenericObject>({
   oldPassword: '',
   newPassword: '',
-});
-const confirmPassword = ref('');
+})
+const confirmPassword = ref('')
 const itemTemp = ref<GenericObject>({
   code: '',
   name: '',
@@ -190,8 +190,8 @@ const formTitle = computed(() => {
 })
 
 const currentFields = computed(() => {
-      return formTitle.value === 'Edit' ? fieldsEdit : fields;
-  });
+  return formTitle.value === 'Edit' ? fieldsEdit : fields
+})
 
 function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
@@ -244,7 +244,6 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-   
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
@@ -278,7 +277,7 @@ async function getItemById(id: string) {
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
-   // openDialogPass.value = true;
+    // openDialogPass.value = true;
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
       if (response) {
@@ -292,7 +291,7 @@ async function getItemById(id: string) {
       }
       updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
-    //  fields[4].hidden=true
+      //  fields[4].hidden=true
       fieldsEdit[0].disabled = true
     }
     catch (error) {
@@ -323,23 +322,22 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function updatePassword(itemPassword: { [key: string]: any }) {
-  loadingSaveAll.value = true;
-  const payload: { [key: string]: any } = { ...itemPassword};
-  
+  loadingSaveAll.value = true
+  const payload: { [key: string]: any } = { ...itemPassword }
+
   try {
     await GenericService.update('report', 'db-connection/password', idItem.value || '', payload)
-    openDialogPass.value = false;
+    openDialogPass.value = false
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
-  
-  } catch (error) {
+  }
+  catch (error) {
     // Manejar el error de la actualización
     toast.add({ severity: 'error', summary: 'Error', detail: 'Password is wrong', life: 3000 })
-  } finally {
-    loadingSaveAll.value = false;
+  }
+  finally {
+    loadingSaveAll.value = false
   }
 }
-
-
 
 async function deleteItem(id: string) {
   try {
@@ -367,7 +365,6 @@ async function saveItem(item: { [key: string]: any }) {
       if (response) {
         successOperation = true
         toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
-  
       }
     }
     catch (error: any) {
@@ -382,7 +379,6 @@ async function saveItem(item: { [key: string]: any }) {
       if (response) {
         successOperation = true
         toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
-  
       }
     }
     catch (error: any) {
@@ -398,42 +394,43 @@ async function saveItem(item: { [key: string]: any }) {
 }
 
 async function savePassword(itemPassword: { [key: string]: any }) {
-  loadingSaveAll.value = true;
-  let successOperation = null;
+  loadingSaveAll.value = true
+  let successOperation = null
 
   try {
     if (idItem.value) {
-      const response: any = await updatePassword(itemPassword);
+      const response: any = await updatePassword(itemPassword)
       if (response) {
-        successOperation = true;
+        successOperation = true
       }
     }
-  } catch (error: any) {
-    successOperation = false;
+  }
+  catch (error: any) {
+    successOperation = false
     toast.add({
       severity: 'error',
       summary: 'Error',
       detail: error.data?.data?.error?.errorMessage || 'An error occurred',
       life: 10000,
-    });
-  } finally {
-    loadingSaveAll.value = false;
+    })
+  }
+  finally {
+    loadingSaveAll.value = false
     if (successOperation) {
       // Cerrar el diálogo y limpiar el formulario
-      openDialogPass.value = false;
-      clearPasswordFields();
+      openDialogPass.value = false
+      clearPasswordFields()
       toast.add({
         severity: 'success',
         summary: 'Success',
         detail: 'Password updated successfully',
         life: 3000,
-      });
+      })
     }
   }
 }
 
-
- function requireConfirmationToSave(item: any) {
+function requireConfirmationToSave(item: any) {
   const { event } = item
   confirm.require({
     target: event.currentTarget,
@@ -544,9 +541,8 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 // -------------------------------------------------------------------------------------------------------
 async function openModalPass() {
   openDialogPass.value = true
-  clearPasswordFields();
+  clearPasswordFields()
 }
-
 
 function validateAndSavePassword() {
   if (itemPassword.value.newPassword !== confirmPassword.value) {
@@ -555,18 +551,17 @@ function validateAndSavePassword() {
       summary: 'Error',
       detail: 'New password and confirm password must be the same.',
       life: 3000,
-    });
-    return;
+    })
+    return
   }
 
-  savePassword(itemPassword.value);
+  savePassword(itemPassword.value)
 }
 
-
 function clearPasswordFields() {
-  itemPassword.value.oldPassword = '';
-  itemPassword.value.newPassword = '';
-  confirmPassword.value = '';
+  itemPassword.value.oldPassword = ''
+  itemPassword.value.newPassword = ''
+  confirmPassword.value = ''
 }
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(() => {
@@ -663,92 +658,87 @@ onMounted(() => {
             </template>
             <template #form-footer="props">
               <div class="flex justify-content-end">
-              
-                  <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
-               
-                 <Button v-tooltip.top="'Config Password'" class="w-3rem mr-2" icon="pi pi-eye" :loading="loadingSaveAll" @click="openModalPass" /> 
-              
-              
-                  <Button v-tooltip.top="'Delete'" class="w-3rem" severity="danger" outlined :loading="loadingDelete" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
-            
+                <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
+
+                <Button v-tooltip.top="'Config Password'" class="w-3rem mr-2" icon="pi pi-eye" :loading="loadingSaveAll" @click="openModalPass" />
+
+                <Button v-tooltip.top="'Delete'" class="w-3rem" severity="danger" outlined :loading="loadingDelete" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
               </div>
             </template>
           </EditFormV2>
-<!--Dialogo de cambiar password-->
-<Dialog
-      v-model:visible="openDialogPass"
-      :id-item="idItem"
-      @update:password="savePassword"
-      modal
-      
-      class="mx-3 sm:mx-0"
-      content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '30%' }"
-      :pt="{
-        root: {
-          class: 'custom-dialog',
-        },
-        header: {
-          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
-        },
-        mask: {
-          style: 'backdrop-filter: blur(5px)',
-        },
-      }"
-      @hide="openDialogPass = false"
-    >
-      <template #header>
-        <div class="flex justify-content-between">
-          <h5 class="m-0">
-            Change Password
-          </h5>
-        </div>
-      </template>
-      <template #default>
-    <form @submit.prevent="validateAndSavePassword" >
-      <div class="field mb-4 mt-2 ">
-        <label for="old-password" class="block font-bold mb-2 required">Old Password <span class="required-indicator ml-2"> * </span></label>
-    
-           <InputText
-          id="old-password"
-          v-model="itemPassword.oldPassword"
-          type="password"
-          class="w-full"  
-          placeholder="Enter old password"
-          required
-        />
-      
-      </div>
-      <div class="field mb-4">
-        <label for="new-password" class="block font-bold mb-2 required">New Password <span class="required-indicator ml-2"> * </span></label>
-           <InputText
-          id="confirm-password"
-          v-model="itemPassword.newPassword"
-          type="password"
-          class="w-full "
-          placeholder="Enter new password"
-          required
-        />
-      </div>
-      <div class="field mb-4">
-    <label for="confirm-password" class="block font-bold mb-2 required">Confirm Password <span class="required-indicator ml-2"> * </span></label>
-    <InputText
-      id="confirm-password"
-      v-model="confirmPassword"
-      type="password"
-      class="w-full"
-      placeholder="Confirm new password"
-      required
-    />
-    </div>
-      <div class="field flex justify-content-end">
-        <Button type="submit" label="Save" class="p-button-primary mr-2" />
-        <Button label="Cancel" @click="openDialogPass = false" severity="danger" />
-      </div>
-    </form>
-  </template>
-    </Dialog>
+          <!-- Dialogo de cambiar password -->
+          <Dialog
+            v-model:visible="openDialogPass"
+            :id-item="idItem"
+            modal
+            class="mx-3 sm:mx-0"
 
+            content-class="border-round-bottom border-top-1 surface-border"
+            :style="{ width: '30%' }"
+            :pt="{
+              root: {
+                class: 'custom-dialog',
+              },
+              header: {
+                style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+              },
+              mask: {
+                style: 'backdrop-filter: blur(5px)',
+              },
+            }"
+            @update:password="savePassword"
+            @hide="openDialogPass = false"
+          >
+            <template #header>
+              <div class="flex justify-content-between">
+                <h5 class="m-0">
+                  Change Password
+                </h5>
+              </div>
+            </template>
+            <template #default>
+              <form @submit.prevent="validateAndSavePassword">
+                <div class="field mb-3 mt-4 ">
+                  <label for="old-password" class="block font-bold mb-2 required">Old Password <span class="required-indicator ml-2"> * </span></label>
+
+                  <InputText
+                    id="old-password"
+                    v-model="itemPassword.oldPassword"
+                    type="password"
+                    class="w-full"
+                    placeholder="Enter old password"
+                    required
+                  />
+                </div>
+                <div class="field mb-4">
+                  <label for="new-password" class="block font-bold mb-2 required">New Password <span class="required-indicator ml-2"> * </span></label>
+                  <InputText
+                    id="confirm-password"
+                    v-model="itemPassword.newPassword"
+                    type="password"
+                    class="w-full "
+                    placeholder="Enter new password"
+                    required
+                  />
+                </div>
+                <div class="field mb-4">
+                  <label for="confirm-password" class="block font-bold mb-2 required">Confirm Password <span class="required-indicator ml-2"> * </span></label>
+                  <InputText
+                    id="confirm-password"
+                    v-model="confirmPassword"
+                    type="password"
+                    class="w-full"
+                    placeholder="Confirm new password"
+                    required
+                  />
+                </div>
+                <div class="field flex justify-content-end">
+                  <Button type="submit" icon="pi pi-save" label="Save" class="p-button-primary mr-2" />
+                  <Button label="Cancel" icon="pi pi-times" severity="secondary" @click="openDialogPass = false" />
+                </div>
+              </form>
+            </template>
+          </Dialog>
         </div>
       </div>
     </div>

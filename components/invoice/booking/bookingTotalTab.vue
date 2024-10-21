@@ -14,6 +14,7 @@ import type { Container, FieldDefinitionType } from '~/components/form/EditFormV
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import BookingTotalDialog from './BookingPartialDialog.vue'
+import BookingCloneTotal from './cloneTotal-edit/BookingCloneTotal.vue'
 
 const props = defineProps({
   isDialogOpen: {
@@ -141,6 +142,10 @@ const selectedBooking = ref<any>()
 const totalInvoiceAmount = ref<number>(0)
 const totalHotelAmount = ref<number>(0)
 const totalOriginalAmount = ref<number>(0)
+
+//edit booking clone total
+const isEditBookingCloneDialog = ref(false)
+//////////////////////////
 
 const confroomCategoryApi = reactive({
   moduleApi: 'settings',
@@ -1233,8 +1238,6 @@ async function deleteBooking(id: string) {
   }
 }
 
-
-
 async function saveBooking(item: { [key: string]: any }) {
   console.log('asdasdasdasdasd');
   
@@ -1275,6 +1278,7 @@ async function saveBooking(item: { [key: string]: any }) {
 
   loadingSaveAll.value = true
   let successOperation = true
+
   if (idItem.value || item?.id) {
     try {
       if (!item?.id) {
@@ -1370,19 +1374,10 @@ function OnSortField(event: any) {
       return props.sortBooking(event)
     }
 
-
-
-
-
     Payload.value.sortBy = getSortField(event.sortField)
-
-
     Payload.value.sortType = event.sortOrder
 
     getBookingList()
-
-
-
   }
 }
 
@@ -1400,6 +1395,17 @@ function getSortField(field: any) {
 
   }
 }
+
+// edit booking clone total
+async function openNewEditBooking(item: any) {
+  if (item.id) {
+    idItem.value = item.id
+    await GetItemById(item?.id)
+    selectedBooking.value = item
+    isEditBookingCloneDialog.value = true
+  }
+}
+///////////////////////////
 
 watch(() => props.invoiceObj, () => {
   currentInvoice.value = props.invoiceObj
@@ -1446,15 +1452,14 @@ watch(() => props.forceUpdate, () => {
 })
 
 function onRowRightClick(event: any) {
+  // console.log(props.invoiceObj);
+  // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
+  //   return;
+  // }
 
-  console.log(props.invoiceObj);
-  if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-    return;
-  }
-
-  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-    return;
-  }
+  // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  //   return;
+  // }
 
   selectedBooking.value = event.data
   bookingContextMenu.value.show(event.originalEvent)
@@ -1553,7 +1558,12 @@ onMounted(() => {
       label: 'Edit booking',
       command: () => openEditBooking(selectedBooking.value),
    //   disabled: computedShowMenuItemEditBooking
-    }
+    },
+    {
+      label: 'New Edit booking',
+      command: () => openNewEditBooking(selectedBooking.value),
+      //disabled: computedShowMenuItemEditBooking
+    },
   ]
 
   if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
@@ -1662,6 +1672,16 @@ onMounted(() => {
       :getrate-plan-list="getratePlanList" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel"
       :is-night-type-required="nightTypeRequired" :coupon-number-validation="couponNumberValidation"
       :invoice-obj="currentInvoice" />
+  </div>
+
+  <div v-if="isEditBookingCloneDialog" style="h-fit">
+  <BookingCloneTotal
+            :is-dialog-open="isEditBookingCloneDialog"
+            :close-dialog="() => { isEditBookingCloneDialog = false }"
+            :open-dialog="isEditBookingCloneDialog"
+            :selected-invoice="selectedBooking.id"
+            :invoice-obj="selectedBooking"
+          />
   </div>
 </template>
 

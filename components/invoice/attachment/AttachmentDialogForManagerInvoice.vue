@@ -759,7 +759,7 @@ function disabledFields(): boolean {
 }
 
 function disabledBtnCreate(): boolean {
-  if (props.selectedInvoiceObj && props.selectedInvoiceObj?.invoiceStatus?.processStatus) {
+  if (props.selectedInvoiceObj) { // && props.selectedInvoiceObj?.invoiceStatus?.processStatus
     return false
   }
   else {

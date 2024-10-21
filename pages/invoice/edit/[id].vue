@@ -302,7 +302,7 @@ const item = ref<GenericObject>({
   hotel: null,
   agency: null,
   invoiceType: null,
-  dueAmount: '0.00',
+  dueAmount: '0.00'
 })
 
 const itemTemp = ref<GenericObject>({
@@ -314,7 +314,7 @@ const itemTemp = ref<GenericObject>({
   hotel: null,
   agency: null,
   invoiceType: null,
-  dueAmount: '0.00',
+  dueAmount: '0.00'
 })
 
 
@@ -725,10 +725,10 @@ async function updateItem(item: { [key: string]: any }) {
   payload.invoiceStatus = item.invoiceStatus?.id
 
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
-  navigateTo(
-    '/invoice'
-  )
-}
+    navigateTo(
+      '/invoice'
+    )
+  }
 
 async function deleteItem(id: string) {
   try {

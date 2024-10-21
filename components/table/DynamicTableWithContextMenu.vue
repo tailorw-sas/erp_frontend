@@ -118,12 +118,12 @@ const menuItems = ref([
   {
     items: [
       {
-        label: 'Editar',
+        label: 'Edit',
         icon: 'pi pi-pencil',
         action: 'edit'
       },
       {
-        label: 'Eliminar',
+        label: 'Delete',
         icon: 'pi pi-trash',
         action: 'delete'
       }
@@ -402,217 +402,217 @@ getOptionsList()
       </div>
       <BlockUI :blocked="options?.loading">
         <div class="card p-0">
-      <DataTable
-        v-model:contextMenuSelection="selectedItem"
-        v-model:filters="filters1" v-model:selection="clickedItem"
-        :context-menu="options?.showContextMenu" :meta-key-selection="metaKey" selection-mode="single"
-        filter-display="row" sort-mode="single" :value="data" data-key="id" show-gridlines
-        striped-rows removable-sort lazy scrollable scroll-height="60vh" :filters="filters1" row-group-mode="subheader"
-        @row-dblclick="onDoubleClickItem" @row-contextmenu="onRowContextMenu" @sort="onSortField" @update:selection="onSelectItem"
-        @update:filters="onChangeFilters"   edit-mode="cell"
-      >
-        <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
-          <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <span class="flex mt-2 md:mt-0">
-              <div class="my-2">
-                <h5 class="m-0">{{ options?.tableName }}</h5>
-              </div>
-              <Divider layout="vertical" />
-              <Button
-                v-tooltip.right="'Clear'" type="button" icon="pi pi-filter-slash" severity="primary" label="Clear"
-                outlined @click="clearFilter1(filters1)"
-              />
-              <Divider layout="vertical" />
-              <span v-if="props.options?.search || false">
-                <InputText
-                  v-model="filters1.search.value" class="w-full sm:w-auto"
-                  placeholder="Press enter to search..."
-                />
-                <Button
-                  label="Buscar" icon="pi pi-plus" class="mx-2" severity="primary"
-                  @click="onChangeFilters(filters1)"
-                >
-                  <i class="pi pi-search" />
-                </Button>
-              </span>
-            </span>
-            <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2">
-              <Button
-                v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" class="mr-2" severity="primary"
-                @click="openNew"
-              />
-            </div>
-          </div>
-        </template>
-
-        <template #empty>
-          <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-            <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
-              <div class="row">
-                <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
-              </div>
-              <div class="row">
-                <p>{{ messageForEmptyTable }}</p>
-              </div>
-            </span>
-            <span v-else class="flex flex-column align-items-center justify-content-center">
-              <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-            </span>
-          </div>
-        </template>
-        <Column v-if="options?.showAcctions" selection-mode="single" header-style="width: 3rem">
-          <template #body="templateProps">
-            <slot name="row-selector-body" :item="templateProps.data" />
-          </template>
-        </Column>
-        <!-- :show-filter-match-modes="column.type !== 'bool' " -->
-        <Column
-        v-for="(column, index) in columns" :key="column.field"
-        :field="column.field"
-        :show-filter-match-modes="false"
-        :sortable="column.hasOwnProperty('sortable') ? column.sortable : true"
-        :filter-field="column.field"
-        class="custom-table-head" :class="column.columnClass"
-        :style="{
-          width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
-          minWidth: column?.width ? column?.width : 'auto',
-          // maxWidth: column?.width ? column?.width : 'auto',
-        }"
-      >
-      <template #header>
-        <span v-tooltip="column.tooltip">{{ column.header }}</span>
-      </template>
-          <template #body="{ data }">
-            <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null">
-              <span v-if="column.type === 'select' || column.type === 'local-select'">
-                {{ data[column.field].name }}
-              </span>
-              <span v-if="column.type === 'date'">
-                {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : '' }}
-              </span>
-            </span>
-            <span v-else-if="column.type === 'image'">
-              <NuxtImg v-if="data[column.field]" :src="data[column.field]" alt="Avatar" class="avatar" />
-              <div v-else>
-                <Avatar
-                  icon="pi pi-image" style="background-color: #dee9fc; color: #1a2551" shape="circle"
-                  size="large"
-                />
-              </div>
-            </span>
-            <span v-else-if="column.type === 'bool'">
-              <Badge
-                v-tooltip.top="data[column.field] ? 'Active' : 'Inactive'"
-                :value="data[column.field].toString().charAt(0).toUpperCase() + data[column.field].toString().slice(1)"
-                :severity="data[column.field] ? 'success' : 'danger'" class="success"
-              />
-            </span>
-            <span v-else>
-              <span v-if="column.type === 'local-select'">
-                {{ (column.hasOwnProperty('localItems') && column.localItems) ? getNameById(data[column.field],
-                                                                                            column.localItems) : '' }}
-              </span>
-              <span v-else>
-                {{ data[column.field] }}
-              </span>
-            </span>
-          </template>
-          <template
-            v-if="options?.hasOwnProperty('showFilters') ? options?.showFilters : true"
-            #filter="{ filterModel, filterCallback }"
+          <DataTable
+            v-model:contextMenuSelection="selectedItem"
+            v-model:filters="filters1" v-model:selection="clickedItem"
+            :context-menu="options?.showContextMenu" :meta-key-selection="metaKey" selection-mode="single"
+            filter-display="row" sort-mode="single" :value="data" data-key="id" show-gridlines
+            striped-rows removable-sort lazy scrollable scroll-height="60vh" :filters="filters1" row-group-mode="subheader"
+            edit-mode="cell" @row-dblclick="onDoubleClickItem" @row-contextmenu="onRowContextMenu" @sort="onSortField"
+            @update:selection="onSelectItem" @update:filters="onChangeFilters"
           >
-            <div v-if="column.type === 'text'" class="flex">
-              <InputText
-                v-model="filterModel.value" type="text" class="p-column-filter w-full"
-                placeholder="Write a text" @change="filterCallback()"
-              />
-              <Button
-                type="button" icon="pi pi-filter" text aria-haspopup="true"
-                :aria-controls="`overlayPanel_${index}`" @click="toggleMenuFilter($event, index)"
-              />
-
-              <Menu :id="column.field" ref="menuFilter" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
-                <template #item="{ item, props }">
-                  <a
-                    v-ripple class="flex align-items-center" v-bind="props.action"
-                    @click="filterModel.matchMode = item.id; filterCallback()"
-                  >
-                    <span :class="item.icon" />
-                    <span class="ml-2">{{ item.label }}</span>
-                  </a>
-                </template>
-              </Menu>
-            </div>
-
-            <div v-if="column.type === 'select' || column.type === 'local-select'" class="flex">
-              <MultiSelect
-                v-model="filterModel.value" :options="objListData[column.field]" option-label="name"
-                placeholder="Select one or more" class="p-column-filter w-full" :max-selected-labels="2"
-                @change="filterCallback()"
-              >
-                <template #option="slotProps">
-                  <div class="flex align-items-center gap-2">
-                    <span>{{ slotProps.option.name }}</span>
+            <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
+              <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                <span class="flex mt-2 md:mt-0">
+                  <div class="my-2">
+                    <h5 class="m-0">{{ options?.tableName }}</h5>
                   </div>
-                </template>
-              </MultiSelect>
-              <Button
-                type="button" icon="pi pi-filter" text aria-haspopup="true" aria-controls="overlay_menu_filter"
-                @click="toggleMenuFilter($event, index, data)"
-              />
-              <Menu
-                id="overlay_menu_filter" ref="menuFilter" :model="menuItemsSelect" :popup="true"
-                class="w-full md:w-9rem"
-              >
-                <template #item="{ item, props }">
-                  <a
-                    v-ripple class="flex align-items-center" v-bind="props.action"
-                    @click="filterModel.matchMode = item.id; filterCallback()"
-                  >
-                    <span :class="item.icon" />
-                    <span class="ml-2">{{ item.label }}</span>
-                  </a>
-                </template>
-              </Menu>
-            </div>
+                  <Divider layout="vertical" />
+                  <Button
+                    v-tooltip.right="'Clear'" type="button" icon="pi pi-filter-slash" severity="primary" label="Clear"
+                    outlined @click="clearFilter1(filters1)"
+                  />
+                  <Divider layout="vertical" />
+                  <span v-if="props.options?.search || false">
+                    <InputText
+                      v-model="filters1.search.value" class="w-full sm:w-auto"
+                      placeholder="Press enter to search..."
+                    />
+                    <Button
+                      label="Buscar" icon="pi pi-plus" class="mx-2" severity="primary"
+                      @click="onChangeFilters(filters1)"
+                    >
+                      <i class="pi pi-search" />
+                    </Button>
+                  </span>
+                </span>
+                <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2">
+                  <Button
+                    v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" class="mr-2" severity="primary"
+                    @click="openNew"
+                  />
+                </div>
+              </div>
+            </template>
 
-            <div v-if="column.type === 'bool'" class="flex align-items-center">
-              <TriStateCheckbox
-                :id="column.field" ref="menuFilter" v-model="filterModel.value"
-                @update:model-value="filterCallback()"
-              />
-              <label :for="column.field" class="font-bold ml-3"> {{ column.header }} </label>
-            </div>
-
-            <div v-if="column.type === 'date'" class="flex">
-              <Calendar
-                v-model="filterModel.value" type="text" date-format="yy-mm-dd" placeholder="yyyy-mm-dd"
-                mask="99/99/9999" class="p-column-filter w-full" @date-select="filterCallback()"
-              />
-              <Button
-                type="button" icon="pi pi-filter" text aria-haspopup="true" aria-controls="overlay_menu_filter"
-                @click="toggleMenuFilter($event, index, data)"
-              />
-              <Menu
-                id="overlay_menu_filter" ref="menuFilter" :model="menuItemsDate" :popup="true"
-                class="w-full md:w-9rem"
+            <template #empty>
+              <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                  <div class="row">
+                    <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                  </div>
+                  <div class="row">
+                    <p>{{ messageForEmptyTable }}</p>
+                  </div>
+                </span>
+                <span v-else class="flex flex-column align-items-center justify-content-center">
+                  <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                </span>
+              </div>
+            </template>
+            <Column v-if="options?.showAcctions" selection-mode="single" header-style="width: 3rem">
+              <template #body="templateProps">
+                <slot name="row-selector-body" :item="templateProps.data" />
+              </template>
+            </Column>
+            <!-- :show-filter-match-modes="column.type !== 'bool' " -->
+            <Column
+              v-for="(column, index) in columns" :key="column.field"
+              :field="column.field"
+              :show-filter-match-modes="false"
+              :sortable="column.hasOwnProperty('sortable') ? column.sortable : true"
+              :filter-field="column.field"
+              class="custom-table-head" :class="column.columnClass"
+              :style="{
+                width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
+                minWidth: column?.width ? column?.width : 'auto',
+                // maxWidth: column?.width ? column?.width : 'auto',
+              }"
+            >
+              <template #header>
+                <span v-tooltip="column.tooltip">{{ column.header }}</span>
+              </template>
+              <template #body="{ data }">
+                <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null">
+                  <span v-if="column.type === 'select' || column.type === 'local-select'">
+                    {{ data[column.field].name }}
+                  </span>
+                  <span v-if="column.type === 'date'">
+                    {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : '' }}
+                  </span>
+                </span>
+                <span v-else-if="column.type === 'image'">
+                  <NuxtImg v-if="data[column.field]" :src="data[column.field]" alt="Avatar" class="avatar" />
+                  <div v-else>
+                    <Avatar
+                      icon="pi pi-image" style="background-color: #dee9fc; color: #1a2551" shape="circle"
+                      size="large"
+                    />
+                  </div>
+                </span>
+                <span v-else-if="column.type === 'bool'">
+                  <Badge
+                    v-tooltip.top="data[column.field] ? 'Active' : 'Inactive'"
+                    :value="data[column.field].toString().charAt(0).toUpperCase() + data[column.field].toString().slice(1)"
+                    :severity="data[column.field] ? 'success' : 'danger'" class="success"
+                  />
+                </span>
+                <span v-else>
+                  <span v-if="column.type === 'local-select'">
+                    {{ (column.hasOwnProperty('localItems') && column.localItems) ? getNameById(data[column.field],
+                                                                                                column.localItems) : '' }}
+                  </span>
+                  <span v-else>
+                    {{ data[column.field] }}
+                  </span>
+                </span>
+              </template>
+              <template
+                v-if="options?.hasOwnProperty('showFilters') ? options?.showFilters : true"
+                #filter="{ filterModel, filterCallback }"
               >
-                <template #item="{ item, props }">
-                  <a
-                    v-ripple class="flex align-items-center" v-bind="props.action"
-                    @click="filterModel.matchMode = item.id; filterCallback()"
+                <div v-if="column.type === 'text'" class="flex">
+                  <InputText
+                    v-model="filterModel.value" type="text" class="p-column-filter w-full"
+                    placeholder="Write a text" @change="filterCallback()"
+                  />
+                  <Button
+                    type="button" icon="pi pi-filter" text aria-haspopup="true"
+                    :aria-controls="`overlayPanel_${index}`" @click="toggleMenuFilter($event, index)"
+                  />
+
+                  <Menu :id="column.field" ref="menuFilter" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
+                    <template #item="{ item, props }">
+                      <a
+                        v-ripple class="flex align-items-center" v-bind="props.action"
+                        @click="filterModel.matchMode = item.id; filterCallback()"
+                      >
+                        <span :class="item.icon" />
+                        <span class="ml-2">{{ item.label }}</span>
+                      </a>
+                    </template>
+                  </Menu>
+                </div>
+
+                <div v-if="column.type === 'select' || column.type === 'local-select'" class="flex">
+                  <MultiSelect
+                    v-model="filterModel.value" :options="objListData[column.field]" option-label="name"
+                    placeholder="Select one or more" class="p-column-filter w-full" :max-selected-labels="2"
+                    @change="filterCallback()"
                   >
-                    <span :class="item.icon" />
-                    <span class="ml-2">{{ item.label }}</span>
-                  </a>
-                </template>
-              </Menu>
-            </div>
-          </template>
-        </Column>
-      </DataTable>
-    </div>
-    </BlockUI>
+                    <template #option="slotProps">
+                      <div class="flex align-items-center gap-2">
+                        <span>{{ slotProps.option.name }}</span>
+                      </div>
+                    </template>
+                  </MultiSelect>
+                  <Button
+                    type="button" icon="pi pi-filter" text aria-haspopup="true" aria-controls="overlay_menu_filter"
+                    @click="toggleMenuFilter($event, index, data)"
+                  />
+                  <Menu
+                    id="overlay_menu_filter" ref="menuFilter" :model="menuItemsSelect" :popup="true"
+                    class="w-full md:w-9rem"
+                  >
+                    <template #item="{ item, props }">
+                      <a
+                        v-ripple class="flex align-items-center" v-bind="props.action"
+                        @click="filterModel.matchMode = item.id; filterCallback()"
+                      >
+                        <span :class="item.icon" />
+                        <span class="ml-2">{{ item.label }}</span>
+                      </a>
+                    </template>
+                  </Menu>
+                </div>
+
+                <div v-if="column.type === 'bool'" class="flex align-items-center">
+                  <TriStateCheckbox
+                    :id="column.field" ref="menuFilter" v-model="filterModel.value"
+                    @update:model-value="filterCallback()"
+                  />
+                  <label :for="column.field" class="font-bold ml-3"> {{ column.header }} </label>
+                </div>
+
+                <div v-if="column.type === 'date'" class="flex">
+                  <Calendar
+                    v-model="filterModel.value" type="text" date-format="yy-mm-dd" placeholder="yyyy-mm-dd"
+                    mask="99/99/9999" class="p-column-filter w-full" @date-select="filterCallback()"
+                  />
+                  <Button
+                    type="button" icon="pi pi-filter" text aria-haspopup="true" aria-controls="overlay_menu_filter"
+                    @click="toggleMenuFilter($event, index, data)"
+                  />
+                  <Menu
+                    id="overlay_menu_filter" ref="menuFilter" :model="menuItemsDate" :popup="true"
+                    class="w-full md:w-9rem"
+                  >
+                    <template #item="{ item, props }">
+                      <a
+                        v-ripple class="flex align-items-center" v-bind="props.action"
+                        @click="filterModel.matchMode = item.id; filterCallback()"
+                      >
+                        <span :class="item.icon" />
+                        <span class="ml-2">{{ item.label }}</span>
+                      </a>
+                    </template>
+                  </Menu>
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+        </div>
+      </BlockUI>
     </div>
 
     <div class="flex flex-row justify-content-end  w-full align-items-center mt-3 card p-0">
@@ -631,15 +631,14 @@ getOptionsList()
           <div class="flex  w-fit align-items-center mx-3 gap-4 justify-content-between ">
             <slot name="pagination-total-section" :total="props.pagination?.totalElements">
               <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
-                
                 <span>
                   Total:
                 </span>
                 <slot name="pagination-total" :total="props.pagination?.totalElements">
-                <span class="font-bold font">
-                  {{ props.pagination?.totalElements }}
-                </span>
-              </slot>
+                  <span class="font-bold font">
+                    {{ props.pagination?.totalElements }}
+                  </span>
+                </slot>
               </Badge>
             </slot>
           </div>
@@ -653,7 +652,7 @@ getOptionsList()
   <!-- Dialog Delete -->
   <DialogDelete
     v-if="clickedItem" :open-dialog="openDialogDelete" :data="clickedItem"
-    :message="props.options?.messageToDelete ? props.options.messageToDelete : '¿Estás seguro que desea eliminar el elemento seleccionado?'"
+    :message="props.options?.messageToDelete ? props.options.messageToDelete : 'Are you sure you want to delete the selected record?'"
     @on-close-dialog="closeDialogDelete"
     @on-delete-confirmed="deleteItem($event, options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false)"
   />

@@ -140,7 +140,7 @@ async function openResetPassword() {
                 href="/user/profile" class="flex align-items-center hover:text-primary-500 transition-duration-200"
               >
                 <i class="pi pi-fw pi-user mr-2" />
-                <span>Mi Perfil</span>
+                <span>My Profile</span>
               </a>
             </li>
 

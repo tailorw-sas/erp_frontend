@@ -256,7 +256,7 @@ const options = ref({
   showEdit: false,
   showDelete: false,
   showLocalDelete: true,
-  messageToDelete: '¿Estás seguro que deseas eliminar el Servicio: {{service.name}}?'
+  messageToDelete: 'Are you sure you want to delete the service: {{service.name}}?'
 })
 
 const formOptionsToEdit = ref({
