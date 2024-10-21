@@ -27,10 +27,12 @@ public class UpdateManagePaymentAttachmentStatusCommand implements ICommand {
     private boolean patWithAttachment;
     private boolean pwaWithOutAttachment;
     private boolean supported;
+    private boolean otherSupport;
 
     public UpdateManagePaymentAttachmentStatusCommand(UUID id, String code, String name, Status status, List<UUID> navigate,
                                                       UUID module, Boolean show, Boolean defaults, String permissionCode, String description, 
-                                                      boolean nonNone, boolean patWithAttachment, boolean pwaWithOutAttachment, boolean supported) {
+                                                      boolean nonNone, boolean patWithAttachment, boolean pwaWithOutAttachment, boolean supported,
+                                                      boolean otherSupport) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -45,6 +47,7 @@ public class UpdateManagePaymentAttachmentStatusCommand implements ICommand {
         this.patWithAttachment = patWithAttachment;
         this.pwaWithOutAttachment = pwaWithOutAttachment;
         this.supported = supported;
+        this.otherSupport = otherSupport;
     }
     
     public static UpdateManagePaymentAttachmentStatusCommand fromRequest(UpdateManagePaymentAttachmentStatusRequest request,
@@ -52,7 +55,8 @@ public class UpdateManagePaymentAttachmentStatusCommand implements ICommand {
         return new UpdateManagePaymentAttachmentStatusCommand(id, request.getCode(), request.getName(),
                 request.getStatus(), request.getNavigate(), request.getModule(), request.getShow(), request.getDefaults(),
                 request.getPermissionCode(), request.getDescription(), 
-                request.isNonNone(), request.isPatWithAttachment(), request.isPwaWithOutAttachment(), request.isSupported());
+                request.isNonNone(), request.isPatWithAttachment(), request.isPwaWithOutAttachment(), 
+                request.isSupported(), request.isOtherSupport());
     }
 
     @Override

@@ -22,8 +22,10 @@ public class UpdatePaymentStatusCommand implements ICommand {
     private Boolean applied;
     private boolean confirmed;
     private boolean cancelled;
+    private boolean transit;
     
-    public UpdatePaymentStatusCommand(UUID id, String code, String name, Status status, Boolean collected, String description, Boolean defaults, Boolean applied, boolean confirmed, boolean cancelled) {
+    public UpdatePaymentStatusCommand(UUID id, String code, String name, Status status, Boolean collected, String description, Boolean defaults, 
+            Boolean applied, boolean confirmed, boolean cancelled, boolean transit) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -34,6 +36,7 @@ public class UpdatePaymentStatusCommand implements ICommand {
         this.applied = applied;
         this.confirmed = confirmed;
         this.cancelled = cancelled;
+        this.transit = transit;
     }
     
     public static UpdatePaymentStatusCommand fromRequest(UpdatePaymentStatusRequest request, UUID id) { 
@@ -47,7 +50,8 @@ public class UpdatePaymentStatusCommand implements ICommand {
                 request.getDefaults(), 
                 request.getApplied(), 
                 request.isConfirmed(),
-                request.isCancelled()
+                request.isCancelled(),
+                request.isTransit()
         );
     }
     

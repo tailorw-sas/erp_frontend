@@ -25,6 +25,7 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         dto.setPatWithAttachment(command.isPatWithAttachment());
         dto.setPwaWithOutAttachment(command.isPwaWithOutAttachment());
         dto.setSupported(command.isSupported());
+        dto.setOtherSupport(command.isOtherSupport());
         service.update(dto);
     }
 }

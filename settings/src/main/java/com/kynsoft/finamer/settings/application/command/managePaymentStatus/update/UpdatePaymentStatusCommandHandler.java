@@ -39,6 +39,7 @@ public class UpdatePaymentStatusCommandHandler implements ICommandHandler<Update
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setConfirmed, command.isConfirmed(), dto.isConfirmed(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setCancelled, command.isCancelled(), dto.isCancelled(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setTransit, command.isTransit(), dto.isTransit(), update::setUpdate);
         if (UpdateIfNotNull.updateBoolean(dto::setApplied, command.getApplied(), dto.getApplied(), update::setUpdate)) {
             RulesChecker.checkRule(new ManagePaymentStatusAppliedMustBeUniqueRule(service, command.getId()));
         }
@@ -53,7 +54,8 @@ public class UpdatePaymentStatusCommandHandler implements ICommandHandler<Update
                     command.getStatus().name(), 
                     command.getApplied(), 
                     command.isConfirmed(),
-                    command.isCancelled()
+                    command.isCancelled(),
+                    command.isTransit()
             ));
         }
     }

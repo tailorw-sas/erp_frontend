@@ -29,7 +29,8 @@ public class ConsumerReplicateManagePaymentStatusService {
                     objKafka.getStatus(), 
                     objKafka.getApplied(), 
                     objKafka.isConfirmed(),
-                    objKafka.isCancelled()
+                    objKafka.isCancelled(),
+                    objKafka.isTransit()
             );
             mediator.send(command);
         } catch (Exception ex) {
