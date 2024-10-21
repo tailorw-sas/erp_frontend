@@ -529,6 +529,18 @@ async function resetListItems() {
   getList()
 }
 
+async function hasAssociatedData(id: string) {
+  try {
+    // inActive
+    const { inActive } = await GenericService.getById('payment', 'payment/agency', id)
+    return inActive
+  }
+  catch (error) {
+    console.error('Error loading hasAssociatedData:', error)
+    return false
+  }
+}
+
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
@@ -607,9 +619,17 @@ async function getItemById(id: string) {
 
         item.value.generationType = ENUM_GENERATION_TYPE.find(i => i.id === response.generationType)
       }
+      const hasAssociated = await hasAssociatedData(response.id)
+      if (hasAssociated) {
+        updateFieldProperty(fields, 'status', 'disabled', true)
+      }
+      else {
+        updateFieldProperty(fields, 'status', 'disabled', false)
+      }
+      console.log('hasAssociated', hasAssociated)
+
       fields[0].disabled = true
       updateFieldProperty(fields, 'contact', 'hidden', false)
-      updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
     }
     catch (error) {
