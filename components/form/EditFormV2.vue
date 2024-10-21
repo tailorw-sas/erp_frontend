@@ -326,7 +326,7 @@ watch(() => props.forceSave, () => {
             </span>
           </slot>
           <!-- Field Help -->
-          <small v-if="field.helpText">{{ field.helpText }}</small>
+          <small v-if="field.helpText" :class="field.helpTextClass ? field.helpTextClass : ''">{{ field.helpText }}</small>
 
           <!-- Validation errors -->
           <div v-if="true" class="flex">

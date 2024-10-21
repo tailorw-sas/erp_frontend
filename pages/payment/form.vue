@@ -2822,7 +2822,9 @@ watch(() => hasBeenCreated.value, async (newValue) => {
 // Watcher
 watch(() => paymentDetailsList.value, (newValue) => {
   enableDepositSummaryAction.value = hasDepositSummaryTransaction(newValue)
-  if (paymentDetailsList.value.length === 0 && item.value.paymentStatus.cancelled === false) {
+
+  // paymentDetailsList.value.length === 0 && item.value.paymentStatus.cancelled === false  Esto es lo que va
+  if (paymentDetailsList.value.length === 0 && (item.value.paymentStatus.code !== 'CAN' || item.value.paymentStatus.name !== 'CAN - Cancelled')) {
     updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
   }
   else {

@@ -2163,7 +2163,7 @@ async function addAmmountsToApplyPayment(event: any) {
         return total + item.dueAmount
       }
       else {
-        return total // Si no es válido, simplemente lo ignoramos
+        return total
       }
     }, 0) // 0 es el valor inicial
   disabledBtnApplyPayment.value = false

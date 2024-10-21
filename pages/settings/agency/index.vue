@@ -287,7 +287,9 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Active',
     dataType: 'check',
     disabled: true,
-    class: 'field col-12 mt-3 mb-3',
+    helpText: '',
+    helpTextClass: 'p-error text-xs ml-3',
+    class: 'field col-12 mt-3 mb-3 mr-3',
   },
 ]
 
@@ -451,6 +453,7 @@ function clearForm() {
   // clientObject.value = {}
   updateFieldProperty(fields, 'contact', 'hidden', true)
   updateFieldProperty(fields, 'status', 'disabled', true)
+  updateFieldProperty(fields, 'status', 'helpText', '')
   fields[0].disabled = false
   formReload.value++
 }
@@ -620,13 +623,15 @@ async function getItemById(id: string) {
         item.value.generationType = ENUM_GENERATION_TYPE.find(i => i.id === response.generationType)
       }
       const hasAssociated = await hasAssociatedData(response.id)
-      if (hasAssociated) {
+
+      if (hasAssociated === false) {
         updateFieldProperty(fields, 'status', 'disabled', true)
+        updateFieldProperty(fields, 'status', 'helpText', 'Agency has active balances')
       }
       else {
         updateFieldProperty(fields, 'status', 'disabled', false)
+        updateFieldProperty(fields, 'status', 'helpText', '')
       }
-      console.log('hasAssociated', hasAssociated)
 
       fields[0].disabled = true
       updateFieldProperty(fields, 'contact', 'hidden', false)
