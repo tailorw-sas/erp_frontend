@@ -1992,7 +1992,7 @@ async function onExpandRowApplyPayment(event: any) {
 }
 
 function onRowContextMenu(event: any) {
-  // console.log(event)
+  console.log(event.data)
 
   idPaymentSelectedForPrint.value = event?.data?.id || ''
   isPrintByRightClick.value = true
@@ -2015,7 +2015,7 @@ function onRowContextMenu(event: any) {
   }
   objItemSelectedForRightClickApplyPayment.value = event.data
   objItemSelectedForRightClickPaymentWithOrNotAttachment.value = event.data
-  if (event && event.data && ((event.data.notApplied !== '' || event.data.notApplied !== null && event.data.notApplied.replace(/,/g, '') > 0) || (event.data.depositBalance !== '' || event.data.depositBalance !== null && event.data.depositBalance.replace(/,/g, '') > 0)) && (event.data.paymentStatus && event.data.paymentStatus.code !== 'CAN')) {
+  if (event && event.data && (event.data.paymentStatus && event.data.paymentStatus.cancelled === false && event.data.paymentStatus.applied === false)) {
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
       menuItemApplayPayment.disabled = false
@@ -2027,11 +2027,11 @@ function onRowContextMenu(event: any) {
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
       menuItemApplayPayment.disabled = true
-      menuItemApplayPayment.visible = false
+      menuItemApplayPayment.visible = true
     }
   }
 
-  if (event && event.data && event.data.hasAttachment && event.data.attachmentStatus.supported === false && (event.data.attachmentStatus.nonNone || event.data.attachmentStatus.patWithAttachment || event.data.attachmentStatus.pwaWithOutAttachment)) {
+  if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && (event.data.attachmentStatus.nonNone || event.data.attachmentStatus.patWithAttachment || event.data.attachmentStatus.pwaWithOutAttachment)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
