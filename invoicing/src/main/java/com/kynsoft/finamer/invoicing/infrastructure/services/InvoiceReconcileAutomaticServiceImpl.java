@@ -68,6 +68,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private final ServiceLocator<IMediator> serviceLocator;
     private final IManageResourceTypeService resourceTypeService;
 
+    private final IManageBookingService bookingService;
+
     @Value("${resource.type.code}")
     private String paymentInvoiceTypeCode;
 
@@ -79,7 +81,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
                                                 IManageInvoiceService manageInvoiceService,
                                                 InvoiceReconcileAutomaticImportErrorRedisRepository errorRedisRepository,
                                                 InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository,
-                                                ServiceLocator<IMediator> serviceLocator, IManageResourceTypeService resourceTypeService
+                                                ServiceLocator<IMediator> serviceLocator, IManageResourceTypeService resourceTypeService,
+                                                IManageBookingService bookingService
     ) {
         this.applicationEventPublisher = applicationEventPublisher;
         this.reconcileAutomaticValidatorFactory = reconcileAutomaticValidatorFactory;
@@ -92,6 +95,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         this.statusRedisRepository = statusRedisRepository;
         this.serviceLocator = serviceLocator;
         this.resourceTypeService = resourceTypeService;
+        this.bookingService = bookingService;
     }
 
     @Override
@@ -138,6 +142,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         for (ManageInvoiceDto manageInvoiceDto : selectedInvoice) {
             if (reconcileAutomaticValidatorFactory.validate(manageInvoiceDto, request.getImportProcessId())) {
                 validInvoice.add(manageInvoiceDto);
+                manageInvoiceDto.getBookings().forEach(bookingService::update);
             }
         }
         return validInvoice;
