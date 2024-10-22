@@ -802,6 +802,17 @@ async function newOpenEditBooking(item: any) {
   // }
 }
 
+async function openModalPaymentDetail(item: any) {
+  if (item?.id) {
+    try {
+      openDialogPaymentDetailsApplied.value = true
+    } catch (error) {
+        
+    }
+    
+  }
+}
+
 async function deleteBookingOption(item: any) {
   if (item?.id) {
     await deleteBooking(item?.id)
@@ -1482,6 +1493,89 @@ function onCellEditComplete(val: any) {
 }
 
 
+// CODE FOR MODAL PAYMENT DETAILS
+const openDialogPaymentDetailsApplied = ref(false)
+const paymentDetailsAppliedList = ref<any[]>([])
+
+const columnsPaymentDetailsApplied = ref<IColumn[]>([
+  { field: 'paymentDetailId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'transactionType', header: 'Transaction', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'transactionDate', header: 'Transaction Date', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'amount', header: 'Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'remark', header: 'Remark', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
+])
+
+const optionsPaymentDetailsApplied = ref({
+  tableName: 'Payment Details',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/search-payment',
+  expandableRows: false,
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+
+const payloadPaymentDetailsApplied = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'amount',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+const paginationPaymentDetailsApplied = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
+const onChangePagePaymentDetailsApplied = ref<PageState>()
+
+function getStatusBadgeBackgroundColor(code: string) {
+  switch (code) {
+    case 'PROCECSED': return '#FF8D00'
+    case 'RECONCILED': return '#005FB7'
+    case 'SENT': return '#006400'
+    case 'CANCELED': return '#888888'
+    case 'PENDING': return '#686868'
+
+    default:
+      return '#686868'
+  }
+}
+
+function getStatusName(code: string) {
+  switch (code) {
+    case 'PROCECSED': return 'Processed'
+
+    case 'RECONCILED': return 'Reconciled'
+    case 'SENT': return 'Sent'
+    case 'CANCELED': return 'Cancelled'
+    case 'PENDING': return 'Pending'
+
+    default:
+      return ''
+  }
+}
+
+
+function closeModalPaymentDetailApplied() {
+  openDialogPaymentDetailsApplied.value = false
+}
+
+watch(onChangePagePaymentDetailsApplied, (newValue) => {
+  payloadPaymentDetailsApplied.value.page = newValue?.page ? newValue?.page : 0
+  payloadPaymentDetailsApplied.value.pageSize = newValue?.rows ? newValue.rows : 10
+  // getList()
+})
+
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
   Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
@@ -1549,15 +1643,20 @@ onMounted(() => {
       command: () => props.openRoomRateDialog(selectedBooking.value),
       disabled: computedShowMenuItemAddRoomRate
     },
-    {
-      label: 'Edit booking',
-      command: () => openEditBooking(selectedBooking.value),
-      disabled: computedShowMenuItemEditBooking
-    },
+    // {
+    //   label: 'Edit booking',
+    //   command: () => openEditBooking(selectedBooking.value),
+    //   disabled: computedShowMenuItemEditBooking
+    // },
     // Esto es solo para pruebas
     {
       label: 'New Edit booking',
       command: () => newOpenEditBooking(selectedBooking.value),
+      disabled: computedShowMenuItemEditBooking
+    },
+    {
+      label: 'Payment Details Applied',
+      command: () => openModalPaymentDetail(selectedBooking.value),
       disabled: computedShowMenuItemEditBooking
     },
   ]
@@ -1691,6 +1790,53 @@ onMounted(() => {
       :invoice-obj="currentInvoice"
     />
   </div>
+
+
+  <!-- Dialog Apply Payment Other Deduction -->
+  <Dialog
+      v-model:visible="openDialogPaymentDetailsApplied"
+      modal
+      class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border"
+      :style="{ width: 'auto' }"
+      :pt="{
+        root: {
+          class: 'custom-dialog-history',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+        // mask: {
+        //   style: 'backdrop-filter: blur(5px)',
+        // },
+      }"
+      @hide="closeModalPaymentDetailApplied()"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Payment Details
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-3">
+          <DynamicTable
+            class="card p-0"
+            :data="paymentDetailsAppliedList"
+            :columns="columnsPaymentDetailsApplied"
+            :options="optionsPaymentDetailsApplied"
+            :pagination="paginationPaymentDetailsApplied"
+            @on-change-pagination="onChangePagePaymentDetailsApplied = $event"
+            @on-row-double-click="() => {}"
+          >
+            <template #column-status="{ data: item }">
+              <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
+            </template>
+          </DynamicTable>
+        </div>
+      </template>
+    </Dialog>
 </template>
 
 <style>
