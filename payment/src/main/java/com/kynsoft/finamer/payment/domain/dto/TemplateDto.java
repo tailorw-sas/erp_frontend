@@ -1,10 +1,9 @@
-package com.kynsoft.notification.domain.dto;
+package com.kynsoft.finamer.payment.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -14,9 +13,6 @@ public class TemplateDto {
     private UUID id;
     private String templateCode;
     private String name;
-    private String description;
-    private MailjetConfigurationDto mailjetConfigurationDto;
-    private LocalDateTime createdAt;
     private String languageCode;
-    private EMailjetType type;
+    private String type;
 }

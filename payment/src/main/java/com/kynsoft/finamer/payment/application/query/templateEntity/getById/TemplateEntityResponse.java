@@ -1,10 +1,8 @@
-package com.kynsoft.notification.application.query.templateEntity.getById;
+package com.kynsoft.finamer.payment.application.query.templateEntity.getById;
 
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
-import com.kynsoft.notification.application.query.mailjetConfiguration.getById.MailjetConfigurationResponse;
-import com.kynsoft.notification.domain.dto.EMailjetType;
-import com.kynsoft.notification.domain.dto.TemplateDto;
+import com.kynsoft.finamer.payment.domain.dto.TemplateDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,16 +19,12 @@ public class TemplateEntityResponse implements IResponse {
     private String name;
     private String description;
     private LocalDate createdAt;
-    private MailjetConfigurationResponse MailjetConfigId;
     private String languageCode;
-    private EMailjetType type;
+    private String type;
     public TemplateEntityResponse(TemplateDto dto) {
         this.id = dto.getId();
         this.templateCode = dto.getTemplateCode();
         this.name = dto.getName();
-        this.description = dto.getDescription();
-        this.createdAt = dto.getCreatedAt().toLocalDate();
-        this.setMailjetConfigId(new MailjetConfigurationResponse(dto.getMailjetConfigurationDto()));
         this.languageCode = dto.getLanguageCode();
         this.type = dto.getType();
     }

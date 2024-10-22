@@ -1,22 +1,26 @@
-package com.kynsoft.notification.domain.dto;
+package com.kynsof.share.core.domain.kafka.entity;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
 @AllArgsConstructor
-public class TemplateDto {
+@NoArgsConstructor
+public class TemplateKafka implements Serializable {
+
     private UUID id;
     private String templateCode;
     private String name;
     private String description;
-    private MailjetConfigurationDto mailjetConfigurationDto;
+    private UUID mailjetConfigurationDto;
     private LocalDateTime createdAt;
     private String languageCode;
-    private EMailjetType type;
+    private String type;
 }
