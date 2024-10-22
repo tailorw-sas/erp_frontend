@@ -1,5 +1,9 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.domain.exception.GlobalBusinessException;
+import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetTransactionDataResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.CardnetJobDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageStatusTransactionService;
@@ -31,8 +35,10 @@ public class ManageStatusTransactionServiceImpl implements IManageStatusTransact
     @Override
     public CardnetJobDto findBySession(String session) {
         Optional<CardnetJob> optionalEntity = repositoryCardnetJobQuery.findBySession(session);
-
-        return optionalEntity.map(CardnetJob::toAggregate).orElse(null);
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("session", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
     }
     @Override
     public Mono<CardNetTransactionDataResponse> dataTransactionSuccess(String url) {

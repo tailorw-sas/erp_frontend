@@ -24,10 +24,11 @@ public class UpdatePaymentCommand implements ICommand {
     private UUID attachmentStatus;
 
     private String remark;
+    private UUID employee;
 
     public UpdatePaymentCommand(UUID id, UUID paymentSource, String reference, LocalDate transactionDate, 
                                 UUID paymentStatus, UUID client, UUID agency, UUID hotel, UUID bankAccount, 
-                                UUID attachmentStatus, String remark) {
+                                UUID attachmentStatus, String remark, UUID employee) {
         this.id = id;
         this.paymentSource = paymentSource;
         this.reference = reference;
@@ -39,6 +40,7 @@ public class UpdatePaymentCommand implements ICommand {
         this.bankAccount = bankAccount;
         this.attachmentStatus = attachmentStatus;
         this.remark = remark;
+        this.employee = employee;
     }
 
     public static UpdatePaymentCommand fromRequest(UpdatePaymentRequest request, UUID id) {
@@ -53,7 +55,8 @@ public class UpdatePaymentCommand implements ICommand {
                 request.getHotel(),
                 request.getBankAccount(),
                 request.getAttachmentStatus(),
-                request.getRemark()
+                request.getRemark(),
+                request.getEmployee()
         );
     }
 
