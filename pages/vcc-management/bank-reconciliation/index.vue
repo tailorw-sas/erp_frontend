@@ -118,7 +118,7 @@ const legend = ref(
     },
     {
       name: 'Cancelled',
-      color: '#888888',
+      color: '#FF1405',
       colClass: 'pr-3',
     },
     {
@@ -169,18 +169,13 @@ const createItems: Array<MenuItem> = ref([{
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'id', header: 'Id', type: 'text' },
-  { field: 'parent', header: 'Parent Id', type: 'text' },
-  { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
-  { field: 'cardNumber', header: 'Card Number', type: 'text' },
-  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
-  { field: 'methodType', header: 'Method Type', type: 'text' },
-  { field: 'referenceNumber', header: 'Reference', type: 'text' },
+  { field: 'bankAccount', header: 'BankAccount', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant-bank-account' }, sortable: true },
   { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'commission', header: 'Commission', type: 'text' },
-  { field: 'netAmount', header: 'T.Amount', type: 'text' },
-  { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'status', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
+  { field: 'detailsAmount', header: 'Details Amount', type: 'text' },
+  { field: 'date', header: 'Date', type: 'date' },
+  { field: 'remark', header: 'Remark', type: 'text' },
+  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
@@ -192,7 +187,7 @@ const ENUM_FILTER = [
 const options = ref({
   tableName: 'Transactions',
   moduleApi: 'creditcard',
-  uriApi: 'transactions',
+  uriApi: 'bank-reconciliation',
   loading: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
@@ -248,26 +243,9 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
-        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
-        iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
-        iterator.id = String(iterator.id)
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
         iterator.amount = formatNumber(iterator.amount)
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
-        count.commission += iterator.commission
-        iterator.commission = formatNumber(iterator.commission)
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
-        count.net += iterator.netAmount
-        iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
@@ -771,10 +749,6 @@ function setRefundAvailable(isAvailable: boolean) {
     menuItem.disabled = !isAvailable
   }
 }
-
-function openBankReconciliation() {
-  window.open('/vcc-management/bank-reconciliation', '_blank')
-}
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -799,20 +773,17 @@ onMounted(() => {
 <template>
   <div class="flex justify-content-between align-items-center">
     <h3 class="mb-0">
-      Virtual Credit Card Management
+      Management Bank Reconciliation
     </h3>
     <div class="my-2 flex justify-content-end px-0">
-      <PopupNavigationMenu menu-id="vcc-menu" :items="createItems" icon="pi pi-plus" label="New" class="vcc-menu" />
-      <Button class="ml-2" icon="pi pi-building-columns" label="Bank Reconciliation" @click="openBankReconciliation()" />
-      <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled />
-      <Button class="ml-2" icon="pi pi-download" label="Export" disabled />
+      <Button class="ml-2" icon="pi pi-plus" label="New" @click="" />
     </div>
   </div>
   <div class="grid">
     <div class="col-12 order-0">
       <div class="card p-0 mb-0">
-        <Accordion :active-index="0">
-          <AccordionTab>
+        <Accordion id="accordion" :active-index="0">
+          <AccordionTab content-class="p-0 m-0">
             <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
@@ -823,159 +794,156 @@ onMounted(() => {
                 </div>
               </div>
             </template>
-            <div class="grid">
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">Merchant:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.merchant" :suggestions="merchantList"
-                        @load="($event) => getMerchantList($event)" @change="($event) => {
-                          if (!filterToSearch.merchant.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.merchant = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.merchant = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-2">
-                    <label class="filter-label font-bold" for="">Hotel:</label>
-                    <div class="w-full">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
-                        @load="($event) => getHotelList($event)" @change="($event) => {
-                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">CC Type:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.ccType" :suggestions="ccTypeList" @change="($event) => {
-                          if (!filterToSearch.ccType.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.ccType = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.ccType = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }" @load="($event) => getCCTypeList($event)"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-2">
-                    <label class="filter-label font-bold" for="">Status:</label>
-                    <div class="w-full">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.status" :suggestions="statusList"
-                        @load="($event) => getStatusList($event)" @change="($event) => {
-                          if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">From:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <Calendar
-                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :max-date="new Date()"
-                      />
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-2">
-                    <label class="filter-label font-bold" for="">To:</label>
-                    <div class="w-full">
-                      <Calendar
-                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
-                <div class="flex w-full">
-                  <div class="flex flex-row w-full">
-                    <div class="flex flex-column gap-2 w-full">
-                      <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                        <label class="filter-label font-bold" for="">Criteria:</label>
-                        <div class="w-full">
-                          <Dropdown
-                            v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
-                            placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
-                          />
-                        </div>
-                      </div>
-                      <div class="flex align-items-center gap-2">
-                        <label class="filter-label font-bold" for="">Search:</label>
-                        <div class="w-full">
-                          <IconField icon-position="left">
-                            <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
-                          </IconField>
-                        </div>
+            <div class="grid p-0 m-0" style="margin: 0 auto;">
+              <!-- first filter -->
+              <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
+                <div class="grid align-items-center justify-content-center">
+                  <div class="col-12">
+                    <div class="flex align-items-center mb-2">
+                      <!-- <pre>{{ filterToSearch }}</pre> -->
+                      <label for="" class="mr-2 font-bold"> Hotel</label>
+                      <div class="w-full">
+                        <DebouncedAutoCompleteComponent
+                          v-if="!loadingSaveAll" id="autocomplete"
+                          :multiple="true" class="w-full" field="name"
+                          item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
+                          @load="($event) => getHotelList($event)" @change="($event) => {
+                            if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                              filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                            }
+                            else {
+                              filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                            }
+                          }"
+                        >
+                          <template #option="props">
+                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                          </template>
+                        </DebouncedAutoCompleteComponent>
                       </div>
                     </div>
                     <div class="flex align-items-center">
-                      <Button
-                        v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch"
-                        :loading="loadingSearch" @click="searchAndFilter"
-                      />
-                      <Button
-                        v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
-                        :loading="loadingSearch" @click="clearFilterToSearch"
-                      />
+                      <label for="" class="mr-2 font-bold"> Bank Account</label>
+                      <div class="w-full">
+                        <DebouncedAutoCompleteComponent
+                          v-if="!loadingSaveAll" id="autocomplete"
+                          :multiple="true" class="w-full" field="name"
+                          item-value="id" :model="filterToSearch.merchant" :suggestions="merchantList"
+                          @load="($event) => getMerchantList($event)" @change="($event) => {
+                            if (!filterToSearch.merchant.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                              filterToSearch.merchant = $event.filter((element: any) => element?.id === 'All')
+                            }
+                            else {
+                              filterToSearch.merchant = $event.filter((element: any) => element?.id !== 'All')
+                            }
+                          }"
+                        >
+                          <template #option="props">
+                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                          </template>
+                        </DebouncedAutoCompleteComponent>
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- third filter From - To -->
+              <div class="col-12 md:col-3 align-items-center my-0 py-0 w-auto">
+                <div class="grid align-items-center justify-content-center p-0 m-0">
+                  <div class="col-12 md:col-10 p-0 m-0 w-auto">
+                    <div class="flex align-items-center mb-2">
+                      <label for="" class="mr-2 font-bold"> From</label>
+                      <div class="w-9rem">
+                        <Calendar
+                          v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                          show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                        />
+                      </div>
+                    </div>
+                    <div class="flex align-items-center">
+                      <label for="" class="mr-2 font-bold" style="padding-right: 17px;"> To</label>
+                      <div class="w-9rem">
+                        <Calendar
+                          v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                          icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- fourth filter -->
+              <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
+                <div class="grid align-items-center justify-content-center">
+                  <div class="col-12">
+                    <div class="flex align-items-center mb-2">
+                      <label for="" class="mr-2 font-bold"> Criteria</label>
+                      <div class="w-full">
+                        <Dropdown
+                          v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
+                          placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
+                        />
+                      </div>
+                    </div>
+                    <div class="flex align-items-center">
+                      <label for="" class="w-4rem font-bold">Search</label>
+                      <IconField icon-position="left">
+                        <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
+                        <InputIcon class="pi pi-search" />
+                      </IconField>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- fifth filter -->
+              <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
+                <div class="grid align-items-center justify-content-center">
+                  <div class="col-12">
+                    <div class="flex align-items-center mb-2">
+                      <!-- <pre>{{ filterToSearch }}</pre> -->
+                      <label for="" class="mr-2 font-bold"> Status</label>
+                      <div class="w-full">
+                        <DebouncedAutoCompleteComponent
+                          v-if="!loadingSaveAll" id="autocomplete"
+                          :multiple="true" class="w-full" field="name"
+                          item-value="id" :model="filterToSearch.status" :suggestions="statusList"
+                          @load="($event) => getStatusList($event)" @change="($event) => {
+                            if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                              filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
+                            }
+                            else {
+                              filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
+                            }
+                          }"
+                        >
+                          <template #option="props">
+                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                          </template>
+                        </DebouncedAutoCompleteComponent>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Button filter -->
+              <div class="col-12 md:col-1 flex align-items-center my-0 py-0 w-auto justify-content-center">
+                <Button
+                  v-tooltip.top="'Filter'"
+                  label=""
+                  class="p-button-lg w-3rem h-3rem mr-2"
+                  icon="pi pi-search"
+                  @click="searchAndFilter"
+                />
+                <Button
+                  v-tooltip.top="'Clear'"
+                  label=""
+                  outlined
+                  class="p-button-lg w-3rem h-3rem"
+                  icon="pi pi-filter-slash"
+                  @click="clearFilterToSearch"
+                />
               </div>
             </div>
           </AccordionTab>
@@ -1001,11 +969,10 @@ onMounted(() => {
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
+              <Column footer="Totals:" :colspan="3" footer-style="text-align:right" />
               <Column :footer="formatNumber(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)" />
               <Column :footer="formatNumber(Math.round((subTotals.commission + Number.EPSILON) * 100) / 100)" />
-              <Column :footer="formatNumber(Math.round((subTotals.net + Number.EPSILON) * 100) / 100)" />
-              <Column :colspan="2" />
+              <Column :colspan="3" />
             </Row>
           </ColumnGroup>
         </template>
@@ -1020,10 +987,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.filter-label {
-  min-width: 55px;
-  text-align: end;
-}
+
 </style>
 
 <style lang="scss">
@@ -1035,36 +999,6 @@ onMounted(() => {
     cursor: pointer;
   }
 }
-
-.text-sent {
-  background-color: #006400;
-  color: #fff;
-}
-.text-created {
-  background-color: #FF8D00;
-  color: #fff;
-}
-.text-received {
-  background-color: #3403F9;
-  color: #fff;
-}
-.text-declined {
-  background-color: #661E22;
-  color: #fff;
-}
-.text-paid {
-  background-color: #2E892E;
-  color: #fff;
-}
-.text-reconciled {
-  background-color: #05D2FF;
-  color: #fff;
-}
-.text-refund {
-  background-color: #666666;
-  color: #fff;
-}
-
 // .p-datatable-tfoot {
 //   background-color: #42A5F5;
 //   tr td {
