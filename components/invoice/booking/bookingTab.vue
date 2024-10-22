@@ -823,6 +823,8 @@ async function getPaymentDetailBybookingId(id: string) {
     }
 
     const response = await GenericService.search('payment', 'payment-detail', payloadPaymentDetailsApplied.value)
+    console.log(response);
+    
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     paginationPaymentDetailsApplied.value.page = page
@@ -897,6 +899,33 @@ async function getPaymentDetailBybookingId(id: string) {
     } finally {
       optionsPaymentDetailsApplied.value.loading = false
     }
+}
+
+async function parseDataTableFilter(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsPaymentDetailsApplied.value)
+  payloadPaymentDetailsApplied.value.filter = [...parseFilter || []]
+  getPaymentDetailBybookingId(selectedBooking.value?.id)
+}
+
+function onSortField(event: any) {
+  if (event) {
+    if (event.sortField === 'transactionType') {
+      event.sortField = 'transactionType.name'
+    }
+    if (event.sortField === 'paymentNo') {
+      event.sortField = 'payment.paymentId'
+    }
+    if (event.sortField === 'fullName') {
+      event.sortField = 'manageBooking.fullName'
+    }
+    // if (event.sortField === 'transactionDate') {
+    //   event.sortField = 'manageBooking.fullName'
+    // }
+    
+    payloadPaymentDetailsApplied.value.sortBy = event.sortField
+    payloadPaymentDetailsApplied.value.sortType = event.sortOrder
+    parseDataTableFilter(event.filter)
+  }
 }
 
 interface SubTotals {
@@ -1619,14 +1648,14 @@ const openDialogPaymentDetailsApplied = ref(false)
 const paymentDetailsAppliedList = ref<any[]>([])
 
 const columnsPaymentDetailsApplied = ref<IColumn[]>([
-  { field: 'paymentDetailId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'paymentDetailId', header: 'Id', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '90px', sortable: false, showFilter: false },
-  { field: 'transactionDate', header: 'Transaction Date', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'amount', header: 'D. Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'remark', header: 'Remark', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '90px', sortable: true, showFilter: true, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
+  { field: 'transactionDate', header: 'Transaction Date', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'amount', header: 'D. Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'remark', header: 'Remark', type: 'text', width: '90px', sortable: true, showFilter: true },
 ])
 
 const optionsPaymentDetailsApplied = ref({
@@ -1914,23 +1943,23 @@ onMounted(() => {
   </div>
 
   <Dialog
-      v-model:visible="openDialogPaymentDetailsApplied"
-      modal
-      class="mx-3 sm:mx-0"
-      content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: 'auto' }"
-      :pt="{
-        root: {
-          class: 'custom-dialog-history',
-        },
-        header: {
-          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
-        },
-        // mask: {
-        //   style: 'backdrop-filter: blur(5px)',
-        // },
-      }"
-      @hide="closeModalPaymentDetailApplied()"
+    v-model:visible="openDialogPaymentDetailsApplied"
+    modal
+    class="mx-3 sm:mx-0"
+    content-class="border-round-bottom border-top-1 surface-border"
+    :style="{ width: 'auto' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog-history',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
+    }"
+    @hide="closeModalPaymentDetailApplied()"
     >
       <template #header>
         <div class="flex justify-content-between">
@@ -1947,6 +1976,8 @@ onMounted(() => {
             :columns="columnsPaymentDetailsApplied"
             :options="optionsPaymentDetailsApplied"
             :pagination="paginationPaymentDetailsApplied"
+            @on-change-filter="parseDataTableFilter"
+            @on-sort-field="onSortField"
             @on-change-pagination="onChangePagePaymentDetailsApplied = $event"
             @on-row-double-click="($event) => {
               if ($event && $event?.paymentId) {

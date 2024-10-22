@@ -1321,8 +1321,6 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   let statusTemp: any[] = []
   statusItemsList.value = [allDefaultItem]
   statusTemp = await getDataList<DataListItemForStatus, ListItemForStatus>(moduleApi, uriApi, filter, queryObj, mapFunctionForStatus, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  console.log('statusTemp', statusTemp)
-
   statusItemsList.value = [...statusItemsList.value, ...statusTemp]
 }
 
