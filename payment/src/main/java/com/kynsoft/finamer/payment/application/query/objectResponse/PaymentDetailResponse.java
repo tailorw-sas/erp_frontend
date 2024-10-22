@@ -23,6 +23,7 @@ public class PaymentDetailResponse implements IResponse {
     private UUID id;
     private Status status;
     private UUID paymentId;
+    private Long paymentNo;
     private Long paymentDetailId;
     private Long parentId;
     private ManagePaymentTransactionTypeResponse transactionType;
@@ -44,6 +45,7 @@ public class PaymentDetailResponse implements IResponse {
         this.id = dto.getId();
         this.status = dto.getStatus();
         this.paymentId = dto.getPayment().getId();
+        this.paymentNo = dto.getPayment().getPaymentId();
         this.transactionType = dto.getTransactionType() != null ? new ManagePaymentTransactionTypeResponse(dto.getTransactionType()) : null;
         this.amount = dto.getAmount();
         this.remark = dto.getRemark();
