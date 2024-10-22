@@ -5,8 +5,10 @@ import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -24,6 +26,12 @@ import java.util.Optional;
 public class ReconcileAutomaticInvoiceValidator {
     private Workbook workbook;
     private Sheet sheet;
+
+    private final IManageNightTypeService nightTypeService;
+
+    public ReconcileAutomaticInvoiceValidator(IManageNightTypeService nightTypeService) {
+        this.nightTypeService = nightTypeService;
+    }
 
 
     public void loadWorkbook(byte[] file) throws IOException {
@@ -72,12 +80,13 @@ public class ReconcileAutomaticInvoiceValidator {
                 errorFieldList.add(new ErrorField("Booking", "All bookings are not in the file"));
                 return errorFieldList;
             } else {
+                DataFormatter formatter = new DataFormatter();
                 for (Row currentRow : allRow) {
                     errorFieldList.clear();
-                    String couponNumber = currentRow.getCell(4).getStringCellValue() + currentRow.getCell(11).getStringCellValue();
-                    String nightType = currentRow.getCell(13).getStringCellValue();
-                    String price = currentRow.getCell(39).getStringCellValue();
-                    String contract = currentRow.getCell(0).getStringCellValue();
+                    String couponNumber = formatter.formatCellValue(currentRow.getCell(4)) + formatter.formatCellValue(currentRow.getCell(11));
+                    String nightType = formatter.formatCellValue(currentRow.getCell(13));
+                    String price = formatter.formatCellValue(currentRow.getCell(39));
+                    String contract = formatter.formatCellValue(currentRow.getCell(0));
                     if (validateCouponNumber(couponNumber, booking, errorFieldList
                     ) && validatePrice(price, booking, errorFieldList)
                             && validateNightType(nightType, booking, errorFieldList)) {
@@ -95,7 +104,7 @@ public class ReconcileAutomaticInvoiceValidator {
 
     private Optional<List<Row>> searchBookingInTheFile(ManageBookingDto manageBookingDto) {
         List<Row> allMatch = new ArrayList<>();
-        for (int i = 2; i < sheet.getLastRowNum(); i++) {
+        for (int i = 2; i <= sheet.getLastRowNum(); i++) {
             Row currentRow = sheet.getRow(i);
             if (ExcelUtils.isRowEmpty(currentRow) || this.isDateSeparator(currentRow)) {
                 continue;
@@ -118,8 +127,8 @@ public class ReconcileAutomaticInvoiceValidator {
     }
 
     private boolean validateNightType(String nightType, ManageBookingDto manageBookingDto, List<ErrorField> errors) {
-        if (!nightType.equals(manageBookingDto.getNightType().getCode())) {
-            errors.add(new ErrorField("Night Type", "The night type not match with the file"));
+        if (!nightTypeService.existNightTypeByCode(nightType)) {
+            errors.add(new ErrorField("Night Type", "The night type not exist"));
             return false;
         }
         return true;
