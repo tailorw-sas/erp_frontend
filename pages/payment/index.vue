@@ -1255,13 +1255,41 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
-function mapFunctionForStatus(data: DataListItem): ListItem {
+interface DataListItemForStatus {
+  id: string
+  name: string
+  code: string
+  status: string
+  description?: string
+  applied: boolean
+  confirmed: boolean
+  cancelled: boolean
+  transit: boolean
+}
+
+interface ListItemForStatus {
+  id: string
+  name: string
+  status: boolean | string
+  code?: string
+  description?: string
+  applied: boolean
+  confirmed: boolean
+  cancelled: boolean
+  transit: boolean
+}
+
+function mapFunctionForStatus(data: DataListItemForStatus): DataListItemForStatus {
   return {
     id: data.id,
     name: `${data.name}`,
     status: data.status,
     code: data.code,
-    description: data.description
+    description: data.description,
+    applied: data.applied,
+    confirmed: data.confirmed,
+    cancelled: data.cancelled,
+    transit: data.transit
   }
 }
 
@@ -1292,7 +1320,9 @@ async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { q
 async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let statusTemp: any[] = []
   statusItemsList.value = [allDefaultItem]
-  statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  statusTemp = await getDataList<DataListItemForStatus, ListItemForStatus>(moduleApi, uriApi, filter, queryObj, mapFunctionForStatus, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  console.log('statusTemp', statusTemp)
+
   statusItemsList.value = [...statusItemsList.value, ...statusTemp]
 }
 
@@ -2739,7 +2769,7 @@ onMounted(async () => {
     keys: ['name', 'code'],
   }
   await getStatusList(objApis.value.status.moduleApi, objApis.value.status.uriApi, objQueryToSearch)
-  filterToSearch.value.status = statusItemsList.value.filter((item: { id: string, name: string, status?: string }) => item.name === 'Applied' || item.name === 'Confirmed')
+  filterToSearch.value.status = statusItemsList.value.filter((item: ListItemForStatus) => item.applied === true || item.confirmed === true)
 
   const filterForEmployee: FilterCriteria[] = [
     {
