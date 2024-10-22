@@ -903,9 +903,18 @@ async function getPaymentDetailBybookingId(id: string) {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsPaymentDetailsApplied.value)
+  const objFilterForPaymentId = parseFilter?.find((item: IFilter) => item?.key === 'paymentNo')
+  if (objFilterForPaymentId) {
+    objFilterForPaymentId.key = 'payment.paymentId'
+  }
+  const objFilterForFullName = parseFilter?.find((item: IFilter) => item?.key === 'fullName')
+  if (objFilterForFullName) {
+    objFilterForFullName.key = 'manageBooking.fullName'
+  }
   payloadPaymentDetailsApplied.value.filter = [...parseFilter || []]
   getPaymentDetailBybookingId(selectedBooking.value?.id)
 }
+
 
 function onSortField(event: any) {
   if (event) {
