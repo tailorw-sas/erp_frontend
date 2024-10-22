@@ -1623,9 +1623,9 @@ const columnsPaymentDetailsApplied = ref<IColumn[]>([
   { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'transactionType', header: 'Transaction', type: 'select', width: '90px', sortable: false, showFilter: false },
+  { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'transactionDate', header: 'Transaction Date', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'amount', header: 'Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'amount', header: 'D. Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'remark', header: 'Remark', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
 ])
 
