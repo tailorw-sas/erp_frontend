@@ -73,6 +73,9 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     @Value("${resource.type.code}")
     private String paymentInvoiceTypeCode;
 
+    @Value("${attachment.type.code}")
+    private String attachmentTypeCode;
+
     public InvoiceReconcileAutomaticServiceImpl(ApplicationEventPublisher applicationEventPublisher,
                                                 ReconcileAutomaticValidatorFactory reconcileAutomaticValidatorFactory,
                                                 InvoiceReportProviderFactory invoiceReportProviderFactory,
@@ -161,7 +164,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     }
 
     private void createAttachmentForInvoice(String invoiceId, String employeeId, String employeeName, byte[] fileContent) throws Exception {
-        Optional<ManageAttachmentTypeDto> attachmentTypeDto = typeService.findDefault();
+        Optional<ManageAttachmentTypeDto> attachmentTypeDto = typeService.findByCode(attachmentTypeCode);
         ResourceTypeDto resourceTypeDto = resourceTypeService.findByCode(paymentInvoiceTypeCode);
         if (attachmentTypeDto.isPresent()) {
             LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent("Reconcile automatic", fileContent);
