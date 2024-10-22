@@ -372,3 +372,8 @@ export const FORM_FIELD_TYPE = [
   { id: 'textarea', name: 'Textarea' },
   // { id: 'file', name: 'File' },
 ]
+
+export const ENUM_MAIL_TEMPLATE_TYPE = [
+  { id: 'PAYMENT_CONFIRMATION_VOUCHER', name: 'Payment Confirmation Voucher' },
+  { id: 'PAYMENT_LINK', name: 'Payment Link' },
+]
