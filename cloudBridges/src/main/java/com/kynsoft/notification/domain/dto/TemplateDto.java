@@ -17,4 +17,6 @@ public class TemplateDto {
     private String description;
     private MailjetConfigurationDto mailjetConfigurationDto;
     private LocalDateTime createdAt;
+    private String languageCode;
+    private EMailjetType type;
 }

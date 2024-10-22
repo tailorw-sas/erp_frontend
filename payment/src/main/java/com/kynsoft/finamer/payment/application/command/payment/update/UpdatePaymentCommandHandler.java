@@ -101,7 +101,7 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
             ManagePaymentStatusDto paymentStatusDto = this.statusService.findById(newValue);
             RulesChecker.checkRule(new UpdatePaymentValidateChangeStatusRule(paymentDto.getPaymentStatus(), paymentStatusDto, paymentDto.isApplyPayment()));
             ManageEmployeeDto employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
-            createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
+            createPaymentAttachmentStatusHistory(employeeDto, paymentDto, paymentStatusDto);
             setter.accept(paymentStatusDto);
             update.accept(1);
 
@@ -111,14 +111,14 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
     }
 
     //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
-    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
+    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, ManagePaymentStatusDto paymentStatusDto) {
 
         PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
         attachmentStatusHistoryDto.setId(UUID.randomUUID());
         attachmentStatusHistoryDto.setDescription("Update Payment.");
         attachmentStatusHistoryDto.setEmployee(employeeDto);
         attachmentStatusHistoryDto.setPayment(payment);
-        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+        attachmentStatusHistoryDto.setStatus(paymentStatusDto.getCode() + "-" + paymentStatusDto.getName());
 
         this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
