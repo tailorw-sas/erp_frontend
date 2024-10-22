@@ -1239,7 +1239,6 @@ async function deleteBooking(id: string) {
 }
 
 async function saveBooking(item: { [key: string]: any }) {
-  console.log('asdasdasdasdasd');
   
   item.hotelBookingNumber = item.hotelBookingNumber.split(" ").filter((a: string) => a !== "").join(" ")
   item.checkIn = dayjs(item.checkIn).startOf('day').toDate()
@@ -1255,19 +1254,12 @@ async function saveBooking(item: { [key: string]: any }) {
   if (!props.isCreationDialog) {
 
     await props.getInvoiceAgency(props?.invoiceObj?.agency?.id)
-
     if (props.nightTypeRequired && !item?.nightType?.id) {
-
-
       return toast.add({ severity: 'error', summary: 'Error', detail: 'The Night Type field is required for this client', life: 10000 })
     }
-
-
-
   }
 
   item.fullName = `${item?.firstName ?? ''} ${item?.lastName ?? ''}`
-
   if (props.isCreationDialog) {
     const invalid: any = props?.listItems?.find((booking: any) => booking?.hotelBookingNumber === item?.hotelBookingNumber)
 
@@ -1318,6 +1310,65 @@ async function saveBooking(item: { [key: string]: any }) {
     }
   }
   loadingSaveAll.value = false
+  if (successOperation) {
+    ClearForm()
+    if (!props.isCreationDialog) {
+      props.refetchInvoice()
+      // props?.toggleForceUpdate()
+    }
+  }
+}
+
+async function saveBookingClone(newBooking: any) {
+  
+  newBooking.hotelBookingNumber = newBooking.hotelBookingNumber.split(" ").filter((a: string) => a !== "").join(" ")
+  newBooking.checkIn = dayjs(newBooking.checkIn).startOf('day').toDate()
+  newBooking.checkOut = dayjs(newBooking.checkOut).startOf('day').toDate()
+  newBooking.hotelCreationDate = dayjs(newBooking.hotelCreationDate).startOf('day').toDate()
+  newBooking.bookingDate = dayjs(newBooking.bookingDate).startOf('day').toDate()
+
+  if (props.selectedInvoice && typeof props.selectedInvoice === 'string') {
+    newBooking.invoice = props.selectedInvoice
+  }
+
+  console.log(props.nightTypeRequired);
+  if (!props.isCreationDialog) {
+
+    await props.getInvoiceAgency(props?.invoiceObj?.agency?.id)
+    if (props.nightTypeRequired && !item?.nightType?.id) {
+      return toast.add({ severity: 'error', summary: 'Error', detail: 'The Night Type field is required for this client', life: 10000 })
+    }
+  }
+
+  newBooking.fullName = `${item?.firstName ?? ''} ${item?.lastName ?? ''}`
+  if (props.isCreationDialog) {
+    const invalid: any = props?.listItems?.find((booking: any) => booking?.hotelBookingNumber === item?.hotelBookingNumber)
+
+    if (invalid && invalid?.id !== idnewBooking.value) {
+      return toast.add({ severity: 'error', summary: 'Error', detail: 'The field Hotel booking No. is repeated', life: 10000 })
+    }
+  }
+
+  loadingSaveAll.value = true
+  let successOperation = true
+
+    try {
+      if (props?.isCreationDialog) {
+        newBooking.id = v4()
+        props.addItem(item)
+      }
+      else {
+        await createBooking(item)
+      }
+      props.closeDialog()
+    }
+    catch (error: any) {
+      successOperation = false
+      console.log(error)
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+  
+    loadingSaveAll.value = false
   if (successOperation) {
     ClearForm()
     if (!props.isCreationDialog) {
@@ -1507,7 +1558,6 @@ onMounted(() => {
     finalColumns.value = [
 
       { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-
       { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -1525,17 +1575,13 @@ onMounted(() => {
   if (props?.isCreationDialog && route.query.type === InvoiceType.CREDIT) {
 
     finalColumns.value = [
-
-
       { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
 
       { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-
       { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-
       { field: 'originalAmount', header: 'Original Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
 
@@ -1549,15 +1595,9 @@ onMounted(() => {
     return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:BOOKING-EDIT'])))
   })
   menuModel.value = [
-   /* {
-      label: 'Add Room Rate',
-      command: () => props.openRoomRateDialog(selectedBooking.value),
-      disabled: computedShowMenuItemAddRoomRate
-    },*/
-    {
+   {
       label: 'Edit booking',
       command: () => openEditBooking(selectedBooking.value),
-   //   disabled: computedShowMenuItemEditBooking
     },
     {
       label: 'New Edit booking',
@@ -1575,8 +1615,6 @@ onMounted(() => {
       },
     ]
   }
-
-
 
   if (!props.isCreationDialog) {
     getBookingList()

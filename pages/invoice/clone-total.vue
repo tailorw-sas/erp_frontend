@@ -10,7 +10,7 @@ import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTotalTabView.vue'
-import type {IQueryRequest} from "~/components/fields/interfaces/IFieldInterfaces";
+import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
 const bookingEdited = ref(false)
 const bookingEdit: any = ref([])
@@ -151,7 +151,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'invoiceDate',
     header: 'Invoice Date',
     dataType: 'date',
-
+    disabled: true,
     class: 'field col-12 md:col-3 required ',
     validation: z.date({ required_error: 'The Invoice Date field is required' }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
   },
@@ -326,7 +326,7 @@ function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
 
-async function getHotelList(query = '',currentTradingCompany:any,currentHotelId:any) {
+async function getHotelList(query = '', currentTradingCompany: any, currentHotelId: any) {
   try {
     const payload = {
       filter: [
@@ -366,30 +366,29 @@ async function getHotelList(query = '',currentTradingCompany:any,currentHotelId:
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
-    };
+    }
 
-    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload);
-    const { data: dataList } = response;
-    
-    hotelList.value = [];
+    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
+    const { data: dataList } = response
+
+    hotelList.value = []
     for (const iterator of dataList) {
       if (iterator.id !== currentHotelId) {
-      hotelList.value.push({
-      
-        isNightType: iterator?.isNightType,
-        id: iterator.id,
-        name: iterator.name,
-        code: iterator.code,
-        status: iterator.status,
-        fullName: `${iterator.code} - ${iterator.name}`,
-        manageTradingCompanies: iterator.manageTradingCompanies
-      });
+        hotelList.value.push({
+
+          isNightType: iterator?.isNightType,
+          id: iterator.id,
+          name: iterator.name,
+          code: iterator.code,
+          status: iterator.status,
+          fullName: `${iterator.code} - ${iterator.name}`,
+          manageTradingCompanies: iterator.manageTradingCompanies
+        })
+      }
     }
-    
   }
-    
-  } catch (error) {
-    console.error('Error loading hotel list:', error);
+  catch (error) {
+    console.error('Error loading hotel list:', error)
   }
 }
 
@@ -1368,13 +1367,12 @@ async function filterEditFields(bookingEdit: any[]) {
       roomType: booking.roomType ? booking.roomType.id : null,
       roomCategory: booking.roomCategory ? booking.roomCategory.id : null,
       agency: booking.agency ? booking.agency.id : null,
-      hotelCreationDate:booking.hotelCreationDate,
-      bookingDate:booking.bookingDate,
-      contract:booking?.contract,
-      hotelBookingNumber:booking.hotelBookingNumber,
-      hotelInvoiceNumber:booking.hotelInvoiceNumber,
-      description:booking?.description
-
+      hotelCreationDate: booking.hotelCreationDate,
+      bookingDate: booking.bookingDate,
+      contract: booking?.contract,
+      hotelBookingNumber: booking.hotelBookingNumber,
+      hotelInvoiceNumber: booking.hotelInvoiceNumber,
+      description: booking?.description
 
     }))
 
@@ -1531,16 +1529,14 @@ function updateBooking(booking: any) {
         hotelAmount: booking?.hotelAmount,
         adults: booking?.adults,
         children: booking?.children,
-        hotelCreationDate:booking.hotelCreationDate,
-        bookingDate:booking.bookingDate,
-        hotelBookingNumber:booking?.hotelBookingNumber,
-        hotelInvoiceNumber:booking?.hotelInvoiceNumber,
-        contract:booking?.contract,
-        description:booking?.description,
+        hotelCreationDate: booking.hotelCreationDate,
+        bookingDate: booking.bookingDate,
+        hotelBookingNumber: booking?.hotelBookingNumber,
+        hotelInvoiceNumber: booking?.hotelInvoiceNumber,
+        contract: booking?.contract,
+        description: booking?.description,
 
-       
       }
-
     }
   }
 
@@ -1564,12 +1560,12 @@ function updateBooking(booking: any) {
   const existingEditIndex = bookingEdit.value.findIndex((item: any) => item.id === booking.id)
   if (existingEditIndex === -1) {
     bookingEdit.value.push(booking) // Agregar el booking editado al array solo si no está presente
-    console.log(bookingEdit.value,'que hay aqui')
+    console.log(bookingEdit.value, 'que hay aqui')
   }
   else {
     bookingEdit.value[existingEditIndex] = booking // Actualizar el booking existente en el array
   }
-  
+
   // bookingEdit.value.push(booking); // Agregar el booking editado al array
   // bookingEdit.value = [booking]; //
   calcInvoiceAmountUpdate()
@@ -1626,7 +1622,7 @@ function updateAttachment(attachment: any) {
   attachmentList.value[index] = attachment
 }
 
-//validacion del hotel
+// validacion del hotel
 
 //
 
@@ -1675,7 +1671,7 @@ onMounted(async () => {
     >
       <template #field-invoiceDate="{ item: data, onUpdate }">
         <Calendar
-          v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()"
+          v-if="!loadingSaveAll" v-model="data.invoiceDate" date-format="yy-mm-dd" :max-date="new Date()" :disabled="true"
           @update:model-value="($event) => {
             onUpdate('invoiceDate', $event)
           }"
@@ -1730,44 +1726,45 @@ onMounted(async () => {
       <template #field-hotel="{ item: data, onUpdate }">
         <DebouncedAutoCompleteComponent
           v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :disabled="false" :model="data.hotel" :suggestions="hotelList"   @change="($event) => {
-      const currentHotel =data.hotel
+          :disabled="false" :model="data.hotel" :suggestions="hotelList" @change="($event) => {
+            const currentHotel = data.hotel
 
-      if (currentHotel && $event) {
-        const currentManageTradingCompany = currentHotel.manageTradingCompanies.company;
-        console.log(currentManageTradingCompany,'actual')
-        const newManageTradingCompany = $event.manageTradingCompanies.company;
-        console.log(newManageTradingCompany,'nuevo')
-        // Verificar si los nombres coinciden
-        if (currentManageTradingCompany !== newManageTradingCompany) {
-          hotelError = true; // Mostrar error
-          console.log(hotelError,'q hay aqui')
+            if (currentHotel && $event) {
+              const currentManageTradingCompany = currentHotel.manageTradingCompanies.company;
+              console.log(currentManageTradingCompany, 'actual')
+              const newManageTradingCompany = $event.manageTradingCompanies.company;
+              console.log(newManageTradingCompany, 'nuevo')
+              // Verificar si los nombres coinciden
+              if (currentManageTradingCompany !== newManageTradingCompany) {
+                hotelError = true; // Mostrar error
+                console.log(hotelError, 'q hay aqui')
 
-          return; // Salir sin actualizar
-        } else {
-          hotelError = false; // Resetear el error si coincide
-        }
-      }
+                return; // Salir sin actualizar
+              }
+              else {
+                hotelError = false; // Resetear el error si coincide
+              }
+            }
 
-      // Si la validación pasa, actualizar el hotel
-      onUpdate('hotel', $event);
-    }"
-    @load="($event) => getHotelList($event, data.hotel.manageTradingCompanies.company,data.hotel.id)"
-  >
-    <template #option="props">
-      <span>{{ props.item.fullName }}</span>
-    </template>
-    <template #chip="{ value }">
-      <div>
-        {{ value?.fullName }}
-      </div>
-    </template>
-  </DebouncedAutoCompleteComponent>
-  <Skeleton v-else height="2rem" class="mb-2" />
-  <span v-if="hotelError" class="error-message p-error text-xs">
-    The hotel does not belong to the same trading company.
-  </span>
-</template>
+            // Si la validación pasa, actualizar el hotel
+            onUpdate('hotel', $event);
+          }"
+          @load="($event) => getHotelList($event, data.hotel.manageTradingCompanies.company, data.hotel.id)"
+        >
+          <template #option="props">
+            <span>{{ props.item.fullName }}</span>
+          </template>
+          <template #chip="{ value }">
+            <div>
+              {{ value?.fullName }}
+            </div>
+          </template>
+        </DebouncedAutoCompleteComponent>
+        <Skeleton v-else height="2rem" class="mb-2" />
+        <span v-if="hotelError" class="error-message p-error text-xs">
+          The hotel does not belong to the same trading company.
+        </span>
+      </template>
       <template #field-status="{ item: data, onUpdate }">
         <Dropdown
           v-if="!loadingSaveAll" v-model="data.status" :options="[...ENUM_INVOICE_STATUS]" option-label="name"
@@ -1795,7 +1792,7 @@ onMounted(async () => {
             :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
             :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
             :is-creation-dialog="true" :selected-invoice="selectedInvoice as any" :booking-list="bookingList"
-            :update-booking="updateBooking"  :adjustment-list="[]" :add-adjustment="addAdjustment"
+            :update-booking="updateBooking" :adjustment-list="[]" :add-adjustment="addAdjustment"
             :update-adjustment="updateAdjustment" :active="active" :bookings-total-obj="objBookingsTotals"
             :room-rate-total-obj="objRoomRateTotals" :adjustment-total-obj="objAdjustmentTotals" :set-active="($event) => {
 
