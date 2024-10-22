@@ -74,20 +74,20 @@ const loadingDelete = ref(false)
 const invoiceAmount = ref(0)
 const requiresFlatRate = ref(false)
 
-const bookingDialogOpen = ref<boolean>(false)
-const roomRateDialogOpen = ref<boolean>(false)
-const adjustmentDialogOpen = ref<boolean>(false)
-const attachmentHistoryDialogOpen = ref<boolean>(false)
-const exportAttachmentsDialogOpen = ref<boolean>(false)
+// const bookingDialogOpen = ref<boolean>(false)
+// const roomRateDialogOpen = ref<boolean>(false)
+// const adjustmentDialogOpen = ref<boolean>(false)
+// const attachmentHistoryDialogOpen = ref<boolean>(false)
+// const exportAttachmentsDialogOpen = ref<boolean>(false)
 
 const invoiceAgency = ref<any>(null)
 const invoiceHotel = ref<any>(null)
 
-const attachmentDialogOpen = ref<boolean>(false)
+// const attachmentDialogOpen = ref<boolean>(false)
 
 const hotelList = ref<any[]>([])
 const agencyList = ref<any[]>([])
-const invoiceTypeList = ref<any[]>([])
+// const invoiceTypeList = ref<any[]>([])
 const invoiceStatusList = ref<any[]>([])
 const invoiceStatus = ref<any>(null)
 
@@ -690,8 +690,6 @@ function handleDialogOpen() {
     default:
       break
   }
-
-  console.log(bookingDialogOpen)
 }
 
 async function getHotelList(query = '') {
@@ -930,8 +928,6 @@ async function createItem(item: { [key: string]: any }) {
   }
 }
 
-// const nightTypeRequired = ref(false)
-
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
@@ -1111,15 +1107,11 @@ async function getInvoiceHotel(id: string) {
 }
 async function getInvoiceAgency(id: string) {
   try {
-    console.log(id)
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
 
     if (agency) {
       invoiceAgency.value = { ...agency }
-
       nightTypeRequired.value = agency?.client?.isNightType
-
-      console.log(agency)
     }
   }
   catch (err) {
@@ -1155,14 +1147,12 @@ function clearFormRoomRate() {
   // item2.value = { ...itemTemp2.value }
   // idItem.value = ''
   // formReload.value++
-  console.log('lImpiar Room Rate')
 }
 
 function clearFormAdjustment() {
   // item2.value = { ...itemTemp2.value }
   // idItem.value = ''
   // formReload.value++
-  console.log('lImpiar Adjustment')
 }
 
 async function onCellEditRoomRate(event: any) {
@@ -1193,7 +1183,6 @@ async function onCellEditRoomRate(event: any) {
   }
 
   const payload: { [key: string]: any } = {
-
     roomRateId: newData.roomRateId,
     roomNumber: newData.roomNumber,
     checkIn: dayjs(newData.checkIn).toISOString(),
@@ -1212,13 +1201,10 @@ async function onCellEditRoomRate(event: any) {
 
     await updateRoomRate(payload)
     onSaveButtonByRef.value = true
-    // if (saveButton.value) {
-    //   saveButton.value.$el.click()
-    // }
     reloadBookingItem()
   }
   catch (error: any) {
-    console.log(error)
+
   }
 }
 
@@ -1664,7 +1650,7 @@ async function getBookingItemById(id: string) {
 
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'validation', decimalSchema.shape.hotelInvoiceNumber)
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'class', `${objField?.class} required`)
-        updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'disabled', false)
+        // updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'disabled', false)
       }
       else {
         const decimalSchema = z.object(
@@ -1682,7 +1668,7 @@ async function getBookingItemById(id: string) {
         const objField = fieldsV2.find(field => field.field === 'hotelInvoiceNumber')
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'validation', decimalSchema.shape.hotelInvoiceNumber)
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'class', `${objField?.class}`)
-        updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'disabled', true)
+        // updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'disabled', true)
       }
       requiresFlatRateCheck.value = response?.invoice?.hotel?.requiresFlatRate
       if (response?.invoice?.hotel?.requiresFlatRate) {
@@ -1722,6 +1708,7 @@ async function getBookingItemById(id: string) {
         updateFieldProperty(fieldsV2, 'hotelAmount', 'class', `${objField?.class}`)
       }
       formReload.value += 1
+      bookingTemp.value = response
     }
     catch (error) {
       if (error) {
@@ -1940,13 +1927,6 @@ onMounted(async () => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
 
-            <!-- <template #header-nightType="{ field }">
-          <strong>
-            {{ typeof field.header === 'function' ? field.header() : field.header }}
-          </strong>
-          <span v-if="isNightTypeRequired" class="p-error">*</span>
-        </template> -->
-
             <template #field-nightType="{ item: data, onUpdate }">
               <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
@@ -2062,27 +2042,6 @@ onMounted(async () => {
                         </DynamicTable>
                       </TabPanel>
                     </TabView>
-
-                    <!-- <InvoiceTabView
-                  :requires-flat-rate="requiresFlatRate"
-                  :get-invoice-hotel="getInvoiceHotel"
-                  :get-invoice-agency="getInvoiceAgency"
-                  :invoice-obj-amount="invoiceAmount"
-                  :is-dialog-open="bookingDialogOpen"
-                  :close-dialog="() => { bookingDialogOpen = false }"
-                  :open-dialog="handleDialogOpen"
-                  :selected-booking="selectedInvoice"
-                  :force-update="forceUpdate"
-                  :toggle-force-update="update"
-                  :invoice-obj="item2"
-                  :refetch-invoice="refetchInvoice"
-                  :is-creation-dialog="false"
-                  :selected-invoice="selectedInvoice as any"
-                  :active="active"
-                  :set-active="($event) => { active = $event }"
-                  :showTotals="true"
-                  :invoiceType="route.query?.type?.toString()"
-                /> -->
                   </div>
                 </div>
                 <div class="col-12 flex justify-content-end">
@@ -2104,15 +2063,15 @@ onMounted(async () => {
           </EditFormV2>
         </div>
 
-        <div v-if="attachmentDialogOpen">
+        <!-- <div v-if="attachmentDialogOpen">
           <AttachmentDialog
             :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
             :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
             :selected-invoice="selectedInvoice" :selected-invoice-obj="item"
           />
-        </div>
+        </div> -->
       </div>
-      <div v-if="attachmentHistoryDialogOpen">
+      <!-- <div v-if="attachmentHistoryDialogOpen">
         <AttachmentHistoryDialog
           selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
           header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
@@ -2125,7 +2084,7 @@ onMounted(async () => {
           :open-dialog="exportAttachmentsDialogOpen"
           :invoice="item"
         />
-      </div>
+      </div> -->
     </div>
   </Dialog>
   <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
