@@ -19,6 +19,8 @@ public interface IManageAttachmentTypeService {
 
     ManageAttachmentTypeDto findById(UUID id);
 
+    Optional<ManageAttachmentTypeDto> findByCode(String code);
+
     Optional<ManageAttachmentTypeDto> findDefault();
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filter);
