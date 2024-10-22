@@ -979,30 +979,5 @@ onMounted(() => {
       </DynamicTable>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
-    <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />
-    <VCCNewAdjustmentTransaction :open-dialog="newAdjustmentTransactionDialogVisible" @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" />
-    <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog($event)" />
-    <VCCEditManualTransaction :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="onCloseEditManualTransactionDialog($event)" />
   </div>
 </template>
-
-<style scoped>
-
-</style>
-
-<style lang="scss">
-#vcc-menu_list {
-  .p-menuitem .p-menuitem-content {
-    padding: 6px 2px;
-  }
-  .p-menuitem .p-menuitem-content:hover {
-    cursor: pointer;
-  }
-}
-// .p-datatable-tfoot {
-//   background-color: #42A5F5;
-//   tr td {
-//     color: #fff;
-//   }
-// }
-</style>

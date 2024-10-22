@@ -1064,11 +1064,8 @@ onMounted(() => {
   background-color: #666666;
   color: #fff;
 }
-
-// .p-datatable-tfoot {
-//   background-color: #42A5F5;
-//   tr td {
-//     color: #fff;
-//   }
-// }
+.text-cancelled {
+  background-color: #888888;
+  color: #fff;
+}
 </style>
