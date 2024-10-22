@@ -8,4 +8,5 @@ import lombok.Getter;
 @Getter
 public class PaymentImportDetailStatusResponse implements IResponse {
     private String status;
+    private int total;
 }

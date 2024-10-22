@@ -38,6 +38,8 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
 
     private final PaymentImportProcessStatusRepository statusRepository;
 
+    private AbstractPaymentImportHelperService paymentImportHelperService;
+
     public PaymentImportDetailServiceImpl(ApplicationEventPublisher paymentEventPublisher,
                                           PaymentImportHelperProvider paymentImportHelperProvider1,
                                           PaymentImportProcessStatusRepository statusRepository) {
@@ -50,8 +52,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
     @Async
     @Override
     public void importPaymentFromFile(PaymentImportDetailRequest request) {
-        AbstractPaymentImportHelperService paymentImportHelperService =
-                paymentImportHelperProvider.provideImportHelperService(request.getImportPaymentType());
+        paymentImportHelperService = paymentImportHelperProvider.provideImportHelperService(request.getImportPaymentType());
         try {
             ReaderConfiguration readerConfiguration = new ReaderConfiguration();
             readerConfiguration.setIgnoreHeaders(true);
@@ -98,7 +99,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
         if (paymentImportStatusDto.isHasError()) {
             throw new ExcelException(paymentImportStatusDto.getExceptionMessage());
         }
-        return new PaymentImportDetailStatusResponse(paymentImportStatusDto.getStatus());
+        return new PaymentImportDetailStatusResponse(paymentImportStatusDto.getStatus(),paymentImportHelperService.getTotalProcessRow());
     }
 
 
