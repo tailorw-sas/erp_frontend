@@ -488,26 +488,21 @@ function disabledBtnSave(propsValue: any): boolean {
 }
 
 function requireConfirmationToSave(item: any) {
-  if (!useRuntimeConfig().public.showSaveConfirm) {
-    saveItem(item)
-  }
-  else {
-    const { event } = item
-    confirm.require({
-      target: event.currentTarget,
-      group: 'headless',
-      header: 'Save the record',
-      message: 'Do you want to save the change?',
-      rejectLabel: 'Cancel',
-      acceptLabel: 'Accept',
-      accept: () => {
-        saveItem(item)
-      },
-      reject: () => {
-        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-      }
-    })
-  }
+  const { event } = item
+  confirm.require({
+    target: event.currentTarget,
+    group: 'headless',
+    header: 'Save the record',
+    message: 'Do you want to save the change?',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Accept',
+    accept: () => {
+      saveItem(item)
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+    }
+  })
 }
 
 function requireConfirmationToDelete(event: any) {
@@ -636,7 +631,7 @@ onMounted(async () => {
                 <template #field-path="{ item: data, onUpdate }">
                   <FileUpload
                     v-if="!loadingSaveAll" :max-file-size="10000000" :disabled="idItem !== '' || idItem === null" :multiple="false"
-                    auto custom-upload accept="application/pdf,text/plain,application/octet-stream, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    auto custom-upload accept="application/pdf,text/plain,application/octet-stream"
                     @uploader="($event: any) => {
                       customBase64Uploader($event, fieldsV2, 'path');
                       onUpdate('path', $event)

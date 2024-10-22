@@ -9,6 +9,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { base64ToFile } from '~/utils/helpers'
 
 const toast = useToast()
+const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
@@ -151,6 +152,7 @@ async function importFile() {
     formData.append('file', file)
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.EXPENSE)
+    formData.append('employeeId', userData?.value?.user?.userId)
     await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {

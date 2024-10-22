@@ -1344,7 +1344,7 @@ async function saveBookingClone(newBooking: any) {
   if (props.isCreationDialog) {
     const invalid: any = props?.listItems?.find((booking: any) => booking?.hotelBookingNumber === item?.hotelBookingNumber)
 
-    if (invalid && invalid?.id !== idnewBooking.value) {
+    if (invalid && invalid?.id !== idItem.value) {
       return toast.add({ severity: 'error', summary: 'Error', detail: 'The field Hotel booking No. is repeated', life: 10000 })
     }
   }

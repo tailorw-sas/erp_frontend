@@ -692,7 +692,18 @@ async function saveItem(item: { [key: string]: any }) {
   }
   catch (error: any) {
     successOperation = false
-    toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 })
+    if (error?.data?.data?.error?.status === 1029) {
+      const message = error?.data?.data?.error?.errors.find((error: any) => error?.field === 'hotelBookingNumber')?.message
+      if (message) {
+        toast.add({ severity: 'error', summary: 'Error', detail: message, life: 10000 })
+      }
+      else {
+        toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
+      }
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 })
+    }
   }
 
   loadingSaveAll.value = false
