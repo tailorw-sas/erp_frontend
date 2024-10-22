@@ -1,9 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.templateEntity;
 
 import com.kynsof.share.core.domain.kafka.entity.TemplateKafka;
-import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageVCCTransactionTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.creditcard.application.command.manageVCCTransactionType.create.CreateManageVCCTransactionTypeCommand;
 import com.kynsoft.finamer.creditcard.application.command.templateEntity.create.CreateTemplateEntityCommand;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
