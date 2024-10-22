@@ -802,9 +802,111 @@ async function newOpenEditBooking(item: any) {
   // }
 }
 
+async function getPaymentDetailBybookingId(id: string) {
+  try {
+      optionsPaymentDetailsApplied.value.loading = true
+      paymentDetailsAppliedList.value = []
+      const count: SubTotals = { depositAmount: 0 }
+      const newListItems = []
+      const objFilter = payloadPaymentDetailsApplied.value.filter.find(item => item.key === 'manageBooking.id')
+
+    if (objFilter) {
+      objFilter.value = id
+    }
+    else {
+      payloadPaymentDetailsApplied.value.filter.push({
+        key: 'manageBooking.id',
+        operator: 'EQUALS',
+        value: id,
+        logicalOperation: 'AND'
+      })
+    }
+
+    const response = await GenericService.search('payment', 'payment-detail', payloadPaymentDetailsApplied.value)
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    paginationPaymentDetailsApplied.value.page = page
+    paginationPaymentDetailsApplied.value.limit = size
+    paginationPaymentDetailsApplied.value.totalElements = totalElements
+    paginationPaymentDetailsApplied.value.totalPages = totalPages
+
+    const existingIds = new Set(paymentDetailsAppliedList.value.map(item => id))
+
+    for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        count.depositAmount += iterator.amount
+        iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
+          ? Number.parseFloat(iterator.amount).toString()
+          : '0'
+
+        iterator.amount = formatNumber(iterator.amount)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.status = statusToBoolean(iterator.status)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionDate')) {
+        iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'parentId')) {
+        iterator.parentId = iterator.parentId ? iterator.parentId.toString() : ''
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionType')) {
+        iterator.deposit = iterator.transactionType.deposit
+        iterator.transactionType.name = `${iterator.transactionType.code} - ${iterator.transactionType.name}`
+
+        if (iterator.deposit) {
+          iterator.rowClass = 'row-deposit' // Clase CSS para las transacciones de tipo deposit
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
+        iterator.adults = iterator.manageBooking?.adults?.toString()
+        iterator.childrens = iterator.manageBooking?.children?.toString()
+        iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
+        iterator.fullName = iterator.manageBooking?.fullName
+        iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
+
+        if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && iterator?.transactionType?.cash) {
+          iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
+          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+        }
+        else if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && !iterator?.transactionType?.cash) {
+          iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
+          iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
+          iterator.bookingId = iterator?.manageBooking.parentResponse?.bookingId
+          iterator.invoiceNumber = iterator?.manageBooking.invoice?.parent?.invoiceNumber
+        }
+        else {
+          iterator.bookingId = iterator.manageBooking?.bookingId
+          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber
+        }
+      }
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    paymentDetailsAppliedList.value = [...paymentDetailsAppliedList.value, ...newListItems]
+      
+    } catch (error) {
+      optionsPaymentDetailsApplied.value.loading = false
+        console.log(error);  
+    } finally {
+      optionsPaymentDetailsApplied.value.loading = false
+    }
+}
+
+interface SubTotals {
+  depositAmount: number
+}
+
 async function openModalPaymentDetail(item: any) {
   if (item?.id) {
     try {
+      await getPaymentDetailBybookingId(item?.id)
       openDialogPaymentDetailsApplied.value = true
     } catch (error) {
         
@@ -1461,13 +1563,32 @@ watch(() => props.forceUpdate, () => {
   }
 })
 
+const computedShowMenuItemAddRoomRate = computed(() => {
+    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ROOM-RATE-CREATE'])))
+  })
+  const computedShowMenuItemEditBooking = computed(() => {
+    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:BOOKING-EDIT'])))
+  })
+
 function onRowRightClick(event: any) {
   if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {  
-    return;
+    menuModel.value = [
+      {
+        label: 'Payment Details Applied',
+        command: () => openModalPaymentDetail(selectedBooking.value),
+        disabled: computedShowMenuItemEditBooking
+      },
+    ]
   }
 
   if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-    return;
+    menuModel.value = [
+      {
+        label: 'Payment Details Applied',
+        command: () => openModalPaymentDetail(selectedBooking.value),
+        disabled: computedShowMenuItemEditBooking
+      },
+    ]
   }
 
   selectedBooking.value = event.data
@@ -1499,10 +1620,10 @@ const paymentDetailsAppliedList = ref<any[]>([])
 
 const columnsPaymentDetailsApplied = ref<IColumn[]>([
   { field: 'paymentDetailId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'transactionType', header: 'Transaction', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'transactionType', header: 'Transaction', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'transactionDate', header: 'Transaction Date', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'amount', header: 'Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'remark', header: 'Remark', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
@@ -1525,7 +1646,7 @@ const payloadPaymentDetailsApplied = ref<IQueryRequest>({
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'amount',
+  sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const paginationPaymentDetailsApplied = ref<IPagination>({
@@ -1570,10 +1691,16 @@ function closeModalPaymentDetailApplied() {
   openDialogPaymentDetailsApplied.value = false
 }
 
-watch(onChangePagePaymentDetailsApplied, (newValue) => {
+function goToFormInNewTab(item: any) {
+  const paymentId = item.hasOwnProperty('paymentId') ? item.paymentId : item
+  const url = `/payment/form?id=${encodeURIComponent(paymentId)}`
+  window.open(url, '_blank')
+}
+
+watch(onChangePagePaymentDetailsApplied, async (newValue) => {
   payloadPaymentDetailsApplied.value.page = newValue?.page ? newValue?.page : 0
   payloadPaymentDetailsApplied.value.pageSize = newValue?.rows ? newValue.rows : 10
-  // getList()
+  await getPaymentDetailBybookingId(selectedBooking.value?.id)
 })
 
 watch(PayloadOnChangePage, (newValue) => {
@@ -1631,12 +1758,7 @@ onMounted(() => {
     ]
   }
 
-  const computedShowMenuItemAddRoomRate = computed(() => {
-    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ROOM-RATE-CREATE'])))
-  })
-  const computedShowMenuItemEditBooking = computed(() => {
-    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:BOOKING-EDIT'])))
-  })
+  
   menuModel.value = [
     {
       label: 'Add Room Rate',
@@ -1791,8 +1913,6 @@ onMounted(() => {
     />
   </div>
 
-
-  <!-- Dialog Apply Payment Other Deduction -->
   <Dialog
       v-model:visible="openDialogPaymentDetailsApplied"
       modal
@@ -1828,7 +1948,11 @@ onMounted(() => {
             :options="optionsPaymentDetailsApplied"
             :pagination="paginationPaymentDetailsApplied"
             @on-change-pagination="onChangePagePaymentDetailsApplied = $event"
-            @on-row-double-click="() => {}"
+            @on-row-double-click="($event) => {
+              if ($event && $event?.paymentId) {
+                goToFormInNewTab($event?.paymentId)
+              }              
+            }"
           >
             <template #column-status="{ data: item }">
               <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />

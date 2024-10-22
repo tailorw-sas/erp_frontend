@@ -394,3 +394,16 @@ function formatDate(value) {
 
   return parseAndFormatDate(value)
 }
+
+export function formatNumber(number: any) {
+  // Asegúrate de que el número sea válido
+  if (Number.isNaN(number)) {
+    throw new TypeError('El valor proporcionado no es un número.')
+  }
+
+  // Utiliza Intl.NumberFormat para formatear el número
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4
+  }).format(number)
+}
