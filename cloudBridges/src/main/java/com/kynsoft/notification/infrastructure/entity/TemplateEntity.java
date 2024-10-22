@@ -1,5 +1,6 @@
 package com.kynsoft.notification.infrastructure.entity;
 
+import com.kynsoft.notification.domain.dto.EMailjetType;
 import com.kynsoft.notification.domain.dto.TemplateDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -44,16 +45,23 @@ public class TemplateEntity {
     @Column(nullable = true)
     private Boolean deleted = false;
 
+    private String languageCode;
+
+    @Enumerated(EnumType.STRING)
+    private EMailjetType type;
+
     public TemplateEntity(TemplateDto dto) {
         this.id = dto.getId();
         this.templateCode = dto.getTemplateCode();
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.mailjetConfig = new MailjetConfiguration(dto.getMailjetConfigurationDto());
+        this.languageCode = dto.getLanguageCode();
+        this.type = dto.getType();
     }
 
 
     public TemplateDto toAggregate() {
-        return new TemplateDto(this.id, this.templateCode, this.name, this.description, mailjetConfig.toAggregate(), createdAt);
+        return new TemplateDto(this.id, this.templateCode, this.name, this.description, mailjetConfig.toAggregate(), createdAt, languageCode, type);
     }
 }

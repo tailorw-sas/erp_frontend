@@ -16,7 +16,7 @@ public class ReconcileAutomaticValidatorFactory {
     private final ReconcileAutomaticInvoiceValidator reconcileAutomaticInvoiceValidator;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    protected ReconcileAutomaticValidatorFactory(ReconcileAutomaticInvoiceValidator reconcileAutomaticInvoiceValidator, ApplicationEventPublisher applicationEventPublisher1) {
+    public ReconcileAutomaticValidatorFactory(ReconcileAutomaticInvoiceValidator reconcileAutomaticInvoiceValidator, ApplicationEventPublisher applicationEventPublisher1) {
         this.reconcileAutomaticInvoiceValidator = reconcileAutomaticInvoiceValidator;
         this.applicationEventPublisher = applicationEventPublisher1;
     }

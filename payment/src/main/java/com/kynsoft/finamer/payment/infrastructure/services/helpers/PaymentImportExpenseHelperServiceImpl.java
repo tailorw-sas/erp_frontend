@@ -42,12 +42,15 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
     private final IManageHotelService manageHotelService;
     private final IManagePaymentSourceService paymentSourceService;
     private final IManagePaymentStatusService paymentStatusService;
+    private final IManagePaymentAttachmentStatusService attachmentStatusService;
     private final PaymentRowMapper paymentRowMapper;
 
     @Value("${payment.source.expense.code}")
     private String PAYMENT_SOURCE_EXP_CODE;
     @Value("${payment.status.confirm.code}")
     private String PAYMENT_STATUS_CONF_CODE;
+    @Value("${payment.default.attachment.status.code}")
+    private String PAYMENT_ATTACHMENT_STATUS;
 
     public PaymentImportExpenseHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
                                                  PaymentImportExpenseErrorRepository expenseErrorRepository,
@@ -58,6 +61,7 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
                                                  IManageHotelService manageHotelService,
                                                  IManagePaymentSourceService paymentSourceService,
                                                  IManagePaymentStatusService paymentStatusService,
+                                                 IManagePaymentAttachmentStatusService attachmentStatusService,
                                                  PaymentRowMapper paymentRowMapper) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
@@ -68,6 +72,7 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
         this.manageHotelService = manageHotelService;
         this.paymentSourceService = paymentSourceService;
         this.paymentStatusService = paymentStatusService;
+        this.attachmentStatusService = attachmentStatusService;
         this.paymentRowMapper = paymentRowMapper;
     }
 
@@ -129,6 +134,7 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
                     paymentDto.setId(UUID.randomUUID());
                     paymentDto.setApplied(0.0);
                     paymentDto.setNotApplied(0.0);
+                    paymentDto.setAttachmentStatus(attachmentStatusService.findByCode(PAYMENT_ATTACHMENT_STATUS));
                     return paymentDto;
                 }).toList();
                 paymentService.createBulk(paymentDtoList);
