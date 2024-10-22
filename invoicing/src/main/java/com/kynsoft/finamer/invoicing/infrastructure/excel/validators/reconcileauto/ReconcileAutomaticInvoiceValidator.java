@@ -138,7 +138,7 @@ public class ReconcileAutomaticInvoiceValidator {
         String[] priceSplit = price.split("Price:");
         Double priceAmount = Double.parseDouble(priceSplit[1]);
         if (!priceAmount.equals(manageBookingDto.getDueAmount())) {
-            errors.add(new ErrorField("Night Type", "The night type not match with the file"));
+            errors.add(new ErrorField("Price", "The price not match with the file"));
             return false;
         }
         return true;
