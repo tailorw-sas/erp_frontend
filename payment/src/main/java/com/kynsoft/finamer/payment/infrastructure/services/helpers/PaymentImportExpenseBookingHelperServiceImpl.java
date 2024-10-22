@@ -75,8 +75,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
 
     @Value("${payment.source.expense.code}")
     private String PAYMENT_SOURCE_EXP_CODE;
-    @Value("${payment.source.apply.code}")
-    private String PAYMENT_STATUS_APPLY_CODE;
+    @Value("${payment.status.confirm.code}")
+    private String PAYMENT_STATUS_CONFIRM_CODE;
     @Value("${payment.attachment.status.code}")
     private String PAYMENT_ATTACHMENT_STATUS_CODE;
     @Value("${payment.resource.type.code}")
@@ -211,7 +211,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private UUID createPayment(UUID hotelId, UUID employeeId, ManageAgencyDto agencyDto, double amount) {
 
         ManagePaymentSourceDto paymentSource = paymentSourceService.findByCodeActive(PAYMENT_SOURCE_EXP_CODE);
-        ManagePaymentStatusDto paymentStatus = paymentStatusService.findByCode(PAYMENT_STATUS_APPLY_CODE);
+        ManagePaymentStatusDto paymentStatus = paymentStatusService.findByCode(PAYMENT_STATUS_CONFIRM_CODE);
         ManagePaymentAttachmentStatusDto attachmentStatusDto = paymentAttachmentStatusService.findByCode(PAYMENT_ATTACHMENT_STATUS_CODE);
         CreatePaymentCommand createPaymentCommand = new CreatePaymentCommand(Status.ACTIVE, paymentSource.getId(), "",
                 getTransactionDate(hotelId), paymentStatus.getId(),
