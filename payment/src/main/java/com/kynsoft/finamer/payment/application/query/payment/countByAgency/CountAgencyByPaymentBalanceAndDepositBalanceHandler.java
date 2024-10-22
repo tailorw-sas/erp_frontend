@@ -15,9 +15,16 @@ public class CountAgencyByPaymentBalanceAndDepositBalanceHandler implements IQue
 
     @Override
     public CountAgencyByPaymentBalanceAndDepositBalanceResponse handle(CountAgencyByPaymentBalanceAndDepositBalanceQuery query) {
-        Long cant = service.countByAgency(query.getAgencyId());
-        boolean inactive = !(cant > 0);//Si devuelve falso es que no se puede desactiva o sea que existe Angencia en algun payment con paymentBalance o depositBalance Mayor que cero.
 
-        return new CountAgencyByPaymentBalanceAndDepositBalanceResponse(inactive);
+        if (service.countByAgencyOther(query.getAgencyId()) == 0) {
+            return new CountAgencyByPaymentBalanceAndDepositBalanceResponse(true);
+        }
+
+        Long cant = service.countByAgency(query.getAgencyId());
+        if (cant > 0) {
+            return new CountAgencyByPaymentBalanceAndDepositBalanceResponse(false);//Si devuelve falso es que no se puede desactiva o sea que existe Angencia en algun payment con paymentBalance o depositBalance Mayor que cero.
+        } else {
+            return new CountAgencyByPaymentBalanceAndDepositBalanceResponse(true);
+        }
     }
 }

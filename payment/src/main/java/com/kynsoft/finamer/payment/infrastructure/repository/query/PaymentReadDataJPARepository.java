@@ -22,6 +22,10 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
 
     Optional<Payment> findPaymentByPaymentId(long paymentId);
 
-    @Query("SELECT COUNT(b) FROM Payment b WHERE b.agency.id = :agencyId AND paymentBalance > 0 OR depositBalance > 0")
+    //@Query("SELECT COUNT(b) FROM Payment b WHERE b.agency.id = :agencyId AND paymentBalance > 0 OR depositBalance > 0")
+    @Query("SELECT COUNT(p) FROM Payment p LEFT JOIN p.agency a WHERE a.id = :agencyId AND (p.paymentBalance > 0 OR p.depositBalance > 0)")
     Long countByAgency(@Param("agencyId") UUID agencyId);
+
+    @Query("SELECT COUNT(b) FROM Payment b WHERE b.agency.id = :agencyId")
+    Long countByAgencyOther(@Param("agencyId") UUID agencyId);
 }
