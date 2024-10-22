@@ -118,7 +118,7 @@ const legend = ref(
     },
     {
       name: 'Cancelled',
-      color: '#FF1405',
+      color: '#888888',
       colClass: 'pr-3',
     },
     {
@@ -1049,10 +1049,6 @@ onMounted(() => {
 }
 .text-paid {
   background-color: #2E892E;
-  color: #fff;
-}
-.text-cancelled {
-  background-color: #FF1405;
   color: #fff;
 }
 .text-reconciled {
