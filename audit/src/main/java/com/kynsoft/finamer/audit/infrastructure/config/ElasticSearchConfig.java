@@ -14,12 +14,18 @@ import java.time.Duration;
 public class ElasticSearchConfig extends ElasticsearchConfiguration {
     @Value("${elasticsearch.url}")
     private String elasticSearchUrl;
+    @Value("${elasticsearch.username}")
+    private String elasticSearchUsername;
+    @Value("${elasticsearch.password}")
+    private String elasticSearchPassword;
+
     @Override
     public ClientConfiguration clientConfiguration() {
         return ClientConfiguration.builder()
                 .connectedTo(elasticSearchUrl)
                 .withConnectTimeout(Duration.ofSeconds(5))
                 .withSocketTimeout(Duration.ofSeconds(3))
+                .withBasicAuth(elasticSearchUsername,elasticSearchPassword)
                 .build();
     }
 }
