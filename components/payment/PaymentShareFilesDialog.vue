@@ -435,7 +435,6 @@ function formatSize(bytes: number) {
 
 async function getItemById(id: string) {
   if (id) {
-    debugger
     idItem.value = id
     loadingSaveAll.value = true
     idItemToLoadFirstTime.value = id
