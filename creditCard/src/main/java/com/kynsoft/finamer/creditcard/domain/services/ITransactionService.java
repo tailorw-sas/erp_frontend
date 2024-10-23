@@ -30,5 +30,10 @@ public interface ITransactionService {
 
     Double findSumOfAmountByParentId(Long parentId);
 
-    void confirmTransactionMail(TransactionDto transactionDto);
+    void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto);
+
+    void sendTransactionPaymentLinkEmail(TransactionDto transactionDto, String paymentLink);
+
+    //Correo que se envia al contacto del hotel cuando se crea una nueva transaccion manual
+    void sendNewTransactionHotelContactEmail(TransactionDto transactionDto);
 }

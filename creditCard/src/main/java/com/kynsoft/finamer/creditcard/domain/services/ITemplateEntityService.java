@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.domain.services;
 
+import com.kynsof.share.core.domain.EMailjetType;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.TemplateDto;
@@ -16,4 +17,5 @@ public interface ITemplateEntityService {
     TemplateDto findById(UUID id);
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
     TemplateDto findByTemplateCode(String templateCode);
+    TemplateDto findByLanguageCodeAndType(String languageCode, EMailjetType type);
 }

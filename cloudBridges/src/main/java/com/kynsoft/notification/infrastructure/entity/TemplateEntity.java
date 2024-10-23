@@ -1,6 +1,6 @@
 package com.kynsoft.notification.infrastructure.entity;
 
-import com.kynsoft.notification.domain.dto.EMailjetType;
+import com.kynsof.share.core.domain.EMailjetType;
 import com.kynsoft.notification.domain.dto.TemplateDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

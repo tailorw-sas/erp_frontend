@@ -23,4 +23,6 @@ public interface ManageAttachmentTypeReadDataJPARepository extends JpaRepository
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
     Optional<ManageAttachmentType> findManageAttachmentTypeByDefaults(boolean defaultValue);
+
+    Optional<ManageAttachmentType> findManageAttachmentTypeByCode(String code);
 }

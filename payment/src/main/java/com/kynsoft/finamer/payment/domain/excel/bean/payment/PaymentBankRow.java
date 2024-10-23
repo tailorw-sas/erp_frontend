@@ -39,6 +39,7 @@ public class PaymentBankRow extends Row implements Serializable {
     public PaymentDto toAggregate(){
        PaymentDto paymentDto = new PaymentDto();
        paymentDto.setPaymentAmount(this.amount);
+       paymentDto.setPaymentBalance(this.amount);
        paymentDto.setRemark(this.remarks);
        try {
        paymentDto.setTransactionDate(DateUtil.parseDateToLocalDate(this.transactionDate,"dd/MM/yyyy"));

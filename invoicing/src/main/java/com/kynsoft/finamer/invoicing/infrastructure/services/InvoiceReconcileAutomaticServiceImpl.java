@@ -73,6 +73,9 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     @Value("${resource.type.code}")
     private String paymentInvoiceTypeCode;
 
+    @Value("${attachment.type.code}")
+    private String attachmentTypeCode;
+
     public InvoiceReconcileAutomaticServiceImpl(ApplicationEventPublisher applicationEventPublisher,
                                                 ReconcileAutomaticValidatorFactory reconcileAutomaticValidatorFactory,
                                                 InvoiceReportProviderFactory invoiceReportProviderFactory,
@@ -161,11 +164,11 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     }
 
     private void createAttachmentForInvoice(String invoiceId, String employeeId, String employeeName, byte[] fileContent) throws Exception {
-        Optional<ManageAttachmentTypeDto> attachmentTypeDto = typeService.findDefault();
+        Optional<ManageAttachmentTypeDto> attachmentTypeDto = typeService.findByCode(attachmentTypeCode);
         ResourceTypeDto resourceTypeDto = resourceTypeService.findByCode(paymentInvoiceTypeCode);
         if (attachmentTypeDto.isPresent()) {
-            LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent("Reconcile automatic", fileContent);
-            CreateAttachmentCommand createAttachmentCommand = new CreateAttachmentCommand("Reconcile Automatic Support", response.get("url"),
+            LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent("Reconcile automatic.pdf", fileContent);
+            CreateAttachmentCommand createAttachmentCommand = new CreateAttachmentCommand("Reconcile Automatic Support.pdf", response.get("url"),
                     "Importer by reconcile automatic", attachmentTypeDto.get().getId(),
                     UUID.fromString(invoiceId), employeeName, UUID.fromString(employeeId), resourceTypeDto.getId());
             IMediator mediator = serviceLocator.getBean(IMediator.class);

@@ -81,6 +81,15 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
     }
 
     @Override
+    public Optional<ManageAttachmentTypeDto> findByCode(String code) {
+        Optional<ManageAttachmentType> attachmentType =repositoryQuery.findManageAttachmentTypeByCode(code);
+        if (attachmentType.isPresent()){
+            return attachmentType.map(ManageAttachmentType::toAggregate);
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<ManageAttachmentTypeDto> findDefault() {
         Optional<ManageAttachmentType> defaultType=repositoryQuery.findManageAttachmentTypeByDefaults(true);
        if(defaultType.isPresent()){

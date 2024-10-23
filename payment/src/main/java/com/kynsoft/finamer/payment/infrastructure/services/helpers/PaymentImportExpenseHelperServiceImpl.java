@@ -6,9 +6,11 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
 import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
+import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentSourceDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
@@ -44,6 +46,9 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
     private final IManagePaymentStatusService paymentStatusService;
     private final IManagePaymentAttachmentStatusService attachmentStatusService;
     private final PaymentRowMapper paymentRowMapper;
+    private final IPaymentStatusHistoryService paymentStatusHistoryService;
+
+    private final IManageEmployeeService employeeService;
 
     @Value("${payment.source.expense.code}")
     private String PAYMENT_SOURCE_EXP_CODE;
@@ -62,7 +67,9 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
                                                  IManagePaymentSourceService paymentSourceService,
                                                  IManagePaymentStatusService paymentStatusService,
                                                  IManagePaymentAttachmentStatusService attachmentStatusService,
-                                                 PaymentRowMapper paymentRowMapper) {
+                                                 PaymentRowMapper paymentRowMapper,
+                                                 IPaymentStatusHistoryService paymentStatusHistoryService,
+                                                 IManageEmployeeService employeeService) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.expenseErrorRepository = expenseErrorRepository;
@@ -74,6 +81,8 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
         this.paymentStatusService = paymentStatusService;
         this.attachmentStatusService = attachmentStatusService;
         this.paymentRowMapper = paymentRowMapper;
+        this.paymentStatusHistoryService = paymentStatusHistoryService;
+        this.employeeService = employeeService;
     }
 
 
@@ -137,10 +146,23 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
                     paymentDto.setAttachmentStatus(attachmentStatusService.findByCode(PAYMENT_ATTACHMENT_STATUS));
                     return paymentDto;
                 }).toList();
-                paymentService.createBulk(paymentDtoList);
+                List<PaymentDto> createdPayment = paymentService.createBulk(paymentDtoList);
+                createdPayment.forEach(paymentDto -> createPaymentAttachmentStatusHistory(employeeService.findById(request.getEmployeeId()), paymentDto));
                pageable= pageable.next();
             } while (cacheList.hasNext());
         }
+    }
+
+    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Creating Payment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+
+        this.paymentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
     @Override

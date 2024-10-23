@@ -43,6 +43,9 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
     private final IManagePaymentStatusService paymentStatusService;
     private final PaymentBankRowMapper paymentBankRowMapper;
     private final IManagePaymentAttachmentStatusService attachmentStatusService;
+    private final IPaymentStatusHistoryService paymentStatusHistoryService;
+
+    private final IManageEmployeeService employeeService;
 
     @Value("${payment.source.bank.code}")
     private String PAYMENT_SOURCE_BANK_CODE;
@@ -61,7 +64,10 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
                                               IManageBankAccountService bankAccountService,
                                               IManagePaymentSourceService paymentSourceService,
                                               IManagePaymentStatusService paymentStatusService,
-                                              PaymentBankRowMapper paymentBankRowMapper, IManagePaymentAttachmentStatusService attachmentStatusService) {
+                                              PaymentBankRowMapper paymentBankRowMapper,
+                                              IManagePaymentAttachmentStatusService attachmentStatusService,
+                                              IPaymentStatusHistoryService paymentStatusHistoryService,
+                                              IManageEmployeeService employeeService) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentImportErrorRepository = paymentImportErrorRepository;
@@ -75,12 +81,14 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
         this.paymentStatusService = paymentStatusService;
         this.paymentBankRowMapper = paymentBankRowMapper;
         this.attachmentStatusService = attachmentStatusService;
+        this.paymentStatusHistoryService = paymentStatusHistoryService;
+        this.employeeService = employeeService;
     }
 
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
-        this.totalProcessRow=0;
+        this.totalProcessRow = 0;
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
         paymentBankValidatorFactory.createValidators();
         ExcelBeanReader<PaymentBankRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentBankRow.class);
@@ -108,7 +116,7 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
         do {
             cacheList = paymentImportCacheRepository.findAllByImportProcessId(importProcessId, pageable);
             paymentImportCacheRepository.deleteAll(cacheList.getContent());
-            pageable=pageable.next();
+            pageable = pageable.next();
         } while (cacheList.hasNext());
     }
 
@@ -143,10 +151,23 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
                     paymentDto.setAttachmentStatus(attachmentStatusService.findByCode(PAYMENT_ATTACHMENT_STATUS));
                     return paymentDto;
                 }).toList();
-                paymentService.createBulk(paymentDtoList);
-               pageable= pageable.next();
+                List<PaymentDto> createdPayment = paymentService.createBulk(paymentDtoList);
+                createdPayment.forEach(paymentDto -> createPaymentAttachmentStatusHistory(employeeService.findById(request.getEmployeeId()), paymentDto));
+                pageable = pageable.next();
             } while (cacheList.hasNext());
         }
+    }
+
+    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Creating Payment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+
+        this.paymentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
     @Override
