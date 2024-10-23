@@ -28,4 +28,5 @@ public class ManageInvoiceDto {
     private LocalDateTime invoiceDate;
     private ManageHotelDto hotel;
     private ManageAgencyDto agency;
+    private Boolean autoRec;
 }

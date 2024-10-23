@@ -51,6 +51,8 @@ public class ManageInvoice {
     @JoinColumn(name = "manage_agency")
     private ManageAgency agency;
 
+    private Boolean autoRec;
+
     public ManageInvoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceId = dto.getInvoiceId();
@@ -68,6 +70,7 @@ public class ManageInvoice {
         this.invoiceDate = dto.getInvoiceDate();
         this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
         this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
+        this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : null;
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -82,9 +85,9 @@ public class ManageInvoice {
                 hasAttachment,
                 null,
                 invoiceDate,
-                Objects.nonNull(hotel)? hotel.toAggregate():null,
-               Objects.nonNull(agency)? agency.toAggregate():null
-
+                Objects.nonNull(hotel) ? hotel.toAggregate() : null,
+                Objects.nonNull(agency) ? agency.toAggregate() : null,
+                autoRec != null ? autoRec : null
         );
     }
 
@@ -102,8 +105,9 @@ public class ManageInvoice {
                 hasAttachment,
                 parent != null ? parent.toAggregateSample() : null,
                 invoiceDate,
-                Objects.nonNull(hotel)? hotel.toAggregate():null,
-                Objects.nonNull(agency)? agency.toAggregate():null
+                Objects.nonNull(hotel) ? hotel.toAggregate() : null,
+                Objects.nonNull(agency) ? agency.toAggregate() : null,
+                autoRec != null ? autoRec : null
         );
     }
 
