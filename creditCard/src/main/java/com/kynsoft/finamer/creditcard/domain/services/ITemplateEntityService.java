@@ -1,10 +1,10 @@
 package com.kynsoft.finamer.creditcard.domain.services;
 
+import com.kynsof.share.core.domain.EMailjetType;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.TemplateDto;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TemplateEntity;
-import com.kynsoft.notification.domain.dto.EMailjetType;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

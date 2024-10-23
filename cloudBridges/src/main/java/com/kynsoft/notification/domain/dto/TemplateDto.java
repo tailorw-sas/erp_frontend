@@ -1,5 +1,6 @@
 package com.kynsoft.notification.domain.dto;
 
+import com.kynsof.share.core.domain.EMailjetType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
