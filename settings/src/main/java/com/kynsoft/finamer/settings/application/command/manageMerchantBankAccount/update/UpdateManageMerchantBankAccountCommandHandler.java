@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageMerchantBankAccou
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ManageMerchantBankAccountKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -19,6 +20,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantBankAccount.ProducerReplicateManageMerchantBankAccountService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,15 +32,17 @@ public class UpdateManageMerchantBankAccountCommandHandler implements ICommandHa
     private final IManagerBankService serviceBankService;
     private final IManageCreditCardTypeService serviceCreditCardTypeService;
     private final IManageMerchantBankAccountService serviceMerchantBankAccountService;
+    private final ProducerReplicateManageMerchantBankAccountService producerManageMerchantBankAccountService;
 
     public UpdateManageMerchantBankAccountCommandHandler(IManagerMerchantService serviceMerchantService,
-                                                       IManagerBankService serviceBankService,
-                                                       IManageCreditCardTypeService serviceCreditCardTypeService,
-                                                       IManageMerchantBankAccountService serviceMerchantBankAccountService) {
+                                                         IManagerBankService serviceBankService,
+                                                         IManageCreditCardTypeService serviceCreditCardTypeService,
+                                                         IManageMerchantBankAccountService serviceMerchantBankAccountService, ProducerReplicateManageMerchantBankAccountService producerManageMerchantBankAccountService) {
         this.serviceMerchantService = serviceMerchantService;
         this.serviceBankService = serviceBankService;
         this.serviceCreditCardTypeService = serviceCreditCardTypeService;
         this.serviceMerchantBankAccountService = serviceMerchantBankAccountService;
+        this.producerManageMerchantBankAccountService = producerManageMerchantBankAccountService;
     }
 
     @Override
@@ -66,6 +72,11 @@ public class UpdateManageMerchantBankAccountCommandHandler implements ICommandHa
         test.getCreditCardTypes().clear();
         test.setCreditCardTypes(merchantCreditCardTypeDtos);
         serviceMerchantBankAccountService.update(test);
+        this.producerManageMerchantBankAccountService.replicate(new ManageMerchantBankAccountKafka(
+                test.getId(), test.getManagerMerchant().getId(), test.getManageBank().getId(),
+                test.getAccountNumber(), test.getDescription(), test.getStatus().name(),
+                merchantCreditCardTypeDtos.stream().map(ManageCreditCardTypeDto::getId).collect(Collectors.toSet())
+        ));
     }
     
     private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {

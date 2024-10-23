@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageAccountType.updat
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ManageAccountTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagerAccountTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerAccountTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAccountType.ProducerReplicateAccountTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -17,8 +19,11 @@ public class UpdateManagerAccountTypeCommandHandler implements ICommandHandler<U
 
     private final IManagerAccountTypeService service;
 
-    public UpdateManagerAccountTypeCommandHandler(IManagerAccountTypeService service) {
+    private final ProducerReplicateAccountTypeService producerReplicateAccountTypeService;
+
+    public UpdateManagerAccountTypeCommandHandler(IManagerAccountTypeService service, ProducerReplicateAccountTypeService producerReplicateAccountTypeService) {
         this.service = service;
+        this.producerReplicateAccountTypeService = producerReplicateAccountTypeService;
     }
 
     @Override
@@ -32,6 +37,10 @@ public class UpdateManagerAccountTypeCommandHandler implements ICommandHandler<U
 
         if (update.getUpdate() > 0) {
             this.service.update(accountTypeDto);
+            this.producerReplicateAccountTypeService.replicate(new ManageAccountTypeKafka(
+                    accountTypeDto.getId(), accountTypeDto.getCode(), accountTypeDto.getName(),
+                    accountTypeDto.getDescription(), accountTypeDto.getStatus().name()
+            ));
         }
     }
 
