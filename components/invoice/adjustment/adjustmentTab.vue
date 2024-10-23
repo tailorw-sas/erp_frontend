@@ -249,7 +249,7 @@ const Columns: IColumn[] = [
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'amount', header: 'Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'roomRateId', header: 'Room Rate', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'paymentTransactionType', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'date', header: 'Transaction Date', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'employee', header: 'Employee', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'description', header: 'Description', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -298,7 +298,7 @@ const route = useRoute()
 const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
   filter: [
-   
+
   ],
   query: '',
   pageSize: 10,
@@ -340,6 +340,7 @@ async function getAdjustmentList() {
     totalAmount.value = 0
 
     const response = await GenericService.search(Options.value.moduleApi, Options.value.uriApi, Payload.value)
+    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -695,11 +696,11 @@ onMounted(() => {
       value: props.selectedInvoice,
       logicalOperation: 'AND'
     }, {
-        key: 'roomRate.booking.invoice.isCloned',
-        operator: 'EQUALS', // Usamos 'EQUALS' para igualar
-        value: false,   // Buscamos aquellos que no están clonados
-        logicalOperation: 'AND' // Operación lógica
-      }]
+      key: 'roomRate.booking.invoice.isCloned',
+      operator: 'EQUALS', // Usamos 'EQUALS' para igualar
+      value: false, // Buscamos aquellos que no están clonados
+      logicalOperation: 'AND' // Operación lógica
+    }]
   }
   if (!props.isCreationDialog) {
     getAdjustmentList()

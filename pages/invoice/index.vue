@@ -2342,9 +2342,16 @@ const legend = ref(
         </template>
 
         <template #expanded-item="props">
-          <InvoiceTabView :invoice-obj-amount="0" :selected-invoice="props.itemId" :is-dialog-open="bookingDialogOpen"
-            :close-dialog="() => { bookingDialogOpen = false }" :open-dialog="handleDialogOpen" :active="active"
-            :set-active="($event) => { active = $event }" :is-detail-view="true"  />
+          <InvoiceTabView 
+            :invoice-obj-amount="0" 
+            :selected-invoice="props.itemId" 
+            :is-dialog-open="bookingDialogOpen"
+            :close-dialog="() => { bookingDialogOpen = false }" 
+            :open-dialog="handleDialogOpen" 
+            :active="active"
+            :set-active="($event) => { active = $event }" 
+            :is-detail-view="true"  
+          />
         </template>
 
         <!-- <template #column-status="props">
