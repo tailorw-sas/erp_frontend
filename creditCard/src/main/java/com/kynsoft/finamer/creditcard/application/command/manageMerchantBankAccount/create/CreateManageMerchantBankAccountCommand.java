@@ -16,14 +16,14 @@ import java.util.UUID;
 public class CreateManageMerchantBankAccountCommand implements ICommand {
 
     private UUID id;
-    private UUID managerMerchant;
+    private Set<UUID> managerMerchant;
     private UUID managerBank;
     private String accountNumber;
     private String description;
     private Status status;
     private Set<UUID> creditCardTypes;
 
-    public CreateManageMerchantBankAccountCommand(UUID managerMerchant, UUID managerBank, String accountNumber, String description, Status status, Set<UUID> creditCardTypes) {
+    public CreateManageMerchantBankAccountCommand(Set<UUID> managerMerchant, UUID managerBank, String accountNumber, String description, Status status, Set<UUID> creditCardTypes) {
         this.id = UUID.randomUUID();
         this.managerMerchant = managerMerchant;
         this.managerBank = managerBank;

@@ -16,7 +16,7 @@ import java.util.UUID;
 public class ManageMerchantBankAccountDto {
 
     private UUID id;
-    private ManageMerchantDto managerMerchant;
+    private Set<ManageMerchantDto> managerMerchant;
     private ManagerBankDto manageBank;
     private String accountNumber;
     private String description;

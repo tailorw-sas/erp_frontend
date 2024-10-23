@@ -41,10 +41,14 @@ public class CreateManageMerchantBankAccountCommandHandler implements ICommandHa
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerBank(), "manageBank", "Manage Bank ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerMerchant(), "manageMerchant", "Manager Merchant ID cannot be null."));
 
-        RulesChecker.checkRule(new ManagerMerchantBankAccountMustBeUniqueByIdRule(this.serviceMerchantBankAccountService, command.getManagerMerchant(), command.getManagerBank(), command.getId(), command.getAccountNumber()));
+        Set<ManageMerchantDto> manageMerchantDtoSet = new HashSet<>();
+        for (UUID merchantId  : command.getManagerMerchant()){
+            RulesChecker.checkRule(new ManagerMerchantBankAccountMustBeUniqueByIdRule(this.serviceMerchantBankAccountService, merchantId, command.getManagerBank(), command.getId(), command.getAccountNumber()));
+            ManageMerchantDto merchantDto = this.serviceMerchantService.findById(merchantId);
+            manageMerchantDtoSet.add(merchantDto);
+        }
 
         ManagerBankDto managerBankDto = this.serviceBankService.findById(command.getManagerBank());
-        ManageMerchantDto managerMerchantDto = this.serviceMerchantService.findById(command.getManagerMerchant());
 
         Set<ManageCreditCardTypeDto> merchantCreditCardTypeDtos = new HashSet<>();
 
@@ -54,7 +58,7 @@ public class CreateManageMerchantBankAccountCommandHandler implements ICommandHa
         }
         serviceMerchantBankAccountService.create(new ManageMerchantBankAccountDto(
                 command.getId(), 
-                managerMerchantDto, 
+                manageMerchantDtoSet,
                 managerBankDto, 
                 command.getAccountNumber(), 
                 command.getDescription(),

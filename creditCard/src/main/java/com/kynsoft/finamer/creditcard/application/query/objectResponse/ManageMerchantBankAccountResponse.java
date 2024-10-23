@@ -12,6 +12,7 @@ import lombok.Setter;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,7 +21,7 @@ import java.util.UUID;
 public class ManageMerchantBankAccountResponse implements IResponse {
 
     private UUID id;
-    private ManageMerchantResponse managerMerchant;
+    private Set<MerchantToManageMerchantBankAccountResponse> managerMerchant;
     private ManagerBankResponse manageBank;
     private String accountNumber;
     private String description;
@@ -29,7 +30,7 @@ public class ManageMerchantBankAccountResponse implements IResponse {
 
     public ManageMerchantBankAccountResponse(ManageMerchantBankAccountDto dto) {
         this.id = dto.getId();
-        this.managerMerchant = dto.getManagerMerchant() != null ? new ManageMerchantResponse(dto.getManagerMerchant()) : null;
+        this.managerMerchant = dto.getManagerMerchant() != null ? dto.getManagerMerchant().stream().map(MerchantToManageMerchantBankAccountResponse::new).collect(Collectors.toSet()) : null;
         this.manageBank = dto.getManageBank() != null ? new ManagerBankResponse(dto.getManageBank()) : null;
         this.accountNumber = dto.getAccountNumber();
         this.description = dto.getDescription();
