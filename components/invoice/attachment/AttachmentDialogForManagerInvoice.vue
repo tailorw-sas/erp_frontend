@@ -745,7 +745,7 @@ function disabledBtnSave(propsValue: any): boolean {
   }
 }
 function disabledFields(): boolean {
-  if (props.selectedInvoiceObj && props.selectedInvoiceObj?.invoiceStatus?.processStatus) {
+  if (props.selectedInvoiceObj) { // && props.selectedInvoiceObj?.invoiceStatus?.processStatus
     if (item.value && item.value.id) {
       return true
     }

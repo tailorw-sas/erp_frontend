@@ -50,8 +50,6 @@ const externalProps = defineProps({
   }
 })
 
-const emits = defineEmits(['update:listItems', 'update:closeDialog', 'update:openDialog', 'update:isCreationDialog', 'update:isCreateOrEditPayment'])
-
 const pathFileLocal = ref('')
 
 const filterToSearch = ref<IData>({
@@ -167,7 +165,7 @@ const itemTemp = ref<GenericObject>({
 const Columns: IColumn[] = [
   { field: 'shareFileYear', header: 'Year', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'shareFileMonth', header: 'Month', type: 'text', width: '100px', sortable: false, showFilter: false },
-  { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
+  { field: 'fileName', header: 'Filename', type: 'text', width: '200px', },
 ]
 // const columnsAttachment: IColumn[] = [
 //   { field: 'attachmentId', header: 'Id', type: 'text', width: '100px', sortable: false, showFilter: false },
@@ -270,7 +268,7 @@ async function getList() {
     // }
 
     if (listItems.value.length > 0) {
-      idItem.value = listItems.value[0].id
+      idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
   catch (error) {
@@ -441,14 +439,14 @@ async function getItemById(id: string) {
     try {
       const response = await GenericService.searchShareFileById(options.value.moduleApi, options.value.uriApi, id)
       if (response) {
-        item.value.id = response.id
-        item.value.paymentId = response.paymentId
+        item.value.id = response.payment.id
+        item.value.paymentId = response.payment.paymentId
         item.value.shareFileYear = response.shareFileYear
         item.value.shareFileMonth = response.shareFileMonth
-        item.value.hotel = response.hotel
-        item.value.agency = response.agency
+        item.value.hotel = response.payment.hotel.name
+        item.value.agency = response.payment.agency.name
         item.value.fileName = response.fileName
-        item.value.file = response.file
+        item.value.path = response.fileUrl // `https://static.kynsoft.net/${response.fileUrl}`
         pathFileLocal.value = response.path
         updateFieldProperty(fieldsV2, 'shareFileYear', 'disabled', true)
         updateFieldProperty(fieldsV2, 'shareFileMonth', 'disabled', true)
@@ -626,7 +624,7 @@ onMounted(async () => {
                     <template #header="{ chooseCallback }">
                       <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
                         <div class="flex gap-2">
-                          <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
+                          <Button id="btn-choose" :disabled="false" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
                           <Button
                             :disabled="idItem !== '' || idItem === null"
                             icon="pi pi-times" class="ml-2" severity="danger" text
