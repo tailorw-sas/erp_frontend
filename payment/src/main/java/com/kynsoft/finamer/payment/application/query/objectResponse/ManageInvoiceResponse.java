@@ -22,7 +22,7 @@ public class ManageInvoiceResponse implements IResponse {
     private String invoiceNumber;
     private EInvoiceType invoiceType;
     private Double invoiceAmount;
-    //private List<ManageBookingResponse> bookings = new ArrayList<>();
+    private Boolean autoRec;
     private ManageInvoiceResponse parent;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
@@ -32,11 +32,7 @@ public class ManageInvoiceResponse implements IResponse {
         this.invoiceNumber = deleteHotelInfo(dto.getInvoiceNumber());
         this.invoiceType = dto.getInvoiceType();
         this.invoiceAmount = dto.getInvoiceAmount();
-//        if (dto.getBookings() != null) {
-//            for (ManageBookingDto booking : dto.getBookings()) {
-//                this.bookings.add(new ManageBookingResponse(booking));
-//            }
-//        }
+        this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : null;
         this.parent = dto.getParent() != null ? new ManageInvoiceResponse(dto.getParent()) : null;
     }
 
