@@ -145,6 +145,12 @@ const totalOriginalAmount = ref<number>(0)
 
 //edit booking clone total
 const isEditBookingCloneDialog = ref(false)
+const bookingClone = ref<any>(null)
+const roomRateList = ref<any[]>([])
+const objClone = ref<any>({
+  newInvoice: null,
+  bookingList: []
+})
 //////////////////////////
 
 const confroomCategoryApi = reactive({
@@ -721,6 +727,282 @@ const itemTemp = ref<GenericObject>({
   nightType: null,
   roomType: null,
   roomCategory: null,
+  id: ''
+})
+
+
+const fieldsClone: Array<FieldDefinitionType> = [
+  // Booking Id
+
+  {
+    field: 'bookingId',
+    header: 'Booking Id',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    disabled: true,
+  },
+  // Invoice Original Amount
+  {
+    field: 'invoiceOriginalAmount',
+    header: 'Invoice Original Amount',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    disabled: true,
+    headerClass: 'mb-1',
+  },
+
+  // //Adults
+  {
+    field: 'adults',
+    header: 'Adult',
+    dataType: 'number',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    disabled: true,
+    validation: z.number().min(1, 'The Adults field must be greater than 0').nullable()
+  },
+
+  // Room Type
+  {
+    field: 'roomType',
+    header: 'Room Type',
+    dataType: 'select',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+
+  // Check In
+  // Hotel Creation Date
+  {
+    field: 'hotelCreationDate',
+    header: 'Hotel Creation Date',
+    dataType: 'date',
+    class: 'field col-12 md:col-3 required ',
+    headerClass: 'mb-1',
+
+    validation: z.date({
+      required_error: 'The Hotel Creation Date field is required',
+      invalid_type_error: 'The Hotel Creation Date field is required',
+    }).max(dayjs().endOf('day').toDate(), 'The Hotel Creation Date field cannot be greater than current date')
+
+  },
+  // Invoice Amount
+  {
+    field: 'invoiceAmount',
+    header: 'Booking Amount',
+    dataType: 'number',
+    class: 'field col-12 md:col-3 required',
+    disabled: true,
+    headerClass: 'mb-1',
+  },
+  // // Children
+  {
+    field: 'children',
+    header: 'Children',
+    dataType: 'number',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    disabled: true,
+    validation: z.number().nonnegative('The Children field must not be negative').nullable()
+  },
+
+  // Rate Plan
+  {
+    field: 'ratePlan',
+    header: 'Rate Plan',
+    dataType: 'select',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+
+  {
+    field: 'bookingDate',
+    header: 'Booking Date',
+    dataType: 'date',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+
+  {
+    field: 'firstName',
+    header: 'First Name',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The First Name field is required')
+  },
+
+  // Hotel Invoice Number
+  {
+    field: 'hotelInvoiceNumber',
+    header: 'Hotel Invoice No',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    validation: z.string().refine((val: string) => {
+      if ((Number(val) < 0)) {
+        return false
+      }
+      return true
+    }, { message: 'The Hotel Invoice No. field must not be negative' }).nullable()
+  },
+
+  // Room Category
+  {
+    field: 'roomCategory',
+    header: 'Room Category',
+    dataType: 'select',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+
+  },
+  {
+    field: 'checkIn',
+    header: 'Check In',
+    dataType: 'date',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    disabled: true,
+    validation: z.date({
+      required_error: 'The Check In field is required',
+      invalid_type_error: 'The Check In field is required',
+    })
+  },
+  {
+    field: 'lastName',
+    header: 'Last Name',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The Last Name field is required')
+  },
+  // Folio Number
+  {
+    field: 'folioNumber',
+    header: 'Folio Number',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+  // Hotel Amount
+  {
+    field: 'hotelAmount',
+    header: 'Hotel Amount',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    disabled: true,
+    //validation: z.string().trim().regex(/^\d+$/, 'The Hotel Amount field must be greater than or equal to 0')
+    // validation: z.string().trim().regex(/^\d+$/, 'Only numeric characters allowed')
+  },
+  // Check Out
+  {
+    field: 'checkOut',
+    header: 'Check Out',
+    dataType: 'date',
+    disabled: true,
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.date({
+      required_error: 'The Check Out field is required',
+      invalid_type_error: 'The Check Out field is required',
+    })
+  },
+
+  // Room Number
+  {
+    field: 'roomNumber',
+    header: 'Room Number',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 ',
+    headerClass: 'mb-1',
+  },
+
+  // Night Type
+  {
+    field: 'nightType',
+    header: 'Night Type',
+    dataType: 'select',
+    class: `field col-12 md:col-3 ${nightTypeRequired.value ? 'required' : ''}`,
+    headerClass: 'mb-1',
+  },
+
+  // Booking Balance
+  {
+    field: 'dueAmount',
+    header: 'Booking Balance',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    disabled: true,
+    headerClass: 'mb-1',
+  },
+  // Hotel Booking No.
+  {
+    field: 'hotelBookingNumber',
+    header: 'Hotel Booking No.',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d{2,}\s*$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
+  },
+
+  // Coupon No.
+  {
+    field: 'couponNumber',
+    header: 'Coupon No.',
+    dataType: 'text',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+  },
+
+  //  Contract
+  {
+    field: 'contract',
+    header: 'Contract',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    // validation: z.string().regex(/^[a-z0-9]+$/i, 'No se permiten caracteres especiales').nullable()
+  },
+  // Description
+  {
+    field: 'description',
+    header: 'Remark',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+  },
+]
+
+const itemClone = ref<GenericObject>({
+  bookingId: '-',
+  hotelCreationDate: new Date(),
+  bookingDate: new Date(),
+  checkIn: new Date(),
+  checkOut: new Date(),
+  hotelBookingNumber: '',
+  fullName: '',
+  firstName: '',
+  lastName: '',
+  invoiceAmount: '0',
+  roomNumber: '0',
+  couponNumber: '',
+  adults: 0,
+  children: 0,
+  rateAdult: 0,
+  rateChild: 0,
+  hotelInvoiceNumber: '',
+  folioNumber: '',
+  hotelAmount: '0',
+  description: '',
+  invoice: '',
+  ratePlan: null,
+  nightType: null,
+  roomType: null,
+  roomCategory: null,
+  dueAmount: 0,
+  contract: '',
   id: ''
 })
 
@@ -1319,32 +1601,38 @@ async function saveBooking(item: { [key: string]: any }) {
   }
 }
 
-async function saveBookingClone(newBooking: any) {
-  
+async function saveEditBookingCloneTotal() {
+  debugger
+  console.log(itemClone.value)
+  console.log(roomRateList.value)
+
+  let newBooking = ListItems.value.find((booking: any) => booking?.id === itemClone.value?.id)
+  newBooking = { ...newBooking, ...bookingClone.value }
+
   newBooking.hotelBookingNumber = newBooking.hotelBookingNumber.split(" ").filter((a: string) => a !== "").join(" ")
   newBooking.checkIn = dayjs(newBooking.checkIn).startOf('day').toDate()
   newBooking.checkOut = dayjs(newBooking.checkOut).startOf('day').toDate()
   newBooking.hotelCreationDate = dayjs(newBooking.hotelCreationDate).startOf('day').toDate()
   newBooking.bookingDate = dayjs(newBooking.bookingDate).startOf('day').toDate()
 
-  if (props.selectedInvoice && typeof props.selectedInvoice === 'string') {
-    newBooking.invoice = props.selectedInvoice
-  }
+  // if (props.selectedInvoice && typeof props.selectedInvoice === 'string') {
+  //   newBooking.invoice = props.selectedInvoice
+  // }
 
   console.log(props.nightTypeRequired);
   if (!props.isCreationDialog) {
 
     await props.getInvoiceAgency(props?.invoiceObj?.agency?.id)
-    if (props.nightTypeRequired && !item?.nightType?.id) {
+    if (props.nightTypeRequired && !newBooking?.nightType?.id) {
       return toast.add({ severity: 'error', summary: 'Error', detail: 'The Night Type field is required for this client', life: 10000 })
     }
   }
 
-  newBooking.fullName = `${item?.firstName ?? ''} ${item?.lastName ?? ''}`
+  newBooking.fullName = `${newBooking?.firstName ?? ''} ${newBooking?.lastName ?? ''}`
   if (props.isCreationDialog) {
-    const invalid: any = props?.listItems?.find((booking: any) => booking?.hotelBookingNumber === item?.hotelBookingNumber)
+    const invalid: any = props?.listItems?.find((booking: any) => booking?.hotelBookingNumber === newBooking?.hotelBookingNumber)
 
-    if (invalid && invalid?.id !== idItem.value) {
+    if (invalid && invalid?.id !== newBooking.value) {
       return toast.add({ severity: 'error', summary: 'Error', detail: 'The field Hotel booking No. is repeated', life: 10000 })
     }
   }
@@ -1352,30 +1640,30 @@ async function saveBookingClone(newBooking: any) {
   loadingSaveAll.value = true
   let successOperation = true
 
-    try {
-      if (props?.isCreationDialog) {
-        newBooking.id = v4()
-        props.addItem(item)
-      }
-      else {
-        await createBooking(item)
-      }
-      props.closeDialog()
-    }
-    catch (error: any) {
-      successOperation = false
-      console.log(error)
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
+  //   try {
+  //     if (props?.isCreationDialog) {
+  //       newBooking.id = v4()
+  //       props.addItem(item)
+  //     }
+  //     else {
+  //       await createBooking(item)
+  //     }
+  //     props.closeDialog()
+  //   }
+  //   catch (error: any) {
+  //     successOperation = false
+  //     console.log(error)
+  //     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  //   }
   
-    loadingSaveAll.value = false
-  if (successOperation) {
-    ClearForm()
-    if (!props.isCreationDialog) {
-      props.refetchInvoice()
-      // props?.toggleForceUpdate()
-    }
-  }
+  //   loadingSaveAll.value = false
+  // if (successOperation) {
+  //   ClearForm()
+  //   if (!props.isCreationDialog) {
+  //     props.refetchInvoice()
+  //     // props?.toggleForceUpdate()
+  //   }
+  // }
 }
 
 function requireConfirmationToSaveBooking(item: any) {
@@ -1453,6 +1741,12 @@ async function openNewEditBooking(item: any) {
     idItem.value = item.id
     await GetItemById(item?.id)
     selectedBooking.value = item
+    bookingClone.value = item
+    itemClone.value = item
+    itemClone.value.hotelCreationDate = new Date(item.hotelCreationDate)
+    itemClone.value.bookingDate = item.bookingDate ? new Date(item.bookingDate) : ''
+    itemClone.value.checkIn = new Date(item.checkIn)
+    itemClone.value.checkOut = new Date(item.checkOut)
     isEditBookingCloneDialog.value = true
   }
 }
@@ -1718,7 +2012,16 @@ onMounted(() => {
             :close-dialog="() => { isEditBookingCloneDialog = false }"
             :open-dialog="isEditBookingCloneDialog"
             :selected-invoice="selectedBooking.id"
-            :invoice-obj="selectedBooking"
+            :booking-obj="selectedBooking"
+            :require-confirmation-to-save="saveEditBookingCloneTotal"
+            :booking-clone="bookingClone"
+            :room-rate-list="roomRateList"
+            :header="isCreationDialog || !idItem ? 'Edit Booking' : 'Edit Booking'" 
+            container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" 
+            class="h-fit p-2 overflow-y-hidden"
+        	  content-class="w-full"
+            :fields-clone="fieldsClone"
+            :item-clone="itemClone"
           />
   </div>
 </template>

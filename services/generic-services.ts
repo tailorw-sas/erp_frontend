@@ -235,6 +235,21 @@ export const GenericService = {
     })
   },
 
+  async searchShareFileById(MODULE_NAME: string, URI_API: string, ID: string, SUB_CONTROLLER = '', ID2: string = '') {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    let url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/${ID}`
+    if (SUB_CONTROLLER !== '') {
+      url += `/${SUB_CONTROLLER}`
+    }
+    if (ID2 !== '') {
+      url += `/${ID2}`
+    }
+    return $api<any>(url, {
+      method: 'GET',
+    })
+  },
+
   async searchShareFile(MODULE_NAME: string, URI_API: string, payload: IQueryRequest) {
     const { $api } = useNuxtApp()
 

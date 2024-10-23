@@ -69,10 +69,8 @@ const loadingDelete = ref(false)
 const listItems = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
 const paymentSelect = ref<any>()
-const listItemsCount = ref(0)
 
 const idItem = ref('')
-const pathLoaded = ref('')
 
 const toast = useToast()
 
@@ -141,7 +139,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     class: 'field col-12 required',
     headerClass: 'mb-1',
     disabled: true,
-    validation: z.string().trim().min(1, 'This is a required field')
+    validation: z.string().trim().min(1, 'The filename field is required')
   },
 ]
 
@@ -166,12 +164,8 @@ const itemTemp = ref<GenericObject>({
   path: '',
 })
 
-const objApis = ref({
-  employee: { moduleApi: 'settings', uriApi: 'manage-employee' },
-})
-
 const Columns: IColumn[] = [
-  { field: 'shareFileYear', header: 'Year', type: 'text', width: '100px' },
+  { field: 'shareFileYear', header: 'Year', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'shareFileMonth', header: 'Month', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
 ]
@@ -327,8 +321,8 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
 
-    if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
-      const file = payload.path.files[0]
+    if (typeof payload.path === 'object' && payload.path !== null) {
+      const file = payload.path// .files[0]
       const formData = new FormData()
       formData.append('file', file)
       formData.append('paymentId', payload.paymentId)
@@ -441,11 +435,12 @@ function formatSize(bytes: number) {
 
 async function getItemById(id: string) {
   if (id) {
+    debugger
     idItem.value = id
     loadingSaveAll.value = true
     idItemToLoadFirstTime.value = id
     try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+      const response = await GenericService.searchShareFileById(options.value.moduleApi, options.value.uriApi, id)
       if (response) {
         item.value.id = response.id
         item.value.paymentId = response.paymentId
@@ -581,23 +576,7 @@ onMounted(async () => {
               </div>
             </AccordionTab>
           </Accordion>
-
-          <!-- <DynamicTable
-            v-if="isCreateOrEditPayment === 'create'"
-            class="card p-0"
-            :data="listItemsLocal"
-            :columns="columnsAttachment"
-            :options="options"
-            :pagination="Pagination"
-            @on-change-filter="parseDataTableFilterLocal"
-            @update:clicked-item="getItemByIdLocal($event)"
-            @on-confirm-create="clearForm"
-            @on-change-pagination="payloadOnChangePage = $event"
-            @on-list-item="ResetListItems"
-            @on-sort-field="onSortFieldLocal"
-          /> -->
           <DynamicTable
-
             class="card p-0"
             :data="listItems"
             :columns="Columns"
@@ -630,20 +609,18 @@ onMounted(async () => {
               >
                 <template #field-path="{ item: data, onUpdate }">
                   <FileUpload
-                    v-if="!loadingSaveAll" :max-file-size="10000000" :disabled="idItem !== '' || idItem === null" :multiple="false"
-                    auto custom-upload accept="application/pdf,text/plain,application/octet-stream"
-                    @uploader="($event: any) => {
-                      customBase64Uploader($event, fieldsV2, 'path');
-                      onUpdate('path', $event)
-                      pathLoaded = $event
-                      if ($event && $event.files.length > 0) {
-                        onUpdate('fileName', `${paymentSelect.paymentAmount}_${Pagination.totalElements + 1}.${$event?.files[0]?.name.split('.').pop()}`)
-                        onUpdate('fileSize', formatSize($event?.files[0]?.size))
-                        disabledBtnSave({ item: data })
-                      }
-                      else {
-                        onUpdate('fileName', '')
-                      }
+                    v-if="!loadingSaveAll"
+                    :max-file-size="10000000"
+                    :disabled="idItem !== '' || idItem === null"
+                    :multiple="false"
+                    auto
+                    custom-upload
+                    accept="application/pdf,text/plain,application/octet-stream"
+                    @uploader="(event: any) => {
+                      //customBase64Uploader($event, fieldsV2, 'path');
+                      const file = event.files[0]
+                      onUpdate('path', file)
+                      onUpdate('fileName', `${paymentSelect.paymentAmount}_${Pagination.totalElements + 1}.${event?.files[0]?.name.split('.').pop()}`)
 
                     }"
                   >
@@ -653,28 +630,33 @@ onMounted(async () => {
                           <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
                           <Button
                             :disabled="idItem !== '' || idItem === null"
-                            icon="pi pi-times" class="ml-2" severity="danger" text @click="() => {
+                            icon="pi pi-times" class="ml-2" severity="danger" text
+                            @click="() => {
                               onUpdate('path', null);
-                              onUpdate('fileName', '');
-
+                              clearForm();
                             }"
                           />
                         </div>
                       </div>
                     </template>
                     <template #content="{ files }">
-                      <ul v-if="files[0] || (data.path && data.path?.files.length > 0)" class="list-none p-0 m-0">
-                        <li class="p-3 surface-border flex align-items-start sm:align-items-center">
-                          <div class="flex flex-column">
-                            <span class="text-900 font-semibold text-xl mb-2">{{ data.path?.files[0].name }}</span>
-                            <span class="text-900 font-medium">
-                              <Badge severity="warning">
-                                {{ formatSize(data.path?.files[0].size) }}
-                              </Badge>
-                            </span>
-                          </div>
-                        </li>
-                      </ul>
+                      <div class="w-full flex justify-content-center">
+                        <ul v-if="files[0] || data.path" class=" p-0 m-0" style="width: 300px;  overflow: hidden;">
+                          <li class=" surface-border flex align-items-center w-fit">
+                            <div class="flex flex-column w-fit  text-overflow-ellipsis">
+                              <span
+                                class="text-900 font-semibold text-xl mb-2 text-overflow-clip overflow-hidden"
+                                style="width: 300px;"
+                              >{{ data.path ? data.fileName : '' }}</span>
+                              <span v-if="data.path.size" class="text-900 font-medium">
+                                <Badge severity="warning">
+                                  {{ formatSize(data.path.size) }}
+                                </Badge>
+                              </span>
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
                     </template>
                   </FileUpload>
                 </template>
@@ -689,7 +671,7 @@ onMounted(async () => {
                   />
                   <!-- </IfCan>
                   <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-SHARE-FILES']"> -->
-                  <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                  <!-- <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" /> -->
                   <!-- </IfCan> -->
                   <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialog" />
                 </template>
