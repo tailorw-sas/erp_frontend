@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,10 +28,14 @@ public class ManageMerchantBankAccount implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
-    
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "manage_merchant_id")
-    private ManageMerchant managerMerchant;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "manage_merchant_bank_account_merchants",
+            joinColumns = @JoinColumn(name = "manage_merchant_bank_account_id"),
+            inverseJoinColumns = @JoinColumn(name = "manage_merchant_id")
+    )
+    private Set<ManageMerchant> managerMerchant = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_bank_id")
@@ -59,7 +64,7 @@ public class ManageMerchantBankAccount implements Serializable {
 
     public ManageMerchantBankAccount(ManageMerchantBankAccountDto dto) {
         this.id = dto.getId();
-        this.managerMerchant = dto.getManagerMerchant() != null ? new ManageMerchant(dto.getManagerMerchant()) : null;
+        this.managerMerchant = dto.getManagerMerchant() != null ? dto.getManagerMerchant().stream().map(ManageMerchant::new).collect(Collectors.toSet()) : new HashSet<>();
         this.manageBank = dto.getManageBank() != null ? new ManagerBank(dto.getManageBank()) : null;
         this.accountNumber = dto.getAccountNumber();
         this.description = dto.getDescription();
@@ -76,7 +81,7 @@ public class ManageMerchantBankAccount implements Serializable {
         }
         return new ManageMerchantBankAccountDto(
                 id,
-                managerMerchant != null ? managerMerchant.toAggregate() : null,
+                managerMerchant != null ? managerMerchant.stream().map(ManageMerchant::toAggregate).collect(Collectors.toSet()) : new HashSet<>(),
                 manageBank != null ? manageBank.toAggregate() : null,
                 accountNumber, description, status, ccardTypes);
     }

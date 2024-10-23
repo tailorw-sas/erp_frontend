@@ -14,14 +14,14 @@ import java.util.UUID;
 public class UpdateManageMerchantBankAccountCommand implements ICommand {
 
     private UUID id;
-    private UUID managerMerchant;
+    private Set<UUID> managerMerchant;
     private UUID managerBank;
     private String accountNumber;
     private String description;
     private Status status;
     private Set<UUID> creditCardTypes;
 
-    public UpdateManageMerchantBankAccountCommand(UUID id, UUID managerMerchant, UUID managerBank, String accountNumber, String description, Status status, Set<UUID> creditCardTypes) {
+    public UpdateManageMerchantBankAccountCommand(UUID id, Set<UUID> managerMerchant, UUID managerBank, String accountNumber, String description, Status status, Set<UUID> creditCardTypes) {
         this.id = id;
         this.managerMerchant = managerMerchant;
         this.managerBank = managerBank;

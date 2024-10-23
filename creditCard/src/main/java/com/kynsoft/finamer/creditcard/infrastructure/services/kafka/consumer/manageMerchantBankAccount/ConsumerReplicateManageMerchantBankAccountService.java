@@ -25,11 +25,11 @@ public class ConsumerReplicateManageMerchantBankAccountService {
     @KafkaListener(topics = "finamer-replicate-manage-merchant-bank-account", groupId = "vcc-entity-replica")
     public void listen(ManageMerchantBankAccountKafka objKafka) {
         try {
-            CreateManageMerchantBankAccountCommand command =new CreateManageMerchantBankAccountCommand(
-                    objKafka.getId(), objKafka.getManagerMerchant(), objKafka.getManageBank(),
-                    objKafka.getAccountNumber(), objKafka.getDescription(), Status.valueOf(objKafka.getStatus()),
-                    objKafka.getCreditCardTypes());
-            mediator.send(command);
+//            CreateManageMerchantBankAccountCommand command =new CreateManageMerchantBankAccountCommand(
+//                    objKafka.getId(), objKafka.getManagerMerchant(), objKafka.getManageBank(),
+//                    objKafka.getAccountNumber(), objKafka.getDescription(), Status.valueOf(objKafka.getStatus()),
+//                    objKafka.getCreditCardTypes());
+//            mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageMerchantBankAccountService.class.getName()).log(Level.SEVERE, null, ex);
         }

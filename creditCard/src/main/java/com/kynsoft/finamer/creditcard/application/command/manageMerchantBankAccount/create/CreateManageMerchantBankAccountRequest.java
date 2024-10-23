@@ -10,7 +10,7 @@ import java.util.UUID;
 @Getter
 @Setter
 public class CreateManageMerchantBankAccountRequest {
-    private UUID managerMerchant;
+    private Set<UUID> managerMerchant;
     private UUID managerBank;
     private String accountNumber;
     private String description;
