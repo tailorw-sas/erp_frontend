@@ -50,7 +50,8 @@ public class ProducerReplicateManageInvoiceService {
                             booking.getAdults(),
                             booking.getChildren(),
                             entity.getId(),
-                            booking.getParent() != null ? booking.getParent().getId() : null
+                            booking.getParent() != null ? booking.getParent().getId() : null,
+                            booking.getBookingDate()
                     ));
                 }
             }
@@ -83,7 +84,8 @@ public class ProducerReplicateManageInvoiceService {
                     bookingKafkas,
                     attachmentKafkas,
                     entity.getAttachments() != null && !entity.getAttachments().isEmpty(),
-                    entity.getInvoiceDate()
+                    entity.getInvoiceDate(),
+                    entity.getAutoRec()
             ));
         } catch (Exception ex) {
             Logger.getLogger(ProducerReplicateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);

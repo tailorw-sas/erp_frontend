@@ -29,4 +29,5 @@ public class ManageBookingDto {
     private Integer children;
     private ManageInvoiceDto invoice;
     private ManageBookingDto parent;
+    private LocalDateTime bookingDate;
 }

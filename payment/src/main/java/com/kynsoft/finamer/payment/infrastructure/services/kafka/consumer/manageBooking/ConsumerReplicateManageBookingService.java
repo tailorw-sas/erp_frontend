@@ -39,7 +39,8 @@ public class ConsumerReplicateManageBookingService {
                     objKafka.getAdults(), 
                     objKafka.getChildren(), 
                     invoiceDto,
-                    objKafka.getBookingParent() != null ? this.serviceBookingService.findById(objKafka.getBookingParent()) : null
+                    objKafka.getBookingParent() != null ? this.serviceBookingService.findById(objKafka.getBookingParent()) : null,
+                    objKafka.getBookingDate()
             ));
 //        } catch (Exception ex) {
 //            Logger.getLogger(ConsumerReplicateManageBookingService.class.getName()).log(Level.SEVERE, null, ex);

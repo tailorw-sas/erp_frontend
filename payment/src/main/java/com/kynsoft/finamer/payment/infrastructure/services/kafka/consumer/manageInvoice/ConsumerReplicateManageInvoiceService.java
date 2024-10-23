@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ConsumerReplicateManageInvoiceService {
@@ -69,7 +68,8 @@ public class ConsumerReplicateManageInvoiceService {
                         booking.getAdults(),
                         booking.getChildren(),
                         null,
-                        booking.getBookingParent() != null ? this.serviceBookingService.findById(booking.getBookingParent()) : null
+                        booking.getBookingParent() != null ? this.serviceBookingService.findById(booking.getBookingParent()) : null,
+                        booking.getBookingDate()
                 ));
             }
         }
@@ -88,7 +88,8 @@ public class ConsumerReplicateManageInvoiceService {
                 objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null,
                 objKafka.getInvoiceDate(),
                 manageHotelDto,
-                manageAgencyDto
+                manageAgencyDto,
+                objKafka.getAutoRec()
         );
 
         this.service.create(invoiceDto);

@@ -59,7 +59,8 @@ public class ConsumerCreateIncomeTransactionSuccess {
                booking.getAdults(),
                booking.getChildren(),
                null,
-               Objects.nonNull(booking.getBookingParent())?manageBookingService.findById(booking.getBookingParent()):null
+               Objects.nonNull(booking.getBookingParent())?manageBookingService.findById(booking.getBookingParent()):null,
+              booking.getBookingDate()
        )).toList();
     }
 
@@ -78,7 +79,8 @@ public class ConsumerCreateIncomeTransactionSuccess {
                 objKafka.getInvoiceParent() != null ? this.manageInvoiceService.findById(objKafka.getInvoiceParent()) : null,
                 objKafka.getInvoiceDate(),
                 manageHotelDto,
-                manageAgencyDto
+                manageAgencyDto,
+                false
         );
     }
 

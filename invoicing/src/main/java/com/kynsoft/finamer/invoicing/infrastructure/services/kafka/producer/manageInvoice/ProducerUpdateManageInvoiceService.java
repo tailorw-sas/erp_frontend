@@ -45,7 +45,8 @@ public class ProducerUpdateManageInvoiceService {
                             booking.getAdults(),
                             booking.getChildren(),
                             entity.getId(),
-                            booking.getParent() != null ? booking.getParent().getId() : null
+                            booking.getParent() != null ? booking.getParent().getId() : null,
+                            booking.getBookingDate()
                     ));
                 }
             }
@@ -78,7 +79,8 @@ public class ProducerUpdateManageInvoiceService {
                     bookingKafkas,
                     attachmentKafkas,
                     entity.getAttachments() != null && !entity.getAttachments().isEmpty(),
-                    entity.getInvoiceDate()
+                    entity.getInvoiceDate(),
+                    entity.getAutoRec()
             ));
         } catch (Exception ex) {
             Logger.getLogger(ProducerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);

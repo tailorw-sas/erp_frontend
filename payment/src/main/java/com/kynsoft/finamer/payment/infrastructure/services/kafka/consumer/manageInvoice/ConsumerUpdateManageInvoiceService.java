@@ -59,7 +59,8 @@ public class ConsumerUpdateManageInvoiceService {
                             booking.getAdults(), 
                             booking.getChildren(), 
                             null,
-                            booking.getBookingParent() != null ? this.serviceBookingService.findById(booking.getBookingParent()) : null
+                            booking.getBookingParent() != null ? this.serviceBookingService.findById(booking.getBookingParent()) : null,
+                            booking.getBookingDate()
                     ));
                 }
             }
@@ -78,7 +79,8 @@ public class ConsumerUpdateManageInvoiceService {
                     objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null,
                     objKafka.getInvoiceDate(),
                     manageHotelDto,
-                    manageAgencyDto
+                    manageAgencyDto,
+                    objKafka.getAutoRec()
             ));
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
