@@ -4,11 +4,16 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplyPayment.UndoApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.rules.undoApplication.CheckApplyPaymentRule;
+import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
+import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import org.springframework.stereotype.Component;
@@ -22,10 +27,20 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
 
     private final IPaymentDetailService paymentDetailService;
     private final IPaymentService paymentService;
+    private final IManageEmployeeService employeeService;
+    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IManagePaymentStatusService paymentStatusService;
 
-    public CreateReverseTransactionCommandHandler(IPaymentDetailService paymentDetailService, IPaymentService paymentService) {
+    public CreateReverseTransactionCommandHandler(IPaymentDetailService paymentDetailService,
+            IPaymentService paymentService,
+            IManageEmployeeService employeeService,
+            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IManagePaymentStatusService paymentStatusService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentService = paymentService;
+        this.employeeService = employeeService;
+        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.paymentStatusService = paymentStatusService;
     }
 
     @Override
@@ -61,19 +76,30 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
 
         if (paymentDetailDto.getTransactionType().getApplyDeposit()) {
             reverseFrom.setReverseFrom(paymentDetailDto.getPaymentDetailId());
+            reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
             reverseFrom.setParentId(paymentDetailDto.getParentId());
             this.addChildren(reverseFrom, paymentDetailDto.getParentId());
             this.calculateReverseApplyDeposit(reverseFrom.getPayment(), reverseFrom);
             this.paymentDetailService.update(reverseFrom);
+
+            this.changeStatus(paymentDetailDto, command.getEmployee());
         } else if (paymentDetailDto.getTransactionType().getCash()) {
             this.calculateReverseCash(reverseFrom.getPayment(), reverseFrom.getAmount());
+            reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
+            this.paymentDetailService.update(reverseFrom);
             paymentDetailDto.setTransactionDate(null);
+
+            this.changeStatus(paymentDetailDto, command.getEmployee());
         } else {
+            reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
+            this.paymentDetailService.update(reverseFrom);
             this.calculateReverseOtherDeductions(reverseFrom.getPayment(), reverseFrom.getAmount());
+
+            this.changeStatus(paymentDetailDto, command.getEmployee());
         }
 
         ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
-        paymentDetailDto.setManageBooking(null);
+        //paymentDetailDto.setManageBooking(null);
         this.paymentDetailService.update(paymentDetailDto);
 
         command.getMediator().send(new UndoApplyPaymentDetailCommand(command.getPaymentDetail(), bookingDto.getId()));
@@ -114,6 +140,30 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
 
         this.paymentService.update(paymentDto);
+    }
+
+    private void changeStatus(PaymentDetailDto paymentDetailDto, UUID employee) {
+
+        if (paymentDetailDto.getPayment().getPaymentStatus().getApplied()) {
+            PaymentDto payment = this.paymentService.findById(paymentDetailDto.getPayment().getId());
+            payment.setPaymentStatus(this.paymentStatusService.findByConfirmed());
+            this.paymentService.update(payment);
+            createPaymentAttachmentStatusHistory(employee, payment);
+        }
+    }
+
+    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
+    private void createPaymentAttachmentStatusHistory(UUID employee, PaymentDto payment) {
+
+        ManageEmployeeDto employeeDto = employee != null ? this.employeeService.findById(employee) : null;
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Update Payment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+
+        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
 }

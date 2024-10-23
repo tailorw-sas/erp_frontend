@@ -40,6 +40,7 @@ public class PaymentDetailDto {
     private Double applyDepositValue;
     private Boolean applayPayment;
     private Long reverseFrom;
+    private Long reverseFromParentId;//Esta variable es para poder controlar el undo luego de realizar un reverse.
     private boolean reverseTransaction;
     private boolean createByCredit;//Para identificar cuando un Details fue creado por un proceso automatico de la HU154.
 

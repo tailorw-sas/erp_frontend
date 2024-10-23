@@ -14,16 +14,19 @@ public class CreateReverseTransactionCommand implements ICommand {
 
     private UUID paymentDetail;
     private final IMediator mediator;
+    private UUID employee;
 
-    public CreateReverseTransactionCommand(UUID paymentDetail, IMediator mediator) {
+    public CreateReverseTransactionCommand(UUID paymentDetail, IMediator mediator, UUID employee) {
         this.paymentDetail = paymentDetail;
         this.mediator = mediator;
+        this.employee = employee;
     }
 
     public static CreateReverseTransactionCommand fromRequest(CreateReverseTransactionRequest request, IMediator mediator) {
         return new CreateReverseTransactionCommand(
                 request.getPaymentDetail(),
-                mediator
+                mediator,
+                request.getEmployee()
         );
     }
 
