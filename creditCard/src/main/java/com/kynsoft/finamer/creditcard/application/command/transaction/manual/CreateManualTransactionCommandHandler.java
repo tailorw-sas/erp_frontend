@@ -134,14 +134,14 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         command.setId(id);
 
         //Send Mail after create the transaction to the HotelEmailContact in case of this exist
-        if (command.getHotelContactEmail() != null) {
+        if (command.getHotelContactEmail() != null && !command.getHotelContactEmail().isEmpty()) {
             transactionService.sendNewTransactionHotelContactEmail(newTransaction);
         }
 
         //Send Mail in case the methodType be Link
         if (command.getMethodType() == MethodType.LINK) {
             //Send mail after the crate transaction
-            if (command.getEmail() != null) {
+            if (command.getEmail() != null && !command.getEmail().isEmpty()) {
                 String token = tokenService.generateToken(command.getTransactionUuid());
                 ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(merchantDto.getId());
                 String baseUrl = UrlGetBase.getBaseUrl(merchantConfigDto.getSuccessUrl());
