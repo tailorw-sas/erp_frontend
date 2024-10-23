@@ -50,7 +50,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         this.transactionPaymentLogsService.update(transactionPaymentLogsDto);
 
         //Enviar correo (voucher) de confirmacion a las personas implicadas
-        transactionService.confirmTransactionMail(transactionDto);
+        transactionService.sendTransactionConfirmationVoucherEmail(transactionDto);
 
     }
 }

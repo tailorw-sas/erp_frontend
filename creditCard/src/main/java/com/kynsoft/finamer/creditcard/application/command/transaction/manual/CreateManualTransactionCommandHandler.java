@@ -21,7 +21,7 @@ import java.util.*;
 @Component
 public class CreateManualTransactionCommandHandler implements ICommandHandler<CreateManualTransactionCommand> {
 
-    private final ITransactionService service;
+    private final ITransactionService transactionService;
 
     private final IManageMerchantService merchantService;
 
@@ -51,8 +51,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
     private final IManagerMerchantCurrencyService merchantCurrencyService;
 
-    public CreateManualTransactionCommandHandler(ITransactionService service, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService, TokenService tokenService, MailService mailService, IManageMerchantConfigService merchantConfigService, IManagerMerchantCurrencyService merchantCurrencyService) {
-        this.service = service;
+    public CreateManualTransactionCommandHandler(ITransactionService transactionService, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService, TokenService tokenService, MailService mailService, IManageMerchantConfigService merchantConfigService, IManagerMerchantCurrencyService merchantCurrencyService) {
+        this.transactionService = transactionService;
         this.merchantService = merchantService;
         this.hotelService = hotelService;
         this.agencyService = agencyService;
@@ -78,7 +78,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ManageMerchantDto merchantDto = this.merchantService.findById(command.getMerchant());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
-        RulesChecker.checkRule(new ManualTransactionReservationNumberUniqueRule(this.service, command.getReservationNumber(), command.getHotel()));
+        RulesChecker.checkRule(new ManualTransactionReservationNumberUniqueRule(this.transactionService, command.getReservationNumber(), command.getHotel()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageLanguageDto languageDto = this.languageService.findById(command.getLanguage());
@@ -103,8 +103,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
         double commission = 0;
         double netAmount = command.getAmount() - commission;
-
-        Long id = this.service.create(new TransactionDto(
+        TransactionDto newTransaction = new TransactionDto(
                 command.getTransactionUuid(),
                 merchantDto,
                 command.getMethodType(),
@@ -130,55 +129,25 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 true,
                 merchantCurrencyDto,
                 true
-        ));
+        );
+        Long id = this.transactionService.create(newTransaction);
         command.setId(id);
 
         //Send Mail after create the transaction to the HotelEmailContact in case of this exist
-        if(command.getHotelContactEmail() != null){
-            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-            request.setTemplateId(6371592); // Cambiar en configuración
-
-            // Variables para el template de email, cambiar cuando keimer genere la plantilla
-            List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("topic", "Transaction Verification"),
-                    new MailJetVar("name", command.getGuestName())
-            );
-            request.setMailJetVars(vars);
-
-            // Recipients
-            List<MailJetRecipient> recipients = new ArrayList<>();
-            recipients.add(new MailJetRecipient(command.getHotelContactEmail(), command.getGuestName()));
-            request.setRecipientEmail(recipients);
-
-            mailService.sendMail(request);
+        if (command.getHotelContactEmail() != null) {
+            transactionService.sendNewTransactionHotelContactEmail(newTransaction);
         }
 
         //Send Mail in case the methodType be Link
-        if(command.getMethodType() == MethodType.LINK){
-        //Send mail after the crate transaction
-        String token = tokenService.generateToken(command.getTransactionUuid());
-        if (command.getEmail() != null) {
-            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-            request.setTemplateId(6324713); // Cambiar en configuración
-
-            ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(merchantDto.getId());
-            String baseUrl = UrlGetBase.getBaseUrl(merchantConfigDto.getSuccessUrl());
-
-            // Variables para el template de email
-            List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("payment_link", baseUrl + "payment?token="+ token),
-                    new MailJetVar("invoice_amount", command.getAmount().toString())
-            );
-            request.setMailJetVars(vars);
-
-            // Recipients
-            List<MailJetRecipient> recipients = new ArrayList<>();
-            recipients.add(new MailJetRecipient(command.getEmail(), command.getGuestName()));
-            recipients.add(new MailJetRecipient("keimermo1989@gmail.com", command.getGuestName()));
-            request.setRecipientEmail(recipients);
-
-            mailService.sendMail(request);
-        }
+        if (command.getMethodType() == MethodType.LINK) {
+            //Send mail after the crate transaction
+            if (command.getEmail() != null) {
+                String token = tokenService.generateToken(command.getTransactionUuid());
+                ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(merchantDto.getId());
+                String baseUrl = UrlGetBase.getBaseUrl(merchantConfigDto.getSuccessUrl());
+                String paymentLink = baseUrl + "payment?token=" + token;
+                transactionService.sendTransactionPaymentLinkEmail(newTransaction, paymentLink);
+            }
         }
     }
 
