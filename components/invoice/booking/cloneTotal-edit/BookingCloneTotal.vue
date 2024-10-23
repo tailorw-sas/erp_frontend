@@ -78,11 +78,6 @@ const props = defineProps({
   },
 })
 
-const emits = defineEmits([
-  'itemClone',
-  'fieldsClone',
-  'roomRateList'
-])
 const toast = useToast()
 const { data: userData } = useAuth()
 
@@ -597,36 +592,6 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 
-// const item = ref<GenericObject>({
-//   invoiceId: '',
-//   invoiceNumber: '',
-//   invoiceDate: new Date(),
-//   isManual: true,
-//   invoiceAmount: '0.00',
-//   hotel: null,
-//   agency: null,
-//   invoiceType: null,
-// })
-
-// const itemTemp = ref<GenericObject>({
-//   invoiceId: '',
-//   invoiceNumber: '',
-//   invoiceDate: new Date(),
-//   isManual: true,
-//   invoiceAmount: '0.00',
-//   hotel: null,
-//   agency: null,
-//   invoiceType: null,
-// })
-
-// -------------------------------------------------------------------------------------------------------
-
-// -------------------------------------------------------------------------------------------------------
-const ENUM_FILTER = [
-  { id: 'code', name: 'Code' },
-  { id: 'name', name: 'Name' },
-  { id: 'description', name: 'Description' },
-]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Invoice',
@@ -758,7 +723,7 @@ async function getAgencyList(query = '') {
 }
 
 function clearForm() {
-  item.value = { ...itemTemp.value }
+  item2.value = { ...itemTemp.value }
   idItem.value = ''
 
   formReload.value++
@@ -791,7 +756,7 @@ async function getInvoiceStatusListDefault(moduleApi: string, uriApi: string, qu
     const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
     if (filteredList.length > 0) {
       invoiceStatusList.value = [filteredList[0]]
-      item.value.invoiceStatus = invoiceStatusList.value[0]
+      item2.value.invoiceStatus = invoiceStatusList.value[0]
     }
     else {
       invoiceStatusList.value = []
@@ -826,7 +791,7 @@ async function getInvoiceAmountById(id: string) {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
 
       if (response) {
-        item.value.invoiceAmount = response.invoiceAmount
+        item2.value.invoiceAmount = response.invoiceAmount
         invoiceAmount.value = response.invoiceAmount
       }
     }
@@ -838,52 +803,52 @@ async function getInvoiceAmountById(id: string) {
   }
 }
 
-async function getItemById(id: string) {
-  if (id) {
-    idItem.value = id
-    loadingSaveAll.value = true
-    try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-      if (response) {
-        item.value.id = response.id
-        item.value.invoiceId = response.invoiceId
-        item.value.dueDate = response.dueDate
+// async function getItemById(id: string) {
+//   if (id) {
+//     idItem.value = id
+//     loadingSaveAll.value = true
+//     try {
+//       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+//       if (response) {
+//         item2.value.id = response.id
+//         item2.value.invoiceId = response.invoiceId
+//         item2.value.dueDate = response.dueDate
 
-        const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
+//         const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
-        item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
-        item.value.invoiceNumber = item.value.invoiceNumber.replace('OLD', 'CRE')
+//         item2.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
+//         item2.value.invoiceNumber = item2.value.invoiceNumber.replace('OLD', 'CRE')
 
-        item.value.invoiceDate = dayjs(response.invoiceDate).format('YYYY-MM-DD')
-        item.value.isManual = response.isManual
-        item.value.invoiceAmount = response.invoiceAmount
-        invoiceAmount.value = response.invoiceAmount
-        item.value.reSend = response.reSend
-        item.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate
-        item.value.hotel = response.hotel
-        item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
-        item.value.agency = response.agency
-        item.value.hasAttachments = response.hasAttachments
-        item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
-        item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
-        invoiceStatus.value = response.status
-        item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
-        await getInvoiceAgency(response.agency?.id)
-        await getInvoiceHotel(response.hotel?.id)
-      }
+//         item2.value.invoiceDate = dayjs(response.invoiceDate).format('YYYY-MM-DD')
+//         item2.value.isManual = response.isManual
+//         item2.value.invoiceAmount = response.invoiceAmount
+//         invoiceAmount.value = response.invoiceAmount
+//         item2.value.reSend = response.reSend
+//         item2.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate
+//         item2.value.hotel = response.hotel
+//         item2.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
+//         item2.value.agency = response.agency
+//         item2.value.hasAttachments = response.hasAttachments
+//         item2.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
+//         item2.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
+//         invoiceStatus.value = response.status
+//         item2.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
+//         await getInvoiceAgency(response.agency?.id)
+//         await getInvoiceHotel(response.hotel?.id)
+//       }
 
-      formReload.value += 1
-    }
-    catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
-      }
-    }
-    finally {
-      loadingSaveAll.value = false
-    }
-  }
-}
+//       formReload.value += 1
+//     }
+//     catch (error) {
+//       if (error) {
+//         toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+//       }
+//     }
+//     finally {
+//       loadingSaveAll.value = false
+//     }
+//   }
+// }
 
 async function createItem(item: { [key: string]: any }) {
   if (item) {
@@ -1003,9 +968,6 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  debugger
-  emits('itemClone', item)
-  emits('roomRateList', roomRateList.value)
   props.closeDialog()
 }
 function requireConfirmationToDelete(event: any) {
@@ -1026,29 +988,6 @@ function requireConfirmationToDelete(event: any) {
     }
   })
 }
-
-function toggleForceUpdate() {
-  forceUpdate.value = !forceUpdate.value
-}
-
-function update() {
-  forceUpdate.value = true
-
-  setTimeout(() => {
-    forceUpdate.value = false
-  }, 100)
-}
-
-function openAdjustmentDialog(roomRate?: any) {
-  active.value = 2
-
-  if (roomRate?.id) {
-    selectedRoomRate.value = roomRate?.id
-  }
-
-  adjustmentDialogOpen.value = true
-}
-
 async function getInvoiceHotel(id: string) {
   try {
     const hotel = await GenericService.getById(confhotelListApi.moduleApi, confhotelListApi.uriApi, id)
@@ -1074,30 +1013,6 @@ async function getInvoiceAgency(id: string) {
   }
   catch (err) {
 
-  }
-}
-
-function handleAttachmentDialogOpen() {
-  attachmentDialogOpen.value = true
-}
-
-async function getInvoiceStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  const additionalFilter: FilterCriteria[] = [
-    {
-      key: 'name',
-      logicalOperation: 'AND',
-      operator: 'EQUALS',
-      value: 'Sent'
-    }
-  ]
-
-  const filteredList = await getDataList<any, any>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
-
-  if (filteredList.length > 0) {
-    invoiceStatusList.value = [filteredList[0]]
-  }
-  else {
-    invoiceStatusList.value = []
   }
 }
 
@@ -1746,6 +1661,7 @@ onMounted(async () => {
   >
     <div class=" h-full overflow-hidden p-2 w-full">
       <div class="justify-content-center align-center w-full">
+        asaasfsfsd
         <EditFormV2
           v-if="true"
           :key="formReload"
