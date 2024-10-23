@@ -1,9 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageBank;
 
 import com.kynsof.share.core.domain.kafka.entity.ManageBankKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateB2BPartnerTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.creditcard.application.command.manageB2BPartnerType.create.CreateManageB2BPartnerTypeCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageBank.create.CreateManagerBankCommand;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -26,8 +24,8 @@ public class ConsumerReplicateBankService {
     public void listen(ManageBankKafka objKafka) {
         try {
             CreateManagerBankCommand command =new CreateManagerBankCommand(
-                    objKafka.getId(),objKafka.getCode(), objKafka.getDescription(),
-                    objKafka.getName(), Status.valueOf(objKafka.getStatus()));
+                    objKafka.getId(),objKafka.getCode(), objKafka.getName(),
+                    objKafka.getDescription(), Status.valueOf(objKafka.getStatus()));
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateBankService.class.getName()).log(Level.SEVERE, null, ex);
