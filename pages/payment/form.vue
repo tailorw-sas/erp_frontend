@@ -1596,11 +1596,11 @@ async function updatePaymentDetails(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     // payload.payment = idItem.value || ''
     // payload.amount = Number.parseFloat(payload.amount)
-    // payload.employee = userData?.value?.user?.userId || ''
     // payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
 
     try {
       await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, {
+        employee: userData?.value?.user?.userId || '',
         remark: payload.remark
       })
 
