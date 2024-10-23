@@ -215,7 +215,7 @@ async function getList() {
         }
 
         let recStatus = ''
-        const haveError = errorList.value.find(item => item.invoiceId === iterator.id)
+        const haveError = errorList.value.find(item => item.invoiceNo === iterator.id)
         if (haveError) {
           recStatus = haveError?.errorMessage
         }
@@ -282,7 +282,7 @@ async function getErrorList() {
         }
 
         // const datTemp = new Date(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, invoiceNo: iterator.invoiceIds, errorMessage: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        newListItems.push({ ...iterator.row, id: iterator.id, invoiceNo: iterator.invoiceId, errorMessage: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -768,6 +768,7 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
+                      <Skeleton v-else height="2rem" class="mb-2" />
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
@@ -789,6 +790,7 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
+                      <Skeleton v-else height="2rem" class="mb-2" />
                     </div>
                   </div>
                 </div>
