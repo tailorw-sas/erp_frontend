@@ -167,7 +167,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         Optional<ManageAttachmentTypeDto> attachmentTypeDto = typeService.findByCode(attachmentTypeCode);
         ResourceTypeDto resourceTypeDto = resourceTypeService.findByCode(paymentInvoiceTypeCode);
         if (attachmentTypeDto.isPresent()) {
-            LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent("Reconcile automatic", fileContent);
+            LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent("Reconcile automatic.pdf", fileContent);
             CreateAttachmentCommand createAttachmentCommand = new CreateAttachmentCommand("Reconcile Automatic Support.pdf", response.get("url"),
                     "Importer by reconcile automatic", attachmentTypeDto.get().getId(),
                     UUID.fromString(invoiceId), employeeName, UUID.fromString(employeeId), resourceTypeDto.getId());

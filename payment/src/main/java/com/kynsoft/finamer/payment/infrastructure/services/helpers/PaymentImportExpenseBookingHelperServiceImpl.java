@@ -58,7 +58,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private final PaymentImportExpenseBookingErrorRepository errorRepository;
     private final PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory;
     private final IManageBookingService bookingService;
-    private List<String> availableClient;
+    private Set<String> availableClient;
     private final IStorageService fileSystemService;
     private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
     private final IPaymentCloseOperationService closeOperationService;
@@ -118,7 +118,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         this.storageService = storageService;
         this.paymentDetailService = paymentDetailService;
         this.serviceLocator = serviceLocator;
-        this.availableClient = new ArrayList<>();
+        this.availableClient = new HashSet<>();
     }
 
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
@@ -184,17 +184,13 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     }
 
     private Map<String, List<PaymentExpenseBookingImportCache>> groupCacheByClient(String importProcessId) {
-        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
         Map<String, List<PaymentExpenseBookingImportCache>> group = new HashMap<>();
         Page<PaymentExpenseBookingImportCache> elements;
         for (String clientName : availableClient) {
+            Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
             do {
                 elements = cacheRepository.findAllByImportProcessIdAndClientName(importProcessId, clientName, pageable);
-                group.merge(clientName,new ArrayList<>(elements.getContent()), (oldList, newList) -> {
-                    List<PaymentExpenseBookingImportCache> combinedList = new ArrayList<>(oldList); // Creamos una nueva lista mutable
-                    combinedList.addAll(newList);
-                    return combinedList;
-                });
+                group.computeIfAbsent(clientName,key->new ArrayList<>()).addAll(elements.getContent());
                 pageable = pageable.next();
             } while (elements.hasNext());
         }
