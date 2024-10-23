@@ -45,6 +45,14 @@ const toast = useToast()
 
 const fields: Array<FieldDefinitionType> = [
   {
+    field: 'id',
+    header: 'Id',
+    dataType: 'text',
+    class: 'field col-12 md:col-6 required',
+    validation: z.string().trim().min(1, 'The id field is required'),
+    disabled: true,
+  },
+  {
     field: 'agency',
     header: 'Agency',
     dataType: 'select',
@@ -180,6 +188,7 @@ async function getItemById(id: string) {
     try {
       const response = await GenericService.getById(confApi.moduleApi, 'transactions', id)
       if (response) {
+        item.value.id = String(response.id)
         const objAgency = {
           id: response.agency.id,
           name: `${response.agency.code} ${response.agency.name ? `- ${response.agency.name}` : ''}`,
