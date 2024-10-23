@@ -1,9 +1,9 @@
 package com.kynsoft.notification.application.query.templateEntity.getById;
 
 
+import com.kynsof.share.core.domain.EMailjetType;
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.notification.application.query.mailjetConfiguration.getById.MailjetConfigurationResponse;
-import com.kynsoft.notification.domain.dto.EMailjetType;
 import com.kynsoft.notification.domain.dto.TemplateDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

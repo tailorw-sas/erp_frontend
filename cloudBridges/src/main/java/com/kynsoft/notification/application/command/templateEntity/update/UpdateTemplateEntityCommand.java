@@ -1,8 +1,8 @@
 package com.kynsoft.notification.application.command.templateEntity.update;
 
+import com.kynsof.share.core.domain.EMailjetType;
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.notification.domain.dto.EMailjetType;
 import lombok.Getter;
 import lombok.Setter;
 
