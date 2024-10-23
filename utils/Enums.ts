@@ -376,5 +376,7 @@ export const FORM_FIELD_TYPE = [
 export const ENUM_MAIL_TEMPLATE_TYPE = [
   { id: 'PAYMENT_CONFIRMATION_VOUCHER', name: 'Payment Confirmation Voucher' },
   { id: 'PAYMENT_LINK', name: 'Payment Link' },
-  { id: 'HOTEL_CONTACT_NEW_TRANSACTION', name: 'Hotel Contact New Transaction Information' },
+  { id: 'WELCOME', name: 'Welcome' },
+  { id: 'SEND_INVOICE', name: 'Send Invoice' },
+  { id: 'VERIFY_OTP', name: 'Verify OTP' },
 ]
