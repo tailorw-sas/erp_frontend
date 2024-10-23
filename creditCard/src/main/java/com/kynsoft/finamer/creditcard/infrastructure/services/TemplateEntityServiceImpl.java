@@ -1,6 +1,10 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
+import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.templateEntity.getById.TemplateEntityResponse;
@@ -9,6 +13,7 @@ import com.kynsoft.finamer.creditcard.domain.services.ITemplateEntityService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TemplateEntity;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.TemplateEntityWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TemplateEntityReadDataJPARepository;
+import com.kynsoft.notification.domain.dto.EMailjetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -66,6 +71,15 @@ public class TemplateEntityServiceImpl implements ITemplateEntityService {
     public TemplateDto findByTemplateCode(String templateCode) {
         Optional<TemplateEntity> templateEntity = this.queryRepository.findByTemplateCode(templateCode);
         return templateEntity.map(TemplateEntity::toAggregate).orElse(null);
+    }
+
+    @Override
+    public TemplateDto findByLanguageCodeAndType(String languageCode, EMailjetType type) {
+        List<TemplateEntity> templateEntities = this.queryRepository.findByLanguageCodeAndType(languageCode, type.name());
+        if (!templateEntities.isEmpty()) {
+            return templateEntities.get(0).toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MAILJET_TEMPLATE_NOT_FOUND, new ErrorField("type, language", DomainErrorMessage.MAILJET_TEMPLATE_NOT_FOUND.getReasonPhrase())));
     }
 
     private PaginatedResponse getPaginatedResponse(Page<TemplateEntity> data) {

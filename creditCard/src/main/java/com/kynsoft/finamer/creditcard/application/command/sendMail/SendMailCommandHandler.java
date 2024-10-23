@@ -42,24 +42,9 @@ public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> 
         if (transactionDto.getEmail() != null) {
             ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
             String baseUrl = UrlGetBase.getBaseUrl(merchantConfigDto.getSuccessUrl());
-
-            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-            request.setTemplateId(6324713); // Cambiar en configuración
-
-            // Variables para el template de email
-            List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("payment_link", baseUrl + "payment?token="+ token),
-                    new MailJetVar("invoice_amount", transactionDto.getAmount().toString())
-            );
-            request.setMailJetVars(vars);
-
-            // Recipients
-            List<MailJetRecipient> recipients = new ArrayList<>();
-            recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
-            request.setRecipientEmail(recipients);
-
+            String paymentLink = baseUrl + "payment?token="+ token;
             try {
-                mailService.sendMail(request);
+                transactionService.sendTransactionPaymentLinkEmail(transactionDto, paymentLink);
                 command.setResult(true);
             } catch (Exception e) {
                 command.setResult(false);

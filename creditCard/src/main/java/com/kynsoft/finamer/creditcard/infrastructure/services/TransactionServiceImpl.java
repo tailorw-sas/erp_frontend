@@ -13,12 +13,14 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionSearchResponse;
+import com.kynsoft.finamer.creditcard.domain.dto.TemplateDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.TransactionWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionReadDataJPARepository;
+import com.kynsoft.notification.domain.dto.EMailjetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,11 +46,15 @@ public class TransactionServiceImpl implements ITransactionService {
     @Autowired
     private final MailService mailService;
 
-    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand, TransactionReadDataJPARepository repositoryQuery, ManageTransactionStatusServiceImpl statusService, MailService mailService) {
+    @Autowired
+    private final TemplateEntityServiceImpl templateEntityService;
+
+    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand, TransactionReadDataJPARepository repositoryQuery, ManageTransactionStatusServiceImpl statusService, MailService mailService, TemplateEntityServiceImpl templateEntityService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.statusService = statusService;
         this.mailService = mailService;
+        this.templateEntityService = templateEntityService;
     }
 
     @Override
@@ -156,10 +162,12 @@ public class TransactionServiceImpl implements ITransactionService {
     }
 
     //Conformar el correo para confirmar que la transaccion fue Recivida
-    public void confirmTransactionMail(TransactionDto transactionDto){
+    @Override
+    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto){
         if(transactionDto.getEmail() != null){
+            TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_CONFIRMATION_VOUCHER);
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-            request.setTemplateId(6395138); // Cambiar en configuración
+            request.setTemplateId(Integer.parseInt(templateDto.getTemplateCode()));
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             String transactionDateStr = transactionDto.getPaymentDate() != null ? transactionDto.getPaymentDate().format(formatter) : "";
@@ -199,6 +207,45 @@ public class TransactionServiceImpl implements ITransactionService {
 
             mailService.sendMail(request);
         }
+    }
+
+    @Override
+    public void sendTransactionPaymentLinkEmail(TransactionDto transactionDto, String paymentLink) {
+        SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+        request.setTemplateId(6324713); // Cambiar en configuración
+
+        // Variables para el template de email
+        List<MailJetVar> vars = Arrays.asList(
+                new MailJetVar("payment_link", paymentLink),
+                new MailJetVar("invoice_amount", transactionDto.getAmount().toString())
+        );
+        request.setMailJetVars(vars);
+
+        // Recipients
+        List<MailJetRecipient> recipients = new ArrayList<>();
+        recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
+        request.setRecipientEmail(recipients);
+        mailService.sendMail(request);
+    }
+
+    //Correo que se envia al contacto del hotel cuando se crea una nueva transaccion manual
+    @Override
+    public void sendNewTransactionHotelContactEmail(TransactionDto transactionDto) {
+        SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+        request.setTemplateId(6371592); // Cambiar en configuración
+
+        // Variables para el template de email, cambiar cuando keimer genere la plantilla
+        List<MailJetVar> vars = Arrays.asList(
+                new MailJetVar("topic", "Transaction Verification"),
+                new MailJetVar("name", transactionDto.getGuestName())
+        );
+        request.setMailJetVars(vars);
+
+        // Recipients
+        List<MailJetRecipient> recipients = new ArrayList<>();
+        recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
+        request.setRecipientEmail(recipients);
+        mailService.sendMail(request);
     }
 
 }
