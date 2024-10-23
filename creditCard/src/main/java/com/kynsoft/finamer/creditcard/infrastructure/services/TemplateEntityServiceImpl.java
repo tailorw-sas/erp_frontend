@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.EMailjetType;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -13,7 +14,6 @@ import com.kynsoft.finamer.creditcard.domain.services.ITemplateEntityService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TemplateEntity;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.TemplateEntityWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TemplateEntityReadDataJPARepository;
-import com.kynsoft.notification.domain.dto.EMailjetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,6 +1,5 @@
 package com.kynsoft.notification.application.command.templateEntity.update;
 
-import com.kynsoft.notification.domain.dto.EMailjetType;
 import lombok.Getter;
 import lombok.Setter;
 
