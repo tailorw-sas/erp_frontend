@@ -211,8 +211,9 @@ public class TransactionServiceImpl implements ITransactionService {
 
     @Override
     public void sendTransactionPaymentLinkEmail(TransactionDto transactionDto, String paymentLink) {
+        TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_LINK);
         SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-        request.setTemplateId(6324713); // Cambiar en configuración
+        request.setTemplateId(Integer.parseInt(templateDto.getTemplateCode())); // Cambiar en configuración
 
         // Variables para el template de email
         List<MailJetVar> vars = Arrays.asList(
@@ -231,8 +232,9 @@ public class TransactionServiceImpl implements ITransactionService {
     //Correo que se envia al contacto del hotel cuando se crea una nueva transaccion manual
     @Override
     public void sendNewTransactionHotelContactEmail(TransactionDto transactionDto) {
+        TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.HOTEL_CONTACT_NEW_TRANSACTION);
         SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-        request.setTemplateId(6371592); // Cambiar en configuración
+        request.setTemplateId(Integer.parseInt(templateDto.getTemplateCode())); // Cambiar en configuración
 
         // Variables para el template de email, cambiar cuando keimer genere la plantilla
         List<MailJetVar> vars = Arrays.asList(
