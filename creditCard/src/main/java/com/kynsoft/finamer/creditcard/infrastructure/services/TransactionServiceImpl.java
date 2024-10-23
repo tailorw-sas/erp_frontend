@@ -225,27 +225,10 @@ public class TransactionServiceImpl implements ITransactionService {
         // Recipients
         List<MailJetRecipient> recipients = new ArrayList<>();
         recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
-        request.setRecipientEmail(recipients);
-        mailService.sendMail(request);
-    }
-
-    //Correo que se envia al contacto del hotel cuando se crea una nueva transaccion manual
-    @Override
-    public void sendNewTransactionHotelContactEmail(TransactionDto transactionDto) {
-        TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.HOTEL_CONTACT_NEW_TRANSACTION);
-        SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-        request.setTemplateId(Integer.parseInt(templateDto.getTemplateCode())); // Cambiar en configuración
-
-        // Variables para el template de email, cambiar cuando keimer genere la plantilla
-        List<MailJetVar> vars = Arrays.asList(
-                new MailJetVar("topic", "Transaction Verification"),
-                new MailJetVar("name", transactionDto.getGuestName())
-        );
-        request.setMailJetVars(vars);
-
-        // Recipients
-        List<MailJetRecipient> recipients = new ArrayList<>();
-        recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
+        // Add hotel contact recipient if exists
+        if (transactionDto.getHotelContactEmail() != null && !transactionDto.getHotelContactEmail().isEmpty()) {
+            recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
+        }
         request.setRecipientEmail(recipients);
         mailService.sendMail(request);
     }

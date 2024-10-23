@@ -133,11 +133,6 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         Long id = this.transactionService.create(newTransaction);
         command.setId(id);
 
-        //Send Mail after create the transaction to the HotelEmailContact in case of this exist
-        if (command.getHotelContactEmail() != null && !command.getHotelContactEmail().isEmpty()) {
-            transactionService.sendNewTransactionHotelContactEmail(newTransaction);
-        }
-
         //Send Mail in case the methodType be Link
         if (command.getMethodType() == MethodType.LINK) {
             //Send mail after the crate transaction
