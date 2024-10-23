@@ -10,4 +10,5 @@ import java.util.UUID;
 public class CreateReverseTransactionRequest {
 
     private UUID paymentDetail;
+    private UUID employee;
 }

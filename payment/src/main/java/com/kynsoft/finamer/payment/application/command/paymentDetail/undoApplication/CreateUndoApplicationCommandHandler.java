@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.delete.DeletePaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplyPayment.UndoApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.undoReverseTransaction.CreateUndoReverseTransactionCommand;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.rules.undoApplication.CheckApplyPaymentRule;
@@ -32,7 +33,14 @@ public class CreateUndoApplicationCommandHandler implements ICommandHandler<Crea
         this.paymentDetailService.update(paymentDetailDto);
         if (!paymentDetailDto.isReverseTransaction()) {
             command.getMediator().send(new UndoApplyPaymentDetailCommand(paymentDetailDto.getId(), bookingDto.getId()));
+            command.getMediator().send(new DeletePaymentDetailCommand(command.getPaymentDetail(), command.getEmployee(), true));
+        } else {
+            command.getMediator().send(new DeletePaymentDetailCommand(command.getPaymentDetail(), command.getEmployee(), true));
+            /**
+             * Si el PaymentDetails al que se le esta aplicando undo se crea a partir de un reverseTransaction
+             * Aqui ejecuto para que se devuelvan los valores a la cabecera del payment.
+             */
+            command.getMediator().send(new CreateUndoReverseTransactionCommand(paymentDetailDto.getReverseFromParentId(), command.getMediator(), command.getEmployee()));
         }
-        command.getMediator().send(new DeletePaymentDetailCommand(command.getPaymentDetail(), command.getEmployee(), true));//TODO: es posible que tengamos que agregar el employee a la peticion.
     }
 }

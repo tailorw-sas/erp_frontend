@@ -54,6 +54,8 @@ public class PaymentDetail implements Serializable {
 
     private Long reverseFrom;
 
+    private Long reverseFromParentId;//Esta variable es para poder controlar el undo luego de realizar un reverse.
+
     private Double amount;
     private Double applyDepositValue;
     private String remark;
@@ -123,6 +125,7 @@ public class PaymentDetail implements Serializable {
         this.manageBooking = dto.getManageBooking() != null ? new ManageBooking(dto.getManageBooking()) : null;
         this.applayPayment = dto.getApplayPayment();
         this.reverseFrom = dto.getReverseFrom();
+        this.reverseFromParentId = dto.getReverseFromParentId();
         this.reverseTransaction = dto.isReverseTransaction();
         this.createByCredit = dto.isCreateByCredit();
     }
@@ -153,6 +156,7 @@ public class PaymentDetail implements Serializable {
                 applyDepositValue,
                 applayPayment,
                 reverseFrom != null ? reverseFrom : null,
+                reverseFromParentId != null ? reverseFromParentId : null,
                 reverseTransaction,
                 createByCredit
         );
@@ -184,6 +188,7 @@ public class PaymentDetail implements Serializable {
                 applyDepositValue,
                 applayPayment,
                 null,
+                reverseFromParentId != null ? reverseFromParentId : null,
                 reverseTransaction,
                 createByCredit
         );
@@ -215,6 +220,7 @@ public class PaymentDetail implements Serializable {
                 applyDepositValue,
                 applayPayment,
                 reverseFrom != null ? reverseFrom : null,
+                reverseFromParentId != null ? reverseFromParentId : null,
                 reverseTransaction,
                 createByCredit
         );
