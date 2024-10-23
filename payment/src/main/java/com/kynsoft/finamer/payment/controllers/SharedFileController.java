@@ -19,6 +19,7 @@ import com.kynsoft.finamer.payment.application.query.objectResponse.AttachmentTy
 import com.kynsoft.finamer.payment.application.query.payment.search.GetSearchPaymentQuery;
 import com.kynsoft.finamer.payment.application.query.shareFile.getById.FindPaymentShareFileByIdQuery;
 import com.kynsoft.finamer.payment.application.query.shareFile.search.GetShareFileQuery;
+import com.kynsoft.finamer.payment.application.query.shareFile.search.PaymentShareFileResponse;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EImportPaymentType;
 import org.aspectj.bridge.IMessage;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -108,7 +109,7 @@ public class SharedFileController {
     public ResponseEntity<?> getById(@PathVariable UUID id) {
 
         FindPaymentShareFileByIdQuery query = new FindPaymentShareFileByIdQuery(id);
-        AttachmentTypeResponse response = mediator.send(query);
+        PaymentShareFileResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }
