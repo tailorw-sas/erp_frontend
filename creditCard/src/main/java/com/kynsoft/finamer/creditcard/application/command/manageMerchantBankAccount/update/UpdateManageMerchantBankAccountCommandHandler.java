@@ -1,57 +1,49 @@
-package com.kynsoft.finamer.settings.application.command.manageMerchantBankAccount.update;
+package com.kynsoft.finamer.creditcard.application.command.manageMerchantBankAccount.update;
 
-import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.ManageMerchantBankAccountKafka;
-import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.settings.domain.dto.ManageCreditCardTypeDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageMerchantBankAccountDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerBankDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import com.kynsoft.finamer.settings.domain.rules.manageMerchantBankAccount.ManagerMerchantBankAccountMustBeUniqueByIdRule;
-import com.kynsoft.finamer.settings.domain.services.IManageCreditCardTypeService;
-import com.kynsoft.finamer.settings.domain.services.IManageMerchantBankAccountService;
-import com.kynsoft.finamer.settings.domain.services.IManagerBankService;
-import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageCreditCardTypeDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantBankAccountDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerBankDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
+import com.kynsoft.finamer.creditcard.domain.services.IManageCreditCardTypeService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantBankAccountService;
+import com.kynsoft.finamer.creditcard.domain.services.IManagerBankService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
+import org.springframework.stereotype.Component;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantBankAccount.ProducerReplicateManageMerchantBankAccountService;
-import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateManageMerchantBankAccountCommandHandler implements ICommandHandler<UpdateManageMerchantBankAccountCommand> {
 
-    private final IManagerMerchantService serviceMerchantService;
+    private final IManageMerchantService serviceMerchantService;
     private final IManagerBankService serviceBankService;
     private final IManageCreditCardTypeService serviceCreditCardTypeService;
     private final IManageMerchantBankAccountService serviceMerchantBankAccountService;
-    private final ProducerReplicateManageMerchantBankAccountService producerManageMerchantBankAccountService;
 
-    public UpdateManageMerchantBankAccountCommandHandler(IManagerMerchantService serviceMerchantService,
+    public UpdateManageMerchantBankAccountCommandHandler(IManageMerchantService serviceMerchantService,
                                                          IManagerBankService serviceBankService,
                                                          IManageCreditCardTypeService serviceCreditCardTypeService,
-                                                         IManageMerchantBankAccountService serviceMerchantBankAccountService, ProducerReplicateManageMerchantBankAccountService producerManageMerchantBankAccountService) {
+                                                         IManageMerchantBankAccountService serviceMerchantBankAccountService) {
         this.serviceMerchantService = serviceMerchantService;
         this.serviceBankService = serviceBankService;
         this.serviceCreditCardTypeService = serviceCreditCardTypeService;
         this.serviceMerchantBankAccountService = serviceMerchantBankAccountService;
-        this.producerManageMerchantBankAccountService = producerManageMerchantBankAccountService;
     }
 
     @Override
     public void handle(UpdateManageMerchantBankAccountCommand command) {
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Merchant Bank Account ID cannot be null."));
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerBank(), "manageBank", "Manage Bank ID cannot be null."));
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerMerchant(), "manageMerchant", "Manager Merchant ID cannot be null."));
-
-        RulesChecker.checkRule(new ManagerMerchantBankAccountMustBeUniqueByIdRule(this.serviceMerchantBankAccountService, command.getManagerMerchant(), command.getManagerBank(), command.getId(), command.getAccountNumber()));
+//        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Merchant Bank Account ID cannot be null."));
+//        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerBank(), "manageBank", "Manage Bank ID cannot be null."));
+//        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManagerMerchant(), "manageMerchant", "Manager Merchant ID cannot be null."));
+//
+//        RulesChecker.checkRule(new ManagerMerchantBankAccountMustBeUniqueByIdRule(this.serviceMerchantBankAccountService, command.getManagerMerchant(), command.getManagerBank(), command.getId(), command.getAccountNumber()));
 
         ManageMerchantBankAccountDto test = this.serviceMerchantBankAccountService.findById(command.getId());
 
@@ -72,11 +64,6 @@ public class UpdateManageMerchantBankAccountCommandHandler implements ICommandHa
         test.getCreditCardTypes().clear();
         test.setCreditCardTypes(merchantCreditCardTypeDtos);
         serviceMerchantBankAccountService.update(test);
-        this.producerManageMerchantBankAccountService.replicate(new ManageMerchantBankAccountKafka(
-                test.getId(), test.getManagerMerchant().getId(), test.getManageBank().getId(),
-                test.getAccountNumber(), test.getDescription(), test.getStatus().name(),
-                merchantCreditCardTypeDtos.stream().map(ManageCreditCardTypeDto::getId).collect(Collectors.toSet())
-        ));
     }
     
     private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
@@ -100,9 +87,9 @@ public class UpdateManageMerchantBankAccountCommandHandler implements ICommandHa
         return false;
     }
 
-    private boolean updateManageMerchant(Consumer<ManagerMerchantDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+    private boolean updateManageMerchant(Consumer<ManageMerchantDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
-            ManagerMerchantDto merchantDto = this.serviceMerchantService.findById(newValue);
+            ManageMerchantDto merchantDto = this.serviceMerchantService.findById(newValue);
             setter.accept(merchantDto);
             update.accept(1);
 

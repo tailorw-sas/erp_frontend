@@ -1,43 +1,39 @@
-package com.kynsoft.finamer.settings.application.command.manageMerchantBankAccount.create;
+package com.kynsoft.finamer.creditcard.application.command.manageMerchantBankAccount.create;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.ManageMerchantBankAccountKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
-import com.kynsoft.finamer.settings.domain.dto.ManageCreditCardTypeDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageMerchantBankAccountDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerBankDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerMerchantDto;
-import com.kynsoft.finamer.settings.domain.rules.manageMerchantBankAccount.ManagerMerchantBankAccountMustBeUniqueByIdRule;
-import com.kynsoft.finamer.settings.domain.services.IManageCreditCardTypeService;
-import com.kynsoft.finamer.settings.domain.services.IManageMerchantBankAccountService;
-import com.kynsoft.finamer.settings.domain.services.IManagerBankService;
-import com.kynsoft.finamer.settings.domain.services.IManagerMerchantService;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageCreditCardTypeDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantBankAccountDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerBankDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
+import com.kynsoft.finamer.creditcard.domain.rules.manageMerchantBankAccount.ManagerMerchantBankAccountMustBeUniqueByIdRule;
+import com.kynsoft.finamer.creditcard.domain.services.IManageCreditCardTypeService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantBankAccountService;
+import com.kynsoft.finamer.creditcard.domain.services.IManagerBankService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
+import org.springframework.stereotype.Component;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantBankAccount.ProducerReplicateManageMerchantBankAccountService;
-import org.springframework.stereotype.Component;
-
 @Component
 public class CreateManageMerchantBankAccountCommandHandler implements ICommandHandler<CreateManageMerchantBankAccountCommand> {
 
-    private final IManagerMerchantService serviceMerchantService;
+    private final IManageMerchantService serviceMerchantService;
     private final IManagerBankService serviceBankService;
     private final IManageCreditCardTypeService serviceCreditCardTypeService;
     private final IManageMerchantBankAccountService serviceMerchantBankAccountService;
-    private final ProducerReplicateManageMerchantBankAccountService producerManageMerchantBankAccountService;
 
-    public CreateManageMerchantBankAccountCommandHandler(IManagerMerchantService serviceMerchantService,
+    public CreateManageMerchantBankAccountCommandHandler(IManageMerchantService serviceMerchantService,
                                                          IManagerBankService serviceBankService,
                                                          IManageCreditCardTypeService serviceCreditCardTypeService,
-                                                         IManageMerchantBankAccountService serviceMerchantBankAccountService, ProducerReplicateManageMerchantBankAccountService producerManageMerchantBankAccountService) {
+                                                         IManageMerchantBankAccountService serviceMerchantBankAccountService) {
         this.serviceMerchantService = serviceMerchantService;
         this.serviceBankService = serviceBankService;
         this.serviceCreditCardTypeService = serviceCreditCardTypeService;
         this.serviceMerchantBankAccountService = serviceMerchantBankAccountService;
-        this.producerManageMerchantBankAccountService = producerManageMerchantBankAccountService;
     }
 
     @Override
@@ -48,7 +44,7 @@ public class CreateManageMerchantBankAccountCommandHandler implements ICommandHa
         RulesChecker.checkRule(new ManagerMerchantBankAccountMustBeUniqueByIdRule(this.serviceMerchantBankAccountService, command.getManagerMerchant(), command.getManagerBank(), command.getId(), command.getAccountNumber()));
 
         ManagerBankDto managerBankDto = this.serviceBankService.findById(command.getManagerBank());
-        ManagerMerchantDto managerMerchantDto = this.serviceMerchantService.findById(command.getManagerMerchant());
+        ManageMerchantDto managerMerchantDto = this.serviceMerchantService.findById(command.getManagerMerchant());
 
         Set<ManageCreditCardTypeDto> merchantCreditCardTypeDtos = new HashSet<>();
 
@@ -64,11 +60,6 @@ public class CreateManageMerchantBankAccountCommandHandler implements ICommandHa
                 command.getDescription(),
                 command.getStatus(),
                 merchantCreditCardTypeDtos
-        ));
-        this.producerManageMerchantBankAccountService.replicate(new ManageMerchantBankAccountKafka(
-                command.getId(), command.getManagerMerchant(), command.getManagerBank(),
-                command.getAccountNumber(), command.getDescription(), command.getStatus().name(),
-                command.getCreditCardTypes()
         ));
     }
 }
