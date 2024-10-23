@@ -117,6 +117,7 @@ const columns = ref<IColumn[]>([
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
   { field: 'languageCode', header: 'Language Code', type: 'text' },
+  { field: 'type', header: 'Type', type: 'text' },
   { field: 'createdAt', header: 'Created At', type: 'date' },
 ])
 // -------------------------------------------------------------------------------------------------------
