@@ -2193,7 +2193,7 @@ async function historyGetList() {
       iterator.paymentStatus = iterator.status
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
-        if (iterator.employee.firstName && iterator.employee.lastName) {
+        if (iterator?.employee?.firstName && iterator?.employee?.lastName) {
           iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
         }
       }
