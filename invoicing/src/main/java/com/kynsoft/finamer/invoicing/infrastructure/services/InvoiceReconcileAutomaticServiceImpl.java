@@ -113,7 +113,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
             List<ManageInvoiceDto> validInvoice = this.readExcel(request);
             for (ManageInvoiceDto invoice : validInvoice) {
                 this.createReconcileAutomaticSupport(invoice.getId().toString(), request);
-                this.setInvoiceAutoRec(invoice);
+                this.setInvoiceAutoRec(invoice.getId());
             }
             this.createImportProcessStatusEvent(
                     InvoiceReconcileAutomaticImportProcessDto.builder()
@@ -216,7 +216,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         return null;
     }
 
-    private void setInvoiceAutoRec(ManageInvoiceDto invoiceDto){
+    private void setInvoiceAutoRec(UUID invoiceId){
+        ManageInvoiceDto invoiceDto = this.manageInvoiceService.findById(invoiceId);
         invoiceDto.setAutoRec(true);
         this.manageInvoiceService.update(invoiceDto);
     }
