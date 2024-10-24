@@ -21,7 +21,6 @@ const newManualTransactionDialogVisible = ref(false)
 const editManualTransactionDialogVisible = ref(false)
 const newAdjustmentTransactionDialogVisible = ref(false)
 const newRefundDialogVisible = ref(false)
-const newBankOfPaymentDialogOpen = ref<boolean>(false)
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
@@ -700,6 +699,14 @@ function setRefundAvailable(isAvailable: boolean) {
     menuItem.disabled = !isAvailable
   }
 }
+
+function goToBankPaymentInNewTab(itemId?: string) {
+  let url = `/vcc-management/bank-reconciliation/bank-payment-of-merchant`
+  if (itemId) {
+    url = `${url}?id=${encodeURIComponent(itemId)}`
+  }
+  window.open(url, '_blank')
+}
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -726,7 +733,7 @@ onMounted(() => {
       Management Bank Reconciliation
     </h3>
     <div class="my-2 flex justify-content-end px-0">
-      <Button class="ml-2" icon="pi pi-plus" label="New" @click="() => newBankOfPaymentDialogOpen = true" />
+      <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToBankPaymentInNewTab()" />
     </div>
   </div>
   <div class="grid">
@@ -926,11 +933,5 @@ onMounted(() => {
       </DynamicTable>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
-    <div v-if="newBankOfPaymentDialogOpen">
-      <NewBankPaymentOfMerchantDialog
-        :close-dialog="() => { newBankOfPaymentDialogOpen = false }" :is-creation-dialog="true" header="Bank Payment of Merchant"
-        :open-dialog="newBankOfPaymentDialogOpen" selected-bank-payment-id=""
-      />
-    </div>
   </div>
 </template>

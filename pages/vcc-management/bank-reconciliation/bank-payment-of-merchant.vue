@@ -9,37 +9,17 @@ import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
-const props = defineProps({
-  header: {
-    type: String,
-    required: true
-  },
-  openDialog: {
-    type: Boolean,
-    required: true
-  },
-  closeDialog: {
-    type: Function as any,
-    required: true
-  },
-  isCreationDialog: {
-    type: Boolean,
-    required: true
-  },
-  selectedBankPaymentId: {
-    type: String,
-    required: true
-  },
-})
+const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
 const BindTransactionList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const forceSave = ref(false)
-const dialogVisible = ref(props.openDialog)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
+const subTotals: any = ref({ amount: 0 })
 
 const item = ref({
   manageMerchantBankAccount: null,
@@ -237,7 +217,8 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  getList()
+  // getList()
+  // Aqui primero el filtro debe ser local y luego ya si con el api
 }
 
 function onSortField(event: any) {
@@ -250,25 +231,11 @@ function onSortField(event: any) {
 </script>
 
 <template>
-  <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class="h-screen"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
-    :style="{ width: '80%' }"
-    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-    :pt="{
-      root: {
-        class: 'custom-dialog',
-      },
-      header: {
-        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
-      },
-    }"
-    @hide="closeDialog()"
-  >
-    <!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      Payment Merchant
-    </div> -->
-    <div class="card p-4 mt-4 mb-0">
+  <div style="max-height: 100vh; height: 90vh">
+    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+      Bank Payment of Merchant
+    </div>
+    <div class="card p-4 mb-0">
       <EditFormV2
         :key="formReload"
         ref="refForm"
@@ -282,6 +249,22 @@ function onSortField(event: any) {
         @force-save="forceSave = $event"
         @submit="handleSave($event)"
       >
+        <template #field-amount="{ item: data, onUpdate, fields: listFields, field }">
+          <InputNumber
+            v-if="!loadingSaveAll"
+            v-model="data.amount"
+            show-clear
+            mode="decimal"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
+            :min-fraction-digits="2"
+            :max-fraction-digits="4"
+            @update:model-value="($event) => {
+              onUpdate('amount', $event)
+              item.amount = $event
+            }"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
         <template #field-paidDate="{ item: data, onUpdate, fields: listFields, field }">
           <Calendar
             v-if="!loadingSaveAll"
@@ -340,15 +323,26 @@ function onSortField(event: any) {
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
     >
+      <template #datatable-footer>
+        <ColumnGroup type="footer" class="flex align-items-center">
+          <Row>
+            <Column footer="Totals:" :colspan="5" footer-style="text-align:right" />
+            <Column :footer="formatNumber(subTotals.amount)" />
+          </Row>
+        </ColumnGroup>
+      </template>
     </DynamicTable>
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0" icon="pi pi-lock" @click="() => {}" />
+      <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.manageMerchantBankAccount == null || item.manageHotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+      <Button v-tooltip.top="'Payment'" class="w-3rem ml-1" disabled icon="pi pi-dollar" @click="() => {}" />
       <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
-      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="closeDialog()" />
+      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => {}" />
     </div>
-  </Dialog>
+    <div v-if="transactionsToBindDialogOpen">
+      <NewBankPaymentOfMerchantDialog
+        :close-dialog="() => { transactionsToBindDialogOpen = false }" :is-creation-dialog="true" header="Bank Payment of Merchant"
+        :open-dialog="transactionsToBindDialogOpen" selected-bank-payment-id=""
+      />
+    </div>
+  </div>
 </template>
-
-<style scoped lang="scss">
-
-</style>
