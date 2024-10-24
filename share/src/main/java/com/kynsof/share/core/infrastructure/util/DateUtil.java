@@ -86,4 +86,13 @@ public class DateUtil {
         return false;
 
     }
+
+    public static boolean getDateForCloseOperation(LocalDate beginDate, LocalDate endDate){
+        LocalDate currentDate = LocalDate.now();
+//        LocalDate currentDate = LocalDate.of(2024, 10, 02);
+//        LocalDate beginDate = LocalDate.of(2024, 10, 01);
+//        LocalDate endDate = LocalDate.of(2024, 10, 31);
+        return (currentDate.isEqual(beginDate) || currentDate.isEqual(endDate))
+                       || (currentDate.isBefore(endDate) && currentDate.isAfter(beginDate));
+    }
 }
