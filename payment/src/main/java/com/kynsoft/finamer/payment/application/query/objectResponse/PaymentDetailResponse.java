@@ -41,6 +41,9 @@ public class PaymentDetailResponse implements IResponse {
     private boolean createByCredit;
     private ManageBookingResponse manageBooking;
 
+    private Long reverseFromParentId;
+    private boolean reverseTransaction;
+
     public PaymentDetailResponse(PaymentDetailDto dto) {
         this.id = dto.getId();
         this.status = dto.getStatus();
@@ -66,6 +69,8 @@ public class PaymentDetailResponse implements IResponse {
         this.applyPayment = dto.getApplayPayment();
         this.reverseFrom = dto.getReverseFrom() != null ? dto.getReverseFrom() : null;
         this.createByCredit = dto.isCreateByCredit();
+        this.reverseFromParentId = dto.getReverseFromParentId();
+        this.reverseTransaction = dto.isReverseTransaction();
     }
 
 }
