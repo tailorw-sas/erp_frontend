@@ -1626,16 +1626,8 @@ function updateAttachment(attachment: any) {
 
 //
 function onSaveRoomRateInBookingEdit(item: any) {
-  if (item && item.id) {
-    const objRoomRate = roomRateList.value.find((roomRate: any) => roomRate.id === item.id)
-
-    if (objRoomRate) {
-      if (item.adults) { objRoomRate.adults = item.adults }
-      if (item.children) { objRoomRate.children = item.children }
-      if (item.nights) { objRoomRate.nights = item.nights }
-      if (item.hotelAmount) { objRoomRate.hotelAmount = item.hotelAmount }
-      if (item.invoiceAmount) { objRoomRate.invoiceAmount = item.invoiceAmount }
-    }
+  if (item && item.roomRateList && item.roomRateList.length > 0) {
+    roomRateList.value = [...item.roomRateList]
   }
 }
 
@@ -1652,6 +1644,24 @@ watch(invoiceAmount, () => {
   if (-invoiceAmount.value > +item.value.originalAmount) {
     invoiceAmountError.value = true
     invoiceAmountErrorMessage.value = 'New value must be less or equal than original amount'
+  }
+})
+
+watch(bookingList.value, () => {
+  if (bookingList.value && bookingList.value.length > 0) {
+    for (const iterator of bookingList.value) {
+      if (typeof +iterator.invoiceAmount === 'number') {
+        objBookingsTotals.value.totalInvoiceAmount += Number(iterator.invoiceAmount)
+      }
+
+      if (typeof +iterator.dueAmount === 'number') {
+        objBookingsTotals.value.totalDueAmount += Number(iterator.dueAmount)
+      }
+
+      if (typeof +iterator.hotelAmount === 'number') {
+        objBookingsTotals.value.totalHotelAmount += Number(iterator.hotelAmount)
+      }
+    }
   }
 })
 
@@ -1834,7 +1844,6 @@ onMounted(async () => {
             }"
             @on-save-room-rate-in-booking-edit="onSaveRoomRateInBookingEdit"
           />
-
           <div>
             <div class="flex justify-content-end">
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">

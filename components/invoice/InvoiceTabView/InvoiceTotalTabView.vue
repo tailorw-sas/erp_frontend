@@ -102,8 +102,8 @@ const props = defineProps({
   getInvoiceHotel: { type: Function, default: () => {} },
   setActive: { type: Function, required: true },
   active: { type: Number, required: true },
-  bookingList: Array<any>,
-  roomRateList: Array<any>,
+  bookingList: { type: Array, required: true },
+  roomRateList: { type: Array, required: true },
   adjustmentList: Array<any>,
   sortRoomRate: Function as any,
   sortAdjustment: Function as any,
@@ -310,13 +310,6 @@ function openAdjustmentDialog(roomRate?: any) {
   }
 
   adjustmentDialogOpen.value = true
-}
-
-function onSaveRoomRateInBookingEdit(objRoomRate: any) {
-  console.log('--------------------RoomRate----------------------')
-
-  console.log(objRoomRate)
-  roomRateList.value = roomRateList.value.map((roomRate: any) => roomRate.id === objRoomRate.id ? objRoomRate : roomRate)
 }
 
 watch(activeTab, () => {
