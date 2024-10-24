@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.creditcard.application.query.transaction.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.CustomCodeDescriptionStatusResponse;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageCreditCardTypeResponse;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionHotelSearchResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
@@ -20,6 +21,7 @@ public class TransactionSearchResponse implements IResponse {
 
     private Long id;
     private TransactionHotelSearchResponse hotel;
+    private CustomCodeDescriptionStatusResponse merchant;
     private Double amount;
     private LocalDate checkIn;
     private String referenceNumber;
@@ -37,6 +39,7 @@ public class TransactionSearchResponse implements IResponse {
     public TransactionSearchResponse(TransactionDto dto){
         this.id = dto.getId();
         this.hotel = dto.getHotel() != null ? new TransactionHotelSearchResponse(dto.getHotel()) : null;
+        this.merchant = dto.getMerchant() != null ? new CustomCodeDescriptionStatusResponse(dto.getMerchant().getId(), dto.getMerchant().getCode(), dto.getMerchant().getDescription(), dto.getMerchant().getStatus()) : null;
         this.amount = dto.getAmount();
         this.checkIn = dto.getCheckIn();
         this.referenceNumber = dto.getReferenceNumber();
