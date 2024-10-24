@@ -1159,6 +1159,8 @@ async function onCellEditRoomRate(event: any) {
     }
   }
 
+  const rateChildren = newData?.invoiceAmount ? newData.invoiceAmount / (newData.nights * newData.children) : 0
+
   const payload: { [key: string]: any } = {
 
     roomRateId: newData.roomRateId,
@@ -1267,8 +1269,8 @@ async function getRoomRateList() {
     for (const iterator of dataList) {
       countRR++
       // Rate Adult= RateAmount/(Ctdad noches*Ctdad Adults) y Rate Children= RateAmount/(Ctdad noches*Ctdad Children)
-      // const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
-      // const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
+      const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
+      const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
         checkIn: dayjs(iterator?.checkIn).format('YYYY-MM-DD'),
@@ -1283,8 +1285,8 @@ async function getRoomRateList() {
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
         agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` },
-        rateAdult: iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0,
-        rateChildren: iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
+        rateAdult: rateAdult.toFixed(2), // iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0,
+        rateChildren: rateChildren.toFixed(2), // iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
@@ -1931,13 +1933,6 @@ onMounted(async () => {
                       @on-table-cell-edit-complete="onCellEditRoomRate($event)"
                       @on-row-double-click="($event) => {
 
-                        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
-                        //   return;
-                        // }
-
-                        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
-                        //   return;
-                        // }
                         openEditDialog($event)
 
                       }"
