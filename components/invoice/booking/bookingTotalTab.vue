@@ -1895,11 +1895,12 @@ function recalculateFormData () {
   itemClone.value.checkIn = minCheckInAndMaxCheckOut.minCheckIn
   itemClone.value.checkOut = minCheckInAndMaxCheckOut.maxCheckOut
 
+  formRealoadForDialogBooking.value++
 }
 
 watch(props.roomRateList, () => {
   recalculateFormData()
-  formRealoadForDialogBooking.value++
+  
 }, { deep: true })
 
 
@@ -2086,32 +2087,32 @@ onMounted(() => {
   </div>
 
   <div v-if="isEditBookingCloneDialog" style="h-fit">
-  <BookingCloneTotal
-            :form-reload="formRealoadForDialogBooking"
-            :is-dialog-open="isEditBookingCloneDialog"
-            :close-dialog="() => { isEditBookingCloneDialog = false }"
-            :open-dialog="isEditBookingCloneDialog"
-            :selected-invoice="selectedBooking.id"
-            :booking-obj="selectedBooking"
-            :require-confirmation-to-save="saveEditBookingCloneTotal"
-            :booking-clone="bookingClone"
-            :room-rate-list="roomRateList"
-            :header="isCreationDialog || !idItem ? 'Edit Booking' : 'Edit Booking'" 
-            container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" 
-            class="h-fit p-2 overflow-y-hidden"
-        	  content-class="w-full"
-            :fields-clone="fieldsClone"
-            :item-clone="itemClone"
-            @on-save-booking-edit="($event) => {
-              emits('onSaveBookingEdit', $event)
-            }"
-            @on-save-room-rate-in-booking-edit="($event) => {
-              if ($event && $event.payload) {
-                objRoomRateUpdateInBookingEdit = $event.payload
-              }
-              emits('onSaveRoomRateInBookingEdit', $event)
-            }"
-          />
+    <BookingCloneTotal
+      :form-reload="formRealoadForDialogBooking"
+      :is-dialog-open="isEditBookingCloneDialog"
+      :close-dialog="() => { isEditBookingCloneDialog = false }"
+      :open-dialog="isEditBookingCloneDialog"
+      :selected-invoice="selectedBooking.id"
+      :booking-obj="selectedBooking"
+      :require-confirmation-to-save="saveEditBookingCloneTotal"
+      :booking-clone="bookingClone"
+      :room-rate-list="roomRateList"
+      :header="isCreationDialog || !idItem ? 'Edit Booking' : 'Edit Booking'" 
+      container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" 
+      class="h-fit p-2 overflow-y-hidden"
+      content-class="w-full"
+      :fields-clone="fieldsClone"
+      :item-clone="itemClone"
+      @on-save-booking-edit="($event) => {
+        emits('onSaveBookingEdit', $event)
+      }"
+      @on-save-room-rate-in-booking-edit="($event) => {
+        if ($event && $event.payload) {
+          objRoomRateUpdateInBookingEdit = $event.payload
+        }
+        emits('onSaveRoomRateInBookingEdit', $event)
+      }"
+    />
           <!-- @on-form-reload="formRealoadForDialogBooking = $event" -->
   </div>
 </template>

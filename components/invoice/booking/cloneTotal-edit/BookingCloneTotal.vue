@@ -93,7 +93,6 @@ const toast = useToast()
 
 const dialogVisible = ref(props.openDialog)
 const saveButton = ref(null)
-const onSaveButtonByRef = ref(false)
 const formReload = ref(props.formReload)
 const route = useRoute()
 
@@ -104,12 +103,6 @@ const selectedRoomRate = ref<string>('')
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
-
-const invoiceAmount = ref(0)
-const requiresFlatRate = ref(false)
-
-const invoiceAgency = ref<any>(null)
-const invoiceHotel = ref<any>(null)
 
 const invoiceStatusList = ref<any[]>([])
 
@@ -1574,7 +1567,7 @@ onMounted(async () => {
                           <ColumnGroup type="footer" class="flex align-items-center">
                             <Row>
                               <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-                              <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2))" footer-style="font-weight: 700" />
+                              <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2)).toString()" footer-style="font-weight: 700" />
 
                               <Column :colspan="6" />
                             </Row>
