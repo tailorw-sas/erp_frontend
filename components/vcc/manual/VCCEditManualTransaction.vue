@@ -45,6 +45,14 @@ const toast = useToast()
 
 const fields: Array<FieldDefinitionType> = [
   {
+    field: 'id',
+    header: 'Id',
+    dataType: 'text',
+    class: 'field col-12 md:col-6 required',
+    validation: z.string().trim().min(1, 'The id field is required'),
+    disabled: true,
+  },
+  {
     field: 'agency',
     header: 'Agency',
     dataType: 'select',
@@ -161,7 +169,7 @@ async function save(item: { [key: string]: any }) {
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
     delete payload.event
     const response: any = await GenericService.update(confApi.moduleApi, 'transactions', idItem.value, payload)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })
     item.id = response.id
     onClose(false)
   }
@@ -180,6 +188,7 @@ async function getItemById(id: string) {
     try {
       const response = await GenericService.getById(confApi.moduleApi, 'transactions', id)
       if (response) {
+        item.value.id = String(response.id)
         const objAgency = {
           id: response.agency.id,
           name: `${response.agency.code} ${response.agency.name ? `- ${response.agency.name}` : ''}`,

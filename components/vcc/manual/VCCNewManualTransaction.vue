@@ -87,11 +87,15 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'amount',
     header: 'Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 md:col-6 required',
-    validation: z.string().trim().min(1, 'The amount field is required')
-      .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-      .refine(val => Number.parseFloat(val) > 0, {
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
+    validation: z.number({
+      invalid_type_error: 'The amount field must be a number',
+      required_error: 'The amount field is required',
+    })
+      .refine(val => Number.parseFloat(String(val)) > 0, {
         message: 'The amount must be greater than zero',
       })
   },
@@ -162,7 +166,7 @@ const item = ref<GenericObject>({
   hotel: null,
   agency: null,
   language: null,
-  amount: '0',
+  amount: 0,
   checkIn: '',
   reservationNumber: '',
   referenceNumber: '',
@@ -178,7 +182,7 @@ const itemTemp = ref<GenericObject>({
   hotel: null,
   agency: null,
   language: null,
-  amount: '0',
+  amount: 0,
   checkIn: new Date(),
   reservationNumber: '',
   referenceNumber: '',
