@@ -99,6 +99,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         }
 
         ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
+        paymentDetailDto.setReverseTransaction(true);
         //paymentDetailDto.setManageBooking(null);
         this.paymentDetailService.update(paymentDetailDto);
 
