@@ -775,6 +775,8 @@ const itemDetailsForEdit = ref({
   applyDepositValue: '0',
   childrens: 0,
   childrenTotalValue: 0,
+  transactionDate: null,
+  bookingDate: null,
 })
 
 const itemDetailsTempForEdit = ref({
@@ -789,6 +791,8 @@ const itemDetailsTempForEdit = ref({
   applyDepositValue: '0',
   childrens: 0,
   childrenTotalValue: 0,
+  transactionDate: null,
+  bookingDate: null,
 })
 
 const options = ref({
@@ -1032,7 +1036,12 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
 function openDialogPaymentDetailsEdit(idDetail: any = null) {
   if (idDetail && idDetail.id) {
     itemDetailsForEdit.value = JSON.parse(JSON.stringify(itemDetailsTempForEdit.value))
-    itemDetailsForEdit.value = idDetail
+    itemDetailsForEdit.value = {
+      ...itemDetailsForEdit.value,
+      ...idDetail,
+      transactionDate: dayjs(idDetail?.transactionDate).format('YYYY-MM-DD') || '',
+      bookingDate: dayjs(idDetail?.manageBooking?.bookingDate).format('YYYY-MM-DD') || '',
+    }
   }
   onOffDialogPaymentDetailEdit.value = true
   dialogPaymentDetailFormReloadEdit.value += 1
