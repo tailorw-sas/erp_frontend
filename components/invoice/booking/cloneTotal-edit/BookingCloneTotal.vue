@@ -78,6 +78,11 @@ const props = defineProps({
   },
 })
 
+const emits = defineEmits<{
+  (e: 'onSaveBookingEdit', value: boolean): void
+  (e: 'onSaveRoomRateInBookingEdit', value: any): void
+}>()
+
 const toast = useToast()
 const { data: userData } = useAuth()
 
@@ -968,7 +973,9 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  props.closeDialog()
+  console.log(item)
+  console.log(roomRateList.value)
+  emits('onSaveBookingEdit', item)
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -1068,24 +1075,13 @@ async function onCellEditRoomRate(event: any) {
     nights: newData.nights,
     id: newData.id
   }
-  try {
-    data[field] = newValue
-    // props.itemClone?[field] = newValue
-    // item.value[field] = newValue
-
-    await updateRoomRate(payload)
-    onSaveButtonByRef.value = true
-    reloadBookingItem()
-  }
-  catch (error: any) {
-
-  }
+  data[field] = newValue
+  emits('onSaveRoomRateInBookingEdit', payload)
 }
 
 async function updateRoomRate(itemRoomRate: { [key: string]: any }) {
   const payload: { [key: string]: any } = { ...itemRoomRate }
   roomRateList.value = roomRateList.value.map((rr: any) => rr.id === itemRoomRate.id ? payload : rr)
-  // await GenericService.update(confApi.roomRate.moduleApi, confApi.roomRate.uriApi, itemRoomRate.id || '', payload)
 }
 
 function onRowRightClick(event: any) {
@@ -1596,7 +1592,6 @@ async function getBookingItemById(id: string) {
 }
 
 async function reloadBookingItem() {
-  debugger
   item2.value.hotelCreationDate = new Date(props.itemClone?.hotelCreationDate)
   item2.value.bookingDate = props.itemClone?.bookingDate ? new Date(props.itemClone?.bookingDate) : ''
   item2.value.contract = props.itemClone?.contract
@@ -1661,7 +1656,7 @@ onMounted(async () => {
   >
     <div class=" h-full overflow-hidden p-2 w-full">
       <div class="justify-content-center align-center w-full">
-        asaasfsfsd
+        <pre>{{ bookingObj.adults }}</pre>
         <EditFormV2
           v-if="true"
           :key="formReload"
@@ -1927,8 +1922,9 @@ onMounted(async () => {
                   severity="secondary"
                   class="w-3rem mx-1"
                   icon="pi pi-times"
-                  @click="navigateTo('/invoice')"
+                  @click="closeDialog()"
                 />
+                <!-- @click="navigateTo('/invoice')" -->
               </div>
             </div>
           </template>

@@ -144,6 +144,11 @@ const props = defineProps({
   }
 })
 
+const emits = defineEmits<{
+  (e: 'onSaveBookingEdit', value: boolean): void
+  (e: 'onSaveRoomRateInBookingEdit', value: any): void
+}>()
+
 const activeTab = ref(props.active)
 
 const route = useRoute()
@@ -307,6 +312,13 @@ function openAdjustmentDialog(roomRate?: any) {
   adjustmentDialogOpen.value = true
 }
 
+function onSaveRoomRateInBookingEdit(objRoomRate: any) {
+  console.log('--------------------RoomRate----------------------')
+
+  console.log(objRoomRate)
+  roomRateList.value = roomRateList.value.map((roomRate: any) => roomRate.id === objRoomRate.id ? objRoomRate : roomRate)
+}
+
 watch(activeTab, () => {
   props.setActive(activeTab.value)
 })
@@ -360,6 +372,7 @@ onMounted(async () => {
             :add-item="addBooking"
             :update-item="updateBooking"
             :list-items="bookingList"
+            :room-rate-list="roomRateList"
             :night-type-required="nightTypeRequired"
             :is-creation-dialog="isCreationDialog"
             :invoice-obj="invoiceObj"
@@ -368,6 +381,12 @@ onMounted(async () => {
             :is-detail-view="isDetailView"
             :show-totals="showTotals"
             :bookings-total-obj="bookingsTotalObj"
+            @on-save-booking-edit="($event) => {
+              emits('onSaveBookingEdit', $event)
+            }"
+            @on-save-room-rate-in-booking-edit="($event) => {
+              emits('onSaveRoomRateInBookingEdit', $event)
+            }"
           />
         </TabPanel>
         <TabPanel v-if="showTabs">

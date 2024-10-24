@@ -1625,6 +1625,19 @@ function updateAttachment(attachment: any) {
 // validacion del hotel
 
 //
+function onSaveRoomRateInBookingEdit(item: any) {
+  if (item && item.id) {
+    const objRoomRate = roomRateList.value.find((roomRate: any) => roomRate.id === item.id)
+
+    if (objRoomRate) {
+      if (item.adults) { objRoomRate.adults = item.adults }
+      if (item.children) { objRoomRate.children = item.children }
+      if (item.nights) { objRoomRate.nights = item.nights }
+      if (item.hotelAmount) { objRoomRate.hotelAmount = item.hotelAmount }
+      if (item.invoiceAmount) { objRoomRate.invoiceAmount = item.invoiceAmount }
+    }
+  }
+}
 
 watch(invoiceAmount, () => {
   invoiceAmountError.value = false
@@ -1785,19 +1798,41 @@ onMounted(async () => {
       <template #form-footer="props">
         <div style="width: 100%; height: 100%;">
           <InvoiceTotalTabView
-            :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
-            :invoice-obj-amount="invoiceAmount" :is-dialog-open="bookingDialogOpen"
-            :close-dialog="() => { bookingDialogOpen = false }" :open-dialog="handleDialogOpen"
-            :selected-booking="selectedBooking" :open-adjustment-dialog="openAdjustmentDialog"
-            :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
-            :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
-            :is-creation-dialog="true" :selected-invoice="selectedInvoice as any" :booking-list="bookingList"
-            :update-booking="updateBooking" :adjustment-list="[]" :add-adjustment="addAdjustment"
-            :update-adjustment="updateAdjustment" :active="active" :bookings-total-obj="objBookingsTotals"
-            :room-rate-total-obj="objRoomRateTotals" :adjustment-total-obj="objAdjustmentTotals" :set-active="($event) => {
-
+            :requires-flat-rate="requiresFlatRate"
+            :get-invoice-hotel="getInvoiceHotel"
+            :invoice-obj-amount="invoiceAmount"
+            :is-dialog-open="bookingDialogOpen"
+            :close-dialog="() => { bookingDialogOpen = false }"
+            :open-dialog="handleDialogOpen"
+            :selected-booking="selectedBooking"
+            :open-adjustment-dialog="openAdjustmentDialog"
+            :force-update="forceUpdate"
+            :sort-adjustment="sortAdjustment"
+            :sort-booking="sortBooking"
+            :sort-room-rate="sortRoomRate"
+            :toggle-force-update="toggleForceUpdate"
+            :room-rate-list="roomRateList"
+            :is-creation-dialog="true"
+            :selected-invoice="selectedInvoice"
+            :booking-list="bookingList"
+            :update-booking="updateBooking"
+            :adjustment-list="[]"
+            :add-adjustment="addAdjustment"
+            :update-adjustment="updateAdjustment"
+            :active="active"
+            :bookings-total-obj="objBookingsTotals"
+            :room-rate-total-obj="objRoomRateTotals"
+            :adjustment-total-obj="objAdjustmentTotals"
+            :set-active="($event) => {
               active = $event
             }"
+            @on-save-booking-edit="($event) => {
+              console.log('------------------Desde AFUERA Save Booking------------------');
+
+              console.log($event);
+
+            }"
+            @on-save-room-rate-in-booking-edit="onSaveRoomRateInBookingEdit"
           />
 
           <div>
