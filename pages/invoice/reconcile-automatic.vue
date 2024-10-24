@@ -753,7 +753,7 @@ onMounted(async () => {
                     <label class="filter-label font-bold" for="">Agency:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete" :multiple="true"
+                        id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.agency"
                         :suggestions="agencyList" @load="($event) => getAgencyList($event)" @change="($event) => {
                           if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
@@ -768,14 +768,13 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
-                      <Skeleton v-else height="2rem" class="mb-2" />
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                     <div class="w-full">
                       <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete" :multiple="true"
+                        id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
                         :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => {
                           if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
@@ -790,7 +789,6 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
-                      <Skeleton v-else height="2rem" class="mb-2" />
                     </div>
                   </div>
                 </div>
