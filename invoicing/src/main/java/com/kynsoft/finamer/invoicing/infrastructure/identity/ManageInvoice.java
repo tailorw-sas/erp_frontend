@@ -110,17 +110,13 @@ public class ManageInvoice {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    @PrePersist
-    protected void PrePersist() {
-        this.originalAmount = this.invoiceAmount;
-    }
-
     public ManageInvoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceNumber = dto.getInvoiceNumber();
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
         this.invoiceAmount = dto.getInvoiceAmount();
+        this.originalAmount = dto.getOriginalAmount() != null ? dto.getOriginalAmount() : null;
         this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
         this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
         this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
