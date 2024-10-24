@@ -48,6 +48,8 @@ public class ManageInvoice {
     private LocalDate dueDate;
 
     private Boolean isManual;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean autoRec;
 
     private Boolean reSend;
@@ -118,7 +120,7 @@ public class ManageInvoice {
         this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
         this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
         this.invoiceStatus = dto.getStatus();
-        this.autoRec = false;
+        this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : false;
         this.bookings = dto.getBookings() != null ? dto.getBookings().stream().map(_booking -> {
             ManageBooking booking = new ManageBooking(_booking);
             booking.setInvoice(this);
