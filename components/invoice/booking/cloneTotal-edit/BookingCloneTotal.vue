@@ -1309,7 +1309,7 @@ watch(props.roomRateList, () => {
 onMounted(async () => {
   if (props.selectedInvoice) {
     selectedInvoice.value = props.selectedInvoice
-    await getBookingItemById(props.selectedInvoice as string)
+    // await getBookingItemById(props.selectedInvoice as string)
     getRoomRateList()
     getAdjustmentList()
   }

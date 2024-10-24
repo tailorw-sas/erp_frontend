@@ -1753,7 +1753,7 @@ function getSortField(field: any) {
 }
 
 // edit booking clone total
-async function openNewEditBooking(item: any) {  
+async function openNewEditBooking(item: any) {    
   if (item.id) {
     idItem.value = item.id
     // await GetItemById(item?.id)
@@ -1803,10 +1803,32 @@ function onCellEditComplete(val: any) {
   console.log(val);
 }
 
-function onEditBookingLocal(item: any) {
-  console.log('------------------onEditBookingLocal-------------------');
-  console.log(item);
+function onEditBookingLocal(item: any) {  
+  itemClone.value.bookingId = item.bookingId
+  itemClone.value.adults = item.adults
+  itemClone.value.roomType = item.roomType
+  itemClone.value.hotelCreationDate = item.hotelCreationDate
+  itemClone.value.invoiceAmount = item.invoiceAmount
+  itemClone.value.children = item.children
+  itemClone.value.ratePlan = item.ratePlan
+  itemClone.value.bookingDate = item.bookingDate
+  itemClone.value.firstName = item.firstName
+  itemClone.value.hotelInvoiceNumber = item.hotelInvoiceNumber
+  itemClone.value.roomCategory = item.roomCategory
+  itemClone.value.checkIn = item.checkIn
+  itemClone.value.lastName = item.lastName
+  itemClone.value.folioNumber = item.folioNumber
+  itemClone.value.hotelAmount = item.hotelAmount
+  itemClone.value.checkOut = item.checkOut
+  itemClone.value.roomNumber = item.roomNumber
+  itemClone.value.nightType = item.nightType
+  itemClone.value.dueAmount = item.dueAmount
+  itemClone.value.hotelBookingNumber = item.hotelBookingNumber
+  itemClone.value.couponNumber = item.couponNumber
+  itemClone.value.contract = item.contract
+  itemClone.value.description = item.description
   recalculateFormData()
+  // isEditBookingCloneDialog.value = false
 }
 
 function isValidDate(dateStr) {
@@ -1870,9 +1892,7 @@ watch(() => props.invoiceAgency?.bookingCouponFormat, () => {
   couponNumberValidation.value = props.invoiceAgency?.bookingCouponFormat
 })
 
-watch(() => props.listItems, () => {
-  console.log('Entro a watch list items');
-  
+watch(() => props.listItems, () => {  
   if (props.listItems && props?.listItems?.length > 0) {
     objBookingsTotals.value = JSON.parse(JSON.stringify(objBookingsTotalsTemp))
     props?.listItems?.forEach((item: any) => {    
@@ -1881,7 +1901,6 @@ watch(() => props.listItems, () => {
       objBookingsTotals.value.totalDueAmount += item?.dueAmount ? Number(item?.dueAmount) : 0
     })
   }
-  
 }, { deep: true })
 
 watch(() => props.forceUpdate, () => {
@@ -2094,6 +2113,9 @@ onMounted(() => {
       :fields-clone="fieldsClone"
       :item-clone="itemClone"
       @on-save-booking-edit="($event) => {
+        if ($event) {         
+          onEditBookingLocal($event)
+        }
         emits('onSaveBookingEdit', $event)
       }"
       @on-save-room-rate-in-booking-edit="($event) => {
