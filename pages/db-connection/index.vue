@@ -698,7 +698,7 @@ onMounted(() => {
             </template>
             <template #default>
               <form @submit.prevent="validateAndSavePassword">
-                <div class="field mb-3 mt-4 ">
+                <div class="field mb-2 mt-4 ">
                   <label for="old-password" class="block font-bold mb-2 required">Old Password <span class="required-indicator ml-2"> * </span></label>
 
                   <InputText
@@ -710,7 +710,7 @@ onMounted(() => {
                     required
                   />
                 </div>
-                <div class="field mb-4">
+                <div class="field mb-2">
                   <label for="new-password" class="block font-bold mb-2 required">New Password <span class="required-indicator ml-2"> * </span></label>
                   <InputText
                     id="confirm-password"
@@ -732,7 +732,7 @@ onMounted(() => {
                     required
                   />
                 </div>
-                <div class="field flex justify-content-end">
+                <div class="field flex justify-content-end" style="margin-bottom: 0rem !important;">
                   <Button type="submit" icon="pi pi-save" label="Save" class="p-button-primary mr-2" />
                   <Button label="Cancel" icon="pi pi-times" severity="secondary" @click="openDialogPass = false" />
                 </div>
