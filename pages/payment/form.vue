@@ -59,6 +59,8 @@ const hasBeenEdited = ref(0)
 const hasBeenCreated = ref(0)
 const actionOfModal = ref<'new-detail' | 'edit-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined>(undefined)
 
+const showReverseTransaction = ref(false)
+
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
   applyPayment: false,
@@ -1349,7 +1351,7 @@ const somePaymenWithApplyPayment = computed(() => {
   return paymentDetailsList.value.some(item => item.applyPayment)
 })
 
-async function getListPaymentDetail() {
+async function getListPaymentDetail(showReverse: boolean = false) {
   const count: SubTotals = { depositAmount: 0 }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -1359,6 +1361,13 @@ async function getListPaymentDetail() {
     options.value.loading = true
     paymentDetailsList.value = []
     const newListItems = []
+
+    if (showReverse) {
+      // aplicar el filtro
+    }
+    else {
+      // filtrar para que no aparezca el de reversado
+    }
 
     const objFilter = payload.value.filter.find(item => item.key === 'payment.id')
 
@@ -3230,6 +3239,17 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
       </EditFormV2>
+    </div>
+    <div class="flex align-items-center mb-2">
+      <Checkbox
+        id="showReverseTransaction"
+        v-model="showReverseTransaction"
+        :binary="true"
+        @update:model-value="($event) => {
+          getListPaymentDetail($event)
+        }"
+      />
+      <label for="showReverseTransaction" class="ml-2 font-bold text-primary"> Show Reverse Transaction </label>
     </div>
     <DynamicTable
       :data="paymentDetailsList"
