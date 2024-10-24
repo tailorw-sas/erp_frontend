@@ -479,23 +479,23 @@ function disabledBtnSave(propsValue: any): boolean {
   }
 }
 
-function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
-}
+// function requireConfirmationToSave(item: any) {
+//   const { event } = item
+//   confirm.require({
+//     target: event.currentTarget,
+//     group: 'headless',
+//     header: 'Save the record',
+//     message: 'Do you want to save the change?',
+//     rejectLabel: 'Cancel',
+//     acceptLabel: 'Accept',
+//     accept: () => {
+//       saveItem(item)
+//     },
+//     reject: () => {
+//       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+//     }
+//   })
+// }
 
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -598,11 +598,10 @@ onMounted(async () => {
                 :item="item"
                 :show-actions="true"
                 :loading-save="loadingSaveAll"
-                @submit-form="requireConfirmationToSave"
                 @on-confirm-create="clearForm"
                 @cancel="clearForm"
                 @delete="requireConfirmationToDelete($event)"
-                @submit="requireConfirmationToSave($event)"
+                @submit="saveItem($event)"
               >
                 <template #field-path="{ item: data, onUpdate }">
                   <FileUpload
