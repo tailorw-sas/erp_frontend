@@ -573,6 +573,7 @@ onMounted(async () => {
             :show-actions="true"
             :loading-save="loadingSaveAll"
             :loading-delete="loadingDelete"
+            hide-delete-button
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
