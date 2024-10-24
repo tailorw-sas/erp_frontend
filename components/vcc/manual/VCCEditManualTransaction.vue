@@ -169,7 +169,7 @@ async function save(item: { [key: string]: any }) {
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
     delete payload.event
     const response: any = await GenericService.update(confApi.moduleApi, 'transactions', idItem.value, payload)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })
     item.id = response.id
     onClose(false)
   }
