@@ -103,15 +103,15 @@ const allMenuListItems = ref([
     disabled: true,
     visible: true,
   },
-  {
-    id: 'undoApplication',
-    label: 'Undo Application',
-    icon: 'pi pi-undo',
-    iconSvg: '',
-    command: ($event: any) => undoApplication($event),
-    disabled: true,
-    visible: true,
-  },
+  // {
+  //   id: 'undoApplication',
+  //   label: 'Undo Application',
+  //   icon: 'pi pi-undo',
+  //   iconSvg: '',
+  //   command: ($event: any) => undoApplication($event),
+  //   disabled: true,
+  //   visible: true,
+  // },
   {
     id: 'reverseTransaction',
     label: 'Reverse Transaction',
@@ -1364,9 +1364,35 @@ async function getListPaymentDetail(showReverse: boolean = false) {
 
     if (showReverse) {
       // aplicar el filtro
+      const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
+
+      if (objFilterForReverseFalse) {
+        objFilterForReverseFalse.value = true
+      }
+      else {
+        payload.value.filter.push({
+          key: 'reverseTransaction',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'OR'
+        })
+      }
     }
     else {
       // filtrar para que no aparezca el de reversado
+      const objFilterForReverseTrue = payload.value.filter.find(item => item.key === 'reverseTransaction')
+
+      if (objFilterForReverseTrue) {
+        objFilterForReverseTrue.value = false
+      }
+      else {
+        payload.value.filter.push({
+          key: 'reverseTransaction',
+          operator: 'EQUALS',
+          value: false,
+          logicalOperation: 'OR'
+        })
+      }
     }
 
     const objFilter = payload.value.filter.find(item => item.key === 'payment.id')

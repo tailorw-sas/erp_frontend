@@ -1272,15 +1272,15 @@ async function getBookingList(clearFilter: boolean = false) {
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
 
-      if (typeof +iterator.invoiceAmount === 'number') {
-        objBookingsTotals.value.totalInvoiceAmount += Number(iterator.invoiceAmount)
-      }
-      if (typeof +iterator.originalAmount === 'number') {
-        objBookingsTotals.value.totalDueAmount += Number(iterator.dueAmount)
-      }
-      if (typeof +iterator.hotelAmount === 'number') {
-        objBookingsTotals.value.totalHotelAmount += Number(iterator.hotelAmount)
-      }
+      // if (typeof +iterator.invoiceAmount === 'number') {
+      //   objBookingsTotals.value.totalInvoiceAmount += Number(iterator.invoiceAmount)
+      // }
+      // if (typeof +iterator.originalAmount === 'number') {
+      //   objBookingsTotals.value.totalDueAmount += Number(iterator.dueAmount)
+      // }
+      // if (typeof +iterator.hotelAmount === 'number') {
+      //   objBookingsTotals.value.totalHotelAmount += Number(iterator.hotelAmount)
+      // }
     }
     return bookingList.value
   }
@@ -1290,19 +1290,7 @@ async function getBookingList(clearFilter: boolean = false) {
     return []
   }
 }
-/*
-async function findBookingByInvoiceId() {
-  try {
-    // Obtener el listado completo de bookings
-    const bookings = await getBookingList()
-    return bookings // Retornar solo los bookings asociados
-  }
-  catch (error) {
-    console.error('Error al buscar el booking asociado a la factura:', error)
-    return [] // Retornar un array vacío en caso de error
-  }
-}
-*/
+
 async function findBookingByInvoiceId() {
   try {
     // Obtener el listado completo de bookings
@@ -1629,6 +1617,22 @@ function onSaveRoomRateInBookingEdit(item: any) {
   if (item && item.roomRateList && item.roomRateList.length > 0) {
     roomRateList.value = [...item.roomRateList]
   }
+  if (bookingList.value && bookingList.value.length > 0) {
+    objBookingsTotals.value = JSON.parse(JSON.stringify(objBookingsTotalsTemp))
+    for (const iterator of bookingList.value) {
+      if (typeof +iterator.invoiceAmount === 'number') {
+        objBookingsTotals.value.totalInvoiceAmount += Number(iterator.invoiceAmount)
+      }
+
+      if (typeof +iterator.dueAmount === 'number') {
+        objBookingsTotals.value.totalDueAmount += Number(iterator.dueAmount)
+      }
+
+      if (typeof +iterator.hotelAmount === 'number') {
+        objBookingsTotals.value.totalHotelAmount += Number(iterator.hotelAmount)
+      }
+    }
+  }
 }
 
 watch(invoiceAmount, () => {
@@ -1647,23 +1651,24 @@ watch(invoiceAmount, () => {
   }
 })
 
-watch(bookingList.value, () => {
-  if (bookingList.value && bookingList.value.length > 0) {
-    for (const iterator of bookingList.value) {
-      if (typeof +iterator.invoiceAmount === 'number') {
-        objBookingsTotals.value.totalInvoiceAmount += Number(iterator.invoiceAmount)
-      }
+// watch(bookingList, () => {
+//   if (bookingList.value && bookingList.value.length > 0) {
+//     objBookingsTotals.value = JSON.parse(JSON.stringify(objBookingsTotalsTemp))
+//     for (const iterator of bookingList.value) {
+//       if (typeof +iterator.invoiceAmount === 'number') {
+//         objBookingsTotals.value.totalInvoiceAmount += Number(iterator.invoiceAmount)
+//       }
 
-      if (typeof +iterator.dueAmount === 'number') {
-        objBookingsTotals.value.totalDueAmount += Number(iterator.dueAmount)
-      }
+//       if (typeof +iterator.dueAmount === 'number') {
+//         objBookingsTotals.value.totalDueAmount += Number(iterator.dueAmount)
+//       }
 
-      if (typeof +iterator.hotelAmount === 'number') {
-        objBookingsTotals.value.totalHotelAmount += Number(iterator.hotelAmount)
-      }
-    }
-  }
-})
+//       if (typeof +iterator.hotelAmount === 'number') {
+//         objBookingsTotals.value.totalHotelAmount += Number(iterator.hotelAmount)
+//       }
+//     }
+//   }
+// })
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
