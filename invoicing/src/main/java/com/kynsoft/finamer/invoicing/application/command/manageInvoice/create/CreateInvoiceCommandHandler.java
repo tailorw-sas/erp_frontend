@@ -51,12 +51,14 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
         ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(command.getInvoiceType());
 
-        ManageInvoiceDto invoiceDto = service.create(new ManageInvoiceDto(command.getId(), 0L, 0L,
+        ManageInvoiceDto creInvoiceDto = new ManageInvoiceDto(command.getId(), 0L, 0L,
                 invoiceNumber, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),
                 command.getInvoiceAmount(), command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCECSED,
                 false,
                 null, null, null, null, invoiceTypeDto, manageInvoiceStatus, null,  false,
-                null, 0.0));
+                null, 0.0);
+        creInvoiceDto.setOriginalAmount(command.getInvoiceAmount());
+        ManageInvoiceDto invoiceDto = service.create(creInvoiceDto);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         try {
             this.producerReplicateManageInvoiceService.create(invoiceDto);
