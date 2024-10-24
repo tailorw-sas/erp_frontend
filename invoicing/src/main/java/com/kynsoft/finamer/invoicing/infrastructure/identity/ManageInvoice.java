@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
-//@EntityListeners(value = AuditEntityListener.class)
 @Table(name = "manage_invoice")
 public class ManageInvoice {
 
@@ -68,6 +67,7 @@ public class ManageInvoice {
     @JoinColumn(name = "invoice_status_id")
     private ManageInvoiceStatus manageInvoiceStatus;
 
+    private Double originalAmount;
     private Double invoiceAmount;
 
     @Column(name = "due_amount", nullable = false)
@@ -110,6 +110,11 @@ public class ManageInvoice {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
+    @PrePersist
+    protected void PrePersist() {
+        this.originalAmount = this.invoiceAmount;
+    }
+
     public ManageInvoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceNumber = dto.getInvoiceNumber();
@@ -141,7 +146,7 @@ public class ManageInvoice {
                 : null;
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
-        this.invoiceNumberPrefix= InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" +dto.getInvoiceNo();
+        this.invoiceNumberPrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getInvoiceNo();
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
@@ -150,18 +155,19 @@ public class ManageInvoice {
 
     public ManageInvoiceDto toAggregateSample() {
 
-        return new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
                 invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 null, credits);
-
+        manageInvoiceDto.setOriginalAmount(originalAmount);
+        return manageInvoiceDto;
     }
 
     public ManageInvoiceDto toAggregate() {
-        return new ManageInvoiceDto(id, invoiceId,
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId,
                 invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec,
@@ -172,6 +178,8 @@ public class ManageInvoice {
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 parent != null ? parent.toAggregateSample() : null, credits);
+        manageInvoiceDto.setOriginalAmount(originalAmount);
+        return manageInvoiceDto;
     }
 
     public ManageInvoiceDto toAggregateSearch() {
@@ -184,6 +192,7 @@ public class ManageInvoice {
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 parent != null ? parent.toAggregateSample() : null, credits);
         manageInvoiceDto.setSendStatusError(sendStatusError);
+        manageInvoiceDto.setOriginalAmount(originalAmount);
         return manageInvoiceDto;
     }
 

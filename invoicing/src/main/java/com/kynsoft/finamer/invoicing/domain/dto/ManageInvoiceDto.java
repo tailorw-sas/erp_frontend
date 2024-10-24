@@ -46,6 +46,7 @@ public class ManageInvoiceDto {
     private Double credits;
 
     private String sendStatusError;
+    private Double originalAmount;
 
     public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual, Double invoiceAmount, Double dueAmount, ManageHotelDto hotel, ManageAgencyDto agency, EInvoiceType invoiceType, EInvoiceStatus status, Boolean autoRec, List<ManageBookingDto> bookings, List<ManageAttachmentDto> attachments, Boolean reSend, LocalDate reSendDate, ManageInvoiceTypeDto manageInvoiceType, ManageInvoiceStatusDto manageInvoiceStatus, LocalDateTime createdAt, Boolean isCloned, ManageInvoiceDto parent, Double credits) {
         this.id = id;

@@ -45,6 +45,7 @@ public class ManageInvoiceResponse implements IResponse {
 
     private ManageInvoiceDto parent;
     private Double credits;
+    private Double originalAmount;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -70,6 +71,7 @@ public class ManageInvoiceResponse implements IResponse {
         this.parent = dto.getParent();
         this.invoiceNo = dto.getInvoiceNo();
         this.credits = dto.getCredits();
+        this.originalAmount = dto.getOriginalAmount();
     }
 
     private String deleteHotelInfo(String input) {
