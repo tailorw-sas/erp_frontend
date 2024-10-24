@@ -55,6 +55,10 @@ const props = defineProps({
     type: Array,
     required: false
   },
+  roomRateList: {
+    type: Array,
+    required: false
+  },
   addItem: {
     type: Function as any,
     required: false
@@ -107,6 +111,11 @@ const props = defineProps({
   }
 })
 
+const emits = defineEmits<{
+  (e: 'onSaveBookingEdit', value: boolean): void
+  (e: 'onSaveRoomRateInBookingEdit', value: any): void
+}>()
+
 const toast = useToast()
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
@@ -147,6 +156,7 @@ const totalOriginalAmount = ref<number>(0)
 const isEditBookingCloneDialog = ref(false)
 const bookingClone = ref<any>(null)
 const roomRateList = ref<any[]>([])
+const objRoomRateUpdateInBookingEdit = ref<any>(null)
 const objClone = ref<any>({
   newInvoice: null,
   bookingList: []
@@ -1602,10 +1612,6 @@ async function saveBooking(item: { [key: string]: any }) {
 }
 
 async function saveEditBookingCloneTotal() {
-  debugger
-  console.log(itemClone.value)
-  console.log(roomRateList.value)
-
   let newBooking = ListItems.value.find((booking: any) => booking?.id === itemClone.value?.id)
   newBooking = { ...newBooking, ...bookingClone.value }
 
@@ -1737,9 +1743,13 @@ function getSortField(field: any) {
 
 // edit booking clone total
 async function openNewEditBooking(item: any) {
+  console.log('------------------openNewEditBooking-------------------');
+  
+  console.log(item);
+  
   if (item.id) {
     idItem.value = item.id
-    await GetItemById(item?.id)
+    // await GetItemById(item?.id)
     selectedBooking.value = item
     bookingClone.value = item
     itemClone.value = item
@@ -1830,11 +1840,24 @@ function onCellEditComplete(val: any) {
   console.log(val);
 }
 
+function onEditBookingLocal(item: any) {
+  console.log('------------------onEditBookingLocal-------------------');
+  console.log(item);
+  
+}
+
 
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
   Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
   getBookingList()
+})
+
+watch(objRoomRateUpdateInBookingEdit, (newValue) => {
+
+  if (newValue) {
+    onEditBookingLocal(newValue)
+  }
 })
 
 
@@ -2022,6 +2045,13 @@ onMounted(() => {
         	  content-class="w-full"
             :fields-clone="fieldsClone"
             :item-clone="itemClone"
+            @on-save-booking-edit="($event) => {
+              emits('onSaveBookingEdit', $event)
+            }"
+            @on-save-room-rate-in-booking-edit="($event) => {
+              objRoomRateUpdateInBookingEdit = $event
+              emits('onSaveRoomRateInBookingEdit', $event)
+            }"
           />
   </div>
 </template>
