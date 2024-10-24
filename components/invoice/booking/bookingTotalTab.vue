@@ -57,7 +57,7 @@ const props = defineProps({
   },
   roomRateList: {
     type: Array,
-    required: false
+    required: true
   },
   addItem: {
     type: Function as any,
@@ -155,7 +155,6 @@ const totalOriginalAmount = ref<number>(0)
 //edit booking clone total
 const isEditBookingCloneDialog = ref(false)
 const bookingClone = ref<any>(null)
-const roomRateList = ref<any[]>([])
 const objRoomRateUpdateInBookingEdit = ref<any>(null)
 const objClone = ref<any>({
   newInvoice: null,
@@ -1846,6 +1845,64 @@ function onEditBookingLocal(item: any) {
   
 }
 
+function isValidDate(dateStr) {
+  if (!dateStr || dateStr.trim() === '') {
+    return false; // Verificar si es nulo o vacío
+  }
+
+  // Validar formato de fecha (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateStr)) {
+    return false; // Si no coincide con el formato
+  }
+
+  // Verificar si la fecha es válida
+  const date = new Date(dateStr);
+  return !isNaN(date.getTime()); // Comprobar que es una fecha válida
+}
+
+function getMinCheckInAndMaxCheckOut(array) {
+  return array.reduce((acc, item) => {
+    // Ignorar fechas inválidas
+    if (!isValidDate(item.checkIn) || !isValidDate(item.checkOut)) {
+      console.warn(`Fecha inválida en el item: ${JSON.stringify(item)}`);
+      return acc; // Continuar con el siguiente objeto
+    }
+
+    return {
+      minCheckIn: acc.minCheckIn ? (new Date(item.checkIn) < new Date(acc.minCheckIn) ? item.checkIn : acc.minCheckIn) : item.checkIn,
+      maxCheckOut: acc.maxCheckOut ? (new Date(item.checkOut) > new Date(acc.maxCheckOut) ? item.checkOut : acc.maxCheckOut) : item.checkOut
+    };
+  }, {});
+}
+
+const formRealoadForDialogBooking = ref(0)
+
+function recalculateFormData () {
+  if (props.roomRateList && props.roomRateList.length > 0) {
+    const totalAdults = props.roomRateList.reduce((sum, item: any) => sum + item.adults, 0);
+    const totalChildren = props.roomRateList.reduce((sum, item: any) => sum + item.children, 0);
+    const totalHotelAmount = props.roomRateList.reduce((sum, item: any) => sum + item.hotelAmount, 0);
+    const totalInvoiceAmount = props.roomRateList.reduce((sum, item: any) => sum + item.invoiceAmount, 0);
+    
+    itemClone.value.children = Number(totalChildren)
+    itemClone.value.adults = Number(totalAdults)
+    itemClone.value.hotelAmount = Number(totalHotelAmount)
+    itemClone.value.invoiceAmount = Number(totalInvoiceAmount)
+  }
+
+  const minCheckInAndMaxCheckOut = getMinCheckInAndMaxCheckOut(props.roomRateList)
+  itemClone.value.checkIn = minCheckInAndMaxCheckOut.minCheckIn
+  itemClone.value.checkOut = minCheckInAndMaxCheckOut.maxCheckOut
+
+  formRealoadForDialogBooking.value++
+}
+
+watch(props.roomRateList, () => {
+  recalculateFormData()
+  
+}, { deep: true })
+
 
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
@@ -2030,29 +2087,33 @@ onMounted(() => {
   </div>
 
   <div v-if="isEditBookingCloneDialog" style="h-fit">
-  <BookingCloneTotal
-            :is-dialog-open="isEditBookingCloneDialog"
-            :close-dialog="() => { isEditBookingCloneDialog = false }"
-            :open-dialog="isEditBookingCloneDialog"
-            :selected-invoice="selectedBooking.id"
-            :booking-obj="selectedBooking"
-            :require-confirmation-to-save="saveEditBookingCloneTotal"
-            :booking-clone="bookingClone"
-            :room-rate-list="roomRateList"
-            :header="isCreationDialog || !idItem ? 'Edit Booking' : 'Edit Booking'" 
-            container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" 
-            class="h-fit p-2 overflow-y-hidden"
-        	  content-class="w-full"
-            :fields-clone="fieldsClone"
-            :item-clone="itemClone"
-            @on-save-booking-edit="($event) => {
-              emits('onSaveBookingEdit', $event)
-            }"
-            @on-save-room-rate-in-booking-edit="($event) => {
-              objRoomRateUpdateInBookingEdit = $event
-              emits('onSaveRoomRateInBookingEdit', $event)
-            }"
-          />
+    <BookingCloneTotal
+      :form-reload="formRealoadForDialogBooking"
+      :is-dialog-open="isEditBookingCloneDialog"
+      :close-dialog="() => { isEditBookingCloneDialog = false }"
+      :open-dialog="isEditBookingCloneDialog"
+      :selected-invoice="selectedBooking.id"
+      :booking-obj="selectedBooking"
+      :require-confirmation-to-save="saveEditBookingCloneTotal"
+      :booking-clone="bookingClone"
+      :room-rate-list="roomRateList"
+      :header="isCreationDialog || !idItem ? 'Edit Booking' : 'Edit Booking'" 
+      container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" 
+      class="h-fit p-2 overflow-y-hidden"
+      content-class="w-full"
+      :fields-clone="fieldsClone"
+      :item-clone="itemClone"
+      @on-save-booking-edit="($event) => {
+        emits('onSaveBookingEdit', $event)
+      }"
+      @on-save-room-rate-in-booking-edit="($event) => {
+        if ($event && $event.payload) {
+          objRoomRateUpdateInBookingEdit = $event.payload
+        }
+        emits('onSaveRoomRateInBookingEdit', $event)
+      }"
+    />
+          <!-- @on-form-reload="formRealoadForDialogBooking = $event" -->
   </div>
 </template>
 

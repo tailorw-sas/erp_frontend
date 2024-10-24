@@ -49,7 +49,7 @@ const props = defineProps({
     required: false
   },
   roomRateList: {
-    type: Array,
+    type: Array as any,
     required: false
   },
   bookingClone: {
@@ -76,24 +76,24 @@ const props = defineProps({
     type: String,
     required: false,
   },
+  formReload: {
+    type: Number,
+    required: true
+  }
 })
 
 const emits = defineEmits<{
   (e: 'onSaveBookingEdit', value: boolean): void
   (e: 'onSaveRoomRateInBookingEdit', value: any): void
+  (e: 'onFormReload', value: any): void
 }>()
 
 const toast = useToast()
-const { data: userData } = useAuth()
+// const { data: userData } = useAuth()
 
 const dialogVisible = ref(props.openDialog)
-
-const forceSave = ref(false)
-const forceUpdate = ref(false)
-const active = ref(0)
 const saveButton = ref(null)
-const onSaveButtonByRef = ref(false)
-
+const formReload = ref(props.formReload)
 const route = useRoute()
 
 // const selectedInvoice = ref<string>(route.params.id.toString())
@@ -104,23 +104,10 @@ const selectedRoomRate = ref<string>('')
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 
-const invoiceAmount = ref(0)
-const requiresFlatRate = ref(false)
-
-const invoiceAgency = ref<any>(null)
-const invoiceHotel = ref<any>(null)
-
-// const attachmentDialogOpen = ref<boolean>(false)
-
-const hotelList = ref<any[]>([])
-const agencyList = ref<any[]>([])
-// const invoiceTypeList = ref<any[]>([])
 const invoiceStatusList = ref<any[]>([])
-const invoiceStatus = ref<any>(null)
 
 // Temporal
 const bookingTemp = ref<any>(null)
-const roomRateTempList = ref<any[]>([])
 
 const fieldsV2: Array<FieldDefinitionType> = [
   // Booking Id
@@ -419,7 +406,7 @@ const item2 = ref<GenericObject>({
 
 // ])
 
-const roomRateList = ref<any[]>([])
+const roomRateList = ref<any[]>([...props.roomRateList])
 const adjustmentList = ref<any[]>([])
 const ratePlanList = ref<any[]>([])
 const roomCategoryList = ref<any[]>([])
@@ -507,7 +494,7 @@ const columnsRoomRate: IColumn[] = [
   { field: 'adults', header: 'Adults', type: 'text', sortable: false, editable: true },
   { field: 'children', header: 'Children', type: 'text', sortable: false, editable: true },
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'nights', header: 'Nights', type: 'text', sortable: false, editable: true },
+  { field: 'nights', header: 'Nights', type: 'text', sortable: false, editable: false },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'rateAdult', header: 'Rate Adult', type: 'text', sortable: false, editable: false },
   { field: 'rateChildren', header: 'Rate Children', type: 'text', sortable: false, editable: false },
@@ -569,11 +556,6 @@ const confagencyListApi = reactive({
   uriApi: 'manage-agency',
 })
 
-const confinvoiceTypeListtApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-invoice-type',
-})
-
 // VARIABLES -----------------------------------------------------------------------------------------
 
 const objApis = ref({
@@ -588,14 +570,10 @@ const objApis = ref({
 
 //
 const confirm = useConfirm()
-const formReload = ref(0)
+// const formReload = ref(0)
 
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
-const filterToSearch = ref<IData>({
-  criterial: null,
-  search: '',
-})
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
@@ -618,120 +596,10 @@ const confBookingApi = reactive({
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
-function handleDialogOpen() {
-  switch (active.value) {
-    case 0:
-      bookingDialogOpen.value = true
-      break
-
-    case 1:
-      roomRateDialogOpen.value = true
-      break
-
-    case 2:
-      adjustmentDialogOpen.value = true
-      break
-
-    default:
-      break
-  }
-}
-
-async function getHotelList(query = '') {
-  try {
-    const payload
-      = {
-        filter: [
-          {
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'code',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
-    const { data: dataList } = response
-    hotelList.value = []
-    for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
-
-function handleAttachmentHistoryDialogOpen() {
-  attachmentHistoryDialogOpen.value = true
-}
-
-async function getAgencyList(query = '') {
-  try {
-    const payload
-      = {
-        filter: [
-          {
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'code',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
-    const { data: dataList } = response
-    agencyList.value = []
-    for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading agency list:', error)
-  }
-}
-
 function clearForm() {
-  item2.value = { ...itemTemp.value }
   idItem.value = ''
 
-  formReload.value++
+  // formReload.value++
 }
 
 const objApisLoading = ref({
@@ -766,94 +634,12 @@ async function getInvoiceStatusListDefault(moduleApi: string, uriApi: string, qu
     else {
       invoiceStatusList.value = []
     }
-    formReload.value++
+    // formReload.value++
   }
   finally {
     objApisLoading.value.invoiceStatus = false
   }
 }
-
-async function loadDefaultsValues() {
-  const objQueryToSearch = {
-    query: '',
-    keys: ['name', 'code'],
-  }
-  const filter: FilterCriteria[] = [{
-    key: 'status',
-    logicalOperation: 'AND',
-    operator: 'EQUALS',
-    value: 'ACTIVE',
-  }]
-
-  getInvoiceStatusListDefault(objApis.value.invoiceStatus.moduleApi, objApis.value.invoiceStatus.uriApi, objQueryToSearch, filter)
-}
-
-async function getInvoiceAmountById(id: string) {
-  if (id) {
-    idItem.value = id
-
-    try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-
-      if (response) {
-        item2.value.invoiceAmount = response.invoiceAmount
-        invoiceAmount.value = response.invoiceAmount
-      }
-    }
-    catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
-      }
-    }
-  }
-}
-
-// async function getItemById(id: string) {
-//   if (id) {
-//     idItem.value = id
-//     loadingSaveAll.value = true
-//     try {
-//       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-//       if (response) {
-//         item2.value.id = response.id
-//         item2.value.invoiceId = response.invoiceId
-//         item2.value.dueDate = response.dueDate
-
-//         const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
-
-//         item2.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
-//         item2.value.invoiceNumber = item2.value.invoiceNumber.replace('OLD', 'CRE')
-
-//         item2.value.invoiceDate = dayjs(response.invoiceDate).format('YYYY-MM-DD')
-//         item2.value.isManual = response.isManual
-//         item2.value.invoiceAmount = response.invoiceAmount
-//         invoiceAmount.value = response.invoiceAmount
-//         item2.value.reSend = response.reSend
-//         item2.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate
-//         item2.value.hotel = response.hotel
-//         item2.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
-//         item2.value.agency = response.agency
-//         item2.value.hasAttachments = response.hasAttachments
-//         item2.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
-//         item2.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
-//         invoiceStatus.value = response.status
-//         item2.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
-//         await getInvoiceAgency(response.agency?.id)
-//         await getInvoiceHotel(response.hotel?.id)
-//       }
-
-//       formReload.value += 1
-//     }
-//     catch (error) {
-//       if (error) {
-//         toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
-//       }
-//     }
-//     finally {
-//       loadingSaveAll.value = false
-//     }
-//   }
-// }
 
 async function createItem(item: { [key: string]: any }) {
   if (item) {
@@ -897,32 +683,6 @@ async function updateItem(item: { [key: string]: any }) {
 
   await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
   navigateTo('/invoice')
-}
-
-async function updateItemByRef(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  const payload: { [key: string]: any } = {}
-
-  payload.id = route.params.id
-  payload.hotelCreationDate = dayjs(item.hotelCreationDate).toISOString()
-  payload.bookingDate = dayjs(item.bookingDate).toISOString()
-  payload.hotelBookingNumber = item.hotelBookingNumber
-  payload.fullName = `${item.firstName} ${item.lastName}`
-  payload.firstName = item.firstName
-  payload.lastName = item.lastName
-  payload.roomNumber = item.roomNumber
-  payload.couponNumber = item.couponNumber
-  payload.hotelInvoiceNumber = item.hotelInvoiceNumber
-  payload.folioNumber = item.folioNumber
-  payload.description = item.description
-  payload.contract = item.contract
-  payload.ratePlan = item.ratePlan ? item.ratePlan.id : null
-  payload.nightType = item.nightType ? item.nightType.id : null
-  payload.roomType = item.roomType ? item.roomType.id : null
-  payload.roomCategory = item.roomCategory ? item.roomCategory.id : null
-
-  await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
-  onSaveButtonByRef.value = false
 }
 
 async function deleteItem(id: string) {
@@ -973,8 +733,6 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  console.log(item)
-  console.log(roomRateList.value)
   emits('onSaveBookingEdit', item)
 }
 function requireConfirmationToDelete(event: any) {
@@ -994,33 +752,6 @@ function requireConfirmationToDelete(event: any) {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
     }
   })
-}
-async function getInvoiceHotel(id: string) {
-  try {
-    const hotel = await GenericService.getById(confhotelListApi.moduleApi, confhotelListApi.uriApi, id)
-
-    if (hotel) {
-      invoiceHotel.value = { ...hotel }
-
-      requiresFlatRate.value = hotel?.requiresFlatRate
-    }
-  }
-  catch (err) {
-
-  }
-}
-async function getInvoiceAgency(id: string) {
-  try {
-    const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
-
-    if (agency) {
-      invoiceAgency.value = { ...agency }
-      nightTypeRequired.value = agency?.client?.isNightType
-    }
-  }
-  catch (err) {
-
-  }
 }
 
 function clearFormRoomRate() {
@@ -1076,12 +807,8 @@ async function onCellEditRoomRate(event: any) {
     id: newData.id
   }
   data[field] = newValue
-  emits('onSaveRoomRateInBookingEdit', payload)
-}
-
-async function updateRoomRate(itemRoomRate: { [key: string]: any }) {
-  const payload: { [key: string]: any } = { ...itemRoomRate }
-  roomRateList.value = roomRateList.value.map((rr: any) => rr.id === itemRoomRate.id ? payload : rr)
+  emits('onSaveRoomRateInBookingEdit', { payload, roomRateList: roomRateList.value })
+  emits('onFormReload', formReload.value++)
 }
 
 function onRowRightClick(event: any) {
@@ -1134,50 +861,25 @@ async function resetListItemsRoomRate() {
 }
 async function getRoomRateList() {
   try {
-    idItemToLoadFirstTime.value = ''
-    optionsRoomRate.value.loading = true
-    roomRateList.value = []
-    roomRateTempList.value = []
-    payloadRoomRate.value.filter = [...payloadRoomRate.value.filter, {
-      key: 'booking.id',
-      operator: 'EQUALS',
-      value: selectedInvoice.value,
-      logicalOperation: 'OR'
-    }]
-    const response = await GenericService.search(optionsRoomRate.value.moduleApi, optionsRoomRate.value.uriApi, payloadRoomRate.value)
-
-    const { data: dataList, page, size, totalElements, totalPages } = response
-
-    paginationRoomRate.value.page = page
-    paginationRoomRate.value.limit = size
-    paginationRoomRate.value.totalElements = totalElements
-    paginationRoomRate.value.totalPages = totalPages
-
-    let countRR = 0
     totalInvoiceAmount.value = 0
     totalHotelAmount.value = 0
-    for (const iterator of dataList) {
-      countRR++
+    for (const iterator of roomRateList.value) {
+      iterator.checkIn = dayjs(iterator?.checkIn).format('YYYY-MM-DD')
+      iterator.checkOut = dayjs(iterator?.checkOut).format('YYYY-MM-DD')
+      iterator.invoiceAmount = iterator?.invoiceAmount || 0
+      iterator.nights = dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false)
+      iterator.fullName = `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`
+      iterator.bookingId = iterator.booking.bookingId
+      iterator.roomType = { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` }
+      iterator.nightType = { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` }
+      iterator.ratePlan = { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` }
+      iterator.agency = { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
+      iterator.rateAdult = iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0
+      iterator.rateChildren = iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
+
       // Rate Adult= RateAmount/(Ctdad noches*Ctdad Adults) y Rate Children= RateAmount/(Ctdad noches*Ctdad Children)
       // const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
       // const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
-      roomRateList.value = [...roomRateList.value, {
-        ...iterator,
-        checkIn: dayjs(iterator?.checkIn).format('YYYY-MM-DD'),
-        checkOut: dayjs(iterator?.checkOut).format('YYYY-MM-DD'),
-        invoiceAmount: iterator?.invoiceAmount || 0,
-        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
-        loadingEdit: false,
-        loadingDelete: false,
-        fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
-        bookingId: iterator.booking.bookingId,
-        roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
-        nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
-        ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
-        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` },
-        rateAdult: iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0,
-        rateChildren: iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
-      }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
@@ -1186,9 +888,6 @@ async function getRoomRateList() {
       if (typeof +iterator.hotelAmount === 'number') {
         totalHotelAmount.value += Number(iterator.hotelAmount)
       }
-    }
-    if (roomRateList.value.length > 0) {
-      idItemToLoadFirstTime.value = roomRateList.value[0].id
     }
   }
   catch (error) {
@@ -1577,7 +1276,7 @@ async function getBookingItemById(id: string) {
         updateFieldProperty(fieldsV2, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
         updateFieldProperty(fieldsV2, 'hotelAmount', 'class', `${objField?.class}`)
       }
-      formReload.value += 1
+      // formReload.value += 1
       bookingTemp.value = response
     }
     catch (error) {
@@ -1591,60 +1290,29 @@ async function getBookingItemById(id: string) {
   }
 }
 
-async function reloadBookingItem() {
-  item2.value.hotelCreationDate = new Date(props.itemClone?.hotelCreationDate)
-  item2.value.bookingDate = props.itemClone?.bookingDate ? new Date(props.itemClone?.bookingDate) : ''
-  item2.value.contract = props.itemClone?.contract
-  item2.value.dueAmount = props.itemClone?.dueAmount
-  item2.value.checkIn = new Date(props.itemClone?.checkIn)
-  item2.value.checkOut = new Date(props.itemClone?.checkOut)
-  item2.value.hotelBookingNumber = props.itemClone?.hotelBookingNumber
-  item2.value.fullName = props.itemClone?.fullName
-  item2.value.firstName = props.itemClone?.firstName
-  item2.value.lastName = props.itemClone?.lastName
+watch(props.roomRateList, () => {
+  if (props.roomRateList && props.roomRateList.length > 0) {
+    totalHotelAmount.value = 0
+    totalInvoiceAmount.value = 0
+    for (const iterator of props.roomRateList) {
+      if (typeof +iterator.invoiceAmount === 'number') {
+        totalInvoiceAmount.value += Number(iterator.invoiceAmount)
+      }
 
-  item2.value.invoiceAmount = props.itemClone?.invoiceAmount ? String(props.itemClone?.invoiceAmount) : '0'
-  item2.value.roomNumber = props.itemClone?.roomNumber
-  item2.value.couponNumber = props.itemClone?.couponNumber
-  item2.value.adults = props.itemClone?.adults
-  item2.value.children = props.itemClone?.children
-  item2.value.rateAdult = props.itemClone?.rateAdult
-  item2.value.rateChild = props.itemClone?.rateChild
-  item2.value.hotelInvoiceNumber = props.itemClone?.hotelInvoiceNumber
-  item2.value.folioNumber = props.itemClone?.folioNumber
-  item2.value.hotelAmount = String(props.itemClone?.hotelAmount)
-  item2.value.description = props.itemClone?.description
-  item2.value.invoice = props.itemClone?.invoice
-  item2.value.invoiceOriginalAmount = props.itemClone?.invoice.invoiceAmount
-  item2.value.ratePlan = props.itemClone?.ratePlan?.name === '-' ? null : props.itemClone?.ratePlan
-  item2.value.nightType = props.itemClone?.nightType
-  item2.value.roomType = props.itemClone?.roomType?.name === '-' ? null : props.itemClone?.roomType
-  item2.value.roomCategory = props.itemClone?.roomCategory
-  formReload.value += 1
-  // await getBookingItemById(id)
-  // getRoomRateList()
-  // getAdjustmentList()
-}
-
-async function saveEditBookingCloneTotal() {
-  console.log(roomRateList.value)
-  console.log(item2.value)
-}
+      if (typeof +iterator.hotelAmount === 'number') {
+        totalHotelAmount.value += Number(iterator.hotelAmount)
+      }
+    }
+  }
+})
 
 onMounted(async () => {
-  // filterToSearch.value.criterial = ENUM_FILTER[0]
-  // //@ts-ignore
-  // await getItemById(route.params.id.toString())
-
-  // await loadDefaultsValues()
   if (props.selectedInvoice) {
     selectedInvoice.value = props.selectedInvoice
     await getBookingItemById(props.selectedInvoice as string)
     getRoomRateList()
     getAdjustmentList()
   }
-
-  // saveButton.value.$el.click()
 })
 </script>
 
@@ -1656,7 +1324,6 @@ onMounted(async () => {
   >
     <div class=" h-full overflow-hidden p-2 w-full">
       <div class="justify-content-center align-center w-full">
-        <pre>{{ bookingObj.adults }}</pre>
         <EditFormV2
           v-if="true"
           :key="formReload"
@@ -1863,8 +1530,8 @@ onMounted(async () => {
                                 footer="Totals:" :colspan="8"
                                 footer-style="text-align:right; font-weight: 700"
                               />
-                              <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2))" footer-style="font-weight: 700" />
-                              <Column :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))" footer-style="font-weight: 700" />
+                              <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2)).toString()" footer-style="font-weight: 700" />
+                              <Column :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2)).toString()" footer-style="font-weight: 700" />
                             </Row>
                           </ColumnGroup>
                         </template>
@@ -1900,7 +1567,7 @@ onMounted(async () => {
                           <ColumnGroup type="footer" class="flex align-items-center">
                             <Row>
                               <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-                              <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2))" footer-style="font-weight: 700" />
+                              <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2)).toString()" footer-style="font-weight: 700" />
 
                               <Column :colspan="6" />
                             </Row>
