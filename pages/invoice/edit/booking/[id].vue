@@ -965,7 +965,12 @@ async function saveItem(item: { [key: string]: any }) {
   let successOperation = true
   if (idItem.value) {
     try {
-      await updateItem(item)
+      if (onSaveButtonByRef.value === true) {
+        await updateItemByRef(item)
+      }
+      else {
+        await updateItem(item)
+      }
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -1130,7 +1135,6 @@ function clearFormAdjustment() {
 
 async function onCellEditRoomRate(event: any) {
   const { data, newValue, field, newData } = event
-
   if (data[field] === newValue) { return }
 
   if (field === 'hotelAmount') {
