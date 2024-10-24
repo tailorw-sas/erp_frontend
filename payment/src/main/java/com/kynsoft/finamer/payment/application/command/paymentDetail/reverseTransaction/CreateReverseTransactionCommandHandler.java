@@ -2,20 +2,25 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTra
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplyPayment.UndoApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.rules.undoApplication.CheckApplyPaymentRule;
 import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -30,17 +35,21 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
     private final IManageEmployeeService employeeService;
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
     private final IManagePaymentStatusService paymentStatusService;
+    private final IPaymentCloseOperationService paymentCloseOperationService;
 
     public CreateReverseTransactionCommandHandler(IPaymentDetailService paymentDetailService,
-            IPaymentService paymentService,
-            IManageEmployeeService employeeService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
-            IManagePaymentStatusService paymentStatusService) {
+                                                IPaymentService paymentService,
+                                                IManageEmployeeService employeeService,
+                                                IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+                                                IManagePaymentStatusService paymentStatusService,
+                                                IPaymentCloseOperationService paymentCloseOperationService) {
+
         this.paymentDetailService = paymentDetailService;
         this.paymentService = paymentService;
         this.employeeService = employeeService;
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
         this.paymentStatusService = paymentStatusService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
     }
 
     @Override
@@ -59,7 +68,8 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
                 null,
                 null,
                 null,
-                OffsetDateTime.now(ZoneId.of("UTC")),
+                transactionDate(paymentDetailDto.getPayment().getHotel().getId()),
+                //OffsetDateTime.now(ZoneId.of("UTC")),
                 null,
                 null,
                 null,
@@ -87,7 +97,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
             this.calculateReverseCash(reverseFrom.getPayment(), reverseFrom.getAmount());
             reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
             this.paymentDetailService.update(reverseFrom);
-            paymentDetailDto.setTransactionDate(null);
+            //paymentDetailDto.setTransactionDate(null);
 
             this.changeStatus(paymentDetailDto, command.getEmployee());
         } else {
@@ -104,6 +114,15 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         this.paymentDetailService.update(paymentDetailDto);
 
         command.getMediator().send(new UndoApplyPaymentDetailCommand(command.getPaymentDetail(), bookingDto.getId()));
+    }
+
+    private OffsetDateTime transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(ZoneId.of("UTC"));
+        }
+        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 
     private void addChildren(PaymentDetailDto reverseFrom, Long parentId) {
