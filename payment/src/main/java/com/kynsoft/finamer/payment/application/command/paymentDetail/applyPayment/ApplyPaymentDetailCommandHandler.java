@@ -6,8 +6,10 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
@@ -15,14 +17,17 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
+import java.time.LocalTime;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Component
@@ -37,13 +42,16 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
     private final IManageEmployeeService manageEmployeeService;
 
+    private final IPaymentCloseOperationService paymentCloseOperationService;
+
     public ApplyPaymentDetailCommandHandler(IPaymentDetailService paymentDetailService,
-            IManageBookingService manageBookingService,
-            IPaymentService paymentService,
-            ProducerUpdateBookingService producerUpdateBookingService,
-            IManagePaymentStatusService statusService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
-            IManageEmployeeService manageEmployeeService) {
+                                            IManageBookingService manageBookingService,
+                                            IPaymentService paymentService,
+                                            ProducerUpdateBookingService producerUpdateBookingService,
+                                            IManagePaymentStatusService statusService,
+                                            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+                                            IManageEmployeeService manageEmployeeService,
+                                            IPaymentCloseOperationService paymentCloseOperationService) {
         this.paymentDetailService = paymentDetailService;
         this.manageBookingService = manageBookingService;
         this.paymentService = paymentService;
@@ -51,6 +59,7 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         this.statusService = statusService;
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
         this.manageEmployeeService = manageEmployeeService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
     }
 
     @Override
@@ -63,7 +72,8 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
         paymentDetailDto.setManageBooking(bookingDto);
         paymentDetailDto.setApplayPayment(Boolean.TRUE);
-        paymentDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
+        //paymentDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
+        paymentDetailDto.setTransactionDate(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
         this.manageBookingService.update(bookingDto);
         this.paymentDetailService.update(paymentDetailDto);
 
@@ -91,6 +101,15 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         this.paymentService.update(paymentDto);
 
         command.setPaymentResponse(paymentDto);
+    }
+
+    private OffsetDateTime transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(ZoneId.of("UTC"));
+        }
+        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 
     //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
