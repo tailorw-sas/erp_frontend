@@ -344,7 +344,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
-  { field: 'reverseFrom', header: 'Reverse From', width: 'auto', type: 'text' },
+  { field: 'reverseFromParentId', header: 'Reverse From', width: 'auto', type: 'text' },
   { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
 
 ]
@@ -1410,7 +1410,6 @@ async function getListPaymentDetail(showReverse: boolean = false) {
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -1419,7 +1418,7 @@ async function getListPaymentDetail(showReverse: boolean = false) {
     pagination.value.totalPages = totalPages
 
     const existingIds = new Set(paymentDetailsList.value.map(item => item.id))
-
+    // reverseFromParentId
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.depositAmount += iterator.amount
