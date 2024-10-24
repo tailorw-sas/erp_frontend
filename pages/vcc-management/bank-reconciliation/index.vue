@@ -21,6 +21,7 @@ const newManualTransactionDialogVisible = ref(false)
 const editManualTransactionDialogVisible = ref(false)
 const newAdjustmentTransactionDialogVisible = ref(false)
 const newRefundDialogVisible = ref(false)
+const newBankOfPaymentDialogOpen = ref<boolean>(false)
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
@@ -29,7 +30,7 @@ const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
-  merchant: [allDefaultItem],
+  merchantBankAccount: [allDefaultItem],
   ccType: [allDefaultItem],
   hotel: [allDefaultItem],
   status: [allDefaultItem],
@@ -67,8 +68,8 @@ const menuListItems = ref<any[]>([])
 const collectionStatusList = ref<any[]>([])
 const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
+const MerchantBankAccountList = ref<any[]>([])
 const merchantList = ref<any[]>([])
-const ccTypeList = ref<any[]>([])
 
 const confStatusListApi = reactive({
   moduleApi: 'settings',
@@ -455,48 +456,6 @@ async function getHotelList(query: string = '') {
   }
 }
 
-async function getMerchantList(query: string = '') {
-  try {
-    const payload = {
-      filter: [
-        {
-          key: 'description',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 20,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
-    const response = await GenericService.search(confMerchantListApi.moduleApi, confMerchantListApi.uriApi, payload)
-    const { data: dataList } = response
-    merchantList.value = [allDefaultItem]
-    for (const iterator of dataList) {
-      merchantList.value = [...merchantList.value, { id: iterator.id, name: iterator.description, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading merchant list:', error)
-  }
-}
-
 async function getStatusList(query: string = '') {
   try {
     const payload = {
@@ -539,45 +498,37 @@ async function getStatusList(query: string = '') {
   }
 }
 
-async function getCCTypeList(query: string = '') {
+async function getMerchantBankAccountList(query: string) {
   try {
     const payload = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
+      filter: [{
+        key: 'accountNumber',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'AND'
+      }, {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }],
       query: '',
+      sortBy: 'createdAt',
+      sortType: 'ASC',
       pageSize: 20,
       page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
     }
-
-    const response = await GenericService.search(confCCTypeListApi.moduleApi, confCCTypeListApi.uriApi, payload)
+    const response: any = await GenericService.search('creditcard', 'manage-merchant-bank-account', payload)
     const { data: dataList } = response
-    ccTypeList.value = [allDefaultItem]
+    MerchantBankAccountList.value = [allDefaultItem]
+
     for (const iterator of dataList) {
-      ccTypeList.value = [...ccTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      const merchantNames = iterator.managerMerchant.map((item: any) => item.description).join(' - ')
+      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`}]
     }
   }
   catch (error) {
-    console.error('Error loading credit card type list:', error)
+    console.error('Error loading merchant bank account list:', error)
   }
 }
 
@@ -765,7 +716,6 @@ onMounted(() => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // getList()
   searchAndFilter()
-  getCollectionStatusList()
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -776,7 +726,7 @@ onMounted(() => {
       Management Bank Reconciliation
     </h3>
     <div class="my-2 flex justify-content-end px-0">
-      <Button class="ml-2" icon="pi pi-plus" label="New" @click="" />
+      <Button class="ml-2" icon="pi pi-plus" label="New" @click="() => newBankOfPaymentDialogOpen = true" />
     </div>
   </div>
   <div class="grid">
@@ -828,19 +778,16 @@ onMounted(() => {
                         <DebouncedAutoCompleteComponent
                           v-if="!loadingSaveAll" id="autocomplete"
                           :multiple="true" class="w-full" field="name"
-                          item-value="id" :model="filterToSearch.merchant" :suggestions="merchantList"
-                          @load="($event) => getMerchantList($event)" @change="($event) => {
-                            if (!filterToSearch.merchant.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                              filterToSearch.merchant = $event.filter((element: any) => element?.id === 'All')
+                          item-value="id" :model="filterToSearch.merchantBankAccount" :suggestions="MerchantBankAccountList"
+                          @load="($event) => getMerchantBankAccountList($event)" @change="($event) => {
+                            if (!filterToSearch.merchantBankAccount.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                              filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id === 'All')
                             }
                             else {
-                              filterToSearch.merchant = $event.filter((element: any) => element?.id !== 'All')
+                              filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id !== 'All')
                             }
                           }"
                         >
-                          <template #option="props">
-                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                          </template>
                         </DebouncedAutoCompleteComponent>
                       </div>
                     </div>
@@ -979,5 +926,11 @@ onMounted(() => {
       </DynamicTable>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
+    <div v-if="newBankOfPaymentDialogOpen">
+      <NewBankPaymentOfMerchantDialog
+        :close-dialog="() => { newBankOfPaymentDialogOpen = false }" :is-creation-dialog="true" header="Bank Payment of Merchant"
+        :open-dialog="newBankOfPaymentDialogOpen" selected-bank-payment-id=""
+      />
+    </div>
   </div>
 </template>
