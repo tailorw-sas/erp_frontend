@@ -9,6 +9,7 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.service.IFtpService;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
@@ -28,13 +29,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.springframework.core.io.ClassPathResource;
-import org.apache.commons.io.IOUtils;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Base64;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 
 @Component
 @Transactional
@@ -50,6 +50,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IManageAgencyContactService manageAgencyContactService;
     private final AccountStatementService accountStatementService;
+    private final IInvoiceCloseOperationService closeOperationService;
 
     public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService,
                                      IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,
@@ -57,7 +58,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                                      FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory,
                                      IInvoiceStatusHistoryService invoiceStatusHistoryService,
                                      IManageAgencyContactService manageAgencyContactService,
-                                     AccountStatementService accountStatementService) {
+                                     AccountStatementService accountStatementService,
+                                     IInvoiceCloseOperationService closeOperationService) {
 
         this.service = service;
         this.mailService = mailService;
@@ -69,6 +71,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.manageAgencyContactService = manageAgencyContactService;
         this.accountStatementService = accountStatementService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
@@ -373,6 +376,15 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         orderedContent.add(content.getOrDefault(EInvoiceReportType.INVOICE_AND_BOOKING, Optional.empty()));
         orderedContent.add(content.getOrDefault(EInvoiceReportType.INVOICE_SUPPORT, Optional.empty()));
         return orderedContent;
+    }
+
+    private LocalDateTime generateDate(UUID hotel) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
 }
