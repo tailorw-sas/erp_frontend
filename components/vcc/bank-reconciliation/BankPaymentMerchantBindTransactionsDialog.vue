@@ -35,7 +35,7 @@ const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 const BindTransactionList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const dialogVisible = ref(props.openDialog)
-const selectedElements = ref<string[]>([])
+const selectedElements = ref<any[]>([])
 
 const sClassMap: IStatusClass[] = [
   { status: 'Sent', class: 'text-sent' },
@@ -117,12 +117,12 @@ async function getList() {
       operator: 'IN',
       value: creditCardTypeIds,
       logicalOperation: 'AND'
-    }, /* {
+    }, {
       key: 'amount',
       operator: 'LESS_THAN_OR_EQUAL_TO',
       value: props.currentBankPayment.amount,
       logicalOperation: 'AND'
-    } */]
+    }]
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
@@ -189,8 +189,22 @@ async function handleSave() {
   props.closeDialog()
 }
 
+// Se deben solo tener en cuenta los elementos de la pagina actual contra los seleccionados globalmente.
 async function onMultipleSelect(data: any) {
-  selectedElements.value = data
+  // Crear un Set de IDs para los seleccionados globalmente y los seleccionados en la página actual
+  const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
+  const currentPageSelectedIds = new Set(data.map((item: any) => item.id))
+
+  // Crear un nuevo array que contenga la selección global optimizada
+  // Actualizar selectedElements solo una vez
+  selectedElements.value = [
+    // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
+    ...selectedElements.value.filter((item: any) =>
+      currentPageSelectedIds.has(item.id) || !BindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
+    ),
+    // Agregar nuevos elementos seleccionados en la página actual
+    ...data.filter((item: any) => !selectedIds.has(item.id))
+  ]
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -215,6 +229,7 @@ watch(payloadOnChangePage, (newValue) => {
 })
 
 onMounted(() => {
+  selectedElements.value = [...props.selectedItems]
   getList()
 })
 </script>
@@ -409,7 +424,7 @@ onMounted(() => {
       :columns="columns"
       :options="options"
       :pagination="pagination"
-      :selected-items="props.selectedItems"
+      :selected-items="selectedElements"
       @on-change-pagination="payloadOnChangePage = $event"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
