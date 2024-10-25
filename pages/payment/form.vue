@@ -779,6 +779,7 @@ const itemDetailsForEdit = ref({
   childrenTotalValue: 0,
   transactionDate: null,
   bookingDate: null,
+  reconciledManually: false,
 })
 
 const itemDetailsTempForEdit = ref({
@@ -795,6 +796,7 @@ const itemDetailsTempForEdit = ref({
   childrenTotalValue: 0,
   transactionDate: null,
   bookingDate: null,
+  reconciledManually: false,
 })
 
 const options = ref({
@@ -1043,6 +1045,7 @@ function openDialogPaymentDetailsEdit(idDetail: any = null) {
       ...idDetail,
       transactionDate: dayjs(idDetail?.transactionDate).format('YYYY-MM-DD') || '',
       bookingDate: dayjs(idDetail?.manageBooking?.bookingDate).format('YYYY-MM-DD') || '',
+      reconciledManually: idDetail.manageBooking?.invoice?.reconciledManually || false
     }
   }
   onOffDialogPaymentDetailEdit.value = true
