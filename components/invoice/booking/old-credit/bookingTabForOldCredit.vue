@@ -1548,14 +1548,14 @@ onMounted(() => {
       command: () => props.openRoomRateDialog(selectedBooking.value),
       disabled: computedShowMenuItemAddRoomRate
     },
-    {
-      label: 'Edit booking',
-      command: () => openEditBooking(selectedBooking.value),
-      disabled: computedShowMenuItemEditBooking
-    },
+    // {
+    //   label: 'Edit booking',
+    //   command: () => openEditBooking(selectedBooking.value),
+    //   disabled: computedShowMenuItemEditBooking
+    // },
     // Esto es solo para pruebas
     {
-      label: 'New Edit booking',
+      label: 'Edit booking',
       command: () => newOpenEditBooking(selectedBooking.value),
       disabled: computedShowMenuItemEditBooking
     },

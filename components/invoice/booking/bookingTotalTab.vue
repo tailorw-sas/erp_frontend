@@ -1972,12 +1972,12 @@ onMounted(() => {
     return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:BOOKING-EDIT'])))
   })
   menuModel.value = [
-   {
-      label: 'Edit booking',
-      command: () => openEditBooking(selectedBooking.value),
-    },
+  //  {
+  //     label: 'Edit booking',
+  //     command: () => openEditBooking(selectedBooking.value),
+  //   },
     {
-      label: 'New Edit booking',
+      label: 'Edit booking',
       command: () => openNewEditBooking(selectedBooking.value),
       //disabled: computedShowMenuItemEditBooking
     },
