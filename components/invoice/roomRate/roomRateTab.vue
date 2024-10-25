@@ -164,10 +164,14 @@ const computedShowMenuItemEditRoomRate = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ROOM-RATE-EDIT'])))
 })
 
-const menuModel = ref([
-  { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
-  { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
-])
+const menuModel = props.isCreationDialog
+  ? ref([
+    { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
+  ])
+  : ref([
+    { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
+    { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
+  ])
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -231,8 +235,8 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
     resetValidation: false,
-    validation: z.number()
-      .refine(val => !Number.isNaN(val) && +val >= 0, { message: 'The Children field must be greater than 0' }).nullable()
+    // validation: z.number()
+    //   .refine(val => !Number.isNaN(val) && +val > 0, { message: 'The Children field must be greater than 0' }).nullable()
   },
   // {
   //   field: 'rateAdult',
@@ -409,7 +413,7 @@ const item = ref<GenericObject>({
   children: 0,
   rateAdult: 0,
   rateChild: 0,
-  hotelAmount: '0',
+  hotelAmount: 0,
   remark: '',
   booking: props.selectedBooking,
 })
@@ -424,7 +428,7 @@ const itemTemp = ref<GenericObject>({
   children: 0,
   rateAdult: 0,
   rateChild: 0,
-  hotelAmount: '0',
+  hotelAmount: 0,
   remark: '',
   booking: '',
 })
@@ -668,7 +672,7 @@ async function GetItemById(id: string) {
         item.value.children = response.children
         item.value.rateAdult = response.rateAdult
         item.value.rateChild = response.rateChild
-        item.value.hotelAmount = response.hotelAmount ? String(response.hotelAmount) : '0'
+        item.value.hotelAmount = response.hotelAmount ? String(response.hotelAmount) : 0
         item.value.remark = response.remark
         item.value.booking = response.booking?.id
         currentBooking.value = response.booking?.id
@@ -872,7 +876,7 @@ onMounted(() => {
       { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       // { field: 'roomType', header: 'Room Type', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
       // { field: 'ratePlan', header: 'Rate Plan', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
     ]
@@ -881,7 +885,6 @@ onMounted(() => {
   if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT || route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
     menuModel.value = [{ label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value) }]
   }
-
   if (!props.isCreationDialog) {
     getRoomRateList()
   }
