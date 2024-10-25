@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 
@@ -15,6 +16,9 @@ import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -196,14 +200,33 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
-        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(UUID.randomUUID(), 0L, 0L,
+        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
+                UUID.randomUUID(), 
+                0L, 
+                0L,
                 invoiceNumber,
-                invoiceToClone.getInvoiceDate(), invoiceToClone.getDueDate(),
+                //invoiceToClone.getInvoiceDate(), 
+                this.invoiceDate(invoiceToClone.getId()), 
+                invoiceToClone.getDueDate(),
                 true,
                 invoiceToClone.getInvoiceAmount(),
-                invoiceToClone.getInvoiceAmount(), invoiceToClone.getHotel(), invoiceToClone.getAgency(),
-                invoiceToClone.getInvoiceType(), status,
-                false, bookingDtos, attachmentDtos, null, null, invoiceToClone.getManageInvoiceType(), invoiceStatus, null, true, invoiceToClone, 0.00);
+                invoiceToClone.getInvoiceAmount(), 
+                invoiceToClone.getHotel(), 
+                invoiceToClone.getAgency(),
+                invoiceToClone.getInvoiceType(), 
+                status,
+                false, 
+                bookingDtos, 
+                attachmentDtos, 
+                null, 
+                null, 
+                invoiceToClone.getManageInvoiceType(), 
+                invoiceStatus, 
+                null, 
+                true, 
+                invoiceToClone, 
+                0.00
+        );
 
         ManageInvoiceDto created = service.create(invoiceDto);
 
@@ -251,6 +274,15 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 //        command.setRoomRates(roomRateDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
 //        command.setAttachments(attachmentDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
         command.setCloned(created.getId());
+    }
+
+    private LocalDateTime invoiceDate(UUID hotel) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
     public void calculateBookingHotelAmount(ManageBookingDto dto) {

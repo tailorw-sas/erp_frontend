@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClo
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
@@ -12,6 +13,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +37,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageInvoiceTransactionTypeService invoiceTransactionTypeService;
+    private final IInvoiceCloseOperationService closeOperationService;
 
     public TotalCloneCommandHandler(IManageInvoiceService invoiceService,
                                     IManageAgencyService agencyService,
@@ -44,7 +49,9 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                                     IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
                                     IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
                                     IInvoiceStatusHistoryService invoiceStatusHistoryService,
-                                    IAttachmentStatusHistoryService attachmentStatusHistoryService, IManageInvoiceTransactionTypeService invoiceTransactionTypeService) {
+                                    IAttachmentStatusHistoryService attachmentStatusHistoryService, 
+                                    IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
+                                    IInvoiceCloseOperationService closeOperationService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -59,6 +66,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.invoiceTransactionTypeService = invoiceTransactionTypeService;
+        this.closeOperationService = closeOperationService;
     }
 
 
@@ -299,7 +307,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 0L,
                 0L,
                 invoiceNumber,
-                command.getInvoiceDate(),
+                //command.getInvoiceDate(),
+                this.invoiceDate(invoiceToClone.getHotel().getId()),
                 dueDate,
                 true,
                 invoiceToClone.getInvoiceAmount(), //TODO: revisar si es mejor asi o calcularlo nuevamente
@@ -359,6 +368,15 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     )
             );
         }
+    }
+
+    private LocalDateTime invoiceDate(UUID hotel) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
     private void calculateBookingHotelAmount(ManageBookingDto dto) {
