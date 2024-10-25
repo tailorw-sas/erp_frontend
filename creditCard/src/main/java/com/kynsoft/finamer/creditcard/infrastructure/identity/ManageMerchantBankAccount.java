@@ -69,9 +69,7 @@ public class ManageMerchantBankAccount implements Serializable {
         this.accountNumber = dto.getAccountNumber();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
-        for (ManageCreditCardTypeDto creditCardType : dto.getCreditCardTypes()) {
-            this.creditCardTypes.add(new ManageCreditCardType(creditCardType));
-        }
+        this.creditCardTypes = dto.getCreditCardTypes() != null ? dto.getCreditCardTypes().stream().map(ManageCreditCardType::new).collect(Collectors.toSet()) : new HashSet<>();
     }
 
     public ManageMerchantBankAccountDto toAggregate() {
@@ -84,6 +82,18 @@ public class ManageMerchantBankAccount implements Serializable {
                 managerMerchant != null ? managerMerchant.stream().map(ManageMerchant::toAggregate).collect(Collectors.toSet()) : new HashSet<>(),
                 manageBank != null ? manageBank.toAggregate() : null,
                 accountNumber, description, status, ccardTypes);
+    }
+
+    public ManageMerchantBankAccountDto toAggregateSimple(){
+        return new ManageMerchantBankAccountDto(
+                id,
+                null,
+                manageBank != null ? manageBank.toAggregate() : null,
+                accountNumber,
+                description,
+                status,
+                null
+        );
     }
 
 }
