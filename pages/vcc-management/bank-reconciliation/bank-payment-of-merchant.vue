@@ -12,6 +12,7 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import { parseFormattedNumber } from '~/utils/helpers'
 
 const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
@@ -204,7 +205,7 @@ async function getMerchantBankAccountList(query: string) {
 
     for (const iterator of dataList) {
       const merchantNames = iterator.managerMerchant.map((item: any) => item.description).join(' - ')
-      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`, status: iterator.status, merchantData: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes}]
+      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`, status: iterator.status, merchantData: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes }]
     }
   }
   catch (error) {
@@ -217,6 +218,12 @@ async function handleSave(event: any) {
     // await saveItem(event)
     forceSave.value = false
   }
+}
+
+function setTransactions(event: any) {
+  BindTransactionList.value = [...event]
+  const totalAmount = BindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
+  subTotals.value.amount = totalAmount
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -346,8 +353,8 @@ function onSortField(event: any) {
     </div>
     <div v-if="transactionsToBindDialogOpen">
       <BankPaymentMerchantBindTransactionsDialog
-        :close-dialog="() => { transactionsToBindDialogOpen = false }" :is-creation-dialog="true" header="Transaction Items"
-        :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item"
+        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="BindTransactionList"
+        :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" @update:list-items="($event) => setTransactions($event)"
       />
     </div>
   </div>

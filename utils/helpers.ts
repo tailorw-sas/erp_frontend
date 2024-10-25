@@ -407,3 +407,18 @@ export function formatNumber(number: any) {
     maximumFractionDigits: 4
   }).format(number)
 }
+
+export function parseFormattedNumber(formattedNumber: string): number {
+  // Elimina cualquier carácter que no sea un número, punto o signo negativo
+  const sanitizedNumber = formattedNumber.replace(/[^0-9.-]/g, '')
+
+  // Convierte el string en un número
+  const parsedNumber = Number.parseFloat(sanitizedNumber)
+
+  // Verifica si el resultado es un número válido
+  if (Number.isNaN(parsedNumber)) {
+    throw new TypeError('El valor proporcionado no se puede convertir en un número.')
+  }
+
+  return parsedNumber
+}

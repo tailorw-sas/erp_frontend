@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { type PropType, ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
-import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
@@ -20,28 +19,34 @@ const props = defineProps({
     type: Function as any,
     required: true
   },
-  isCreationDialog: {
-    type: Boolean,
-    required: true
-  },
   currentBankPayment: {
     type: Object,
     required: true
   },
+  selectedItems: {
+    type: Array as PropType<any[]>,
+    required: true
+  }
 })
+
+const emit = defineEmits(['update:listItems'])
+
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 const BindTransactionList = ref<any[]>([])
 const loadingSaveAll = ref(false)
-const forceSave = ref(false)
 const dialogVisible = ref(props.openDialog)
+const selectedElements = ref<string[]>([])
 
-const item = ref({
-  manageMerchantBankAccount: null,
-  manageHotel: null,
-  amount: 0,
-  paidDate: '',
-  remark: '',
-} as GenericObject)
+const sClassMap: IStatusClass[] = [
+  { status: 'Sent', class: 'text-sent' },
+  { status: 'Created', class: 'text-created' },
+  { status: 'Received', class: 'text-received' },
+  { status: 'Declined', class: 'text-declined' },
+  { status: 'Paid', class: 'text-paid' },
+  { status: 'Cancelled', class: 'text-cancelled' },
+  { status: 'Reconciled', class: 'text-reconciled' },
+  { status: 'Refund', class: 'text-refund' },
+]
 
 const columns: IColumn[] = [
   { field: 'id', header: 'Id', type: 'text' },
@@ -50,6 +55,7 @@ const columns: IColumn[] = [
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
   { field: 'amount', header: 'Amount', type: 'text' },
+  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap },
 ]
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -59,6 +65,7 @@ const options = ref({
   uriApi: 'transactions',
   loading: false,
   actionsAsMenu: false,
+  selectionMode: 'multiple',
   messageToDelete: 'Do you want to save the change?',
 })
 const payloadOnChangePage = ref<PageState>()
@@ -110,12 +117,12 @@ async function getList() {
       operator: 'IN',
       value: creditCardTypeIds,
       logicalOperation: 'AND'
-    }, {
+    }, /* {
       key: 'amount',
       operator: 'LESS_THAN_OR_EQUAL_TO',
       value: props.currentBankPayment.amount,
       logicalOperation: 'AND'
-    }]
+    } */]
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
@@ -177,11 +184,13 @@ async function getList() {
   }
 }
 
-async function handleSave(event: any) {
-  if (event) {
-    // await saveItem(event)
-    forceSave.value = false
-  }
+async function handleSave() {
+  emit('update:listItems', selectedElements.value)
+  props.closeDialog()
+}
+
+async function onMultipleSelect(data: any) {
+  selectedElements.value = data
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -198,6 +207,12 @@ function onSortField(event: any) {
     parseDataTableFilter(event.filter)
   }
 }
+// WATCH FUNCTIONS -------------------------------------------------------------------------------------
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getList()
+})
 
 onMounted(() => {
   getList()
@@ -389,24 +404,55 @@ onMounted(() => {
       </Accordion>
     </div> -->
     <div class="mt-4" />
-    <pre>{{ props.currentBankPayment }}</pre>
     <DynamicTable
       :data="BindTransactionList"
       :columns="columns"
       :options="options"
       :pagination="pagination"
+      :selected-items="props.selectedItems"
       @on-change-pagination="payloadOnChangePage = $event"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
+      @update:selected-items="onMultipleSelect($event)"
     />
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0" icon="pi pi-lock" @click="() => {}" />
-      <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
+      <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="loadingSaveAll" @click="handleSave()" />
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="closeDialog()" />
     </div>
   </Dialog>
 </template>
 
-<style scoped lang="scss">
-
+<style lang="scss">
+.text-sent {
+  background-color: #006400;
+  color: #fff;
+}
+.text-created {
+  background-color: #FF8D00 !important;
+  color: #fff;
+}
+.text-received {
+  background-color: #3403F9 !important;
+  color: #fff;
+}
+.text-declined {
+  background-color: #661E22 !important;
+  color: #fff;
+}
+.text-paid {
+  background-color: #2E892E !important;
+  color: #fff;
+}
+.text-reconciled {
+  background-color: #05D2FF !important;
+  color: #fff;
+}
+.text-refund {
+  background-color: #666666 !important;
+  color: #fff;
+}
+.text-cancelled {
+  background-color: #888888 !important;
+  color: #fff;
+}
 </style>

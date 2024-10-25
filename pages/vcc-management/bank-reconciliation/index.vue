@@ -175,7 +175,7 @@ const columns: IColumn[] = [
   { field: 'detailsAmount', header: 'Details Amount', type: 'text' },
   { field: 'date', header: 'Date', type: 'date' },
   { field: 'remark', header: 'Remark', type: 'text' },
-  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
+  // { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })

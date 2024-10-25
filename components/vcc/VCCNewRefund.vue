@@ -8,6 +8,7 @@ import Divider from 'primevue/divider'
 import { GenericService } from '~/services/generic-services'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
+import { parseFormattedNumber } from '~/utils/helpers'
 
 const props = defineProps({
   openDialog: {
@@ -210,21 +211,6 @@ function clearForm() {
     partial: 0,
   }
   formReload.value++
-}
-
-function parseFormattedNumber(formattedNumber: string): number {
-  // Elimina cualquier carácter que no sea un número, punto o signo negativo
-  const sanitizedNumber = formattedNumber.replace(/[^0-9.-]/g, '')
-
-  // Convierte el string en un número
-  const parsedNumber = Number.parseFloat(sanitizedNumber)
-
-  // Verifica si el resultado es un número válido
-  if (Number.isNaN(parsedNumber)) {
-    throw new TypeError('El valor proporcionado no se puede convertir en un número.')
-  }
-
-  return parsedNumber
 }
 
 function requireConfirmationToSave(item: any) {
