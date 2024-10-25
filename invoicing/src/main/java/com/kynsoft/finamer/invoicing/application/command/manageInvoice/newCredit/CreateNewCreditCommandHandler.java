@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -195,7 +198,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 0L,
                 0L,
                 invoiceNumber,
-                command.getInvoiceDate(),
+                //command.getInvoiceDate(),
+                this.invoiceDate(parentInvoice.getHotel().getId()),
                 dueDate,
                 true,
                 invoiceAmount,
@@ -249,4 +253,14 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             );
         }
     }
+
+    private LocalDateTime invoiceDate(UUID hotel) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
+    }
+
 }
