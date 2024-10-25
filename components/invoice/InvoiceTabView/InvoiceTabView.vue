@@ -306,7 +306,6 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-
   if (props.isCreationDialog) {
     showTabs.value = route.query.type !== InvoiceType.CREDIT
   }
@@ -392,7 +391,7 @@ onMounted(async () => {
             :show-totals="showTotals"
           />
         </TabPanel>
-        <TabPanel v-if="showTabs">
+        <TabPanel v-if="showTabs && !isCreationDialog">
           <template #header>
             <div class="flex align-items-center gap-2 p-2" :style="`${active === 2 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
@@ -426,7 +425,7 @@ onMounted(async () => {
             :add-item="addAdjustment"
             :update-item="updateAdjustment"
             :is-creation-dialog="isCreationDialog"
-            :selected-invoice="selectedInvoice as any"
+            :selected-invoice="selectedInvoice"
             :is-detail-view="isDetailView"
             :show-totals="showTotals"
           />
