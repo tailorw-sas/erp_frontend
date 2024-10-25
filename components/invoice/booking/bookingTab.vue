@@ -1810,7 +1810,7 @@ onMounted(() => {
     // },
     // Esto es solo para pruebas
     {
-      label: 'New Edit booking',
+      label: 'Edit booking',
       command: () => newOpenEditBooking(selectedBooking.value),
       disabled: computedShowMenuItemEditBooking
     },
