@@ -1058,7 +1058,7 @@ onMounted(async () => {
           v-model="data.invoiceDate"
           date-format="yy-mm-dd"
           :max-date="new Date()"
-          :disabled="true"
+          :disabled="false"
           @update:model-value="($event) => {
             onUpdate('invoiceDate', $event)
           }"
