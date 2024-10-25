@@ -118,28 +118,28 @@ const ENUM_FILTER = [
 ]
 
 const columns: IColumn[] = [
-    { field: 'code', header: '', type: 'text', showFilter: false, sortable: false },
+    { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '25px' },
     { field: 'paymentId', header: 'Id', type: 'text' },
-    { field: 'transDate', header: 'Trans. Date', type: 'text' },
+    { field: 'transactionDate', header: 'Trans. Date', type: 'text' },
     { field: 'hotel', header: 'Hotel', type: 'text' },
     { field: 'agency', header: 'Agencia', type: 'text' },
     { field: 'paymentAmount', header: 'P.Amount', type: 'text' },
-    { field: 'deposit', header: 'Deposit Balance', type: 'text' },
-    { field: 'applyd', header: 'Applied', type: 'text' },
-    { field: 'notapply', header: 'Not Applied', type: 'text' },
+    { field: 'depositBalance', header: 'D.Balance', type: 'text' },
+    { field: 'applied', header: 'Applied', type: 'text' },
+    { field: 'notapplied', header: 'Not Applied', type: 'text' },
 
 ]
 const columnsInvoice: IColumn[] = [
-    { field: 'code', header: '', type: 'text', showFilter: false, sortable: false },
+    { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '25px' },
     { field: 'hotel', header: 'Hotel', type: 'text' },
     { field: 'agency', header: 'Agency', type: 'text' },
-    { field: 'invoiceNo', header: 'Invoice No', type: 'text' },
-    { field: 'genDate', header: 'Generation Date', type: 'text' },
+    { field: 'invoiceNo', header: 'Inv.No', type: 'text' },
+    { field: 'invoiceDate', header: 'Gen.Date', type: 'text' },
     { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
     { field: 'paymentAmount', header: 'P.Amount', type: 'text' },
-    { field: 'invoiceBalance', header: 'Invoice Balance', type: 'text' },
+    { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
     { field: 'aging', header: 'Aging', type: 'text' },
-    { field: 'status', header: 'Status', type: 'bool' },
+    { field: 'invoiceStatus', header: 'Status', type: 'bool' },
 
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -593,9 +593,9 @@ onMounted(() => {
 </script>
 <template>
 
-    <div class="grid">
+    <div class="grid p-0 m-0 my-0 py-0 px-0">
 
-        <div class="col-12 md:order-1 md:col-6 xl:col-6">
+        <div class="col-12 md:order-1 md:col-6 xl:col-6 lg:col-6 mt-0 pm-0">
             <div class="flex justify-content-between align-items-center">
                 <!-- Título a la derecha -->
                 <div class="font-bold">
@@ -621,214 +621,279 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-            <div class="card p-0">
-                <Accordion :active-index="0" class="mb-0">
-                    <AccordionTab>
-                        <template #header>
-                            <div class="text-white font-bold custom-accordion-header">
-                                Client View
-                            </div>
-                        </template>
-                        <div class="grid">
-                            <div class="col-12 md:col-6 lg:col-6 flex pb-0">
+    
+         <!-- Accordion y campos del payment -->
 
-                                <div class="flex flex-column gap-2 w-full">
-                                    <div class="flex align-items-center gap-2">
-                                        <label class="filter-label font-bold ml-3" for="">Client:</label>
-                                        <div class="w-full">
-                                            <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete"
-                                                multiple field="name" item-value="id" class="w-full"
-                                                :model="filterToSearch.client" :suggestions="clientList" placeholder=""
-                                                @load="($event) => getClientList($event)" @change="($event) => {
-
-                                                    if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-                                                        filterToSearch.client = $event.filter((element: any) => element?.id === 'All')
-                                                    }
-                                                    else {
-
-                                                        filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
-                                                    }
-
-                                                    filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : []
-                                                }">
-                                                <template #option="props">
-                                                    <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                                                </template>
-                                                <template #chip="{ value }">
-                                                    <div>
-                                                        {{ value?.code }}
-                                                    </div>
-                                                </template>
-                                            </DebouncedAutoCompleteComponent>
-                                        </div>
+<div class="card p-0 m-0">
+    <!-- Encabezado Completo -->
+    <div class="font-bold text-lg bg-primary custom-card-header px-4">
+        Client View
+    </div>
+    
+    <!-- Contenedor de Contenido -->
+    <div style="display: flex; height: 23vh;">
+    <!-- Sección Izquierda -->
+    <div class="p-0 m-0 py-0 px-0" style="flex: 1;">
+        <div class="grid p-0 py-0 px-0 m-0">
+            <!-- Selector de Cliente -->
+            <div class="col-12 md:col-12 lg:col-12 flex pb-0 w-full ">
+                <div class="flex flex-column gap-2 w-full">
+                    <div class="flex align-items-center gap-2 px-1 py-1">
+                        <label class="filter-label font-bold ml-0" for="client">Client<span class="text-red">*</span></label>
+                        <div class="w-full">
+                            <DebouncedAutoCompleteComponent 
+                                v-if="!loadingSaveAll" 
+                                id="autocomplete"
+                                multiple 
+                                field="name" 
+                                item-value="id" 
+                                class="w-full"
+                                :model="filterToSearch.client" 
+                                :suggestions="clientList" 
+                                placeholder=""
+                                @load="($event) => getClientList($event)" 
+                                @change="($event) => {
+                                    if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                                        filterToSearch.client = $event.filter((element: any) => element?.id === 'All');
+                                    } else {
+                                        filterToSearch.client = $event.filter((element: any) => element?.id !== 'All');
+                                    }
+                                    filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : [];
+                                }">
+                                <template #option="props">
+                                    <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                                </template>
+                                <template #chip="{ value }">
+                                    <div>
+                                        {{ value?.code }}
                                     </div>
-
-                                    <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
-                                        <label class="filter-label font-bold" for="">Agency:</label>
-                                        <div class="w-full" style=" z-index:5 ">
-                                            <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete"
-                                                :multiple="true" class="w-full" field="name" item-value="id"
-                                                :model="filterToSearch.agency" :suggestions="agencyList"
-                                                @load="($event) => getAgencyList($event)" @change="($event) => {
-                                                    if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                                                        filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
-                                                    }
-                                                    else {
-                                                        filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
-                                                    }
-                                                }">
-                                                <template #option="props">
-                                                    <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                                                </template>
-                                            </DebouncedAutoCompleteComponent>
-
-                                        </div>
-
-
-                                    </div>
-                                    <div class="flex align-items-center gap-2">
-                                        <label class="filter-label font-bold ml-3" for="">Hotel:</label>
-                                        <div class="w-full">
-                                            <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete"
-                                                :multiple="true" class="w-full" field="name" item-value="id"
-                                                :model="filterToSearch.hotel" :suggestions="hotelList"
-                                                @load="($event) => getHotelList($event)" @change="($event) => {
-                                                    if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                                                        filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                                                    }
-                                                    else {
-                                                        filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                                                    }
-                                                }">
-                                                <template #option="props">
-                                                    <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                                                </template>
-                                            </DebouncedAutoCompleteComponent>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex align-items-center ">
-                                        <Button v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
-                                            :disabled="disabledSearch" :loading="loadingSearch"
-                                            @click="searchAndFilter" />
-                                        <Button v-tooltip.top="'Clear'" outlined class="w-3rem"
-                                            icon="pi pi-filter-slash" :loading="loadingSearch"
-                                            @click="clearFilterToSearch" />
-                                    </div>
-
-                                </div>
-                            </div>
-
-
-                            <div class="col-12 xl:col-6 mb-3"> <!-- Segunda mitad para otros campos -->
-                                <!-- Aquí puedes agregar los otros campos que deseas mostrar -->
-                                <div class="flex flex-col mt-0">
-                                    <label for="otherField1" class="font-bold mt-2 ml-5">Client Name:</label>
-
-                                    <div class="w-full lg:w-full">
-                                        <InputText v-model="filterToSearch.otherField1" class="w-full" />
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-col mt-2">
-                                    <label for="otherField2" class="font-bold mt-2 ml-5">Client Status:</label>
-                                    <div class="w-full lg:w-full">
-                                        <InputText v-model="filterToSearch.otherField2" class="w-full" />
-                                    </div>
-                                </div>
-                                <div class="flex flex-col mt-2">
-                                    <label for="otherField2" class="font-bold mt-2 ml-5">Credit Days:</label>
-
-                                    <div class="w-full lg:w-full">
-
-                                        <InputText v-model="filterToSearch.otherField2" class="w-full" />
-                                    </div>
-                                </div>
-                                <div class="flex flex-col mt-2">
-                                    <label for="otherField2" class="font-bold mt-2 ml-5">Language:</label>
-
-                                    <div class="w-1/2 lg:w-full">
-
-                                        <InputText v-model="filterToSearch.otherField2" class="w-full " />
-                                    </div>
-                                    <div class="w-1/2 lg:w-full">
-
-                                        <InputText v-model="filterToSearch.otherField2" class="w-full mx-2" />
-                                    </div>
-                                </div>
-
-
-                                <!-- Agrega más campos según sea necesario -->
-                            </div>
+                                </template>
+                            </DebouncedAutoCompleteComponent>
                         </div>
-                    </AccordionTab>
-                </Accordion>
-            </div>
-            <div class="grid grid-nogutter">
-                <div class="col-12  md:col-10 lg:col-10 xl:col-10 mt-2 sm:col-10">
-                    <div class="card p-0 ">
-                        <div class="header-content text-lg font-bold"
-                            style="background-color: var(--primary-color); color: white; padding: 10px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
-                            Payment View
-                        </div>
-
-
+                    </div> 
+                </div>
+                
+                
+            </div> 
+             <!-- Selector de Agencia -->
+             <div class="col-12 pb-0">
+                    <div class="flex flex-column gap-2 w-full">
+                        <div class="flex align-items-center gap-2 px-0 py-0">
+                            <label class="filter-label font-bold ml-0 " for="agency">Agency<span class="text-red">*</span></label>
+                            <div class="w-full">
+                                <DebouncedAutoCompleteComponent 
+                                    v-if="!loadingSaveAll" 
+                                    id="autocomplete"
+                                    multiple 
+                                    field="name" 
+                                    item-value="id" 
+                                    class="w-full mr-2 "
+                                    :model="filterToSearch.agency" 
+                                    :suggestions="agencyList" 
+                                    placeholder=""
+                                    @load="($event) => getAgencyList($event)" 
+                                    @change="($event) => {
+                                        filterToSearch.agency = $event;
+                                    }">
+                                    <template #option="props">
+                                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                                    </template>
+                                    <template #chip="{ value }">
+                                        <div>
+                                            {{ value?.code }}
+                                        </div>
+                                    </template>
+                                </DebouncedAutoCompleteComponent>
+                            </div>
+                           
+                        </div> 
+                    </div>
+                    
+                </div>
+                 <!-- Selector de Hotel -->
+                 <div class="col-12 pb-0 ">
+                    <div class="flex flex-column gap-2 w-full">
+                        <div class="flex align-items-center gap-2 px-1 py-0">
+                            <label class="filter-label font-bold ml-2" for="hotel">Hotel<span class="text-red">*</span></label>
+                            <div class="w-full">
+                                <DebouncedAutoCompleteComponent 
+                                    v-if="!loadingSaveAll" 
+                                    id="autocomplete-hotel"
+                                    multiple 
+                                    field="name" 
+                                    item-value="id" 
+                                    class="w-full"
+                                    :model="filterToSearch.hotel" 
+                                    :suggestions="hotelList" 
+                                    placeholder=""
+                                    @load="($event) => getHotelList($event)" 
+                                    @change="($event) => {
+                                        filterToSearch.hotel = $event;
+                                    }">
+                                    <template #option="props">
+                                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                                    </template>
+                                    <template #chip="{ value }">
+                                        <div>
+                                            {{ value?.code }}
+                                        </div>
+                                    </template>
+                                </DebouncedAutoCompleteComponent>
+                            </div>
+                        </div> 
                     </div>
                 </div>
-                <div class="col-12 md:col-2 lg:col-2 sm:col-2 xl:col-2  flex align-items-center justify-content-center ">
-                    <Button label="More" style="height: 60%; text-decoration: underline;" severity="primary"
-                        class="w-6rem mt-1 mb-3 text-lg" icon="pi pi-plus" />
+                <div class="flex col-12">
+                                    <Button 
+                                        v-tooltip.top="'Search'" 
+                                        class="w-3rem mx-2" 
+                                        icon="pi pi-search"
+                                        :disabled="disabledSearch" 
+                                        :loading="loadingSearch"
+                                        @click="searchAndFilter" />
+                                    <Button 
+                                        v-tooltip.top="'Clear'" 
+                                        outlined 
+                                        class="w-3rem"
+                                        icon="pi pi-filter-slash" 
+                                        :loading="loadingSearch"
+                                        @click="clearFilterToSearch" />
+                                </div>
+        </div>
+    </div>
+
+    <!-- Divisor Vertical -->
+    <div style="width: 4px; background-color: #d3d3d3; height: auto; margin: 0;"></div>
+
+    <!-- Sección Derecha -->
+    <div class="px-2 py-0 m-1 my-0 mt-0" style="flex: 1; padding: 16px;">
+        <div class="grid py-0 my-0 px-0">
+        <!-- Fila para Cliente y Agencia -->
+        <div class="col-12 mb-0 ">
+            <div class="flex items-center w-full"> <!-- Usar flex para alinear en una fila -->
+                <label for="client" class="font-bold mb-0 mt-2 required" style="margin-right: 8px; flex: 0 0 auto;">Client Name</label>
+                <InputText id="client" v-model="filterToSearch.clientName" class="w-full" style="flex: 1;" />
+            </div>
+        </div>
+
+        <div class="col-12 mb-0 py-0">
+            <div class="flex items-center w-full"> <!-- Usar flex para alinear en una fila -->
+                <label for="client" class="font-bold mb-0 mt-1 required" style="margin-right: 8px; flex: 0 0 auto;">Client Status</label>
+                <InputText id="client" v-model="filterToSearch.clientName" class="w-full" style="flex: 1;" />
+            </div>
+        </div>
+        <div class="col-12 mb-0 ">
+            <div class="flex items-center w-full"> <!-- Usar flex para alinear en una fila -->
+                <label for="client" class="font-bold mb-0 ml-1 mt-1 " style="margin-right: 9px; flex: 0 0 auto;">Credit Days</label>
+                <InputText id="client" v-model="filterToSearch.clientName" class="w-full " style="flex: 1;" />
+            </div>
+        </div>
+        <div class="col-12 mb-0 py-0 pb-0">
+            <div class="flex items-center w-full"> <!-- Usar flex para alinear en una fila -->
+                <label for="language" class="font-bold mb-0 ml-3" style="margin-right: 8px; flex: 0 0 auto;">Language</label>
+                
+                <div style="flex: 1; display: flex; gap: 8px;"> <!-- Contenedor para los dos inputs -->
+                    <InputText id="language1" v-model="filterToSearch.language1" class="w-full" />
+                      <!-- Input para Time Zone con estilo azul -->
+                      <InputText 
+                        id="timezone" 
+                        v-model="currentTime" 
+                        placeholder="Time Zone"
+                        class="w-full timezone-input" 
+                        style="background-color: var(--primary-color); color: white;" 
+                        readonly 
+                    />
                 </div>
             </div>
+        </div>
+</div>
+</div>
 
+
+</div>
+</div>
+            <!--Aqui termina-->
+            <div class="grid grid-nogutter px-0 py-0 mt-0">
+                <div class="col-12 flex align-items-center"> <!-- Usar flex para alinear en la misma fila -->
+                    <div class="col-11 md:col-11 lg:col-11 xl:col-11 py-0 px-0">
+                        <div class="card py-1 p-0 my-0">
+                            <div class="header-content text-lg font-bold"
+                                style="background-color: var(--primary-color); color: white; padding: 10px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                                Payment View
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="col-1 md:col-1 lg:col-1 sm:col-1 xl:col-1 flex align-items-center justify-content-end px-1 my-0 p-0 w-auto">
+                        <Button label="+More" style="height: 70%;text-decoration: underline;" severity="primary"
+                            v-tooltip.left="'More'" class="mr-2 py-2 text-lg" />
+                        <!-- Añadido margen derecho para separación -->
+                    </div>
+                </div>
+            </div>
             <DynamicTable :data="listItems" :columns="columns" :options="options" :pagination="pagination"
                 @on-confirm-create="clearForm" @open-edit-dialog="getItemById($event)"
                 @update:clicked-item="getItemById($event)" @on-change-pagination="payloadOnChangePage = $event"
-                @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField" >
-               
+                @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField">
+
                 <template #datatable-footer>
-            <ColumnGroup type="footer" class="flex align-items-center ">
-              <Row>
-                <Column footer="Total #:" :colspan="3" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column  footer="Total $:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column  footer="Total Transit #:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column  footer="Total Deposit #:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-       
-                <Column :colspan="2" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-             
-            
-            </Row>
-            <Row>
-                <Column footer="Total Applied $:" :colspan="3" footer-style="text-align:right; font-weight: bold; color:#000000; background-color:#ffffff;" />
-                <Column  footer="Total N.A $:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-                <Column  footer="Total Transit $:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-                <Column  footer="Total Deposit $:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-       
-                <Column :colspan="2" footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-             
-            
-            </Row>
-            <Row>
-                <Column footer="Total Applied %:" :colspan="3" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column  footer="Total N.A %:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column  footer="Total Transit %:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column  footer="Total Deposit %:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-       
-                <Column :colspan="2" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-             
-            
-            </Row>
+                    <ColumnGroup type="footer" class="flex align-items-center ">
+                        <Row>
+                            <Column footer="Total #:" :colspan="3"
+                                footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                            <Column footer="Total $:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total Transit #:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total Deposit #:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
 
-            </ColumnGroup>
+                            <Column :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
 
-            
-          </template>
-          
-          </DynamicTable>
-          
+
+                        </Row>
+                        <Row>
+                            <Column footer="Total Applied $:" :colspan="3"
+                                footer-style="text-align:right; font-weight: bold; color:#000000; background-color:#ffffff;" />
+                            <Column footer="Total N.A $:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                            <Column footer="Total Transit $:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                            <Column footer="Total Deposit $:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+
+                            <Column :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+
+
+                        </Row>
+                        <Row>
+                            <Column footer="Total Applied %:" :colspan="3"
+                                footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                            <Column footer="Total N.A %:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total Transit %:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total Deposit %:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+
+                            <Column :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+
+
+                        </Row>
+
+                    </ColumnGroup>
+
+
+                </template>
+
+            </DynamicTable>
+
         </div>
         <!--Section Invoice-->
-        <div class="col-12 md:order-0 md:col-6 xl:col-6">
+        <div class="col-12 md:order-0 md:col-6 xl:col-6 px-0">
             <div class="flex justify-content-end align-items-center">
 
                 <div class="flex justify-content-end align-items-center">
@@ -852,114 +917,116 @@ onMounted(() => {
 
                 </div>
             </div>
-            <div class="card p-0">
-                <Accordion :active-index="0" class="mb-2">
-                    <AccordionTab>
-                        <template #header>
-                            <div class="text-white font-bold custom-accordion-header">
-                                Client Details
-                            </div>
-                        </template>
-                        <div class="flex gap-4 flex-column lg:flex-row">
-                            <div class="flex align-items-center gap-2">
-                                <label for="email3">Criteria</label>
-                                <div class="w-full lg:w-auto">
-                                    <Dropdown v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]"
-                                        option-label="name" placeholder="Criteria" return-object="false"
-                                        class="align-items-center w-full" show-clear />
-                                </div>
-                            </div>
-                            <div class="flex align-items-center gap-2">
-                                <label for="email">Search</label>
-                                <div class="w-full lg:w-auto">
-                                    <IconField icon-position="left" class="w-full">
-                                        <InputText v-model="filterToSearch.search" type="text" placeholder="Search"
-                                            class="w-full" />
-                                        <InputIcon class="pi pi-search" />
-                                    </IconField>
-                                </div>
-                            </div>
-                            <div class="flex align-items-center">
-                                <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search"
-                                    :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter" />
-                                <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
-                                    :disabled="disabledClearSearch" :loading="loadingSearch"
-                                    @click="clearFilterToSearch" />
-                            </div>
-                        </div>
-                    </AccordionTab>
-                </Accordion>
-            </div>
-            <div class="grid grid-nogutter">
-                <div class="col-12 xl:col-10 lg:col-10 md:col-10 sm:col-10 mt-2">
-                    <div class="card p-0 ">
-                        <div class="header-content text-lg font-bold"
-                            style="background-color: var(--primary-color); color: white; padding: 10px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
-                            Invoice View
-                        </div>
 
-
+            <div class="card p-0 m-0">
+                <div style="max-height: 28vh; height: 28vh">
+                    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+                        Client Details
                     </div>
                 </div>
-                <div class="col-12 xl:col-2 lg:col-2 sm:col-2 md:col-2  flex align-items-center justify-content-center ">
-                    <Button label="More" style="height: 60%; text-decoration: underline;" severity="primary"
-                        class="w-6rem mt-1 mb-3 text-lg" icon="pi pi-plus" />
+            </div>
+            <div class="grid grid-nogutter px-0 py-0 mt-0">
+                <div class="col-12 flex align-items-center"> <!-- Usar flex para alinear en la misma fila -->
+                    <div class="col-11 md:col-11 lg:col-11 xl:col-11 py-0 px-0">
+                        <div class="card py-1 p-0 my-0">
+                            <div class="header-content text-lg font-bold"
+                                style="background-color: var(--primary-color); color: white; padding: 10px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                                Invoice View
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="col-1 md:col-1 lg:col-1 sm:col-1 xl:col-1 flex align-items-center justify-content-end px-1 my-0 p-0 w-auto">
+                        <Button label="+More" style="height: 70%;text-decoration: underline;" severity="primary"
+                            v-tooltip.left="'More'" class="mr-2 py-2 text-lg" />
+                        <!-- Añadido margen derecho para separación -->
+                    </div>
                 </div>
             </div>
+
             <DynamicTable :data="listItemsInvoice" :columns="columnsInvoice" :options="optionsInvoice"
                 :pagination="paginationInvoice" @on-confirm-create="clearForm" @open-edit-dialog="getItemById($event)"
                 @update:clicked-item="getItemById($event)" @on-change-pagination="payloadOnChangePage = $event"
-                @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField" >
+                @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField">
                 <template #datatable-footer>
-            <ColumnGroup type="footer" class="flex align-items-center ">
-              <Row>
-                <Column footer="Total #:" :colspan="3" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column  footer="Total $:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column  footer="Total Pending #:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column  footer="Total Invoice B #:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-       
-                <Column :colspan="2" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-             
-            
-            </Row>
-            <Row>
-                <Column footer="Total 30 Days #:" :colspan="3" footer-style="text-align:right; font-weight: bold; color:#000000; background-color:#ffffff;" />
-                <Column  footer="Total 60 Days #:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-                <Column  footer="Total 90 Days #:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-                <Column  footer="Total 120 Days #:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-       
-                <Column :colspan="2" footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-             
-            
-            </Row>
-            <Row>
-                <Column footer="Total 30 Days $:" :colspan="3" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column  footer="Total 60 Days $:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column  footer="Total 90 Days $:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column  footer="Total 120 Days $:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-       
-                <Column :colspan="2" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-             
-            
-            </Row>
-            <Row>
-                <Column footer="Total 30 Days %:" :colspan="3" footer-style="text-align:right; font-weight: bold; color:#000000; background-color:#ffffff;" />
-                <Column  footer="Total 60 Days %:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-                <Column  footer="Total 90 Days %:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-                <Column  footer="Total 120 Days %:" :colspan="2"  footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-       
-                <Column :colspan="2" footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-             
-            
-            </Row>
+                    <ColumnGroup type="footer" class="flex align-items-center ">
+                        <Row>
+                            <Column footer="Total #:" :colspan="3"
+                                footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                            <Column footer="Total $:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total Pending #:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total Invoice B #:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
 
-            </ColumnGroup>
-            </template>
-        </DynamicTable>
+                            <Column :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+
+
+                        </Row>
+                        <Row>
+                            <Column footer="Total 30 Days #:" :colspan="3"
+                                footer-style="text-align:right; font-weight: bold; color:#000000; background-color:#ffffff;" />
+                            <Column footer="Total 60 Days #:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                            <Column footer="Total 90 Days #:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                            <Column footer="Total 120 Days #:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+
+                            <Column :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+
+
+                        </Row>
+                        <Row>
+                            <Column footer="Total 30 Days $:" :colspan="3"
+                                footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                            <Column footer="Total 60 Days $:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total 90 Days $:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total 120 Days $:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+
+                            <Column :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+
+
+                        </Row>
+                        <Row>
+                            <Column footer="Total 30 Days %:" :colspan="3"
+                                footer-style="text-align:right; font-weight: bold; color:#000000; background-color:#ffffff;" />
+                            <Column footer="Total 60 Days %:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                            <Column footer="Total 90 Days %:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                            <Column footer="Total 120 Days %:" :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+
+                            <Column :colspan="2"
+                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+
+
+                        </Row>
+
+                    </ColumnGroup>
+                </template>
+            </DynamicTable>
         </div>
     </div>
 </template>
 <style lang="scss">
+  .timezone-input {
+        background-color: var(--primary-color); 
+        color: white; 
+        font-weight: bold;
+    }
+    .timezone-input::placeholder {
+        color: white; /* Cambia el color del placeholder a blanco */
+        
+    }
 .header-card {
     border: 1px solid #ccc;
     /* Borde de la tarjeta */
@@ -970,4 +1037,7 @@ onMounted(() => {
     overflow: hidden;
     /* Asegura que los bordes redondeados se apliquen correctamente */
 }
+.text-red {
+        color: red; /* Define color rojo para el asterisco */
+    }
 </style>
