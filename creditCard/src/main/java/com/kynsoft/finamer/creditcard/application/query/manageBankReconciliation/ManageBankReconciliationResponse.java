@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ManageBankReconciliationResponse implements IResponse {
 
+    private UUID id;
     private Long reconciliationId;
     private HotelToBankReconciliationResponse hotel;
     private MerchantBankAccountToReconciliationResponse merchantBankAccount;
@@ -25,6 +27,7 @@ public class ManageBankReconciliationResponse implements IResponse {
     private StatusToReconcileResponse reconcileStatus;
 
     public ManageBankReconciliationResponse(ManageBankReconciliationDto dto){
+        this.id = dto.getId();
         this.reconciliationId = dto.getReconciliationId();
         this.hotel = dto.getHotel() != null ? new HotelToBankReconciliationResponse(dto.getHotel()) : null;
         this.merchantBankAccount = dto.getMerchantBankAccount() != null ? new MerchantBankAccountToReconciliationResponse(dto.getMerchantBankAccount()) : null;
