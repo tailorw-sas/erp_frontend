@@ -5,6 +5,7 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import { parseFormattedNumber } from '~/utils/helpers'
 
 const props = defineProps({
   header: {
@@ -83,6 +84,11 @@ const pagination = ref<IPagination>({
   totalElements: 0,
   totalPages: 0,
   search: ''
+})
+
+const computedTransactionAmountSelected = computed(() => {
+  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
+  return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -429,10 +435,25 @@ onMounted(() => {
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
       @update:selected-items="onMultipleSelect($event)"
-    />
-    <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="loadingSaveAll" @click="handleSave()" />
-      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="closeDialog()" />
+    >
+      <template #datatable-footer>
+        <ColumnGroup type="footer" class="flex align-items-center">
+          <Row>
+            <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
+            <Column :footer="formatNumber(subTotals.amount)" />
+            <Column :colspan="1" />
+          </Row>
+        </ColumnGroup>
+      </template>
+    </DynamicTable>
+    <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
+      <Badge
+        v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
+      />
+      <div>
+        <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="loadingSaveAll" @click="handleSave()" />
+        <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="closeDialog()" />
+      </div>
     </div>
   </Dialog>
 </template>

@@ -18,12 +18,12 @@ const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
 const BindTransactionList = ref<any[]>([])
-const BindTransactionListTemp = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
 const subTotals: any = ref({ amount: 0 })
+const selectedElements = ref<any[]>([])
 
 const item = ref({
   manageMerchantBankAccount: null,
@@ -111,6 +111,7 @@ const options = ref({
   uriApi: 'transactions',
   loading: false,
   actionsAsMenu: false,
+  selectionMode: 'multiple',
   messageToDelete: 'Do you want to save the change?',
 })
 const payloadOnChangePage = ref<PageState>()
@@ -130,7 +131,29 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
+const computedTransactionAmountSelected = computed(() => {
+  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
+  return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
+})
+
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+
+async function onMultipleSelect(data: any) {
+  // Crear un Set de IDs para los seleccionados globalmente y los seleccionados en la página actual
+  const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
+  const currentPageSelectedIds = new Set(data.map((item: any) => item.id))
+
+  // Crear un nuevo array que contenga la selección global optimizada
+  // Actualizar selectedElements solo una vez
+  selectedElements.value = [
+    // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
+    ...selectedElements.value.filter((item: any) =>
+      currentPageSelectedIds.has(item.id) || !BindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
+    ),
+    // Agregar nuevos elementos seleccionados en la página actual
+    ...data.filter((item: any) => !selectedIds.has(item.id))
+  ]
+}
 
 function clearForm() {
   item.value = JSON.parse(JSON.stringify(itemTemp.value))
@@ -333,24 +356,31 @@ function onSortField(event: any) {
       :columns="columns"
       :options="options"
       :pagination="pagination"
+      :selected-items="selectedElements"
       @on-change-pagination="payloadOnChangePage = $event"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
+      @update:selected-items="onMultipleSelect($event)"
     >
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="5" footer-style="text-align:right" />
+            <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
             <Column :footer="formatNumber(subTotals.amount)" />
           </Row>
         </ColumnGroup>
       </template>
     </DynamicTable>
-    <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.manageMerchantBankAccount == null || item.manageHotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
-      <Button v-tooltip.top="'Payment'" class="w-3rem ml-1" disabled icon="pi pi-dollar" @click="() => {}" />
-      <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
-      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => {}" />
+    <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
+      <Badge
+        v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
+      />
+      <div>
+        <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.manageMerchantBankAccount == null || item.manageHotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+        <Button v-tooltip.top="'Payment'" class="w-3rem ml-1" disabled icon="pi pi-dollar" @click="() => {}" />
+        <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
+        <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => {}" />
+      </div>
     </div>
     <div v-if="transactionsToBindDialogOpen">
       <BankPaymentMerchantBindTransactionsDialog
