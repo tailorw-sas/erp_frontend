@@ -881,14 +881,11 @@ const fieldsClone: Array<FieldDefinitionType> = [
   {
     field: 'checkIn',
     header: 'Check In',
-    dataType: 'date',
+    dataType: 'string',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
     disabled: true,
-    validation: z.date({
-      required_error: 'The Check In field is required',
-      invalid_type_error: 'The Check In field is required',
-    })
+    validation: z.string().min(1, 'The Check In field is required')
   },
   {
     field: 'lastName',
@@ -921,14 +918,11 @@ const fieldsClone: Array<FieldDefinitionType> = [
   {
     field: 'checkOut',
     header: 'Check Out',
-    dataType: 'date',
+    dataType: 'string',
     disabled: true,
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.date({
-      required_error: 'The Check Out field is required',
-      invalid_type_error: 'The Check Out field is required',
-    })
+    validation: z.string().min(1, 'The Last Name field is required')
   },
 
   // Room Number
@@ -1803,30 +1797,7 @@ function onCellEditComplete(val: any) {
   console.log(val);
 }
 
-function onEditBookingLocal(item: any) {  
-  itemClone.value.bookingId = item.bookingId
-  itemClone.value.adults = item.adults
-  itemClone.value.roomType = item.roomType
-  itemClone.value.hotelCreationDate = item.hotelCreationDate
-  itemClone.value.invoiceAmount = item.invoiceAmount
-  itemClone.value.children = item.children
-  itemClone.value.ratePlan = item.ratePlan
-  itemClone.value.bookingDate = item.bookingDate
-  itemClone.value.firstName = item.firstName
-  itemClone.value.hotelInvoiceNumber = item.hotelInvoiceNumber
-  itemClone.value.roomCategory = item.roomCategory
-  itemClone.value.checkIn = item.checkIn
-  itemClone.value.lastName = item.lastName
-  itemClone.value.folioNumber = item.folioNumber
-  itemClone.value.hotelAmount = item.hotelAmount
-  itemClone.value.checkOut = item.checkOut
-  itemClone.value.roomNumber = item.roomNumber
-  itemClone.value.nightType = item.nightType
-  itemClone.value.dueAmount = item.dueAmount
-  itemClone.value.hotelBookingNumber = item.hotelBookingNumber
-  itemClone.value.couponNumber = item.couponNumber
-  itemClone.value.contract = item.contract
-  itemClone.value.description = item.description
+function onEditBookingLocal(item: any) { 
   recalculateFormData()
   // isEditBookingCloneDialog.value = false
 }

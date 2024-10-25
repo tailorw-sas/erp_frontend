@@ -808,7 +808,8 @@ async function onCellEditRoomRate(event: any) {
   }
   data[field] = newValue
   emits('onSaveRoomRateInBookingEdit', { payload, roomRateList: roomRateList.value })
-  emits('onFormReload', formReload.value++)
+  formReload.value++
+  // emits('onFormReload', formReload.value++)
 }
 
 function onRowRightClick(event: any) {
@@ -1291,6 +1292,8 @@ async function getBookingItemById(id: string) {
 }
 
 watch(props.roomRateList, () => {
+  console.log('JoseK')
+
   if (props.roomRateList && props.roomRateList.length > 0) {
     totalHotelAmount.value = 0
     totalInvoiceAmount.value = 0
@@ -1460,7 +1463,6 @@ onMounted(async () => {
             </DebouncedAutoCompleteComponent>
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
-
           <template #field-nightType="{ item: data, onUpdate }">
             <DebouncedAutoCompleteComponent
               v-if="!loadingSaveAll"
