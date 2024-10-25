@@ -638,9 +638,9 @@ onMounted(() => {
 // -------------------------------------------------------------------------------------------------------
 </script>
 <template>
-    <div class="grid p-0 m-0 my-0 py-0 px-0">
+    <div class="grid p-0 m-0 my-0 py-0 px-0 mx-0">
 
-        <div class="col-12 md:order-1 md:col-12 xl:col-6 lg:col-12 mt-0 pm-0">
+        <div class="col-12 md:order-1 md:col-12 xl:col-6 lg:col-12 mt-0 px-1">
             <div class="flex justify-content-between align-items-center">
                 <!-- Título a la derecha -->
                 <div class="font-bold">
@@ -678,7 +678,7 @@ onMounted(() => {
                 <!-- Contenedor de Contenido -->
                 <div style="display: flex; height: 23%;" class="responsive-height">
                     <!-- Sección Izquierda -->
-                    <div class="p-0 m-0 py-0 px-0" style="flex: 1;">
+                    <div class="p-0 m-0 py-0 px-0 " style="flex: 1;">
                         <div class="grid p-0 py-0 px-0 m-0">
                             <!-- Selector de Cliente -->
                             <div class="col-12 md:col-12 lg:col-12 xl:col-12 flex pb-0  w-full">
@@ -824,7 +824,7 @@ onMounted(() => {
                 </div>
             </div>
             <!--Aqui termina-->
-            <div class="grid grid-nogutter px-0 py-0 mt-0">
+            <div class="grid grid-nogutter px-0 py-0 my-0 mt-0">
                 <div class="col-12 flex align-items-center"> <!-- Usar flex para alinear en la misma fila -->
                     <div class="col-11 md:col-11 lg:col-11 xl:col-11 sm:col-11 py-0 px-0">
                         <div class="card py-1 p-0 my-0 mr-1 ">
@@ -906,7 +906,7 @@ onMounted(() => {
 
         </div>
         <!--Section Invoice-->
-        <div class="col-12 md:order-0 md:col-12 xl:col-6 lg:col-12 px-0">
+        <div class="col-12 md:order-0 md:col-12 xl:col-6 lg:col-12 px-1 ">
             <div class="flex justify-content-end align-items-center">
 
                 <div class="flex justify-content-end align-items-center">
@@ -930,8 +930,9 @@ onMounted(() => {
 
                 </div>
             </div>
+            
 
-            <div class="card p-0 m-0 py-0">
+            <div class="card px-1 m-0 py-0">
 
 
                 <div class="font-bold text-lg px-4 bg-primary custom-card-header">
@@ -946,62 +947,55 @@ onMounted(() => {
                             </div>
                         </template>
                         <!-- Contenido de la pestaña Client Main Info -->
-                        <!-- Contenido de la pestaña Client Main Info -->
+                        <div class="grid m-0 p-0 mb-0 my-0 py-0" > <!-- Ajusta la altura según sea necesario -->
+    <div class="col-12 xl:col-6 p-0 py-0 mb-0 my-1 mt-0">
+        <div class="flex items-center w-full mb-0 mt-0" style="flex-wrap: nowrap;"> <!-- Ajuste de mt -->
+            <label for="primaryPhone" class="font-bold ml-3 mt-2"
+                style="margin-right: 9px; flex: 0 0 auto;">Primary Phone</label>
+            <IconField class="w-full" icon-position="left">
+                <InputIcon class="pi pi-phone text-blue-500" />
+                <InputText id="primaryPhone" v-model="filterToSearch.primaryPhone"
+                    class="w-full" style="flex: 1;" />
+            </IconField>
+        </div>
 
-                        <div class="grid m-0 p-0 py-2 px-0 my-0"> <!-- Eliminado pb-0 y py-0 aquí -->
-                            <div class="col-12 xl:col-6 p-0 my-1 py-1 px-1"> <!-- Ajuste de margen vertical -->
-                                <div class="flex items-center w-full mb-2 mt-0" style="flex-wrap: nowrap;">
-                                    <!-- Reducción de mb-3 a mb-2 -->
-                                    <label for="primaryPhone" class="font-bold  ml-3 mt-2"
-                                        style="margin-right: 9px; flex: 0 0 auto;">Primary Phone</label>
-                                    <IconField class="w-full" icon-position="left">
-                                        <InputIcon class="pi pi-phone text-blue-500" />
-                                        <InputText id="primaryPhone" v-model="filterToSearch.primaryPhone"
-                                            class="w-full" style="flex: 1;" />
-                                    </IconField>
-                                </div>
+        <div class="flex items-center w-full mb-2 mt-2" style="flex-wrap: nowrap;"> <!-- Ajuste de mt -->
+            <label for="alternativePhone" class="font-bold ml-1 mb-0 mr-0 pl-0 mt-2"
+                style="margin-right: 9px; flex: 0 0 auto;">Alternative Phone</label>
+            <IconField class="w-full" icon-position="left">
+                <InputIcon class="pi pi-phone text-blue-500" />
+                <InputText id="alternativePhone" v-model="filterToSearch.alternativePhone"
+                    class="w-full ml-0" style="flex: 1;" />
+            </IconField>
+        </div>
 
-                                <div class="flex items-center w-full mb-2 mt-2 px-1" style="flex-wrap: nowrap;">
-                                    <!-- Reducción de mb-3 a mb-2 -->
-                                    <label for="alternativePhone" class="font-bold mb-1 mr-0 pl-0 mt-1"
-                                        style="margin-right: 9px; flex: 0 0 auto;">Alternative Phone</label>
-                                    <IconField class="w-full" icon-position="left">
-                                        <InputIcon class="pi pi-phone text-blue-500" />
-                                        <InputText id="alternativePhone" v-model="filterToSearch.alternativePhone"
-                                            class="w-full" style="flex: 1;" />
-                                    </IconField>
-                                </div>
+        <div class="flex items-center w-full mb-0 mt-2" style="flex-wrap: nowrap;"> <!-- Ajuste de mt -->
+            <label for="email" class="font-bold mb-0 pl-2 mt-2 ml-8"
+                style="margin-right: 9px; flex: 0 0 auto;">Email</label>
+            <IconField class="w-full" icon-position="left">
+                <InputIcon class="pi pi-envelope text-blue-500" />
+                <InputText id="email" v-model="filterToSearch.email" class="w-full"
+                    style="flex: 1;" />
+            </IconField>
+        </div>
+    </div>
 
-                                <div class="flex items-center w-full mb-2 py-0 mt-2 px-1" style="flex-wrap: nowrap;">
-                                    <!-- Reducción de mb-3 a mb-2 -->
-                                    <label for="email" class="font-bold mb-0 ml-8 mt-2"
-                                        style="margin-right: 9px; flex: 0 0 auto;">Email</label>
-                                    <IconField class="w-full" icon-position="left">
-                                        <InputIcon class="pi pi-envelope text-blue-500" />
-                                        <InputText id="email" v-model="filterToSearch.email" class="w-full"
-                                            style="flex: 1;" />
-                                    </IconField>
-                                </div>
-                            </div>
+    <div class="col-12 xl:col-6 p-0 px-2 my-1">
+        <div class="flex items-center w-full mb-2 mt-1" style="flex-wrap: nowrap;"> <!-- Ajuste de mt -->
+            <label for="contactName" class="font-bold mb-0 mt-1 ml-6 mx-2"
+                style="margin-right: 9px; flex: 0 0 auto;">Contact Name</label>
+            <InputText id="contactName" v-model="filterToSearch.contactName" class="w-full"
+                style="flex: 1;" />
+        </div>
 
-                            <div class="col-12 xl:col-6 p-0 px-2 my-1"> <!-- Ajuste de margen vertical -->
-                                <div class="flex items-center w-full mb-2" style="flex-wrap: nowrap;">
-                                    <!-- Reducción de mb-3 a mb-2 -->
-                                    <label for="contactName" class="font-bold mb-0 mt-1 ml-6 mx-2 "
-                                        style="margin-right: 9px; flex: 0 0 auto;">Contact Name</label>
-                                    <InputText id="contactName" v-model="filterToSearch.contactName" class="w-full"
-                                        style="flex: 1;" />
-                                </div>
-
-                                <div class="flex items-center w-full mb-2 px-1" style="flex-wrap: nowrap;">
-                                    <!-- Reducción de mb-3 a mb-2 -->
-                                    <label for="country" class="font-bold mb-0 ml-6  mt-1"
-                                        style="margin-right: 9px; flex: 0 0 auto;">Country</label>
-                                    <InputText id="country" v-model="filterToSearch.country" class="w-full"
-                                        style="flex: 1;" />
-                                </div>
-                            </div>
-                        </div>
+        <div class="flex items-center w-full mb-2 mt-1" style="flex-wrap: nowrap;"> <!-- Ajuste de mt -->
+            <label for="country" class="font-bold mb-0 ml-6 mt-1"
+                style="margin-right: 9px; flex: 0 0 auto;">Country</label>
+            <InputText id="country" v-model="filterToSearch.country" class="w-full"
+                style="flex: 1;" />
+        </div>
+    </div>
+</div>
                     </TabPanel>
                     <!--Campos-->
 
@@ -1009,7 +1003,7 @@ onMounted(() => {
                         <template #header>
                             <div class="flex align-items-center gap-2 p-1 tab-header"
                                 :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: auto`">
-                                <span class="font-bold">Agency</span>
+                                <span class="font-bold">Agency Contact</span>
                             </div>
                         </template>
                         <div class="grid py-1 ">
@@ -1024,7 +1018,7 @@ onMounted(() => {
 
                             <div
                                 class="col 12 xl:col-1 md:col-1 lg:col-1 py-3 flex justify-content-end align-items-start">
-                                <Button v-tooltip.left="'Contact Agency'" icon="pi pi-user-plus"
+                                <Button v-tooltip.left="'Agency Contact'" icon="pi pi-user-plus"
                                     class="p-button-text p-button-lg pl-3 pr-6" @click="clearForm" />
 
                             </div>
@@ -1150,7 +1144,7 @@ onMounted(() => {
 }
 
 .tab-view {
-    height: 12px;
+    height: 10px;
 
 }
 
