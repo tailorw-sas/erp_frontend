@@ -68,7 +68,13 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.greaterThan(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.greaterThan(path.as(LocalDateTime.class), (LocalDateTime) value);
-                } else {
+                } else if (value instanceof Integer) {
+                    yield builder.lessThanOrEqualTo(path.as(Integer.class), (Integer) value);
+                }
+                else if (value instanceof Double) {
+                    yield builder.greaterThanOrEqualTo(path.as(Double.class), (Double) value);
+                }
+                else {
                     yield builder.greaterThan(path.as(String.class), value.toString());
                 }
             }
@@ -77,7 +83,13 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.lessThan(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.lessThan(path.as(LocalDateTime.class), (LocalDateTime) value);
-                } else {
+                } else if (value instanceof Integer) {
+                    yield builder.lessThanOrEqualTo(path.as(Integer.class), (Integer) value);
+                }
+                else if (value instanceof Double) {
+                    yield builder.greaterThanOrEqualTo(path.as(Double.class), (Double) value);
+                }
+                else {
                     yield builder.lessThan(path.as(String.class), value.toString());
                 }
             }
@@ -86,7 +98,10 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.greaterThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.greaterThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
-                } else if (value instanceof Double) {
+                } else if (value instanceof Integer) {
+                    yield builder.lessThanOrEqualTo(path.as(Integer.class), (Integer) value);
+                }
+                else if (value instanceof Double) {
                     yield builder.greaterThanOrEqualTo(path.as(Double.class), (Double) value);
                 } else {
                     yield builder.greaterThanOrEqualTo(path.as(String.class), value.toString());
@@ -97,9 +112,12 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.lessThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.lessThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else if (value instanceof Integer) {
+                    yield builder.lessThanOrEqualTo(path.as(Integer.class), (Integer) value);
                 } else if (value instanceof Double) {
                     yield builder.lessThanOrEqualTo(path.as(Double.class), (Double) value);
-                } else {
+                }
+                else {
                     yield builder.lessThanOrEqualTo(path.as(String.class), value.toString());
                 }
             }
