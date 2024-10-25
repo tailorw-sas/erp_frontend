@@ -4,6 +4,7 @@ import { FilterMatchMode } from 'primevue/api'
 import BlockUI from 'primevue/blockui'
 import type { DataTableFilterMeta } from 'primevue/datatable'
 import type { PageState } from 'primevue/paginator'
+import type { PropType } from 'vue'
 import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterfaces'
 import { getLastDayOfMonth } from '../../utils/helpers'
 import type { IColumn, IObjApi } from './interfaces/ITableInterfaces'
@@ -67,7 +68,11 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: true,
-  }
+  },
+  selectedItems: {
+    type: Array as PropType<any[]>,
+    required: false,
+  },
 })
 
 const emits = defineEmits<{
@@ -80,6 +85,7 @@ const emits = defineEmits<{
   (e: 'openDeleteDialog', value: any): void
   (e: 'onLocalDelete', value: any): void
   (e: 'update:clickedItem', value: any): void
+  (e: 'update:selectedItems', value: any): void
   (e: 'onSortField', value: any): void
   (e: 'onRowDoubleClick', value: any): void
   (e: 'onRowRightClick', value: any): void
@@ -231,6 +237,7 @@ function onSelectItem(item: any) {
       if (item.length > 0) {
         const ids = item.map((i: any) => i.id)
         emits('update:clickedItem', ids)
+        emits('update:selectedItems', item)
       }
       else if (item.length === 0) {
         emits('update:clickedItem', [])
@@ -482,7 +489,13 @@ watch(() => props.data, async (newValue) => {
     clickedItem.value = props.data
   }
   else {
-    if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
+    if (newValue.length > 0 && props.options?.selectionMode === 'multiple' && props.selectedItems && props.selectedItems.length > 0) {
+      // Filtra los elementos de newValue que están en selectedItems comparando por id
+      clickedItem.value = newValue.filter((item: any) =>
+        props.selectedItems?.some(selected => selected.id === item.id)
+      )
+    }
+    else if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
       clickedItem.value = props.data[0]
     }
   }
