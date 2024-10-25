@@ -4,6 +4,8 @@ import { z } from 'zod'
 import dayjs from 'dayjs'
 import type { Ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
+import BankPaymentMerchantBindTransactionsDialog
+  from '../../../components/vcc/bank-reconciliation/BankPaymentMerchantBindTransactionsDialog.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
@@ -43,6 +45,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Bank Account',
     dataType: 'select',
     class: 'field col-12 md:col-6 required',
+    headerClass: 'mb-1',
     validation: validateEntityStatus('bank account'),
   },
   {
@@ -50,6 +53,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Hotel',
     dataType: 'select',
     class: 'field col-12 md:col-6 required',
+    headerClass: 'mb-1',
     validation: validateEntityStatus('hotel'),
   },
   {
@@ -60,6 +64,7 @@ const fields: Array<FieldDefinitionType> = [
     minFractionDigits: 2,
     maxFractionDigits: 4,
     class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
     validation: z.number({
       invalid_type_error: 'The amount field must be a number',
       required_error: 'The amount field is required',
@@ -84,6 +89,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Remark',
     dataType: 'text',
     class: 'field col-12 md:col-6',
+    headerClass: 'mb-1',
   },
 ]
 
@@ -198,7 +204,7 @@ async function getMerchantBankAccountList(query: string) {
 
     for (const iterator of dataList) {
       const merchantNames = iterator.managerMerchant.map((item: any) => item.description).join(' - ')
-      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`, status: iterator.status }]
+      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`, status: iterator.status, merchantData: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes}]
     }
   }
   catch (error) {
@@ -339,9 +345,9 @@ function onSortField(event: any) {
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => {}" />
     </div>
     <div v-if="transactionsToBindDialogOpen">
-      <NewBankPaymentOfMerchantDialog
-        :close-dialog="() => { transactionsToBindDialogOpen = false }" :is-creation-dialog="true" header="Bank Payment of Merchant"
-        :open-dialog="transactionsToBindDialogOpen" selected-bank-payment-id=""
+      <BankPaymentMerchantBindTransactionsDialog
+        :close-dialog="() => { transactionsToBindDialogOpen = false }" :is-creation-dialog="true" header="Transaction Items"
+        :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item"
       />
     </div>
   </div>
