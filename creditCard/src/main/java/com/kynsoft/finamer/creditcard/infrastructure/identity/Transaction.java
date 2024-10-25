@@ -109,6 +109,10 @@ public class Transaction implements Serializable {
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "bank_reconciliation")
+    private ManageBankReconciliation reconciliation;
+
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
         this.merchant = dto.getMerchant() != null ? new ManageMerchant(dto.getMerchant()) : null;
@@ -139,12 +143,13 @@ public class Transaction implements Serializable {
         transactionUuid= dto.getTransactionUuid();
         this.manual = dto.isManual();
         this.paymentDate = dto.getPaymentDate();
+        this.reconciliation = dto.getReconciliation() != null ? new ManageBankReconciliation(dto.getReconciliation()) : null;
     }
 
     private TransactionDto toAggregateParent() {
         return new TransactionDto(
                 id,transactionUuid, checkIn, reservationNumber, referenceNumber,
-                createdAt.toLocalDate());
+                createdAt != null ? createdAt.toLocalDate() : null);
     }
 
     public TransactionDto toAggregate(){
@@ -163,12 +168,13 @@ public class Transaction implements Serializable {
                 commission,
                 status != null ? status.toAggregate() : null,
                 parent != null ? parent.toAggregateParent() : null,
-                createdAt.toLocalDate(),
+                createdAt != null ? createdAt.toLocalDate() : null,
                 transactionCategory != null ? transactionCategory.toAggregate() : null,
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
                 netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null,
                 manual,
-                paymentDate
+                paymentDate,
+                reconciliation != null ? reconciliation.toAggregateSimple() : null
         );
     }
 }

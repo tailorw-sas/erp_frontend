@@ -58,9 +58,9 @@ public class TransactionServiceImpl implements ITransactionService {
     }
 
     @Override
-    public Long create(TransactionDto dto) {
+    public TransactionDto create(TransactionDto dto) {
         Transaction entity = new Transaction(dto);
-        return this.repositoryCommand.save(entity).getId();
+        return this.repositoryCommand.save(entity).toAggregate();
     }
 
     @Override

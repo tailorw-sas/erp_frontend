@@ -348,7 +348,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_VCC_TRANSACTION_TYPE_CHECK_DEFAULT(1126, Series.DOMAIN_ERROR,"Another item already exists with default."),
     UPDATE_PAYMENT_VALIDATE_CHANGE_STATUS(1127, Series.DOMAIN_ERROR,"It is not possible to change the status from confirmed to canceled if there is an applied payment."),
     VCC_INVALID_PAYMENT_LINK(1128, Series.DOMAIN_ERROR,"Payment link is invalid."),
-    MAILJET_TEMPLATE_NOT_FOUND(1129, Series.DOMAIN_ERROR, "Mailjet Template could not be found."),;
+    MAILJET_TEMPLATE_NOT_FOUND(1129, Series.DOMAIN_ERROR, "Mailjet Template could not be found."),
+    MANAGE_BANK_RECONCILIATION_NOT_FOUND(1130, Series.DOMAIN_ERROR, "Manage Bank Reconciliation not found.");
 
     private static final DomainErrorMessage[] VALUES;
 

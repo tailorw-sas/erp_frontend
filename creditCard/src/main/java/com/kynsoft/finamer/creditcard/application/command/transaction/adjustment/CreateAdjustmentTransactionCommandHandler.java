@@ -47,7 +47,7 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
         LocalDate transactionDate = command.getTransactionDate();
         double netAmount = command.getAmount() - commission;
 
-        Long id = this.service.create(new TransactionDto(
+        TransactionDto transactionDto = this.service.create(new TransactionDto(
                 command.getTransactionUuid(),
                 agencyDto,
                 transactionCategory,
@@ -62,6 +62,6 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 transactionDate,
                 false
         ));
-        command.setId(id);
+        command.setId(transactionDto.getId());
     }
 }
