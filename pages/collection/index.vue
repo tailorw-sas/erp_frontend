@@ -14,6 +14,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+const activeTab = ref(0)
 const allDefault = { id: 'All', name: 'All' }
 const filterToSearch = ref<IData>({
     criteria: null,
@@ -42,6 +43,7 @@ const confagencyListApi = reactive({
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
+const listItemsAgency = ref<any[]>([])
 const listItemsInvoice = ref<any[]>([])
 const loadingSearch = ref(false)
 const formReload = ref(0)
@@ -118,7 +120,7 @@ const ENUM_FILTER = [
 ]
 
 const columns: IColumn[] = [
-    { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '25px' },
+    { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '30px' },
     { field: 'paymentId', header: 'Id', type: 'text' },
     { field: 'transactionDate', header: 'Trans. Date', type: 'text' },
     { field: 'hotel', header: 'Hotel', type: 'text' },
@@ -130,7 +132,7 @@ const columns: IColumn[] = [
 
 ]
 const columnsInvoice: IColumn[] = [
-    { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '25px' },
+    { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '30px' },
     { field: 'hotel', header: 'Hotel', type: 'text' },
     { field: 'agency', header: 'Agency', type: 'text' },
     { field: 'invoiceNo', header: 'Inv.No', type: 'text' },
@@ -140,6 +142,13 @@ const columnsInvoice: IColumn[] = [
     { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
     { field: 'aging', header: 'Aging', type: 'text' },
     { field: 'invoiceStatus', header: 'Status', type: 'bool' },
+
+]
+const columnsAgency: IColumn[] = [
+    { field: 'agency', header: 'Agency', type: 'text' },
+    { field: 'regions', header: 'Regions', type: 'text' },
+    { field: 'email', header: 'Email Contact', type: 'text' },
+
 
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -155,6 +164,14 @@ const options = ref({
     actionsAsMenu: false,
     messageToDelete: 'Do you want to save the change?'
 })
+const optionsAgency = ref({
+    tableName: 'Agency',
+    moduleApi: 'settings',
+    uriApi: 'manage-agency',
+    loading: false,
+    actionsAsMenu: false,
+    messageToDelete: 'Do you want to save the change?'
+})
 const optionsInvoice = ref({
     tableName: 'Invoice',
     moduleApi: 'invoicing',
@@ -166,7 +183,25 @@ const optionsInvoice = ref({
     messageToDelete: 'Do you want to save the change?'
 })
 const payloadOnChangePage = ref<PageState>()
+const payloadOnChangePageAgency = ref<PageState>()
+const payloadOnChangePageInv = ref<PageState>()
 const payload = ref<IQueryRequest>({
+    filter: [],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
+})
+const payloadInv = ref<IQueryRequest>({
+    filter: [],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
+})
+const payloadAgency = ref<IQueryRequest>({
     filter: [],
     query: '',
     pageSize: 50,
@@ -182,6 +217,13 @@ const pagination = ref<IPagination>({
     search: ''
 })
 const paginationInvoice = ref<IPagination>({
+    page: 0,
+    limit: 50,
+    totalElements: 0,
+    totalPages: 0,
+    search: ''
+})
+const paginationAgency = ref<IPagination>({
     page: 0,
     limit: 50,
     totalElements: 0,
@@ -592,10 +634,9 @@ onMounted(() => {
 // -------------------------------------------------------------------------------------------------------
 </script>
 <template>
-
     <div class="grid p-0 m-0 my-0 py-0 px-0">
 
-        <div class="col-12 md:order-1 md:col-6 xl:col-6 lg:col-6 mt-0 pm-0">
+        <div class="col-12 md:order-1 md:col-12 xl:col-6 lg:col-12 mt-0 pm-0">
             <div class="flex justify-content-between align-items-center">
                 <!-- Título a la derecha -->
                 <div class="font-bold">
@@ -621,210 +662,187 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-    
-         <!-- Accordion y campos del payment -->
 
-<div class="card p-0 m-0">
-    <!-- Encabezado Completo -->
-    <div class="font-bold text-lg bg-primary custom-card-header px-4">
-        Client View
-    </div>
-    
-    <!-- Contenedor de Contenido -->
-    <div style="display: flex; height: 23vh;">
-    <!-- Sección Izquierda -->
-    <div class="p-0 m-0 py-0 px-0" style="flex: 1;">
-        <div class="grid p-0 py-0 px-0 m-0">
-            <!-- Selector de Cliente -->
-            <div class="col-12 md:col-12 lg:col-12 flex pb-0 w-full ">
-                <div class="flex flex-column gap-2 w-full">
-                    <div class="flex align-items-center gap-2 px-1 py-1">
-                        <label class="filter-label font-bold ml-0" for="client">Client<span class="text-red">*</span></label>
-                        <div class="w-full">
-                            <DebouncedAutoCompleteComponent 
-                                v-if="!loadingSaveAll" 
-                                id="autocomplete"
-                                multiple 
-                                field="name" 
-                                item-value="id" 
-                                class="w-full"
-                                :model="filterToSearch.client" 
-                                :suggestions="clientList" 
-                                placeholder=""
-                                @load="($event) => getClientList($event)" 
-                                @change="($event) => {
-                                    if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-                                        filterToSearch.client = $event.filter((element: any) => element?.id === 'All');
-                                    } else {
-                                        filterToSearch.client = $event.filter((element: any) => element?.id !== 'All');
-                                    }
-                                    filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : [];
-                                }">
-                                <template #option="props">
-                                    <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                                </template>
-                                <template #chip="{ value }">
-                                    <div>
-                                        {{ value?.code }}
+            <!-- Accordion y campos del payment -->
+
+            <div class="card p-0 m-0">
+                <!-- Encabezado Completo -->
+                <div class="font-bold text-lg bg-primary custom-card-header px-4">
+                    Client View
+                </div>
+
+                <!-- Contenedor de Contenido -->
+                <div style="display: flex; height: 23%;" class="responsive-height">
+                    <!-- Sección Izquierda -->
+                    <div class="p-0 m-0 py-0 px-0" style="flex: 1;">
+                        <div class="grid p-0 py-0 px-0 m-0">
+                            <!-- Selector de Cliente -->
+                            <div class="col-12 md:col-12 lg:col-12 xl:col-12 flex pb-0 w-full ">
+                                <div class="flex flex-column gap-2 w-full">
+                                    <div class="flex align-items-center gap-2 px-1 py-1">
+                                        <label class="filter-label font-bold ml-0" for="client">Client<span
+                                                class="text-red">*</span></label>
+                                        <div class="w-full">
+                                            <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete"
+                                                multiple field="name" item-value="id" class="w-full custom-input"
+                                                :model="filterToSearch.client" :suggestions="clientList" placeholder=""
+                                                @load="($event) => getClientList($event)" @change="($event) => {
+                                                    if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                                                        filterToSearch.client = $event.filter((element: any) => element?.id === 'All');
+                                                    } else {
+                                                        filterToSearch.client = $event.filter((element: any) => element?.id !== 'All');
+                                                    }
+                                                    filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : [];
+                                                }">
+                                                <template #option="props">
+                                                    <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                                                </template>
+                                                <template #chip="{ value }">
+                                                    <div>
+                                                        {{ value?.code }}
+                                                    </div>
+                                                </template>
+                                            </DebouncedAutoCompleteComponent>
+                                        </div>
                                     </div>
-                                </template>
-                            </DebouncedAutoCompleteComponent>
-                        </div>
-                    </div> 
-                </div>
-                
-                
-            </div> 
-             <!-- Selector de Agencia -->
-             <div class="col-12 pb-0">
-                    <div class="flex flex-column gap-2 w-full">
-                        <div class="flex align-items-center gap-2 px-0 py-0">
-                            <label class="filter-label font-bold ml-0 " for="agency">Agency<span class="text-red">*</span></label>
-                            <div class="w-full">
-                                <DebouncedAutoCompleteComponent 
-                                    v-if="!loadingSaveAll" 
-                                    id="autocomplete"
-                                    multiple 
-                                    field="name" 
-                                    item-value="id" 
-                                    class="w-full mr-2 "
-                                    :model="filterToSearch.agency" 
-                                    :suggestions="agencyList" 
-                                    placeholder=""
-                                    @load="($event) => getAgencyList($event)" 
-                                    @change="($event) => {
-                                        filterToSearch.agency = $event;
-                                    }">
-                                    <template #option="props">
-                                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                                    </template>
-                                    <template #chip="{ value }">
-                                        <div>
-                                            {{ value?.code }}
-                                        </div>
-                                    </template>
-                                </DebouncedAutoCompleteComponent>
-                            </div>
-                           
-                        </div> 
-                    </div>
-                    
-                </div>
-                 <!-- Selector de Hotel -->
-                 <div class="col-12 pb-0 ">
-                    <div class="flex flex-column gap-2 w-full">
-                        <div class="flex align-items-center gap-2 px-1 py-0">
-                            <label class="filter-label font-bold ml-2" for="hotel">Hotel<span class="text-red">*</span></label>
-                            <div class="w-full">
-                                <DebouncedAutoCompleteComponent 
-                                    v-if="!loadingSaveAll" 
-                                    id="autocomplete-hotel"
-                                    multiple 
-                                    field="name" 
-                                    item-value="id" 
-                                    class="w-full"
-                                    :model="filterToSearch.hotel" 
-                                    :suggestions="hotelList" 
-                                    placeholder=""
-                                    @load="($event) => getHotelList($event)" 
-                                    @change="($event) => {
-                                        filterToSearch.hotel = $event;
-                                    }">
-                                    <template #option="props">
-                                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                                    </template>
-                                    <template #chip="{ value }">
-                                        <div>
-                                            {{ value?.code }}
-                                        </div>
-                                    </template>
-                                </DebouncedAutoCompleteComponent>
-                            </div>
-                        </div> 
-                    </div>
-                </div>
-                <div class="flex col-12">
-                                    <Button 
-                                        v-tooltip.top="'Search'" 
-                                        class="w-3rem mx-2" 
-                                        icon="pi pi-search"
-                                        :disabled="disabledSearch" 
-                                        :loading="loadingSearch"
-                                        @click="searchAndFilter" />
-                                    <Button 
-                                        v-tooltip.top="'Clear'" 
-                                        outlined 
-                                        class="w-3rem"
-                                        icon="pi pi-filter-slash" 
-                                        :loading="loadingSearch"
-                                        @click="clearFilterToSearch" />
                                 </div>
-        </div>
-    </div>
 
-    <!-- Divisor Vertical -->
-    <div style="width: 4px; background-color: #d3d3d3; height: auto; margin: 0;"></div>
 
-    <!-- Sección Derecha -->
-    <div class="px-2 py-0 m-1 my-0 mt-0" style="flex: 1; padding: 16px;">
-        <div class="grid py-0 my-0 px-0">
-        <!-- Fila para Cliente y Agencia -->
-        <div class="col-12 mb-0 ">
-            <div class="flex items-center w-full"> <!-- Usar flex para alinear en una fila -->
-                <label for="client" class="font-bold mb-0 mt-2 required" style="margin-right: 8px; flex: 0 0 auto;">Client Name</label>
-                <InputText id="client" v-model="filterToSearch.clientName" class="w-full" style="flex: 1;" />
-            </div>
-        </div>
+                            </div>
+                            <!-- Selector de Agencia -->
+                            <div class="col-12 pb-0">
+                                <div class="flex flex-column gap-2 w-full">
+                                    <div class="flex align-items-center gap-2 px-0 py-0">
+                                        <label class="filter-label font-bold ml-0 " for="agency">Agency<span
+                                                class="text-red">*</span></label>
+                                        <div class="w-full">
+                                            <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete"
+                                                multiple field="name" item-value="id" class="w-full mr-2 agency-input "
+                                                :model="filterToSearch.agency" :suggestions="agencyList" placeholder=""
+                                                @load="($event) => getAgencyList($event)" @change="($event) => {
+                                                    filterToSearch.agency = $event;
+                                                }">
+                                                <template #option="props">
+                                                    <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                                                </template>
+                                                <template #chip="{ value }">
+                                                    <div>
+                                                        {{ value?.code }}
+                                                    </div>
+                                                </template>
+                                            </DebouncedAutoCompleteComponent>
+                                        </div>
 
-        <div class="col-12 mb-0 py-0">
-            <div class="flex items-center w-full"> <!-- Usar flex para alinear en una fila -->
-                <label for="client" class="font-bold mb-0 mt-1 required" style="margin-right: 8px; flex: 0 0 auto;">Client Status</label>
-                <InputText id="client" v-model="filterToSearch.clientName" class="w-full" style="flex: 1;" />
-            </div>
-        </div>
-        <div class="col-12 mb-0 ">
-            <div class="flex items-center w-full"> <!-- Usar flex para alinear en una fila -->
-                <label for="client" class="font-bold mb-0 ml-1 mt-1 " style="margin-right: 9px; flex: 0 0 auto;">Credit Days</label>
-                <InputText id="client" v-model="filterToSearch.clientName" class="w-full " style="flex: 1;" />
-            </div>
-        </div>
-        <div class="col-12 mb-0 py-0 pb-0">
-            <div class="flex items-center w-full"> <!-- Usar flex para alinear en una fila -->
-                <label for="language" class="font-bold mb-0 ml-3" style="margin-right: 8px; flex: 0 0 auto;">Language</label>
-                
-                <div style="flex: 1; display: flex; gap: 8px;"> <!-- Contenedor para los dos inputs -->
-                    <InputText id="language1" v-model="filterToSearch.language1" class="w-full" />
-                      <!-- Input para Time Zone con estilo azul -->
-                      <InputText 
-                        id="timezone" 
-                        v-model="currentTime" 
-                        placeholder="Time Zone"
-                        class="w-full timezone-input" 
-                        style="background-color: var(--primary-color); color: white;" 
-                        readonly 
-                    />
+                                    </div>
+                                </div>
+
+                            </div>
+                            <!-- Selector de Hotel -->
+                            <div class="col-12 pb-0 ">
+                                <div class="flex flex-column gap-2 w-full">
+                                    <div class="flex align-items-center gap-2 px-1 py-0">
+                                        <label class="filter-label font-bold ml-2" for="hotel">Hotel<span
+                                                class="text-red">*</span></label>
+                                        <div class="w-full">
+                                            <DebouncedAutoCompleteComponent v-if="!loadingSaveAll"
+                                                id="autocomplete-hotel" multiple field="name" item-value="id"
+                                                class="w-full hotel-input" :model="filterToSearch.hotel"
+                                                :suggestions="hotelList" placeholder=""
+                                                @load="($event) => getHotelList($event)" @change="($event) => {
+                                                    filterToSearch.hotel = $event;
+                                                }">
+                                                <template #option="props">
+                                                    <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                                                </template>
+                                                <template #chip="{ value }">
+                                                    <div>
+                                                        {{ value?.code }}
+                                                    </div>
+                                                </template>
+                                            </DebouncedAutoCompleteComponent>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex col-12 justify-content-end mt-2 py-2 xl:mt-0 py-2 pb-3">
+                                <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search"
+                                    :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter" />
+                                <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                                    :loading="loadingSearch" @click="clearFilterToSearch" />
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Divisor Vertical -->
+                    <div style="width: 4px; background-color: #d3d3d3; height: auto; margin: 0;"></div>
+
+                    <!-- Sección Derecha -->
+                    <div class="px-2 py-0 m-1 my-0 mt-0" style="flex: 1; padding: 16px;">
+                        <div class="grid py-0 my-0 px-0" style="max-width: 1200px; margin: auto;">
+                            <!-- Fila para Cliente y Agencia -->
+                            <div class="col-12 mb-0 ">
+                                <div class="flex items-center w-full" style="flex-wrap: nowrap;">
+                                    <!-- Usar flex para alinear en una fila -->
+                                    <label for="client" class="font-bold mb-0 mt-2 required"
+                                        style="margin-right: 8px; flex: 0 0 auto;">Client Name</label>
+                                    <InputText id="client" v-model="filterToSearch.clientName" class="w-full "
+                                        style="flex: 1;" />
+                                </div>
+                            </div>
+
+                            <div class="col-12 mb-0 py-0">
+                                <div class="flex items-center w-full" style="flex-wrap: nowrap;">
+                                    <!-- Usar flex para alinear en una fila -->
+                                    <label for="client" class="font-bold mb-0 mt-1 required"
+                                        style="margin-right: 8px; flex: 0 0 auto;">Client Status</label>
+                                    <InputText id="client" v-model="filterToSearch.clientName" class="w-full "
+                                        style="flex: 1;" />
+                                </div>
+                            </div>
+                            <div class="col-12 mb-0 ">
+                                <div class="flex items-center w-full" style="flex-wrap: nowrap;">
+                                    <!-- Usar flex para alinear en una fila -->
+                                    <label for="client" class="font-bold mb-0 ml-1 mt-1 "
+                                        style="margin-right: 9px; flex: 0 0 auto;">Credit
+                                        Days</label>
+                                    <InputText id="client" v-model="filterToSearch.clientName" class="w-full  "
+                                        style="flex: 1;" />
+                                </div>
+                            </div>
+                            <div class="col-12 my-0 py-0 pb-0 xl:col-12 mb-2">
+                                <div class="flex items-center w-full " style="flex-wrap: nowrap;">
+                                    <!-- Usar flex para alinear en una fila -->
+                                    <label for="language" class="font-bold mb-0 ml-3"
+                                        style="margin-right: 8px; flex: 0 0 auto;">Language</label>
+                                    <div style="flex: 1; display: flex; gap: 8px; flex-wrap: nowrap;">
+                                        <!-- Contenedor para los dos inputs -->
+                                        <InputText id="language1" v-model="filterToSearch.language1" class="w-full" />
+                                        <InputText id="timezone" v-model="currentTime" placeholder="Time Zone"
+                                            class="w-full timezone-input"
+                                            style="background-color: var(--primary-color); color: white;" readonly />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
                 </div>
             </div>
-        </div>
-</div>
-</div>
-
-
-</div>
-</div>
             <!--Aqui termina-->
             <div class="grid grid-nogutter px-0 py-0 mt-0">
                 <div class="col-12 flex align-items-center"> <!-- Usar flex para alinear en la misma fila -->
                     <div class="col-11 md:col-11 lg:col-11 xl:col-11 py-0 px-0">
                         <div class="card py-1 p-0 my-0">
                             <div class="header-content text-lg font-bold"
-                                style="background-color: var(--primary-color); color: white; padding: 10px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                                style="background-color: var(--primary-color); color: white; padding: 8px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
                                 Payment View
                             </div>
                         </div>
                     </div>
                     <div
-                        class="col-1 md:col-1 lg:col-1 sm:col-1 xl:col-1 flex align-items-center justify-content-end px-1 my-0 p-0 w-auto">
+                        class="col-1 md:col-1 lg:col-1 sm:col-1 xl:col-1 flex align-items-center justify-content-end px-1 mx-0 my-0 p-0 w-auto">
                         <Button label="+More" style="height: 70%;text-decoration: underline;" severity="primary"
                             v-tooltip.left="'More'" class="mr-2 py-2 text-lg" />
                         <!-- Añadido margen derecho para separación -->
@@ -840,46 +858,46 @@ onMounted(() => {
                     <ColumnGroup type="footer" class="flex align-items-center ">
                         <Row>
                             <Column footer="Total #:" :colspan="3"
-                                footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                                footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
                             <Column footer="Total $:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                             <Column footer="Total Transit #:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                             <Column footer="Total Deposit #:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
 
                             <Column :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
 
 
                         </Row>
                         <Row>
                             <Column footer="Total Applied $:" :colspan="3"
-                                footer-style="text-align:right; font-weight: bold; color:#000000; background-color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; color:#000000; background-color:#ffffff;" />
                             <Column footer="Total N.A $:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
                             <Column footer="Total Transit $:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
                             <Column footer="Total Deposit $:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
 
                             <Column :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
 
 
                         </Row>
                         <Row>
                             <Column footer="Total Applied %:" :colspan="3"
-                                footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                                footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
                             <Column footer="Total N.A %:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                             <Column footer="Total Transit %:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                             <Column footer="Total Deposit %:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
 
                             <Column :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
 
 
                         </Row>
@@ -893,7 +911,7 @@ onMounted(() => {
 
         </div>
         <!--Section Invoice-->
-        <div class="col-12 md:order-0 md:col-6 xl:col-6 px-0">
+        <div class="col-12 md:order-0 md:col-12 xl:col-6 lg:col-12 px-0">
             <div class="flex justify-content-end align-items-center">
 
                 <div class="flex justify-content-end align-items-center">
@@ -919,18 +937,99 @@ onMounted(() => {
             </div>
 
             <div class="card p-0 m-0">
-                <div style="max-height: 28vh; height: 28vh">
+               
+
                     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
                         Client Details
                     </div>
+                    <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
+                        <TabPanel>
+                            <template #header>
+                                <div class=" tab-header flex align-items-center gap-2 p-1 tab-header"
+                                    :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: auto`">
+                                    <span class="font-bold">Client Main Info</span>
+                                </div>
+                            </template>
+                            <!-- Contenido de la pestaña Client Main Info -->
+
+                            <div class="grid m-0 p-0"> <!-- Eliminado pb-0 y py-0 aquí -->
+    <div class="col-12 xl:col-6 p-0 my-1 px-1"> <!-- Ajuste de margen vertical -->
+        <div class="flex items-center w-full mb-2" style="flex-wrap: nowrap;"> <!-- Reducción de mb-3 a mb-2 -->
+            <label for="primaryPhone" class="font-bold mb-0 ml-3 mt-1" style="margin-right: 9px; flex: 0 0 auto;">Primary Phone</label>
+            <IconField class="w-full" icon-position="left">
+                <InputIcon class="pi pi-phone text-blue-500" />
+                <InputText id="primaryPhone" v-model="filterToSearch.primaryPhone" class="w-full" style="flex: 1;" />
+            </IconField>
+        </div>
+
+        <div class="flex items-center w-full mb-2" style="flex-wrap: nowrap;"> <!-- Reducción de mb-3 a mb-2 -->
+            <label for="alternativePhone" class="font-bold mb-0 mr-1 mt-1" style="margin-right: 9px; flex: 0 0 auto;">Alternative Phone</label>
+            <IconField class="w-full" icon-position="left">
+                <InputIcon class="pi pi-phone text-blue-500" />
+                <InputText id="alternativePhone" v-model="filterToSearch.alternativePhone" class="w-full" style="flex: 1;" />
+            </IconField>
+        </div>
+
+        <div class="flex items-center w-full mb-2" style="flex-wrap: nowrap;"> <!-- Reducción de mb-3 a mb-2 -->
+            <label for="email" class="font-bold mb-0 ml-8 mt-1" style="margin-right: 9px; flex: 0 0 auto;">Email</label>
+            <IconField class="w-full" icon-position="left">
+                <InputIcon class="pi pi-envelope text-blue-500" />
+                <InputText id="email" v-model="filterToSearch.email" class="w-full" style="flex: 1;" />
+            </IconField>
+        </div>
+    </div>
+    
+    <div class="col-12 xl:col-6 p-0 px-2 my-0"> <!-- Ajuste de margen vertical -->
+        <div class="flex items-center w-full mb-2" style="flex-wrap: nowrap;"> <!-- Reducción de mb-3 a mb-2 -->
+            <label for="contactName" class="font-bold mb-0 mt-1 ml-3" style="margin-right: 9px; flex: 0 0 auto;">Contact Name</label>
+            <InputText id="contactName" v-model="filterToSearch.contactName" class="w-full" style="flex: 1;" />
+        </div>
+
+        <div class="flex items-center w-full mb-2" style="flex-wrap: nowrap;"> <!-- Reducción de mb-3 a mb-2 -->
+            <label for="country" class="font-bold mb-0 ml-7 mr-1 mt-1" style="margin-right: 9px; flex: 0 0 auto;">Country</label>
+            <InputText id="country" v-model="filterToSearch.country" class="w-full" style="flex: 1;" />
+        </div>
+    </div>
+</div>
+                        </TabPanel>
+                        <!--Campos-->
+
+                        <TabPanel>
+                            <template #header>
+                                <div class="flex align-items-center gap-2 p-1 tab-header"
+                                    :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: auto`">
+                                    <span class="font-bold">Agency</span>
+                                </div>
+                            </template>
+                            <div class="grid ">
+                                <div class="col 12 xl:col-11 md:col-11 lg:col-11 py-0">
+                                    <DynamicTable :data="listItemsAgency" :columns="columnsAgency"
+                                        :options="optionsAgency" :pagination="paginationAgency"
+                                        @on-confirm-create="clearForm" @open-edit-dialog="getItemById($event)"
+                                        @update:clicked-item="getItemById($event)"
+                                        @on-change-pagination="payloadOnChangePage = $event"
+                                        @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems"
+                                        @on-sort-field="onSortField" />
+                                </div>
+
+                                <div
+                                    class="col 12 xl:col-1 md:col-1 lg:col-1 py-0 flex justify-content-end align-items-start">
+                                    <Button v-tooltip.left="'Add client'" icon="pi pi-user-plus"
+                                        class="p-button-text p-button-lg pl-3 pr-6" @click="clearForm" />
+
+                                </div>
+                            </div>
+                        </TabPanel>
+                    </TabView>
                 </div>
-            </div>
+            
+
             <div class="grid grid-nogutter px-0 py-0 mt-0">
                 <div class="col-12 flex align-items-center"> <!-- Usar flex para alinear en la misma fila -->
                     <div class="col-11 md:col-11 lg:col-11 xl:col-11 py-0 px-0">
                         <div class="card py-1 p-0 my-0">
                             <div class="header-content text-lg font-bold"
-                                style="background-color: var(--primary-color); color: white; padding: 10px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                                style="background-color: var(--primary-color); color: white; padding: 8px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
                                 Invoice View
                             </div>
                         </div>
@@ -951,63 +1050,54 @@ onMounted(() => {
                 <template #datatable-footer>
                     <ColumnGroup type="footer" class="flex align-items-center ">
                         <Row>
-                            <Column footer="Total #:" :colspan="3"
-                                footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                            <Column footer="Total #:" :colspan="4"
+                                footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
                             <Column footer="Total $:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                             <Column footer="Total Pending #:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                            <Column footer="Total Invoice B #:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total Invoice B #:" :colspan="3"
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
 
-                            <Column :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-
+                           
 
                         </Row>
                         <Row>
-                            <Column footer="Total 30 Days #:" :colspan="3"
-                                footer-style="text-align:right; font-weight: bold; color:#000000; background-color:#ffffff;" />
+                            <Column footer="Total 30 Days #:" :colspan="4"
+                                footer-style="text-align:left; font-weight: bold; color:#000000; background-color:#ffffff;" />
                             <Column footer="Total 60 Days #:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
                             <Column footer="Total 90 Days #:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-                            <Column footer="Total 120 Days #:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                            <Column footer="Total 120 Days #:" :colspan="3"
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
 
-                            <Column :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-
+                          
 
                         </Row>
                         <Row>
-                            <Column footer="Total 30 Days $:" :colspan="3"
-                                footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                            <Column footer="Total 30 Days $:" :colspan="4"
+                                footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
                             <Column footer="Total 60 Days $:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                             <Column footer="Total 90 Days $:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                            <Column footer="Total 120 Days $:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                            <Column footer="Total 120 Days $:" :colspan="3"
+                                footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
 
-                            <Column :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-
-
+                           
                         </Row>
                         <Row>
-                            <Column footer="Total 30 Days %:" :colspan="3"
-                                footer-style="text-align:right; font-weight: bold; color:#000000; background-color:#ffffff;" />
+                            <Column footer="Total 30 Days %:" :colspan="4"
+                                footer-style="text-align:left; font-weight: bold; color:#000000; background-color:#ffffff;" />
                             <Column footer="Total 60 Days %:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
                             <Column footer="Total 90 Days %:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-                            <Column footer="Total 120 Days %:" :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
+                            <Column footer="Total 120 Days %:" :colspan="3"
+                                footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;" />
 
-                            <Column :colspan="2"
-                                footer-style="text-align:right; font-weight: bold; background-color:#ffffff; color:#000000;" />
-
+                          
 
                         </Row>
 
@@ -1018,15 +1108,63 @@ onMounted(() => {
     </div>
 </template>
 <style lang="scss">
-  .timezone-input {
-        background-color: var(--primary-color); 
-        color: white; 
-        font-weight: bold;
+.timezone-input {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+}
+
+.timezone-input::placeholder {
+    color: white;
+    /* Cambia el color del placeholder a blanco */
+
+}
+
+.no-global-style .p-tabview-nav-container {
+    padding-left: 0 !important;
+    background-color: initial !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
+#tabView {
+    .p-tabview-nav-container {
+        .p-tabview-nav-link {
+            color: var(--secondary-color) !important;
+        }
+
+        .p-tabview-nav-link:hover {
+            border-bottom-color: transparent !important;
+        }
     }
-    .timezone-input::placeholder {
-        color: white; /* Cambia el color del placeholder a blanco */
-        
-    }
+}
+
+.tab-view {
+    height: 10px;
+
+}
+
+.text-red {
+    color: red;
+    /* Define color rojo para el asterisco */
+}
+
+.tab-header {
+    background-color: transparent !important;
+    /* Fondo transparente para las pestañas */
+    background-color: initial !important;
+    /* Color azul para el texto */
+    transition: color 0.3s;
+    /* Transición suave para el color */
+    padding: 6px;
+    /* Menor padding para altura reducida */
+}
+
+.tab-header:hover {
+    color: #0A6FB8 !important;
+    /* Color más oscuro al pasar el mouse */
+}
+
 .header-card {
     border: 1px solid #ccc;
     /* Borde de la tarjeta */
@@ -1037,7 +1175,55 @@ onMounted(() => {
     overflow: hidden;
     /* Asegura que los bordes redondeados se apliquen correctamente */
 }
-.text-red {
-        color: red; /* Define color rojo para el asterisco */
+
+.custom-input {
+    height: 30px;
+    /* Altura por defecto */
+}
+
+.agency-input {
+    height: 30px;
+    /* Altura por defecto */
+}
+
+.hotel-input {
+    height: 30px;
+    /* Altura por defecto */
+}
+
+@media (max-width: 1199px) {
+
+    /* Para pantallas grandes (lg) */
+    .responsive-height {
+        height: 23vh;
+        /* Ajustar altura para pantallas grandes */
+        margin: auto;
     }
+}
+
+/* Media query para pantallas grandes */
+@media (min-width: 1200px) {
+    .responsive-height {
+        height: 25vh;
+        /* Ajustar altura para pantallas extra largas */
+    }
+
+    .custom-input {
+        height: 30px;
+        /* Ajustar altura para pantallas grandes */
+    }
+
+    .agency-input {
+        height: 30px;
+        /* Ajustar altura para pantallas grandes */
+    }
+
+    .hotel-input {
+        height: 30px;
+        /* Altura por defecto */
+
+    }
+
+
+}
 </style>
