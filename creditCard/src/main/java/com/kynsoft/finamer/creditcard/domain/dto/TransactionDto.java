@@ -45,6 +45,7 @@ public class TransactionDto {
     private ManagerMerchantCurrencyDto merchantCurrency;
     private boolean manual;
     private LocalDateTime paymentDate;
+    private ManageBankReconciliationDto reconciliation;
 
     //uso -> toAggregateParent
     public TransactionDto(

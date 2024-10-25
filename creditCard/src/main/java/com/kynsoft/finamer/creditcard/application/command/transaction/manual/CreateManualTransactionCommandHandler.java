@@ -130,8 +130,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 merchantCurrencyDto,
                 true
         );
-        Long id = this.transactionService.create(newTransaction);
-        command.setId(id);
+        TransactionDto transactionDto = this.transactionService.create(newTransaction);
+        command.setId(transactionDto.getId());
 
         //Send Mail in case the methodType be Link
         if (command.getMethodType() == MethodType.LINK) {

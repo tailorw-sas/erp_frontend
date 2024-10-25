@@ -77,7 +77,7 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
 
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus(ETransactionStatus.REFUND);
 
-        Long id = this.service.create(new TransactionDto(
+        TransactionDto transactionDto = this.service.create(new TransactionDto(
                 parentTransaction.getTransactionUuid(),
                 parentTransaction.getMerchant(),
                 parentTransaction.getMethodType(),
@@ -104,7 +104,7 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
                 parentTransaction.getMerchantCurrency(),
                 false
         ));
-        command.setId(id);
+        command.setId(transactionDto.getId());
         if(this.service.findSumOfAmountByParentId(parentTransaction.getId()) >= parentTransaction.getAmount()){
             parentTransaction.setPermitRefund(false);
             this.service.update(parentTransaction);

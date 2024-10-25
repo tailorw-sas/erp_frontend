@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface ITransactionService {
 
-    Long create(TransactionDto dto);
+    TransactionDto create(TransactionDto dto);
 
     void update(TransactionDto dto);
 
