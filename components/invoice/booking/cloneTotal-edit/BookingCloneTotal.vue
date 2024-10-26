@@ -406,7 +406,7 @@ const item2 = ref<GenericObject>({
 
 // ])
 
-const roomRateList = ref<any[]>([...props.roomRateList])
+const roomRateList = ref<any[]>([...props.roomRateList.filter((x: any) => x?.booking?.id === props.bookingObj?.id)])
 const adjustmentList = ref<any[]>([])
 const ratePlanList = ref<any[]>([])
 const roomCategoryList = ref<any[]>([])
@@ -860,6 +860,7 @@ async function resetListItemsRoomRate() {
   payloadRoomRate.value.page = 0
   getRoomRateList()
 }
+
 async function getRoomRateList() {
   try {
     totalInvoiceAmount.value = 0
@@ -1292,8 +1293,6 @@ async function getBookingItemById(id: string) {
 }
 
 watch(props.roomRateList, () => {
-  console.log('JoseK')
-
   if (props.roomRateList && props.roomRateList.length > 0) {
     totalHotelAmount.value = 0
     totalInvoiceAmount.value = 0

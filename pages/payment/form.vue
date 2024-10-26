@@ -60,6 +60,7 @@ const hasBeenCreated = ref(0)
 const actionOfModal = ref<'new-detail' | 'edit-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined>(undefined)
 
 const showReverseTransaction = ref(false)
+const showCanceledDetails = ref(false)
 
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
@@ -1365,7 +1366,7 @@ async function getListPaymentDetail(showReverse: boolean = false) {
     paymentDetailsList.value = []
     const newListItems = []
 
-    if (showReverse) {
+    if (showReverseTransaction.value) {
       // aplicar el filtro
       const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
 
@@ -1397,6 +1398,39 @@ async function getListPaymentDetail(showReverse: boolean = false) {
         })
       }
     }
+
+    // if (showCanceledDetails.value) {
+    //   // aplicar el filtro
+    //   const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+    //   if (objFilterForCanceledFalse) {
+    //     objFilterForCanceledFalse.value = true
+    //   }
+    //   else {
+    //     payload.value.filter.push({
+    //       key: 'canceledTransaction',
+    //       operator: 'EQUALS',
+    //       value: true,
+    //       logicalOperation: 'OR'
+    //     })
+    //   }
+    // }
+    // else {
+    //   // filtrar para que no aparezca el de reversado
+    //   const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+    //   if (objFilterForCanceledFalse) {
+    //     objFilterForCanceledFalse.value = false
+    //   }
+    //   else {
+    //     payload.value.filter.push({
+    //       key: 'canceledTransaction',
+    //       operator: 'EQUALS',
+    //       value: false,
+    //       logicalOperation: 'OR'
+    //     })
+    //   }
+    // }
 
     const objFilter = payload.value.filter.find(item => item.key === 'payment.id')
 
@@ -2914,6 +2948,7 @@ onMounted(async () => {
     loadDefaultsValues()
   }
 })
+const checkboxValue1 = ref(false)
 </script>
 
 <template>
@@ -3268,7 +3303,7 @@ onMounted(async () => {
         </template>
       </EditFormV2>
     </div>
-    <div class="flex align-items-center mb-2">
+    <!-- <div class="flex align-items-center mb-2">
       <Checkbox
         id="showReverseTransaction"
         v-model="showReverseTransaction"
@@ -3278,7 +3313,7 @@ onMounted(async () => {
         }"
       />
       <label for="showReverseTransaction" class="ml-2 font-bold text-primary"> Show Reverse Transaction </label>
-    </div>
+    </div> -->
     <DynamicTable
       :data="paymentDetailsList"
       :columns="columns"
@@ -3294,7 +3329,35 @@ onMounted(async () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold;" />
+            <Column footer="" :colspan="9" footer-style="text-align:right; font-weight: bold;">
+              <template #footer>
+                <div class="flex align-items-center gap-4">
+                  <div class="flex align-items-center">
+                    <Checkbox
+                      id="showReverseTransaction"
+                      v-model="showReverseTransaction"
+                      :binary="true"
+                      @update:model-value="($event) => {
+                        getListPaymentDetail($event)
+                      }"
+                    />
+                    <label for="showReverseTransaction" class="ml-2 font-bold"> Show Reverse Transaction </label>
+                  </div>
+                  <div class="flex align-items-center">
+                    <Checkbox
+                      id="showCanceledDetails"
+                      v-model="showCanceledDetails"
+                      :binary="true"
+                      @update:model-value="($event) => {
+                        getListPaymentDetail($event)
+                      }"
+                    />
+                    <label for="showCanceledDetails" class="ml-2 font-bold"> Show Canceled Details </label>
+                  </div>
+                </div>
+              </template>
+            </Column>
+            <Column footer="Totals:" :colspan="0" footer-style="text-align:right; font-weight: bold;" />
             <Column :footer="formatNumber(Math.round((subTotals.depositAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
             <Column :colspan="4" />
           </Row>
@@ -3358,7 +3421,7 @@ onMounted(async () => {
         <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
-        <Button v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-trash" @click="requireConfirmationToDelete($event)" />
+        <Button v-tooltip.top="'Annular'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-trash" @click="requireConfirmationToDelete($event)" />
       </IfCan>
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
@@ -3648,4 +3711,15 @@ onMounted(async () => {
 .custom-dialog-history .p-dialog-footer {
   background-color: #ffffff;
 }
+.p-checkbox.p-component > .p-checkbox-box {
+  border-color: white;
+}
+// .p-checkbox.p-component.p-highlight >.p-checkbox-box {
+//   background-color: white; /* Fondo blanco cuando esté marcado */
+//   border-color: white;      /* Borde blanco */
+// }
+
+// .p-checkbox.p-component.p-highlight >.p-checkbox-box > .p-checkbox-icon {
+//   color: blue; /* Color del check en azul */
+// }
 </style>
