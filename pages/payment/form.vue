@@ -3338,10 +3338,12 @@ const checkboxValue1 = ref(false)
                       v-model="showReverseTransaction"
                       :disabled="route?.query?.id ? false : true"
                       :binary="true"
+                      :pt="{ box: { class: 'custom-checkbox' } }"
                       @update:model-value="($event) => {
                         getListPaymentDetail($event)
                       }"
                     />
+                    <!-- :pt="{ root: { class: 'custom-checkbox' } }" -->
                     <label for="showReverseTransaction" class="ml-2 font-bold"> Show Reverse Transaction </label>
                   </div>
                   <div class="flex align-items-center">
@@ -3350,6 +3352,7 @@ const checkboxValue1 = ref(false)
                       v-model="showCanceledDetails"
                       :disabled="route?.query?.id ? false : true"
                       :binary="true"
+                      :pt="{ box: { class: 'custom-checkbox' } }"
                       @update:model-value="($event) => {
                         getListPaymentDetail($event)
                       }"
@@ -3713,9 +3716,15 @@ const checkboxValue1 = ref(false)
 .custom-dialog-history .p-dialog-footer {
   background-color: #ffffff;
 }
-.p-checkbox.p-component > .p-checkbox-box {
+.custom-checkbox {
   border-color: white;
 }
+// .p-checkbox.p-component > .p-checkbox-box {
+//   border-color: white;
+// }
+// .p-checkbox.p-component > .p-checkbox-box {
+//   border-color: white;
+// }
 // .p-checkbox.p-component.p-highlight >.p-checkbox-box {
 //   background-color: white; /* Fondo blanco cuando esté marcado */
 //   border-color: white;      /* Borde blanco */
