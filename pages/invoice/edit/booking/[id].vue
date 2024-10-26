@@ -493,7 +493,7 @@ const columnsRoomRate: IColumn[] = [
   { field: 'adults', header: 'Adults', type: 'text', sortable: false, editable: true },
   { field: 'children', header: 'Children', type: 'text', sortable: false, editable: true },
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'nights', header: 'Nights', type: 'text', sortable: false, editable: true },
+  { field: 'nights', header: 'Nights', type: 'text', sortable: false, editable: false },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'rateAdult', header: 'Rate Adult', type: 'text', sortable: false, editable: false },
   { field: 'rateChildren', header: 'Rate Children', type: 'text', sortable: false, editable: false },
@@ -898,8 +898,8 @@ async function updateItem(item: { [key: string]: any }) {
   const payload: { [key: string]: any } = {}
 
   payload.id = route.params.id
-  payload.hotelCreationDate = dayjs(item.hotelCreationDate).toISOString()
-  payload.bookingDate = dayjs(item.bookingDate).toISOString()
+  payload.hotelCreationDate = item.hotelCreationDate ? dayjs(item.hotelCreationDate).toDate() : null
+  payload.bookingDate = item.bookingDate ? dayjs(item.bookingDate).toDate() : null
   payload.hotelBookingNumber = item.hotelBookingNumber
   payload.fullName = `${item.firstName} ${item.lastName}`
   payload.firstName = item.firstName
@@ -922,10 +922,9 @@ async function updateItem(item: { [key: string]: any }) {
 async function updateItemByRef(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
-
   payload.id = route.params.id
-  payload.hotelCreationDate = dayjs(item.hotelCreationDate).toISOString()
-  payload.bookingDate = dayjs(item.bookingDate).toISOString()
+  payload.hotelCreationDate = item.hotelCreationDate ? dayjs(item.hotelCreationDate).format('YYYY-MM-DD') : null
+  payload.bookingDate = item.bookingDate ? dayjs(item.bookingDate).format('YYYY-MM-DD') : null
   payload.hotelBookingNumber = item.hotelBookingNumber
   payload.fullName = `${item.firstName} ${item.lastName}`
   payload.firstName = item.firstName
@@ -978,21 +977,12 @@ async function saveItem(item: { [key: string]: any }) {
 
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
-    idItem.value = ''
-  }
-  else {
-    try {
-      await createItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
   }
   loadingSaveAll.value = false
   if (successOperation) {
-    clearForm()
+    formReload.value++
+
+    // clearForm()
   }
 }
 const goToList = async () => await navigateTo('/invoice')
@@ -1135,6 +1125,7 @@ function clearFormAdjustment() {
 
 async function onCellEditRoomRate(event: any) {
   const { data, newValue, field, newData } = event
+  const dataTemp = data[field]
   if (data[field] === newValue) { return }
 
   if (field === 'hotelAmount') {
@@ -1186,7 +1177,8 @@ async function onCellEditRoomRate(event: any) {
     reloadBookingItem(idItem.value)
   }
   catch (error: any) {
-    console.log(error)
+    data[field] = dataTemp
+    toast.add({ severity: 'error', summary: 'Error', detail: error?.response?._data?.data?.error?.errorMessage, life: 3000 })
   }
 }
 
@@ -1285,8 +1277,8 @@ async function getRoomRateList() {
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
         agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` },
-        rateAdult: rateAdult.toFixed(2), // iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0,
-        rateChildren: rateChildren.toFixed(2), // iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
+        rateAdult: iterator.adults > 0 ? rateAdult.toFixed(2) : 0,
+        rateChildren: iterator.children > 0 ? rateChildren.toFixed(2) : 0,
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
@@ -1582,8 +1574,8 @@ async function getBookingItemById(id: string) {
         idItem.value = response?.id
         item2.value.id = response.id
         item2.value.bookingId = response.bookingId
-        item2.value.hotelCreationDate = new Date(response.hotelCreationDate)
-        item2.value.bookingDate = response.bookingDate ? new Date(response.bookingDate) : ''
+        item2.value.hotelCreationDate = response.hotelCreationDate ? dayjs(response.hotelCreationDate).format('YYYY-MM-DD') : ''
+        item2.value.bookingDate = response.bookingDate ? dayjs(response.bookingDate).format('YYYY-MM-DD') : ''
         item2.value.contract = response.contract
         item2.value.dueAmount = response.dueAmount
         item2.value.checkIn = new Date(response.checkIn)
