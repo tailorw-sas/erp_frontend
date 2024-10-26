@@ -241,6 +241,7 @@ function onSelectItem(item: any) {
       }
       else if (item.length === 0) {
         emits('update:clickedItem', [])
+        emits('update:selectedItems', [])
       }
     }
     else {

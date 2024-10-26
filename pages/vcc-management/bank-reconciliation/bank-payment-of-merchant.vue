@@ -137,7 +137,6 @@ const computedTransactionAmountSelected = computed(() => {
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
-
 async function onMultipleSelect(data: any) {
   // Crear un Set de IDs para los seleccionados globalmente y los seleccionados en la página actual
   const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
@@ -244,7 +243,13 @@ async function handleSave(event: any) {
   }
 }
 
+function removeUnbindSelectedTransactions(newTransactions: any[]) {
+  const ids = new Set(newTransactions.map(item => item.id))
+  selectedElements.value = selectedElements.value.filter(item => ids.has(item.id))
+}
+
 function setTransactions(event: any) {
+  removeUnbindSelectedTransactions(event)
   BindTransactionList.value = [...event]
   const totalAmount = BindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
   subTotals.value.amount = totalAmount
