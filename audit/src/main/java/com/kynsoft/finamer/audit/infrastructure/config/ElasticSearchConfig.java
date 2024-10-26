@@ -20,23 +20,23 @@ public class ElasticSearchConfig extends ElasticsearchConfiguration {
     @Value("${elasticsearch.url}")
     private String elasticSearchUrl;
 
-    @Value("${elasticsearch.username}")
-    private String elasticSearchUsername;
-
-    @Value("${elasticsearch.password}")
-    private String elasticSearchPassword;
+//    @Value("${elasticsearch.username}")
+//    private String elasticSearchUsername;
+//
+//    @Value("${elasticsearch.password}")
+//    private String elasticSearchPassword;
 
     @Override
     public ClientConfiguration clientConfiguration() {
         logger.info("ElasticSearch URL: {}", elasticSearchUrl);
-        logger.info("ElasticSearch Username: {}", elasticSearchUsername);
+      //  logger.info("ElasticSearch Username: {}", elasticSearchUsername);
         // Por razones de seguridad, no se registra la contraseña.
 
         return ClientConfiguration.builder()
                 .connectedTo(elasticSearchUrl)
                 .withConnectTimeout(Duration.ofSeconds(5))
                 .withSocketTimeout(Duration.ofSeconds(3))
-                .withBasicAuth(elasticSearchUsername, elasticSearchPassword)
+             //   .withBasicAuth(elasticSearchUsername, elasticSearchPassword)
                 .build();
     }
 }

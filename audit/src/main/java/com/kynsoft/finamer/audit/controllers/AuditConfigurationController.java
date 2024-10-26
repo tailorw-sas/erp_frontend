@@ -11,6 +11,7 @@ import com.kynsoft.finamer.audit.application.query.configuration.search.SearchCo
 import com.kynsoft.finamer.audit.application.query.configuration.search.SearchConfigurationResponse;
 import com.kynsoft.finamer.audit.domain.request.PageableUtil;
 import com.kynsoft.finamer.audit.domain.request.SearchRequest;
+import com.kynsoft.finamer.audit.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.audit.infrastructure.bus.IMediator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,13 +40,13 @@ public class AuditConfigurationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<GetConfigurationByIdQuery> getById(@PathVariable UUID id) {
+    public ResponseEntity<GetConfigurationByIdResponse> getById(@PathVariable UUID id) {
         GetConfigurationByIdQuery query = new GetConfigurationByIdQuery(id);
         return ResponseEntity.ok(mediator.send(query));
     }
 
     @PostMapping("/search")
-    public ResponseEntity<SearchConfigurationResponse> search(SearchRequest searchRequest) {
+    public ResponseEntity<PaginatedResponse> search(@RequestBody SearchRequest searchRequest) {
         Pageable pageable = PageableUtil.createPageable(searchRequest);
         SearchConfigurationQuery searchConfigurationQuery = new SearchConfigurationQuery(pageable,searchRequest.getFilter(),searchRequest.getQuery());
         return ResponseEntity.ok(mediator.send(searchConfigurationQuery));
