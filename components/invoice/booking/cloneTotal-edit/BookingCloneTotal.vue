@@ -795,11 +795,11 @@ async function onCellEditRoomRate(event: any) {
 
   const payload: { [key: string]: any } = {
     roomRateId: newData.roomRateId,
-    roomNumber: newData.roomNumber,
+    roomNumber: newData.roomNumber ? Number(newData.roomNumber) : 0,
     checkIn: dayjs(newData.checkIn).toISOString(),
     checkOut: dayjs(newData.checkOut).toISOString(),
-    adults: newData.adults,
-    children: newData.children,
+    adults: newData.adults ? Number(newData.adults) : 0,
+    children: newData.children ? Number(newData.children) : 0,
     invoiceAmount: newData.invoiceAmount,
     hotelAmount: newData.hotelAmount,
     remark: newData.remark,
