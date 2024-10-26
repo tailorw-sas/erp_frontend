@@ -55,7 +55,7 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setLanguage, command.getLanguage(), updateDto.getLanguage(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setQuery, command.getQuery(), updateDto.getQuery(), update::setUpdate);
 
-        this.updateConection(updateDto::setDbConectionDto, command.getDbConection(), updateDto.getDbConectionDto() != null ? updateDto.getDbConectionDto().getId() : null);
+        this.updateConection(updateDto::setDbConectionDto, command.getDbConection(), updateDto.getDbConectionDto() != null ? updateDto.getDbConectionDto().getId() : null,update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(updateDto);
@@ -76,10 +76,11 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         }
     }
 
-    private void updateConection(Consumer<DBConectionDto> setter, UUID newValue, UUID oldValue) {
+    private void updateConection(Consumer<DBConectionDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             DBConectionDto conectionDto = this.conectionService.findById(newValue);
             setter.accept(conectionDto);
+            update.accept(1);
         }
     }
 

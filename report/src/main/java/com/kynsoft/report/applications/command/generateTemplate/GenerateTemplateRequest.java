@@ -14,4 +14,5 @@ import java.util.Map;
 public class GenerateTemplateRequest {
     private Map<String, Object> parameters;
     private String JasperReportCode;
+    private String reportFormatType;
 }
