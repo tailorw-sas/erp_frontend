@@ -1048,6 +1048,25 @@ async function createClonation(item: { [key: string]: any }) {
     const bookingsEdit = await filterEditFields(listBookingsTemp) || []
 
     payload.bookings = bookingsEdit
+    payload.roomRates = roomRateList.value.filter(item => item).map(item => ({
+      id: item?.id,
+      checkIn: item?.checkIn,
+      checkOut: item?.checkOut,
+      invoiceAmount: item?.invoiceAmount,
+      roomNumber: item?.roomNumber,
+      adults: item?.adults,
+      children: item?.children,
+      rateAdult: item?.rateAdult,
+      rateChild: item?.rateChild,
+      hotelAmount: item?.hotelAmount,
+      remark: item?.remark,
+      nights: item?.nights,
+      fullName: item?.fullName,
+      firstName: item?.booking?.firstName,
+      lastName: item?.booking?.lastName,
+      // rateChildren: item?.rateChildren,
+      booking: item?.booking?.id,
+    }))
 
     return await GenericService.create(confClonationApi.moduleApi, confClonationApi.uriApi, payload)
   }
@@ -1548,7 +1567,6 @@ function updateBooking(booking: any) {
   const existingEditIndex = bookingEdit.value.findIndex((item: any) => item.id === booking.id)
   if (existingEditIndex === -1) {
     bookingEdit.value.push(booking) // Agregar el booking editado al array solo si no está presente
-    console.log(bookingEdit.value, 'que hay aqui')
   }
   else {
     bookingEdit.value[existingEditIndex] = booking // Actualizar el booking existente en el array
@@ -1565,29 +1583,6 @@ function updateBooking(booking: any) {
     objBookingsTotals.value.totalDueAmount += Number(booking.dueAmount)
     objBookingsTotals.value.totalHotelAmount += Number(booking.hotelAmount)
   })
-}
-
-function disabledButtonSave() {
-  let result = false
-  if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
-    result = true
-  }
-  else {
-    const listIds = roomRateList.value.map((roomRate: any) => roomRate.id)
-    if (listIds.length === 0) {
-      result = true
-    }
-    else {
-      // recorrer la lista de ids y ver si todos los ids existen en la lista de adjustments y la propiedad a verificar se llama roomRate
-      for (let i = 0; i < listIds.length; i++) {
-        if (!adjustmentList.value.some((adjustment: any) => adjustment.roomRate === listIds[i])) {
-          result = true
-          break
-        }
-      }
-    }
-  }
-  return result
 }
 
 function addAdjustment(adjustment: any) {
@@ -1614,6 +1609,8 @@ function updateAttachment(attachment: any) {
 
 //
 function onSaveRoomRateInBookingEdit(item: any) {
+  console.log('item', item)
+
   if (item && item.roomRateList && item.roomRateList.length > 0) {
     roomRateList.value = [...item.roomRateList]
   }
@@ -1685,6 +1682,378 @@ onMounted(async () => {
   calcInvoiceAmount()
   // }
 })
+
+const jsonTemp = ref(
+  {
+    id: '14848e3a-a404-44d9-9ad4-cde98a42c86b',
+    roomRateId: '',
+    checkIn: '2024-10-25',
+    checkOut: '2024-10-25',
+    invoiceAmount: 1768,
+    roomNumber: '0',
+    adults: 2,
+    children: null,
+    rateAdult: 0,
+    rateChild: null,
+    hotelAmount: 1234,
+    remark: '',
+    booking: {
+      id: '5f03267d-bec8-4b76-b3fb-3cf5a792163a',
+      bookingId: 164,
+      reservationNumber: 164,
+      hotelCreationDate: '2024-10-25T04:00:00',
+      bookingDate: '2024-10-25T04:00:00',
+      checkIn: '2024-10-25T04:00:00',
+      checkOut: '2024-10-25T04:00:00',
+      hotelBookingNumber: 'I 123 135',
+      fullName: 'ehfgkwe bvmnadfb',
+      firstName: 'ehfgkwe',
+      lastName: 'bvmnadfb',
+      invoiceAmount: 1768,
+      dueAmount: 1768,
+      roomNumber: '0',
+      couponNumber: '',
+      adults: 2,
+      children: null,
+      rateAdult: null,
+      rateChild: null,
+      hotelInvoiceNumber: '',
+      folioNumber: '',
+      hotelAmount: 1234,
+      description: '',
+      invoice: {
+        id: 'b725f4bd-bba2-45b6-9413-82a1410b5deb',
+        invoiceId: 134,
+        invoiceNo: 6,
+        invoiceNumber: 'INV-COH-6',
+        invoiceDate: '2024-10-25T18:37:06.988392',
+        dueDate: '2024-12-19',
+        isManual: true,
+        invoiceAmount: 78693750,
+        dueAmount: 78693750,
+        hotel: {
+          id: '7c91f636-f11a-44f5-b4fa-70d403897314',
+          code: 'COH',
+          name: 'Cohiba',
+          manageTradingCompanies: {
+            id: '9cc54004-1594-489a-9183-9d7366818e9d',
+            code: 'SMA',
+            isApplyInvoice: false,
+            autogen_code: 4,
+            cif: '3073401140',
+            address: 'BBVA Bancomer S.A Fideicomiso F/408453-9',
+            company: 'BBVA Bancomer S.A Fideicomiso F/408453-9'
+          },
+          autogen_code: null,
+          virtual: true,
+          status: 'ACTIVE',
+          requiresFlatRate: false,
+          autoApplyCredit: false,
+          address: '',
+          babelCode: 'coh',
+          manageCountry: {
+            id: '704b7162-f55e-413c-842d-3a5bcbca6209',
+            code: 'DOM',
+            name: 'República Dominicana',
+            description: '',
+            isDefault: false,
+            status: 'ACTIVE'
+          },
+          manageCityState: {
+            id: '6512e21e-698e-403d-bc1d-d0b33e03de7f',
+            code: 'DRO',
+            name: 'Duarte',
+            description: '',
+            status: 'ACTIVE',
+            country: null
+          },
+          city: '',
+          manageCurrency: null
+        },
+        agency: {
+          id: '7e425e14-06fe-49e7-9224-d38692f170a8',
+          code: 'BRE',
+          name: 'BrenJos',
+          client: {
+            id: 'd5ab697e-d79c-4431-8c53-e9c2f0d84c06',
+            code: 'VHD',
+            name: 'VIRGIN HOLIDAYS LTD',
+            isNightType: false
+          },
+          generationType: 'ByBooking',
+          status: 'ACTIVE',
+          cif: '3derf',
+          address: 'dcfv',
+          sentB2BPartner: {
+            id: '3717d55d-7701-4237-a91e-8799aed09c2c',
+            code: 'EML',
+            name: 'Invoice Sent Email Configuration',
+            description: '',
+            status: 'ACTIVE',
+            url: null,
+            ip: '172.20.41.96',
+            userName: 'usrftp01',
+            password: 'usuarioftp01*',
+            token: '',
+            b2BPartnerTypeDto: {
+              id: '121b6d83-85ca-4b06-b797-ab1edc5e44da',
+              code: 'EML',
+              name: 'EMAIL',
+              description: '',
+              status: 'ACTIVE'
+            }
+          },
+          cityState: {
+            id: '9a6000d5-5e37-44d4-baa5-1f3c14730d3f',
+            code: 'SDQ',
+            name: 'Santo Domingo',
+            description: '',
+            status: 'ACTIVE',
+            country: {
+              id: '704b7162-f55e-413c-842d-3a5bcbca6209',
+              code: 'DOM',
+              name: 'República Dominicana',
+              description: '',
+              isDefault: false,
+              status: 'ACTIVE'
+            }
+          },
+          country: {
+            id: '704b7162-f55e-413c-842d-3a5bcbca6209',
+            code: 'DOM',
+            name: 'República Dominicana',
+            description: '',
+            isDefault: false,
+            status: 'ACTIVE'
+          },
+          mailingAddress: 'df',
+          zipCode: 'sxdcfd',
+          city: 'dfv',
+          creditDay: 55,
+          autoReconcile: true,
+          validateCheckout: true
+        },
+        invoiceType: 'INVOICE',
+        status: 'RECONCILED',
+        autoRec: false,
+        bookings: null,
+        attachments: null,
+        reSend: false,
+        reSendDate: null,
+        manageInvoiceType: {
+          id: '53fcb130-7711-4f5e-a6ed-b0273d253d0c',
+          code: 'INV',
+          name: 'Invoice'
+        },
+        manageInvoiceStatus: {
+          id: 'a0abaccb-b003-42ed-99f0-501230cc05fe',
+          code: 'REC',
+          description: 'Enabled To Apply, siempre puesto para aplicar pago',
+          status: 'ACTIVE',
+          name: 'Reconciled',
+          enabledToPrint: true,
+          enabledToPropagate: true,
+          enabledToApply: true,
+          enabledToPolicy: true,
+          processStatus: false,
+          navigate: [],
+          showClone: true,
+          sentStatus: false,
+          reconciledStatus: true,
+          canceledStatus: false
+        },
+        createdAt: '2024-10-25T13:37:07.209568',
+        isCloned: true,
+        parent: null,
+        credits: 0,
+        sendStatusError: null,
+        originalAmount: null
+      },
+      ratePlan: null,
+      nightType: {
+        id: 'b2ad349b-1409-4f0d-9c9f-130e602ffbe6',
+        code: 'GOLD',
+        name: 'Premium Night'
+      },
+      roomType: null,
+      roomCategory: null,
+      roomRates: [
+        {
+          id: '14848e3a-a404-44d9-9ad4-cde98a42c86b',
+          roomRateId: 187,
+          checkIn: '2024-10-25T04:00:00',
+          checkOut: '2024-10-25T04:00:00',
+          invoiceAmount: 1768,
+          roomNumber: '0',
+          adults: 2,
+          children: null,
+          rateAdult: null,
+          rateChild: null,
+          hotelAmount: 1234,
+          remark: '',
+          booking: null,
+          adjustments: [],
+          nights: 0
+        }
+      ],
+      nights: 0,
+      parent: {
+        id: '08e2a2c7-e32e-4462-b265-3193262e8259',
+        bookingId: 153,
+        reservationNumber: 153,
+        hotelCreationDate: '2024-10-25T04:00:00',
+        bookingDate: '2024-10-25T04:00:00',
+        checkIn: '2024-10-25T04:00:00',
+        checkOut: '2024-10-25T04:00:00',
+        hotelBookingNumber: 'I 123 135',
+        fullName: 'ehfgkwe bvmnadfb',
+        firstName: 'ehfgkwe',
+        lastName: 'bvmnadfb',
+        invoiceAmount: 0,
+        dueAmount: 0,
+        roomNumber: '0',
+        couponNumber: '',
+        adults: 2,
+        children: null,
+        rateAdult: null,
+        rateChild: null,
+        hotelInvoiceNumber: '',
+        folioNumber: '',
+        hotelAmount: 1234,
+        description: '',
+        invoice: null,
+        ratePlan: null,
+        nightType: {
+          id: 'b2ad349b-1409-4f0d-9c9f-130e602ffbe6',
+          code: 'GOLD',
+          name: 'Premium Night'
+        },
+        roomType: null,
+        roomCategory: null,
+        roomRates: [
+          {
+            id: '5d576f65-b93c-4d0f-bd24-eef0fb5706d7',
+            roomRateId: 176,
+            checkIn: '2024-10-25T04:00:00',
+            checkOut: '2024-10-25T04:00:00',
+            invoiceAmount: 0,
+            roomNumber: '0',
+            adults: 2,
+            children: null,
+            rateAdult: null,
+            rateChild: null,
+            hotelAmount: 1234,
+            remark: '',
+            booking: null,
+            adjustments: [
+              {
+                id: '8f56a199-a6c8-43fa-9b37-8316875cfc18',
+                adjustmentId: 53,
+                amount: -1768,
+                date: '2024-10-25T13:37:07.340596',
+                description: 'Automatic adjustment generated to closed the invoice, because it was cloned',
+                transaction: {
+                  id: 'a85761fa-3c98-4054-8d0c-189aa414bd55',
+                  code: 'AJPR',
+                  name: 'Ajuste por Provision',
+                  defaults: true
+                },
+                paymentTransactionType: null,
+                roomRate: null,
+                employee: 'Azcuy'
+              }
+            ],
+            nights: 0
+          }
+        ],
+        nights: 0,
+        parent: null,
+        contract: null
+      },
+      contract: null
+    },
+    nights: 0,
+    loadingEdit: false,
+    loadingDelete: false,
+    fullName: 'ehfgkwe bvmnadfb',
+    roomType: {
+      name: '-'
+    },
+    nightType: {
+      id: 'b2ad349b-1409-4f0d-9c9f-130e602ffbe6',
+      code: 'GOLD',
+      name: 'GOLD-Premium Night'
+    },
+    ratePlan: {
+      name: '-'
+    },
+    agency: {
+      id: '7e425e14-06fe-49e7-9224-d38692f170a8',
+      code: 'BRE',
+      name: 'BRE-BrenJos',
+      client: {
+        id: 'd5ab697e-d79c-4431-8c53-e9c2f0d84c06',
+        code: 'VHD',
+        name: 'VIRGIN HOLIDAYS LTD',
+        isNightType: false
+      },
+      generationType: 'ByBooking',
+      status: 'ACTIVE',
+      cif: '3derf',
+      address: 'dcfv',
+      sentB2BPartner: {
+        id: '3717d55d-7701-4237-a91e-8799aed09c2c',
+        code: 'EML',
+        name: 'Invoice Sent Email Configuration',
+        description: '',
+        status: 'ACTIVE',
+        url: null,
+        ip: '172.20.41.96',
+        userName: 'usrftp01',
+        password: 'usuarioftp01*',
+        token: '',
+        b2BPartnerTypeDto: {
+          id: '121b6d83-85ca-4b06-b797-ab1edc5e44da',
+          code: 'EML',
+          name: 'EMAIL',
+          description: '',
+          status: 'ACTIVE'
+        }
+      },
+      cityState: {
+        id: '9a6000d5-5e37-44d4-baa5-1f3c14730d3f',
+        code: 'SDQ',
+        name: 'Santo Domingo',
+        description: '',
+        status: 'ACTIVE',
+        country: {
+          id: '704b7162-f55e-413c-842d-3a5bcbca6209',
+          code: 'DOM',
+          name: 'República Dominicana',
+          description: '',
+          isDefault: false,
+          status: 'ACTIVE'
+        }
+      },
+      country: {
+        id: '704b7162-f55e-413c-842d-3a5bcbca6209',
+        code: 'DOM',
+        name: 'República Dominicana',
+        description: '',
+        isDefault: false,
+        status: 'ACTIVE'
+      },
+      mailingAddress: 'df',
+      zipCode: 'sxdcfd',
+      city: 'dfv',
+      creditDay: 55,
+      autoReconcile: true,
+      validateCheckout: true
+    },
+    bookingId: 164,
+    rateChildren: 0
+  },
+)
 </script>
 
 <template>
@@ -1705,7 +2074,6 @@ onMounted(async () => {
           }"
         />
       </template>
-
       <template #field-invoiceAmount="{ onUpdate, item: data }">
         <InputText
           v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
