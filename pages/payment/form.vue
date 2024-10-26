@@ -3336,6 +3336,7 @@ const checkboxValue1 = ref(false)
                     <Checkbox
                       id="showReverseTransaction"
                       v-model="showReverseTransaction"
+                      :disabled="route?.query?.id ? false : true"
                       :binary="true"
                       @update:model-value="($event) => {
                         getListPaymentDetail($event)
@@ -3347,6 +3348,7 @@ const checkboxValue1 = ref(false)
                     <Checkbox
                       id="showCanceledDetails"
                       v-model="showCanceledDetails"
+                      :disabled="route?.query?.id ? false : true"
                       :binary="true"
                       @update:model-value="($event) => {
                         getListPaymentDetail($event)
