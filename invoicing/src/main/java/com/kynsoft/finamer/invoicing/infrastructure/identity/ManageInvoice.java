@@ -109,6 +109,8 @@ public class ManageInvoice {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
+    @Column(nullable = false,columnDefinition = "integer default 0")
+    private Integer aging;
 
     public ManageInvoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -147,6 +149,7 @@ public class ManageInvoice {
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
         this.sendStatusError = dto.getSendStatusError();
+        this.aging = dto.getAging();
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -157,7 +160,7 @@ public class ManageInvoice {
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                null, credits);
+                null, credits,aging);
         manageInvoiceDto.setOriginalAmount(originalAmount);
         return manageInvoiceDto;
     }
@@ -173,7 +176,7 @@ public class ManageInvoice {
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregateSample() : null, credits);
+                parent != null ? parent.toAggregateSample() : null, credits,aging);
         manageInvoiceDto.setOriginalAmount(originalAmount);
         return manageInvoiceDto;
     }
@@ -186,7 +189,7 @@ public class ManageInvoice {
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregateSample() : null, credits);
+                parent != null ? parent.toAggregateSample() : null, credits,aging);
         manageInvoiceDto.setSendStatusError(sendStatusError);
         manageInvoiceDto.setOriginalAmount(originalAmount);
         return manageInvoiceDto;

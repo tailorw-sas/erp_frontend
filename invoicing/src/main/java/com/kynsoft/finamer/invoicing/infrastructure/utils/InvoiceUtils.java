@@ -3,6 +3,9 @@ package com.kynsoft.finamer.invoicing.infrastructure.utils;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 
+import java.time.LocalDate;
+import java.time.chrono.ChronoLocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class InvoiceUtils {
@@ -32,5 +35,31 @@ public class InvoiceUtils {
 
     public static String deleteHotelInfo(String input) {
         return input.replaceAll("-(.*?)-", "-");
+    }
+
+
+    public static ManageInvoiceDto calculateInvoiceAging(ManageInvoiceDto manageInvoiceDto){
+       LocalDate dueDate= manageInvoiceDto.getDueDate();
+       LocalDate serverDate = LocalDate.now();
+       if(dueDate.isEqual(serverDate) || dueDate.isAfter(serverDate)){
+           manageInvoiceDto.setAging(0);
+       }else{
+         long dayBetween=  ChronoUnit.DAYS.between(dueDate,serverDate);
+         
+         if (dayBetween<=30){
+             manageInvoiceDto.setAging(30);
+         } else if (dayBetween>31 && dayBetween<=60) {
+             manageInvoiceDto.setAging(60);
+         }else if(dayBetween>61 && dayBetween<=90){
+             manageInvoiceDto.setAging(90);
+         }else{
+             manageInvoiceDto.setAging(120);
+         }
+       }
+       return manageInvoiceDto;
+    }
+
+    public static ManageInvoiceDto establishDueDate(ManageInvoiceDto manageInvoiceDto){
+        manageInvoiceDto.se
     }
 }
