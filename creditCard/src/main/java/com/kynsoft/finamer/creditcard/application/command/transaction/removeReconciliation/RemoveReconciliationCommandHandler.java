@@ -21,17 +21,28 @@ public class RemoveReconciliationCommandHandler implements ICommandHandler<Remov
 
     @Override
     public void handle(RemoveReconciliationCommand command) {
-        ManageBankReconciliationDto bankReconciliationDto = this.bankReconciliationService.findById(command.getBankReconciliation());
-
         for (Long id : command.getTransactionsIds()){
             TransactionDto transactionDto = this.transactionService.findById(id);
-            if (transactionDto.isAdjustment()){
-                transactionDto.setReconciliation(null);
-                this.transactionService.update(transactionDto);
-                this.transactionService.delete(transactionDto);
+            if (command.getBankReconciliation() != null){
+                if (transactionDto.getReconciliation().getId().equals(command.getBankReconciliation())){
+                    if (transactionDto.isAdjustment()){
+                        transactionDto.setReconciliation(null);
+                        this.transactionService.update(transactionDto);
+                        this.transactionService.delete(transactionDto);
+                    } else {
+                        transactionDto.setReconciliation(null);
+                        this.transactionService.update(transactionDto);
+                    }
+                }
             } else {
-                transactionDto.setReconciliation(null);
-                this.transactionService.update(transactionDto);
+                if (transactionDto.isAdjustment()){
+                    transactionDto.setReconciliation(null);
+                    this.transactionService.update(transactionDto);
+                    this.transactionService.delete(transactionDto);
+                } else {
+                    transactionDto.setReconciliation(null);
+                    this.transactionService.update(transactionDto);
+                }
             }
         }
     }
