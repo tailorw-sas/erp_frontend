@@ -24,41 +24,41 @@
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     </properties>
 
-	<profiles>
-		<profile>
-			<id>dev</id>
-			<activation>
-				<property>
-					<name>env</name>
-					<value>dev</value>
-				</property>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<dependencies>
-				<dependency>
-					<groupId>com.kynsoft.finamer</groupId>
-					<artifactId>audit-agent-dev</artifactId>
-					<version>0.0.1-SNAPSHOT</version>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
-			<id>qa</id>
-			<activation>
-				<property>
-					<name>env</name>
-					<value>qa</value>
-				</property>
-			</activation>
-			<dependencies>
-				<dependency>
-					<groupId>com.kynsoft.finamer</groupId>
-					<artifactId>audit-agent-qa</artifactId>
-					<version>0.0.1-SNAPSHOT</version>
-				</dependency>
-			</dependencies>
-		</profile>
-	</profiles>
+<!--	<profiles>-->
+<!--		<profile>-->
+<!--			<id>dev</id>-->
+<!--			<activation>-->
+<!--				<property>-->
+<!--					<name>env</name>-->
+<!--					<value>dev</value>-->
+<!--				</property>-->
+<!--				<activeByDefault>true</activeByDefault>-->
+<!--			</activation>-->
+<!--			<dependencies>-->
+<!--				<dependency>-->
+<!--					<groupId>com.kynsoft.finamer</groupId>-->
+<!--					<artifactId>audit-agent-dev</artifactId>-->
+<!--					<version>0.0.1-SNAPSHOT</version>-->
+<!--				</dependency>-->
+<!--			</dependencies>-->
+<!--		</profile>-->
+<!--		<profile>-->
+<!--			<id>qa</id>-->
+<!--			<activation>-->
+<!--				<property>-->
+<!--					<name>env</name>-->
+<!--					<value>qa</value>-->
+<!--				</property>-->
+<!--			</activation>-->
+<!--			<dependencies>-->
+<!--				<dependency>-->
+<!--					<groupId>com.kynsoft.finamer</groupId>-->
+<!--					<artifactId>audit-agent-qa</artifactId>-->
+<!--					<version>0.0.1-SNAPSHOT</version>-->
+<!--				</dependency>-->
+<!--			</dependencies>-->
+<!--		</profile>-->
+<!--	</profiles>-->
 	
     <dependencyManagement>
         <dependencies>

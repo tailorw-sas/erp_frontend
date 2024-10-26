@@ -11,8 +11,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface AuditConfigurationRepository extends JpaRepository<AuditConfiguration,String>,
-        PagingAndSortingRepository<AuditConfiguration,String>, JpaSpecificationExecutor<AuditConfiguration> {
+public interface AuditConfigurationRepository extends JpaRepository<AuditConfiguration,UUID>,
+        PagingAndSortingRepository<AuditConfiguration,UUID>, JpaSpecificationExecutor<AuditConfiguration> {
 
     Optional<AuditConfiguration> findAuditConfigurationByServiceNameAndId(String serviceName, UUID registerId);
 }
