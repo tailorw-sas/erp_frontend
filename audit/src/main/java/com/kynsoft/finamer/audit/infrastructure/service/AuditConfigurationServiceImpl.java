@@ -41,7 +41,7 @@ public class AuditConfigurationServiceImpl implements AuditConfigurationService 
 
     @Override
     public GetConfigurationByIdResponse findById(UUID id) {
-       Optional<AuditConfigurationDto> result= auditConfigurationRepository.findById(id.toString()).map(AuditConfiguration::toAggregate);
+       Optional<AuditConfigurationDto> result= auditConfigurationRepository.findById(id).map(AuditConfiguration::toAggregate);
 
        if (result.isPresent()){
            AuditConfigurationDto auditConfigurationDto = result.get();
@@ -62,7 +62,7 @@ public class AuditConfigurationServiceImpl implements AuditConfigurationService 
 
     @Override
     public void update(AuditConfigurationDto auditConfigurationDto) {
-       Optional<AuditConfiguration> auditConfiguration = auditConfigurationRepository.findById(auditConfigurationDto.getId().toString());
+       Optional<AuditConfiguration> auditConfiguration = auditConfigurationRepository.findById(auditConfigurationDto.getId());
        auditConfiguration.ifPresent(auditConfiguration1 -> {
            auditConfiguration1.setAuditUpdate(auditConfigurationDto.isAuditUpdate());
            auditConfiguration1.setAuditDelete(auditConfigurationDto.isAuditDelete());
