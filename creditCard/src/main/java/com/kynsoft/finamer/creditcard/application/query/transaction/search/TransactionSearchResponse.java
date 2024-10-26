@@ -35,6 +35,7 @@ public class TransactionSearchResponse implements IResponse {
     private Boolean permitRefund;
     private MethodType methodType;
     private boolean manual;
+    private boolean adjustment;
 
     public TransactionSearchResponse(TransactionDto dto){
         this.id = dto.getId();
@@ -53,5 +54,6 @@ public class TransactionSearchResponse implements IResponse {
         this.permitRefund = dto.getPermitRefund();
         this.methodType = dto.getMethodType();
         this.manual = dto.isManual();
+        this.adjustment = dto.isAdjustment();
     }
 }

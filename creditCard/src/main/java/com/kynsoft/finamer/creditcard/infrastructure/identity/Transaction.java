@@ -106,6 +106,9 @@ public class Transaction implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean manual;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean adjustment;
+
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
@@ -144,6 +147,7 @@ public class Transaction implements Serializable {
         this.manual = dto.isManual();
         this.paymentDate = dto.getPaymentDate();
         this.reconciliation = dto.getReconciliation() != null ? new ManageBankReconciliation(dto.getReconciliation()) : null;
+        this.adjustment = dto.isAdjustment();
     }
 
     private TransactionDto toAggregateParent() {
@@ -173,6 +177,7 @@ public class Transaction implements Serializable {
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
                 netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null,
                 manual,
+                adjustment,
                 paymentDate,
                 reconciliation != null ? reconciliation.toAggregateSimple() : null
         );

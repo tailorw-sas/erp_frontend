@@ -1,9 +1,6 @@
 package com.kynsoft.finamer.creditcard.application.command.transaction.manual;
 
-import com.kynsof.share.core.application.mailjet.MailJetRecipient;
-import com.kynsof.share.core.application.mailjet.MailJetVar;
 import com.kynsof.share.core.application.mailjet.MailService;
-import com.kynsof.share.core.application.mailjet.SendMailJetEMailRequest;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
@@ -15,8 +12,6 @@ import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.*;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import com.kynsoft.finamer.creditcard.infrastructure.services.TokenService;
 import org.springframework.stereotype.Component;
-
-import java.util.*;
 
 @Component
 public class CreateManualTransactionCommandHandler implements ICommandHandler<CreateManualTransactionCommand> {
