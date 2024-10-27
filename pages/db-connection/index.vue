@@ -660,7 +660,7 @@ onMounted(() => {
               <div class="flex justify-content-end">
                 <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
 
-                <Button v-tooltip.top="'Config Password'" class="w-3rem mr-2" icon="pi pi-eye" :loading="loadingSaveAll" @click="openModalPass" />
+                <Button v-if="idItem" v-tooltip.top="'Config Password'" class="w-3rem mr-2" icon="pi pi-eye" :loading="loadingSaveAll" @click="openModalPass" />
 
                 <Button v-tooltip.top="'Delete'" class="w-3rem" severity="danger" outlined :loading="loadingDelete" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
               </div>
