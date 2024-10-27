@@ -170,15 +170,15 @@ const createItems: Array<MenuItem> = ref([{
 const columns: IColumn[] = [
   { field: 'id', header: 'Id', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
-  { field: 'bankAccount', header: 'BankAccount', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant-bank-account' }, sortable: true },
+  { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant-bank-account' }, sortable: true },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'detailsAmount', header: 'Details Amount', type: 'text' },
-  { field: 'date', header: 'Date', type: 'date' },
+  { field: 'paidDate', header: 'Date', type: 'date' },
   { field: 'remark', header: 'Remark', type: 'text' },
   // { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
 ]
 
-const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
+const subTotals: any = ref({ amount: 0, details: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
   { id: 'id', name: 'Id' },
@@ -213,7 +213,7 @@ const pagination = ref<IPagination>({
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
-  const count = { amount: 0, commission: 0, net: 0 }
+  const count = { amount: 0, details: 0 }
   subTotals.value = { ...count }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -246,6 +246,13 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
         iterator.amount = formatNumber(iterator.amount)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'detailsAmount')) {
+        count.details += iterator.detailsAmount
+        iterator.detailsAmount = formatNumber(iterator.detailsAmount)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'merchantBankAccount')) {
+        iterator.merchantBankAccount = { id: iterator.merchantBankAccount.id, name: `${iterator.merchantBankAccount.bankCode} - ${iterator.merchantBankAccount.bankName} - ${iterator.merchantBankAccount.description}` }
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
@@ -293,7 +300,7 @@ function searchAndFilter() {
     // Date
     if (filterToSearch.value.from) {
       newPayload.filter = [...newPayload.filter, {
-        key: 'checkIn',
+        key: 'paidDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -302,7 +309,7 @@ function searchAndFilter() {
     }
     if (filterToSearch.value.to) {
       newPayload.filter = [...newPayload.filter, {
-        key: 'checkIn',
+        key: 'paidDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -380,37 +387,6 @@ function clearFilterToSearch() {
   }
   filterToSearch.value.criterial = ENUM_FILTER[0]
   getList()
-}
-
-async function getCollectionStatusList() {
-  if (collectionStatusList.value.length > 0) {
-    return collectionStatusList.value
-  }
-  try {
-    const payload = {
-      filter: [
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 50,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
-    const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
-    const { data: dataList } = response
-    collectionStatusList.value = dataList
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-  return collectionStatusList.value
 }
 
 async function getHotelList(query: string = '') {
@@ -523,7 +499,7 @@ async function getMerchantBankAccountList(query: string) {
 
     for (const iterator of dataList) {
       const merchantNames = iterator.managerMerchant.map((item: any) => item.description).join(' - ')
-      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`}]
+      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}` }]
     }
   }
   catch (error) {
@@ -794,8 +770,7 @@ onMounted(() => {
                               filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id !== 'All')
                             }
                           }"
-                        >
-                        </DebouncedAutoCompleteComponent>
+                        />
                       </div>
                     </div>
                   </div>
@@ -924,8 +899,8 @@ onMounted(() => {
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
               <Column footer="Totals:" :colspan="3" footer-style="text-align:right" />
-              <Column :footer="formatNumber(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)" />
-              <Column :footer="formatNumber(Math.round((subTotals.commission + Number.EPSILON) * 100) / 100)" />
+              <Column :footer="formatNumber(subTotals.amount)" />
+              <Column :footer="formatNumber(subTotals.details)" />
               <Column :colspan="3" />
             </Row>
           </ColumnGroup>
