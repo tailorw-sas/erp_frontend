@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { z } from 'zod'
 import dayjs from 'dayjs'
 import type { Ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
+import { useToast } from 'primevue/usetoast'
 import BankPaymentMerchantBindTransactionsDialog
   from '../../../components/vcc/bank-reconciliation/BankPaymentMerchantBindTransactionsDialog.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -14,28 +15,35 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import { parseFormattedNumber } from '~/utils/helpers'
 
+const toast = useToast()
 const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
-const BindTransactionList = ref<any[]>([])
+const LocalBindTransactionList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
 const subTotals: any = ref({ amount: 0 })
 const selectedElements = ref<any[]>([])
+const idItem = ref('')
+
+const confApi = reactive({
+  moduleApi: 'creditcard',
+  uriApi: 'bank-reconciliation',
+})
 
 const item = ref({
-  manageMerchantBankAccount: null,
-  manageHotel: null,
+  merchantBankAccount: null,
+  hotel: null,
   amount: 0,
   paidDate: '',
   remark: '',
 } as GenericObject)
 
 const itemTemp = ref({
-  manageMerchantBankAccount: null,
-  manageHotel: null,
+  merchantBankAccount: null,
+  hotel: null,
   amount: 0,
   paidDate: '',
   remark: '',
@@ -43,7 +51,7 @@ const itemTemp = ref({
 
 const fields: Array<FieldDefinitionType> = [
   {
-    field: 'manageMerchantBankAccount',
+    field: 'merchantBankAccount',
     header: 'Bank Account',
     dataType: 'select',
     class: 'field col-12 md:col-6 required',
@@ -51,7 +59,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('bank account'),
   },
   {
-    field: 'manageHotel',
+    field: 'hotel',
     header: 'Hotel',
     dataType: 'select',
     class: 'field col-12 md:col-6 required',
@@ -71,8 +79,8 @@ const fields: Array<FieldDefinitionType> = [
       invalid_type_error: 'The amount field must be a number',
       required_error: 'The amount field is required',
     })
-      .refine(val => Number.parseFloat(String(val)) > 0, {
-        message: 'The amount must be greater than zero',
+      .refine(val => Number.parseFloat(String(val)) >= 0, {
+        message: 'The amount must be zero or greater',
       })
   },
   {
@@ -147,7 +155,7 @@ async function onMultipleSelect(data: any) {
   selectedElements.value = [
     // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
     ...selectedElements.value.filter((item: any) =>
-      currentPageSelectedIds.has(item.id) || !BindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
+      currentPageSelectedIds.has(item.id) || !LocalBindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
     ),
     // Agregar nuevos elementos seleccionados en la página actual
     ...data.filter((item: any) => !selectedIds.has(item.id))
@@ -236,9 +244,66 @@ async function getMerchantBankAccountList(query: string) {
   }
 }
 
+async function createItem(item: { [key: string]: any }) {
+  if (item) {
+    const payload: { [key: string]: any } = { ...item }
+    payload.paidDate = payload.paidDate ? dayjs(payload.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
+    payload.merchantBankAccount = Object.prototype.hasOwnProperty.call(payload.merchantBankAccount, 'id') ? payload.merchantBankAccount.id : payload.merchantBankAccount
+    payload.detailsAmount = subTotals.value.amount
+
+    if (LocalBindTransactionList.value.length > 0) {
+      payload.transactions = LocalBindTransactionList.value.map((i: any) => i.id)
+    }
+    const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    if (response && response.id) {
+      // Guarda el id del elemento creado
+      idItem.value = response.id
+      LocalBindTransactionList.value = []
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant was created successful`, life: 10000 })
+      // toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice ${response.invoiceNumber ?? ''} was created successful`, life: 10000 })
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
+    }
+  }
+}
+
+async function saveItem(item: { [key: string]: any }) {
+  loadingSaveAll.value = true
+  // let successOperation = true
+  if (idItem.value) {
+    try {
+      // await updateItem(item)
+      idItem.value = ''
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    }
+    catch (error: any) {
+      // successOperation = false
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+  }
+  else {
+    try {
+      await createItem(item)
+      // Deshabilitar campos restantes del formulario
+      // updateFieldProperty(fields, 'reSend', 'disabled', true)
+      // updateFieldProperty(fields, 'reSendDate', 'disabled', true)
+      // if (AdjustmentList.value.length > 0) {
+      //   await createAdjustment(AdjustmentList.value)
+      // }
+      // await getItemById(idItem.value)
+    }
+    catch (error: any) {
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+  }
+  loadingSaveAll.value = false
+}
+
 async function handleSave(event: any) {
   if (event) {
-    // await saveItem(event)
+    await saveItem(event)
     forceSave.value = false
   }
 }
@@ -250,8 +315,8 @@ function removeUnbindSelectedTransactions(newTransactions: any[]) {
 
 function setTransactions(event: any) {
   removeUnbindSelectedTransactions(event)
-  BindTransactionList.value = [...event]
-  const totalAmount = BindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
+  LocalBindTransactionList.value = [...event]
+  const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
   subTotals.value.amount = totalAmount
 }
 
@@ -321,34 +386,34 @@ function onSortField(event: any) {
           <Skeleton v-else height="2rem" />
         </template>
         <!-- Agency -->
-        <template #field-manageHotel="{ item: data, onUpdate }">
+        <template #field-hotel="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
-            :model="data.manageHotel"
+            :model="data.hotel"
             :suggestions="HotelList"
             @change="($event) => {
               onUpdate('hotel', $event)
-              item.manageHotel = $event
+              item.hotel = $event
             }"
             @load="($event) => getHotelList($event)"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #field-manageMerchantBankAccount="{ item: data, onUpdate }">
+        <template #field-merchantBankAccount="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
-            :model="data.manageMerchantBankAccount"
+            :model="data.merchantBankAccount"
             :suggestions="[...MerchantBankAccountList]"
             @change="($event) => {
-              onUpdate('manageMerchantBankAccount', $event)
-              item.manageMerchantBankAccount = $event
+              onUpdate('merchantBankAccount', $event)
+              item.merchantBankAccount = $event
             }"
             @load="($event) => getMerchantBankAccountList($event)"
           />
@@ -357,7 +422,7 @@ function onSortField(event: any) {
       </EditFormV2>
     </div>
     <DynamicTable
-      :data="BindTransactionList"
+      :data="LocalBindTransactionList"
       :columns="columns"
       :options="options"
       :pagination="pagination"
@@ -381,7 +446,7 @@ function onSortField(event: any) {
         v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
       />
       <div>
-        <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.manageMerchantBankAccount == null || item.manageHotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+        <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
         <Button v-tooltip.top="'Payment'" class="w-3rem ml-1" disabled icon="pi pi-dollar" @click="() => {}" />
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => {}" />
@@ -389,7 +454,7 @@ function onSortField(event: any) {
     </div>
     <div v-if="transactionsToBindDialogOpen">
       <BankPaymentMerchantBindTransactionsDialog
-        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="BindTransactionList"
+        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="LocalBindTransactionList"
         :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" @update:list-items="($event) => setTransactions($event)"
       />
     </div>
