@@ -105,13 +105,13 @@ async function getList() {
     BindTransactionList.value = []
     const newListItems = []
 
-    const merchantIds = props.currentBankPayment.manageMerchantBankAccount.merchantData.map((item: any) => item.id)
-    const creditCardTypeIds = props.currentBankPayment.manageMerchantBankAccount.creditCardTypes.map((item: any) => item.id)
+    const merchantIds = props.currentBankPayment.merchantBankAccount.merchantData.map((item: any) => item.id)
+    const creditCardTypeIds = props.currentBankPayment.merchantBankAccount.creditCardTypes.map((item: any) => item.id)
 
     payload.value.filter = [{
       key: 'hotel.id',
       operator: 'EQUALS',
-      value: props.currentBankPayment.manageHotel.id,
+      value: props.currentBankPayment.hotel.id,
       logicalOperation: 'AND'
     }, {
       key: 'merchant.id',
