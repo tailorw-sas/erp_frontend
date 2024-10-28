@@ -13,11 +13,12 @@ export default defineEventHandler(async (event): Promise<any> => {
   }
 
   try {
-    const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}/search`, {
+    const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}/config/search`, {
       method: 'POST',
       body,
       headers: defaultHeaders
     })
+   
     return response
   }
   catch (error: any) {
