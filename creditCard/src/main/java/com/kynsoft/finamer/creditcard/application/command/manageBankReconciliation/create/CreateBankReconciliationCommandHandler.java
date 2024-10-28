@@ -106,7 +106,8 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
                     LocalDate.now(),
                     netAmount,
                     LocalDate.now(),
-                    false
+                    false,
+                    true
             ));
             transactionList.add(transactionDto);
             ids.add(transactionDto.getId());

@@ -42,6 +42,7 @@ public class TransactionResponse implements IResponse {
     private Double netAmount;
     private Boolean permitRefund;
     private boolean manual;
+    private boolean adjustment;
 
     public TransactionResponse(TransactionDto dto){
         this.id = dto.getId();
@@ -73,5 +74,6 @@ public class TransactionResponse implements IResponse {
         this.netAmount = dto.getNetAmount();
         this.permitRefund = dto.getPermitRefund();
         this.manual = dto.isManual();
+        this.adjustment = dto.isAdjustment();
     }
 }
