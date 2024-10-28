@@ -101,7 +101,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
                 null,
                 null,
                 null,
-                false
+                true
         );
 
         children.setParentId(paymentDetailDto.getPaymentDetailId());
