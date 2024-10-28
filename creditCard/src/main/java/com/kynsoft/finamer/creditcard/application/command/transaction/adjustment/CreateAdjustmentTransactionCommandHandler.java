@@ -60,7 +60,8 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 transactionDate,
                 netAmount,
                 transactionDate,
-                false
+                false,
+                true
         ));
         command.setId(transactionDto.getId());
     }

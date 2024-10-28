@@ -30,6 +30,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClon
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.originalAmount.UpdateInvoiceOriginalAmountCommand;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.ExportInvoiceQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.GetSearchInvoiceQuery;
@@ -64,7 +65,7 @@ public class InvoiceController {
         ManageInvoiceResponse resp = mediator.send(query);
 
         this.mediator.send(
-                new UpdateInvoiceCommand(response.getId(), null, null, null, null));
+                new UpdateInvoiceCommand(response.getId(), null, resp.getAgency().getId(), null, null));
         return ResponseEntity.ok(response);
     }
 
@@ -72,6 +73,11 @@ public class InvoiceController {
     public ResponseEntity<CreateBulkInvoiceMessage> createBulk(@RequestBody CreateBulkInvoiceRequest request) {
         CreateBulkInvoiceCommand command = CreateBulkInvoiceCommand.fromRequest(request);
         CreateBulkInvoiceMessage message = this.mediator.send(command);
+
+        FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(message.getId());
+        ManageInvoiceResponse resp = mediator.send(query);
+
+        this.mediator.send(new UpdateInvoiceOriginalAmountCommand(resp.getId(), resp.getInvoiceAmount()));
         return ResponseEntity.ok(message);
 
     }

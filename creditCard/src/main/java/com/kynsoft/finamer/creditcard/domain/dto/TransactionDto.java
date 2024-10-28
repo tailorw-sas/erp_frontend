@@ -44,6 +44,7 @@ public class TransactionDto {
     private Boolean permitRefund;
     private ManagerMerchantCurrencyDto merchantCurrency;
     private boolean manual;
+    private boolean adjustment;
     private LocalDateTime paymentDate;
     private ManageBankReconciliationDto reconciliation;
 
@@ -104,7 +105,7 @@ public class TransactionDto {
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
             String reservationNumber, String referenceNumber, ManageTransactionStatusDto status,
             Double commission, LocalDate checkIn, Double netAmount,
-            LocalDate transactionDate, Boolean permitRefund) {
+            LocalDate transactionDate, Boolean permitRefund, boolean adjustment) {
         this.transactionUuid = transactionUuid;
         this.agency = agency;
         this.transactionCategory = transactionCategory;
@@ -118,5 +119,6 @@ public class TransactionDto {
         this.netAmount = netAmount;
         this.transactionDate = transactionDate;
         this.permitRefund = permitRefund;
+        this.adjustment = adjustment;
     }
 }

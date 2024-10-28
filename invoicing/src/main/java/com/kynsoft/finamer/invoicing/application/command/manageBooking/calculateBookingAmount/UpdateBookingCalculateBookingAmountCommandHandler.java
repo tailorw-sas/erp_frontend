@@ -17,6 +17,7 @@ public class UpdateBookingCalculateBookingAmountCommandHandler implements IComma
                 .mapToDouble(ManageRoomRateDto::getInvoiceAmount)
                 .sum();
         command.getBookingDto().setInvoiceAmount(total);
+        command.getBookingDto().setDueAmount(total);
     }
 
 }

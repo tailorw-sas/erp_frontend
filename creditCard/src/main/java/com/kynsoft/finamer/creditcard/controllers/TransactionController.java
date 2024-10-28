@@ -27,6 +27,9 @@ import com.kynsoft.finamer.creditcard.application.command.transaction.refund.Cre
 import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailCommand;
 import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailMessage;
 import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailRequest;
+import com.kynsoft.finamer.creditcard.application.command.transaction.removeReconciliation.RemoveReconciliationCommand;
+import com.kynsoft.finamer.creditcard.application.command.transaction.removeReconciliation.RemoveReconciliationMessage;
+import com.kynsoft.finamer.creditcard.application.command.transaction.removeReconciliation.RemoveReconciliationRequest;
 import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionRequest;
@@ -145,6 +148,15 @@ public class TransactionController {
 
         UpdateTransactionCommand command = UpdateTransactionCommand.fromRequest(request, id);
         UpdateTransactionMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/unbind")
+    public ResponseEntity<?> unbind(@RequestBody RemoveReconciliationRequest request) {
+
+        RemoveReconciliationCommand command = RemoveReconciliationCommand.fromRequest(request);
+        RemoveReconciliationMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
     }

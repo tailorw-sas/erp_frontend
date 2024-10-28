@@ -7,6 +7,12 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.create.CreateBankReconciliationCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.create.CreateBankReconciliationMessage;
 import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.create.CreateBankReconciliationRequest;
+import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.update.UpdateBankReconciliationCommand;
+import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.update.UpdateBankReconciliationMessage;
+import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.update.UpdateBankReconciliationRequest;
+import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionCommand;
+import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionMessage;
+import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionRequest;
 import com.kynsoft.finamer.creditcard.application.query.manageBankReconciliation.ManageBankReconciliationResponse;
 import com.kynsoft.finamer.creditcard.application.query.manageBankReconciliation.getById.FindManageBankReconciliationByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageBankReconciliation.search.GetSearchManageBankReconciliationQuery;
@@ -50,5 +56,14 @@ public class ManageBankReconciliationController {
         GetSearchManageBankReconciliationQuery query = new GetSearchManageBankReconciliationQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
+    }
+
+    @PatchMapping(path = "/{id}")
+    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateBankReconciliationRequest request) {
+
+        UpdateBankReconciliationCommand command = UpdateBankReconciliationCommand.fromRequest(id, request);
+        UpdateBankReconciliationMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
     }
 }
