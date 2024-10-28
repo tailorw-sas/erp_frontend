@@ -10,7 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInv
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateChangeAgencyRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateChangeStatusRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -29,7 +29,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
 
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
-    private final ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService;
+    private final ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService;
     private final IInvoiceCloseOperationService closeOperationService;
 
     public UpdateInvoiceCommandHandler(IManageInvoiceService service,
@@ -37,7 +37,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
             IManageHotelService hotelService,
             IManageInvoiceTypeService iManageInvoiceTypeService,
             IInvoiceStatusHistoryService invoiceStatusHistoryService,
-            ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService,
+            ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService,
             IManageInvoiceStatusService invoiceStatusService,
             IInvoiceCloseOperationService closeOperationService) {
         this.service = service;
@@ -77,12 +77,12 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         }
 
         this.service.calculateInvoiceAmount(dto);
+        this.service.update(dto);
         try {
             //TODO: aqui se envia para actualizar el invoice en payment
-            this.producerUpdateManageInvoiceService.update(dto);
+            this.producerUpdateManageInvoiceService.create(this.service.findById(dto.getId()));
         } catch (Exception e) {
         }
-        this.service.update(dto);
     }
 
     public void updateLocalDateTime(Consumer<LocalDateTime> setter, LocalDateTime newValue, LocalDateTime oldValue,

@@ -20,6 +20,7 @@ import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateC
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import org.springframework.stereotype.Component;
@@ -30,11 +31,16 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
     private final IManageRoomRateService roomRateService;
     private final IManageBookingService bookingService;
     private final IManageInvoiceService invoiceService;
+    private final ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService;
 
-    public UpdateRoomRateCommandHandler(IManageRoomRateService roomRateService, IManageBookingService bookingService, IManageInvoiceService invoiceService) {
+    public UpdateRoomRateCommandHandler(IManageRoomRateService roomRateService, 
+                                        IManageBookingService bookingService, 
+                                        IManageInvoiceService invoiceService,
+                                        ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService) {
         this.roomRateService = roomRateService;
         this.bookingService = bookingService;
         this.invoiceService = invoiceService;
+        this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
     }
 
     @Override
@@ -81,6 +87,8 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(bookingDto.getInvoice().getId());
             command.getMediator().send(new UpdateInvoiceCalculateInvoiceAmountCommand(invoiceDto));
             this.invoiceService.update(invoiceDto);
+            ManageInvoiceDto updateInvoice = this.invoiceService.findById(invoiceDto.getId());
+            this.producerUpdateManageInvoiceService.create(updateInvoice);
         }
     }
 
