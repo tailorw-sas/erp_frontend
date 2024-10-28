@@ -391,7 +391,7 @@ onMounted(async () => {
             :show-totals="showTotals"
           />
         </TabPanel>
-        <TabPanel v-if="showTabs && !isCreationDialog">
+        <TabPanel v-if="showTabs">
           <template #header>
             <div class="flex align-items-center gap-2 p-2" :style="`${active === 2 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
