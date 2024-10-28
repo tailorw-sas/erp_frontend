@@ -26,6 +26,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -85,6 +86,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
+        InvoiceUtils.establishDueDate(dto);
+        InvoiceUtils.calculateInvoiceAging(dto);
         ManageInvoice entity = new ManageInvoice(dto);
         Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
         String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
