@@ -4,6 +4,8 @@ import com.kynsoft.finamer.audit.domain.response.ApiError;
 import com.kynsoft.finamer.audit.domain.response.ApiResponse;
 import com.kynsoft.finamer.audit.domain.response.ErrorField;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
@@ -41,6 +44,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleAllUncaughtException(Exception ex) {
         ApiError apiError = new ApiError("An unexpected error occurred.",
                 List.of(new ErrorField("internal", "Internal server error.")));
+        logger.error(ex.getMessage());
         return ResponseEntity.internalServerError().body(ApiResponse.fail(apiError));
     }
 
