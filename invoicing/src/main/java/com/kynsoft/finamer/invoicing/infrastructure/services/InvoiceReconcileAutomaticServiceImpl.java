@@ -33,6 +33,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.aut
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportErrorRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportProcessStatusRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
 import org.slf4j.Logger;
@@ -67,7 +68,6 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private final InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository;
     private final ServiceLocator<IMediator> serviceLocator;
     private final IManageResourceTypeService resourceTypeService;
-
     private final IManageBookingService bookingService;
 
     @Value("${resource.type.code}")
@@ -75,6 +75,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
 
     @Value("${attachment.type.code}")
     private String attachmentTypeCode;
+
+    private final ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService;
 
     public InvoiceReconcileAutomaticServiceImpl(ApplicationEventPublisher applicationEventPublisher,
                                                 ReconcileAutomaticValidatorFactory reconcileAutomaticValidatorFactory,
@@ -85,7 +87,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
                                                 InvoiceReconcileAutomaticImportErrorRedisRepository errorRedisRepository,
                                                 InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository,
                                                 ServiceLocator<IMediator> serviceLocator, IManageResourceTypeService resourceTypeService,
-                                                IManageBookingService bookingService
+                                                IManageBookingService bookingService, ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService
     ) {
         this.applicationEventPublisher = applicationEventPublisher;
         this.reconcileAutomaticValidatorFactory = reconcileAutomaticValidatorFactory;
@@ -99,6 +101,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         this.serviceLocator = serviceLocator;
         this.resourceTypeService = resourceTypeService;
         this.bookingService = bookingService;
+        this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
     }
 
     @Override
@@ -220,5 +223,6 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.findById(invoiceId);
         invoiceDto.setAutoRec(true);
         this.manageInvoiceService.update(invoiceDto);
+        this.producerUpdateManageInvoiceService.create(invoiceDto);
     }
 }
