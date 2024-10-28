@@ -50,11 +50,16 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public void delete(PaymentDetailDto dto) {
-        try{
-            this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
-        }
+        PaymentDetail update = new PaymentDetail(dto);
+
+        update.setCanceledTransaction(true);
+
+        this.repositoryCommand.save(update);
+//        try{
+//            this.repositoryCommand.deleteById(dto.getId());
+//        } catch (Exception e){
+//            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+//        }
     }
 
     @Override
@@ -82,7 +87,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public List<PaymentDetailDto> findByPaymentId(UUID paymentId) {
-        Optional<List<PaymentDetail>> result= repositoryQuery.findAllByPayment(paymentId);
+        Optional<List<PaymentDetail>> result = repositoryQuery.findAllByPayment(paymentId);
         return result.map(paymentDetails -> paymentDetails.stream().map(PaymentDetail::toAggregate).toList()).orElse(Collections.EMPTY_LIST);
     }
 
@@ -99,7 +104,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     @Override
     public List<UUID> bulk(List<PaymentDetailDto> toSave) {
 
-        return this.repositoryCommand.saveAll( toSave.stream().map(PaymentDetail::new).collect(Collectors.toList()))
+        return this.repositoryCommand.saveAll(toSave.stream().map(PaymentDetail::new).collect(Collectors.toList()))
                 .stream().map(PaymentDetail::getId).toList();
     }
 
