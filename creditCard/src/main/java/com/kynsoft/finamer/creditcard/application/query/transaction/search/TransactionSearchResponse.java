@@ -2,8 +2,10 @@ package com.kynsoft.finamer.creditcard.application.query.transaction.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CustomCodeDescriptionStatusResponse;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageAgencyResponse;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageCreditCardTypeResponse;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionHotelSearchResponse;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import lombok.AllArgsConstructor;
@@ -36,6 +38,8 @@ public class TransactionSearchResponse implements IResponse {
     private MethodType methodType;
     private boolean manual;
     private boolean adjustment;
+    private ManageAgencyResponse agency;
+    private ManageVCCTransactionTypeDto categoryType;
 
     public TransactionSearchResponse(TransactionDto dto){
         this.id = dto.getId();
@@ -55,5 +59,7 @@ public class TransactionSearchResponse implements IResponse {
         this.methodType = dto.getMethodType();
         this.manual = dto.isManual();
         this.adjustment = dto.isAdjustment();
+        this.agency = dto.getAgency() != null ? new ManageAgencyResponse(dto.getAgency()) : null;
+        this.categoryType = dto.getTransactionCategory();
     }
 }
