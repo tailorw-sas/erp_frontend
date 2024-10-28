@@ -20,6 +20,7 @@ const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
 const LocalBindTransactionList = ref<any[]>([])
+const collectionStatusRefundReceivedList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
@@ -455,7 +456,9 @@ function onSortField(event: any) {
     <div v-if="transactionsToBindDialogOpen">
       <BankPaymentMerchantBindTransactionsDialog
         :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="LocalBindTransactionList"
-        :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" @update:list-items="($event) => setTransactions($event)"
+        :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
+        @update:list-items="($event) => setTransactions($event)"
+        @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
       />
     </div>
   </div>

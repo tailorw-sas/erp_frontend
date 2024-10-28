@@ -27,16 +27,26 @@ const props = defineProps({
   selectedItems: {
     type: Array as PropType<any[]>,
     required: true
+  },
+  validCollectionStatusList: {
+    type: Array as PropType<any[]>,
+    required: true
   }
 })
 
-const emit = defineEmits(['update:listItems'])
+const emit = defineEmits(['update:listItems', 'update:statusList'])
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 const BindTransactionList = ref<any[]>([])
+const collectionStatusRefundReceivedList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const dialogVisible = ref(props.openDialog)
 const selectedElements = ref<any[]>([])
+
+const confStatusListApi = reactive({
+  moduleApi: 'creditcard',
+  uriApi: 'manage-transaction-status',
+})
 
 const sClassMap: IStatusClass[] = [
   { status: 'Sent', class: 'text-sent' },
@@ -93,6 +103,50 @@ const computedTransactionAmountSelected = computed(() => {
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
+async function getCollectionStatusList() {
+  if (collectionStatusRefundReceivedList.value.length > 0) {
+    return collectionStatusRefundReceivedList.value
+  }
+  try {
+    const payload = {
+      filter: [
+        {
+          key: 'receivedStatus',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'refundStatus',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 50,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
+    const { data: dataList } = response
+    collectionStatusRefundReceivedList.value = dataList
+    emit('update:statusList', dataList)
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+  return collectionStatusRefundReceivedList.value
+}
+
 async function getList() {
   const count = { amount: 0, commission: 0, net: 0 }
   subTotals.value = { ...count }
@@ -104,6 +158,9 @@ async function getList() {
     options.value.loading = true
     BindTransactionList.value = []
     const newListItems = []
+
+    await getCollectionStatusList()
+    const statusIds = collectionStatusRefundReceivedList.value.map((elem: any) => elem.id)
 
     const merchantIds = props.currentBankPayment.merchantBankAccount.merchantData.map((item: any) => item.id)
     const creditCardTypeIds = props.currentBankPayment.merchantBankAccount.creditCardTypes.map((item: any) => item.id)
@@ -132,6 +189,11 @@ async function getList() {
       key: 'reconciliation',
       operator: 'IS_NULL',
       value: '',
+      logicalOperation: 'AND'
+    }, {
+      key: 'status.id',
+      operator: 'IN',
+      value: statusIds,
       logicalOperation: 'AND'
     }]
 
@@ -241,6 +303,7 @@ watch(payloadOnChangePage, (newValue) => {
 
 onMounted(() => {
   selectedElements.value = [...props.selectedItems]
+  collectionStatusRefundReceivedList.value = [...props.validCollectionStatusList]
   getList()
 })
 </script>
