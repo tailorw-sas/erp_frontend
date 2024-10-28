@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManagerPaymentStatusDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -18,6 +20,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Setter
 @Entity
 @Table(name = "manage_payment_status")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_payment_status",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManagerPaymentStatus {
     @Id
     @Column(name = "id")
