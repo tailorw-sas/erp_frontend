@@ -110,7 +110,7 @@ public class ConsumerCreateIncomeTransactionService {
         return bookings.stream().map(booking -> new ManageBookingKafka(
                 booking.getId(),
                 booking.getBookingId(),
-                booking.getReservationNumber().toString(),
+                booking.getHotelBookingNumber(),
                 booking.getCheckIn(),
                 booking.getCheckOut(),
                 booking.getFullName(),
