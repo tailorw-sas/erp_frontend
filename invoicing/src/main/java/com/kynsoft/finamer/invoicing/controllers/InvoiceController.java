@@ -85,7 +85,7 @@ public class InvoiceController {
     @PostMapping("total-clone-invoice")
     public ResponseEntity<?> totalClone(@RequestBody TotalCloneRequest request) {
 
-        TotalCloneCommand command = TotalCloneCommand.fromRequest(request);
+        TotalCloneCommand command = TotalCloneCommand.fromRequest(request, mediator);
 
         TotalCloneMessage message = this.mediator.send(command);
 
