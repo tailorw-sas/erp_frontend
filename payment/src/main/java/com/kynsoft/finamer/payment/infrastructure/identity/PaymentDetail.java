@@ -67,6 +67,9 @@ public class PaymentDetail implements Serializable {
     private boolean reverseTransaction;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean canceledTransaction;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean createByCredit;//Para identificar cuando un Details fue creado por un proceso automatico de la HU154.
 
     private Double bookingId;
@@ -128,6 +131,7 @@ public class PaymentDetail implements Serializable {
         this.reverseFromParentId = dto.getReverseFromParentId();
         this.reverseTransaction = dto.isReverseTransaction();
         this.createByCredit = dto.isCreateByCredit();
+        this.canceledTransaction = dto.isCanceledTransaction();
     }
 
     public PaymentDetailDto toAggregate() {
@@ -158,7 +162,8 @@ public class PaymentDetail implements Serializable {
                 reverseFrom != null ? reverseFrom : null,
                 reverseFromParentId != null ? reverseFromParentId : null,
                 reverseTransaction,
-                createByCredit
+                createByCredit,
+                canceledTransaction
         );
     }
 
@@ -190,7 +195,8 @@ public class PaymentDetail implements Serializable {
                 null,
                 reverseFromParentId != null ? reverseFromParentId : null,
                 reverseTransaction,
-                createByCredit
+                createByCredit,
+                canceledTransaction
         );
     }
 
@@ -222,7 +228,8 @@ public class PaymentDetail implements Serializable {
                 reverseFrom != null ? reverseFrom : null,
                 reverseFromParentId != null ? reverseFromParentId : null,
                 reverseTransaction,
-                createByCredit
+                createByCredit,
+                canceledTransaction
         );
     }
 }

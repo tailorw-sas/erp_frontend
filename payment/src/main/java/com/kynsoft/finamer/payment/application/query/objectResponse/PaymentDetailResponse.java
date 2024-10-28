@@ -43,6 +43,7 @@ public class PaymentDetailResponse implements IResponse {
 
     private Long reverseFromParentId;
     private boolean reverseTransaction;
+    private boolean canceledTransaction;
 
     public PaymentDetailResponse(PaymentDetailDto dto) {
         this.id = dto.getId();
@@ -71,6 +72,7 @@ public class PaymentDetailResponse implements IResponse {
         this.createByCredit = dto.isCreateByCredit();
         this.reverseFromParentId = dto.getReverseFromParentId();
         this.reverseTransaction = dto.isReverseTransaction();
+        this.canceledTransaction = dto.isCanceledTransaction();
     }
 
 }
