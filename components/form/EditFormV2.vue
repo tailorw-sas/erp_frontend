@@ -11,6 +11,7 @@ const props = defineProps<{
   loadingSave?: boolean
   loadingDelete?: boolean
   showActions?: boolean
+  showActionsInline?: boolean
   forceSave?: boolean
   formClass?: string
   containerClass?: string
@@ -354,6 +355,13 @@ watch(() => props.forceSave, () => {
         <button v-if="field.showClearButton" @click="clearField(field.field)">
           Clear
         </button>
+      </div>
+      <div v-if="showActionsInline" class="flex align-self-center justify-content-end my-2">
+        <slot name="form-btns-inline" :item="{ fieldValues, submitForm, cancelForm, deleteItem, item }">
+          <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSave" @click="submitForm($event)" />
+          <Button v-if="!hideDeleteButton" v-tooltip.top="'Delete'" outlined class="w-3rem" severity="danger" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem($event)" />
+          <Button v-if="props.showCancel" v-tooltip.top="'Cancel'" class="w-3rem mx-2" icon="pi pi-times" severity="secondary" :loading="loadingSave" @click="cancelForm" />
+        </slot>
       </div>
     </div>
     <!-- General Footer slot of the form -->

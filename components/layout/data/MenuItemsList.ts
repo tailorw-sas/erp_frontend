@@ -586,6 +586,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
             {
+              label: 'Report View',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/report-config/view'),
+              items: []
+            },
+            {
               label: 'Logs',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/audit'),
