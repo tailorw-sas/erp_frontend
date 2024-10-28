@@ -17,12 +17,14 @@ public class ManageBankAccountSearchResponse implements IResponse {
     private UUID id;
     private String accountNumber;
     private String nameOfBank;
+    private String status;
     private ManageHotelSearchResponse manageHotelDto;
 
     public ManageBankAccountSearchResponse(ManageBankAccountDto dto) {
         this.id = dto.getId();
         this.accountNumber = dto.getAccountNumber();
         this.nameOfBank = dto.getNameOfBank();
+        this.status = dto.getStatus();
         this.manageHotelDto = dto.getManageHotelDto() != null ? new ManageHotelSearchResponse(dto.getManageHotelDto()) : null;
     }
 

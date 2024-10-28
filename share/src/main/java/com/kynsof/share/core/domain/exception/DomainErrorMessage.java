@@ -349,7 +349,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     UPDATE_PAYMENT_VALIDATE_CHANGE_STATUS(1127, Series.DOMAIN_ERROR,"It is not possible to change the status from confirmed to canceled if there is an applied payment."),
     VCC_INVALID_PAYMENT_LINK(1128, Series.DOMAIN_ERROR,"Payment link is invalid."),
     MAILJET_TEMPLATE_NOT_FOUND(1129, Series.DOMAIN_ERROR, "Mailjet Template could not be found."),
-    MANAGE_BANK_RECONCILIATION_NOT_FOUND(1130, Series.DOMAIN_ERROR, "Manage Bank Reconciliation not found.");
+    MANAGE_BANK_RECONCILIATION_NOT_FOUND(1130, Series.DOMAIN_ERROR, "Manage Bank Reconciliation not found."),
+    MANAGE_BANK_RECONCILIATION_AMOUNT_DETAILS(1131, Series.DOMAIN_ERROR, "The amount must be greater than or equal to the details amount.");
 
     private static final DomainErrorMessage[] VALUES;
 

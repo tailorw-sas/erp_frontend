@@ -76,12 +76,13 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
         this.updateManageClient(paymentDto::setClient, command.getClient(), paymentDto.getClient().getId(), update::setUpdate);
         this.updateManageAgency(paymentDto::setAgency, command.getAgency(), paymentDto.getAgency().getId(), update::setUpdate);
         this.updateManageHotel(paymentDto::setHotel, command.getHotel(), paymentDto.getHotel().getId(), update::setUpdate);
-        this.updateManageBankAccount(paymentDto::setBankAccount, command.getBankAccount(), paymentDto.getBankAccount().getId(), update::setUpdate);
+//        this.updateManageBankAccount(paymentDto::setBankAccount, command.getBankAccount(), paymentDto.getBankAccount().getId(), update::setUpdate);
         this.updateManageAttachmentStatus(paymentDto::setAttachmentStatus, command.getAttachmentStatus(), paymentDto.getAttachmentStatus().getId(), update::setUpdate);
 
-        if (update.getUpdate() > 0) {
-            this.paymentService.update(paymentDto);
-        }
+        //if (update.getUpdate() > 0) {
+        paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+        this.paymentService.update(paymentDto);
+        //}
 
     }
 

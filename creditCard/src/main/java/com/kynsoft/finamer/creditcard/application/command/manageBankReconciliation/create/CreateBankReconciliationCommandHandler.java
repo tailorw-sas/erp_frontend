@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAmountRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -43,6 +44,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
     @Override
     public void handle(CreateBankReconciliationCommand command) {
+        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(command.getAmount(), command.getDetailsAmount()));
         ManageMerchantBankAccountDto merchantBankAccountDto = this.merchantBankAccountService.findById(command.getMerchantBankAccount());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 

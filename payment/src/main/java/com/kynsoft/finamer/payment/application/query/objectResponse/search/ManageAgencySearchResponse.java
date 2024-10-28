@@ -19,12 +19,14 @@ public class ManageAgencySearchResponse implements IResponse {
     private String code;
     private String name;
     private ManageAgencyTypeSearchResponse agencyTypeResponse;
+    private String status;
 
     public ManageAgencySearchResponse(ManageAgencyDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.agencyTypeResponse = dto.getAgencyType() != null ? new ManageAgencyTypeSearchResponse(dto.getAgencyType()) : null;
+        this.status = dto.getStatus();
     }
 
 }

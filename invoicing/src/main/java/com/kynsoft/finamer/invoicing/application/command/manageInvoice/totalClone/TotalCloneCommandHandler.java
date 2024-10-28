@@ -3,6 +3,14 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClo
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingAdults.UpdateBookingCalculateBookingAdultsCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingAmount.UpdateBookingCalculateBookingAmountCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingChildren.UpdateBookingCalculateBookingChildrenCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateChickInAndCheckOut.UpdateBookingCalculateCheckIntAndCheckOutCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateHotelAmount.UpdateBookingCalculateHotelAmountCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateRateAdult.UpdateBookingCalculateRateAdultCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateRateChild.UpdateBookingCalculateRateChildCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.calculateInvoiceAmount.UpdateInvoiceCalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
@@ -15,7 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -227,8 +235,28 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
             //cambiando los ids de los room rates para poder guardarlos
             //no me llevo los adjustments
-            for (ManageRoomRateDto roomRate : bookingToClone.getRoomRates()){
-                ManageRoomRateDto roomRateDto = new ManageRoomRateDto(roomRate);
+            for (TotalCloneRoomRateRequest roomRate : bookingRequest.getRoomRates()){
+                long nights = this.calculateNights(roomRate.getCheckIn(), roomRate.getCheckOut());
+                double rateAdult = roomRate.getAdults() != null ? this.calculateRateAdult(roomRate.getInvoiceAmount(), nights, roomRate.getAdults()) : 0.00;
+                double rateChild = roomRate.getChildren() != null ? this.calculateRateChild(roomRate.getInvoiceAmount(), nights, roomRate.getChildren()) : 0.00;
+
+                ManageRoomRateDto roomRateDto = new ManageRoomRateDto(
+                        UUID.randomUUID(),
+                        null,
+                        roomRate.getCheckIn(),
+                        roomRate.getCheckOut(),
+                        roomRate.getInvoiceAmount(),
+                        roomRate.getRoomNumber(),
+                        roomRate.getAdults() != null ? roomRate.getAdults() : 0,
+                        roomRate.getChildren() != null ? roomRate.getChildren() : 0,
+                        rateAdult,
+                        rateChild,
+                        roomRate.getHotelAmount(),
+                        roomRate.getRemark(),
+                        null,
+                        new ArrayList<>(),
+                        nights
+                );
                 roomRateDtoList.add(roomRateDto);
             }
 
@@ -284,8 +312,16 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             bookings.add(newBooking);
         }
 
+        //actualizando los bookings con la info de los room rate
         for (ManageBookingDto booking : bookings) {
-            this.calculateBookingHotelAmount(booking);
+            command.getMediator().send(new UpdateBookingCalculateCheckIntAndCheckOutCommand(booking));
+            command.getMediator().send(new UpdateBookingCalculateBookingAmountCommand(booking));
+            command.getMediator().send(new UpdateBookingCalculateHotelAmountCommand(booking));
+            command.getMediator().send(new UpdateBookingCalculateBookingAdultsCommand(booking));
+            command.getMediator().send(new UpdateBookingCalculateBookingChildrenCommand(booking));
+            command.getMediator().send(new UpdateBookingCalculateRateChildCommand(booking));
+            command.getMediator().send(new UpdateBookingCalculateRateAdultCommand(booking));
+            booking.setDueAmount(booking.getInvoiceAmount());
         }
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
@@ -329,6 +365,10 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 invoiceToClone,
                 invoiceToClone.getCredits()
         );
+        //actualizando el invoice con la info de los bookings
+        command.getMediator().send(new UpdateInvoiceCalculateInvoiceAmountCommand(clonedInvoice));
+        clonedInvoice.setDueAmount(clonedInvoice.getInvoiceAmount());
+        clonedInvoice.setOriginalAmount(clonedInvoice.getInvoiceAmount());
 
         ManageInvoiceDto created = this.invoiceService.create(clonedInvoice);
         command.setClonedInvoiceId(created.getInvoiceId());
@@ -379,16 +419,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
-    private void calculateBookingHotelAmount(ManageBookingDto dto) {
-        Double hotelAmount = 0.00;
-        if (dto.getRoomRates() != null) {
-            for (ManageRoomRateDto roomRateDto : dto.getRoomRates()) {
-                hotelAmount += roomRateDto.getHotelAmount();
-            }
-            dto.setHotelAmount(hotelAmount);
-        }
-    }
-
     private void setInvoiceToCloneAmounts(ManageInvoiceDto invoiceDto, String employee){
 
         for (ManageBookingDto bookingDto : invoiceDto.getBookings()){
@@ -416,5 +446,21 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
     private String deleteHotelInfo(String input) {
         return input.replaceAll("-(.*?)-", "-");
+    }
+
+    private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {
+        return adults == 0
+                ? 0.0
+                : rateAmount / ((nights == 0 ? 1 : nights) * adults);
+    }
+
+    private Double calculateRateChild(Double rateAmount, Long nights, Integer children) {
+        return children == 0
+                ? 0.0
+                : rateAmount / ((nights == 0 ? 1 : nights) * children);
+    }
+
+    private Long calculateNights(LocalDateTime checkIn, LocalDateTime checkOut) {
+        return ChronoUnit.DAYS.between(checkIn.toLocalDate(), checkOut.toLocalDate());
     }
 }
