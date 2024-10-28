@@ -53,7 +53,7 @@ public class AuditConfigurationController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<UpdateConfigurationMessage> update(@PathVariable UUID id, UpdateConfigurationRequest request) {
+    public ResponseEntity<UpdateConfigurationMessage> update(@PathVariable UUID id, @RequestBody UpdateConfigurationRequest request) {
         UpdateConfigurationCommand updateConfigurationCommand = new UpdateConfigurationCommand(request, id);
         return ResponseEntity.ok( mediator.send(updateConfigurationCommand));
     }
