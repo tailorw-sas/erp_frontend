@@ -128,6 +128,11 @@ async function getList() {
       operator: 'LESS_THAN_OR_EQUAL_TO',
       value: props.currentBankPayment.amount,
       logicalOperation: 'AND'
+    }, {
+      key: 'reconciliation',
+      operator: 'IS_NULL',
+      value: '',
+      logicalOperation: 'AND'
     }]
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
