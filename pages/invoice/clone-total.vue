@@ -753,7 +753,7 @@ async function saveItem(item: { [key: string]: any }) {
     // }
 
     // await new Promise(resolve => setTimeout(resolve, 5000))
-    navigateTo('/invoice')
+    // navigateTo('/invoice')
   }
 }
 
@@ -1027,6 +1027,24 @@ function compareObjects(obj1, obj2) {
   return { isEqual, differences }
 }
 
+async function assignRoomRatesToBookings(bookings: any[], roomRates: any[]) {
+  // Crear un diccionario de roomRates agrupados por booking ID
+  const roomRatesByBooking = roomRates.reduce((acc, roomRate) => {
+    const bookingId = roomRate.booking
+    if (!acc[bookingId]) {
+      acc[bookingId] = []
+    }
+    acc[bookingId].push(roomRate)
+    return acc
+  }, {})
+
+  // Asignar cada grupo de roomRates al booking correspondiente
+  return bookings.map(booking => ({
+    ...booking,
+    roomRates: roomRatesByBooking[booking.id] || []
+  }))
+}
+
 async function createClonation(item: { [key: string]: any }) {
   try {
     loadingSaveAll.value = true
@@ -1077,7 +1095,7 @@ async function createClonation(item: { [key: string]: any }) {
     const bookingsEdit = await filterEditFields(listBookingsTemp) || []
 
     payload.bookings = bookingsEdit
-    payload.roomRates = roomRateList.value.filter(item => item).map(item => ({
+    const payloadRoomRate = roomRateList.value.filter(item => item).map(item => ({
       id: item?.id,
       checkIn: item?.checkIn ? formatDate(item?.checkIn) : null,
       checkOut: item?.checkOut ? formatDate(item?.checkOut) : null,
@@ -1096,6 +1114,8 @@ async function createClonation(item: { [key: string]: any }) {
       // rateChildren: item?.rateChildren,
       booking: item?.booking?.id,
     }))
+
+    payload.bookings = [...await assignRoomRatesToBookings(payload.bookings, payloadRoomRate)]
 
     return await GenericService.create(confClonationApi.moduleApi, confClonationApi.uriApi, payload)
   }
@@ -1755,8 +1775,14 @@ onMounted(async () => {
   </div>
   <div class="p-4">
     <EditFormV2
-      :key="formReload" :fields="Fields" :item="item" :show-actions="true" :loading-save="loadingSaveAll"
-      :loading-delete="loadingDelete" container-class="grid pt-3" @cancel="clearForm"
+      :key="formReload"
+      :fields="Fields"
+      :item="item"
+      :show-actions="true"
+      :loading-save="loadingSaveAll"
+      :loading-delete="loadingDelete"
+      container-class="grid pt-3"
+      @cancel="clearForm"
       @delete="requireConfirmationToDelete($event)"
     >
       <template #field-invoiceDate="{ item: data, onUpdate }">
