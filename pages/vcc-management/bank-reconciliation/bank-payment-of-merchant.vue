@@ -28,6 +28,7 @@ const formReload = ref(0)
 const subTotals: any = ref({ amount: 0 })
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
+const newAdjustmentTransactionDialogVisible = ref(false)
 
 const confApi = reactive({
   moduleApi: 'creditcard',
@@ -146,6 +147,17 @@ const computedTransactionAmountSelected = computed(() => {
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+async function openNewAdjustmentTransactionDialog() {
+  newAdjustmentTransactionDialogVisible.value = true
+}
+
+async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
+  newAdjustmentTransactionDialogVisible.value = false
+  if (!isCancel) {
+    // guardar en memoria la transaccion de ajuste
+  }
+}
+
 async function onMultipleSelect(data: any) {
   // Crear un Set de IDs para los seleccionados globalmente y los seleccionados en la página actual
   const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
@@ -254,7 +266,16 @@ async function createItem(item: { [key: string]: any }) {
     payload.detailsAmount = subTotals.value.amount
 
     if (LocalBindTransactionList.value.length > 0) {
-      payload.transactions = LocalBindTransactionList.value.map((i: any) => i.id)
+      payload.transactions = LocalBindTransactionList.value.filter((t: any) => !t.adjustment).map((i: any) => i.id)
+      const adjustmentTransactions = LocalBindTransactionList.value.filter((t: any) => t.adjustment)
+      payload.adjustmentTransactions = adjustmentTransactions.map((elem: any) => ({
+        agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
+        transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
+        transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
+        amount: parseFormattedNumber(elem.amount),
+        reservationNumber: elem.reservationNumber,
+        referenceNumber: elem.referenceNumber
+      }))
     }
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     if (response && response.id) {
@@ -307,6 +328,14 @@ async function handleSave(event: any) {
     await saveItem(event)
     forceSave.value = false
   }
+}
+
+function addAdjustmentLocal(data: any) {
+  data.checkIn = dayjs().format('YYYY-MM-DD')
+  subTotals.value.amount += data.amount
+  data.amount = formatNumber(data.amount)
+  data.adjustment = true
+  LocalBindTransactionList.value.push(data)
 }
 
 function removeUnbindSelectedTransactions(newTransactions: any[]) {
@@ -448,6 +477,7 @@ function onSortField(event: any) {
       />
       <div>
         <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+        <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-plus" @click="openNewAdjustmentTransactionDialog()" />
         <Button v-tooltip.top="'Payment'" class="w-3rem ml-1" disabled icon="pi pi-dollar" @click="() => {}" />
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/bank-reconciliation') }" />
@@ -461,5 +491,9 @@ function onSortField(event: any) {
         @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
       />
     </div>
+    <VCCNewAdjustmentTransaction
+      is-local :open-dialog="newAdjustmentTransactionDialogVisible"
+      @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" @on-save-local="($event) => addAdjustmentLocal($event)"
+    />
   </div>
 </template>
