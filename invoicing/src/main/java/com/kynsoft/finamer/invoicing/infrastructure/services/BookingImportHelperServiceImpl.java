@@ -169,6 +169,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
         manageInvoiceDto.setInvoiceAmount(calculateInvoiceAmount(bookingRowList));
         manageInvoiceDto.setDueAmount(calculateInvoiceAmount(bookingRowList));
+        manageInvoiceDto.setOriginalAmount(manageInvoiceDto.getInvoiceAmount());
         String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
         if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
             invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();

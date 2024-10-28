@@ -36,6 +36,13 @@ public class PaymentExpenseRow extends Row implements Serializable {
         PaymentDto paymentDto = new PaymentDto();
         paymentDto.setPaymentAmount(this.amount);
         paymentDto.setPaymentBalance(this.amount);
+        paymentDto.setNotApplied(this.amount);
+        paymentDto.setNotIdentified(this.amount);
+        paymentDto.setIdentified(0.0);
+        paymentDto.setDepositAmount(0.0);
+        paymentDto.setDepositBalance(0.0);
+        paymentDto.setOtherDeductions(0.0);
+        paymentDto.setApplied(0.0);
         paymentDto.setRemark(this.remarks);
         paymentDto.setTransactionDate(DateUtil.parseDateToLocalDate(this.transactionDate,"dd/MM/yyyy"));
         return paymentDto;
