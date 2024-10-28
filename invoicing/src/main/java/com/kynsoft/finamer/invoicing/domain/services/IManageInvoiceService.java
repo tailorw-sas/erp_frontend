@@ -28,6 +28,8 @@ public interface IManageInvoiceService {
 
     PaginatedResponse searchToPayment(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    List<ManageInvoiceDto> getInvoiceForSummary(List<FilterCriteria>filterCriteria);
+
     List<ManageInvoiceDto> findByIds(List<UUID> ids);
 
     List<ManageInvoiceDto> findAllToReplicate();
