@@ -1,0 +1,234 @@
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import type { PageState } from 'primevue/paginator'
+import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
+import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import { GenericService } from '~/services/generic-services'
+import { formatNumber } from '~/pages/payment/utils/helperFilters'
+
+const props = defineProps({
+  bankReconciliationId: {
+    type: String,
+    required: true
+  }
+})
+
+const listItems = ref<any[]>([])
+
+const sClassMap: IStatusClass[] = [
+  { status: 'Sent', class: 'text-sent' },
+  { status: 'Created', class: 'text-created' },
+  { status: 'Received', class: 'text-received' },
+  { status: 'Declined', class: 'text-declined' },
+  { status: 'Paid', class: 'text-paid' },
+  { status: 'Cancelled', class: 'text-cancelled' },
+  { status: 'Reconciled', class: 'text-reconciled' },
+  { status: 'Refund', class: 'text-refund' },
+]
+
+const columns: IColumn[] = [
+  { field: 'id', header: 'Id', type: 'text' },
+  { field: 'parent', header: 'Parent Id', type: 'text' },
+  { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
+  { field: 'hotel', header: 'Hotel', type: 'text' },
+  { field: 'cardNumber', header: 'Card Number', type: 'text' },
+  { field: 'creditCardType', header: 'CC Type', type: 'text' },
+  { field: 'methodType', header: 'Method Type', type: 'text' },
+  { field: 'referenceNumber', header: 'Reference', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'text' },
+  { field: 'commission', header: 'Commission', type: 'text' },
+  { field: 'netAmount', header: 'T.Amount', type: 'text' },
+  { field: 'checkIn', header: 'Trans Date', type: 'date' },
+  { field: 'status', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, showFilter: false },
+]
+
+const options = ref({
+  tableName: 'Transactions',
+  moduleApi: 'creditcard',
+  uriApi: 'transactions',
+  loading: false,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?',
+})
+
+const payloadOnChangePage = ref<PageState>()
+const payload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 50,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
+const pagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
+async function resetListItems() {
+  payload.value.page = 0
+  getList()
+}
+
+function searchAndFilter() {
+  const newPayload: IQueryRequest = {
+    filter: [{
+      key: 'reconciliation.id',
+      operator: 'EQUALS',
+      value: props.bankReconciliationId,
+      logicalOperation: 'AND'
+    }],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
+  }
+  payload.value = newPayload
+  getList()
+}
+
+function onSortField(event: any) {
+  if (event) {
+    payload.value.sortBy = event.sortField
+    payload.value.sortType = event.sortOrder
+    parseDataTableFilter(event.filter)
+  }
+}
+
+function getStatusFilter(element: any) {
+  if (element && Array.isArray(element.constraints) && element.constraints.length > 0) {
+    for (const iterator of element.constraints) {
+      if (iterator.value) {
+        const ketTemp = 'status.name'
+        let operator: string = ''
+        if ('matchMode' in iterator) {
+          if (typeof iterator.matchMode === 'object') {
+            operator = iterator.matchMode.id.toUpperCase()
+          }
+          else {
+            operator = iterator.matchMode.toUpperCase()
+          }
+        }
+        if (Array.isArray(iterator.value) && iterator.value.length > 0) {
+          const objFilter: IFilter = {
+            key: ketTemp,
+            operator,
+            value: iterator.value.length > 0 ? [...iterator.value.map((item: any) => item.name)] : [],
+            logicalOperation: 'AND',
+          }
+          return objFilter
+        }
+      }
+    }
+  }
+}
+
+async function parseDataTableFilter(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  payload.value.filter = [...payload.value.filter, ...parseFilter || []]
+
+  const statusFilter: any = getStatusFilter(payloadFilter.status)
+  if (statusFilter) {
+    const index = payload.value.filter.findIndex((filter: IFilter) => filter.key === statusFilter.key)
+    if (index !== -1) {
+      payload.value.filter[index] = statusFilter
+    }
+    else {
+      payload.value.filter.push(statusFilter)
+    }
+  }
+
+  getList()
+}
+
+async function getList() {
+  if (options.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    options.value.loading = true
+    listItems.value = []
+    const newListItems = []
+
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    const existingIds = new Set(listItems.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.status = iterator.status.name
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
+        iterator.hotel = `${iterator.hotel.code} - ${iterator.hotel.name}`
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
+        iterator.creditCardType = `${iterator.creditCardType.code} - ${iterator.creditCardType.name}`
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
+        iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
+        iterator.id = String(iterator.id)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        iterator.amount = formatNumber(iterator.amount)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
+        iterator.commission = formatNumber(iterator.commission)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
+        iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
+      }
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate) })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    listItems.value = [...listItems.value, ...newListItems]
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
+onMounted(() => {
+  searchAndFilter()
+})
+</script>
+
+<template>
+  <div class="p-0 m-0">
+    <DynamicTable
+      :data="listItems"
+      :columns="columns"
+      :options="options"
+      :pagination="pagination"
+      @on-change-pagination="payloadOnChangePage = $event"
+      @on-change-filter="parseDataTableFilter"
+      @on-list-item="resetListItems"
+      @on-sort-field="onSortField"
+    />
+  </div>
+</template>
+
+<style scoped lang="scss">
+
+</style>

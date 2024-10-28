@@ -168,7 +168,7 @@ const createItems: Array<MenuItem> = ref([{
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'id', header: 'Id', type: 'text' },
+  { field: 'reconciliationId', header: 'Id', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
   { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant-bank-account' }, sortable: true },
   { field: 'amount', header: 'Amount', type: 'text' },
@@ -185,11 +185,12 @@ const ENUM_FILTER = [
 ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Transactions',
+  tableName: 'Management Bank Reconciliation',
   moduleApi: 'creditcard',
   uriApi: 'bank-reconciliation',
   loading: false,
   actionsAsMenu: false,
+  expandableRows: true,
   messageToDelete: 'Do you want to save the change?',
 })
 const payloadOnChangePage = ref<PageState>()
@@ -895,6 +896,10 @@ onMounted(() => {
         @on-row-right-click="onRowRightClick"
         @on-row-double-click="onDoubleClick($event)"
       >
+        <template #expansion="{ data: item }">
+          <!--          <pre>{{item}}</pre> -->
+          <BankPaymentTransactions :bank-reconciliation-id="item.id" />
+        </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
