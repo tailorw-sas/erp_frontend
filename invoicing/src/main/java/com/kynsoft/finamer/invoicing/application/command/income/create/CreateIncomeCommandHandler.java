@@ -94,7 +94,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                 invoiceStatusDto,
                 null,
                 false,
-                null, 0.0
+                null, 0.0,0
         ));
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());

@@ -218,7 +218,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 null,
                 false,
                 parentInvoice,
-                0.0
+                0.0,
+                0
         );
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
         this.producerReplicateManageInvoiceService.create(created);

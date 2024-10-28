@@ -12,5 +12,4 @@ import java.util.List;
 @AllArgsConstructor
 public class CollectionsSummaryQuery implements IQuery {
     private List<FilterCriteria> filter;
-    private String query;
 }

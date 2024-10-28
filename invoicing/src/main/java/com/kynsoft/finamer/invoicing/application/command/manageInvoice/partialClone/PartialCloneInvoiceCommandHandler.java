@@ -225,7 +225,8 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 null, 
                 true, 
                 invoiceToClone, 
-                0.00
+                0.00,
+                0
         );
 
         ManageInvoiceDto created = service.create(invoiceDto);

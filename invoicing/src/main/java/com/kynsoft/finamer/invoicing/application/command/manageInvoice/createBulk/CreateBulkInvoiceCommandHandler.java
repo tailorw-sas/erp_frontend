@@ -349,7 +349,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
                 command.getInvoiceCommand().getInvoiceType(), status,
                 false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null,  false,
-                null, 0.0);
+                null, 0.0,0);
         invoiceDto.setOriginalAmount(invoiceDto.getInvoiceAmount());
         ManageInvoiceDto created = service.create(invoiceDto);
 
