@@ -903,10 +903,10 @@ onMounted(() => {
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="3" footer-style="text-align:right" />
+              <Column footer="Totals:" :colspan="4" footer-style="text-align:right" />
               <Column :footer="formatNumber(subTotals.amount)" />
               <Column :footer="formatNumber(subTotals.details)" />
-              <Column :colspan="3" />
+              <Column :colspan="2" />
             </Row>
           </ColumnGroup>
         </template>

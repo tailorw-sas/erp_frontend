@@ -28,17 +28,16 @@ const sClassMap: IStatusClass[] = [
 
 const columns: IColumn[] = [
   { field: 'id', header: 'Id', type: 'text' },
-  { field: 'parent', header: 'Parent Id', type: 'text' },
   { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'text' },
-  { field: 'cardNumber', header: 'Card Number', type: 'text' },
+  { field: 'agency', header: 'Agency', type: 'text' },
   { field: 'creditCardType', header: 'CC Type', type: 'text' },
-  { field: 'methodType', header: 'Method Type', type: 'text' },
+  { field: 'cardNumber', header: 'Card Number', type: 'text' },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'netAmount', header: 'T.Amount', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
+  { field: 'categoryType', header: 'Trans Cat Type', type: 'text' },
   { field: 'status', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, showFilter: false },
 ]
 
@@ -171,8 +170,11 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = iterator.status.name
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
-        iterator.hotel = `${iterator.hotel.code} - ${iterator.hotel.name}`
+      if (Object.prototype.hasOwnProperty.call(iterator, 'agency') && iterator.agency) {
+        iterator.agency = `${iterator.agency.code} - ${iterator.agency.name}`
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'categoryType') && iterator.categoryType) {
+        iterator.categoryType = `${iterator.categoryType.code} - ${iterator.categoryType.name}`
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
         iterator.creditCardType = `${iterator.creditCardType.code} - ${iterator.creditCardType.name}`
