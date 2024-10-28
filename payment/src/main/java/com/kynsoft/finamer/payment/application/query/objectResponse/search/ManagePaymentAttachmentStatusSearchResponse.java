@@ -20,6 +20,7 @@ public class ManagePaymentAttachmentStatusSearchResponse implements IResponse {
     private boolean patWithAttachment;
     private boolean pwaWithOutAttachment;
     private boolean supported;
+    private String status;
 
     public ManagePaymentAttachmentStatusSearchResponse(ManagePaymentAttachmentStatusDto dto) {
         this.id = dto.getId();
@@ -29,6 +30,7 @@ public class ManagePaymentAttachmentStatusSearchResponse implements IResponse {
         this.patWithAttachment = dto.isPatWithAttachment();
         this.pwaWithOutAttachment = dto.isPwaWithOutAttachment();
         this.supported = dto.isSupported();
+        this.status = dto.getStatus();
     }
 
     public ManagePaymentAttachmentStatusSearchResponse() {

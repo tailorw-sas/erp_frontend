@@ -18,11 +18,13 @@ public class ManageHotelSearchResponse implements IResponse {
     private UUID id;
     private String code;
     private String name;
+    private String status;
 
     public ManageHotelSearchResponse(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.status = dto.getStatus();
     }
 
 }

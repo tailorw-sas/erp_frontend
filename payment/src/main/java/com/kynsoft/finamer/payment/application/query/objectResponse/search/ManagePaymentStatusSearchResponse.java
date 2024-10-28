@@ -21,6 +21,7 @@ public class ManagePaymentStatusSearchResponse implements IResponse {
     private Boolean applied;
     private boolean cancelled;
     private boolean transit;
+    private String status;
 
     public ManagePaymentStatusSearchResponse(ManagePaymentStatusDto dto) {
         this.id = dto.getId();
@@ -30,6 +31,7 @@ public class ManagePaymentStatusSearchResponse implements IResponse {
         this.applied = dto.getApplied();
         this.cancelled = dto.isCancelled();
         this.transit = dto.isTransit();
+        this.status = dto.getStatus();
     }
 
 }
