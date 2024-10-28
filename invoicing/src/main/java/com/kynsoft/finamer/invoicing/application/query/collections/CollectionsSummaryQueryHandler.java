@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.invoicing.application.query.collections;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
-import com.kynsoft.finamer.invoicing.domain.dto.CollectionSummaryDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -44,10 +43,11 @@ public class CollectionsSummaryQueryHandler implements IQueryHandler<Collections
                 .mapToDouble(ManageInvoiceDto::getDueAmount).sum();
         double balanceInvoiceWithAging120=invoiceForSummary.parallelStream().filter(invoice->invoice.getAging()==120)
                 .mapToDouble(ManageInvoiceDto::getDueAmount).sum();
+        double totalInvoiceAmount=invoiceForSummary.parallelStream().mapToDouble(ManageInvoiceDto::getInvoiceAmount).sum();
+        double totalInvoiceDue=invoiceForSummary.parallelStream().mapToDouble(ManageInvoiceDto::getDueAmount).sum();
 
 
-
-     CollectionSummaryDto.builder()
+    return CollectionsSummaryResponse.builder()
              .totalInvoiceWith30(totalInvoiceWith30)
              .totalInvoiceWithAging90(totalInvoiceWith90)
              .totalInvoiceWithAging60(totalInvoiceWith60)
@@ -63,9 +63,9 @@ public class CollectionsSummaryQueryHandler implements IQueryHandler<Collections
              .totalInvoiceBalanceWithAging60(balanceInvoiceWithAging60)
              .totalInvoiceBalanceWithAging120(balanceInvoiceWithAging120)
              .totalInvoiceWithAging0(totalInvoiceWithAging0)
-             .totalInvoiceAmount()
+             .totalInvoiceAmount(totalInvoiceAmount)
+             .totalInvoiceDueAmount(totalInvoiceDue)
+             .build();
 
-
-        return null;
     }
 }
