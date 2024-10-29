@@ -26,7 +26,7 @@ public class UpdateManageBankAccountCommandHandler implements ICommandHandler<Up
         dto.setNameOfBank(command.getNameOfBank());
         dto.setStatus(command.getStatus());
         dto.setAccountNumber(command.getAccountNumber());
-        ManageHotelDto manageHotelDto =hotelService.findById(command.getId());
+        ManageHotelDto manageHotelDto =hotelService.findById(command.getManageHotel());
         dto.setManageHotelDto(manageHotelDto);
         service.update(dto);
     }
