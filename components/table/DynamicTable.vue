@@ -639,11 +639,9 @@ defineExpose({ clearSelectedItems })
             <span v-if="column.type === 'icon' && column.icon">
               <Button :icon="column.icon" class="p-button-rounded p-button-text w-2rem h-2rem" aria-label="Submit" />
             </span>
-
-            <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null" v-tooltip.top="data[column.field].name" class="truncate">
-              <span v-if="column.type === 'select' || column.type === 'local-select'">
-                {{ data[column.field].name }}
-              </span>
+            <span v-else-if="column.type === 'date-editable'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate w-full">
+              <span v-if="column.props?.isRange">{{ formatRangeDate(data[column.field]) }}</span>
+              <span v-else>{{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}</span>
             </span>
             <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
               {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : '' }}
@@ -651,9 +649,10 @@ defineExpose({ clearSelectedItems })
             <span v-else-if="column.type === 'datetime'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
               {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}
             </span>
-            <span v-else-if="column.type === 'date-editable'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate w-full">
-              <span v-if="column.props?.isRange">{{ formatRangeDate(data[column.field]) }}</span>
-              <span v-else>{{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}</span>
+            <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null" v-tooltip.top="data[column.field].name" class="truncate">
+              <span v-if="column.type === 'select' || column.type === 'local-select'">
+                {{ data[column.field].name }}
+              </span>
             </span>
             <span v-else-if="column.type === 'image'">
               <NuxtImg v-if="data[column.field]" :src="data[column.field]" alt="Avatar" class="avatar" />
