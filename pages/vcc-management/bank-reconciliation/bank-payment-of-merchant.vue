@@ -403,8 +403,12 @@ async function createItem(item: { [key: string]: any }) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
+  if (subTotals.value.amount > item.amount) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
+    return
+  }
   // let successOperation = true
+  loadingSaveAll.value = true
   if (idItem.value) {
     try {
       // await updateItem(item)
