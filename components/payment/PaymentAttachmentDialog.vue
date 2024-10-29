@@ -1133,6 +1133,12 @@ watch(() => idItem.value, async (newValue) => {
   }
 })
 
+watch(payloadOnChangePageHistory, (newValue) => {
+  payloadHistory.value.page = newValue?.page ? newValue?.page : 0
+  payloadHistory.value.pageSize = newValue?.rows ? newValue.rows : 10
+  historyGetList()
+})
+
 // watch(() => listItemsLocal.value, async (newValue) => {
 //   console.log('listItemsLocal Se ejecuto el watch', newValue.length)
 
