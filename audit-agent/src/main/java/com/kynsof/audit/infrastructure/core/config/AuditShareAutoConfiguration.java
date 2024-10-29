@@ -47,8 +47,8 @@ public class AuditShareAutoConfiguration {
     public AuditLoader getAuditLoader(){
         return new AuditLoader(getProducerAuditRegisterEventService(),entityManagerFactory);
     }
-    @Bean
-    public SecurityContextThreadLocalFilter getSecurityContextThreadLocalFilter(){
-        return new SecurityContextThreadLocalFilter();
-    }
+//    @Bean
+//    public SecurityContextThreadLocalFilter getSecurityContextThreadLocalFilter(){
+//        return new SecurityContextThreadLocalFilter();
+//    }
 }
