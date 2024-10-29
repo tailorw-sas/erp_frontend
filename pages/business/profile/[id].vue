@@ -250,7 +250,6 @@ const options = ref({
   uriApi: '',
   loading: false,
   actionsAsMenu: false,
-  showToolBar: false,
   showTitleBar: false,
   showFilters: false,
   showEdit: false,

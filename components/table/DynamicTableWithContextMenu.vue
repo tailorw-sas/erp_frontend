@@ -35,7 +35,6 @@ const props = defineProps({
       showDelete?: boolean
       showLocalDelete?: boolean
       showFilters?: boolean
-      showToolBar?: boolean
       showTitleBar?: boolean
       messageToDelete: string
       search?: boolean
@@ -411,40 +410,6 @@ getOptionsList()
             edit-mode="cell" @row-dblclick="onDoubleClickItem" @row-contextmenu="onRowContextMenu" @sort="onSortField"
             @update:selection="onSelectItem" @update:filters="onChangeFilters"
           >
-            <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
-              <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-                <span class="flex mt-2 md:mt-0">
-                  <div class="my-2">
-                    <h5 class="m-0">{{ options?.tableName }}</h5>
-                  </div>
-                  <Divider layout="vertical" />
-                  <Button
-                    v-tooltip.right="'Clear'" type="button" icon="pi pi-filter-slash" severity="primary" label="Clear"
-                    outlined @click="clearFilter1(filters1)"
-                  />
-                  <Divider layout="vertical" />
-                  <span v-if="props.options?.search || false">
-                    <InputText
-                      v-model="filters1.search.value" class="w-full sm:w-auto"
-                      placeholder="Press enter to search..."
-                    />
-                    <Button
-                      label="Buscar" icon="pi pi-plus" class="mx-2" severity="primary"
-                      @click="onChangeFilters(filters1)"
-                    >
-                      <i class="pi pi-search" />
-                    </Button>
-                  </span>
-                </span>
-                <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2">
-                  <Button
-                    v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" class="mr-2" severity="primary"
-                    @click="openNew"
-                  />
-                </div>
-              </div>
-            </template>
-
             <template #empty>
               <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
                 <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
