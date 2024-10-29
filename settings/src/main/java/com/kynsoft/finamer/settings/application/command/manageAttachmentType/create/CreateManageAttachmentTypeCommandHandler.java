@@ -27,11 +27,11 @@ public class CreateManageAttachmentTypeCommandHandler implements ICommandHandler
         RulesChecker.checkRule(new ManageAttachmentTypeNameMustBeNullRule(command.getName()));
         RulesChecker.checkRule(new ManageAttachmentTypeCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
-        if(command.getDefaults()) {
+        if(command.isDefaults()) {
             RulesChecker.checkRule(new ManageAttachmentTypeDefaultMustBeUniqueRule(this.service, command.getId()));
         }
 
-        if(command.getAttachInvDefault() != null && command.getAttachInvDefault()) {
+        if(command.isAttachInvDefault()) {
             RulesChecker.checkRule(new ManageAttachmentTypeInvDefaultMustBeUniqueRule(this.service, command.getId()));
         }
 
@@ -41,9 +41,9 @@ public class CreateManageAttachmentTypeCommandHandler implements ICommandHandler
                 command.getDescription(),
                 command.getStatus(),
                 command.getName(),
-                command.getDefaults(),
-                command.getAttachInvDefault()
+                command.isDefaults(),
+                command.isAttachInvDefault()
         ));
-        this.producerReplicateManageAttachmentTypeService.create(new ReplicateManageAttachmentTypeKafka(command.getId(), command.getCode(), command.getName(),command.getStatus().toString(), command.getDefaults(), command.getAttachInvDefault()));
+        this.producerReplicateManageAttachmentTypeService.create(new ReplicateManageAttachmentTypeKafka(command.getId(), command.getCode(), command.getName(),command.getStatus().toString(), command.isDefaults(), command.isAttachInvDefault()));
     }
 }
