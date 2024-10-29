@@ -38,9 +38,9 @@ public class ManageAttachmentType implements Serializable {
     private String description;
 
     private String name;
-
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean defaults;
-
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean attachInvDefault;
 
     @CreationTimestamp
