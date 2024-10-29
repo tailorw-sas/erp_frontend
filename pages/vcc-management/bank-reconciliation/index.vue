@@ -41,7 +41,7 @@ const allMenuListItems = [
     type: MenuType.refund,
     label: 'Refund',
     icon: 'pi pi-dollar',
-    command: () => openNewRefundDialog(),
+    command: () => {},
     disabled: false,
     isCollection: true // que pertenecen a un status en el collection status
   },

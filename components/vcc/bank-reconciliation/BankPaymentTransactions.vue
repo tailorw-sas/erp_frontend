@@ -16,14 +16,14 @@ const props = defineProps({
 const listItems = ref<any[]>([])
 
 const sClassMap: IStatusClass[] = [
-  { status: 'Sent', class: 'text-sent' },
-  { status: 'Created', class: 'text-created' },
-  { status: 'Received', class: 'text-received' },
-  { status: 'Declined', class: 'text-declined' },
-  { status: 'Paid', class: 'text-paid' },
-  { status: 'Cancelled', class: 'text-cancelled' },
-  { status: 'Reconciled', class: 'text-reconciled' },
-  { status: 'Refund', class: 'text-refund' },
+  { status: 'Sent', class: 'vcc-text-sent' },
+  { status: 'Created', class: 'vcc-text-created' },
+  { status: 'Received', class: 'vcc-text-received' },
+  { status: 'Declined', class: 'vcc-text-declined' },
+  { status: 'Paid', class: 'vcc-text-paid' },
+  { status: 'Cancelled', class: 'vcc-text-cancelled' },
+  { status: 'Reconciled', class: 'vcc-text-reconciled' },
+  { status: 'Refund', class: 'vcc-text-refund' },
 ]
 
 const columns: IColumn[] = [
