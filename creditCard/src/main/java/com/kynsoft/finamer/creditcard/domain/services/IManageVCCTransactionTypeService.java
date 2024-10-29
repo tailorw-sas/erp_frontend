@@ -26,5 +26,7 @@ public interface IManageVCCTransactionTypeService {
 
     ManageVCCTransactionTypeDto findByCode(String code);
 
-    ManageVCCTransactionTypeDto findByIsDefault();
+    ManageVCCTransactionTypeDto findByIsDefaultAndNotIsSubcategory();
+
+    ManageVCCTransactionTypeDto findByIsDefaultAndIsSubcategory();
 }

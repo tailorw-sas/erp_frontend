@@ -22,7 +22,7 @@ public class ConsumerUpdateManageVCCTransactionTypeService {
     @KafkaListener(topics = "finamer-update-manage-vcc-transaction-type", groupId = "vcc-entity-replica")
     public void listen(UpdateManageVCCTransactionTypeKafka objKafka) {
         try {
-            UpdateManageVCCTransactionTypeCommand command = new UpdateManageVCCTransactionTypeCommand(objKafka.getId(), objKafka.getName(), objKafka.getIsDefault());
+            UpdateManageVCCTransactionTypeCommand command = new UpdateManageVCCTransactionTypeCommand(objKafka.getId(), objKafka.getName(), objKafka.getIsDefault(), objKafka.getSubcategory());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageVCCTransactionTypeService.class.getName()).log(Level.SEVERE, null, ex);

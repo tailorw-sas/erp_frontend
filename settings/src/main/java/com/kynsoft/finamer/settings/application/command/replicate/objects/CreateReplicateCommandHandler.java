@@ -238,7 +238,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_VCC_TRANSACTION_TYPE -> {
                     for (ManageVCCTransactionTypeDto transactionTypeDto : this.manageVCCTransactionTypeService.findAllToReplicate()) {
-                        this.replicateManageVCCTransactionTypeService.create(new ReplicateManageVCCTransactionTypeKafka(transactionTypeDto.getId(), transactionTypeDto.getCode(), transactionTypeDto.getName(), transactionTypeDto.getIsDefault()));
+                        this.replicateManageVCCTransactionTypeService.create(new ReplicateManageVCCTransactionTypeKafka(transactionTypeDto.getId(), transactionTypeDto.getCode(), transactionTypeDto.getName(), transactionTypeDto.getIsDefault(), transactionTypeDto.getSubcategory()));
                     }
                 }
                 case MANAGE_LANGUAGE -> {

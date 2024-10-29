@@ -31,6 +31,9 @@ public class ManageVCCTransactionType implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean isDefault;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean subcategory;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -43,10 +46,11 @@ public class ManageVCCTransactionType implements Serializable {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.isDefault = dto.getIsDefault();
+        this.subcategory = dto.getSubcategory();
     }
 
     public ManageVCCTransactionTypeDto toAggregate(){
-        return new ManageVCCTransactionTypeDto(id,code, name, isDefault);
+        return new ManageVCCTransactionTypeDto(id,code, name, isDefault, subcategory);
     }
 
 }

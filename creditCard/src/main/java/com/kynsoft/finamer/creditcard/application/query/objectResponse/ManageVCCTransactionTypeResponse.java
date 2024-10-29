@@ -18,12 +18,13 @@ public class ManageVCCTransactionTypeResponse implements IResponse {
     private UUID id;
     private String code;
     private String name;
-
+    private Boolean subcategory;
 
     public ManageVCCTransactionTypeResponse(ManageVCCTransactionTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.subcategory = dto.getSubcategory();
     }
 
 }
