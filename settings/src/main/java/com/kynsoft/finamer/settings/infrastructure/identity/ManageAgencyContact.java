@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManageAgencyContactDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "manage_agency_contact")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_agency_contact",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageAgencyContact implements Serializable {
 
     @Id
