@@ -122,7 +122,7 @@ const ENUM_FILTER = [
 ]
 
 const columns: IColumn[] = [
-  { field: 'manageAgency', header: 'Agency', type: 'text', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' }, showFilter: false, sortable: false },
+  // { field: 'manageAgency', header: 'Agency', type: 'text', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' }, showFilter: false, sortable: false },
   { field: 'manageRegion', header: 'Region', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-region' } },
   { field: 'emailContact', header: 'Email Contact', type: 'text' },
 ]
