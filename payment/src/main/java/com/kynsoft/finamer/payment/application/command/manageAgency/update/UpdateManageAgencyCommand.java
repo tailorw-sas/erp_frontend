@@ -17,10 +17,11 @@ public class UpdateManageAgencyCommand implements ICommand {
     private String name;
     private String status;  
     private UUID agencyType;
+    private UUID client;
 
     public static UpdateManageAgencyCommand fromRequest(UpdateManageAgencyRequest request, UUID id) {
         return new UpdateManageAgencyCommand(
-                id, request.getName(), request.getStatus(), request.getAgencyType()
+                id, request.getName(), request.getStatus(), request.getAgencyType(), request.getClient()
         );
     }
 
