@@ -49,14 +49,14 @@ const confStatusListApi = reactive({
 })
 
 const sClassMap: IStatusClass[] = [
-  { status: 'Sent', class: 'text-sent' },
-  { status: 'Created', class: 'text-created' },
-  { status: 'Received', class: 'text-received' },
-  { status: 'Declined', class: 'text-declined' },
-  { status: 'Paid', class: 'text-paid' },
-  { status: 'Cancelled', class: 'text-cancelled' },
-  { status: 'Reconciled', class: 'text-reconciled' },
-  { status: 'Refund', class: 'text-refund' },
+  { status: 'Sent', class: 'vcc-text-sent' },
+  { status: 'Created', class: 'vcc-text-created' },
+  { status: 'Received', class: 'vcc-text-received' },
+  { status: 'Declined', class: 'vcc-text-declined' },
+  { status: 'Paid', class: 'vcc-text-paid' },
+  { status: 'Cancelled', class: 'vcc-text-cancelled' },
+  { status: 'Reconciled', class: 'vcc-text-reconciled' },
+  { status: 'Refund', class: 'vcc-text-refund' },
 ]
 
 const columns: IColumn[] = [
@@ -527,36 +527,4 @@ onMounted(() => {
 </template>
 
 <style lang="scss">
-.text-sent {
-  background-color: #006400;
-  color: #fff;
-}
-.text-created {
-  background-color: #FF8D00 !important;
-  color: #fff;
-}
-.text-received {
-  background-color: #3403F9 !important;
-  color: #fff;
-}
-.text-declined {
-  background-color: #661E22 !important;
-  color: #fff;
-}
-.text-paid {
-  background-color: #2E892E !important;
-  color: #fff;
-}
-.text-reconciled {
-  background-color: #05D2FF !important;
-  color: #fff;
-}
-.text-refund {
-  background-color: #666666 !important;
-  color: #fff;
-}
-.text-cancelled {
-  background-color: #888888 !important;
-  color: #fff;
-}
 </style>
