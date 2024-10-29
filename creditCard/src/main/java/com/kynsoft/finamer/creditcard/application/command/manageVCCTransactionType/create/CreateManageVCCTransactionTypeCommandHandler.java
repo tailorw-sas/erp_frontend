@@ -20,7 +20,8 @@ public class CreateManageVCCTransactionTypeCommandHandler implements ICommandHan
                 command.getId(),
                 command.getCode(),
                 command.getName(),
-                command.getIsDefault()
+                command.getIsDefault(),
+                command.getSubcategory()
         ));
     }
 }

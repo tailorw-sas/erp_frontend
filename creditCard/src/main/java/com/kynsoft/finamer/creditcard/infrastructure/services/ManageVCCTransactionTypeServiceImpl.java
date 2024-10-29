@@ -91,8 +91,13 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
     }
 
     @Override
-    public ManageVCCTransactionTypeDto findByIsDefault() {
-        return this.repositoryQuery.findByIsDefault().map(ManageVCCTransactionType::toAggregate).orElse(null);
+    public ManageVCCTransactionTypeDto findByIsDefaultAndNotIsSubcategory() {
+        return this.repositoryQuery.findByIsDefaultAndNotIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageVCCTransactionTypeDto findByIsDefaultAndIsSubcategory() {
+        return this.repositoryQuery.findByIsDefaultAndIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElse(null);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageVCCTransactionType> data) {
