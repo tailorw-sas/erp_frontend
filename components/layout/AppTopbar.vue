@@ -151,7 +151,8 @@ async function onConfirmSignOut() {
             v-styleclass="{ selector: '@next', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
             class="p-ripple cursor-pointer"
           >
-            <Avatar :image="data?.user?.image" shape="circle" />
+            <Avatar v-if="data?.user?.image" :image="data?.user?.image" shape="circle" />
+            <Avatar v-else icon="pi pi-user" style="background-color: #dee9fc; color: #1a2551" shape="circle" />
           </a>
 
           <ul class="topbar-menu active-topbar-menu p-4 w-15rem z-5 hidden border-round">
