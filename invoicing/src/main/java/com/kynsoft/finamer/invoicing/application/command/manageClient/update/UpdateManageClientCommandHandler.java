@@ -18,19 +18,10 @@ public class UpdateManageClientCommandHandler implements ICommandHandler<UpdateM
 
     @Override
     public void handle(UpdateManageClientCommand command) {
-
         ManageClientDto test = this.service.findById(command.getId());
-
-        ConsumerUpdate update = new ConsumerUpdate();
-
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(),
-                update::setUpdate);
-        UpdateIfNotNull.updateBoolean(test::setIsNightType, command.getIsNightType(), test.getIsNightType(), update::setUpdate);
-
-        if (update.getUpdate() > 0) {
-            this.service.update(test);
-        }
-
+        test.setName(command.getName());
+        test.setIsNightType(command.getIsNightType());
+        this.service.update(test);
     }
 
 }
