@@ -76,18 +76,18 @@ const item = ref<GenericObject>({
   auditCreate: false,
   auditUpdate: false,
   auditDelete: false,
- /* serviceName: '',
+  serviceName: '',
   entityName:''
-  */
+  
 })
 
 const itemTemp = ref<GenericObject>({
-    auditCreate: false,
+  auditCreate: false,
   auditUpdate: false,
   auditDelete: false,
-  /*serviceName: '',
+  serviceName: '',
   entityName:''
-  */
+  
 })
 
 
@@ -123,8 +123,8 @@ const payload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
-  sortBy: 'createdAt',
-  sortType: ENUM_SHORT_TYPE.DESC
+ sortBy: '',
+  sortType: ENUM_SHORT_TYPE.ASC
 })
 const pagination = ref<IPagination>({
   page: 0,
@@ -155,7 +155,7 @@ async function getList() {
     listItems.value = []
     const newListItems = []
 
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi,payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -231,13 +231,14 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+      console.log(response,'??')
       if (response) {
-        item.value.id = response.id
-        item.value.auditCreate = response.auditCreate
-        item.value.auditUpdate = response.auditUpdate
-        item.value.auditDelete = response.auditDelete
-        item.value.serviceName = response.serviceName
-        item.value.entityName = response.entityName
+        item.value.id = response.auditConfigurationDto.id
+        item.value.auditCreate = response.auditConfigurationDto.auditCreate
+        item.value.auditUpdate = response.auditConfigurationDto.auditUpdate
+        item.value.auditDelete = response.auditConfigurationDto.auditDelete
+        item.value.serviceName = response.auditConfigurationDto.serviceName
+        item.value.entityName = response.auditConfigurationDto.entityName
       }
         formReload.value += 1
     }
@@ -352,18 +353,30 @@ function requireConfirmationToDelete(event: any) {
   }
 }
 
+
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getList()
 }
+  
 
 function onSortField(event: any) {
   if (event) {
-    payload.value.sortBy = event.sortField
-    payload.value.sortType = event.sortOrder
-    parseDataTableFilter(event.filter)
+    if (event.sortField === 'auditCreate'|| event.sortField ==='auditUpdate' || event.sortField=== 'auditDelete') {
+      // Invertir el orden de sortType
+      payload.value.sortType = event.sortOrder === 'ASC' ? 'DESC' : 'ASC';
+    } else {
+      // Para otros campos, simplemente toma el orden dado
+      payload.value.sortType = event.sortOrder;
+    }
+    
+    // Asigna el campo de ordenación
+    payload.value.sortBy = event.sortField;
+    
+    // Aplica el filtro
+    parseDataTableFilter(event.filter);
   }
 }
 
