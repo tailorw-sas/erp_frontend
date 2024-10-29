@@ -83,7 +83,7 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'processStatus',
-    header: 'Process Status',
+    header: 'Processed Status',
     dataType: 'check',
     class: 'field col-12 required',
   },
