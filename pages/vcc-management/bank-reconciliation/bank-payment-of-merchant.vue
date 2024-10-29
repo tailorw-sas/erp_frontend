@@ -183,6 +183,7 @@ function clearForm() {
   formReload.value++
 }
 
+//Obtener datos del payment of merchant
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
