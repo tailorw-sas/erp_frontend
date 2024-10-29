@@ -112,7 +112,7 @@ const columns: IColumn[] = [
   { field: 'code', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
-  { field: 'defaults', header: 'Default', type: 'text', badge: { color: 'green' } },
+  { field: 'defaults', header: 'Default', type: 'bool', badge: { color: 'green' } },
   { field: 'status', header: 'Active', type: 'bool' },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -179,9 +179,9 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
-      if (!iterator.defaults) {
-        iterator.defaults = ''
-      }
+      // if (!iterator.defaults) {
+      //   iterator.defaults = ''
+      // }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
