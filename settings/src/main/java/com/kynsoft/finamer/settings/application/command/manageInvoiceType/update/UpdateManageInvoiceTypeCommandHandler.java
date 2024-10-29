@@ -39,10 +39,13 @@ public class UpdateManageInvoiceTypeCommandHandler implements ICommandHandler<Up
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setEnabledToPolicy, command.getEnabledToPolicy(), dto.getEnabledToPolicy(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setIncome, command.isIncome(), dto.isIncome(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setCredit, command.isCredit(), dto.isCredit(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setInvoice, command.isInvoice(), dto.isInvoice(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageInvoiceTypeService.update(new UpdateManageInvoiceTypeKafka(dto.getId(), dto.getName()));
+            this.producerUpdateManageInvoiceTypeService.update(new UpdateManageInvoiceTypeKafka(dto.getId(), dto.getName(), dto.isIncome(), dto.isCredit(), dto.isInvoice()));
         }
     }
 

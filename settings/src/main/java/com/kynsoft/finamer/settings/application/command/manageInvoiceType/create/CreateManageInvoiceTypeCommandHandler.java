@@ -36,9 +36,12 @@ public class CreateManageInvoiceTypeCommandHandler implements ICommandHandler<Cr
                 command.getDescription(),
                 command.getStatus(),
                 command.getName(),
-                command.getEnabledToPolicy()
+                command.getEnabledToPolicy(),
+                command.isIncome(),
+                command.isCredit(),
+                command.isInvoice()
         ));
 
-        this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(command.getId(), command.getCode(), command.getName()));
+        this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(command.getId(), command.getCode(), command.getName(), command.isIncome(), command.isCredit(), command.isInvoice()));
     }
 }

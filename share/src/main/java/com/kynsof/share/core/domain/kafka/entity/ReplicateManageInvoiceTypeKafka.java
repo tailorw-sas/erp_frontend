@@ -20,4 +20,8 @@ public class ReplicateManageInvoiceTypeKafka implements Serializable {
     private String code;
     @JsonProperty("name")
     private String name;
+    private boolean income;
+    private boolean credit;
+    private boolean invoice;
+
 }
