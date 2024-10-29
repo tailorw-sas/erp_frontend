@@ -124,4 +124,19 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
 
         return objectDtos;
     }
+
+    @Override
+    public Long countByCreditAndNotId(UUID id) {
+        return this.repositoryQuery.countByCreditAndNotId(id);
+    }
+
+    @Override
+    public Long countByInvoiceAndNotId(UUID id) {
+        return this.repositoryQuery.countByInvoiceAndNotId(id);
+    }
+
+    @Override
+    public Long countByIncomeAndNotId(UUID id) {
+        return this.repositoryQuery.countByIncomeAndNotId(id);
+    }
 }

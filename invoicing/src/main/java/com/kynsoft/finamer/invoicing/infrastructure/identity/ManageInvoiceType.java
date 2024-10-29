@@ -1,10 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +27,7 @@ public class ManageInvoiceType implements Serializable {
 
     private String code;
 
-    @Column(nullable = true)
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean deleted = false;
 
     private String name;
@@ -42,6 +40,9 @@ public class ManageInvoiceType implements Serializable {
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean income;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -60,11 +61,12 @@ public class ManageInvoiceType implements Serializable {
         this.invoice = dto.isInvoice();
         this.credit = dto.isCredit();
         this.income = dto.isIncome();
+        this.status = dto.getStatus();
     }
 
     public ManageInvoiceTypeDto toAggregate() {
         return new ManageInvoiceTypeDto(
-                id, code, name, invoice, credit, income
+                id, code, name, invoice, credit, income, status
         );
     }
 

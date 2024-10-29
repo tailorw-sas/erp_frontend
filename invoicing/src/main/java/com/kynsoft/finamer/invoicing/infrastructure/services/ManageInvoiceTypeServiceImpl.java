@@ -31,13 +31,9 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
     @Autowired
     private final ManageInvoiceTypeReadDataJPARepository repositoryQuery;
 
-    @Autowired
-    private final IParameterizationService parameterizationService;
-
-    public ManageInvoiceTypeServiceImpl(ManageInvoiceTypeWriteDataJPARepository repositoryCommand, ManageInvoiceTypeReadDataJPARepository repositoryQuery, IParameterizationService parameterizationService) {
+    public ManageInvoiceTypeServiceImpl(ManageInvoiceTypeWriteDataJPARepository repositoryCommand, ManageInvoiceTypeReadDataJPARepository repositoryQuery) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
-        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -87,21 +83,31 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
 
     @Override
     public ManageInvoiceTypeDto findByEInvoiceType(EInvoiceType invoiceType) {
-        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceTypeDto invoiceTypeDto = null;
-        if(parameterization != null){
-            invoiceTypeDto = switch (invoiceType) {
-                case CREDIT, OLD_CREDIT -> this.findByCode(parameterization.getTypeCredit());
-                case INVOICE -> this.findByCode(parameterization.getTypeInvoice());
-                case INCOME -> this.findByCode(parameterization.getTypeIncome());
-            };
-        }
-        return invoiceTypeDto;
+        return switch (invoiceType) {
+            case CREDIT, OLD_CREDIT -> this.repositoryQuery.findByCredit().map(ManageInvoiceType::toAggregate).orElse(null);
+            case INVOICE -> this.repositoryQuery.findByInvoice().map(ManageInvoiceType::toAggregate).orElse(null);
+            case INCOME -> this.repositoryQuery.findByIncome().map(ManageInvoiceType::toAggregate).orElse(null);
+        };
     }
 
     @Override
     public ManageInvoiceTypeDto findByCode(String code) {
         return this.repositoryQuery.findByCode(code).map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByIncome() {
+        return this.repositoryQuery.findByIncome().map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByCredit() {
+        return this.repositoryQuery.findByCredit().map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByInvoice() {
+        return this.repositoryQuery.findByInvoice().map(ManageInvoiceType::toAggregate).orElse(null);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

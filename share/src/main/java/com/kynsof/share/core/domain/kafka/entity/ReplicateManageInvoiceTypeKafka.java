@@ -23,5 +23,6 @@ public class ReplicateManageInvoiceTypeKafka implements Serializable {
     private boolean income;
     private boolean credit;
     private boolean invoice;
+    private String status;
 
 }
