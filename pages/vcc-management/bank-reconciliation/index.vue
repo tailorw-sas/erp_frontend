@@ -18,12 +18,10 @@ const isAdmin = (data.value?.user as any)?.isAdmin === true
 
 const listItems = ref<any[]>([])
 const newManualTransactionDialogVisible = ref(false)
-const editManualTransactionDialogVisible = ref(false)
 const newAdjustmentTransactionDialogVisible = ref(false)
 const newRefundDialogVisible = ref(false)
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
-const loadingSearch = ref(false)
 const contextMenuTransaction = ref()
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
@@ -36,7 +34,6 @@ const filterToSearch = ref<IData>({
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
-const selectedTransactionId = ref('')
 const contextMenu = ref()
 
 enum MenuType {
@@ -68,25 +65,15 @@ const collectionStatusList = ref<any[]>([])
 const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
-const merchantList = ref<any[]>([])
 
 const confStatusListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-transaction-status',
 })
-const confMerchantListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-merchant',
-})
 
 const confHotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
-})
-
-const confCCTypeListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-credit-card-type',
 })
 
 const legend = ref(
