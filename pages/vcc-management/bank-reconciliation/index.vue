@@ -168,7 +168,7 @@ const createItems: Array<MenuItem> = ref([{
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'id', header: 'Id', type: 'text' },
+  { field: 'reconciliationId', header: 'Id', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
   { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant-bank-account' }, sortable: true },
   { field: 'amount', header: 'Amount', type: 'text' },
@@ -185,11 +185,12 @@ const ENUM_FILTER = [
 ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Transactions',
+  tableName: 'Management Bank Reconciliation',
   moduleApi: 'creditcard',
   uriApi: 'bank-reconciliation',
   loading: false,
   actionsAsMenu: false,
+  expandableRows: true,
   messageToDelete: 'Do you want to save the change?',
 })
 const payloadOnChangePage = ref<PageState>()
@@ -212,6 +213,12 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+function goToPaymentOfMerchantInNewTab(item: any) {
+  const id = item.hasOwnProperty('id') ? item.id : item
+  const url = `/vcc-management/bank-reconciliation/bank-payment-of-merchant?id=${encodeURIComponent(id)}`
+  window.open(url, '_blank')
+}
+
 async function getList() {
   const count = { amount: 0, details: 0 }
   subTotals.value = { ...count }
@@ -590,42 +597,6 @@ async function openNewRefundDialog() {
   newRefundDialogVisible.value = true
 }
 
-async function onCloseEditManualTransactionDialog(isCancel: boolean) {
-  editManualTransactionDialogVisible.value = false
-  if (!isCancel) {
-    getList()
-  }
-}
-
-async function onCloseNewManualTransactionDialog(isCancel: boolean) {
-  newManualTransactionDialogVisible.value = false
-  if (!isCancel) {
-    getList()
-  }
-}
-
-async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
-  newAdjustmentTransactionDialogVisible.value = false
-  if (!isCancel) {
-    getList()
-  }
-}
-
-async function onCloseNewRefundDialog(isCancel: boolean = true) {
-  newRefundDialogVisible.value = false
-  if (!isCancel) {
-    getList()
-  }
-}
-
-function onDoubleClick(item: any) {
-  if (item.manual) {
-    const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
-    selectedTransactionId.value = id
-    editManualTransactionDialogVisible.value = true
-  }
-}
-
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criteria && filterToSearch.value.search)
   return false
@@ -893,15 +864,19 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
         @on-row-right-click="onRowRightClick"
-        @on-row-double-click="onDoubleClick($event)"
+        @on-row-double-click="goToPaymentOfMerchantInNewTab($event)"
       >
+        <template #expansion="{ data: item }">
+          <!--          <pre>{{item}}</pre> -->
+          <BankPaymentTransactions :bank-reconciliation-id="item.id" />
+        </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="3" footer-style="text-align:right" />
+              <Column footer="Totals:" :colspan="4" footer-style="text-align:right" />
               <Column :footer="formatNumber(subTotals.amount)" />
               <Column :footer="formatNumber(subTotals.details)" />
-              <Column :colspan="3" />
+              <Column :colspan="2" />
             </Row>
           </ColumnGroup>
         </template>

@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import type { Ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
+import { useRoute } from 'vue-router'
 import BankPaymentMerchantBindTransactionsDialog
   from '../../../components/vcc/bank-reconciliation/BankPaymentMerchantBindTransactionsDialog.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -15,11 +16,14 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import { parseFormattedNumber } from '~/utils/helpers'
 
+const route = useRoute()
 const toast = useToast()
 const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
+const BindTransactionList = ref<any[]>([])
 const LocalBindTransactionList = ref<any[]>([])
+const collectionStatusRefundReceivedList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
@@ -27,6 +31,7 @@ const formReload = ref(0)
 const subTotals: any = ref({ amount: 0 })
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
+const newAdjustmentTransactionDialogVisible = ref(false)
 
 const confApi = reactive({
   moduleApi: 'creditcard',
@@ -145,6 +150,17 @@ const computedTransactionAmountSelected = computed(() => {
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+async function openNewAdjustmentTransactionDialog() {
+  newAdjustmentTransactionDialogVisible.value = true
+}
+
+async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
+  newAdjustmentTransactionDialogVisible.value = false
+  if (!isCancel) {
+    // guardar en memoria la transaccion de ajuste
+  }
+}
+
 async function onMultipleSelect(data: any) {
   // Crear un Set de IDs para los seleccionados globalmente y los seleccionados en la página actual
   const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
@@ -165,6 +181,114 @@ async function onMultipleSelect(data: any) {
 function clearForm() {
   item.value = JSON.parse(JSON.stringify(itemTemp.value))
   formReload.value++
+}
+
+async function getItemById(id: string) {
+  if (id) {
+    idItem.value = id
+    loadingSaveAll.value = true
+    try {
+      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+      if (response) {
+        item.value.id = id
+        if (response.merchantBankAccount) {
+          const merchantNames = response.merchantBankAccount?.managerMerchant?.map((item: any) => item.description).join(' - ')
+          response.merchantBankAccount.name = `${merchantNames} - ${response.merchantBankAccount.description} - ${response.merchantBankAccount.accountNumber}`
+          response.merchantBankAccount.status = 'ACTIVE'
+          item.value.merchantBankAccount = response.merchantBankAccount
+          MerchantBankAccountList.value = [response.merchantBankAccount]
+        }
+        if (response.hotel) {
+          response.hotel.name = `${response.hotel.code} - ${response.hotel.name}`
+          response.hotel.status = 'ACTIVE'
+          item.value.hotel = response.hotel
+          HotelList.value = [response.hotel]
+        }
+        item.value.amount = response.amount
+        item.value.paidDate = response.paidDate ? dayjs(response.paidDate).format('YYYY-MM-DD') : null
+        item.value.remark = response.remark
+        subTotals.value.amount = response.detailsAmount
+      }
+      updateFieldProperty(fields, 'merchantBankAccount', 'disabled', true)
+      updateFieldProperty(fields, 'hotel', 'disabled', true)
+      updateFieldProperty(fields, 'amount', 'disabled', true)
+      formReload.value += 1
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Item could not be loaded', life: 3000 })
+      }
+    }
+    finally {
+      loadingSaveAll.value = false
+    }
+  }
+}
+
+async function getList() {
+  if (options.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    options.value.loading = true
+    BindTransactionList.value = []
+    const newListItems = []
+
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    const existingIds = new Set(BindTransactionList.value.map((item: any) => item.id))
+
+    for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.status = iterator.status.name
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'merchant') && iterator.hotel) {
+        iterator.merchant = { id: iterator.merchant.id, name: `${iterator.merchant.code} - ${iterator.merchant.description}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
+        iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
+        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
+        iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
+        iterator.id = String(iterator.id)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        iterator.amount = formatNumber(iterator.amount)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
+        iterator.commission = formatNumber(iterator.commission)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
+        iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
+      }
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate) })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    BindTransactionList.value = [...BindTransactionList.value, ...newListItems]
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    options.value.loading = false
+  }
 }
 
 async function getHotelList(query: string) {
@@ -253,15 +377,23 @@ async function createItem(item: { [key: string]: any }) {
     payload.detailsAmount = subTotals.value.amount
 
     if (LocalBindTransactionList.value.length > 0) {
-      payload.transactions = LocalBindTransactionList.value.map((i: any) => i.id)
+      payload.transactions = LocalBindTransactionList.value.filter((t: any) => !t.adjustment).map((i: any) => i.id)
+      const adjustmentTransactions = LocalBindTransactionList.value.filter((t: any) => t.adjustment)
+      payload.adjustmentTransactions = adjustmentTransactions.map((elem: any) => ({
+        agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
+        transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
+        transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
+        amount: parseFormattedNumber(elem.amount),
+        reservationNumber: elem.reservationNumber,
+        referenceNumber: elem.referenceNumber
+      }))
     }
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     if (response && response.id) {
       // Guarda el id del elemento creado
       idItem.value = response.id
       LocalBindTransactionList.value = []
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant was created successful`, life: 10000 })
-      // toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice ${response.invoiceNumber ?? ''} was created successful`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant ${response.reconciliationId ?? ''} was created successfully`, life: 10000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -287,14 +419,11 @@ async function saveItem(item: { [key: string]: any }) {
     try {
       await createItem(item)
       // Deshabilitar campos restantes del formulario
-      // updateFieldProperty(fields, 'reSend', 'disabled', true)
-      // updateFieldProperty(fields, 'reSendDate', 'disabled', true)
-      // if (AdjustmentList.value.length > 0) {
-      //   await createAdjustment(AdjustmentList.value)
-      // }
-      // await getItemById(idItem.value)
+
+      await getItemById(idItem.value)
     }
     catch (error: any) {
+      loadingSaveAll.value = true
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
@@ -306,6 +435,14 @@ async function handleSave(event: any) {
     await saveItem(event)
     forceSave.value = false
   }
+}
+
+function addAdjustmentLocal(data: any) {
+  data.checkIn = dayjs().format('YYYY-MM-DD')
+  subTotals.value.amount += data.amount
+  data.amount = formatNumber(data.amount)
+  data.adjustment = true
+  LocalBindTransactionList.value.push(data)
 }
 
 function removeUnbindSelectedTransactions(newTransactions: any[]) {
@@ -335,6 +472,21 @@ function onSortField(event: any) {
     parseDataTableFilter(event.filter)
   }
 }
+
+onMounted(async () => {
+  if (route?.query?.id) {
+    const id = route.query.id.toString()
+    idItem.value = id
+    getItemById(id)
+    payload.value.filter = [{
+      key: 'reconciliation.id',
+      operator: 'EQUALS',
+      value: idItem.value,
+      logicalOperation: 'AND'
+    }]
+    getList()
+  }
+})
 </script>
 
 <template>
@@ -392,6 +544,7 @@ function onSortField(event: any) {
             id="autocomplete"
             field="name"
             item-value="id"
+            :disabled="idItem !== ''"
             :model="data.hotel"
             :suggestions="HotelList"
             @change="($event) => {
@@ -409,6 +562,7 @@ function onSortField(event: any) {
             id="autocomplete"
             field="name"
             item-value="id"
+            :disabled="idItem !== ''"
             :model="data.merchantBankAccount"
             :suggestions="[...MerchantBankAccountList]"
             @change="($event) => {
@@ -422,7 +576,7 @@ function onSortField(event: any) {
       </EditFormV2>
     </div>
     <DynamicTable
-      :data="LocalBindTransactionList"
+      :data="idItem ? BindTransactionList : LocalBindTransactionList"
       :columns="columns"
       :options="options"
       :pagination="pagination"
@@ -447,6 +601,7 @@ function onSortField(event: any) {
       />
       <div>
         <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+        <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-plus" @click="openNewAdjustmentTransactionDialog()" />
         <Button v-tooltip.top="'Payment'" class="w-3rem ml-1" disabled icon="pi pi-dollar" @click="() => {}" />
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/bank-reconciliation') }" />
@@ -455,8 +610,14 @@ function onSortField(event: any) {
     <div v-if="transactionsToBindDialogOpen">
       <BankPaymentMerchantBindTransactionsDialog
         :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="LocalBindTransactionList"
-        :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" @update:list-items="($event) => setTransactions($event)"
+        :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
+        @update:list-items="($event) => setTransactions($event)"
+        @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
       />
     </div>
+    <VCCNewAdjustmentTransaction
+      is-local :open-dialog="newAdjustmentTransactionDialogVisible"
+      @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" @on-save-local="($event) => addAdjustmentLocal($event)"
+    />
   </div>
 </template>

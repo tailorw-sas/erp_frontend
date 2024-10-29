@@ -161,7 +161,7 @@ const createItems: Array<MenuItem> = ref([{
 }, {
   label: 'Adjustment Transaction',
   command: () => openNewAdjustmentTransactionDialog(),
-  disabled: computedShowMenuItemAdjustmentTransaction.value
+  disabled: true
 }])
 
 // -------------------------------------------------------------------------------------------------------
@@ -302,7 +302,7 @@ function searchAndFilter() {
     sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    newPayload.filter = [{
+    newPayload.filter = [...newPayload.filter, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'EQUALS',
       value: filterToSearch.value.search,
@@ -312,6 +312,13 @@ function searchAndFilter() {
   }
   else {
     newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    // Filtro para no mostrar transacciones de ajuste
+    // newPayload.filter = [...newPayload.filter, {
+    //   key: 'adjustment',
+    //   operator: 'EQUALS',
+    //   value: false,
+    //   logicalOperation: 'AND',
+    // }]
     // Date
     if (filterToSearch.value.from) {
       newPayload.filter = [...newPayload.filter, {

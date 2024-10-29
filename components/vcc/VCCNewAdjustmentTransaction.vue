@@ -14,9 +14,15 @@ const props = defineProps({
     type: Boolean,
     required: true
   },
+  isLocal: {
+    type: Boolean,
+    required: true,
+    default: false
+  }
 })
 const emits = defineEmits<{
   (e: 'onCloseDialog', value: boolean): void
+  (e: 'onSaveLocal', value: any): void
 }>()
 
 const $primevue = usePrimeVue()
@@ -135,7 +141,12 @@ function clearForm() {
 
 function requireConfirmationToSave(item: any) {
   if (!useRuntimeConfig().public.showSaveConfirm) {
-    save(item)
+    if (props.isLocal) {
+      saveLocal(item)
+    }
+    else {
+      save(item)
+    }
   }
   else {
     confirm.require({
@@ -146,7 +157,12 @@ function requireConfirmationToSave(item: any) {
       rejectLabel: 'Cancel',
       acceptLabel: 'Accept',
       accept: async () => {
-        await save(item)
+        if (props.isLocal) {
+          saveLocal(item)
+        }
+        else {
+          await save(item)
+        }
       },
       reject: () => {}
     })
@@ -170,6 +186,11 @@ async function save(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
   }
+}
+
+function saveLocal(item: { [key: string]: any }) {
+  emits('onSaveLocal', item)
+  onClose(false)
 }
 
 async function getCategoryList(query: string, isDefault: boolean = false) {
