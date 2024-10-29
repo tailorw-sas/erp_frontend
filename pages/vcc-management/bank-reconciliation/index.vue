@@ -120,17 +120,6 @@ const legend = ref(
     },
   ]
 )
-
-const sClassMap: IStatusClass[] = [
-  { status: 'Sent', class: 'text-sent' },
-  { status: 'Created', class: 'text-created' },
-  { status: 'Received', class: 'text-received' },
-  { status: 'Declined', class: 'text-declined' },
-  { status: 'Paid', class: 'text-paid' },
-  { status: 'Cancelled', class: 'text-cancelled' },
-  { status: 'Reconciled', class: 'text-reconciled' },
-  { status: 'Refund', class: 'text-refund' },
-]
 ////
 
 const computedShowMenuItemManualTransaction = computed(() => {
@@ -168,7 +157,7 @@ const columns: IColumn[] = [
 const subTotals: any = ref({ amount: 0, details: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
-  { id: 'id', name: 'Id' },
+  { id: 'reconciliationId', name: 'Id' },
 ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
@@ -310,12 +299,12 @@ function searchAndFilter() {
         type: 'filterSearch'
       }]
     }
-    if (filterToSearch.value.merchant?.length > 0) {
-      const filteredItems = filterToSearch.value.merchant.filter((item: any) => item?.id !== 'All')
+    if (filterToSearch.value.merchantBankAccount?.length > 0) {
+      const filteredItems = filterToSearch.value.merchantBankAccount.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
         newPayload.filter = [...newPayload.filter, {
-          key: 'merchant.id',
+          key: 'merchantBankAccount.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND',
@@ -372,7 +361,7 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criteria: null,
     search: '',
-    merchant: [allDefaultItem],
+    merchantBankAccount: [allDefaultItem],
     ccType: [allDefaultItem],
     hotel: [allDefaultItem],
     status: [allDefaultItem],
@@ -398,6 +387,12 @@ async function getHotelList(query: string = '') {
           operator: 'LIKE',
           value: query,
           logicalOperation: 'OR'
+        },
+        {
+          key: 'isApplyByVCC',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
         },
         {
           key: 'status',
