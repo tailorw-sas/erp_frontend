@@ -3387,7 +3387,7 @@ const checkboxValue1 = ref(false)
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="" :colspan="9" footer-style="text-align:right; font-weight: bold;">
+            <Column footer="" :colspan="8" footer-style="text-align:right; font-weight: bold;">
               <template #footer>
                 <div class="flex align-items-center gap-4">
                   <div class="flex align-items-center">
