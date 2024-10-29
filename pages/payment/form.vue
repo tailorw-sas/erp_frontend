@@ -76,7 +76,96 @@ const subTotals = ref<SubTotals>({ depositAmount: 0 })
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 
-const paymentDetailsList = ref<any[]>([])
+const paymentDetailsList = ref<any[]>([
+  {
+    id: '1',
+    paymentDetailId: 'PD12345',
+    bookingId: 'BKG20231001',
+    invoiceNumber: 'INV001234',
+    transactionDate: '2024-10-01',
+    fullName: 'John Doe',
+    reservationNumber: 'RES001',
+    couponNumber: 'CUP2023',
+    adults: 2,
+    children: 1,
+    amount: 250.00,
+    transactionType: { name: 'Online Payment', code: 'OP001', status: true, cash: false, deposit: true, applyDeposit: false },
+    rowClass: 'row-deposit',
+    parentId: 'PARENT001',
+    reverseFromParentId: 'REV_PARENT001',
+    remark: 'Payment processed successfully',
+  },
+  {
+    id: '2',
+    paymentDetailId: 'PD12346',
+    bookingId: 'BKG20231002',
+    invoiceNumber: 'INV001235',
+    transactionDate: '2024-10-02',
+    fullName: 'Jane Smith',
+    reservationNumber: 'RES002',
+    couponNumber: 'CUP2024',
+    adults: 1,
+    children: 0,
+    amount: 150.00,
+    transactionType: { name: 'Cash Payment', code: 'CP001', status: true, cash: true, deposit: false, applyDeposit: true },
+    parentId: 'PARENT002',
+    reverseFromParentId: 'REV_PARENT002',
+    remark: 'Paid at reception',
+  },
+  {
+    id: '3',
+    paymentDetailId: 'PD12347',
+    bookingId: 'BKG20231003',
+    invoiceNumber: 'INV001236',
+    transactionDate: '2024-10-03',
+    fullName: 'Alice Johnson',
+    reservationNumber: 'RES003',
+    couponNumber: 'CUP2025',
+    adults: 3,
+    children: 2,
+    amount: 500.00,
+    transactionType: { name: 'Credit Card', code: 'CC001', status: true, cash: false, deposit: true, applyDeposit: true },
+    rowClass: 'row-deposit',
+    parentId: 'PARENT003',
+    reverseFromParentId: 'REV_PARENT003',
+    remark: 'Split payment with partner',
+  },
+  {
+    id: '4',
+    paymentDetailId: 'PD12348',
+    bookingId: 'BKG20231004',
+    invoiceNumber: 'INV001237',
+    transactionDate: '2024-10-04',
+    fullName: 'Bob Brown',
+    reservationNumber: 'RES004',
+    couponNumber: 'CUP2026',
+    adults: 2,
+    children: 0,
+    amount: 300.00,
+    transactionType: { name: 'Bank Transfer', code: 'BT001', status: false, cash: false, deposit: true, applyDeposit: false },
+    rowClass: 'row-deposit',
+    parentId: 'PARENT004',
+    reverseFromParentId: 'REV_PARENT004',
+    remark: 'Pending bank confirmation',
+  },
+  {
+    id: '5',
+    paymentDetailId: 'PD12349',
+    bookingId: 'BKG20231005',
+    invoiceNumber: 'INV001238',
+    transactionDate: '2024-10-05',
+    fullName: 'Maria Lopez',
+    reservationNumber: 'RES005',
+    couponNumber: 'CUP2027',
+    adults: 4,
+    children: 1,
+    amount: 700.00,
+    transactionType: { name: 'Online Payment', code: 'OP002', status: true, cash: false, deposit: false, applyDeposit: true },
+    parentId: 'PARENT005',
+    reverseFromParentId: 'REV_PARENT005',
+    remark: 'Early check-in applied',
+  }
+])
 const paymentStatusOfGetById = ref({} as GenericObject)
 
 const contextMenu = ref()
@@ -2117,15 +2206,35 @@ function disableBtnDelete(idDetail: string): boolean {
   }
 }
 
+function updateRowClassExceptId(id: string) {
+  if (!id) {
+    paymentDetailsList.value.forEach((item) => {
+      if ('rowClass' in item && item.transactionType.deposit) {
+        item.rowClass = 'row-deposit'
+      }
+    })
+  }
+  else {
+    paymentDetailsList.value.forEach((item) => {
+      if ('rowClass' in item && item.id !== id && item.transactionType.deposit) {
+        item.rowClass = 'row-deposit'
+      }
+    })
+  }
+}
+
 async function rowSelected(rowData: any) {
+  const paymentDetailObjt = paymentDetailsList.value.find(item => item.id === rowData)
+  if (paymentDetailObjt && 'rowClass' in paymentDetailObjt) {
+    paymentDetailObjt.rowClass = ''
+    updateRowClassExceptId(rowData)
+  }
   if (rowData !== null && rowData !== undefined && rowData !== '') {
     idItemDetail.value = rowData
     idPaymentDetail.value = rowData
 
     enableSplitAction.value = hasDepositTransaction(rowData, paymentDetailsList.value)
     disabledBtnDelete.value = disableBtnDelete(rowData)
-
-    // Variables que puedo usar para deshabilitar el boton eliminar: hasApplyDeposit, applyPayment
   }
   else {
     idItemDetail.value = ''
@@ -2133,6 +2242,7 @@ async function rowSelected(rowData: any) {
     actionOfModal.value = 'new-detail'
     enableSplitAction.value = false
     disabledBtnDelete.value = true
+    updateRowClassExceptId(rowData)
   }
 }
 
@@ -3427,7 +3537,6 @@ const checkboxValue1 = ref(false)
         </ColumnGroup>
       </template>
     </DynamicTable>
-
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT'] : ['PAYMENT-MANAGEMENT:CREATE']">
         <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
