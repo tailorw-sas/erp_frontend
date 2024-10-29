@@ -65,10 +65,10 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     public void handle(CreateNewCreditCommand command) {
         ManageInvoiceDto parentInvoice = this.invoiceService.findById(command.getInvoice());
         ManageHotelDto hotelDto = this.hotelService.findById(parentInvoice.getHotel().getId());
-        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-                this.closeOperationService,
-                command.getInvoiceDate().toLocalDate(),
-                hotelDto.getId()));
+//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+//                this.closeOperationService,
+//                command.getInvoiceDate().toLocalDate(),
+//                hotelDto.getId()));
 
         //preparando lo necesario
         List<ManageBookingDto> parentBookings = parentInvoice.getBookings();
@@ -220,6 +220,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 parentInvoice,
                 0.0
         );
+        invoiceDto.setOriginalAmount(invoiceAmount);
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
         this.producerReplicateManageInvoiceService.create(created);
 
