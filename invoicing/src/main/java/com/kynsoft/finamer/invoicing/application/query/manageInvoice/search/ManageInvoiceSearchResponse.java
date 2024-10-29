@@ -31,6 +31,7 @@ public class ManageInvoiceSearchResponse {
     private String sendStatusError;
     private String parent;
     private Boolean autoRec;
+    private Double originalAmount;
 
     public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
         this.id = projection.getId();
@@ -52,6 +53,7 @@ public class ManageInvoiceSearchResponse {
         this.sendStatusError = projection.getSendStatusError();
         this.parent = projection.getParent() != null ? projection.getParent().getId().toString() : null;
         this.autoRec = projection.getAutoRec();
+        this.originalAmount = projection.getOriginalAmount();
     }
 
     private String deleteHotelInfo(String input) {
