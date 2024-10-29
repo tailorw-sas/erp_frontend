@@ -112,7 +112,7 @@ const columns: IColumn[] = [
   { field: 'code', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
-  { field: 'defaults', header: 'Default', type: 'text', badge: { color: 'green' } },
+  { field: 'defaults', header: 'Default', type: 'bool', badge: { color: 'green' } },
   { field: 'status', header: 'Active', type: 'bool', width: '120px' },
 ]
 // -------------------------------------------------------------------------------------------------------
