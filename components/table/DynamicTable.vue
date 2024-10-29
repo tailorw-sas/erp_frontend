@@ -231,7 +231,6 @@ function onEdit(item: any) {
 }
 
 function onSelectItem(item: any) {
-  // console.log(item, typeof item === 'object', Array.isArray(item))
   if (item) {
     if (Array.isArray(item)) {
       if (item.length > 0) {
