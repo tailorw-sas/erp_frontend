@@ -8,6 +8,9 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.ManageInvoiceTypeCreditMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.ManageInvoiceTypeIncomeMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.ManageInvoiceTypeInvoiceMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceType.ProducerReplicateManageInvoiceTypeService;
 import org.springframework.stereotype.Component;
@@ -31,6 +34,16 @@ public class UpdateManageInvoiceTypeCommandHandler implements ICommandHandler<Up
     public void handle(UpdateManageInvoiceTypeCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Invoice Type ID cannot be null."));
 
+        if (command.isInvoice()){
+            RulesChecker.checkRule(new ManageInvoiceTypeInvoiceMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.isIncome()){
+            RulesChecker.checkRule(new ManageInvoiceTypeIncomeMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.isCredit()){
+            RulesChecker.checkRule(new ManageInvoiceTypeCreditMustBeUniqueRule(this.service, command.getId()));
+        }
+
         ManageInvoiceTypeDto dto = service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -45,7 +58,7 @@ public class UpdateManageInvoiceTypeCommandHandler implements ICommandHandler<Up
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(dto.getId(), dto.getCode(), dto.getName(), dto.isIncome(), dto.isCredit(), dto.isInvoice()));
+            this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(dto.getId(), dto.getCode(), dto.getName(), dto.isIncome(), dto.isCredit(), dto.isInvoice(), dto.getStatus().name()));
         }
     }
 
