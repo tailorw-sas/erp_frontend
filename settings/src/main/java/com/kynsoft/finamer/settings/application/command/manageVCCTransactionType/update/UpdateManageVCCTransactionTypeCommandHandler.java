@@ -55,7 +55,7 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageVCCTransactionTypeService.update(new UpdateManageVCCTransactionTypeKafka(dto.getId(), dto.getName(), dto.getIsDefault()));
+            this.producerUpdateManageVCCTransactionTypeService.update(new UpdateManageVCCTransactionTypeKafka(dto.getId(), dto.getName(), dto.getIsDefault(), dto.getSubcategory()));
         }
     }
 

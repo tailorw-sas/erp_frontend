@@ -17,4 +17,5 @@ public class ReplicateManageVCCTransactionTypeKafka {
     private String code;
     private String name;
     private Boolean isDefault;
+    private Boolean subcategory;
 }
