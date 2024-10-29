@@ -2,14 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageInvoiceType.updat
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageInvoiceTypeKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTypeService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceType.ProducerUpdateManageInvoiceTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceType.ProducerReplicateManageInvoiceTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -19,12 +19,12 @@ public class UpdateManageInvoiceTypeCommandHandler implements ICommandHandler<Up
 
     private final IManageInvoiceTypeService service;
 
-    private final ProducerUpdateManageInvoiceTypeService producerUpdateManageInvoiceTypeService;
+    private final ProducerReplicateManageInvoiceTypeService producerReplicateManageInvoiceTypeService;
 
     public UpdateManageInvoiceTypeCommandHandler(IManageInvoiceTypeService service,
-                                                 ProducerUpdateManageInvoiceTypeService producerUpdateManageInvoiceTypeService) {
+                                                 ProducerReplicateManageInvoiceTypeService producerReplicateManageInvoiceTypeService) {
         this.service = service;
-        this.producerUpdateManageInvoiceTypeService = producerUpdateManageInvoiceTypeService;
+        this.producerReplicateManageInvoiceTypeService = producerReplicateManageInvoiceTypeService;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class UpdateManageInvoiceTypeCommandHandler implements ICommandHandler<Up
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageInvoiceTypeService.update(new UpdateManageInvoiceTypeKafka(dto.getId(), dto.getName(), dto.isIncome(), dto.isCredit(), dto.isInvoice()));
+            this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(dto.getId(), dto.getCode(), dto.getName(), dto.isIncome(), dto.isCredit(), dto.isInvoice()));
         }
     }
 

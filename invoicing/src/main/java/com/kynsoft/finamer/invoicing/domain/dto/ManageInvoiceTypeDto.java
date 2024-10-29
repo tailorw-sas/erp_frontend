@@ -15,7 +15,8 @@ public class ManageInvoiceTypeDto {
 
     private UUID id;
     private String code;
-
     private String name;
-
+    private boolean invoice;
+    private boolean credit;
+    private boolean income;
 }
