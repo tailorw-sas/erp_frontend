@@ -1574,7 +1574,6 @@ function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolea
   else if (mainItem?.reverseTransaction || mainItem?.canceledTransaction) {
     return false
   }
-
   const hasDeposit = (item: TransactionItem): boolean => {
     // Verificar si es de tipo deposit
     // Verificar que no se le haya aplicado deposito anteriormente
