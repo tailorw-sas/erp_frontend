@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManageReportParamTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -18,6 +20,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manage_report_param_type")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_report_param_type",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageReportParamType {
 
     @Id
