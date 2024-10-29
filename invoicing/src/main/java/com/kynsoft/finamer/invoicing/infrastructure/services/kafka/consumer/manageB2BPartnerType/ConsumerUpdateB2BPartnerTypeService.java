@@ -1,8 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageB2BPartnerType;
 
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageAgencyKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.manageAgency.update.UpdateManageAgencyCommand;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +16,8 @@ public class ConsumerUpdateB2BPartnerTypeService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-update-manage-client", groupId = "invoicing-entity-replica")
-    public void listen(UpdateManageAgencyKafka objKafka) {
+    @KafkaListener(topics = "finamer-replicate-b2b-partner-type", groupId = "invoicing-entity-replica")
+    public void listen(ConsumerUpdateB2BPartnerTypeService objKafka) {
         try {
 //            UpdateManageAgencyCommand command = new UpdateManageAgencyCommand(objKafka.getId(), objKafka.getName(),
 //                    objKafka.getClient(),objKafka.getCif(),
