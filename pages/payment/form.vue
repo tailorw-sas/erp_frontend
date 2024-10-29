@@ -1355,7 +1355,7 @@ const somePaymenWithApplyPayment = computed(() => {
   return paymentDetailsList.value.some(item => item.applyPayment)
 })
 
-async function getListPaymentDetail(showReverse: boolean = false) {
+async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, cancel: boolean } = { reverse: false, cancel: false }) {
   const count: SubTotals = { depositAmount: 0 }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -1366,12 +1366,12 @@ async function getListPaymentDetail(showReverse: boolean = false) {
     paymentDetailsList.value = []
     const newListItems = []
 
-    if (showReverseTransaction.value) {
-      // aplicar el filtro
+    if (showReverseTransaction.value && showCanceledDetails.value) {
       const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
 
       if (objFilterForReverseFalse) {
         objFilterForReverseFalse.value = true
+        objFilterForReverseFalse.logicalOperation = 'OR'
       }
       else {
         payload.value.filter.push({
@@ -1381,56 +1381,93 @@ async function getListPaymentDetail(showReverse: boolean = false) {
           logicalOperation: 'OR'
         })
       }
-    }
-    else {
-      // filtrar para que no aparezca el de reversado
-      const objFilterForReverseTrue = payload.value.filter.find(item => item.key === 'reverseTransaction')
 
-      if (objFilterForReverseTrue) {
-        objFilterForReverseTrue.value = false
+      const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+      if (objFilterForCanceledFalse) {
+        objFilterForCanceledFalse.value = true
+        objFilterForCanceledFalse.logicalOperation = 'OR'
       }
       else {
         payload.value.filter.push({
-          key: 'reverseTransaction',
+          key: 'canceledTransaction',
           operator: 'EQUALS',
-          value: false,
+          value: true,
           logicalOperation: 'OR'
         })
       }
     }
+    else {
+      if (showReverseTransaction.value) {
+        // aplicar el filtro
+        const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
 
-    // if (showCanceledDetails.value) {
-    //   // aplicar el filtro
-    //   const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+        if (objFilterForReverseFalse) {
+          objFilterForReverseFalse.value = true
+          objFilterForReverseFalse.logicalOperation = 'OR'
+        }
+        else {
+          payload.value.filter.push({
+            key: 'reverseTransaction',
+            operator: 'EQUALS',
+            value: true,
+            logicalOperation: 'OR'
+          })
+        }
+      }
+      else {
+        // filtrar para que no aparezca el de reversado
+        const objFilterForReverseTrue = payload.value.filter.find(item => item.key === 'reverseTransaction')
 
-    //   if (objFilterForCanceledFalse) {
-    //     objFilterForCanceledFalse.value = true
-    //   }
-    //   else {
-    //     payload.value.filter.push({
-    //       key: 'canceledTransaction',
-    //       operator: 'EQUALS',
-    //       value: true,
-    //       logicalOperation: 'OR'
-    //     })
-    //   }
-    // }
-    // else {
-    //   // filtrar para que no aparezca el de reversado
-    //   const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+        if (objFilterForReverseTrue) {
+          objFilterForReverseTrue.value = false
+          objFilterForReverseTrue.logicalOperation = 'AND'
+        }
+        else {
+          payload.value.filter.push({
+            key: 'reverseTransaction',
+            operator: 'EQUALS',
+            value: false,
+            logicalOperation: 'AND'
+          })
+        }
+      }
 
-    //   if (objFilterForCanceledFalse) {
-    //     objFilterForCanceledFalse.value = false
-    //   }
-    //   else {
-    //     payload.value.filter.push({
-    //       key: 'canceledTransaction',
-    //       operator: 'EQUALS',
-    //       value: false,
-    //       logicalOperation: 'OR'
-    //     })
-    //   }
-    // }
+      if (showCanceledDetails.value) {
+        // aplicar el filtro
+        const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+        if (objFilterForCanceledFalse) {
+          objFilterForCanceledFalse.value = true
+          objFilterForCanceledFalse.logicalOperation = 'OR'
+        }
+        else {
+          payload.value.filter.push({
+            key: 'canceledTransaction',
+            operator: 'EQUALS',
+            value: true,
+            logicalOperation: 'OR'
+          })
+        }
+      }
+      else {
+        // filtrar para que no aparezca el de reversado
+        const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+        if (objFilterForCanceledFalse) {
+          objFilterForCanceledFalse.value = false
+          objFilterForCanceledFalse.logicalOperation = 'AND'
+        }
+        else {
+          payload.value.filter.push({
+            key: 'canceledTransaction',
+            operator: 'EQUALS',
+            value: false,
+            logicalOperation: 'AND'
+          })
+        }
+      }
+    }
 
     const objFilter = payload.value.filter.find(item => item.key === 'payment.id')
 
@@ -1533,6 +1570,9 @@ function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolea
   const mainItem = items.find(item => item.id === mainId)
   if (!mainItem) {
     return false // Si no se encuentra el objeto principal, devolver false
+  }
+  else if (mainItem?.reverseTransaction || mainItem?.canceledTransaction) {
+    return false
   }
 
   const hasDeposit = (item: TransactionItem): boolean => {
@@ -2067,6 +2107,9 @@ function disableBtnDelete(idDetail: string): boolean {
   if (!item) {
     return false
   }
+  else if (item.reverseTransaction || item.canceledTransaction) {
+    return true
+  }
   else if (item.hasApplyDeposit || item.applyPayment) {
     return true
   }
@@ -2348,6 +2391,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
 
     let listAgenciesForApplyPayment: any[] = []
     listAgenciesForApplyPayment = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
+
     if (listAgenciesForApplyPayment.length > 0) {
       const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.agency.id')
 
@@ -2441,6 +2485,22 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
           key: 'invoice.manageInvoiceStatus.enabledToApply',
           operator: 'EQUALS',
           value: true,
+          logicalOperation: 'AND'
+        }
+      )
+    }
+
+    const objFilterProcessStatus = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.processStatus')
+
+    if (objFilterProcessStatus) {
+      objFilterProcessStatus.value = false
+    }
+    else {
+      applyPaymentPayload.value.filter.push(
+        {
+          key: 'invoice.manageInvoiceStatus.processStatus',
+          operator: 'EQUALS',
+          value: false,
           logicalOperation: 'AND'
         }
       )
@@ -2800,10 +2860,9 @@ function onRowContextMenu(event: any) {
   }
   // if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:UNDO-APPLICATION']))) {
   // }
-
   // Mostrar menu contextual si hay items visibles
   const allHidden = allMenuListItems.value.every(item => !item.visible)
-  if (!allHidden) {
+  if (!allHidden && detailItemForApplyPayment.value.canceledTransaction === false && detailItemForApplyPayment.value.reverseTransaction === false) {
     contextMenu.value.show(event.originalEvent)
   }
   else {
