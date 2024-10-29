@@ -228,6 +228,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 0.00
         );
 
+        invoiceDto.setOriginalAmount(invoiceToClone.getInvoiceAmount());
         ManageInvoiceDto created = service.create(invoiceDto);
 
         //calcular el amount de los bookings
