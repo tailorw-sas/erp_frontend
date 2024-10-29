@@ -56,7 +56,7 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'canceled',
-    header: 'Default Canceled Status Code',
+    header: 'Default Cancelled Status Code',
     dataType: 'text',
     class: 'field col-12 required',
     validation: z.string().trim().min(1, 'The code field is required')

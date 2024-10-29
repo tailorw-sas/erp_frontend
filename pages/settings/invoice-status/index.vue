@@ -101,7 +101,7 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'canceledStatus',
-    header: 'Canceled Status',
+    header: 'Cancelled Status',
     dataType: 'check',
     class: 'field col-12 required',
   },
@@ -138,7 +138,7 @@ const item = ref<GenericObject>({
   processStatus: false,
   sentStatus: false,
   canceledStatus: false,
-  reconciledStatus:false,
+  reconciledStatus: false,
   showClone: false,
   navigate: [],
 })
@@ -155,7 +155,7 @@ const itemTemp = ref<GenericObject>({
   processStatus: false,
   sentStatus: false,
   canceledStatus: false,
-  reconciledStatus:false,
+  reconciledStatus: false,
   showClone: false,
   navigate: [],
 })
