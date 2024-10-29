@@ -23,7 +23,8 @@ public class CreateManageInvoiceTypeCommandHandler implements ICommandHandler<Cr
                 command.getName(),
                 command.isInvoice(),
                 command.isCredit(),
-                command.isIncome()
+                command.isIncome(),
+                command.getStatus()
         ));
     }
 }

@@ -26,16 +26,13 @@ public class ManageNightType implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
-    @Column(unique = true)
+
     private String code;
 
     private String name;
 
-
-    @Column(nullable = true)
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean deleted = false;
-
-
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

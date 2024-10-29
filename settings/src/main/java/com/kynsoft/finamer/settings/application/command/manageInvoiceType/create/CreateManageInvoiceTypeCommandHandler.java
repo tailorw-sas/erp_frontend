@@ -4,9 +4,8 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTypeKafka;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTypeDto;
-import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.ManageInvoiceTypeCodeMustBeUniqueRule;
-import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.ManageInvoiceTypeCodeSizeRule;
-import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.ManageInvoiceTypeNameMustBeNullRule;
+import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.*;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransactionTypeIncomeDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceType.ProducerReplicateManageInvoiceTypeService;
 import org.springframework.stereotype.Component;
@@ -30,6 +29,16 @@ public class CreateManageInvoiceTypeCommandHandler implements ICommandHandler<Cr
         RulesChecker.checkRule(new ManageInvoiceTypeNameMustBeNullRule(command.getName()));
         RulesChecker.checkRule(new ManageInvoiceTypeCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
+        if (command.isInvoice()){
+            RulesChecker.checkRule(new ManageInvoiceTypeInvoiceMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.isIncome()){
+            RulesChecker.checkRule(new ManageInvoiceTypeIncomeMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.isCredit()){
+            RulesChecker.checkRule(new ManageInvoiceTypeCreditMustBeUniqueRule(this.service, command.getId()));
+        }
+
         service.create(new ManageInvoiceTypeDto(
                 command.getId(),
                 command.getCode(),
@@ -42,6 +51,6 @@ public class CreateManageInvoiceTypeCommandHandler implements ICommandHandler<Cr
                 command.isInvoice()
         ));
 
-        this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(command.getId(), command.getCode(), command.getName(), command.isIncome(), command.isCredit(), command.isInvoice()));
+        this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(command.getId(), command.getCode(), command.getName(), command.isIncome(), command.isCredit(), command.isInvoice(), command.getStatus().name()));
     }
 }

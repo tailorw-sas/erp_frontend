@@ -24,4 +24,13 @@ public interface ManageInvoiceTypeReadDataJPARepository extends JpaRepository<Ma
 
     @Query("SELECT b FROM ManageInvoiceType b WHERE b.code = :code AND b.deleted = false")
     Optional<ManageInvoiceType> findByCode(String code);
+
+    @Query("SELECT b FROM ManageInvoiceType b WHERE b.income = true AND b.deleted = false AND status = 'ACTIVE'")
+    Optional<ManageInvoiceType> findByIncome();
+
+    @Query("SELECT b FROM ManageInvoiceType b WHERE b.credit = true AND b.deleted = false AND status = 'ACTIVE'")
+    Optional<ManageInvoiceType> findByCredit();
+
+    @Query("SELECT b FROM ManageInvoiceType b WHERE b.invoice = true AND b.deleted = false AND status = 'ACTIVE'")
+    Optional<ManageInvoiceType> findByInvoice();
 }
