@@ -223,6 +223,6 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.findById(invoiceId);
         invoiceDto.setAutoRec(true);
         this.manageInvoiceService.update(invoiceDto);
-        this.producerUpdateManageInvoiceService.create(invoiceDto);
+        this.producerUpdateManageInvoiceService.create(this.manageInvoiceService.findById(invoiceDto.getId()));
     }
 }
