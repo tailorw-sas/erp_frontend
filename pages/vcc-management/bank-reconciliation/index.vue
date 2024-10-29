@@ -5,10 +5,9 @@ import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
 import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import type { MenuItem } from '~/components/menu/MenuItems'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -17,9 +16,6 @@ const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
 
 const listItems = ref<any[]>([])
-const newManualTransactionDialogVisible = ref(false)
-const newAdjustmentTransactionDialogVisible = ref(false)
-const newRefundDialogVisible = ref(false)
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
 const contextMenuTransaction = ref()
@@ -121,24 +117,6 @@ const legend = ref(
   ]
 )
 ////
-
-const computedShowMenuItemManualTransaction = computed(() => {
-  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
-})
-
-const computedShowMenuItemAdjustmentTransaction = computed(() => {
-  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:ADJUSTMENT-TRANSACTION'])))
-})
-
-const createItems: Array<MenuItem> = ref([{
-  label: 'Manual Transaction',
-  command: () => openNewManualTransactionDialog(),
-  disabled: computedShowMenuItemManualTransaction.value
-}, {
-  label: 'Adjustment Transaction',
-  command: () => openNewAdjustmentTransactionDialog(),
-  disabled: computedShowMenuItemAdjustmentTransaction.value
-}])
 
 // -------------------------------------------------------------------------------------------------------
 
@@ -566,23 +544,6 @@ async function resendPaymentLink() {
     options.value.loading = false
   }
 }
-
-async function openNewManualTransactionDialog() {
-  newManualTransactionDialogVisible.value = true
-}
-
-async function openNewAdjustmentTransactionDialog() {
-  newAdjustmentTransactionDialogVisible.value = true
-}
-
-async function openNewRefundDialog() {
-  newRefundDialogVisible.value = true
-}
-
-const disabledSearch = computed(() => {
-  // return !(filterToSearch.value.criteria && filterToSearch.value.search)
-  return false
-})
 
 async function findCollectionStatusMenuOptions(status: string) {
   const collection: any = collectionStatusList.value.find(item => item?.name.toLowerCase() === status.toLowerCase())
