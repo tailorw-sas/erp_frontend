@@ -32,13 +32,16 @@ public class ManageInvoiceType implements Serializable {
     @Column(nullable = true)
     private Boolean deleted = false;
 
-
-
-
-
     private String name;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean invoice;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean credit;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean income;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -50,17 +53,18 @@ public class ManageInvoiceType implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
-    public ManageInvoiceType(ManageInvoiceTypeDto dto){
+    public ManageInvoiceType(ManageInvoiceTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
-
         this.name = dto.getName();
-
+        this.invoice = dto.isInvoice();
+        this.credit = dto.isCredit();
+        this.income = dto.isIncome();
     }
 
-    public ManageInvoiceTypeDto toAggregate(){
+    public ManageInvoiceTypeDto toAggregate() {
         return new ManageInvoiceTypeDto(
-                id, code, name
+                id, code, name, invoice, credit, income
         );
     }
 
