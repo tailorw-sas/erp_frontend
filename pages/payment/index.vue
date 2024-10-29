@@ -3471,11 +3471,13 @@ onMounted(async () => {
             </div>
             <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
               <strong class="mr-2 w-auto">Client:</strong>
-              <span class="w-auto text-white font-semibold">{{ objClientFormChangeAgency.code }} - {{ objClientFormChangeAgency.name }}</span>
+              <!-- <span class="w-auto text-white font-semibold">{{ objClientFormChangeAgency.code }} - {{ objClientFormChangeAgency.name }}</span> -->
+              <span class="w-auto text-white font-semibold">{{ objClientFormChangeAgency.name }}</span>
             </div>
             <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
               <strong class="mr-2 w-auto">Current Agency:</strong>
-              <span class="w-auto text-white font-semibold">{{ currentAgencyForChangeAgency.code }} - {{ currentAgencyForChangeAgency.name }}</span>
+              <!-- <span class="w-auto text-white font-semibold">{{ currentAgencyForChangeAgency.code }} - {{ currentAgencyForChangeAgency.name }}</span> -->
+              <span class="w-auto text-white font-semibold">{{ currentAgencyForChangeAgency.name }}</span>
             </div>
           </div>
 
