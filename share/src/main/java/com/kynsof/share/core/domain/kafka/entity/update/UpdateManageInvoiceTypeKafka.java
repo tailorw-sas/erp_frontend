@@ -18,4 +18,8 @@ public class UpdateManageInvoiceTypeKafka implements Serializable {
     private UUID id;
     @JsonProperty("name")
     private String name;
+    private boolean income;
+    private boolean credit;
+    private boolean invoice;
+
 }
