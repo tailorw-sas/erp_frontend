@@ -213,6 +213,12 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+function goToPaymentOfMerchantInNewTab(item: any) {
+  const id = item.hasOwnProperty('id') ? item.id : item
+  const url = `/vcc-management/bank-reconciliation/bank-payment-of-merchant?id=${encodeURIComponent(id)}`
+  window.open(url, '_blank')
+}
+
 async function getList() {
   const count = { amount: 0, details: 0 }
   subTotals.value = { ...count }
@@ -591,42 +597,6 @@ async function openNewRefundDialog() {
   newRefundDialogVisible.value = true
 }
 
-async function onCloseEditManualTransactionDialog(isCancel: boolean) {
-  editManualTransactionDialogVisible.value = false
-  if (!isCancel) {
-    getList()
-  }
-}
-
-async function onCloseNewManualTransactionDialog(isCancel: boolean) {
-  newManualTransactionDialogVisible.value = false
-  if (!isCancel) {
-    getList()
-  }
-}
-
-async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
-  newAdjustmentTransactionDialogVisible.value = false
-  if (!isCancel) {
-    getList()
-  }
-}
-
-async function onCloseNewRefundDialog(isCancel: boolean = true) {
-  newRefundDialogVisible.value = false
-  if (!isCancel) {
-    getList()
-  }
-}
-
-function onDoubleClick(item: any) {
-  if (item.manual) {
-    const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
-    selectedTransactionId.value = id
-    editManualTransactionDialogVisible.value = true
-  }
-}
-
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criteria && filterToSearch.value.search)
   return false
@@ -894,7 +864,7 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
         @on-row-right-click="onRowRightClick"
-        @on-row-double-click="onDoubleClick($event)"
+        @on-row-double-click="goToPaymentOfMerchantInNewTab($event)"
       >
         <template #expansion="{ data: item }">
           <!--          <pre>{{item}}</pre> -->
