@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -138,22 +139,38 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
 
     @Override
     public ManageInvoiceStatusDto findByEInvoiceStatus(EInvoiceStatus invoiceStatus) {
-        ManageInvoiceStatusDto invoiceStatusDto = null;
-        switch (invoiceStatus) {
-            case PROCECSED, PROCESSED -> {
-                invoiceStatusDto = this.repositoryQuery.findByProcessStatus().map(ManageInvoiceStatus::toAggregate).orElse(null);
-            }
-            case RECONCILED -> {
-                invoiceStatusDto = this.repositoryQuery.findByReconciledStatus().map(ManageInvoiceStatus::toAggregate).orElse(null);
-            }
-            case SENT -> {
-                invoiceStatusDto = this.repositoryQuery.findBySentStatus().map(ManageInvoiceStatus::toAggregate).orElse(null);
-            }
-            case CANCELED -> {
-                invoiceStatusDto = this.repositoryQuery.findByCanceledStatus().map(ManageInvoiceStatus::toAggregate).orElse(null);
-            }
-        }
-        return invoiceStatusDto;
+        return switch (invoiceStatus) {
+            case PROCECSED, PROCESSED ->
+                this.repositoryQuery.findByProcessStatus()
+                        .map(ManageInvoiceStatus::toAggregate)
+                        .orElseThrow(() -> new BusinessException(
+                                DomainErrorMessage.INVOICE_STATUS_NOT_FOUND,
+                                DomainErrorMessage.INVOICE_STATUS_NOT_FOUND.getReasonPhrase()
+                        ));
+            case RECONCILED ->
+                this.repositoryQuery.findByReconciledStatus()
+                        .map(ManageInvoiceStatus::toAggregate)
+                        .orElseThrow(() -> new BusinessException(
+                                DomainErrorMessage.INVOICE_STATUS_NOT_FOUND,
+                                DomainErrorMessage.INVOICE_STATUS_NOT_FOUND.getReasonPhrase()
+                        ));
+            case SENT ->
+                this.repositoryQuery.findBySentStatus()
+                        .map(ManageInvoiceStatus::toAggregate)
+                        .orElseThrow(() -> new BusinessException(
+                                DomainErrorMessage.INVOICE_STATUS_NOT_FOUND,
+                                DomainErrorMessage.INVOICE_STATUS_NOT_FOUND.getReasonPhrase()
+                        ));
+            case CANCELED ->
+                this.repositoryQuery.findByCanceledStatus()
+                        .map(ManageInvoiceStatus::toAggregate)
+                        .orElseThrow(() -> new BusinessException(
+                                DomainErrorMessage.INVOICE_STATUS_NOT_FOUND,
+                                DomainErrorMessage.INVOICE_STATUS_NOT_FOUND.getReasonPhrase()
+                        ));
+            //todo: no hay ningún caso de uso definido para este estado
+            case PENDING -> null;
+        };
     }
 
     @Override
