@@ -1045,9 +1045,6 @@ function searchAndFilter() {
         logicalOperation: 'AND'
       }]
     }
-
-
-
     if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
       const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
       const itemIds = filteredItems?.map((item: any) => item?.id)
@@ -1069,17 +1066,10 @@ function searchAndFilter() {
         logicalOperation: 'AND'
       }]
     }
-
-
-
     if (filterToSearch.value.status?.length > 0) {
-      const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
-      console.log(filteredItems, 'filteredItems');
-      
+      const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')      
       if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
-        console.log(itemIds, 'itemIds');
-        
+        const itemIds = filteredItems?.map((item: any) => item?.id)        
         payload.value.filter = [...payload.value.filter, {
           key: 'manageInvoiceStatus.id',
           operator: 'IN',
