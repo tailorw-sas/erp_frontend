@@ -750,7 +750,7 @@ async function getItemById(id: any) {
         item.value.invoiceType = response.invoiceType ? ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType)) : ENUM_INVOICE_TYPE[0]
         item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
 
-        item.value.originalAmount = response.invoiceAmount
+        item.value.originalAmount = response.originalAmount
         item.value.invoiceDate = new Date()
         await getInvoiceAgency(response.agency?.id)
       }
@@ -806,7 +806,7 @@ async function getBookingList(clearFilter: boolean = false) {
         loadingDelete: false,
         agency: iterator?.invoice?.agency,
         invoiceAmount: 0,
-        originalAmount: iterator?.invoiceAmount,
+        originalAmount: iterator?.invoice?.originalAmount,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
