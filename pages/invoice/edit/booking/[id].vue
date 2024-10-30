@@ -1571,11 +1571,19 @@ async function getBookingItemById(id: string) {
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
       if (response) {
+        if (response.hotelCreationDate) {
+          const date = dayjs(response.hotelCreationDate).format('YYYY-MM-DD')
+          item2.value.hotelCreationDate = new Date(`${date}T00:00:00`)
+        }
+
+        if (response.bookingDate) {
+          const date = dayjs(response.bookingDate).format('YYYY-MM-DD')
+          item2.value.bookingDate = new Date(`${date}T00:00:00`)
+        }
+
         idItem.value = response?.id
         item2.value.id = response.id
         item2.value.bookingId = response.bookingId
-        item2.value.hotelCreationDate = response.hotelCreationDate ? dayjs(response.hotelCreationDate).format('YYYY-MM-DD') : ''
-        item2.value.bookingDate = response.bookingDate ? dayjs(response.bookingDate).format('YYYY-MM-DD') : ''
         item2.value.contract = response.contract
         item2.value.dueAmount = response.dueAmount
         item2.value.checkIn = new Date(response.checkIn)
