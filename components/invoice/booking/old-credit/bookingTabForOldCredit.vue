@@ -537,10 +537,10 @@ const fieldsV2: Array<FieldDefinitionType> = [
   {
     field: 'hotelAmount',
     header: 'Hotel Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-    validation: z.string().refine((val: string) => {
+    validation: z.number().refine((val: number) => {
       if ((Number(val) < 0)) {
         return false
       }
@@ -782,11 +782,14 @@ async function openEditBooking(item: any) {
 }
 
 async function newOpenEditBooking(item: any) {
-  console.log('OPEN EDIT BOOKING', item);
-
-  if (item?.id) {
-    await navigateTo({ path: `booking/${item?.id}`, query: { type: props.invoiceType } }, { open: { target: '_blank' } })
+  if (props.isCreationDialog) {
+    openEditBooking(item)
+  } else {   
+    if (item?.id) {
+      await navigateTo({ path: `booking/${item?.id}`, query: { type: props.invoiceType } }, { open: { target: '_blank' } })
+    }
   }
+
   
   // props.openDialog()
   // if (item?.id) {
@@ -1157,7 +1160,7 @@ async function GetItemById(id: string) {
       item.value.rateChild = element.rateChild
       item.value.hotelInvoiceNumber = element.hotelInvoiceNumber
       item.value.folioNumber = element.folioNumber
-      item.value.hotelAmount = element.hotelAmount ? String(element?.hotelAmount) : '0'
+      item.value.hotelAmount = element.hotelAmount ? Number(element?.hotelAmount) : 0
       item.value.description = element.description
       item.value.invoice = element.invoice
       item.value.ratePlan = element.ratePlan?.name == '-' ? null : element.ratePlan
@@ -1193,7 +1196,7 @@ async function GetItemById(id: string) {
         item.value.rateChild = response.rateChild
         item.value.hotelInvoiceNumber = response.hotelInvoiceNumber
         item.value.folioNumber = response.folioNumber
-        item.value.hotelAmount = String(response.hotelAmount)
+        item.value.hotelAmount = Number(response.hotelAmount) || 0
         item.value.description = response.description
         item.value.invoice = response.invoice
         item.value.ratePlan = response.ratePlan?.name == '-' ? null : response.ratePlan

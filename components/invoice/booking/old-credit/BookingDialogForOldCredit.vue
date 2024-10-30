@@ -169,13 +169,13 @@ onMounted(() => {
             }"
           />
         </template>
-        <template #field-hotelAmount="{ onUpdate, item: data }">
+        <!-- <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
             show-clear
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
-        </template>
+        </template> -->
         <template #field-checkIn="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
@@ -314,13 +314,13 @@ onMounted(() => {
             @update:model-value="onUpdate('invoiceAmount', $event)"
           />
         </template>
-        <template #field-hotelAmount="{ onUpdate, item: data }">
+        <!-- <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
             show-clear :disabled="!!item?.id"
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
-        </template>
+        </template> -->
         <template #field-checkIn="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
