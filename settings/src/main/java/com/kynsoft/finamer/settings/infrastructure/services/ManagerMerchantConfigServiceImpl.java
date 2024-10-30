@@ -35,9 +35,14 @@ public class ManagerMerchantConfigServiceImpl implements IManageMerchantConfigSe
 
     @Override
     public UUID create(ManagerMerchantConfigDto dto) {
-        ManagerMerchantConfig data = new ManagerMerchantConfig(dto);
-        ManagerMerchantConfig merchantConfig = this.repositoryCommand.save(data);
-        return merchantConfig.getId();
+        if(repositoryQuery.findByManagerMerchant_Id(dto.getManagerMerchantDto().getId()).isEmpty())
+        {
+            ManagerMerchantConfig data = new ManagerMerchantConfig(dto);
+            ManagerMerchantConfig merchantConfig = this.repositoryCommand.save(data);
+            return merchantConfig.getId();
+        }
+        else
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ITEM_ALREADY_EXITS, new ErrorField("code", "The Merchant is already in use.")));
     }
 
     public void update(ManagerMerchantConfigDto dto) {
