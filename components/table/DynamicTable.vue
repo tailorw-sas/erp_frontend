@@ -612,6 +612,7 @@ defineExpose({ clearSelectedItems })
             <slot v-if="column.type === 'slot-text'" :name="`column-${column.field}`" :data="data" :column="column" />
             <slot v-if="column.type === 'slot-select'" :name="`column-${column.field}`" :data="data" :column="column" />
             <slot v-if="column.type === 'slot-icon'" :name="`column-${column.field}`" :data="data" :column="column" />
+            <slot v-if="column.type === 'slot-date-editable'" :name="`column-${column.field}`" :data="data" :column="column" />
             <span v-if="column.type === 'icon' && column.icon">
               <Button :icon="column.icon" class="p-button-rounded p-button-text w-2rem h-2rem" aria-label="Submit" />
             </span>
@@ -793,12 +794,12 @@ defineExpose({ clearSelectedItems })
           <template #filterclear="{ field }">
             <Button type="button" label="Clear" severity="secondary" @click="clearIndividualFilter(field)" />
           </template>
-          <template v-if="column.type === 'date-editable'" #editor="{ data, field }">
+          <template v-if="column.type === 'date-editable'" #editor="{ data: dataList, field }">
             <Calendar
-              v-model="data[field]" :manual-input="false"
+              v-model="dataList[field]" :manual-input="false"
               style="width: 100%" :view="column.props?.calendarMode || 'month'"
               date-format="yy-mm-dd"
-              @update:model-value="onCellEditComplete($event, data)"
+              @update:model-value="onCellEditComplete($event, dataList)"
             />
           </template>
           <template v-if="column.editable && column.type === 'text'" #editor="{ data, field }">
