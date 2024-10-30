@@ -1055,14 +1055,14 @@ async function getBookingList(clearFilter: boolean = false) {
         agency: { ...iterator?.invoice?.agency, name: `${iterator?.invoice?.agency?.code}-${iterator?.invoice?.agency?.name}` },
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`,
-        originalAmount: iterator?.invoiceAmount
+        originalAmount: iterator?.invoice?.originalAmount
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
       }
 
-      if (typeof +iterator.originalAmount === 'number') {
-        totalOriginalAmount.value += Number(iterator.originalAmount)
+      if (typeof +iterator?.invoice?.originalAmount === 'number') {
+        totalOriginalAmount.value += Number(iterator?.invoice?.originalAmount)
       }
       if (typeof +iterator.dueAmount === 'number') {
         totalDueAmount.value += Number(iterator.dueAmount)
