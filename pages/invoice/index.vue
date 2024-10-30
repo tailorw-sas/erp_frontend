@@ -1012,7 +1012,25 @@ async function getPrintList() {
   }
 }
 
-const openEditDialog = async (item: any, type: string) => await navigateTo({ path: `invoice/edit/${item}`, query: { type: type } }, { open: { target: '_blank' } })
+async function openEditDialog (item: any, type: string) {  
+  switch (type) {
+    case InvoiceType.INVOICE:
+      await navigateTo({ path: `invoice/edit/${item}` }, { open: { target: '_blank' } })
+      break
+    case InvoiceType.CREDIT:
+      await navigateTo({ path: `invoice/credit/edit//${item}` }, { open: { target: '_blank' } })
+      break
+    case InvoiceType.OLD_CREDIT:
+      await navigateTo({ path: `invoice/credit/edit/${item}` }, { open: { target: '_blank' } })
+      break
+    case InvoiceType.INCOME:
+      await navigateTo({ path: `invoice/income/edit/${item}` }, { open: { target: '_blank' } })
+      break
+    default:
+      await navigateTo({ path: `invoice/edit/${item}` }, { open: { target: '_blank' } })
+      break
+  }
+}
 
 async function resetListItems() {
   payload.value.page = 0
