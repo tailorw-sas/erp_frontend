@@ -43,12 +43,12 @@ const form = reactive(
     },
     newPassword: {
       value: '',
-      label: 'Nueva Contraseña',
+      label: 'New Password',
       type: 'password',
       isRequired: true,
       showRequiredLabel: false,
       showFeedBack: false,
-      placeholder: 'Escriba su contraseña',
+      placeholder: 'Enter new password',
       validationKeywords: [],
       errorMessage: [],
       haveError: false,
@@ -56,12 +56,12 @@ const form = reactive(
     },
     confirmPassword: {
       value: '',
-      label: 'Confirmar Contraseña',
+      label: 'Confirm Password',
       type: 'password',
       isRequired: true,
       showRequiredLabel: false,
       showFeedBack: false,
-      placeholder: 'Escriba su contraseña',
+      placeholder: 'Enter confirm password',
       validationKeywords: [],
       errorMessage: [],
       haveError: false,
@@ -85,11 +85,11 @@ async function resetPassword() {
     loading.value = true
 
     if (form.newPassword.value === '' || form.confirmPassword.value === '') {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Las contraseñas no pueden estar vacias', life: 3000 })
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Passwords cannot be empty', life: 3000 })
     }
 
     if (form.newPassword.value !== form.confirmPassword.value && form.confirmPassword.value !== '') {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Las contraseñas no coinciden', life: 3000 })
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Passwords do not match', life: 3000 })
     }
     const { token } = await executeRecaptcha('resetPassword')
     await repo.changePasswordLogged({ payload: { newPassword: form.newPassword.value, otp: form.otp.value }, tokenCaptcha: token })
@@ -136,7 +136,7 @@ onMounted(async () => {
       <div class="col-12">
         <div class="flex justify-content-center mt-5 mb-2">
           <span class="text-600 font-medium" style="text-align: center">
-            Escriba el código de seguridad enviado a su correo electrónico:
+            Enter the security code sent to your email:
           </span>
         </div>
         <div class="flex mb-3 justify-content-center">
@@ -170,8 +170,8 @@ onMounted(async () => {
       </div>
     </div>
     <template #footer>
-      <Button label="Cancel" icon="pi pi-times" severity="secondary" text @click="cancelResetPassword" />
-      <Button label="Change Password" icon="pi pi-check" text :disabled="loading" @click="resetPassword" />
+      <Button label="Accept" icon="pi pi-check" :disabled="loading" @click="resetPassword" />
+      <Button label="Cancel" icon="pi pi-times" severity="secondary" @click="cancelResetPassword" />
     </template>
   </Dialog>
 </template>
