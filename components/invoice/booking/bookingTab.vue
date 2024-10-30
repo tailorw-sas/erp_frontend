@@ -537,10 +537,10 @@ const fieldsV2: Array<FieldDefinitionType> = [
   {
     field: 'hotelAmount',
     header: 'Hotel Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-    validation: z.string().refine((val: string) => {
+    validation: z.number().refine((val: number) => {
       if ((Number(val) < 0)) {
         return false
       }
@@ -761,8 +761,6 @@ const ENUM_FILTER = [
 const finalColumns = ref<IColumn[]>(Columns)
 
 async function openEditBooking(item: any) {
-  console.log('OPEN EDIT BOOKING', item);
-
   // if (item?.id) {
   //   await navigateTo({ path: `booking/${item?.id}`, query: { type: props.invoiceType } }, { open: { target: '_blank' } })
   // }
@@ -783,10 +781,14 @@ async function openEditBooking(item: any) {
 
 async function newOpenEditBooking(item: any) {
   console.log('OPEN EDIT BOOKING', item);
-
-  if (item?.id) {
-    await navigateTo({ path: `booking/${item?.id}`, query: { type: props.invoiceType } }, { open: { target: '_blank' } })
+  if (props.isCreationDialog) {
+    openEditBooking(item)
+  } else {
+    if (item?.id) {
+      await navigateTo({ path: `booking/${item?.id}`, query: { type: props.invoiceType } }, { open: { target: '_blank' } })
+    }
   }
+
   
   // props.openDialog()
   // if (item?.id) {
@@ -946,10 +948,7 @@ async function openModalPaymentDetail(item: any) {
     try {
       await getPaymentDetailBybookingId(item?.id)
       openDialogPaymentDetailsApplied.value = true
-    } catch (error) {
-        
-    }
-    
+    } catch (error) {}
   }
 }
 
@@ -1309,7 +1308,7 @@ async function GetItemById(id: string) {
       item.value.rateChild = element.rateChild
       item.value.hotelInvoiceNumber = element.hotelInvoiceNumber
       item.value.folioNumber = element.folioNumber
-      item.value.hotelAmount = element.hotelAmount ? String(element?.hotelAmount) : '0'
+      item.value.hotelAmount = element.hotelAmount ? Number(element?.hotelAmount) : 0
       item.value.description = element.description
       item.value.invoice = element.invoice
       item.value.ratePlan = element.ratePlan?.name == '-' ? null : element.ratePlan
@@ -1856,18 +1855,18 @@ onMounted(() => {
       @on-table-cell-edit-complete="onCellEditComplete" 
       @on-row-double-click="($event) => {
 
-        // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
-        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-        //   return;
-        // }
+        if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
+        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
+          return;
+        }
 
-        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-        //   return;
-        // }
+        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+          return;
+        }
 
-        // if (!props.isDetailView) {
-        //   openEditBooking($event)
-        // }
+        if (!props.isDetailView) {
+          openEditBooking($event)
+        }
       }">
 
 

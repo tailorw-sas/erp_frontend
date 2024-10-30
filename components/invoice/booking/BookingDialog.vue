@@ -162,7 +162,6 @@ onMounted(() => {
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id && route.query.type !== InvoiceType.CREDIT"
             @update:model-value="($event) => {
-              console.log(invoiceObj)
               let value: any = $event
               if (route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.CREDIT){
                 value = toNegative(value)
@@ -174,13 +173,13 @@ onMounted(() => {
             }"
           />
         </template>
-        <template #field-hotelAmount="{ onUpdate, item: data }">
+        <!-- <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
             show-clear
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
-        </template>
+        </template> -->
         <template #field-checkIn="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
