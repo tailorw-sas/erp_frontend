@@ -892,9 +892,19 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
 
+  if (item.hotelCreationDate) {
+    const date = dayjs(item.hotelCreationDate).format('YYYY-MM-DD')
+    payload.hotelCreationDate = new Date(`${date}T00:00:00`)
+  }
+
+  if (item.bookingDate) {
+    const date = dayjs(item.bookingDate).format('YYYY-MM-DD')
+    payload.bookingDate = new Date(`${date}T00:00:00`)
+  }
+
   payload.id = route.params.id
-  payload.hotelCreationDate = item.hotelCreationDate ? dayjs(item.hotelCreationDate).toDate() : null
-  payload.bookingDate = item.bookingDate ? dayjs(item.bookingDate).toDate() : null
+  // payload.hotelCreationDate = item.hotelCreationDate ? dayjs(item.hotelCreationDate).toDate() : null
+  // payload.bookingDate = item.bookingDate ? dayjs(item.bookingDate).toDate() : null
   payload.hotelBookingNumber = item.hotelBookingNumber
   payload.fullName = `${item.firstName} ${item.lastName}`
   payload.firstName = item.firstName
@@ -917,9 +927,20 @@ async function updateItem(item: { [key: string]: any }) {
 async function updateItemByRef(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
+
+  if (item.hotelCreationDate) {
+    const date = dayjs(item.hotelCreationDate).format('YYYY-MM-DD')
+    payload.hotelCreationDate = new Date(`${date}T00:00:00`)
+  }
+
+  if (item.bookingDate) {
+    const date = dayjs(item.bookingDate).format('YYYY-MM-DD')
+    payload.bookingDate = new Date(`${date}T00:00:00`)
+  }
+
   payload.id = route.params.id
-  payload.hotelCreationDate = item.hotelCreationDate ? dayjs(item.hotelCreationDate).format('YYYY-MM-DD') : null
-  payload.bookingDate = item.bookingDate ? dayjs(item.bookingDate).format('YYYY-MM-DD') : null
+  // payload.hotelCreationDate = item.hotelCreationDate ? dayjs(item.hotelCreationDate).format('YYYY-MM-DD') : null
+  // payload.bookingDate = item.bookingDate ? dayjs(item.bookingDate).format('YYYY-MM-DD') : null
   payload.hotelBookingNumber = item.hotelBookingNumber
   payload.fullName = `${item.firstName} ${item.lastName}`
   payload.firstName = item.firstName
