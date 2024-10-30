@@ -173,7 +173,7 @@ async function changePass() {
       </div>
     </div>
 
-    <Toast position="top-center" :base-z-index="5" />
+    <Toast position="top-right" :base-z-index="5" />
   </div>
 </template>
 

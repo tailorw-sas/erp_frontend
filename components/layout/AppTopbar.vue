@@ -21,6 +21,7 @@ const bussinessInput = ref(null)
 const bussinessSelected = ref({})
 const currentBussiness = ref({})
 
+const confirm = useConfirm()
 const dialogConfirm = ref(false)
 const dialogConfirmSingOut = ref(false)
 const messageDialog = ref('')
@@ -51,8 +52,20 @@ async function openDialogConfirm() {
 }
 
 async function openDialogSignOut() {
-  messageDialog.value = `Are you sure you want to sign out?`
-  dialogConfirmSingOut.value = true
+  confirm.require({
+    message: 'Are you sure you want to sign out?',
+    header: 'Sign Out',
+    icon: 'pi pi-exclamation-triangle',
+    rejectClass: 'p-button-danger p-button-outlined',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Accept',
+    accept: () => {
+      onConfirmSignOut()
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected the action', life: 3000 })
+    }
+  })
 }
 
 async function handleChange() {
@@ -74,8 +87,22 @@ async function handleChange() {
 
 async function openDialogConfirmChangePassword() {
   messageDialog.value = `Are you sure you want to change your password?`
-  dialogConfirmChangePassword.value = true
-  dialogConfirm.value = false
+  // dialogConfirmChangePassword.value = true
+  // dialogConfirm.value = false
+  confirm.require({
+    message: messageDialog.value,
+    header: 'Change Password',
+    icon: 'pi pi-exclamation-triangle',
+    rejectClass: 'p-button-danger p-button-outlined',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Accept',
+    accept: () => {
+      openResetPassword()
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected the action', life: 3000 })
+    }
+  })
 }
 
 async function openResetPassword() {

@@ -116,17 +116,19 @@ catch (error) {
     <ConfirmPopup group="headless" />
     <ConfirmDialog>
       <template #container="{ message, acceptCallback, rejectCallback }">
-        <div class="flex flex-column align-items-center p-5 surface-overlay border-round">
-          <div class="border-circle bg-primary inline-flex justify-content-center align-items-center h-4rem w-4rem -mt-7">
-            <i class="pi pi-question text-5xl" />
+        <div class="flex flex-column align-items-center pb-4 surface-overlay" style="width: 30rem; border-radius: 0.8rem;">
+          <span class="custom-border-top p-2 block mb-2 w-full bg-primary" style="color: white; padding: 0.4rem; font-size: 1.2rem;">
+            <p class="ml-2">{{ message.header }}</p>
+          </span>
+          <div class="inline-flex justify-content-center align-items-center h-4rem w-4rem mt-2 mb-3">
+            <i class="pi pi-exclamation-triangle text-6xl" style="color: #F54108;" />
           </div>
-          <span class="font-bold text-2xl block mb-2 mt-4">{{ message.header }}</span>
           <p class="mb-0">
             {{ message.message }}
           </p>
           <div class="flex align-items-center gap-2 mt-4">
-            <Button :label="message.acceptLabel || 'Accept'" class="w-8rem" @click="acceptCallback" />
-            <Button :class="message.rejectClass" :label="message.rejectLabel || 'Cancel'" outlined class="w-8rem" @click="rejectCallback" />
+            <Button icon="pi pi-check" :label="message.acceptLabel || 'Accept'" class="w-8rem bg-primary" @click="acceptCallback" />
+            <Button icon="pi pi-times" :label="message.rejectLabel || 'Cancel'" class="w-8rem" severity="secondary" @click="rejectCallback" />
           </div>
         </div>
       </template>
@@ -142,5 +144,10 @@ catch (error) {
   background-repeat: no-repeat;
   background-position: center;
   // opacity: 0.2;
+}
+
+.custom-border-top {
+  border-top-left-radius: 0.8rem;
+  border-top-right-radius: 0.8rem;
 }
 </style>
