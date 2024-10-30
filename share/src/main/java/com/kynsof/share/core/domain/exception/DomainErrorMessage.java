@@ -353,7 +353,9 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_BANK_RECONCILIATION_AMOUNT_DETAILS(1131, Series.DOMAIN_ERROR, "The amount must be greater than or equal to the details amount."),
     MANAGE_TRANSACTION_TYPE_CHECK_INVOICE(1132, Series.DOMAIN_ERROR,"Another item already exists with invoice default."),
     MANAGE_TRANSACTION_TYPE_CHECK_INCOME(1133, Series.DOMAIN_ERROR,"Another item already exists with income default."),
-    MANAGE_TRANSACTION_TYPE_CHECK_CREDIT(1134, Series.DOMAIN_ERROR,"Another item already exists with credit default.");
+    MANAGE_TRANSACTION_TYPE_CHECK_CREDIT(1134, Series.DOMAIN_ERROR,"Another item already exists with credit default."),
+    INVOICE_TYPE_NOT_FOUND(1135, Series.DOMAIN_ERROR, "Invoice type not found or inactive."),
+    INVOICE_STATUS_NOT_FOUND(1136, Series.DOMAIN_ERROR, "Invoice status not found or inactive.");
 
     private static final DomainErrorMessage[] VALUES;
 
