@@ -1252,10 +1252,11 @@ async function getRoomRateList() {
       // Rate Adult= RateAmount/(Ctdad noches*Ctdad Adults) y Rate Children= RateAmount/(Ctdad noches*Ctdad Children)
       const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
       const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
+
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
-        checkIn: dayjs(iterator?.checkIn).format('YYYY-MM-DD'),
-        checkOut: dayjs(iterator?.checkOut).format('YYYY-MM-DD'),
+        checkIn: iterator?.checkIn ? new Date(`${dayjs(iterator?.checkIn).format('YYYY-MM-DD')}T00:00:00`) : null,
+        checkOut: iterator?.checkOut ? new Date(`${dayjs(iterator?.checkOut).format('YYYY-MM-DD')}T00:00:00`) : null,
         invoiceAmount: iterator?.invoiceAmount || 0,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         loadingEdit: false,
