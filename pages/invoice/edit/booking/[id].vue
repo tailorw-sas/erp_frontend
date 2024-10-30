@@ -19,7 +19,6 @@ import { CALENDAR_MODE } from '~/utils/Enums'
 const toast = useToast()
 const { data: userData } = useAuth()
 
-const forceSave = ref(false)
 const forceUpdate = ref(false)
 const active = ref(0)
 const saveButton = ref(null)
@@ -29,8 +28,6 @@ const route = useRoute()
 
 // @ts-expect-error
 const selectedInvoice = ref<string>(route.params.id.toString())
-const nightTypeRequired = ref(route.query?.nightTypeRequired as string)
-const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
 
 const loadingSaveAll = ref(false)
@@ -265,7 +262,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     field: 'nightType',
     header: 'Night Type',
     dataType: 'select',
-    class: `field col-12 md:col-3 ${nightTypeRequired.value ? 'required' : ''}`,
+    class: `field col-12 md:col-3`,
     headerClass: 'mb-1',
   },
 
@@ -891,8 +888,6 @@ async function createItem(item: { [key: string]: any }) {
   }
 }
 
-// const nightTypeRequired = ref(false)
-
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
@@ -1067,15 +1062,9 @@ async function getInvoiceHotel(id: string) {
 }
 async function getInvoiceAgency(id: string) {
   try {
-    console.log(id)
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
-
     if (agency) {
       invoiceAgency.value = { ...agency }
-
-      nightTypeRequired.value = agency?.client?.isNightType
-
-      console.log(agency)
     }
   }
   catch (err) {
@@ -1612,6 +1601,7 @@ async function getBookingItemById(id: string) {
         item2.value.roomCategory = response.roomCategory
       }
 
+      // Validacion para el campo hotelInvoiceNumber
       if (response?.invoice?.hotel?.virtual) {
         const decimalSchema = z.object(
           {
@@ -1650,6 +1640,7 @@ async function getBookingItemById(id: string) {
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'class', `${objField?.class}`)
         updateFieldProperty(fieldsV2, 'hotelInvoiceNumber', 'disabled', true)
       }
+
       requiresFlatRateCheck.value = response?.invoice?.hotel?.requiresFlatRate
       if (response?.invoice?.hotel?.requiresFlatRate) {
         const decimalSchema = z.object(
@@ -1687,6 +1678,18 @@ async function getBookingItemById(id: string) {
         updateFieldProperty(fieldsV2, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
         updateFieldProperty(fieldsV2, 'hotelAmount', 'class', `${objField?.class}`)
       }
+      if (response?.invoice?.agency?.client?.isNightType) {
+        const objField = fieldsV2.find(field => field.field === 'nightType')
+
+        updateFieldProperty(fieldsV2, 'nightType', 'validation', validateEntityStatus('night type'))
+        updateFieldProperty(fieldsV2, 'nightType', 'class', `${objField?.class} required`)
+      }
+      else {
+        const objField = fieldsV2.find(field => field.field === 'nightType')
+        updateFieldProperty(fieldsV2, 'nightType', 'validation', z.string().nullable())
+        updateFieldProperty(fieldsV2, 'nightType', 'class', `${objField?.class}`)
+      }
+
       formReload.value += 1
     }
     catch (error) {
