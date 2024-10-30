@@ -272,7 +272,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
-    validation: z.string().refine(val => +val >= 0, 'The Hotel Amount field cannot be negative').nullable()
+    validation: z.number().refine(val => +val >= 0, 'The Hotel Amount field cannot be negative').nullable()
 
   },
   {
@@ -385,7 +385,7 @@ const Fields: Array<Container> = [
         dataType: 'number',
         class: 'field col-12 md:col-6',
         headerClass: 'mb-1',
-        validation: z.string().refine(val => +val >= 0, 'The Hotel Amount field cannot be negative').nullable()
+        validation: z.number().refine(val => +val >= 0, 'The Hotel Amount field cannot be negative').nullable()
 
       },
       {
@@ -650,7 +650,7 @@ async function GetItemById(id: string) {
         item.value.children = element.children || 0
         item.value.rateAdult = element.rateAdult
         item.value.rateChild = element.rateChild
-        item.value.hotelAmount = element.hotelAmount ? element.hotelAmount : 0
+        item.value.hotelAmount = element.hotelAmount ? Number(element.hotelAmount) : 0
         item.value.remark = element.remark
         item.value.booking = element.booking
         currentBooking.value = element.booking
@@ -672,7 +672,7 @@ async function GetItemById(id: string) {
         item.value.children = response.children
         item.value.rateAdult = response.rateAdult
         item.value.rateChild = response.rateChild
-        item.value.hotelAmount = response.hotelAmount ? String(response.hotelAmount) : 0
+        item.value.hotelAmount = response.hotelAmount ? Number(response.hotelAmount) : 0
         item.value.remark = response.remark
         item.value.booking = response.booking?.id
         currentBooking.value = response.booking?.id

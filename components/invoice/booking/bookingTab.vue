@@ -323,7 +323,6 @@ const Fields = ref<Array<Container>>([
           required_error: 'The Check Out field is required',
           invalid_type_error: 'The Check Out field is required',
         })
-
       },
 
       {
@@ -332,7 +331,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'select',
         class: 'field col-12',
         headerClass: 'mb-1',
-
       },
       {
         field: 'roomNumber',
@@ -348,7 +346,6 @@ const Fields = ref<Array<Container>>([
         class: 'field col-12 ',
         headerClass: 'mb-1',
         validation: z.number().nonnegative('The Children field must not be negative').nullable()
-
       },
       {
         field: 'rateChild',
@@ -357,7 +354,6 @@ const Fields = ref<Array<Container>>([
         class: 'field col-12 ',
         headerClass: 'mb-1',
         validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
-
       },
 
       {
@@ -366,7 +362,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'text',
         class: 'field col-12 ',
         headerClass: 'mb-1',
-
       },
       {
         field: 'hotelAmount',
@@ -374,8 +369,7 @@ const Fields = ref<Array<Container>>([
         dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.string().min(1, 'The Hotel Amount field is required').refine(val => +val <= 0, 'The Hotel Amount field must be greater than 0').nullable()
-
+        validation: z.number().min(1, 'The Hotel Amount field is required').refine(val => +val <= 0, 'The Hotel Amount field must be greater than 0').nullable()
       },
 
       {
@@ -384,7 +378,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'select',
         class: `field col-12 ${nightTypeRequired.value ? 'required' : ''}`,
         headerClass: 'mb-1',
-
       },
 
     ],
@@ -674,7 +667,7 @@ const item = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -704,7 +697,7 @@ const itemTemp = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,

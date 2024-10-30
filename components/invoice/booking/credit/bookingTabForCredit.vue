@@ -1458,7 +1458,12 @@ function onRowRightClick(event: any) {
   bookingContextMenu.value.show(event.originalEvent)
 }
 
-function onCellEditComplete(val: any) {
+function onCellEditComplete(val: any) {  
+  if (toPositive(val.newData.invoiceAmount) === 0) {
+    toast.add({ severity: 'error', summary: 'Error', detail: "Booking invoice amount cannot be zero", life: 10000 })
+    return null;
+  }
+  
   val.newData.invoiceAmount = toNegative(val.newData.invoiceAmount)
 
   if (toPositive(val.newData.invoiceAmount) > toPositive(val.newData.originalAmount)) {
