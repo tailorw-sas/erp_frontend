@@ -915,14 +915,14 @@ watch(() => props.bookingObj, () => {
       @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
-          return;
-        }
+        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
+        //   return;
+        // }
 
-        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
-          return;
-        }
-        openEditDialog($event)
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
+        //   return;
+        // }
+        // openEditDialog($event)
 
       }"
     >

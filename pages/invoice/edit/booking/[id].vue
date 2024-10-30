@@ -1931,11 +1931,6 @@ onMounted(async () => {
                       @on-list-item="resetListItemsRoomRate"
                       @on-sort-field="onSortFieldRoomRate"
                       @on-table-cell-edit-complete="onCellEditRoomRate($event)"
-                      @on-row-double-click="($event) => {
-
-                        openEditDialog($event)
-
-                      }"
                     >
                       <template #datatable-footer>
                         <ColumnGroup type="footer" class="flex align-items-center">
@@ -1944,8 +1939,8 @@ onMounted(async () => {
                               footer="Totals:" :colspan="8"
                               footer-style="text-align:right; font-weight: 700"
                             />
-                            <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2))" footer-style="font-weight: 700" />
-                            <Column :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))" footer-style="font-weight: 700" />
+                            <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2)).toString()" footer-style="font-weight: 700" />
+                            <Column :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2)).toString()" footer-style="font-weight: 700" />
                           </Row>
                         </ColumnGroup>
                       </template>
