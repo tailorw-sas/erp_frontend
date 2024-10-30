@@ -181,7 +181,7 @@ const adjustmentPayload = ref<IQueryRequest>({
 
 const objApis = ref({
   invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
-  invoiceStatus: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
+  invoiceStatus: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' },
   agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
   hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
   bankAccount: { moduleApi: 'settings', uriApi: 'manage-bank-account' },
