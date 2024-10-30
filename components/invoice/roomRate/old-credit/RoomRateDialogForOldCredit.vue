@@ -213,7 +213,7 @@ onMounted(() => {
         </template>
 
         <template #field-hotelAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.hotelAmount"
             show-clear
             @update:model-value="($event) => {
@@ -223,7 +223,7 @@ onMounted(() => {
                 const decimalSchema = z.object(
                   {
                     hotelAmount: z
-                      .string()
+                      .number()
                       .refine(value => +value >= 0, 'The Hotel Amount field cannot be negative').nullable(),
                   },
                 )
@@ -233,7 +233,7 @@ onMounted(() => {
                 const decimalSchema = z.object(
                   {
                     hotelAmount: z
-                      .string()
+                      .number()
                       .refine(value => +value > 0, 'The Hotel Amount field must be greater than 0').nullable(),
                   },
                 )

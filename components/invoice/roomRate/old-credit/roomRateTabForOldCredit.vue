@@ -110,12 +110,8 @@ const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 const ListItems = ref<any[]>([])
 const formReload = ref(0)
-const active = ref(0)
-const forceSave = ref(false)
-const LoadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
-const loadingSearch = ref(false)
 const loadingDelete = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
@@ -266,7 +262,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
-    validation: z.string().refine(val => +val >= 0, 'The Hotel Amount field cannot be negative').nullable()
+    validation: z.number().refine(val => +val >= 0, 'The Hotel Amount field cannot be negative').nullable()
 
   },
   {
@@ -896,6 +892,7 @@ watch(() => props.bookingObj, () => {
 
 <template>
   <div>
+    <!-- @on-row-right-click="onRowRightClick" -->
     <DynamicTable
       :data="isCreationDialog ? listItems as any : ListItems"
       :columns="finalColumns"
@@ -904,7 +901,6 @@ watch(() => props.bookingObj, () => {
       @on-confirm-create="ClearForm"
       @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event"
-      @on-row-right-click="onRowRightClick"
       @on-change-filter="ParseDataTableFilter"
       @on-list-item="ResetListItems"
       @on-sort-field="OnSortField"
