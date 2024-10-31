@@ -505,7 +505,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 } case MANAGE_CREDIT_CARD_TYPE -> {
                     for (ManageCreditCardTypeDto dto : this.creditCardTypeService.findAllToReplicate()){
                         this.producerReplicateManageCreditCardTypeService.create(new ReplicateManageCreditCardTypeKafka(
-                                dto.getId(), dto.getCode(), dto.getName()
+                                dto.getId(), dto.getCode(), dto.getName(), dto.getDescription(), dto.getFirstDigit(), dto.getStatus().name()
                         ));
                     }
                 } case MANAGE_MERCHANT_CURRENCY -> {
