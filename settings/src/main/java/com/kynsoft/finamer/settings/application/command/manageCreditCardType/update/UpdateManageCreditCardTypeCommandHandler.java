@@ -46,7 +46,7 @@ public class UpdateManageCreditCardTypeCommandHandler implements ICommandHandler
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerUpdateManageCreditCardTypeService.update(new UpdateManageCreditCardTypeKafka(test.getId(), test.getName()));
+            this.producerUpdateManageCreditCardTypeService.update(new UpdateManageCreditCardTypeKafka(test.getId(), test.getName(), test.getDescription(), test.getFirstDigit(), test.getStatus().name()));
         }
 
     }
