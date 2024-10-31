@@ -45,7 +45,7 @@ public class CreateManageMerchantCommissionCommandHandler implements ICommandHan
         ManageCreditCardTypeDto manageCreditCardTypeDto = this.serviceCurrencyService.findById(command.getManageCreditCartType());
         ManagerMerchantDto managerMerchantDto = this.serviceMerchantService.findById(command.getManagerMerchant());
 
-        RulesChecker.checkRule(new ManageMerchantCommissionMustNotOverlapRule(this.service,command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getFromDate(), toDate));
+        RulesChecker.checkRule(new ManageMerchantCommissionMustNotOverlapRule(this.service,command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getFromDate(), toDate, command.getCommission(), command.getCalculationType()));
 
         ManageMerchantCommissionDto commissionDto = new ManageMerchantCommissionDto(
                 command.getId(),

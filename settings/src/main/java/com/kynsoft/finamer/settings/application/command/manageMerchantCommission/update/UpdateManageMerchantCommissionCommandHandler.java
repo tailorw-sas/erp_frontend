@@ -51,7 +51,9 @@ public class UpdateManageMerchantCommissionCommandHandler implements ICommandHan
 
         LocalDate toDate = command.getToDate() != null ? command.getToDate() : LocalDate.parse("4000-12-31");
         RulesChecker.checkRule(new ManageMerchantCommissionMustNotOverlapRule(this.service, command.getId(),
-                command.getManagerMerchant(), command.getManageCreditCartType(), command.getFromDate(), toDate));
+                command.getManagerMerchant(), command.getManageCreditCartType(), 
+                command.getFromDate(), toDate, command.getCommission(), command.getCalculationType()
+        ));
         ConsumerUpdate update = new ConsumerUpdate();
 
         updateFields(existingCommission, command, update);
