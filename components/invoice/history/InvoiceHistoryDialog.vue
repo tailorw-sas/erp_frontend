@@ -307,7 +307,7 @@ onMounted(() => {
 
 <template>
   <Dialog v-model:visible="dialogVisible" modal
-    :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status history' : header"
+    :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status History' : header"
     class="p-4 h-fit w-fit" content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
     style="width: 800px;" @hide="closeDialog">
     <div class=" h-fit overflow-hidden mt-4">

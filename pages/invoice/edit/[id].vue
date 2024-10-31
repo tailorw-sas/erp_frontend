@@ -1154,6 +1154,7 @@ onMounted(async () => {
                   class="w-3rem mx-1" 
                   icon="pi pi-print" 
                   :loading="loadingSaveAll"
+                  disabled
                   @click="() => {
                     exportAttachmentsDialogOpen = true
                   }"
@@ -1162,11 +1163,12 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
                   <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"  />
+                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" disabled  />
                   </IfCan>
                   <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-SHOW-HISTORY']"> 
+                    <!-- :disabled="!item?.hasAttachments" -->
                     <Button v-tooltip.top="'Show History'" class="w-3rem mx-1" :loading="loadingSaveAll"
-                      @click="handleAttachmentHistoryDialogOpen()" :disabled="!item?.hasAttachments">
+                      @click="handleAttachmentHistoryDialogOpen()" disabled>
                       <template #icon>
                         <span class="flex align-items-center justify-content-center p-0">
                           <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px"
@@ -1180,8 +1182,16 @@ onMounted(async () => {
                   </IfCan>
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-CREATE']">
-                  <Button v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                    :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME || invoiceStatus !== InvoiceStatus.PROCECSED" />
+                  <Button 
+                    v-if="active === 0" 
+                    v-tooltip.top="'Add Booking'" 
+                    class="w-3rem mx-1" 
+                    icon="pi pi-plus"
+                    :loading="loadingSaveAll" 
+                    @click="handleDialogOpen()" 
+                    disabled
+                  />
+                  <!-- :disabled="item?.invoiceType?.id === InvoiceType.INCOME || invoiceStatus !== InvoiceStatus.PROCECSED"  -->
                 </IfCan>
                 
                 <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === InvoiceType.INCOME" class="w-3rem ml-1"
