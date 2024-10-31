@@ -374,7 +374,7 @@ async function getItemById(id: string) {
         item.value.navigate = response.navigate.map((nav: any) => {
           let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
           if (!enumStatus) {
-            enumStatus = { id: nav.id, name: nav.name, status: nav.status }
+            enumStatus = { id: nav.id, name: `${nav.code} - ${nav.name}`, status: nav.status }
             navigateListItems.value.push(enumStatus)
           }
           return enumStatus

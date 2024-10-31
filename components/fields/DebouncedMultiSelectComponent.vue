@@ -46,30 +46,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['load', 'update:modelValue', 'change'])
-/* const computedSuggestions = computed(() => {
-  // Si `suggestions` no contiene todos los elementos de `model`, añádelos temporalmente
-  console.log(props.suggestions)
-  console.log(localModelValue.value)
-  return [...new Set([...props.suggestions, ...props.model])]
-}) */
-
-const computedSuggestions = computed(() => {
-  // Copia las sugerencias para no modificar el arreglo original
-  const updatedSuggestions = [...props.suggestions]
-
-  // Elimina cualquier elemento que ya esté seleccionado
-  props.model.forEach((selectedItem: any) => {
-    const index = updatedSuggestions.findIndex(
-      (item: any) => item[props.itemValue] === selectedItem[props.itemValue]
-    )
-    if (index !== -1) {
-      updatedSuggestions.splice(index, 1) // Elimina el duplicado
-    }
-  })
-
-  // Agrega los elementos seleccionados al final de la lista de sugerencias
-  return [...updatedSuggestions, ...props.model]
-})
+const allSuggestions = ref<any[]>(props.suggestions)
 
 const debouncedComplete = useDebounceFn((event: any) => {
   emit('load', event.value)
@@ -81,16 +58,27 @@ function removeItem(item: any) {
   const updatedModel = props.model.filter(
     (selectedItem: any) => selectedItem[props.itemValue] !== item[props.itemValue]
   )
-  console.log(updatedModel)
   emit('change', updatedModel)
 }
+
+watch(() => props.suggestions, (newSuggestions) => {
+  const selectedItems = [...props.model]
+
+  // Filtra los elementos de selectedItems que no están en newSuggestions
+  const filteredSelectedItems = selectedItems.filter(
+    (item: any) => !newSuggestions.some((suggestion: any) => suggestion[props.itemValue] === item[props.itemValue])
+  )
+
+  // Agrega los elementos seleccionados al final de la lista de sugerencias
+  allSuggestions.value = [...newSuggestions, ...filteredSelectedItems]
+})
 </script>
 
 <template>
   <MultiSelect
     :id="props.id"
     :model-value="props.model"
-    :options="computedSuggestions"
+    :options="allSuggestions"
     :option-label="props.field"
     :placeholder="props.placeholder"
     :disabled="props.disabled"
@@ -105,15 +93,14 @@ function removeItem(item: any) {
     }"
   >
     <template #value>
-
       <slot name="custom-value" :value="props.model" class="custom-chip">
         <span v-for="(item, index) in props.model.slice(0, props.maxSelectedLabels)" :key="index" class="custom-chip">
-          <span class="chip-label">{{ item[props.field] }}</span>
-          <button @click.stop="removeItem(item)" class="remove-button" aria-label="Remove"><i class="pi pi-times-circle" /></button>
+          <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item[props.field] }}</span>
+          <button class="remove-button" aria-label="Remove" @click.stop="removeItem(item)"><i class="pi pi-times-circle" /></button>
         </span>
         <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
         <span v-if="props.model.length > props.maxSelectedLabels" class="custom-chip">
-          <span >{{ `+${props.model.length - props.maxSelectedLabels}` }}</span>
+          <span>{{ `+${props.model.length - props.maxSelectedLabels}` }}</span>
         </span>
       </slot>
     </template>
