@@ -1113,7 +1113,7 @@ onMounted(async () => {
         </template>
         <template #form-footer="props">
           <div style="width: 100%; height: 100%;">
-            <InvoiceTabView 
+            <InvoiceTabView
               :requires-flat-rate="requiresFlatRate" 
               :get-invoice-hotel="getInvoiceHotel"  
               :get-invoice-agency="getInvoiceAgency" 
