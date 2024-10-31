@@ -71,6 +71,7 @@ const itemSend = ref<GenericObject>({
 
 const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
 const loadingDelete = ref(false)
+const statusListForFilter = ref<any[]>([])
 const filterToSearch = ref<IData>({
   criteria: ENUM_INVOICE_CRITERIA[3],
   search: '',
@@ -1159,7 +1160,7 @@ function searchAndFilter() {
   getList()
 }
 
-function clearFilterToSearch() {
+async function clearFilterToSearch() {
   payload.value = {
     filter: [],
     query: '',
@@ -1174,13 +1175,12 @@ function clearFilterToSearch() {
     client: [allDefaultItem],
     agency: [allDefaultItem],
     hotel: [allDefaultItem],
-    status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
     invoiceType: [allDefaultItem],
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
-
     includeInvoicePaid: true
   }
+  await getStatusListTemp()
   getList()
 }
 async function getItemById(data: { id: string, type: string, status: any }) {
@@ -1498,23 +1498,44 @@ async function getStatusListTemp() {
     payloadForStatus.value.filter = filter
     const response = await GenericService.search(objApis.value.status.moduleApi, objApis.value.status.uriApi, payloadForStatus.value)
     if (response) {
+      
       filterToSearch.value.status = [
-        // { id: 'All', name: 'All', code: 'All' }, 
-        ...response.data.map((item: any) => ({ id: item.id, name: item.name, code: item.code })),
-        
+        ...response.data.map((item: any) => (
+          { 
+            id: item.id, 
+            name: item.name, 
+            code: item.code,
+            description: item.description,
+            status: item.status 
+          }
+        )
+        ),
       ]
       statusList.value = [
-        // { id: 'All', name: 'All', code: 'All' }, 
-        ...response.data.map((item: any) => ({ id: item.id, name: item.name, code: item.code })),
-        
+        ...response.data.map((item: any) => (
+          { 
+            id: item.id, 
+            name: item.name, 
+            code: item.code,
+            description: item.description,
+            status: item.status 
+          }
+        )),
       ]
     }    
-    
   }
   catch (error) {
     console.error('Error loading status list:', error)
   }
 }
+
+// {
+//   "id": "a2befe8a-d335-4be0-94be-a8ed38a6d4f2",
+//   "name": "Sent",
+//   "status": "ACTIVE",
+//   "code": "SENT",
+//   "description": ""
+// }
 
 // async function getStatusList(query = '') {
 //   try {
@@ -1701,9 +1722,7 @@ function onSortField(event: any) {
   }
 }
 
-function getStatusBadgeBackgroundColor(code: string) {
-  console.log(code);
-  
+function getStatusBadgeBackgroundColor(code: string) {  
   switch (code) {
     case 'PROCESSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
