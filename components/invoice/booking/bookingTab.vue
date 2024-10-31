@@ -1298,7 +1298,7 @@ async function GetItemById(id: string) {
       item.value.firstName = element.firstName
       item.value.lastName = element.lastName
 
-      item.value.invoiceAmount = element.invoiceAmount ? String(element.invoiceAmount) : '0'
+      item.value.invoiceAmount = element.invoiceAmount ? Number(element.invoiceAmount) : '0'
       item.value.roomNumber = element.roomNumber
       item.value.couponNumber = element.couponNumber
       item.value.adults = element.adults
@@ -1334,7 +1334,7 @@ async function GetItemById(id: string) {
         item.value.firstName = response.firstName
         item.value.lastName = response.lastName
 
-        item.value.invoiceAmount = response.invoiceAmount ? String(response?.invoiceAmount) : '0'
+        item.value.invoiceAmount = response.invoiceAmount ? Number(response?.invoiceAmount) : 0
         item.value.roomNumber = response.roomNumber
         item.value.couponNumber = response.couponNumber
         item.value.adults = response.adults
@@ -1343,7 +1343,7 @@ async function GetItemById(id: string) {
         item.value.rateChild = response.rateChild
         item.value.hotelInvoiceNumber = response.hotelInvoiceNumber
         item.value.folioNumber = response.folioNumber
-        item.value.hotelAmount = String(response.hotelAmount)
+        item.value.hotelAmount = Number(response.hotelAmount)
         item.value.description = response.description
         item.value.invoice = response.invoice
         item.value.ratePlan = response.ratePlan?.name == '-' ? null : response.ratePlan
