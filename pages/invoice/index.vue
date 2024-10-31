@@ -1019,7 +1019,7 @@ async function openEditDialog (item: any, type: string) {
       await navigateTo({ path: `invoice/edit/${item}` }, { open: { target: '_blank' } })
       break
     case InvoiceType.CREDIT:
-      await navigateTo({ path: `invoice/credit/edit//${item}` }, { open: { target: '_blank' } })
+      await navigateTo({ path: `invoice/credit/edit/${item}` }, { open: { target: '_blank' } })
       break
     case InvoiceType.OLD_CREDIT:
       await navigateTo({ path: `invoice/credit/edit/${item}` }, { open: { target: '_blank' } })
