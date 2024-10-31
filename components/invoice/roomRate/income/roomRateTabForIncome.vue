@@ -5,7 +5,8 @@ import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import dayjs from 'dayjs'
-import RoomRateDialog from './RoomRateDialog.vue'
+import RoomRateDialog from './RoomRateDialogForIncome.vue'
+import RoomRateDialogForIncome from './RoomRateDialogForIncome.vue'
 import getUrlByImage from '~/composables/files'
 import { ModulesService } from '~/services/modules-services'
 import { GenericService } from '~/services/generic-services'
@@ -164,14 +165,16 @@ const computedShowMenuItemEditRoomRate = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ROOM-RATE-EDIT'])))
 })
 
-const menuModel = props.isCreationDialog
-  ? ref([
-    { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
-  ])
-  : ref([
-    { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
-    { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
-  ])
+const menuModel = ref([
+  { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
+  // { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
+])
+// ? ref([
+// ])
+// : ref([
+//   { label: 'Add Adjustment', command: () => props.openAdjustmentDialog(selectedRoomRate.value), disabled: computedShowMenuItemAddAdjustment },
+//   { label: 'Edit Room Rate', command: () => openEditDialog(selectedRoomRate.value), disabled: computedShowMenuItemEditRoomRate },
+// ])
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -523,9 +526,9 @@ function ClearForm() {
 }
 
 function onRowRightClick(event: any) {
-  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-    return
-  }
+  // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED && route.query.type !== InvoiceType.INCOME) {
+  //   return
+  // }
   selectedRoomRate.value = event.data
   roomRateContextMenu.value.show(event.originalEvent)
 }
@@ -948,7 +951,7 @@ watch(() => props.bookingObj, () => {
   <ContextMenu v-if="!isDetailView" ref="roomRateContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen">
-    <RoomRateDialog
+    <RoomRateDialogForIncome
       :fields="fields" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
       :loading-save-all="loadingSaveAll" :clear-form="ClearForm" :require-confirmation-to-save="saveRoomRate"
       :require-confirmation-to-delete="requireConfirmationToDeleteRoomRate"

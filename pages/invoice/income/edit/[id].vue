@@ -1113,7 +1113,7 @@ onMounted(async () => {
         </template>
         <template #form-footer="props">
           <div style="width: 100%; height: 100%;">
-            <InvoiceTabView 
+            <InvoiceTabViewForIncome 
               :requires-flat-rate="requiresFlatRate" 
               :get-invoice-hotel="getInvoiceHotel"  
               :get-invoice-agency="getInvoiceAgency" 
@@ -1184,8 +1184,8 @@ onMounted(async () => {
                     :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME || invoiceStatus !== InvoiceStatus.PROCECSED" />
                 </IfCan>
                 
-                <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === InvoiceType.INCOME" class="w-3rem ml-1"
-                  disabled icon="pi pi-file-import"  />
+                <!-- <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === InvoiceType.INCOME" class="w-3rem ml-1"
+                  disabled icon="pi pi-file-import"  /> -->
 
                 <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll"
                   @click="update" />
