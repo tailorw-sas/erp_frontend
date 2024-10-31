@@ -154,8 +154,8 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
     }
 
 
-    public boolean hasOverlappingRecords(UUID id, UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate) {
-        Long count = repositoryQuery.countOverlappingRecords(id, managerMerchant, manageCreditCartType, fromDate, toDate);
+    public boolean hasOverlappingRecords(UUID id, UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate, Double commission, String calculationType) {
+        Long count = repositoryQuery.countOverlappingRecords(id, managerMerchant, manageCreditCartType, commission, calculationType, fromDate, toDate);
         return count > 0;
     }
 }

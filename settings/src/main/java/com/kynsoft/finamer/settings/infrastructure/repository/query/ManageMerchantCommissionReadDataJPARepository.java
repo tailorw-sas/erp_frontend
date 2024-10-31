@@ -22,6 +22,35 @@ public interface ManageMerchantCommissionReadDataJPARepository extends JpaReposi
     List<ManageMerchantCommission> findAllByManagerMerchantAndManageCreditCartType(@Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType);
 
 
-    @Query("SELECT COUNT(m) FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType AND m.fromDate <= :toDate AND m.toDate >= :fromDate AND m.id <> :id")
-    Long countOverlappingRecords(@Param("id")UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType, @Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+    @Query("SELECT COUNT(m) FROM ManageMerchantCommission m "
+            + "WHERE m.managerMerchant.id = :managerMerchant "
+            + "AND m.manageCreditCartType.id = :manageCreditCartType "
+            + "AND m.commission = :commission "
+            + "AND m.calculationType = :calculationType "
+            + "AND m.fromDate <= :toDate "
+            + "AND m.toDate >= :fromDate "
+            + "AND m.id <> :id")
+    Long countOverlappingRecords(
+            @Param("id")UUID id, 
+            @Param("managerMerchant") UUID managerMerchant, 
+            @Param("manageCreditCartType") UUID manageCreditCartType, 
+            @Param("commission") Double commission, 
+            @Param("calculationType") String calculationType, 
+            @Param("fromDate") LocalDate fromDate, 
+            @Param("toDate") LocalDate toDate
+    );
+//
+//    @Query("SELECT COUNT(m) FROM ManageMerchantCommission m "
+//            + "WHERE m.managerMerchant.id = :managerMerchant "
+//            + "AND m.manageCreditCartType.id = :manageCreditCartType "
+//            + "AND m.fromDate <= :toDate "
+//            + "AND m.toDate >= :fromDate "
+//            + "AND m.id <> :id")
+//    Long countOverlappingRecords(
+//            @Param("id")UUID id, 
+//            @Param("managerMerchant") UUID managerMerchant, 
+//            @Param("manageCreditCartType") UUID manageCreditCartType, 
+//            @Param("fromDate") LocalDate fromDate, 
+//            @Param("toDate") LocalDate toDate
+//    );
 }
