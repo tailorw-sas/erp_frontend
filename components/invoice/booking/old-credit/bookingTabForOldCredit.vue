@@ -529,7 +529,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.string().min(0, 'The Invoice Amount field is required')
+    validation: z.number().max(0, 'The Invoice Amount field is required')
     .refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) 
   },
 
@@ -665,8 +665,8 @@ const item = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-  invoiceAmount: '0',
-  roomNumber: '0',
+  invoiceAmount: 0,
+  roomNumber: 0,
   couponNumber: '',
   adults: 0,
   children: 0,
@@ -674,7 +674,7 @@ const item = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -695,8 +695,8 @@ const itemTemp = ref<GenericObject>({
   firstName: '',
   lastName: '',
 
-  invoiceAmount: '0',
-  roomNumber: '0',
+  invoiceAmount: 0,
+  roomNumber: 0,
   couponNumber: '',
   adults: 0,
   children: 0,
@@ -704,7 +704,7 @@ const itemTemp = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -1151,7 +1151,7 @@ async function GetItemById(id: string) {
       item.value.firstName = element.firstName
       item.value.lastName = element.lastName
 
-      item.value.invoiceAmount = element.invoiceAmount ? String(element.invoiceAmount) : '0'
+      item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : '0'
       item.value.roomNumber = element.roomNumber
       item.value.couponNumber = element.couponNumber
       item.value.adults = element.adults
@@ -1187,7 +1187,7 @@ async function GetItemById(id: string) {
         item.value.firstName = response.firstName
         item.value.lastName = response.lastName
 
-        item.value.invoiceAmount = response.invoiceAmount ? String(response?.invoiceAmount) : '0'
+        item.value.invoiceAmount = response.invoiceAmount ? response?.invoiceAmount : '0'
         item.value.roomNumber = response.roomNumber
         item.value.couponNumber = response.couponNumber
         item.value.adults = response.adults

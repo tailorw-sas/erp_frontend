@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
+import InputNumber from 'primevue/inputnumber'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 
 const props = defineProps({
@@ -158,14 +159,13 @@ onMounted(() => {
           />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id && route.query.type !== InvoiceType.CREDIT"
             @update:model-value="($event) => {
-              console.log(invoiceObj)
               let value: any = $event
               value = toNegative(value)
-              onUpdate('invoiceAmount', String(value))
+              onUpdate('invoiceAmount', value)
             }"
           />
         </template>
@@ -308,7 +308,7 @@ onMounted(() => {
           />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id"
             @update:model-value="onUpdate('invoiceAmount', $event)"
