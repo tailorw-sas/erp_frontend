@@ -935,6 +935,7 @@ async function getList() {
   }
   finally {
     options.value.loading = false
+    isFirstTimeInOnMounted.value = false
   }
 }
 
@@ -1038,6 +1039,8 @@ async function resetListItems() {
   getList()
 }
 
+const isFirstTimeInOnMounted = ref(false)
+
 function searchAndFilter() {
   payload.value = {
     filter: [],
@@ -1049,20 +1052,22 @@ function searchAndFilter() {
   }
 
   if (!filterToSearch.value.search) {
-    if (filterToSearch.value.includeInvoicePaid) {
-      payload.value.filter = [...payload.value.filter, {
-        key: 'dueAmount',
-        operator: 'EQUALS',
-        value: 0,
-        logicalOperation: 'AND'
-      }]
-    } else {
-      payload.value.filter = [...payload.value.filter, {
-        key: 'dueAmount',
-        operator: 'GREATER_THAN_OR_EQUAL_TO',
-        value: 1,
-        logicalOperation: 'AND'
-      }]
+    if (isFirstTimeInOnMounted.value === false) {
+      if (filterToSearch.value.includeInvoicePaid) {
+        payload.value.filter = [...payload.value.filter, {
+          key: 'dueAmount',
+          operator: 'EQUALS',
+          value: 0,
+          logicalOperation: 'AND'
+        }]
+      } else {
+        payload.value.filter = [...payload.value.filter, {
+          key: 'dueAmount',
+          operator: 'GREATER_THAN_OR_EQUAL_TO',
+          value: 1,
+          logicalOperation: 'AND'
+        }]
+      }
     }
     if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
       const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
@@ -1935,10 +1940,10 @@ watch(filterToSearch, () => {
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(async () => {
+  isFirstTimeInOnMounted.value = true
   filterToSearch.value.criterial = ENUM_FILTER[0]
   await getStatusListTemp()  
   searchAndFilter()
-  
 })
 
 const legend = ref(
