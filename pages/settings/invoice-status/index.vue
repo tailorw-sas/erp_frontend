@@ -293,7 +293,7 @@ async function getForSelectNavigateList(query: string = '') {
         }
       ],
       query: '',
-      pageSize: 2,
+      pageSize: 50,
       page: 0,
       sortBy: 'code',
       sortType: ENUM_SHORT_TYPE.DESC
