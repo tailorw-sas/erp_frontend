@@ -30,7 +30,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-reconcile-transaction-status',
 })
 
@@ -124,7 +124,7 @@ const ENUM_FILTER = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Reconcile Transaction Status',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-reconcile-transaction-status',
   loading: false,
   actionsAsMenu: false,
