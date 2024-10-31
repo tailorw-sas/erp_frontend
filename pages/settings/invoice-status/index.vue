@@ -23,6 +23,7 @@ const formReload = ref(0)
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
+const loadingData = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const filterToSearch = ref<IData>({
@@ -267,21 +268,21 @@ async function getList() {
   }
 }
 
-async function getForSelectNavigateList(id: string = '') {
+async function getForSelectNavigateList(query: string = '') {
   try {
-    navigateListItems.value = []
+    loadingData.value = true
     const payload = {
       filter: [
         {
           key: 'name',
           operator: 'LIKE',
-          value: id,
+          value: query,
           logicalOperation: 'OR'
         },
         {
           key: 'code',
           operator: 'LIKE',
-          value: id,
+          value: query,
           logicalOperation: 'OR'
         },
         {
@@ -292,16 +293,22 @@ async function getForSelectNavigateList(id: string = '') {
         }
       ],
       query: '',
-      pageSize: 200,
+      pageSize: 50,
       page: 0,
       sortBy: 'code',
       sortType: ENUM_SHORT_TYPE.DESC
     }
+    if (idItem.value) {
+      payload.filter = [...payload.filter, {
+        key: 'id',
+        operator: 'NOT_EQUALS',
+        value: idItem.value,
+        logicalOperation: 'AND'
+      }]
+    }
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload)
     const { data: dataList } = response
-
     navigateListItems.value = dataList
-      .filter((item: any) => item.id !== id)
       .map((item: any) => ({
         id: item.id,
         name: `${item.code} - ${item.name}`,
@@ -310,6 +317,9 @@ async function getForSelectNavigateList(id: string = '') {
   }
   catch (error) {
     console.error(error)
+  }
+  finally {
+    loadingData.value = false
   }
 }
 
@@ -635,7 +645,7 @@ onMounted(() => {
             @submit="requireConfirmationToSave($event)"
           >
             <template #field-navigate="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <!--              <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
@@ -645,6 +655,21 @@ onMounted(() => {
                 :suggestions="[...navigateListItems]"
                 @change="($event) => {
                   onUpdate('navigate', $event)
+                }"
+                @load="($event) => getForSelectNavigateList($event)"
+              /> -->
+              <DebouncedMultiSelectComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.navigate"
+                :suggestions="[...navigateListItems]"
+                :loading="loadingData"
+                :max-selected-labels="2"
+                @change="($event) => {
+                  onUpdate('navigate', $event)
+                  data.navigate = $event
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
               />
