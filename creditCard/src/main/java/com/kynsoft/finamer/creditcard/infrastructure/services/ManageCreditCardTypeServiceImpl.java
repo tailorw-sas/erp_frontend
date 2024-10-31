@@ -85,11 +85,7 @@ public class ManageCreditCardTypeServiceImpl implements IManageCreditCardTypeSer
 
     @Override
     public ManageCreditCardTypeDto findByFirstDigit(Integer digit) {
-        Optional<ManageCreditCardType> manageCreditCardType = this.repositoryQuery.findByFirstDigit(digit);
-        if (manageCreditCardType.isPresent()) {
-            return manageCreditCardType.get().toAggregate();
-        }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Credit Card Type not found.")));
+        return this.repositoryQuery.findByFirstDigit(digit).map(ManageCreditCardType::toAggregate).orElse(null);
     }
 
 }
