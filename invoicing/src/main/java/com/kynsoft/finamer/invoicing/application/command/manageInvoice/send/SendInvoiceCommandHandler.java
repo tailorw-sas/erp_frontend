@@ -155,14 +155,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             for (GeneratedInvoice generatedInvoice : generatedPDFs) {
                 // Aquí puedes guardar o enviar el PDF, por ejemplo, a un FTP, por correo, o guardarlo en disco
                 InputStream pdfStream = new ByteArrayInputStream(generatedInvoice.getPdfStream().toByteArray());
-                LocalDate currentDate = LocalDate.now();
-
-                // Crear un formateador para "MM" (mes con dos dígitos) y "dd" (día con dos dígitos)
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd");
-
-                // Aplicar el formato a la fecha actual
-                String monthAndDayFormatted = currentDate.format(formatter);
-
+                //LocalDate currentDate = LocalDate.now();
+                LocalDateTime currentDate =  generateDate(generatedInvoice.getInvoices().get(0).getHotel().getId());
                 // Desglosar los valores en separado si se necesita
                 String monthFormatted = currentDate.format(DateTimeFormatter.ofPattern("MM"));
                 String dayFormatted = currentDate.format(DateTimeFormatter.ofPattern("dd"));
