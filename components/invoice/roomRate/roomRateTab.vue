@@ -901,6 +901,7 @@ watch(() => props.bookingObj, () => {
 
 <template>
   <div>
+    <!-- @on-row-right-click="onRowRightClick" -->
     <DynamicTable
       :data="isCreationDialog ? listItems as any : ListItems"
       :columns="finalColumns"
@@ -909,7 +910,6 @@ watch(() => props.bookingObj, () => {
       @on-confirm-create="ClearForm"
       @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event"
-      @on-row-right-click="onRowRightClick"
       @on-change-filter="ParseDataTableFilter"
       @on-list-item="ResetListItems"
       @on-sort-field="OnSortField"
