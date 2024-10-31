@@ -35,12 +35,11 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private final IManageHotelService manageHotelService;
 
     private final IManageInvoiceService invoiceService;
-
-    private final IManageBookingService bookingService;
-
     private final IManageRatePlanService ratePlanService;
 
     private final IManageRoomTypeService roomTypeService;
+
+    private final IManageNightTypeService nightTypeService;
 
     private final BookingImportCacheRedisRepository repository;
 
@@ -48,34 +47,29 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
-    private final IParameterizationService parameterizationService;
-
     private final IManageInvoiceStatusService manageInvoiceStatusService;
-    private final ServiceLocator<IMediator> serviceLocator;
     private final IManageInvoiceTypeService iManageInvoiceTypeService;
 
     public BookingImportHelperServiceImpl(IManageAgencyService agencyService,
                                           IManageHotelService manageHotelService,
-                                          IManageInvoiceService invoiceService, IManageBookingService bookingService,
+                                          IManageInvoiceService invoiceService,
                                           IManageRatePlanService ratePlanService,
-                                          IManageRoomTypeService roomTypeService,
+                                          IManageRoomTypeService roomTypeService, IManageNightTypeService nightTypeService,
                                           BookingImportCacheRedisRepository repository,
                                           BookingImportRowErrorRedisRepository errorRedisRepository,
                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
-                                          IParameterizationService parameterizationService, IManageInvoiceStatusService manageInvoiceStatusService,
-                                          ServiceLocator serviceLocator, IManageInvoiceTypeService iManageInvoiceTypeService) {
+                                           IManageInvoiceStatusService manageInvoiceStatusService,
+                                           IManageInvoiceTypeService iManageInvoiceTypeService) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.invoiceService = invoiceService;
-        this.bookingService = bookingService;
         this.ratePlanService = ratePlanService;
         this.roomTypeService = roomTypeService;
+        this.nightTypeService = nightTypeService;
         this.repository = repository;
         this.errorRedisRepository = errorRedisRepository;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
-        this.parameterizationService = parameterizationService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
-        this.serviceLocator = serviceLocator;
         this.iManageInvoiceTypeService = iManageInvoiceTypeService;
     }
 
@@ -142,17 +136,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         });
     }
 
-//    private void createInvoiceWithBooking2(ManageAgencyDto agencyDto, ManageHotelDto hotelDto,
-//                                           List<BookingRow> bookingRowList) {
-//        BookingRow sample = bookingRowList.get(0);
-//        CreateInvoiceCommand createInvoiceCommand = createInvoiceCommand(getInvoiceDate(sample), LocalDate.now(),
-//                false, calculateInvoiceAmount(bookingRowList), hotelDto.getId(), agencyDto.getId(), EInvoiceType.INVOICE);
-//        List<CreateBookingCommand> createBookingCommands = createBookings(createInvoiceCommand.getId(), bookingRowList);
-//        IMediator mediator = serviceLocator.getBean(IMediator.class);
-//        mediator.send(createInvoiceCommand);
-//        createBookingCommands.forEach(mediator::send);
-//    }
-
     private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList) {
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
@@ -192,12 +175,15 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                     ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
             ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ?
                     roomTypeService.findByCode(bookingRow.getRoomType()) : null;
+            ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRow.getNightType()) ?
+                    nightTypeService.findByCode(bookingRow.getNightType()) : null;
             ManageBookingDto bookingDto = bookingRow.toAggregate();
             bookingDto.setRatePlan(ratePlanDto);
             bookingDto.setRoomType(roomTypeDto);
             bookingDto.setId(UUID.randomUUID());
             bookingDto.setHotelCreationDate(DateUtil.parseDateToDateTime(bookingRow.getTransactionDate()));
             bookingDto.setRoomRates(List.of(createRoomRateDto(bookingRow)));
+            bookingDto.setNightType(nightTypeDto);
             return bookingDto;
         }).toList();
     }
@@ -216,6 +202,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageRoomRateDto.setInvoiceAmount(bookingDto.getInvoiceAmount());
         return manageRoomRateDto;
     }
+
 
     private double calculateInvoiceAmount(List<BookingRow> bookingRowList) {
         return bookingRowList.stream().mapToDouble(BookingRow::getInvoiceAmount).sum();
@@ -239,56 +226,4 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         repository.save(bookingImportCache);
     }
 
-//    private CreateInvoiceCommand createInvoiceCommand(LocalDateTime invoiceDate, LocalDate dueDate,
-//                                                      boolean isManuel, double invoiceAmount, UUID hotel, UUID agency, EInvoiceType invoiceType) {
-//        return new CreateInvoiceCommand(invoiceDate, dueDate, isManuel, invoiceAmount, hotel, agency, invoiceType, UUID.randomUUID());
-//    }
-//
-//    private List<CreateBookingCommand> createBookings(UUID invoiceId, List<BookingRow> bookingRowList) {
-//        return bookingRowList.stream().map(bookingRow -> {
-//                            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ?
-//                                    ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
-//                            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ?
-//                                    roomTypeService.findByCode(bookingRow.getRoomType()) : null;
-//                            return new CreateBookingCommand(UUID.randomUUID(),
-//                                    null,
-//                                    DateUtil.parseDateToDateTime(bookingRow.getBookingDate()),
-//                                    DateUtil.parseDateToDateTime(bookingRow.getCheckIn()),
-//                                    DateUtil.parseDateToDateTime(bookingRow.getCheckOut()),
-//                                    bookingRow.getHotelBookingNumber(),
-//                                    bookingRow.getFirstName() + " " + bookingRow.getLastName(),
-//                                    bookingRow.getFirstName(), bookingRow.getLastName(),
-//                                    bookingRow.getInvoiceAmount(),
-//                                    bookingRow.getRoomNumber(),
-//                                    bookingRow.getCoupon(),
-//                                    Objects.nonNull(bookingRow.getAdults()) ? bookingRow.getAdults().intValue() : 0,
-//                                    Objects.nonNull(bookingRow.getChildren()) ? bookingRow.getChildren().intValue() : 0,
-//                                    0.0, 0.0, bookingRow.getHotelInvoiceNumber(),
-//                                    "", bookingRow.getHotelInvoiceAmount(),
-//                                    bookingRow.getRemarks(),
-//                                    invoiceId, ratePlanDto.getId(), null, roomTypeDto.getId(), null, null
-//                            );
-//                        }
-//
-//                )
-//                .toList();
-//    }
-
-    private List<CreateRoomRateCommand> createRateRoomS(List<CreateBookingCommand> bookingCommands ){
-        List<CreateRoomRateCommand> roomRateCommands = new ArrayList<>();
-        bookingCommands.forEach(bookings->{
-            roomRateCommands.add( new CreateRoomRateCommand(bookings.getCheckIn(),bookings.getCheckOut(),bookings.getInvoiceAmount(),
-                    bookings.getRoomNumber(),
-                    bookings.getAdults(),
-                    bookings.getChildren(),
-                    bookings.getRateAdult(),
-                    bookings.getRateChild(),
-                    bookings.getHotelAmount(),
-                    "",
-                    bookings.getId(),
-                    UUID.randomUUID()
-                    ));
-        });
-        return roomRateCommands;
-    }
 }
