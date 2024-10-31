@@ -660,12 +660,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/close-operation/invoice'),
               items: []
             },
-            {
-              label: 'Invoice Parameterization',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/parameterization/invoice'),
-              items: []
-            },
           ]
         }
       ],
