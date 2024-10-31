@@ -1154,9 +1154,6 @@ function searchAndFilter() {
       return hotelError.value = true
     }
   }
-
-
-
   getList()
 }
 
@@ -1727,7 +1724,7 @@ function getStatusBadgeBackgroundColor(code: string) {
     case 'PROCESSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
-    case 'CANCELED': return '#888888'
+    case 'CANCELLED': return '#888888'
     case 'PENDING': return '#686868'
 
     default:
@@ -1740,7 +1737,43 @@ function getStatusName(code: string) {
     case 'PROCESSED': return 'Processed'
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
-    case 'CANCELED': return 'Cancelled'
+    case 'CANCELLED': return 'Cancelled'
+    case 'PENDING': return 'Pending'
+
+    default:
+      return ''
+  }
+}
+
+interface InvoiceStatus {
+  id: string;
+  code: string;
+  name: string;
+  showClone: boolean;
+  enabledToApply: boolean;
+  sentStatus: boolean;
+  reconciledStatus: boolean;
+  canceledStatus: boolean;
+  processStatus: boolean;
+}
+
+
+function getStatusBadgeBackgroundColorByItem(item: InvoiceStatus) { 
+  if (!item) return
+  if (item.processStatus) return '#FF8D00'
+  if (item.sentStatus) return '#006400'
+  if (item.reconciledStatus) return '#005FB7'
+  if (item.canceledStatus) return '#888888'
+}
+
+function getStatusNameByItem(item: InvoiceStatus) {
+
+
+  switch (code) {
+    case 'PROCESSED': return 'Processed'
+    case 'RECONCILED': return 'Reconciled'
+    case 'SENT': return 'Sent'
+    case 'CANCELLED': return 'Cancelled'
     case 'PENDING': return 'Pending'
 
     default:
@@ -1904,7 +1937,7 @@ watch(filterToSearch, () => {
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   await getStatusListTemp()  
-  getList()
+  searchAndFilter()
   
 })
 
@@ -2386,9 +2419,15 @@ const legend = ref(
             :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item)}`" />
         </template> -->
 
-        <template #column-invoiceStatus="props">
+        <!-- Asi estaba antes -->
+        <!-- <template #column-invoiceStatus="props">
           <Badge v-if="props.item" :value="getStatusName(props.item?.name?.toUpperCase())"
             :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item?.name?.toUpperCase())}`" />
+        </template> -->
+
+        <template #column-invoiceStatus="props">
+          <Badge v-if="props.item" :value="props.item?.name"
+            :style="`background-color: ${getStatusBadgeBackgroundColorByItem(props?.item)}`" />
         </template>
 
         <template #datatable-footer>
