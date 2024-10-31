@@ -876,7 +876,7 @@ onMounted(() => {
       { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       // { field: 'roomType', header: 'Room Type', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
       // { field: 'ratePlan', header: 'Rate Plan', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
     ]
