@@ -171,7 +171,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Transaction Status',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-transaction-status',
   loading: false,
   actionsAsMenu: false,

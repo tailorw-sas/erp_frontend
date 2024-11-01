@@ -213,7 +213,8 @@ async function getList() {
         iterator.detailsAmount = formatNumber(iterator.detailsAmount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'merchantBankAccount')) {
-        iterator.merchantBankAccount = { id: iterator.merchantBankAccount.id, name: `${iterator.merchantBankAccount.bankCode} - ${iterator.merchantBankAccount.bankName} - ${iterator.merchantBankAccount.description}` }
+        const merchantNames = iterator.merchantBankAccount.managerMerchant.map((item: any) => item.description).join(' - ')
+        iterator.merchantBankAccount = { id: iterator.merchantBankAccount.id, name: `${merchantNames} - ${iterator.merchantBankAccount.description} - ${iterator.merchantBankAccount.accountNumber}` }
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {

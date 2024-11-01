@@ -309,14 +309,14 @@ async function getItemById(id: string) {
         const objMerchant = {
           id: response.manageMerchant.id,
           name: `${response.manageMerchant.code} ${response.manageMerchant.description ? `- ${response.manageMerchant.description}` : ''}`,
-          status: response.manageMerchant.status
+          status: response.manageMerchant.status || 'ACTIVE'
         }
         MerchantList.value = [objMerchant]
         item.value.manageMerchant = objMerchant
         const objLanguage = {
           id: response.manageLanguage.id,
           name: `${response.manageLanguage.code} ${response.manageLanguage.name ? `- ${response.manageLanguage.name}` : ''}`,
-          status: response.manageLanguage.status
+          status: response.manageLanguage.status || 'ACTIVE'
         }
         LanguageList.value = [objLanguage]
         item.value.manageLanguage = objLanguage
