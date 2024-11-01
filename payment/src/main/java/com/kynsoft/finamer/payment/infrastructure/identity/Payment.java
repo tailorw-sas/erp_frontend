@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.identity;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -120,6 +121,9 @@ public class Payment implements Serializable {
     @Column(nullable = true, updatable = true)
     private OffsetDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
+    private ImportType importType;
+
     @PrePersist
     protected void prePersist() {
         this.createdAt = OffsetDateTime.now(ZoneId.of("UTC"));
@@ -153,6 +157,7 @@ public class Payment implements Serializable {
         this.paymentSupport = dto.isPaymentSupport();
         this.createByCredit = dto.isCreateByCredit();
         this.dateTime = dto.getTransactionDateTime() != null ? dto.getTransactionDateTime() : LocalTime.now();
+        this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
     }
 
     public PaymentDto toAggregate() {
@@ -230,7 +235,8 @@ public class Payment implements Serializable {
                 applyPayment,
                 paymentSupport,
                 createByCredit,
-                dateTime
+                dateTime,
+                importType
         );
     }
 
