@@ -912,16 +912,14 @@ async function getList() {
           loadingDelete: false, 
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
-          dueAmount: iterator?.dueAmount || 0, 
+          dueAmount: iterator?.dueAmount ? formatNumber(iterator?.dueAmount) : 0, 
+          invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator?.invoiceAmount) : 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
-
-
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
 
-      
       totalInvoiceAmount.value += iterator.invoiceAmount
       totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
@@ -2439,8 +2437,8 @@ const legend = ref(
           <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
             <Row>
               <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: 700" />
-              <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
-              <Column :footer="totalDueAmount" footer-style="font-weight: 700" />
+              <Column :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
+              <Column :footer="formatNumber(Math.round((totalDueAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
               <Column :colspan="9" />
 
 
