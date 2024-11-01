@@ -7,6 +7,7 @@ import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import { useRoute } from 'vue-router'
 import ContextMenu from 'primevue/contextmenu'
+import { v4 } from 'uuid'
 import BankPaymentMerchantBindTransactionsDialog
   from '../../../components/vcc/bank-reconciliation/BankPaymentMerchantBindTransactionsDialog.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -163,6 +164,10 @@ const pagination = ref<IPagination>({
 const computedTransactionAmountSelected = computed(() => {
   const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
   return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
+})
+
+const computedLocalBindTransactionList = computed(() => {
+  return LocalBindTransactionList.value.filter((item: any) => !item.adjustment)
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -393,6 +398,27 @@ async function getMerchantBankAccountList(query: string) {
 }
 
 async function unbindTransactions() {
+  if (idItem.value) {
+    unbindTransactionsOnline()
+  }
+  else {
+    // Si no tiene id (transaccion de ajuste) entonces se busca por el temporal
+    unbindTransactionsLocal()
+  }
+}
+
+function unbindTransactionsLocal() {
+  if (contextMenuTransaction.value.id) {
+    LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== contextMenuTransaction.value.id)
+  }
+  else {
+    // Desvincular transacciones de ajuste local
+    LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.idTemp !== contextMenuTransaction.value.idTemp)
+  }
+  subTotals.value.amount -= parseFormattedNumber(contextMenuTransaction.value.amount)
+}
+
+async function unbindTransactionsOnline() {
   try {
     loadingSaveAll.value = true
     const transactionsIds = [contextMenuTransaction.value.id]
@@ -488,6 +514,7 @@ async function handleSave(event: any) {
 }
 
 function addAdjustmentLocal(data: any) {
+  data.idTemp = v4() // id temporal para poder eliminar de forma local
   data.checkIn = dayjs().format('YYYY-MM-DD')
   subTotals.value.amount += data.amount
   data.amount = formatNumber(data.amount)
@@ -660,7 +687,7 @@ onMounted(async () => {
     </div>
     <div v-if="transactionsToBindDialogOpen">
       <BankPaymentMerchantBindTransactionsDialog
-        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="LocalBindTransactionList"
+        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="computedLocalBindTransactionList"
         :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
         @update:list-items="($event) => setTransactions($event)"
         @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
