@@ -235,6 +235,12 @@ async function getList() {
     options.value.loading = true
     BindTransactionList.value = []
     const newListItems = []
+    payload.value.filter = [{
+      key: 'reconciliation.id',
+      operator: 'EQUALS',
+      value: idItem.value,
+      logicalOperation: 'AND'
+    }]
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
@@ -361,7 +367,7 @@ async function getMerchantBankAccountList(query: string) {
 
     for (const iterator of dataList) {
       const merchantNames = iterator.managerMerchant.map((item: any) => item.description).join(' - ')
-      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`, status: iterator.status, merchantData: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes }]
+      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`, status: iterator.status, managerMerchant: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes }]
     }
   }
   catch (error) {
@@ -426,6 +432,7 @@ async function saveItem(item: { [key: string]: any }) {
       // Deshabilitar campos restantes del formulario
 
       await getItemById(idItem.value)
+      await getList()
     }
     catch (error: any) {
       loadingSaveAll.value = true
@@ -483,12 +490,6 @@ onMounted(async () => {
     const id = route.query.id.toString()
     idItem.value = id
     getItemById(id)
-    payload.value.filter = [{
-      key: 'reconciliation.id',
-      operator: 'EQUALS',
-      value: idItem.value,
-      logicalOperation: 'AND'
-    }]
     getList()
   }
 })
