@@ -502,7 +502,7 @@ async function handleApplyClick() {
     // Redirecciona a la nueva interfaz
     navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
 
-    console.log('Hola estoy en la función');
+   
    
     // Cierra el diálogo
     handleDialogClose();
@@ -668,7 +668,9 @@ const computedShowMenuItemImportBookingFromFile = computed(() => {
 const computedShowMenuItemImportBookingFromVirtual = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:IMPORT-BOOKING-FROM-VIRTUAL'])))
 })
-
+const computedShowMenuItemUndoImport = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:UNDO-IMPORT'])))
+})
 const itemsMenuImport = ref([
   {
     label: 'Booking From File',
@@ -679,6 +681,11 @@ const itemsMenuImport = ref([
     label: 'Booking From File (Virtual Hotels)',
     command: () => navigateTo('invoice/import-virtual'),
     disabled: computedShowMenuItemImportBookingFromVirtual
+  },
+  {
+    label: 'Undo Import',
+    command: () => navigateTo('invoice/undo-import',{ open: { target: '_blank' } }),
+    //disabled: computedShowMenuItemUndoImport
   }
 ])
 
