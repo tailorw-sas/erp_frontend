@@ -1583,6 +1583,8 @@ async function getBookingItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
+      console.log(response)
+
       if (response) {
         if (response.hotelCreationDate) {
           const date = dayjs(response.hotelCreationDate).format('YYYY-MM-DD')
@@ -1618,7 +1620,7 @@ async function getBookingItemById(id: string) {
         item2.value.hotelAmount = String(response.hotelAmount)
         item2.value.description = response.description
         item2.value.invoice = response.invoice
-        item2.value.invoiceOriginalAmount = response.invoice.invoiceAmount
+        item2.value.invoiceOriginalAmount = response.invoice.originalAmount
         item2.value.ratePlan = response.ratePlan?.name === '-' ? null : response.ratePlan
         item2.value.nightType = response.nightType
         item2.value.roomType = response.roomType?.name === '-' ? null : response.roomType
