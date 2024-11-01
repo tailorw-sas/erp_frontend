@@ -26,6 +26,9 @@ public class UpdateManageRatePlanCommandHandler implements ICommandHandler<Updat
 
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
+
+        service.update(test);
     }
 
 }
