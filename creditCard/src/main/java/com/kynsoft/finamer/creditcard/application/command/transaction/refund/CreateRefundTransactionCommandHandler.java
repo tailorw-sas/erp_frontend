@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ParameterizationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
@@ -59,7 +60,8 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
             int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
 
             commission = manageMerchantCommissionService.calculateCommission(command.getAmount(), parentMerchantId, parentCreditCardTypeId, parentCheckIn, decimals);
-            netAmount = command.getAmount() - commission;
+            //independientemente del valor de la commission el netAmount tiene dos decimales
+            netAmount = BankerRounding.round(command.getAmount() - commission, 2);
         }
 
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus(ETransactionStatus.REFUND);

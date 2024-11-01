@@ -3,6 +3,7 @@ package com.kynsoft.finamer.creditcard.application.command.manageStatusTransacti
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetTransactionDataResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
@@ -74,7 +75,8 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
 
             double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn(), decimals);
-            double netAmount = transactionDto.getAmount() - commission;
+            //independientemente del valor de la commission el netAmount tiene dos decimales
+            double netAmount = BankerRounding.round(transactionDto.getAmount() - commission, 2);
 
             //Obtener estado de la transacción correspondiente dado el responseCode del merchant
             CardNetResponseStatus pairedStatus = CardNetResponseStatus.valueOfCode(transactionResponse.getResponseCode());
