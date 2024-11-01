@@ -1,17 +1,13 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsof.share.utils.ServiceLocator;
-import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
-import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
+import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupBy;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportRowErrorRedisRepository;
@@ -20,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,6 +44,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final IManageInvoiceTypeService iManageInvoiceTypeService;
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
     public BookingImportHelperServiceImpl(IManageAgencyService agencyService,
                                           IManageHotelService manageHotelService,
@@ -58,8 +54,9 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                                           BookingImportCacheRedisRepository repository,
                                           BookingImportRowErrorRedisRepository errorRedisRepository,
                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
-                                           IManageInvoiceStatusService manageInvoiceStatusService,
-                                           IManageInvoiceTypeService iManageInvoiceTypeService) {
+                                          IManageInvoiceStatusService manageInvoiceStatusService,
+                                          IManageInvoiceTypeService iManageInvoiceTypeService,
+                                          IInvoiceStatusHistoryService invoiceStatusHistoryService) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.invoiceService = invoiceService;
@@ -71,6 +68,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.iManageInvoiceTypeService = iManageInvoiceTypeService;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
     }
 
     @Override
@@ -80,10 +78,10 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     @Override
-    public void createInvoiceFromGroupedBooking(String importProcessId) {
-        if (!errorRedisRepository.existsByImportProcessId(importProcessId)) {
-            this.createInvoiceGroupingByCoupon(importProcessId);
-            this.createInvoiceGroupingByBooking(importProcessId);
+    public void createInvoiceFromGroupedBooking(ImportBookingRequest request) {
+        if (!errorRedisRepository.existsByImportProcessId(request.getImportProcessId())) {
+            this.createInvoiceGroupingByCoupon(request.getImportProcessId(),request.getEmployee());
+            this.createInvoiceGroupingByBooking(request.getImportProcessId(),request.getEmployee());
         }
     }
 
@@ -109,7 +107,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     }
 
-    private void createInvoiceGroupingByCoupon(String importProcessId) {
+    private void createInvoiceGroupingByCoupon(String importProcessId,String employee) {
         Map<GroupBy, List<BookingRow>> grouped;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
         grouped = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
@@ -121,22 +119,22 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             grouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value);
+                this.createInvoiceWithBooking(agency, hotel, value,employee);
 
             });
         }
     }
 
-    private void createInvoiceGroupingByBooking(String importProcessId) {
+    private void createInvoiceGroupingByBooking(String importProcessId,String employee) {
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByBooking.name(), importProcessId);
         bookingImportCacheStream.forEach(bookingImportCache -> {
             ManageAgencyDto agency = agencyService.findByCode(bookingImportCache.toAggregate().getManageAgencyCode());
             ManageHotelDto hotel = manageHotelService.findByCode(bookingImportCache.toAggregate().getManageHotelCode());
-            this.createInvoiceWithBooking(agency, hotel, List.of(bookingImportCache.toAggregate()));
+            this.createInvoiceWithBooking(agency, hotel, List.of(bookingImportCache.toAggregate()),employee);
         });
     }
 
-    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList) {
+    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList,String employee) {
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
@@ -161,6 +159,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         }
         manageInvoiceDto.setInvoiceNumber(invoiceNumber);
         manageInvoiceDto =invoiceService.create(manageInvoiceDto);
+        this.createInvoiceHistory(manageInvoiceDto,employee);
 
         //TODO: aqui se envia a crear el invoice con sun booking en payment
         try {
@@ -203,7 +202,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         return manageRoomRateDto;
     }
 
-
     private double calculateInvoiceAmount(List<BookingRow> bookingRowList) {
         return bookingRowList.stream().mapToDouble(BookingRow::getInvoiceAmount).sum();
     }
@@ -225,5 +223,20 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         bookingImportCache.setImportProcessId(bookingRow.getImportProcessId());
         repository.save(bookingImportCache);
     }
+
+    private void createInvoiceHistory(ManageInvoiceDto manageInvoice,String employee){
+        this.invoiceStatusHistoryService.create(
+                new InvoiceStatusHistoryDto(
+                        UUID.randomUUID(),
+                        manageInvoice,
+                        "The invoice data was inserted.",
+                        LocalDateTime.now(),
+                        employee,
+                        EInvoiceStatus.PROCECSED
+                )
+        );
+    }
+
+
 
 }
