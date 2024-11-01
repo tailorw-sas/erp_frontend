@@ -1135,7 +1135,8 @@ function clearFormAdjustment() {
 
 async function onCellEditRoomRate(event: any) {
   const { data, newValue, field, newData } = event
-  const dataTemp = data[field]
+  const dataTemp = data[field].replace(/,/g, '')
+
   if (data[field] === newValue) { return }
 
   if (field === 'hotelAmount') {
@@ -1160,7 +1161,7 @@ async function onCellEditRoomRate(event: any) {
     }
   }
 
-  const rateChildren = newData?.invoiceAmount ? newData.invoiceAmount / (newData.nights * newData.children) : 0
+  // const rateChildren = newData?.invoiceAmount ? newData.invoiceAmount / (newData.nights * newData.children) : 0
 
   const payload: { [key: string]: any } = {
 
@@ -1170,8 +1171,9 @@ async function onCellEditRoomRate(event: any) {
     checkOut: dayjs(newData.checkOut).toISOString(),
     adults: newData.adults,
     children: newData.children,
-    invoiceAmount: newData.invoiceAmount,
-    hotelAmount: newData.hotelAmount,
+    invoiceAmount: newData.invoiceAmount ? newData.invoiceAmount.replace(/,/g, '') : 0,
+    hotelAmount: newData.hotelAmount ? newData.hotelAmount.replace(/,/g, '') : 0,
+    rateAdult: newData.rateAdult ? newData.rateAdult.replace(/,/g, '') : 0,
     remark: newData.remark,
     nights: newData.nights,
     id: newData.id
