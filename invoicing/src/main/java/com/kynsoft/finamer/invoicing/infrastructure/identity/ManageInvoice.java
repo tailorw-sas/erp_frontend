@@ -151,7 +151,7 @@ public class ManageInvoice {
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
         this.sendStatusError = dto.getSendStatusError();
-        this.importType = dto.getImportType() != null ?  ImportType.NONE : dto.getImportType();
+        this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
     }
 
     public ManageInvoiceDto toAggregateSample() {
