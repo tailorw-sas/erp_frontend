@@ -176,7 +176,6 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'invoiceNumber',
     header: 'Invoice Number',
     dataType: 'text',
-
     class: 'field col-12 md:col-3  ',
     disabled: true,
 
@@ -186,7 +185,6 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'invoiceAmount',
     header: 'Invoice Amount',
     dataType: 'text',
-
     class: 'field col-12 md:col-3 required  ',
     disabled: true,
     ...(route.query.type === InvoiceType.OLD_CREDIT && { valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
@@ -578,132 +576,132 @@ async function deleteItem(id: string) {
   }
 }
 
-async function getBookingClonationList() {
-  try {
-    const Payload: any = ({
-      filter: [{
+// async function getBookingClonationList() {
+//   try {
+//     const Payload: any = ({
+//       filter: [{
 
-        key: 'invoice.id',
-        operator: 'EQUALS',
-        value: idItemCreated.value,
-        logicalOperation: 'AND'
+//         key: 'invoice.id',
+//         operator: 'EQUALS',
+//         value: idItemCreated.value,
+//         logicalOperation: 'AND'
 
-      }],
-      query: '',
-      pageSize: 10,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    })
-    bookingList.value = []
+//       }],
+//       query: '',
+//       pageSize: 10,
+//       page: 0,
+//       sortBy: 'createdAt',
+//       sortType: ENUM_SHORT_TYPE.DESC
+//     })
+//     bookingList.value = []
 
-    const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, Payload)
+//     const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, Payload)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
+//     const { data: dataList, page, size, totalElements, totalPages } = response
 
-    Pagination.value.page = page
-    Pagination.value.limit = size
-    Pagination.value.totalElements = totalElements
-    Pagination.value.totalPages = totalPages
+//     Pagination.value.page = page
+//     Pagination.value.limit = size
+//     Pagination.value.totalElements = totalElements
+//     Pagination.value.totalPages = totalPages
 
-    for (const iterator of dataList) {
-      //    const id = v4()
-      bookingList.value = [...bookingList.value, {
-        ...iterator,
-        //   id,
-        loadingEdit: false,
-        loadingDelete: false,
-        //  bookingId:'',
-        // hotelAmount: 0,
-        //  dueAmount:0,
-        bookingId: iterator.bookingId,
-        agency: iterator?.invoice?.agency,
-        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
-        fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
-      }]
-    }
-  }
-  catch (error) {
-    console.error(error)
-  }
-  finally {
-    Options.value.loading = false
-  }
-}
+//     for (const iterator of dataList) {
+//       //    const id = v4()
+//       bookingList.value = [...bookingList.value, {
+//         ...iterator,
+//         //   id,
+//         loadingEdit: false,
+//         loadingDelete: false,
+//         //  bookingId:'',
+//         // hotelAmount: 0,
+//         //  dueAmount:0,
+//         bookingId: iterator.bookingId,
+//         agency: iterator?.invoice?.agency,
+//         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+//         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
+//       }]
+//     }
+//   }
+//   catch (error) {
+//     console.error(error)
+//   }
+//   finally {
+//     Options.value.loading = false
+//   }
+// }
 
-async function getRoomRateClonationList() {
-  try {
-    const Payload = {
-      filter: [
-        {
-          key: 'booking.invoice.id',
-          operator: 'EQUALS',
-          value: idItemCreated.value,
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 10,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+// async function getRoomRateClonationList() {
+//   try {
+//     const Payload = {
+//       filter: [
+//         {
+//           key: 'booking.invoice.id',
+//           operator: 'EQUALS',
+//           value: idItemCreated.value,
+//           logicalOperation: 'AND'
+//         }
+//       ],
+//       query: '',
+//       pageSize: 10,
+//       page: 0,
+//       sortBy: 'createdAt',
+//       sortType: ENUM_SHORT_TYPE.DESC
+//     }
 
-    idItemToLoadFirstTime.value = ''
+//     idItemToLoadFirstTime.value = ''
 
-    roomRateList.value = []
+//     roomRateList.value = []
 
-    const response = await GenericService.search(confRoomApi.moduleApi, confRoomApi.uriApi, Payload)
+//     const response = await GenericService.search(confRoomApi.moduleApi, confRoomApi.uriApi, Payload)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
+//     const { data: dataList, page, size, totalElements, totalPages } = response
 
-    Pagination.value.page = page
-    Pagination.value.limit = size
-    Pagination.value.totalElements = totalElements
-    Pagination.value.totalPages = totalPages
+//     Pagination.value.page = page
+//     Pagination.value.limit = size
+//     Pagination.value.totalElements = totalElements
+//     Pagination.value.totalPages = totalPages
 
-    let countRR = 0
-    totalInvoiceAmount.value = 0
-    totalHotelAmount.value = 0
+//     let countRR = 0
+//     totalInvoiceAmount.value = 0
+//     totalHotelAmount.value = 0
 
-    for (const iterator of dataList) {
-      countRR++
+//     for (const iterator of dataList) {
+//       countRR++
 
-      roomRateList.value = [...roomRateList.value, {
-        ...iterator,
+//       roomRateList.value = [...roomRateList.value, {
+//         ...iterator,
 
-        // hotelAmount: 0,
-        roomRateId: iterator?.roomRateId,
-        invoiceAmount: iterator?.invoiceAmount,
-        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
-        loadingEdit: false,
-        loadingDelete: false,
-        fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
-        bookingId: iterator.booking.bookingId,
-        roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
-        nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
-        ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
-        agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
-      }]
+//         // hotelAmount: 0,
+//         roomRateId: iterator?.roomRateId,
+//         invoiceAmount: iterator?.invoiceAmount,
+//         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+//         loadingEdit: false,
+//         loadingDelete: false,
+//         fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
+//         bookingId: iterator.booking.bookingId,
+//         roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
+//         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
+//         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
+//         agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
+//       }]
 
-      if (typeof +iterator.invoiceAmount === 'number') {
-        totalInvoiceAmount.value += Number(iterator.invoiceAmount)
-      }
+//       if (typeof +iterator.invoiceAmount === 'number') {
+//         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
+//       }
 
-      if (typeof +iterator.hotelAmount === 'number') {
-        totalHotelAmount.value += Number(iterator.hotelAmount)
-      }
-    }
+//       if (typeof +iterator.hotelAmount === 'number') {
+//         totalHotelAmount.value += Number(iterator.hotelAmount)
+//       }
+//     }
 
-    if (roomRateList.value.length > 0) {
-      idItemToLoadFirstTime.value = roomRateList.value[0].id
-    }
-  }
+//     if (roomRateList.value.length > 0) {
+//       idItemToLoadFirstTime.value = roomRateList.value[0].id
+//     }
+//   }
 
-  catch (error) {
-    console.error(error)
-  }
-}
+//   catch (error) {
+//     console.error(error)
+//   }
+// }
 
 async function saveItem(item: { [key: string]: any }) {
   if (!item?.hotel?.id) {
@@ -785,7 +783,6 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
     roomRateList.value = []
 
     const response = await GenericService.search(confRoomApi.moduleApi, confRoomApi.uriApi, Payload)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     Pagination.value.page = page
@@ -802,6 +799,8 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
         roomRateId: '',
+        checkIn: iterator?.checkIn ? new Date(`${dayjs(iterator?.checkIn).format('YYYY-MM-DD')}T00:00:00`) : null,
+        checkOut: iterator?.checkOut ? new Date(`${dayjs(iterator?.checkOut).format('YYYY-MM-DD')}T00:00:00`) : null,
         //   invoiceAmount: iterator?.invoiceAmount || 0,
         // hotelAmount: 0,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
@@ -1077,7 +1076,7 @@ async function createClonation(item: { [key: string]: any }) {
       resourceType: 'INV-Invoice',
       employeeName: userData?.value?.user?.name,
       employeeId: userData?.value?.user?.userId,
-    })) */
+      })) */
     if (LocalAttachmentList.value.length > 0) {
       payload.attachments = LocalAttachmentList.value.map(att => ({
         attachmentId: att.attachmentId,
@@ -1095,10 +1094,12 @@ async function createClonation(item: { [key: string]: any }) {
     const bookingsEdit = await filterEditFields(listBookingsTemp) || []
 
     payload.bookings = bookingsEdit
+    // checkIn: item?.checkIn ? formatDate(item?.checkIn) : null,
+    //   checkOut: item?.checkOut ? formatDate(item?.checkOut) : null,
     const payloadRoomRate = roomRateList.value.filter(item => item).map(item => ({
       id: item?.id,
-      checkIn: item?.checkIn ? formatDate(item?.checkIn) : null,
-      checkOut: item?.checkOut ? formatDate(item?.checkOut) : null,
+      checkIn: typeof item?.checkIn === 'string' ? formatDate(item?.checkIn) : item?.checkIn,
+      checkOut: typeof item?.checkOut === 'string' ? formatDate(item?.checkOut) : item?.checkOut,
       invoiceAmount: item?.invoiceAmount,
       roomNumber: item?.roomNumber,
       adults: item?.adults,
@@ -1928,7 +1929,9 @@ onMounted(async () => {
             :set-active="($event) => {
               active = $event
             }"
-            @on-save-booking-edit="($event) => {}"
+            @on-save-booking-edit="($event) => {
+
+            }"
             @on-save-room-rate-in-booking-edit="onSaveRoomRateInBookingEdit"
           />
           <div>
