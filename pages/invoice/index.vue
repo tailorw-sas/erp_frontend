@@ -2440,8 +2440,6 @@ const legend = ref(
               <Column :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
               <Column :footer="formatNumber(Math.round((totalDueAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
               <Column :colspan="9" />
-
-
             </Row>
           </ColumnGroup>
         </template>

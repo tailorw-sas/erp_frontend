@@ -1209,7 +1209,10 @@ async function getBookingList(clearFilter: boolean = false) {
         agency: { ...iterator?.invoice?.agency, name: `${iterator?.invoice?.agency?.code}-${iterator?.invoice?.agency?.name}` },
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`,
-        originalAmount: iterator?.invoiceAmount
+        originalAmount: iterator?.invoiceAmount,
+        invoiceAmount: formatNumber(iterator?.invoiceAmount),
+        dueAmount: formatNumber(iterator?.dueAmount),
+        hotelAmount: formatNumber(iterator?.hotelAmount),
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
@@ -1880,22 +1883,21 @@ onMounted(() => {
            
             <Column 
               v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-            
-              :footer="Number.parseFloat(totalHotelAmount.toFixed(2)) "
+              :footer="formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700"
             />
             <Column 
               v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="Number.parseFloat(totalOriginalAmount.toFixed(2))"
+              :footer="formatNumber(Math.round((totalOriginalAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700"
             />
             <Column 
-              :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))"
+              :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700"
             />
             <Column 
               v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="Number.parseFloat(totalDueAmount.toFixed(2))"
+              :footer="formatNumber(Math.round((totalDueAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700" 
             />
           
