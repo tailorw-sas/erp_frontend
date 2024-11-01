@@ -126,7 +126,7 @@ const fields: Array<FieldDefinitionType> = [
 ]
 
 const columns: IColumn[] = [
-  { field: 'id', header: 'Id', type: 'text' },
+  { field: 'referenceId', header: 'Id', type: 'text' },
   { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant' }, sortable: true },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
@@ -162,7 +162,7 @@ const pagination = ref<IPagination>({
 })
 
 const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
+  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0) : 0
   return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
 })
 
@@ -408,13 +408,20 @@ async function unbindTransactions() {
 }
 
 function unbindTransactionsLocal() {
-  if (contextMenuTransaction.value.id) {
-    LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== contextMenuTransaction.value.id)
+  /* if (contextMenuTransaction.value.id) {
+    const transactionId = contextMenuTransaction.value.id
+    LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
+    selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
   }
   else {
     // Desvincular transacciones de ajuste local
-    LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.idTemp !== contextMenuTransaction.value.idTemp)
-  }
+    const transactionId = contextMenuTransaction.value.referenceId
+    LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.referenceId !== transactionId)
+    selectedElements.value = selectedElements.value.filter((item: any) => item.referenceId !== transactionId)
+  } */
+  const transactionId = contextMenuTransaction.value.id
+  LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
+  selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
   subTotals.value.amount -= parseFormattedNumber(contextMenuTransaction.value.amount)
 }
 
@@ -514,7 +521,7 @@ async function handleSave(event: any) {
 }
 
 function addAdjustmentLocal(data: any) {
-  data.idTemp = v4() // id temporal para poder eliminar de forma local
+  data.id = v4() // id temporal para poder eliminar de forma local
   data.checkIn = dayjs().format('YYYY-MM-DD')
   subTotals.value.amount += data.amount
   data.amount = formatNumber(data.amount)
@@ -524,12 +531,13 @@ function addAdjustmentLocal(data: any) {
 
 function removeUnbindSelectedTransactions(newTransactions: any[]) {
   const ids = new Set(newTransactions.map(item => item.id))
-  selectedElements.value = selectedElements.value.filter(item => ids.has(item.id))
+  selectedElements.value = selectedElements.value.filter(item => ids.has(item.id) || !item.id)
 }
 
 function setTransactions(event: any) {
   removeUnbindSelectedTransactions(event)
-  LocalBindTransactionList.value = [...event]
+  const adjustmentList = [...LocalBindTransactionList.value].filter((item: any) => item.adjustment)
+  LocalBindTransactionList.value = [...event, ...adjustmentList]
   const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
   subTotals.value.amount = totalAmount
 }
