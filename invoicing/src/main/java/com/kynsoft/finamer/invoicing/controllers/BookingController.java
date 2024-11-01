@@ -121,7 +121,7 @@ public class BookingController {
     public Mono<ResponseEntity<?>> importBooking(@RequestPart("file") FilePart filePart,
                                                  @RequestPart("importProcessId") String importProcessId,
                                                  @RequestPart("importType") String eImportPaymentType,
-                                                 @RequestPart("employeeId") String employeeId
+                                                 @RequestPart("employee") String employee
                                                  ) {
 
         return DataBufferUtils.join(filePart.content())
@@ -130,7 +130,7 @@ public class BookingController {
                     dataBuffer.read(bytes);
                     DataBufferUtils.release(dataBuffer);
 
-                    ImportBookingRequest importRequest = new ImportBookingRequest(importProcessId,bytes, EImportType.valueOf(eImportPaymentType),employeeId);
+                    ImportBookingRequest importRequest = new ImportBookingRequest(importProcessId,bytes, EImportType.valueOf(eImportPaymentType),employee);
                     ImportBookingFromFileCommand importBookingFromFileCommand = new ImportBookingFromFileCommand(importRequest);
                     try {
                         IMessage message = mediator.send(importBookingFromFileCommand);
