@@ -12,6 +12,8 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 const entryCode = ref('')
 const randomCode = ref(generateRandomCode());
 const idItemToLoadFirstTime = ref('')
+const totalHotelAmount = ref(0);
+const totalInvoiceAmount = ref(0);
 const openDialog = ref(false)
 const toast = useToast()
 const listItems = ref<any[]>([])
@@ -29,12 +31,15 @@ const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
     criteria: null,
     search: '',
-    onlyManul: true,
+    onlyManul: false,
     onlyInssist: false,
     hotel: [allDefaultItem],
     date: dayjs(new Date()).startOf('month').toDate(),
 
 })
+
+const onlyManual = ref(false);
+const onlyInssist = ref(false);
 
 const hotelList = ref<any[]>([])
 const attachList = ref<any[]>([])
@@ -248,7 +253,10 @@ async function getBookingList(clearFilter: boolean = false) {
 
     for (const iterator of dataList) {
       //    const id = v4()
-     
+      totalHotelAmount.value += iterator.hotelAmount || 0; // Asegúrate de manejar posibles valores nulos
+      totalInvoiceAmount.value += iterator.invoiceAmount || 0;
+
+   
       bookinglistItems.value = [...bookinglistItems.value, {
         ...iterator,
         
@@ -264,6 +272,7 @@ async function getBookingList(clearFilter: boolean = false) {
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
     }
+
     return bookinglistItems.value
   }
   catch (error) {
@@ -274,6 +283,16 @@ async function getBookingList(clearFilter: boolean = false) {
   }
 }
 
+
+function handleCheckboxChange(type) {
+  if (type === 'manual') {
+    filterToSearch.value.onlyManual = true;
+    filterToSearch.value.onlyInssist = false;
+  } else if (type === 'inssist') {
+    filterToSearch.value.onlyManual = false;
+    filterToSearch.value.onlyInssist = true;
+  }
+}
 
 async function getHotelList(query: string = '') {
     try {
@@ -360,32 +379,30 @@ async function parseDataTableFilter(payloadFilter: any) {
             }
       */
 
-            if (parseFilter[i]?.key === 'invoiceNumber') {
-                parseFilter[i].key = 'invoiceNumberPrefix'
-            }
         }
     }
 
-    payload.value.filter = [...parseFilter || []]
-    getList()
+    Payload.value.filter = [...parseFilter || []]
+    getBookingList()
 }
 
 function onSortField(event: any) {
     if (event) {
-        if (event.sortField === 'hotel') {
-            event.sortField = 'hotel.name'
+        if (event.sortField === 'ratePlan') {
+            event.sortField = 'ratePlan.name'
         }
-        if (event.sortField === 'agency') {
-            event.sortField = 'agency.name'
+        if (event.sortField === 'roomType') {
+            event.sortField = 'roomType.name'
         }
-        if (event.sortField === 'invoiceNumber') {
-            event.sortField = 'invoiceNumberPrefix'
+        if (event.sortField === 'fullName') {
+            event.sortField = 'fistName'
         }
-        payload.value.sortBy = event.sortField
-        payload.value.sortType = event.sortOrder
-        getList()
+        Payload.value.sortBy = event.sortField
+        Payload.value.sortType = event.sortOrder
+        getBookingList()
     }
 }
+
 async function searchAndFilter() {
   const newPayload: IQueryRequest = {
     filter: [],
@@ -428,27 +445,37 @@ async function searchAndFilter() {
     }
   }
 
-  newPayload.filter.push({
-    key: 'invoiceStatus',
-    operator: 'IN',
-    value: ['PROCECSED'], // Asegúrate de que esté correctamente escrito como 'PROCESSED'
-    logicalOperation: 'AND'
-  });
-
+  // Aplicar solo un filtro de invoiceStatus basado en el checkbox marcado
+  if (filterToSearch.value.onlyManual) {
+    newPayload.filter.push({
+      key: 'invoiceStatus',
+      operator: 'IN',
+      value: ['PROCECSED'], // Solo se aplica este filtro
+      logicalOperation: 'AND'
+    });
+  } /*else if (filterToSearch.value.onlyInssist) {
+    newPayload.filter.push({
+      key: 'invoiceStatus',
+      operator: 'IN',
+      value: ['SENT'], // Solo se aplica este filtro
+      logicalOperation: 'AND'
+    });
+  }
+*/
   // Actualizar el payload
   payload.value = newPayload;
 
   // Obtener la lista de facturas
-  options.value.selectAllItemByDefault = true;
+  options.value.selectAllItemByDefault = false;
   await getList(); // Asegúrate de que esto funcione como esperas
   const dataList = await getBookingList(); // Ahora esto debería devolver los datos
 
   // Seleccionar automáticamente todos los elementos retornados
-  if (dataList && dataList.length > 0) {
+  /*if (dataList && dataList.length > 0) {
     selectedElements.value = dataList; // Llenar selectedElements con los elementos obtenidos
   } else {
     selectedElements.value = []; // Asegurarse de que esté vacío si no hay resultados
-  }
+  }*/
 }
 
 function clearFilterToSearch() {
@@ -459,7 +486,7 @@ function clearFilterToSearch() {
     filterToSearch.value = {
         // Mantener el primer elemento del enum como valor predeterminado
         search: '', // Dejar el campo de búsqueda en blanco
-        onlyManual: true,
+        onlyManual: false,
         onlyInssist: false,
         hotel: [allDefaultItem], // Restablecer a valor predeterminado
         date: dayjs(new Date()).startOf('month').toDate(),
@@ -467,6 +494,8 @@ function clearFilterToSearch() {
     }
     selectedElements.value = []
     bookinglistItems.value = []
+    totalHotelAmount.value=0
+    totalInvoiceAmount.value=0
     Pagination.value.totalElements = 0
 }
 
@@ -537,14 +566,14 @@ onMounted(async () => {
 
                         </div>
                         <div class="flex align-items-center gap-2 m-3 ">
-                            <Checkbox id="all-check-1" v-model="filterToSearch.onlyManual" :binary="true"
-                                style="z-index: 999;" />
+                            <Checkbox  id="only-manual"   v-model="filterToSearch.onlyManual" :binary="true"
+                                style="z-index: 999;"  @change="handleCheckboxChange('manual')" />
                             <label for="all-check-1" class="font-bold">Only Manual</label>
                         </div>
 
                         <div class="flex align-items-center gap-2 m-3">
-                            <Checkbox id="all-check-1" v-model="filterToSearch.onlyInssist" :binary="true"
-                                style="z-index: 999;" />
+                            <Checkbox  id="only-inssist"   v-model="filterToSearch.onlyInssist" :binary="true"
+                                style="z-index: 999;"  @change="handleCheckboxChange('inssist')" />
                             <label for="all-check-1" class="font-bold">Only Inssist</label>
                         </div>
                         <div class="flex align-items-center mt-3 mb-3">
@@ -566,9 +595,10 @@ onMounted(async () => {
                             </div>
                         </template>
 
-                        <template #column-status="{ data: item }">
-                            <Badge :value="getStatusName(item?.status)"
-                                :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
+                        <template #column-status="{ data}">
+                            <div id="fieldError">
+            <span v-tooltip.bottom="data.sendStatusError" style="color: red;">{{ data.sendStatusError }}</span>
+          </div>
                         </template>
 
                         <template #datatable-footer>
@@ -577,8 +607,8 @@ onMounted(async () => {
                                 <Row>
                                     <Column footer="Totals:" :colspan="9"
                                         footer-style="text-align:right; font-weight: 700" />
-                                    <Column :colspan="1" />
-                                    <Column :colspan="1" />
+                                    <Column :footer="totalHotelAmount" :colspan="1" />
+                                    <Column  :footer="totalInvoiceAmount"  :colspan="1" />
                                     <Column :colspan="1" />
                                 </Row>
                             </ColumnGroup>
