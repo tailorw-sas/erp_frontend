@@ -111,18 +111,28 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
     }
 
     @Override
-    public Double calculateCommission(double amount, UUID merchantId, UUID creditCardTypeId) {
-        List<ManageMerchantCommissionDto> merchantCommissionDtoList = findAllByMerchantAndCreditCardType(merchantId, creditCardTypeId);
+    public Double calculateCommission(double amount, UUID merchantId, UUID creditCardTypeId, LocalDate date, int decimals) {
+        ManageMerchantCommissionDto merchantCommissionDto = this.repositoryQuery.findByManagerMerchantAndManageCreditCartTypeAndDateWithinRangeOrNoEndDate(
+                merchantId, creditCardTypeId, date
+        ).map(ManageMerchantCommission::toAggregate).orElse(null);
         double commission = 0;
-        if (!merchantCommissionDtoList.isEmpty()) {
-            ManageMerchantCommissionDto first = merchantCommissionDtoList.get(0);
-            if (first.getCalculationType() == CalculationType.PER) {
-                commission = (first.getCommission() / 100.0) * amount;
+        if (merchantCommissionDto != null) {
+            if (merchantCommissionDto.getCalculationType() == CalculationType.PER) {
+                commission = (merchantCommissionDto.getCommission() / 100.0) * amount;
                 // Aplicar redondeo de banquero con dos decimales por ahora, despues la cantidad de decimales se toma de la config
-                commission = BankerRounding.round(commission, 2);
+                commission = BankerRounding.round(commission, decimals);
             } else {
-                commission = first.getCommission();
+                commission = merchantCommissionDto.getCommission();
             }
+        } else {
+            throw new BusinessNotFoundException(
+                    new GlobalBusinessException(
+                            DomainErrorMessage.COMMISSION_NOT_FOUND,
+                            new ErrorField(
+                                    "commission",
+                                    DomainErrorMessage.COMMISSION_NOT_FOUND.getReasonPhrase())
+                    )
+            );
         }
         return commission;
     }

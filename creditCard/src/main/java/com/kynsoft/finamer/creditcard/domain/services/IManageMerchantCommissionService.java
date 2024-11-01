@@ -24,5 +24,5 @@ public interface IManageMerchantCommissionService {
 
     ManageMerchantCommissionDto findByManagerMerchantAndManageCreditCartTypeAndDateWithinRangeOrNoEndDate(UUID managerMerchant, UUID manageCreditCartType, LocalDate date);
 
-    Double calculateCommission(double amount, UUID merchantId, UUID creditCardTypeId);
+    Double calculateCommission(double amount, UUID merchantId, UUID creditCardTypeId, LocalDate date, int decimals);
 }

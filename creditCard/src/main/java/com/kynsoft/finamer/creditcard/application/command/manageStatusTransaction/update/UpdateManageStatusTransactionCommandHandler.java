@@ -8,6 +8,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageStatusTransactionService;
+import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
@@ -26,10 +27,11 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
     private final CardNetJobServiceImpl cardnetJobService;
     private final TransactionPaymentLogsService transactionPaymentLogsService;
     private final ManageMerchantCommissionServiceImpl merchantCommissionService;
+    private final IParameterizationService parameterizationService;
 
     public UpdateManageStatusTransactionCommandHandler(ITransactionService transactionService, IManageStatusTransactionService statusTransactionService, IManageMerchantConfigService merchantConfigService,
                                                        ManageCreditCardTypeServiceImpl creditCardTypeService, ManageTransactionStatusServiceImpl transactionStatusService, CardNetJobServiceImpl cardnetJobService,
-                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService) {
+                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService) {
 
         this.transactionService = transactionService;
         this.statusTransactionService = statusTransactionService;
@@ -39,6 +41,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
         this.cardnetJobService = cardnetJobService;
         this.transactionPaymentLogsService = transactionPaymentLogsService;
         this.merchantCommissionService = merchantCommissionService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -65,7 +68,12 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(
                     Character.getNumericValue(transactionResponse.getCreditCardNumber().charAt(0))
             );
-            double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId());
+            ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
+
+            //si no encuentra la parametrization que agarre 2 decimales por defecto
+            int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
+
+            double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn(), decimals);
             double netAmount = transactionDto.getAmount() - commission;
 
             //Obtener estado de la transacción correspondiente dado el responseCode del merchant

@@ -2,6 +2,7 @@ package com.kynsoft.finamer.creditcard.application.command.manageStatusTransacti
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
+import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
@@ -14,15 +15,17 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
     private final ManageTransactionStatusServiceImpl transactionStatusService;
     private final TransactionPaymentLogsService transactionPaymentLogsService;
     private final ManageMerchantCommissionServiceImpl merchantCommissionService;
+    private final IParameterizationService parameterizationService;
     public UpdateManageStatusTransactionBlueCommandHandler(ITransactionService transactionService, ManageCreditCardTypeServiceImpl creditCardTypeService,
                                                            ManageTransactionStatusServiceImpl transactionStatusService,
                                                            TransactionPaymentLogsService transactionPaymentLogsService,
-                                                           ManageMerchantCommissionServiceImpl merchantCommissionService) {
+                                                           ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService) {
         this.transactionService = transactionService;
         this.creditCardTypeService = creditCardTypeService;
         this.transactionStatusService = transactionStatusService;
         this.transactionPaymentLogsService = transactionPaymentLogsService;
         this.merchantCommissionService = merchantCommissionService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -31,7 +34,12 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(Character.getNumericValue(command.getRequest().getCardNumber().charAt(0)));
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(command.getRequest().getStatus());
         TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
-        double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId());
+        ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
+
+        //si no encuentra la parametrization que agarre 2 decimales por defecto
+        int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
+
+        double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn(), decimals);
         double netAmount = transactionDto.getAmount() - commission;
 
         //Comenzar a actualizar lo referente a la transaccion en las diferntes tablas
