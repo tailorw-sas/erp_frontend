@@ -206,7 +206,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 0L,
                 invoiceNumber,
                 //invoiceToClone.getInvoiceDate(), 
-                this.invoiceDate(invoiceToClone.getId()), 
+                this.invoiceDate(invoiceToClone.getHotel().getId()),
                 invoiceToClone.getDueDate(),
                 true,
                 invoiceToClone.getInvoiceAmount(),
