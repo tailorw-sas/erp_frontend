@@ -32,11 +32,9 @@ public class ManageRoomCategory {
     @Column(nullable = true)
     private Boolean deleted = false;
 
-
+    private String status;
 
     private String name;
-
-
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -52,11 +50,12 @@ public class ManageRoomCategory {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.status = dto.getStatus();
     }
 
     public ManageRoomCategoryDto toAggregate(){
         return new ManageRoomCategoryDto(
-                id, code, name
+                id, code, name, status
         );
     }
 }

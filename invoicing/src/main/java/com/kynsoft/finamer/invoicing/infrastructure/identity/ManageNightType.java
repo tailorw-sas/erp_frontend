@@ -34,6 +34,8 @@ public class ManageNightType implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean deleted = false;
 
+    private String status;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -48,11 +50,11 @@ public class ManageNightType implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
-
+        this.status = dto.getStatus();
     }
 
     public ManageNightTypeDto toAggregate() {
-        return new ManageNightTypeDto(id, code, name);
+        return new ManageNightTypeDto(id, code, name, status);
     }
 
 }
