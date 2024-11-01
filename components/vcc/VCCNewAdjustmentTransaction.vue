@@ -499,7 +499,7 @@ watch(() => props.openDialog, (newValue) => {
     </div>
     <template #footer>
       <div class="flex justify-content-end mr-4">
-        <Button v-tooltip.top="'Save'" label="Save" icon="pi pi-save" :loading="loadingSaveAll" class="mr-2" @click="saveSubmit($event)" />
+        <Button v-tooltip.top="'Apply'" label="Apply" icon="pi pi-save" :loading="loadingSaveAll" class="mr-2" @click="saveSubmit($event)" />
         <Button v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" icon="pi pi-times" @click="onClose(true)" />
       </div>
     </template>

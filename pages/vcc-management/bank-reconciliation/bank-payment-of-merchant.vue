@@ -6,6 +6,7 @@ import type { Ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import { useRoute } from 'vue-router'
+import ContextMenu from 'primevue/contextmenu'
 import BankPaymentMerchantBindTransactionsDialog
   from '../../../components/vcc/bank-reconciliation/BankPaymentMerchantBindTransactionsDialog.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -32,6 +33,21 @@ const subTotals: any = ref({ amount: 0 })
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
 const newAdjustmentTransactionDialogVisible = ref(false)
+const contextMenu = ref()
+const contextMenuTransaction = ref()
+
+const menuListItems = [
+  {
+    label: 'Unbind Transaction',
+    icon: 'pi pi-dollar',
+    iconSvg: 'M304.1 405.9c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-59.3 59.3-155.7 59.3-215 0-59.3-59.3-59.3-155.7 0-215l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-28.1 28.1-28.1 73.8 0 101.8 28.1 28.1 73.8 28.1 101.8 0l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6zm-56.6-260.2c4.7 4.7 12.3 4.7 17 0l44.7-44.7c28.1-28.1 73.8-28.1 101.8 0 28.1 28.1 28.1 73.8 0 101.8l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6c4.7 4.7 12.3 4.7 17 0l44.7-44.7c59.3-59.3 59.3-155.7 0-215-59.3-59.3-155.7-59.3-215 0l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6zm234.8 359.3l22.6-22.6c9.4-9.4 9.4-24.6 0-33.9L63.6 7c-9.4-9.4-24.6-9.4-33.9 0L7 29.7c-9.4 9.4-9.4 24.6 0 33.9l441.4 441.4c9.4 9.4 24.6 9.4 33.9 0z',
+    viewBox: '0 0 512 512',
+    width: '14px',
+    height: '14px',
+    command: () => unbindTransactions(),
+    disabled: false,
+  }
+]
 
 const confApi = reactive({
   moduleApi: 'creditcard',
@@ -183,7 +199,7 @@ function clearForm() {
   formReload.value++
 }
 
-//Obtener datos del payment of merchant
+// Obtener datos del payment of merchant
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
@@ -196,6 +212,7 @@ async function getItemById(id: string) {
           const merchantNames = response.merchantBankAccount?.managerMerchant?.map((item: any) => item.description).join(' - ')
           response.merchantBankAccount.name = `${merchantNames} - ${response.merchantBankAccount.description} - ${response.merchantBankAccount.accountNumber}`
           response.merchantBankAccount.status = 'ACTIVE'
+          // Falta mapear creditcardtypes
           item.value.merchantBankAccount = response.merchantBankAccount
           MerchantBankAccountList.value = [response.merchantBankAccount]
         }
@@ -235,6 +252,12 @@ async function getList() {
     options.value.loading = true
     BindTransactionList.value = []
     const newListItems = []
+    payload.value.filter = [{
+      key: 'reconciliation.id',
+      operator: 'EQUALS',
+      value: idItem.value,
+      logicalOperation: 'AND'
+    }]
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
@@ -361,11 +384,32 @@ async function getMerchantBankAccountList(query: string) {
 
     for (const iterator of dataList) {
       const merchantNames = iterator.managerMerchant.map((item: any) => item.description).join(' - ')
-      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`, status: iterator.status, merchantData: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes }]
+      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`, status: iterator.status, managerMerchant: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes }]
     }
   }
   catch (error) {
     console.error('Error loading merchant bank account list:', error)
+  }
+}
+
+async function unbindTransactions() {
+  try {
+    loadingSaveAll.value = true
+    const transactionsIds = [contextMenuTransaction.value.id]
+    const payload: { [key: string]: any } = {}
+    payload.bankReconciliation = idItem.value
+    payload.transactionsIds = transactionsIds
+
+    await GenericService.create(confApi.moduleApi, 'transactions/unbind', payload)
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
+    getList()
+  }
+  catch (error: any) {
+    loadingSaveAll.value = false
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    loadingSaveAll.value = false
   }
 }
 
@@ -424,8 +468,9 @@ async function saveItem(item: { [key: string]: any }) {
     try {
       await createItem(item)
       // Deshabilitar campos restantes del formulario
-
+      await navigateTo({ path: '/vcc-management/bank-reconciliation/bank-payment-of-merchant', query: { id: idItem.value } })
       await getItemById(idItem.value)
+      await getList()
     }
     catch (error: any) {
       loadingSaveAll.value = true
@@ -478,17 +523,17 @@ function onSortField(event: any) {
   }
 }
 
+async function onRowRightClick(event: any) {
+  contextMenu.value.hide()
+  contextMenuTransaction.value = event.data
+  contextMenu.value.show(event.originalEvent)
+}
+
 onMounted(async () => {
   if (route?.query?.id) {
     const id = route.query.id.toString()
     idItem.value = id
     getItemById(id)
-    payload.value.filter = [{
-      key: 'reconciliation.id',
-      operator: 'EQUALS',
-      value: idItem.value,
-      logicalOperation: 'AND'
-    }]
     getList()
   }
 })
@@ -590,6 +635,7 @@ onMounted(async () => {
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
       @update:selected-items="onMultipleSelect($event)"
+      @on-row-right-click="onRowRightClick"
     >
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
@@ -624,5 +670,17 @@ onMounted(async () => {
       is-local :open-dialog="newAdjustmentTransactionDialogVisible"
       @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" @on-save-local="($event) => addAdjustmentLocal($event)"
     />
+    <ContextMenu ref="contextMenu" :model="menuListItems">
+      <template #itemicon="{ item }">
+        <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" :height="item.height" :viewBox="item.viewBox" :width="item.width" fill="#8d8faa">
+            <path :d="item.iconSvg" />
+          </svg>
+        </div>
+        <div v-else class="w-2rem flex justify-content-center align-items-center">
+          <i v-if="item.icon" :class="item.icon" />
+        </div>
+      </template>
+    </ContextMenu>
   </div>
 </template>

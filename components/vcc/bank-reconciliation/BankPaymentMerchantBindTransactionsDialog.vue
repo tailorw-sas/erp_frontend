@@ -162,7 +162,7 @@ async function getList() {
     await getCollectionStatusList()
     const statusIds = collectionStatusRefundReceivedList.value.map((elem: any) => elem.id)
 
-    const merchantIds = props.currentBankPayment.merchantBankAccount.merchantData.map((item: any) => item.id)
+    const merchantIds = props.currentBankPayment.merchantBankAccount.managerMerchant.map((item: any) => item.id)
     const creditCardTypeIds = props.currentBankPayment.merchantBankAccount.creditCardTypes.map((item: any) => item.id)
 
     payload.value.filter = [{
