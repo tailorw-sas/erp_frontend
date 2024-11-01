@@ -13,7 +13,6 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import BookingTotalDialog from './BookingPartialDialog.vue'
 import BookingCloneTotal from './cloneTotal-edit/BookingCloneTotal.vue'
 
 const props = defineProps({
@@ -404,10 +403,10 @@ const Fields = ref<Array<Container>>([
       {
         field: 'hotelAmount',
         header: 'Hotel Amount',
-        dataType: 'text',
+        dataType: 'number',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.string().min(1, 'The Hotel Amount field is required').refine(val => +val <= 0, 'The Hotel Amount field must be greater than 0').nullable()
+        validation: z.number().min(1, 'The Hotel Amount field is required').refine(val => +val <= 0, 'The Hotel Amount field must be greater than 0').nullable()
 
       },
 
@@ -572,7 +571,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
   {
     field: 'hotelAmount',
     header: 'Hotel Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
     validation: z.string().trim().regex(/^\d+$/, 'The Hotel Amount field must be greater than or equal to 0')
@@ -710,7 +709,7 @@ const item = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   contract:'',
@@ -741,7 +740,7 @@ const itemTemp = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -881,11 +880,14 @@ const fieldsClone: Array<FieldDefinitionType> = [
   {
     field: 'checkIn',
     header: 'Check In',
-    dataType: 'string',
+    dataType: 'date',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
     disabled: true,
-    validation: z.string().min(1, 'The Check In field is required')
+    validation: z.date({
+      required_error: 'The Check In field is required',
+      invalid_type_error: 'The Check In field is required',
+    })
   },
   {
     field: 'lastName',
@@ -907,7 +909,7 @@ const fieldsClone: Array<FieldDefinitionType> = [
   {
     field: 'hotelAmount',
     header: 'Hotel Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
     disabled: true,
@@ -918,11 +920,14 @@ const fieldsClone: Array<FieldDefinitionType> = [
   {
     field: 'checkOut',
     header: 'Check Out',
-    dataType: 'string',
+    dataType: 'date',
     disabled: true,
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Last Name field is required')
+    validation: z.date({
+      required_error: 'The Check Out field is required',
+      invalid_type_error: 'The Check Out field is required',
+    })
   },
 
   // Room Number
@@ -1009,7 +1014,7 @@ const itemClone = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -1328,7 +1333,6 @@ async function getBookingList(clearFilter: boolean = false) {
     totalOriginalAmount.value = 0
     
     for (const iterator of dataList) {
-      console.log('Si entro a este total', iterator);
       ListItems.value = [...ListItems.value, {
         ...iterator,
         roomType: { ...iterator?.roomType, name: iterator?.roomType?.code ? `${iterator?.roomType?.code || ""}-${iterator?.roomType?.name || ""}` : "" },
@@ -1437,7 +1441,7 @@ async function GetItemById(id: string) {
       item.value.rateChild = element.rateChild
       item.value.hotelInvoiceNumber = element.hotelInvoiceNumber
       item.value.folioNumber = element.folioNumber
-      item.value.hotelAmount = element.hotelAmount ? String(element?.hotelAmount) : '0'
+      item.value.hotelAmount = element.hotelAmount ? Number(element?.hotelAmount) : 0
       item.value.description = element.description
       item.value.invoice = element.invoice
       item.value.ratePlan = element.ratePlan
@@ -1473,7 +1477,7 @@ async function GetItemById(id: string) {
         item.value.rateChild = response.rateChild
         item.value.hotelInvoiceNumber = response.hotelInvoiceNumber
         item.value.folioNumber = response.folioNumber
-        item.value.hotelAmount = String(response.hotelAmount)
+        item.value.hotelAmount = Number(response.hotelAmount)
         item.value.description = response.description
         item.value.invoice = response.invoice
         item.value.ratePlan = response.ratePlan
@@ -1747,33 +1751,131 @@ function getSortField(field: any) {
 }
 
 // edit booking clone total
-async function openNewEditBooking(item: any) {    
+async function openNewEditBooking(item: any) {      
   if (item.id) {
     idItem.value = item.id
     // await GetItemById(item?.id)
-    selectedBooking.value = item
+    // selectedBooking.value = item
     bookingClone.value = item
     itemClone.value = item
     itemClone.value.hotelCreationDate = new Date(item.hotelCreationDate)
     itemClone.value.bookingDate = item.bookingDate ? new Date(item.bookingDate) : ''
     itemClone.value.checkIn = new Date(item.checkIn)
     itemClone.value.checkOut = new Date(item.checkOut)
+
+    // Validations for hotelInvoiceNumber -------------------------------------------------------------
+    if (itemClone.value.hotel?.virtual) {
+        const decimalSchema = z.object(
+          {
+            hotelInvoiceNumber:
+            z.string()
+              .min(1, 'The Hotel Invoice No. field is required')
+              .refine((val: string) => {
+                if ((Number(val) < 0)) {
+                  return false
+                }
+                return true
+              }, { message: 'The Hotel Invoice No. field must not be negative' }).nullable()
+          },
+        )
+        const objField = fieldsClone.find(field => field.field === 'hotelInvoiceNumber')
+
+        updateFieldProperty(fieldsClone, 'hotelInvoiceNumber', 'validation', decimalSchema.shape.hotelInvoiceNumber)
+        updateFieldProperty(fieldsClone, 'hotelInvoiceNumber', 'class', `${objField?.class} required`)
+        updateFieldProperty(fieldsClone, 'hotelInvoiceNumber', 'disabled', false)
+    }
+    else {
+      const decimalSchema = z.object(
+        {
+          hotelInvoiceNumber: z
+            .string()
+            .refine((val: string) => {
+              if ((Number(val) < 0)) {
+                return false
+              }
+              return true
+            }, { message: 'The Hotel Invoice No. field must not be negative' }).nullable(),
+        },
+      )
+      const objField = fieldsClone.find(field => field.field === 'hotelInvoiceNumber')
+      updateFieldProperty(fieldsClone, 'hotelInvoiceNumber', 'validation', decimalSchema.shape.hotelInvoiceNumber)
+      updateFieldProperty(fieldsClone, 'hotelInvoiceNumber', 'class', `${objField?.class}`)
+      updateFieldProperty(fieldsClone, 'hotelInvoiceNumber', 'disabled', true)
+    }
+    // Validations for hotelInvoiceNumber -------------------------------------------------------------------
+
+    // Validation night type --------------------------------------------------------------------------------
+    if (itemClone.value.agency?.client?.isNightType) {
+        const objField = fieldsClone.find(field => field.field === 'nightType')
+        const validations = z.object({
+          id: z.string(),
+          name: z.string(),
+        }).nullable()
+          .refine(value => value && value.id && value.name, { message: `The nightType field is required` })
+
+        // validateEntityStatus('night type') // Esto es lo que va cuando me pongan el status en el ojbeto, solo llega id, code y name
+        // updateFieldProperty(fieldsV2, 'nightType', 'validation', )
+        updateFieldProperty(fieldsClone, 'nightType', 'validation', validations)
+        updateFieldProperty(fieldsClone, 'nightType', 'class', `${objField?.class} required`)
+    }
+    else {
+      const objField = fieldsClone.find(field => field.field === 'nightType')
+      updateFieldProperty(fieldsClone, 'nightType', 'validation', z.string().nullable())
+      updateFieldProperty(fieldsClone, 'nightType', 'class', `${objField?.class}`)
+    }
+    // Validation night type --------------------------------------------------------------------------------
+
+    // Validation flat rate ---------------------------------------------------------------------------------
+
+    if (itemClone.value?.invoice?.hotel?.requiresFlatRate) {
+        const decimalSchema = z.object(
+          {
+            hotelAmount:
+            z.number()
+              .min(1, 'The Hotel Amount field is required')
+              .refine((val: number) => {
+                if ((Number(val) < 0)) {
+                  return false
+                }
+                return true
+              }, { message: 'The Hotel Amount field must not be negative' }).nullable()
+          },
+        )
+        const objField = fieldsClone.find(field => field.field === 'hotelAmount')
+
+        updateFieldProperty(fieldsClone, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
+        updateFieldProperty(fieldsClone, 'hotelAmount', 'class', `${objField?.class} required`)
+      }
+      else {
+        const decimalSchema = z.object(
+          {
+            hotelAmount: z
+              .number()
+              .refine((val: number) => {
+                if ((Number(val) < 0)) {
+                  return false
+                }
+                return true
+              }, { message: 'The Hotel Invoice No. field must not be negative' }).nullable(),
+          },
+        )
+        const objField = fieldsClone.find(field => field.field === 'hotelAmount')
+        updateFieldProperty(fieldsClone, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
+        updateFieldProperty(fieldsClone, 'hotelAmount', 'class', `${objField?.class}`)
+      }
+    // Validation flat rate ---------------------------------------------------------------------------------
+
     isEditBookingCloneDialog.value = true
   }
 }
 ///////////////////////////
 
 function onRowRightClick(event: any) {
-  // console.log(props.invoiceObj);
-  // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-  //   return;
-  // }
-
-  // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-  //   return;
-  // }
-
-  selectedBooking.value = event.data
+  selectedBooking.value = {
+    ...event.data,
+    checkIn: event.data.checkIn ? new Date(`${dayjs(event.data.checkIn).format('YYYY-MM-DD')}T00:00:00`) : '',
+    checkOut: event.data.checkOut ? new Date(`${dayjs(event.data.checkOut).format('YYYY-MM-DD')}T00:00:00`) : '',
+  }
   bookingContextMenu.value.show(event.originalEvent)
 }
 
@@ -1799,22 +1901,25 @@ function onCellEditComplete(val: any) {
 
 function onEditBookingLocal(item: any) { 
   recalculateFormData()
-  // isEditBookingCloneDialog.value = false
+  isEditBookingCloneDialog.value = false
 }
 
 function isValidDate(dateStr) {
-  if (!dateStr || dateStr.trim() === '') {
+  const dateTemp = typeof dateStr === 'string' ? dateStr :  dayjs(dateStr).format('YYYY-MM-DD');
+  
+
+  if (!dateTemp || dateTemp.trim() === '') {
     return false; // Verificar si es nulo o vacío
   }
 
   // Validar formato de fecha (YYYY-MM-DD)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(dateStr)) {
+  if (!dateRegex.test(dateTemp)) {
     return false; // Si no coincide con el formato
   }
 
   // Verificar si la fecha es válida
-  const date = new Date(dateStr);
+  const date = new Date(dateTemp);
   return !isNaN(date.getTime()); // Comprobar que es una fecha válida
 }
 
@@ -1822,7 +1927,6 @@ function getMinCheckInAndMaxCheckOut(array) {
   return array.reduce((acc, item) => {
     // Ignorar fechas inválidas
     if (!isValidDate(item.checkIn) || !isValidDate(item.checkOut)) {
-      console.warn(`Fecha inválida en el item: ${JSON.stringify(item)}`);
       return acc; // Continuar con el siguiente objeto
     }
 
@@ -1998,18 +2102,18 @@ onMounted(() => {
       @on-row-double-click="($event) => {
 
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
+        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
 
-          return;
-        }
+        //   return;
+        // }
 
-        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-          return;
-        }
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+        //   return;
+        // }
 
-        if (!props.isDetailView) {
-          openEditBooking($event)
-        }
+        // if (!props.isDetailView) {
+        //   openEditBooking($event)
+        // }
       }">
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
@@ -2066,6 +2170,7 @@ onMounted(() => {
       :invoice-obj="currentInvoice" />
   </div>
 
+  <!-- Es este el correcto -->
   <div v-if="isEditBookingCloneDialog" style="h-fit">
     <BookingCloneTotal
       :form-reload="formRealoadForDialogBooking"

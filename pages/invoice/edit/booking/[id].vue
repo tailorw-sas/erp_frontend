@@ -1377,7 +1377,6 @@ async function parseDataTableFilterAdjustment(payloadFilter: any) {
 }
 
 async function openEditDialog(item: any) {
-  console.log('openEditDialog', item)
 
   // if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
   //   return null
@@ -1702,8 +1701,15 @@ async function getBookingItemById(id: string) {
       }
       if (response?.invoice?.agency?.client?.isNightType) {
         const objField = fieldsV2.find(field => field.field === 'nightType')
+        const validations = z.object({
+          id: z.string(),
+          name: z.string(),
+        }).nullable()
+          .refine(value => value && value.id && value.name, { message: `The nightType field is required` })
 
-        updateFieldProperty(fieldsV2, 'nightType', 'validation', validateEntityStatus('night type'))
+        // validateEntityStatus('night type') // Esto es lo que va cuando me pongan el status en el ojbeto, solo llega id, code y name
+        // updateFieldProperty(fieldsV2, 'nightType', 'validation', )
+        updateFieldProperty(fieldsV2, 'nightType', 'validation', validations)
         updateFieldProperty(fieldsV2, 'nightType', 'class', `${objField?.class} required`)
       }
       else {

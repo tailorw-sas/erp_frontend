@@ -866,8 +866,8 @@ async function getRoomRateList() {
     totalInvoiceAmount.value = 0
     totalHotelAmount.value = 0
     for (const iterator of roomRateList.value) {
-      iterator.checkIn = dayjs(iterator?.checkIn).format('YYYY-MM-DD')
-      iterator.checkOut = dayjs(iterator?.checkOut).format('YYYY-MM-DD')
+      iterator.checkIn = iterator?.checkIn ? new Date(`${dayjs(iterator?.checkIn).format('YYYY-MM-DD')}T00:00:00`) : null
+      iterator.checkOut = iterator?.checkOut ? new Date(`${dayjs(iterator?.checkOut).format('YYYY-MM-DD')}T00:00:00`) : null
       iterator.invoiceAmount = iterator?.invoiceAmount || 0
       iterator.nights = dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false)
       iterator.fullName = `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`
@@ -1370,7 +1370,7 @@ onMounted(async () => {
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
           <template #field-hotelAmount="{ onUpdate, item: data, fields, field }">
-            <InputText
+            <InputNumber
               v-if="!loadingSaveAll"
               v-model="data.hotelAmount"
               show-clear

@@ -108,8 +108,6 @@ const formFields = ref<FieldDefinitionType[]>([])
 
 const couponValidation = ref<string>('')
 
-const couponValid = ref(true)
-
 watch(() => props.couponNumberValidation, () => {
   if (props.couponNumberValidation) {
     couponValidation.value = props.couponNumberValidation
