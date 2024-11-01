@@ -1154,21 +1154,19 @@ onMounted(async () => {
                   class="w-3rem mx-1" 
                   icon="pi pi-print" 
                   :loading="loadingSaveAll"
-                  disabled
                   @click="() => {
                     exportAttachmentsDialogOpen = true
                   }"
                 />
            
-
                 <IfCan :perms="['INVOICE-MANAGEMENT:SHOW-BTN-ATTACHMENT']">
                   <Button v-tooltip.top="'Add Attachment'" class="w-3rem mx-1" icon="pi pi-paperclip"
-                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()" disabled  />
+                    :loading="loadingSaveAll" @click="handleAttachmentDialogOpen()"/>
                   </IfCan>
                   <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-SHOW-HISTORY']"> 
                     <!-- :disabled="!item?.hasAttachments" -->
                     <Button v-tooltip.top="'Show History'" class="w-3rem mx-1" :loading="loadingSaveAll"
-                      @click="handleAttachmentHistoryDialogOpen()" disabled>
+                      @click="handleAttachmentHistoryDialogOpen()">
                       <template #icon>
                         <span class="flex align-items-center justify-content-center p-0">
                           <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px"
