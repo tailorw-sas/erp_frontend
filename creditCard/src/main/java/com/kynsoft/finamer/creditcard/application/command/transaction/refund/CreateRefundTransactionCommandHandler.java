@@ -78,7 +78,7 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus(ETransactionStatus.REFUND);
 
         TransactionDto transactionDto = this.service.create(new TransactionDto(
-                parentTransaction.getTransactionUuid(),
+                UUID.randomUUID(),
                 parentTransaction.getMerchant(),
                 parentTransaction.getMethodType(),
                 parentTransaction.getHotel(),
