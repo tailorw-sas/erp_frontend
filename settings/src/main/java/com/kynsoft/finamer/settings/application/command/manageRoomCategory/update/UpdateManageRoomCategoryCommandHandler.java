@@ -38,7 +38,7 @@ public class UpdateManageRoomCategoryCommandHandler implements ICommandHandler<U
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         dto.setDescription(command.getDescription());
         this.service.update(dto);
-        this.producerUpdateManageRoomCategoryService.update(new UpdateManageRoomCategoryKafka(dto.getId(), dto.getName()));
+        this.producerUpdateManageRoomCategoryService.update(new UpdateManageRoomCategoryKafka(dto.getId(), dto.getName(), dto.getStatus().name()));
 
     }
 

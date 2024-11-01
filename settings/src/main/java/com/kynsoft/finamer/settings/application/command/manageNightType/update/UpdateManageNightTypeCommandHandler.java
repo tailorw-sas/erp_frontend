@@ -39,7 +39,7 @@ public class UpdateManageNightTypeCommandHandler implements ICommandHandler<Upda
         dto.setDescription(command.getDescription());
 
         service.update(dto);
-        this.producerUpdateManageNightTypeService.update(new UpdateManageNightTypeKafka(dto.getId(), dto.getName()));
+        this.producerUpdateManageNightTypeService.update(new UpdateManageNightTypeKafka(dto.getId(), dto.getName(), dto.getStatus().name()));
 
         // if (update.getUpdate() > 0) {
         // }
