@@ -4,7 +4,6 @@ import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantBankAccountDto;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
