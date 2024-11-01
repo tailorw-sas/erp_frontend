@@ -10,6 +10,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { ENUM_INVOICE_IMPORT_TYPE } from '~/utils/Enums'
 
 const toast = useToast()
+const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
@@ -175,6 +176,7 @@ async function importFile() {
     formData.append('file', file)
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_INVOICE_IMPORT_TYPE.NO_VIRTUAL)
+    formData.append('employee', userData?.value?.user?.name || '')
     await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
