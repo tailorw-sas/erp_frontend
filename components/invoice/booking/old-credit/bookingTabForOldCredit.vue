@@ -101,6 +101,7 @@ const toast = useToast()
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 const ListItems = ref<any[]>([])
+const listItemsLocal = ref<any[]>([...(props.listItems ?? [])])
 const formReload = ref(0)
 
 const route = useRoute()
@@ -1137,8 +1138,8 @@ async function GetItemById(id: string) {
     loadingSaveAll.value = true
 
     if (props.isCreationDialog) {
-      // @ts-expect-error
-      const element: any = props.listItems.find((item: any) => item.id === id)
+
+      const element: any = listItemsLocal.value.find((item: any) => item.id === id)
       item.value.id = element.id
       item.value.bookingId = element.bookingId
       idItem.value = element?.id
@@ -1151,7 +1152,7 @@ async function GetItemById(id: string) {
       item.value.firstName = element.firstName
       item.value.lastName = element.lastName
 
-      item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : '0'
+      item.value.invoiceAmount = element.invoiceAmount ? Number(element.invoiceAmount) : 0
       item.value.roomNumber = element.roomNumber
       item.value.couponNumber = element.couponNumber
       item.value.adults = element.adults
@@ -1287,7 +1288,7 @@ async function saveBooking(item: { [key: string]: any }) {
   item.roomType = roomTypeList.value.find((roomType: any) => roomType?.id === item?.roomType?.id)
   item.dueAmount = item.invoiceAmount
   if (props.isCreationDialog) {
-    const invalid: any = props?.listItems?.find((booking: any) => booking?.hotelBookingNumber === item?.hotelBookingNumber)
+    const invalid: any = listItemsLocal.value.find((booking: any) => booking?.hotelBookingNumber === item?.hotelBookingNumber)
 
     if (invalid && invalid?.id !== idItem.value) {
       return toast.add({ severity: 'error', summary: 'Error', detail: 'The field Hotel booking No. is repeated', life: 10000 })
@@ -1431,17 +1432,22 @@ watch(() => props.invoiceAgency?.bookingCouponFormat, () => {
   couponNumberValidation.value = props.invoiceAgency?.bookingCouponFormat
 })
 
-watch(() => props.listItems, () => {
+watch(() => listItemsLocal.value, () => {
   if (props.isCreationDialog) {
     totalHotelAmount.value = 0
     totalInvoiceAmount.value = 0
     totalOriginalAmount.value = 0
     totalDueAmount.value = 0
-    props?.listItems?.forEach((listItem: any) => {
-      totalHotelAmount.value += listItem?.hotelAmount ? Number(listItem?.hotelAmount) : 0
-      totalInvoiceAmount.value += listItem?.invoiceAmount ? Number(listItem?.invoiceAmount) : 0
-      totalOriginalAmount.value += listItem?.originalAmount ? Number(listItem?.originalAmount) : 0
-      totalDueAmount.value += listItem?.dueAmount ? Number(listItem?.dueAmount) : 0
+    listItemsLocal.value.forEach((itemObj: any) => {
+      totalHotelAmount.value += itemObj?.hotelAmount ? Number(itemObj?.hotelAmount) : 0
+      totalInvoiceAmount.value += itemObj?.invoiceAmount ? Number(itemObj?.invoiceAmount) : 0
+      totalOriginalAmount.value += itemObj?.originalAmount ? Number(itemObj?.originalAmount) : 0
+      totalDueAmount.value += itemObj?.dueAmount ? Number(itemObj?.dueAmount) : 0
+
+      // listItem.hotelAmount = listItem.hotelAmount ? formatNumber(listItem.hotelAmount) : 0
+      // listItem.invoiceAmount = listItem.invoiceAmount ? formatNumber(listItem.invoiceAmount) : 0
+      // listItem.originalAmount = listItem.originalAmount ? formatNumber(listItem.originalAmount) : 0
+      // listItem.dueAmount = listItem.dueAmount ? formatNumber(listItem.dueAmount) : 0
     })
   }
 }, { deep: true })
@@ -1585,7 +1591,7 @@ onMounted(() => {
 <template>
   <div>
     <DynamicTable 
-      :data="isCreationDialog ? listItems as any : ListItems" 
+      :data="isCreationDialog ? listItemsLocal as any : ListItems" 
       :columns="finalColumns" 
       :options="Options"
       :pagination="Pagination" 
@@ -1626,21 +1632,21 @@ onMounted(() => {
             <Column 
               v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
             
-              :footer="`${Number.parseFloat(totalHotelAmount.toFixed(2))}`"
+              :footer="formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700"
             />
             <Column 
               v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="`${Number.parseFloat(totalOriginalAmount.toFixed(2))}`"
+              :footer="formatNumber(Math.round((totalOriginalAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700"
             />
             <Column 
-              :footer="`${Number.parseFloat(totalInvoiceAmount.toFixed(2))}`"
+              :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700"
             />
             <Column 
               v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="`${Number.parseFloat(totalDueAmount.toFixed(2))}`"
+              :footer="formatNumber(Math.round((totalDueAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700" 
             />
           
@@ -1656,6 +1662,8 @@ onMounted(() => {
 
 
     </DynamicTable>
+    <!-- <pre>{{ formatNumber('-32658826265') }}</pre>
+    <pre>{{ listItems }}</pre> -->
   </div>
   <ContextMenu v-if="!isDetailView" ref="bookingContextMenu" :model="menuModel" />
 

@@ -929,8 +929,8 @@ watch(() => props.bookingObj, () => {
               footer="Totals:" :colspan="!isDetailView ? 6 : 7"
               footer-style="text-align:right; font-weight: 700"
             />
-            <Column :footer="`${Number.parseFloat(totalHotelAmount.toFixed(2))}`" footer-style="font-weight: 700" />
-            <Column :footer="`${Number.parseFloat(totalInvoiceAmount.toFixed(2))}`" footer-style="font-weight: 700" />
+            <Column :footer="formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
+            <Column :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
           </Row>
         </ColumnGroup>
       </template>
