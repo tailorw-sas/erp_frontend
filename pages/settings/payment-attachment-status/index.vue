@@ -17,7 +17,7 @@ const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const formReload = ref(0)
-
+const loadingData = ref(false)
 const loadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
@@ -476,6 +476,7 @@ async function getIdentityModuleList(query: string = '') {
 
 async function getForSelectNavigateList(query: string = '') {
   try {
+    loadingData.value = true
     const payload
         = {
           filter: [
@@ -514,6 +515,9 @@ async function getForSelectNavigateList(query: string = '') {
   }
   catch (error) {
     console.error('Error loading payment attachment status list:', error)
+  }
+  finally{
+    loadingData.value = false
   }
 }
 
@@ -730,7 +734,7 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
             <template #field-navigate="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+          <!--   <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
@@ -743,7 +747,22 @@ onMounted(() => {
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
               />
-
+--> 
+<DebouncedMultiSelectComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.navigate"
+                :suggestions="[...navigateListItems]"
+                :loading="loadingData"
+                :max-selected-labels="2"
+                @change="($event) => {
+                  onUpdate('navigate', $event)
+                  data.navigate = $event
+                }"
+                @load="($event) => getForSelectNavigateList($event)"
+              />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>
