@@ -1278,7 +1278,8 @@ async function getRoomRateList() {
         ...iterator,
         checkIn: iterator?.checkIn ? new Date(`${dayjs(iterator?.checkIn).format('YYYY-MM-DD')}T00:00:00`) : null,
         checkOut: iterator?.checkOut ? new Date(`${dayjs(iterator?.checkOut).format('YYYY-MM-DD')}T00:00:00`) : null,
-        invoiceAmount: iterator?.invoiceAmount || 0,
+        invoiceAmount: formatNumber(iterator?.invoiceAmount) || 0,
+        hotelAmount: formatNumber(iterator?.hotelAmount) || 0,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         loadingEdit: false,
         loadingDelete: false,
@@ -1970,8 +1971,8 @@ onMounted(async () => {
                               footer="Totals:" :colspan="8"
                               footer-style="text-align:right; font-weight: 700"
                             />
-                            <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2)).toString()" footer-style="font-weight: 700" />
-                            <Column :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2)).toString()" footer-style="font-weight: 700" />
+                            <Column :footer="formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
+                            <Column :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
                           </Row>
                         </ColumnGroup>
                       </template>
