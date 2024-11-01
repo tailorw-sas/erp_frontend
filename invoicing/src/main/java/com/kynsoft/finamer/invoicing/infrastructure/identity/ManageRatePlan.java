@@ -31,11 +31,10 @@ public class ManageRatePlan implements Serializable {
 
     private String name;
 
+    private String status;
 
     @Column(nullable = true)
     private Boolean deleted = false;
-
-
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -51,10 +50,11 @@ public class ManageRatePlan implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.status = dto.getStatus();
     }
 
     public ManageRatePlanDto toAggregate() {
-        return new ManageRatePlanDto(id, code, name);
+        return new ManageRatePlanDto(id, code, name, status);
     }
 
 }

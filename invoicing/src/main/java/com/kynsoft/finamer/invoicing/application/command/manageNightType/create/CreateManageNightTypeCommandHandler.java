@@ -17,11 +17,11 @@ public class CreateManageNightTypeCommandHandler implements ICommandHandler<Crea
     @Override
     public void handle(CreateManageNightTypeCommand command) {
 
-
         service.create(new ManageNightTypeDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
+                command.getName(),
+                command.getStatus()
         ));
     }
 }

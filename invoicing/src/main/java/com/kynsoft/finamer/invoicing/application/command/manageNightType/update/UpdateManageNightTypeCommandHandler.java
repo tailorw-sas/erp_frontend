@@ -18,6 +18,7 @@ public class UpdateManageNightTypeCommandHandler implements ICommandHandler<Upda
     public void handle(UpdateManageNightTypeCommand command) {
         ManageNightTypeDto test = this.service.findById(command.getId());
         test.setName(command.getName());
+        test.setStatus(command.getStatus());
         this.service.update(test);
     }
 
