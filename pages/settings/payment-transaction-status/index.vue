@@ -19,7 +19,7 @@ const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const navigateListItems = ref<{ id: string, name: string, status: string }[]>([])
 const formReload = ref(0)
-
+const loadingData = ref(false)
 const loadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
@@ -206,6 +206,7 @@ async function getList() {
 }
 async function getForSelectNavigateList(query: string = '') {
   try {
+    loadingData.value=true
     navigateListItems.value = []
 
     const payload
@@ -250,6 +251,9 @@ async function getForSelectNavigateList(query: string = '') {
   }
   catch (error) {
     console.error(error)
+  }
+  finally{
+    loadingData.value=false
   }
 }
 
@@ -566,7 +570,7 @@ onMounted(() => {
             @submit="requireConfirmationToSave($event)"
           >
             <template #field-navigate="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+           <!--   <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
@@ -579,7 +583,22 @@ onMounted(() => {
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
               />
-
+-->
+<DebouncedMultiSelectComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.navigate"
+                :suggestions="[...navigateListItems]"
+                :loading="loadingData"
+                :max-selected-labels="2"
+                @change="($event) => {
+                  onUpdate('navigate', $event)
+                  data.navigate = $event
+                }"
+                @load="($event) => getForSelectNavigateList($event)"
+              />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>
