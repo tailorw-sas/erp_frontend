@@ -15,6 +15,7 @@ const idItemToLoadFirstTime = ref('')
 const openDialog = ref(false)
 const toast = useToast()
 const listItems = ref<any[]>([])
+const bookinglistItems = ref<any[]>([])
 const selectedElements = ref<string[]>([])
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
@@ -56,7 +57,7 @@ const confAgencyApi = reactive({
 })
 
 // VARIABLES -----------------------------------------------------------------------------------------
-
+const selectedInvoiceIds =ref<string[]>([]);
 //
 const idItem = ref('')
 const ENUM_FILTER = [
@@ -87,10 +88,10 @@ const columns: IColumn[] = [
     { field: 'fullName', header: 'FullName', type: 'text', width: '7%' },
     { field: 'checkIn', header: 'Check In', type: 'date', width: '9%' },
     { field: 'checkOut', header: 'Check Out', type: 'date', width: '9%' },
-    { field: 'chidren', header: 'Children', type: 'text', width: '7%' },
+    { field: 'children', header: 'Children', type: 'text', width: '7%' },
     { field: 'adults', header: 'Adults', type: 'text', width: '7%' },
-    { field: 'roomType', header: 'Room Type', type: 'slot-text', width: '11%' },
-    { field: 'nights', header: 'Nights', type: 'slot-text', width: '7%' },
+    { field: 'roomType', header: 'Room Type', type: 'text', width: '11%' },
+    { field: 'nights', header: 'Nights', type: 'text', width: '7%' },
     { field: 'ratePlan', header: 'Rate Plan', type: 'text', width: '10%' },
     { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', width: '11%' },
     { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '12%' },
@@ -105,6 +106,11 @@ function handleDialogClose() {
     entryCode.value = '';
     randomCode.value = generateRandomCode();
 }
+function handleClose() {
+    openDialog.value = false;
+    entryCode.value = '';
+    randomCode.value = generateRandomCode();
+}
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
     tableName: 'Undo Import',
@@ -113,7 +119,7 @@ const options = ref({
     loading: false,
     showDelete: false,
     selectionMode: 'multiple' as 'multiple' | 'single',
-    selectAllItemByDefault: false,
+    selectAllItemByDefault: true,
     showFilters: true,
     expandableRows: false,
     messageToDelete: 'Do you want to save the change?'
@@ -124,12 +130,28 @@ const payload = ref<IQueryRequest>({
     query: '',
     pageSize: 10,
     page: 0,
+    sortBy: 'invoiceId',
+    sortType: ENUM_SHORT_TYPE.ASC
+})
+const Payload = ref<IQueryRequest>({
+    filter: [],
+    query: '',
+    pageSize: 10,
+    page: 0,
     sortBy: 'bookingId',
     sortType: ENUM_SHORT_TYPE.ASC
 })
 
+
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
+    page: 0,
+    limit: 50,
+    totalElements: 0,
+    totalPages: 0,
+    search: ''
+})
+const Pagination = ref<IPagination>({
     page: 0,
     limit: 50,
     totalElements: 0,
@@ -157,7 +179,7 @@ async function getList() {
         const newListItems = []
 
 
-        const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+        const response = await GenericService.search('invoicing', 'manage-invoice', payload.value)
         console.log(response.data)
 
         const { data: dataList, page, size, totalElements, totalPages } = response
@@ -168,7 +190,7 @@ async function getList() {
         pagination.value.totalPages = totalPages
 
         const existingIds = new Set(listItems.value.map(item => item.id))
-
+        selectedInvoiceIds.value = []; 
         for (const iterator of dataList) {
             // Verificar si el ID ya existe en la lista
             if (!existingIds.has(iterator.id)) {
@@ -183,6 +205,7 @@ async function getList() {
 
                 })
                 existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+                selectedInvoiceIds.value.push(iterator.id);
             }
         }
 
@@ -194,84 +217,63 @@ async function getList() {
         console.error(error)
     }
     finally {
-        options.value.loading = false
+      // options.value.loading = false
     }
 }
+async function getBookingList(clearFilter: boolean = false) {
+  try {
+    const Payload: any = ({
+      filter: [{
 
-async function getAttach() {
-    try {
-        const payload = {
-            filter: [
-                {
-                    key: 'attachInvDefault',
-                    operator: 'EQUALS',
-                    value: true,
-                    logicalOperation: 'AND'
-                }
-            ],
-            query: '',
-            pageSize: 20,
-            page: 0,
-            sortBy: 'createdAt',
-            sortType: ENUM_SHORT_TYPE.DESC
-        }
+        key: 'invoice.id',
+        operator: 'IN',
+        value: selectedInvoiceIds.value,
+        logicalOperation: 'AND'
 
-        const response = await GenericService.search(confAttachApi.moduleApi, confAttachApi.uriApi, payload)
-        const { data: dataList } = response
+      }],
+      query: '',
+      pageSize: 10,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    })
+    bookinglistItems.value = []
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, Payload)
+    const { data: dataList, page, size, totalElements, totalPages } = response
 
-        // Inicializar la lista de adjuntos
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
 
-        if (dataList.length > 0) {
-            const attachId = dataList[0].id // Tomar solo el primer ID
-            console.log(attachId, 'resource id')
-            return attachId // Devolver solo el ID
-        }
-        else {
-            return null // Devolver null si no hay recursos
-        }
+    for (const iterator of dataList) {
+      //    const id = v4()
+     
+      bookinglistItems.value = [...bookinglistItems.value, {
+        ...iterator,
+        
+        loadingEdit: false,
+        loadingDelete: false,
+        bookingId: '',
+        hotelAmount: iterator.hotelAmount,
+        ratePlan: iterator.ratePlan?.name || '',
+        roomType: iterator.roomType?.name || '' ,
+        agency: iterator?.invoice?.agency,
+        invoiceAmount: iterator.invoiceAmount,
+        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
+      }]
     }
-    catch (error) {
-        console.error('Error loading attachments:', error)
-        return null // Devolver un arreglo vacío en caso de error
-    }
+    return bookinglistItems.value
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    options.value.loading = false
+  }
 }
 
-async function getResource() {
-    try {
-        const payload = {
-            filter: [
-                {
-                    key: 'invoice',
-                    operator: 'EQUALS',
-                    value: true,
-                    logicalOperation: 'AND'
-                }
-            ],
-            query: '',
-            pageSize: 20,
-            page: 0,
-            sortBy: 'createdAt',
-            sortType: ENUM_SHORT_TYPE.DESC
-        }
-
-        const response = await GenericService.search(confResourceApi.moduleApi, confResourceApi.uriApi, payload)
-        const { data: dataList } = response
-
-        // Verificar si hay resultados
-        if (dataList.length > 0) {
-            const resourceId = dataList[0].id // Tomar solo el primer ID
-            console.log(resourceId, 'resource id')
-            return resourceId // Devolver solo el ID
-        }
-        else {
-            return null // Devolver null si no hay recursos
-        }
-    }
-    catch (error) {
-        console.error('Error loading resource:', error)
-        return null // Devolver null en caso de error
-    }
-}
 
 async function getHotelList(query: string = '') {
     try {
@@ -315,205 +317,13 @@ async function getHotelList(query: string = '') {
     }
 }
 
-async function reconcileManual() {
-    try {
-        loadingSaveAll.value = true
-
-        const attachmentIds = await getAttach() // Obtener arreglo de IDs
-        const resource = await getResource()
-
-        // Asegúrate de que attachInvDefault tenga solo un ID o esté vacío
-        // const attachInvDefault = attachmentIds.length > 0 ? attachmentIds[0] : null; // Solo tomar un ID
-        // const resourceType = resource.length > 0 ? resource[0] : null; // Solo tomar un ID
-
-        // Extraer el ID del attachment y asegurarte de que esté en un arreglo
-
-        // Crear el payload inicial
-        const payload: any = {
-            invoices: [], // Inicializar el array de facturas
-            employeeName: userData?.value?.user?.name || 'Sin nombre',
-            employeeId: userData?.value?.user?.userId || 'Sin ID',
-            attachInvDefault: attachmentIds,
-            resourceType: resource
-        }
-
-        // Utilizar selectedElements.value como el array de facturas
-        const invoicesFromState = selectedElements.value
-
-        // Llenar el array de facturas
-        if (invoicesFromState && Array.isArray(invoicesFromState)) {
-            payload.invoices = invoicesFromState // Asignar directamente
-        }
-
-        // Enviar el payload a la API
-        return await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
-    }
-    catch (error: any) {
-        console.error('Error en reconcileManual:', error?.data?.data?.error?.errorMessage)
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error?.data?.data?.error?.errorMessage || error?.message,
-            life: 10000,
-        })
-    }
-    finally {
-        loadingSaveAll.value = false
-    }
-}
-
-
-async function saveItem() {
-    loadingSaveAll.value = true
-
-    // Llamar a reconcileManual y guardar la respuesta
-    let response: any
-    try {
-        response = await reconcileManual()
-    }
-    catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error?.data?.data?.error?.errorMessage || 'An error occurred while reconciling invoices.',
-            life: 10000
-        })
-        loadingSaveAll.value = false // Detener el loading en caso de error
-        return // Salir de la función si hay un error
-    }
-
-    // Comprobar si la respuesta contiene errorsResponse y totalInvoicesRec
-    const { errorsResponse, totalInvoicesRec } = response
-
-    // Validaciones según tus requisitos
-    if (errorsResponse && errorsResponse.length === 0) {
-        // Si no hay errores y totalInvoicesRec es 0
-        if (totalInvoicesRec === 0) {
-            // No mostrar mensaje ni redirección, solo llamar a getErrors
-            getErrors(errorsResponse)
-        }
-        else {
-            // Si totalInvoicesRec es mayor que 0
-            navigateTo('/invoice') // Navegar a la página de invoice
-            toast.add({
-                severity: 'info',
-                summary: 'Confirmed',
-                detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
-                life: 0
-            })
-        }
-    }
-    else if (errorsResponse && errorsResponse.length > 0) {
-        // Si hay errores y totalInvoicesRec es mayor que 0
-        if (totalInvoicesRec > 0) {
-            toast.add({
-                severity: 'info',
-                summary: 'Confirmed',
-                detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
-                life: 0
-            })
-            // No redirigir, solo mostrar errores
-        }
-        // Llamar a getErrors para mostrar los errores
-        getErrors(errorsResponse)
-    }
-
-    loadingSaveAll.value = false // Detener el loading al final de la función
-}
-
-async function getErrors(errorsResponse: any) {
-    if (options.value.loading) {
-        // Si ya hay una solicitud en proceso, no hacer nada.
-        return
-    }
-
-    try {
-        idItemToLoadFirstTime.value = ''
-        options.value.loading = true
-        listItems.value = [] // Limpiar la lista antes de agregar nuevos elementos
-
-        const newListItems = errorsResponse.map((error: { invoiceId: any, message: any, agency: any, hotel: any, invoiceDate: any, status: any, invoiceNo: any, invoiceAmount: any }) => ({
-            invoiceId: error.invoiceId, // Asignar invoiceId
-            hotel: error.hotel,
-            agency: error.agency,
-            invoiceDate: error.invoiceDate,
-            status: error.status,
-            invoiceAmount: error.invoiceAmount.toString(),
-            invoiceNumber: error.invoiceNo,
-            message: error.message, // Asignar message
-            loadingEdit: false,
-            loadingDelete: false,
-
-        }))
-
-        // Llenar listItems con los nuevos errores
-        listItems.value = newListItems
-
-        return listItems
-    }
-    catch (error) {
-        console.error(error)
-    }
-    finally {
-        options.value.loading = false
-    }
-}
-
-async function getAgencyList(query: string = '') {
-    try {
-        const payload = {
-            filter: [
-                {
-                    key: 'name',
-                    operator: 'LIKE',
-                    value: query,
-                    logicalOperation: 'OR'
-                },
-                {
-                    key: 'code',
-                    operator: 'LIKE',
-                    value: query,
-                    logicalOperation: 'OR'
-                },
-                {
-                    key: 'status',
-                    operator: 'EQUALS',
-                    value: 'ACTIVE',
-                    logicalOperation: 'AND'
-                },
-                {
-                    key: 'autoReconcile',
-                    operator: 'EQUALS',
-                    value: true,
-                    logicalOperation: 'AND'
-                }
-            ],
-            query: '',
-            pageSize: 20,
-            page: 0,
-            sortBy: 'createdAt',
-            sortType: ENUM_SHORT_TYPE.DESC
-        }
-
-        const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
-        const { data: dataList } = response
-        agencyList.value = [allDefaultItem]
-        for (const iterator of dataList) {
-            agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-        }
-    }
-    catch (error) {
-        console.error('Error loading hotel list:', error)
-    }
-}
-
 async function clearForm() {
     navigateTo('/invoice')
 }
 
 async function resetListItems() {
-    payload.value.page = 0
-    getList()
+    Payload.value.page = 0
+    getBookingList()
 }
 function getStatusName(code: string) {
     switch (code) {
@@ -576,71 +386,69 @@ function onSortField(event: any) {
         getList()
     }
 }
-
 async function searchAndFilter() {
-    const newPayload: IQueryRequest = {
-        filter: [],
-        query: '',
-        pageSize: 50,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.ASC
-    };
+  const newPayload: IQueryRequest = {
+    filter: [],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.ASC
+  };
 
-    // Mantener los filtros existentes
-    newPayload.filter = [
-        ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')
-    ];
+  // Mantener los filtros existentes
+  newPayload.filter = [
+    ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')
+  ];
 
-    // Filtro de fecha usando 'from'
-    if (filterToSearch.value.date) {
-        newPayload.filter.push({
-            key: 'invoiceDate',
-            operator: 'EQUALS',
-            value: dayjs(filterToSearch.value.date).startOf('day').format('YYYY-MM-DD'), // Asegúrate de usar 'from'
-            logicalOperation: 'AND',
-            type: 'filterSearch'
-        });
-    }
-
-    // Filtro de hoteles
-    if (filterToSearch.value.hotel?.length > 0) {
-        const selectedHotelIds = filterToSearch.value.hotel
-            .filter((item: any) => item?.id !== 'All')
-            .map((item: any) => item?.id);
-
-        if (selectedHotelIds.length > 0) {
-            newPayload.filter.push({
-                key: 'hotel.id',
-                operator: 'IN',
-                value: selectedHotelIds,
-                logicalOperation: 'AND',
-                type: 'filterSearch'
-            });
-        }
-    }
-
-    // Incluir el filtro para el estado de la factura
+  // Filtros adicionales
+  if (filterToSearch.value.date) {
     newPayload.filter.push({
-        key: 'invoiceStatus',
-        operator: 'IN',
-        value: ['PROCECSED'], // Asegúrate de que esté correctamente escrito como 'PROCESSED'
-        logicalOperation: 'AND'
+      key: 'invoiceDate',
+      operator: 'EQUALS',
+      value: dayjs(filterToSearch.value.date).startOf('day').format('YYYY-MM-DD'),
+      logicalOperation: 'AND',
+      type: 'filterSearch'
     });
+  }
 
-    // Actualizar el payload
-    payload.value = newPayload;
+  if (filterToSearch.value.hotel?.length > 0) {
+    const selectedHotelIds = filterToSearch.value.hotel
+      .filter((item: any) => item?.id !== 'All')
+      .map((item: any) => item?.id);
 
-    // Obtener la lista de facturas
-    options.value.selectAllItemByDefault = true;
-    const dataList = await getList();
-
-    // Seleccionar automáticamente todos los elementos retornados
-    if (dataList && dataList.value.length > 0) {
-        selectedElements.value = dataList.value; // Llenar selectedElements con los elementos obtenidos
-    } else {
-        selectedElements.value = []; // Asegurarse de que esté vacío si no hay resultados
+    if (selectedHotelIds.length > 0) {
+      newPayload.filter.push({
+        key: 'hotel.id',
+        operator: 'IN',
+        value: selectedHotelIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      });
     }
+  }
+
+  newPayload.filter.push({
+    key: 'invoiceStatus',
+    operator: 'IN',
+    value: ['PROCECSED'], // Asegúrate de que esté correctamente escrito como 'PROCESSED'
+    logicalOperation: 'AND'
+  });
+
+  // Actualizar el payload
+  payload.value = newPayload;
+
+  // Obtener la lista de facturas
+  options.value.selectAllItemByDefault = true;
+  await getList(); // Asegúrate de que esto funcione como esperas
+  const dataList = await getBookingList(); // Ahora esto debería devolver los datos
+
+  // Seleccionar automáticamente todos los elementos retornados
+  if (dataList && dataList.length > 0) {
+    selectedElements.value = dataList; // Llenar selectedElements con los elementos obtenidos
+  } else {
+    selectedElements.value = []; // Asegurarse de que esté vacío si no hay resultados
+  }
 }
 
 function clearFilterToSearch() {
@@ -658,8 +466,8 @@ function clearFilterToSearch() {
 
     }
     selectedElements.value = []
-    listItems.value = []
-    pagination.value.totalElements = 0
+    bookinglistItems.value = []
+    Pagination.value.totalElements = 0
 }
 
 const disabledSearch = computed(() => {
@@ -671,11 +479,11 @@ watch(payloadOnChangePage, (newValue) => {
     payload.value.page = newValue?.page ? newValue?.page : 0
     payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 
-    getList()
+    getBookingList()
 })
 
 onMounted(async () => {
-    filterToSearch.value.criterial = ENUM_FILTER[0]
+   // filterToSearch.value.criterial = ENUM_FILTER[0]
 
     // getList()
 })
@@ -748,7 +556,7 @@ onMounted(async () => {
                     </div>
                 </div>
                 <div class="m-3">
-                    <DynamicTable :data="listItems" :columns="columns" :options="options" :pagination="pagination"
+                    <DynamicTable :data="bookinglistItems" :columns="columns" :options="options" :pagination="Pagination"
                         @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
                         @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems"
                         @on-sort-field="onSortField" @update:clicked-item="onMultipleSelect($event)">
@@ -767,9 +575,11 @@ onMounted(async () => {
                             <ColumnGroup type="footer" class="flex align-items-center font-bold font-500"
                                 style="font-weight: 700">
                                 <Row>
-                                    <Column footer="Totals:" :colspan="6"
+                                    <Column footer="Totals:" :colspan="9"
                                         footer-style="text-align:right; font-weight: 700" />
-                                    <Column :colspan="8" />
+                                    <Column :colspan="1" />
+                                    <Column :colspan="1" />
+                                    <Column :colspan="1" />
                                 </Row>
                             </ColumnGroup>
                         </template>
@@ -777,7 +587,7 @@ onMounted(async () => {
                 </div>
                 <div class="flex align-items-end justify-content-end">
 
-                    <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" @click="openUndo()" />
+                    <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="selectedElements.length === 0"  @click="openUndo()" />
 
                     <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
                         @click="clearForm" />
@@ -816,8 +626,9 @@ onMounted(async () => {
                                     <Button :disabled="entryCode !== randomCode"
                                         class="mr-2 p-button-primary h-2rem  w-3rem mt-3 " icon="pi pi-save"
                                         @click="handleDialogClose" />
-                                    <Button class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2"
-                                        icon="pi pi-times ml-1 mr-1 " @click="openDialog = false" />
+                                   
+                                        <Button v-tooltip.top="'Cancel'" severity="secondary" class="h-2rem w-3rem p-button mt-3 px-2" icon="pi pi-times"
+                                        @click="handleClose" />
 
                                 </div>
                             </div>
@@ -833,6 +644,17 @@ onMounted(async () => {
 </template>
 
 <style lang="scss">
+.p-button-gray{
+    background-color: #f5f5f5 !important;
+    color: #666 !important;
+  border-color: #ddd !important;
+ 
+ 
+
+}
+ 
+
+
 .custom-file-upload {
     background-color: transparent !important;
     border: none !important;
