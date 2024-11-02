@@ -1135,7 +1135,7 @@ function clearFormAdjustment() {
 
 async function onCellEditRoomRate(event: any) {
   const { data, newValue, field, newData } = event
-  const dataTemp = data[field].replace(/,/g, '')
+  const dataTemp = typeof data[field] !== 'string' ? data[field] : data[field].replace(/,/g, '')
 
   if (data[field] === newValue) { return }
 
@@ -1583,8 +1583,6 @@ async function getBookingItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
-      console.log(response)
-
       if (response) {
         if (response.hotelCreationDate) {
           const date = dayjs(response.hotelCreationDate).format('YYYY-MM-DD')
