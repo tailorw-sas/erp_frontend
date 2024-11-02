@@ -663,13 +663,6 @@ const fieldsV2: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
 
   },
-
-
-
-
-
-
-
   // Rate Plan
   {
     field: 'ratePlan',
@@ -758,16 +751,16 @@ const fieldsClone: Array<FieldDefinitionType> = [
     field: 'bookingId',
     header: 'Booking Id',
     dataType: 'text',
-    class: 'field col-12 md:col-3 required',
+    class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
     disabled: true,
   },
   // Invoice Original Amount
   {
-    field: 'invoiceOriginalAmount',
+    field: 'originalAmount',
     header: 'Invoice Original Amount',
     dataType: 'text',
-    class: 'field col-12 md:col-3 required',
+    class: 'field col-12 md:col-3',
     disabled: true,
     headerClass: 'mb-1',
   },
@@ -972,7 +965,7 @@ const fieldsClone: Array<FieldDefinitionType> = [
     field: 'couponNumber',
     header: 'Coupon No.',
     dataType: 'text',
-    class: 'field col-12 md:col-3 required',
+    class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
   },
 
@@ -997,6 +990,7 @@ const fieldsClone: Array<FieldDefinitionType> = [
 
 const itemClone = ref<GenericObject>({
   bookingId: '-',
+  originalAmount: 0,
   hotelCreationDate: new Date(),
   bookingDate: new Date(),
   checkIn: new Date(),
@@ -1751,20 +1745,24 @@ function getSortField(field: any) {
 }
 
 // edit booking clone total
-async function openNewEditBooking(item: any) {      
+async function openNewEditBooking(item: any) {  
+  console.log('---------------------------------------------');
+  console.log(item);
+  console.log('---------------------------------------------');
+      
   if (item.id) {
     idItem.value = item.id
-    // await GetItemById(item?.id)
-    // selectedBooking.value = item
+
     bookingClone.value = item
     itemClone.value = item
     itemClone.value.hotelCreationDate = new Date(item.hotelCreationDate)
     itemClone.value.bookingDate = item.bookingDate ? new Date(item.bookingDate) : ''
     itemClone.value.checkIn = new Date(item.checkIn)
     itemClone.value.checkOut = new Date(item.checkOut)
+    itemClone.value.originalAmount = item?.invoice?.originalAmount
 
     // Validations for hotelInvoiceNumber -------------------------------------------------------------
-    if (itemClone.value.hotel?.virtual) {
+    if (itemClone.value.invoice.hotel?.virtual) {
         const decimalSchema = z.object(
           {
             hotelInvoiceNumber:
@@ -1820,7 +1818,10 @@ async function openNewEditBooking(item: any) {
     }
     else {
       const objField = fieldsClone.find(field => field.field === 'nightType')
-      updateFieldProperty(fieldsClone, 'nightType', 'validation', z.string().nullable())
+      updateFieldProperty(fieldsClone, 'nightType', 'validation', z.object({
+          id: z.string(),
+          name: z.string(),
+        }).nullable())
       updateFieldProperty(fieldsClone, 'nightType', 'class', `${objField?.class}`)
     }
     // Validation night type --------------------------------------------------------------------------------

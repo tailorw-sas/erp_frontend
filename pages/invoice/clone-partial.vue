@@ -742,7 +742,6 @@ async function createPartialClonation(item: { [key: string]: any }) {
     payload.invoice = globalSelectedInvoicing
 
     const adjustments: any = [...adjustmentList.value]
-    console.log(adjustments,'que me esta imprimiendo aqui')
     const attachments = []
 
     // Agregar los attachments localmente al payload
@@ -775,19 +774,13 @@ async function createPartialClonation(item: { [key: string]: any }) {
             id: adjustment.id,
             amount: adjustment.amount,
             transactionType: adjustment.transaction.id,
-            description:adjustment.description,
+            description: adjustment.description,
             date: adjustment.date,
             employee: adjustment.employee
           }
         })
       }
     }
-
-    // Realizar cualquier otra manipulación necesaria en el payload
-
-    console.log('Payload:', payload)
-    console.log('Attchments locales:', attachments)
-    console.log('roomRateAdjustments:', payload.roomRateAdjustments)
 
     // Llamada al servicio genérico para enviar el payload al servidor
     const response = await GenericService.create(confClonationPartialApi.moduleApi, confClonationPartialApi.uriApi, payload)
@@ -1047,57 +1040,56 @@ function disabledButtonSave() {
 */
 // Funcion para el cloando total
 function disabledButtonSave() {
-  let result = true;
+  let result = true
 
   if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
-    return true;
+    return true
   }
 
-  const bookingIds = [...new Set(roomRateList.value.map(roomRate => roomRate.bookingId))];
+  const bookingIds = [...new Set(roomRateList.value.map(roomRate => roomRate.bookingId))]
 
   // Caso 1: Para un booking con un room rate, el room rate debe tener un ajuste(ok)
   if (bookingIds.length === 1) {
-    const roomRate = roomRateList.value.find(roomRate => roomRate.bookingId === bookingIds[0]);
-    result = adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id);
+    const roomRate = roomRateList.value.find(roomRate => roomRate.bookingId === bookingIds[0])
+    result = adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id)
   }
 
   // Caso 2: Para un booking con dos room rates, al menos uno debe tener un ajuste (ok)
   if (bookingIds.length === 1) {
-    const roomRates = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingIds[0]);
-    result = roomRates.some(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id));
+    const roomRates = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingIds[0])
+    result = roomRates.some(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id))
   }
- // Caso 4: Para más de un booking con más de un room rate, al menos uno de los room rates de cada booking debe tener un ajuste (OK)
- if (bookingIds.length > 1) {
+  // Caso 4: Para más de un booking con más de un room rate, al menos uno de los room rates de cada booking debe tener un ajuste (OK)
+  if (bookingIds.length > 1) {
     for (const bookingId of bookingIds) {
-      const roomRatesForBooking = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingId);
-      const atLeastOneRateWithAdjustment = roomRatesForBooking.some(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id));
-      
+      const roomRatesForBooking = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingId)
+      const atLeastOneRateWithAdjustment = roomRatesForBooking.some(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id))
+
       // Si al menos un room rate para un booking tiene un ajuste, continuar con los demás bookings
       if (atLeastOneRateWithAdjustment) {
-        continue;
-      } else {
-        return true; // Si no se encontró ningún room rate con ajuste para un booking, deshabilitar el botón
+        continue
+      }
+      else {
+        return true // Si no se encontró ningún room rate con ajuste para un booking, deshabilitar el botón
       }
     }
 
-    return false; // Si al menos un room rate con ajuste fue encontrado para cada booking, habilitar el botón
+    return false // Si al menos un room rate con ajuste fue encontrado para cada booking, habilitar el botón
   }
-//caso 3 mas de un booking con un roomrate cada uno (ok)
-if (bookingIds.length > 1) {
+  // caso 3 mas de un booking con un roomrate cada uno (ok)
+  if (bookingIds.length > 1) {
     for (const bookingId of bookingIds) {
-      const roomRatesForBooking = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingId);
-      const roomRatesWithAdjustments = roomRatesForBooking.filter(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id));
-      
+      const roomRatesForBooking = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingId)
+      const roomRatesWithAdjustments = roomRatesForBooking.filter(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id))
+
       // Si el número de room rates con ajustes es diferente del número total de room rates para un booking, deshabilitar botón
       if (roomRatesWithAdjustments.length !== roomRatesForBooking.length) {
-        return true;
+        return true
       }
     }
   }
 
-  return false;
- 
-
+  return false
 }
 
 async function saveItem(item: { [key: string]: any }) {
@@ -1562,7 +1554,6 @@ function addAdjustment(adjustment: any) {
 
     }
   ]
-  console.log(adjustmentList.value,'que imprimes aqui en transaction')
   calcInvoiceAmountByAdjustment()
   calcInvoiceAmountInBookingByRoomRate()
 }
