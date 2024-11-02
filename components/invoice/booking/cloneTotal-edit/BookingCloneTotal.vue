@@ -388,7 +388,7 @@ const item2 = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -768,6 +768,7 @@ function clearFormAdjustment() {
 
 async function onCellEditRoomRate(event: any) {
   const { data, newValue, field, newData } = event
+  console.log(newData.rateAdult)
 
   if (data[field] === newValue) { return }
 
@@ -803,10 +804,16 @@ async function onCellEditRoomRate(event: any) {
     invoiceAmount: newData.invoiceAmount,
     hotelAmount: newData.hotelAmount,
     remark: newData.remark,
-    nights: newData.nights,
-    id: newData.id
+    nights: dayjs(newData.checkOut).endOf('day').diff(dayjs(newData.checkIn).startOf('day'), 'day', false),
+    id: newData.id,
+    bookingId: newData.booking.id
   }
   data[field] = newValue
+  data.nights = payload.nights
+  const rateAdult = newData.invoiceAmount ? newData.invoiceAmount / (data.nights * newData.adults) : 0
+  const rateChildren = newData.invoiceAmount ? newData.invoiceAmount / (data.nights * newData.children) : 0
+  data.rateAdult = (newData.adults > 0 && data.nights > 0) ? rateAdult.toFixed(2) : 0
+  data.rateChildren = (newData.children > 0 && data.nights > 0) ? rateChildren.toFixed(2) : 0
   emits('onSaveRoomRateInBookingEdit', { payload, roomRateList: roomRateList.value })
   formReload.value++
   // emits('onFormReload', formReload.value++)
@@ -876,10 +883,15 @@ async function getRoomRateList() {
       iterator.nightType = { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` }
       iterator.ratePlan = { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` }
       iterator.agency = { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
-      iterator.rateAdult = iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0
-      iterator.rateChildren = iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
+      // iterator.rateAdult = iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0
+      // iterator.rateChildren = iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
 
       // Rate Adult= RateAmount/(Ctdad noches*Ctdad Adults) y Rate Children= RateAmount/(Ctdad noches*Ctdad Children)
+      const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
+      const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
+      iterator.rateAdult = (iterator.adults > 0 && iterator.nights > 0) ? rateAdult.toFixed(2) : 0
+      iterator.rateChildren = (iterator.children > 0 && iterator.nights > 0) ? rateChildren.toFixed(2) : 0
+
       // const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
       // const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
 
@@ -1193,7 +1205,7 @@ async function getBookingItemById(id: string) {
         item2.value.rateChild = response.rateChild
         item2.value.hotelInvoiceNumber = response.hotelInvoiceNumber
         item2.value.folioNumber = response.folioNumber
-        item2.value.hotelAmount = String(response.hotelAmount)
+        item2.value.hotelAmount = Number(response.hotelAmount)
         item2.value.description = response.description
         item2.value.invoice = response.invoice
         item2.value.invoiceOriginalAmount = response.invoice.invoiceAmount
@@ -1293,10 +1305,12 @@ async function getBookingItemById(id: string) {
 }
 
 watch(props.roomRateList, () => {
-  if (props.roomRateList && props.roomRateList.length > 0) {
+  roomRateList.value = [...props.roomRateList.filter((x: any) => x?.booking?.id === props.bookingObj?.id)]
+
+  if (roomRateList.value && roomRateList.value.length > 0) {
     totalHotelAmount.value = 0
     totalInvoiceAmount.value = 0
-    for (const iterator of props.roomRateList) {
+    for (const iterator of roomRateList.value) {
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
       }

@@ -1931,10 +1931,10 @@ const formRealoadForDialogBooking = ref(0)
 
 function recalculateFormData () {
   if (props.roomRateList && props.roomRateList.length > 0) {
-    const totalAdults = props.roomRateList.reduce((sum, item: any) => sum + item.adults, 0);
-    const totalChildren = props.roomRateList.reduce((sum, item: any) => sum + item.children, 0);
-    const totalHotelAmount = props.roomRateList.reduce((sum, item: any) => sum + item.hotelAmount, 0);
-    const totalInvoiceAmount = props.roomRateList.reduce((sum, item: any) => sum + item.invoiceAmount, 0);
+    const totalAdults = props.roomRateList.reduce((sum, item: any) => Number(sum) + Number(item.adults), 0);
+    const totalChildren = props.roomRateList.reduce((sum, item: any) => Number(sum) + Number(item.children), 0);
+    const totalHotelAmount = props.roomRateList.reduce((sum, item: any) => Number(sum) + Number(item.hotelAmount), 0);
+    const totalInvoiceAmount = props.roomRateList.reduce((sum, item: any) => Number(sum) + Number(item.invoiceAmount), 0);
     
     itemClone.value.children = Number(totalChildren)
     itemClone.value.adults = Number(totalAdults)
