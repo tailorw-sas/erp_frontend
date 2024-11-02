@@ -1540,24 +1540,16 @@ onMounted(() => {
       @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
       @on-list-item="ResetListItems" @on-sort-field="OnSortField" 
       @on-table-cell-edit-complete="onCellEditComplete" @on-row-double-click="($event) => {
-
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-
-
-          return;
-        }
-
-        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-          return;
-        }
-
-        if (!props.isDetailView) {
-          openEditBooking($event)
-        }
-
-
-
+        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
+        //   return;
+        // }
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+        //   return;
+        // }
+        // if (!props.isDetailView) {
+        //   openEditBooking($event)
+        // }
       }">
 
 
@@ -1568,12 +1560,12 @@ onMounted(() => {
               :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 9"
               footer-style="text-align:right; font-weight: 700" />
             <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalHotelAmount" footer-style="font-weight: 700" />
+              :footer="totalHotelAmount.toString()" footer-style="font-weight: 700" />
             <Column v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalOriginalAmount" footer-style="font-weight: 700" />
-            <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+              :footer="totalOriginalAmount.toString()" footer-style="font-weight: 700" />
+            <Column :footer="totalInvoiceAmount.toString()" footer-style="font-weight: 700" />
             <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+              :footer="totalInvoiceAmount.toString()" footer-style="font-weight: 700" />
 
 
           </Row>
