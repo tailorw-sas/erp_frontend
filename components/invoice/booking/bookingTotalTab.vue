@@ -1745,11 +1745,7 @@ function getSortField(field: any) {
 }
 
 // edit booking clone total
-async function openNewEditBooking(item: any) {  
-  console.log('---------------------------------------------');
-  console.log(item);
-  console.log('---------------------------------------------');
-      
+async function openNewEditBooking(item: any) {       
   if (item.id) {
     idItem.value = item.id
 
@@ -1881,28 +1877,21 @@ function onRowRightClick(event: any) {
 }
 
 function onCellEditComplete(val: any) {
-
   if (props.isCreationDialog) {
     if (route.query.type === InvoiceType.CREDIT) {
       val.newData.invoiceAmount = toNegative(val.newData.invoiceAmount)
-
-      console.log(val.newData);
-
       if (toPositive(val.newData.invoiceAmount) > toPositive(val.newData.originalAmount)) {
         toast.add({ severity: 'error', summary: 'Error', detail: "Booking invoice amount cannot be greater than original amount", life: 10000 })
         return null;
       }
-
     }
     return props.updateItem(val?.newData)
   }
-
-  console.log(val);
 }
 
 function onEditBookingLocal(item: any) { 
   recalculateFormData()
-  isEditBookingCloneDialog.value = false
+  // isEditBookingCloneDialog.value = false
 }
 
 function isValidDate(dateStr) {
