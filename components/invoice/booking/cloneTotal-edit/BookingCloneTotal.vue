@@ -103,6 +103,7 @@ const selectedRoomRate = ref<string>('')
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
+const reactiveBookingObj = ref<any>(null)
 
 const invoiceStatusList = ref<any[]>([])
 
@@ -733,7 +734,7 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  emits('onSaveBookingEdit', item)
+  emits('onSaveBookingEdit', { ...item, id: props.bookingObj?.id })
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -767,9 +768,8 @@ function clearFormAdjustment() {
 }
 
 async function onCellEditRoomRate(event: any) {
+  // saveButton.value?.$el?.click()
   const { data, newValue, field, newData } = event
-  console.log(newData.rateAdult)
-
   if (data[field] === newValue) { return }
 
   if (field === 'hotelAmount') {
@@ -814,9 +814,12 @@ async function onCellEditRoomRate(event: any) {
   const rateChildren = newData.invoiceAmount ? newData.invoiceAmount / (data.nights * newData.children) : 0
   data.rateAdult = (newData.adults > 0 && data.nights > 0) ? rateAdult.toFixed(2) : 0
   data.rateChildren = (newData.children > 0 && data.nights > 0) ? rateChildren.toFixed(2) : 0
-  emits('onSaveRoomRateInBookingEdit', { payload, roomRateList: roomRateList.value })
+  emits('onSaveRoomRateInBookingEdit', { payload, roomRateList: roomRateList.value, reactiveBookingObj: reactiveBookingObj.value })
+  // Esperar a que se guarde la edición para despues recargar el formulario
+
   formReload.value++
-  // emits('onFormReload', formReload.value++)
+  // setTimeout(() => {
+  // }, 1000)
 }
 
 function onRowRightClick(event: any) {
@@ -977,8 +980,6 @@ async function parseDataTableFilterAdjustment(payloadFilter: any) {
 }
 
 async function openEditDialog(item: any) {
-  console.log('openEditDialog', item)
-
   // if (route.query.type === InvoiceType.CREDIT || props.bookingObj?.invoiceType?.id === InvoiceType.CREDIT) {
   //   return null
   // }
@@ -1348,6 +1349,9 @@ onMounted(async () => {
           :show-actions="true"
           :loading-save="loadingSaveAll"
           container-class="grid pt-5"
+          @reactive-update-field="($event) => {
+            reactiveBookingObj = { ...$event, id: bookingClone?.id }
+          }"
           @cancel="clearForm"
           @delete="requireConfirmationToDelete($event)"
           @submit="requireConfirmationToSave($event)"
@@ -1628,7 +1632,6 @@ onMounted(async () => {
       </div> -->
     </div>
   </Dialog>
-  <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
 </template>
 
 <style lang="scss">

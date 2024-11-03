@@ -1890,7 +1890,7 @@ function onCellEditComplete(val: any) {
 }
 
 function onEditBookingLocal(item: any) { 
-  recalculateFormData()
+  recalculateFormData(item)
   // isEditBookingCloneDialog.value = false
 }
 
@@ -1929,22 +1929,49 @@ function getMinCheckInAndMaxCheckOut(array) {
 
 const formRealoadForDialogBooking = ref(0)
 
-function recalculateFormData () {
-  if (props.roomRateList && props.roomRateList.length > 0) {
-    const totalAdults = props.roomRateList.reduce((sum, item: any) => Number(sum) + Number(item.adults), 0);
-    const totalChildren = props.roomRateList.reduce((sum, item: any) => Number(sum) + Number(item.children), 0);
-    const totalHotelAmount = props.roomRateList.reduce((sum, item: any) => Number(sum) + Number(item.hotelAmount), 0);
-    const totalInvoiceAmount = props.roomRateList.reduce((sum, item: any) => Number(sum) + Number(item.invoiceAmount), 0);
+function recalculateFormData (booking: any = null) {
+  console.log('-------------------------------------');
+  console.log('booking', booking);
+  console.log('-------------------------------------');
+  
+  
+  const listRoomRateByBookingId = props.roomRateList?.filter((item: any) => item?.booking?.id === selectedBooking.value?.id)
+  
+  if (listRoomRateByBookingId && listRoomRateByBookingId.length > 0) {
+    
+    const totalAdults = listRoomRateByBookingId.reduce((sum, item: any) => Number(sum) + Number(item.adults), 0);
+    const totalChildren = listRoomRateByBookingId.reduce((sum, item: any) => Number(sum) + Number(item.children), 0);
+    const totalHotelAmount = listRoomRateByBookingId.reduce((sum, item: any) => Number(sum) + Number(item.hotelAmount), 0);
+    const totalInvoiceAmount = listRoomRateByBookingId.reduce((sum, item: any) => Number(sum) + Number(item.invoiceAmount), 0);
     
     itemClone.value.children = Number(totalChildren)
     itemClone.value.adults = Number(totalAdults)
     itemClone.value.hotelAmount = Number(totalHotelAmount)
     itemClone.value.invoiceAmount = Number(totalInvoiceAmount)
+
+    const minCheckInAndMaxCheckOut = getMinCheckInAndMaxCheckOut(listRoomRateByBookingId)
+    itemClone.value.checkIn = minCheckInAndMaxCheckOut.minCheckIn
+    itemClone.value.checkOut = minCheckInAndMaxCheckOut.maxCheckOut
   }
 
-  const minCheckInAndMaxCheckOut = getMinCheckInAndMaxCheckOut(props.roomRateList)
-  itemClone.value.checkIn = minCheckInAndMaxCheckOut.minCheckIn
-  itemClone.value.checkOut = minCheckInAndMaxCheckOut.maxCheckOut
+  if (booking && booking.reactiveBookingObj && booking.reactiveBookingObj?.id) {
+    itemClone.value.description = booking.reactiveBookingObj.description
+    itemClone.value.contract = booking.reactiveBookingObj.contract
+    itemClone.value.roomNumber = booking.reactiveBookingObj.roomNumber
+    itemClone.value.couponNumber = booking.reactiveBookingObj.couponNumber
+    itemClone.value.folioNumber = booking.reactiveBookingObj.folioNumber
+    itemClone.value.hotelBookingNumber = booking.reactiveBookingObj.hotelBookingNumber
+    itemClone.value.firstName = booking.reactiveBookingObj.firstName
+    itemClone.value.lastName = booking.reactiveBookingObj.lastName
+    itemClone.value.hotelCreationDate = booking.reactiveBookingObj.hotelCreationDate
+    itemClone.value.bookingDate = booking.reactiveBookingObj.bookingDate
+    itemClone.value.fullName = `${booking.reactiveBookingObj.firstName} ${booking.reactiveBookingObj.lastName}`
+    itemClone.value.roomType = booking.reactiveBookingObj.roomType
+    itemClone.value.nightType = booking.reactiveBookingObj.nightType
+    itemClone.value.ratePlan = booking.reactiveBookingObj.ratePlan
+    itemClone.value.roomCategory = booking.reactiveBookingObj.roomCategory
+  }
+
 
   formRealoadForDialogBooking.value++
 }
@@ -2185,14 +2212,18 @@ onMounted(() => {
         emits('onSaveBookingEdit', $event)
       }"
       @on-save-room-rate-in-booking-edit="($event) => {
+        
+        if ($event && $event.reactiveBookingObj) {
+          props.updateItem($event.reactiveBookingObj)
+        }
         if ($event && $event.payload) {
-          objRoomRateUpdateInBookingEdit = $event.payload
+          objRoomRateUpdateInBookingEdit = $event
         }
         emits('onSaveRoomRateInBookingEdit', $event)
       }"
     />
-          <!-- @on-form-reload="formRealoadForDialogBooking = $event" -->
   </div>
+  <pre>{{itemClone}}</pre>
 </template>
 
 <style>

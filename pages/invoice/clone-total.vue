@@ -26,10 +26,6 @@ const Options = ref({
 
 })
 
-const totalInvoiceAmount = ref<number>(0)
-const totalHotelAmount = ref<number>(0)
-const totalOriginalAmount = ref<number>(0)
-
 const objBookingsTotals = ref<{ totalHotelAmount: number, totalInvoiceAmount: number, totalDueAmount: number }>({
   totalHotelAmount: 0,
   totalInvoiceAmount: 0,
@@ -1353,6 +1349,32 @@ function calcInvoiceAmountUpdate() {
   })
 }
 
+// Cuando se le da al boton salvar del dialogo Editar Booking, esta es la funcion que actualiza el booking
+function updateBookingLocal(booking: any) {
+  if (booking && booking.id) {
+    const bookingToEdit = bookingList.value.find(item => item.id === booking.id)
+
+    if (bookingToEdit) {
+      bookingToEdit.description = booking.description
+      bookingToEdit.contract = booking.contract
+      bookingToEdit.roomNumber = booking.roomNumber
+      bookingToEdit.couponNumber = booking.couponNumber
+      bookingToEdit.folioNumber = booking.folioNumber
+      bookingToEdit.hotelBookingNumber = booking.hotelBookingNumber
+      bookingToEdit.firstName = booking.firstName
+      bookingToEdit.lastName = booking.lastName
+      bookingToEdit.hotelCreationDate = booking.hotelCreationDate
+      bookingToEdit.bookingDate = booking.bookingDate
+      bookingToEdit.fullName = `${booking.firstName} ${booking.lastName}`
+
+      bookingToEdit.roomType = booking.roomType
+      bookingToEdit.nightType = booking.nightType
+      bookingToEdit.ratePlan = booking.ratePlan
+      bookingToEdit.roomCategory = booking.roomCategory
+    }
+  }
+}
+
 function updateBooking(booking: any) {
   const index = bookingList.value.findIndex(item => item.id === booking.id)
 
@@ -1447,7 +1469,10 @@ function updateAttachment(attachment: any) {
 
 //
 function onSaveRoomRateInBookingEdit(itemObj: any) {
-  // bookingList.value[0].hotelAmount = 1000000
+  if (itemObj && itemObj?.reactiveBookingObj?.id) {
+    updateBookingLocal(itemObj?.reactiveBookingObj)
+  }
+
   const formatDate = (date: string) => {
     return date.includes('T') ? date : `${date}T00:00:00.000Z`
   }
@@ -1716,7 +1741,7 @@ onMounted(async () => {
             :is-creation-dialog="true"
             :selected-invoice="selectedInvoice"
             :booking-list="bookingList"
-            :update-booking="updateBooking"
+            :update-booking="updateBookingLocal"
             :adjustment-list="[]"
             :add-adjustment="addAdjustment"
             :update-adjustment="updateAdjustment"
@@ -1728,7 +1753,7 @@ onMounted(async () => {
               active = $event
             }"
             @on-save-booking-edit="($event) => {
-
+              updateBookingLocal($event)
             }"
             @on-save-room-rate-in-booking-edit="onSaveRoomRateInBookingEdit"
           />
