@@ -22,7 +22,7 @@ const props = defineProps<{
   errorList?: { [key: string]: string[] }
 }>()
 
-const emit = defineEmits(['update:field', 'clearField', 'submit', 'cancel', 'delete', 'forceSave', 'update:errorsList'])
+const emit = defineEmits(['update:field', 'reactiveUpdateField', 'clearField', 'submit', 'cancel', 'delete', 'forceSave', 'update:errorsList'])
 
 const hideCancelLocal = ref(props.hideCancel)
 const $primevue = usePrimeVue()
@@ -138,6 +138,10 @@ watch(() => props.forceSave, () => {
     submitForm()
     emit('forceSave')
   }
+})
+
+watch(fieldValues, (newVal) => {
+  emit('reactiveUpdateField', newVal)
 })
 </script>
 

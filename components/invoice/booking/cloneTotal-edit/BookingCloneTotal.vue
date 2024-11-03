@@ -103,6 +103,7 @@ const selectedRoomRate = ref<string>('')
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
+const reactiveBookingObj = ref<any>(null)
 
 const invoiceStatusList = ref<any[]>([])
 
@@ -388,7 +389,7 @@ const item2 = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -733,7 +734,7 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  emits('onSaveBookingEdit', item)
+  emits('onSaveBookingEdit', { ...item, id: props.bookingObj?.id })
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -767,8 +768,8 @@ function clearFormAdjustment() {
 }
 
 async function onCellEditRoomRate(event: any) {
+  // saveButton.value?.$el?.click()
   const { data, newValue, field, newData } = event
-
   if (data[field] === newValue) { return }
 
   if (field === 'hotelAmount') {
@@ -803,13 +804,22 @@ async function onCellEditRoomRate(event: any) {
     invoiceAmount: newData.invoiceAmount,
     hotelAmount: newData.hotelAmount,
     remark: newData.remark,
-    nights: newData.nights,
-    id: newData.id
+    nights: dayjs(newData.checkOut).endOf('day').diff(dayjs(newData.checkIn).startOf('day'), 'day', false),
+    id: newData.id,
+    bookingId: newData.booking.id
   }
   data[field] = newValue
-  emits('onSaveRoomRateInBookingEdit', { payload, roomRateList: roomRateList.value })
+  data.nights = payload.nights
+  const rateAdult = newData.invoiceAmount ? newData.invoiceAmount / (data.nights * newData.adults) : 0
+  const rateChildren = newData.invoiceAmount ? newData.invoiceAmount / (data.nights * newData.children) : 0
+  data.rateAdult = (newData.adults > 0 && data.nights > 0) ? rateAdult.toFixed(2) : 0
+  data.rateChildren = (newData.children > 0 && data.nights > 0) ? rateChildren.toFixed(2) : 0
+  emits('onSaveRoomRateInBookingEdit', { payload, roomRateList: roomRateList.value, reactiveBookingObj: reactiveBookingObj.value })
+  // Esperar a que se guarde la edición para despues recargar el formulario
+
   formReload.value++
-  // emits('onFormReload', formReload.value++)
+  // setTimeout(() => {
+  // }, 1000)
 }
 
 function onRowRightClick(event: any) {
@@ -876,10 +886,15 @@ async function getRoomRateList() {
       iterator.nightType = { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` }
       iterator.ratePlan = { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` }
       iterator.agency = { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` }
-      iterator.rateAdult = iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0
-      iterator.rateChildren = iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
+      // iterator.rateAdult = iterator.rateAdult ? Number.parseFloat(iterator.rateAdult.toFixed(2)) : 0
+      // iterator.rateChildren = iterator.rateChildren ? Number.parseFloat(iterator.rateChildren).toFixed(2) : 0
 
       // Rate Adult= RateAmount/(Ctdad noches*Ctdad Adults) y Rate Children= RateAmount/(Ctdad noches*Ctdad Children)
+      const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
+      const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
+      iterator.rateAdult = (iterator.adults > 0 && iterator.nights > 0) ? rateAdult.toFixed(2) : 0
+      iterator.rateChildren = (iterator.children > 0 && iterator.nights > 0) ? rateChildren.toFixed(2) : 0
+
       // const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
       // const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
 
@@ -965,8 +980,6 @@ async function parseDataTableFilterAdjustment(payloadFilter: any) {
 }
 
 async function openEditDialog(item: any) {
-  console.log('openEditDialog', item)
-
   // if (route.query.type === InvoiceType.CREDIT || props.bookingObj?.invoiceType?.id === InvoiceType.CREDIT) {
   //   return null
   // }
@@ -1193,7 +1206,7 @@ async function getBookingItemById(id: string) {
         item2.value.rateChild = response.rateChild
         item2.value.hotelInvoiceNumber = response.hotelInvoiceNumber
         item2.value.folioNumber = response.folioNumber
-        item2.value.hotelAmount = String(response.hotelAmount)
+        item2.value.hotelAmount = Number(response.hotelAmount)
         item2.value.description = response.description
         item2.value.invoice = response.invoice
         item2.value.invoiceOriginalAmount = response.invoice.invoiceAmount
@@ -1293,10 +1306,12 @@ async function getBookingItemById(id: string) {
 }
 
 watch(props.roomRateList, () => {
-  if (props.roomRateList && props.roomRateList.length > 0) {
+  roomRateList.value = [...props.roomRateList.filter((x: any) => x?.booking?.id === props.bookingObj?.id)]
+
+  if (roomRateList.value && roomRateList.value.length > 0) {
     totalHotelAmount.value = 0
     totalInvoiceAmount.value = 0
-    for (const iterator of props.roomRateList) {
+    for (const iterator of roomRateList.value) {
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
       }
@@ -1334,6 +1349,9 @@ onMounted(async () => {
           :show-actions="true"
           :loading-save="loadingSaveAll"
           container-class="grid pt-5"
+          @reactive-update-field="($event) => {
+            reactiveBookingObj = { ...$event, id: bookingClone?.id }
+          }"
           @cancel="clearForm"
           @delete="requireConfirmationToDelete($event)"
           @submit="requireConfirmationToSave($event)"
@@ -1614,7 +1632,6 @@ onMounted(async () => {
       </div> -->
     </div>
   </Dialog>
-  <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
 </template>
 
 <style lang="scss">
