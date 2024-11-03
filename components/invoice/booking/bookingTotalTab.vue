@@ -2223,7 +2223,6 @@ onMounted(() => {
       }"
     />
   </div>
-  <pre>{{itemClone}}</pre>
 </template>
 
 <style>
