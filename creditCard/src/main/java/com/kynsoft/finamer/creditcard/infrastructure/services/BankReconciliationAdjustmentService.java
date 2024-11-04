@@ -100,6 +100,7 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
             ));
             adjustmentTransactions.add(transactionDto);
             ids.add(transactionDto.getId());
+            reconciliationDto.setDetailsAmount(reconciliationDto.getDetailsAmount() + request.getAmount());
         }
         reconciliationDto.getTransactions().addAll(adjustmentTransactions);
         this.bankReconciliationService.update(reconciliationDto);
