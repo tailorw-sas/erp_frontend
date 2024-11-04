@@ -5,7 +5,7 @@ import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
 import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type {IColumn, IPagination, IStatusClass} from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
@@ -80,44 +80,23 @@ const legend = ref(
       colClass: 'pr-3',
     },
     {
-      name: 'Sent',
+      name: 'Completed',
       color: '#006400',
       colClass: 'pr-3',
     },
     {
-      name: 'Received',
-      color: '#3403F9',
-      colClass: 'pr-3',
-    },
-    {
-      name: 'Declined',
-      color: '#661E22',
-      colClass: 'pr-3',
-    },
-    {
-      name: 'Paid',
-      color: '#2E892E',
-      colClass: 'pr-3',
-    },
-    {
       name: 'Cancelled',
-      color: '#FF1405',
+      color: '#888888',
       colClass: 'pr-3',
-    },
-    {
-      name: 'Reconciled',
-      color: '#05D2FF',
-      colClass: 'pr-3',
-    },
-    {
-      name: 'Refund',
-      color: '#666666',
-      colClass: '',
-    },
+    }
   ]
 )
 ////
-
+const sClassMap: IStatusClass[] = [
+  { status: 'Completed', class: 'vcc-text-sent' },
+  { status: 'Created', class: 'vcc-text-created' },
+  { status: 'Cancelled', class: 'vcc-text-cancelled' },
+]
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
@@ -199,7 +178,7 @@ async function getList() {
 
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = iterator.status.name
+        iterator.status = iterator.status?.name
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
@@ -820,7 +799,7 @@ onMounted(() => {
               <Column footer="Totals:" :colspan="4" footer-style="text-align:right" />
               <Column :footer="formatNumber(subTotals.amount)" />
               <Column :footer="formatNumber(subTotals.details)" />
-              <Column :colspan="2" />
+              <Column :colspan="3" />
             </Row>
           </ColumnGroup>
         </template>
