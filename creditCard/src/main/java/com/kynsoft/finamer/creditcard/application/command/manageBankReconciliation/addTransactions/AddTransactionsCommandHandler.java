@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class AddTransactionsCommandHandler implements ICommandHandler<AddTransactionsCommand> {
@@ -30,10 +31,14 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
     public void handle(AddTransactionsCommand command) {
         ManageBankReconciliationDto bankReconciliationDto = this.bankReconciliationService.findById(command.getBankReconciliationId());
         Set<TransactionDto> bankReconciliationTransactions = bankReconciliationDto.getTransactions();
+        Set<Long> reconcileTransactions = bankReconciliationDto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet());
 
         for (Long transactionId : command.getTransactionIds()) {
-            TransactionDto transactionDto = this.transactionService.findById(transactionId);
-            bankReconciliationTransactions.add(transactionDto);
+            if (!reconcileTransactions.contains(transactionId)) {
+                TransactionDto transactionDto = this.transactionService.findById(transactionId);
+                bankReconciliationTransactions.add(transactionDto);
+                bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() + transactionDto.getAmount());
+            }
         }
 
         if (command.getAdjustmentRequests() != null && !command.getAdjustmentRequests().isEmpty()) {
