@@ -5,8 +5,9 @@ import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.services.IAttachmentStatusHistoryService;
 import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
-import java.util.List;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class CreateAttachmentStatusHistoryCommandHandler implements ICommandHandler<CreateAttachmentStatusHistoryCommand> {

@@ -7,9 +7,10 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import org.springframework.stereotype.Component;
+
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import org.springframework.stereotype.Component;
 
 @Component
 public class CreatePaymentDetailTypeCashCommandHandler implements ICommandHandler<CreatePaymentDetailTypeCashCommand> {
@@ -47,6 +48,7 @@ public class CreatePaymentDetailTypeCashCommandHandler implements ICommandHandle
                 null,
                 false
         );
+        newDetailDto.setCreateByCredit(command.isCreateByCredit());
         this.paymentDetailService.create(newDetailDto);
         if (command.isApplyPayment()) {
             this.calculate(command.getPaymentCash(), command.getInvoiceAmount());

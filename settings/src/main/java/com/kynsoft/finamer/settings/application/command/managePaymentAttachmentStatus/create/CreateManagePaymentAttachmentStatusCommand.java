@@ -23,10 +23,16 @@ public class CreateManagePaymentAttachmentStatusCommand implements ICommand {
     private Boolean defaults;
     private String permissionCode;
     private String description;
+    private boolean nonNone;
+    private boolean patWithAttachment;
+    private boolean pwaWithOutAttachment;
+    private boolean supported;
+    private boolean otherSupport;
     
     public CreateManagePaymentAttachmentStatusCommand(final String code, final String name, final Status status,
                                                       final List<UUID> navigate, final UUID module, final Boolean show, Boolean defaults,
-                                                      final String permissionCode, final String description) {
+                                                      final String permissionCode, final String description, boolean nonNone, boolean patWithAttachment, 
+                                                      boolean pwaWithOutAttachment, boolean supported, boolean otherSupport) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -37,11 +43,32 @@ public class CreateManagePaymentAttachmentStatusCommand implements ICommand {
         this.defaults = defaults;
         this.permissionCode = permissionCode;
         this.description = description;
+        this.nonNone = nonNone;
+        this.patWithAttachment = patWithAttachment;
+        this.pwaWithOutAttachment = pwaWithOutAttachment;
+        this.supported = supported;
+        this.otherSupport = otherSupport;
     }
-    
+
     public static CreateManagePaymentAttachmentStatusCommand fromRequest(CreateManagePaymentAttachmentStatusRequest request){
-        return new CreateManagePaymentAttachmentStatusCommand(request.getCode(), request.getName(), request.getStatus(), request.getNavigate(), request.getModule(), request.getShow(), request.getDefaults(), request.getPermissionCode(), request.getDescription());
+        return new CreateManagePaymentAttachmentStatusCommand(
+                request.getCode(), 
+                request.getName(), 
+                request.getStatus(), 
+                request.getNavigate(), 
+                request.getModule(), 
+                request.getShow(), 
+                request.getDefaults(), 
+                request.getPermissionCode(), 
+                request.getDescription(),
+                request.isNonNone(),
+                request.isPatWithAttachment(),
+                request.isPwaWithOutAttachment(),
+                request.isSupported(),
+                request.isOtherSupport()
+        );
     }
+
     @Override
     public ICommandMessage getMessage() {
         return new CreateManagePaymentAttachmentStatusMessage(id);

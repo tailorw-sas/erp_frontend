@@ -39,6 +39,13 @@ public class CreateManageCreditCardTypeCommandHandler implements ICommandHandler
                 command.getFirstDigit(),
                 command.getStatus()
         ));
-        this.producerReplicateManageCreditCardTypeService.create(new ReplicateManageCreditCardTypeKafka(command.getId(), command.getCode(), command.getName()));
+        this.producerReplicateManageCreditCardTypeService.create(new ReplicateManageCreditCardTypeKafka(
+                command.getId(), 
+                command.getCode(), 
+                command.getName(),
+                command.getDescription(),
+                command.getFirstDigit(),
+                command.getStatus().name()
+        ));
     }
 }

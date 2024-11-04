@@ -25,7 +25,6 @@ public class JasperReportTemplateResponse implements IResponse {
     private String file;
     private JasperReportTemplateType type;
     private Status status;
-    private String parameters;
     private LocalDate createdAt;
 
     private Double parentIndex;
@@ -50,9 +49,7 @@ public class JasperReportTemplateResponse implements IResponse {
         this.description = jasperReportTemplateDto.getDescription();
         this.file = jasperReportTemplateDto.getFile();
         this.type = jasperReportTemplateDto.getType();
-        this.parameters = jasperReportTemplateDto.getParameters();
         this.createdAt = jasperReportTemplateDto.getCreatedAt().toLocalDate();
-        
         this.parentIndex = jasperReportTemplateDto.getParentIndex();
         this.menuPosition = jasperReportTemplateDto.getMenuPosition();
         this.lanPath = jasperReportTemplateDto.getLanPath();
@@ -66,7 +63,7 @@ public class JasperReportTemplateResponse implements IResponse {
         this.rootIndex = jasperReportTemplateDto.getRootIndex();
         this.language = jasperReportTemplateDto.getLanguage();
         this.status = jasperReportTemplateDto.getStatus();
-        this.dbConection = jasperReportTemplateDto.getDbConection() != null ? new DBConectionResponse(jasperReportTemplateDto.getDbConection()) : null;
+        this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConectionResponse(jasperReportTemplateDto.getDbConectionDto()) : null;
         this.query = jasperReportTemplateDto.getQuery();
     }
 

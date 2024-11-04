@@ -16,11 +16,9 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentImportProcessStatus;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportProcessStatusEntity;
 import com.kynsoft.finamer.payment.domain.services.AbstractPaymentImportHelperService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentImportDetailService;
-import com.kynsoft.finamer.payment.infrastructure.excel.event.createAttachment.CreateAttachmentEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.process.PaymentImportProcessEvent;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportProcessStatusRepository;
 import com.kynsoft.finamer.payment.infrastructure.services.helpers.PaymentImportAntiIncomeHelperServiceImpl;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,7 +28,6 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Objects;
-import java.util.UUID;
 
 @Service
 public class PaymentImportDetailServiceImpl implements IPaymentImportDetailService {
@@ -40,6 +37,8 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
     private final PaymentImportHelperProvider paymentImportHelperProvider;
 
     private final PaymentImportProcessStatusRepository statusRepository;
+
+    private AbstractPaymentImportHelperService paymentImportHelperService;
 
     public PaymentImportDetailServiceImpl(ApplicationEventPublisher paymentEventPublisher,
                                           PaymentImportHelperProvider paymentImportHelperProvider1,
@@ -53,8 +52,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
     @Async
     @Override
     public void importPaymentFromFile(PaymentImportDetailRequest request) {
-        AbstractPaymentImportHelperService paymentImportHelperService =
-                paymentImportHelperProvider.provideImportHelperService(request.getImportPaymentType());
+        paymentImportHelperService = paymentImportHelperProvider.provideImportHelperService(request.getImportPaymentType());
         try {
             ReaderConfiguration readerConfiguration = new ReaderConfiguration();
             readerConfiguration.setIgnoreHeaders(true);
@@ -101,7 +99,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
         if (paymentImportStatusDto.isHasError()) {
             throw new ExcelException(paymentImportStatusDto.getExceptionMessage());
         }
-        return new PaymentImportDetailStatusResponse(paymentImportStatusDto.getStatus());
+        return new PaymentImportDetailStatusResponse(paymentImportStatusDto.getStatus(),paymentImportHelperService.getTotalProcessRow());
     }
 
 

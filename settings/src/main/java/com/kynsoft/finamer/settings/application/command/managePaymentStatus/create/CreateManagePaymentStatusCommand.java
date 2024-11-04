@@ -19,8 +19,11 @@ public class CreateManagePaymentStatusCommand implements ICommand {
     private String description;
     private Boolean defaults;
     private Boolean applied;
+    private boolean confirmed;
+    private boolean cancelled;
+    private boolean transit;
 
-    public CreateManagePaymentStatusCommand(final String code, final String name, final Status status, final Boolean collected, final String description, Boolean defaults, Boolean applied) {
+    public CreateManagePaymentStatusCommand(final String code, final String name, final Status status, final Boolean collected, final String description, Boolean defaults, Boolean applied, boolean confirmed, boolean cancelled, boolean transit) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -29,10 +32,24 @@ public class CreateManagePaymentStatusCommand implements ICommand {
         this.description = description;
         this.defaults = defaults;
         this.applied = applied;
+        this.confirmed = confirmed;
+        this.cancelled = cancelled;
+        this.transit = transit;
     }
 
     public static CreateManagePaymentStatusCommand fromRequest(CreateManagePaymentStatusRequest request) {
-        return new CreateManagePaymentStatusCommand(request.getCode(), request.getName(), request.getStatus(), request.getCollected(), request.getDescription(), request.getDefaults(), request.getApplied());
+        return new CreateManagePaymentStatusCommand(
+                request.getCode(), 
+                request.getName(), 
+                request.getStatus(), 
+                request.getCollected(), 
+                request.getDescription(), 
+                request.getDefaults(), 
+                request.getApplied(), 
+                request.isConfirmed(),
+                request.isCancelled(),
+                request.isTransit()
+        );
     }
 
     @Override

@@ -3,46 +3,20 @@ package com.kynsoft.finamer.payment.application.command.payment.create;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
-import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
-import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageBankAccountDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentAttachmentStatusDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentSourceDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
-import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.masterPaymentAttachment.MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.payment.CheckIfTransactionDateIsWithInRangeCloseOperationRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentAmountGreaterThanZeroRule;
-import com.kynsoft.finamer.payment.domain.services.IAttachmentStatusHistoryService;
-import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.payment.domain.services.IManageAttachmentTypeService;
-import com.kynsoft.finamer.payment.domain.services.IManageBankAccountService;
-import com.kynsoft.finamer.payment.domain.services.IManageClientService;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentAttachmentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentSourceService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
-import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.services.*;
+import java.time.LocalTime;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.stereotype.Component;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 
 @Component
 public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymentCommand> {
@@ -67,20 +41,20 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     private final IMasterPaymentAttachmentService masterPaymentAttachmentService;
 
     public CreatePaymentCommandHandler(IManagePaymentSourceService sourceService,
-            IManagePaymentStatusService statusService,
-            IManageClientService clientService,
-            IManageAgencyService agencyService,
-            IManageBankAccountService bankAccountService,
-            IManagePaymentAttachmentStatusService attachmentStatusService,
-            IPaymentService paymentService,
-            IManageHotelService hotelService,
-            IPaymentCloseOperationService closeOperationService,
-            IManageAttachmentTypeService manageAttachmentTypeService,
-            IManageResourceTypeService manageResourceTypeService,
-            IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IManageEmployeeService manageEmployeeService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
-            IMasterPaymentAttachmentService masterPaymentAttachmentService) {
+                                       IManagePaymentStatusService statusService,
+                                       IManageClientService clientService,
+                                       IManageAgencyService agencyService,
+                                       IManageBankAccountService bankAccountService,
+                                       IManagePaymentAttachmentStatusService attachmentStatusService,
+                                       IPaymentService paymentService,
+                                       IManageHotelService hotelService,
+                                       IPaymentCloseOperationService closeOperationService,
+                                       IManageAttachmentTypeService manageAttachmentTypeService,
+                                       IManageResourceTypeService manageResourceTypeService,
+                                       IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                       IManageEmployeeService manageEmployeeService,
+                                       IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+                                       IMasterPaymentAttachmentService masterPaymentAttachmentService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -106,7 +80,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getClient(), "client", "Client ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAgency(), "agency", "Agency ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getHotel(), "hotel", "Hotel ID cannot be null."));
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBankAccount(), "bankAccount", "Bank Account ID cannot be null."));
+        if (!command.isIgnoreBankAccount())//Se agrega esto con el objetivo de ignorar este check cuando se importa
+            RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBankAccount(), "bankAccount", "Bank Account ID cannot be null."));
+
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAttachmentStatus(), "attachmentStatus", "Attachment Status ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "employee", "Employee ID cannot be null."));
 
@@ -122,7 +98,10 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         ManagePaymentStatusDto paymentStatusDto = this.statusService.findById(command.getPaymentStatus());
         ManageClientDto clientDto = this.clientService.findById(command.getClient());
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
-        ManageBankAccountDto bankAccountDto = this.bankAccountService.findById(command.getBankAccount());
+        ManageBankAccountDto bankAccountDto=null;
+        if (!command.isIgnoreBankAccount()) {
+         bankAccountDto= this.bankAccountService.findById(command.getBankAccount());
+        }
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findById(command.getAttachmentStatus());
 
         PaymentDto paymentDto = new PaymentDto(
@@ -145,23 +124,26 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 0.0,
                 0.0,
                 command.getPaymentAmount(),
-                command.getPaymentAmount(),//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                0.0,
+                command.getPaymentAmount(),//Aplicar la formula del Payment Balance
+                0.0,//Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
                 command.getRemark(),
                 null,
                 null,
                 null,
-                EAttachment.NONE
+                EAttachment.NONE,
+                LocalTime.now()
         );
 
-        command.setPayment(this.paymentService.create(paymentDto));
+        PaymentDto save = this.paymentService.create(paymentDto);
+
         if (command.getAttachments() != null) {
-            paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto));
-            this.createAttachmentStatusHistory(employeeDto, paymentDto);
+            paymentDto.setAttachments(this.createAttachment(command.getAttachments(), save));
+            this.createAttachmentStatusHistory(employeeDto, save);
             //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
 
-        this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
+        command.setPayment(save);
+        this.createPaymentAttachmentStatusHistory(employeeDto, save);
     }
 
     //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
@@ -179,7 +161,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
     private List<MasterPaymentAttachmentDto> createAttachment(List<CreateAttachmentRequest> attachments, PaymentDto paymentDto) {
         List<MasterPaymentAttachmentDto> dtos = new ArrayList<>();
-        Integer countDefaults = 0;
+        Integer countDefaults = 0;//El objetivo de este contador es controlar cuantos Payment Support han sido agregados.
         for (CreateAttachmentRequest attachment : attachments) {
             AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(attachment.getAttachmentType());
             ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(attachment.getResourceType());
@@ -202,6 +184,16 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
         RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule(countDefaults));
         this.masterPaymentAttachmentService.create(dtos);
+
+        if (countDefaults > 0) {
+            paymentDto.setPaymentSupport(true);
+            paymentDto.setAttachmentStatus(this.attachmentStatusService.findBySupported());
+        } else {
+            paymentDto.setAttachmentStatus(this.attachmentStatusService.findByNonNone());
+            paymentDto.setPaymentSupport(false);
+        }
+
+        this.paymentService.update(paymentDto);
         return dtos;
     }
 

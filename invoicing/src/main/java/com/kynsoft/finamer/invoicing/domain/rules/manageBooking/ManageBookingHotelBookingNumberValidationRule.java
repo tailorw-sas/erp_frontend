@@ -16,11 +16,11 @@ public class ManageBookingHotelBookingNumberValidationRule extends BusinessRule 
     private final UUID hotelId;
 
     public ManageBookingHotelBookingNumberValidationRule(IManageBookingService service, String lastChars,
-            UUID hotelId) {
+                                                         UUID hotelId, String hotelBookingNumber) {
         super(
                 DomainErrorMessage.BOOKING_HOTEL_NUMBER_INVALID,
                 new ErrorField("hotelBookingNumber",
-                        DomainErrorMessage.BOOKING_HOTEL_NUMBER_INVALID.getReasonPhrase()));
+                        "The field Hotel Booking No. "+ hotelBookingNumber +" is repeated"));
         this.service = service;
         this.lastChars = lastChars;
         this.hotelId = hotelId;

@@ -1,5 +1,9 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.EGenerationType;
 import com.kynsoft.finamer.settings.domain.dtoEnum.ESentFileFormat;
@@ -13,13 +17,18 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Entity
 @Table(name = "manage_agency")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_agency",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageAgency {
 
     @Id
@@ -124,7 +133,17 @@ public class ManageAgency {
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, status, name, cif, agencyAlias, audit, zipCode, address, mailingAddress, phone, alternativePhone, email, alternativeEmail, contactName, autoReconcile, creditDay, rfc, validateCheckout, bookingCouponFormat, description, city, generationType, sentFileFormat, agencyType.toAggregate(), client.toAggregate(), sentB2BPartner.toAggregate(), country.toAggregate(), cityState.toAggregate(), isDefault
+                id, code, status, name, cif, agencyAlias, audit,
+                zipCode, address, mailingAddress, phone, alternativePhone,
+                email, alternativeEmail, contactName, autoReconcile, creditDay,
+                rfc, validateCheckout, bookingCouponFormat, description, city,
+                generationType, sentFileFormat,
+                agencyType != null ? agencyType.toAggregate() : null,
+                client != null ? client.toAggregate() : null,
+                sentB2BPartner != null ? sentB2BPartner.toAggregate() : null,
+                country != null ? country.toAggregate() : null,
+                cityState != null ? cityState.toAggregate() : null,
+                isDefault
         );
     }
 
@@ -133,8 +152,12 @@ public class ManageAgency {
                 id, code, status, name, cif, agencyAlias, audit, zipCode,
                 address, mailingAddress, phone, alternativePhone, email, alternativeEmail,
                 contactName, autoReconcile, creditDay, rfc, validateCheckout, bookingCouponFormat,
-                description, city, generationType, sentFileFormat, agencyType.toAggregate(),
-                null, sentB2BPartner.toAggregate(), country.toAggregate(), cityState.toAggregate(),
+                description, city, generationType, sentFileFormat,
+                agencyType != null ? agencyType.toAggregate() : null,
+                null,
+                sentB2BPartner != null ? sentB2BPartner.toAggregate() : null,
+                country != null ? country.toAggregate() : null,
+                cityState != null ? cityState.toAggregate() : null,
                 isDefault
         );
     }

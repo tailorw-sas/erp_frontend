@@ -47,6 +47,8 @@ public class PaymentResponse implements IResponse {
     private Boolean hasAttachment;
     private boolean hasDetailTypeDeposit = false;
     private EAttachment eAttachment;
+    private boolean paymentSupport;
+    private boolean createByCredit;
 //    private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
 
     public PaymentResponse(PaymentDto dto) {
@@ -73,6 +75,8 @@ public class PaymentResponse implements IResponse {
         this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
         this.remark = dto.getRemark();
         this.eAttachment = dto.getEAttachment();
+        this.paymentSupport = dto.isPaymentSupport();
+        this.createByCredit = dto.isCreateByCredit();
 //        if (dto.getAttachments() != null) {
 //            for (MasterPaymentAttachmentDto attachment : dto.getAttachments()) {
 //                attachments.add(new MasterPaymentAttachmentResponse(attachment));

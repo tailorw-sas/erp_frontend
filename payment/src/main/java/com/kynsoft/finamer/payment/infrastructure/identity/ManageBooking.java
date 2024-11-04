@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -41,6 +42,8 @@ public class ManageBooking {
     @ManyToOne(fetch = FetchType.EAGER)
     private ManageBooking parent;
 
+    private LocalDateTime bookingDate;
+
     public ManageBooking(ManageBookingDto dto) {
         this.id = dto.getId();
         this.bookingId = dto.getBookingId();
@@ -57,6 +60,7 @@ public class ManageBooking {
         this.lastName = dto.getLastName();
         this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
         this.parent = dto.getParent() != null ? new ManageBooking(dto.getParent()) : null;
+        this.bookingDate = dto.getBookingDate() != null ? dto.getBookingDate() : null;
     }
 
     public ManageBookingDto toAggregate(){
@@ -75,7 +79,8 @@ public class ManageBooking {
                 adults,
                 children,
                 invoice != null ? invoice.toAggregate() : null,
-                parent != null ? parent.toAggregateSimple() : null
+                parent != null ? parent.toAggregateSimple() : null,
+                bookingDate != null ? bookingDate : null
         );
     }
 
@@ -95,7 +100,8 @@ public class ManageBooking {
                 adults,
                 children,
                 null,
-                null
+                null,
+                bookingDate != null ? bookingDate : null
         );
     }
 

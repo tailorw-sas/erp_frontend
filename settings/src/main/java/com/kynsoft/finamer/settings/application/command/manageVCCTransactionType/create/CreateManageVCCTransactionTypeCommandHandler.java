@@ -6,6 +6,8 @@ import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageVCCTransacti
 import com.kynsoft.finamer.settings.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeCodeSizeRule;
+import com.kynsoft.finamer.settings.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeIsDefaultMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeSubcategoryMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageVCCTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerReplicateManageVCCTransactionTypeService;
 import org.springframework.stereotype.Component;
@@ -26,7 +28,13 @@ public class CreateManageVCCTransactionTypeCommandHandler implements ICommandHan
     public void handle(CreateManageVCCTransactionTypeCommand command) {
         RulesChecker.checkRule(new ManageVCCTransactionTypeCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManageVCCTransactionTypeCodeMustBeUniqueRule(service, command.getCode(), command.getId()));
-
+        if(command.getIsDefault()) {
+            if (command.getSubcategory()) {
+                RulesChecker.checkRule(new ManageVCCTransactionTypeSubcategoryMustBeUniqueRule(service, command.getId()));
+            } else {
+                RulesChecker.checkRule(new ManageVCCTransactionTypeIsDefaultMustBeUniqueRule(service, command.getId()));
+            }
+        }
         service.create(new ManageVCCTransactionTypeDto(
                 command.getId(),
                 command.getCode(),
@@ -44,6 +52,6 @@ public class CreateManageVCCTransactionTypeCommandHandler implements ICommandHan
                 command.getDefaultRemark()
         ));
 
-        this.transactionTypeService.create(new ReplicateManageVCCTransactionTypeKafka(command.getId(), command.getCode(), command.getName()));
+        this.transactionTypeService.create(new ReplicateManageVCCTransactionTypeKafka(command.getId(), command.getCode(), command.getName(), command.getIsDefault(), command.getSubcategory()));
     }
 }

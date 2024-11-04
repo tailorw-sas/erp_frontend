@@ -12,6 +12,8 @@ import com.kynsoft.finamer.invoicing.domain.services.IManagerClientService;
 import com.kynsoft.finamer.invoicing.domain.services.IManagerCountryService;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateManageAgencyCommand> {
 
@@ -59,6 +61,11 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
                 managerB2BPartnerService::findById);
         UpdateIfNotNull.updateInteger(dto::setCreditDay, command.getCreditDay(), dto.getCreditDay(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setAutoReconcile, command.getAutoReconcile(), dto.getAutoReconcile(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setValidateCheckout, command.getValidateCheckout(), dto.getValidateCheckout(), update::setUpdate);
+        if (Objects.nonNull(command.getGenerationType())){
+            dto.setGenerationType(command.getGenerationType());
+            update.setUpdate(1);
+        }
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);

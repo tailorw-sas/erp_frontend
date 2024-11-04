@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.domain.rules.closeOperation;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.BusinessRule;
+
 import java.time.LocalDate;
 
 public class CheckBeginDateAndEndDateRule extends BusinessRule {

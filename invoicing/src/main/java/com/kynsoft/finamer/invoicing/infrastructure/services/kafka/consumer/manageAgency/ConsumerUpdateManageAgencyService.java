@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.man
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageAgencyKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageAgency.update.UpdateManageAgencyCommand;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -21,12 +22,17 @@ public class ConsumerUpdateManageAgencyService {
     @KafkaListener(topics = "finamer-update-manage-agency", groupId = "invoicing-entity-replica")
     public void listen(UpdateManageAgencyKafka objKafka) {
         try {
-            UpdateManageAgencyCommand command = new UpdateManageAgencyCommand(objKafka.getId(), objKafka.getName(),
+            UpdateManageAgencyCommand command = new UpdateManageAgencyCommand(objKafka.getId(),
+                    objKafka.getName(),
                     objKafka.getClient(),objKafka.getCif(),
                     objKafka.getAddress(),objKafka.getSentB2BPartner(),
-                    objKafka.getCityState(),objKafka.getCountry(), objKafka.getMailingAddress(),
+                    objKafka.getCityState(),objKafka.getCountry(),
+                    objKafka.getMailingAddress(),
                     objKafka.getZipCode(),
-                    objKafka.getCity(), objKafka.getCreditDay(), objKafka.getAutoReconcile()
+                    objKafka.getCity(), objKafka.getCreditDay(),
+                    objKafka.getAutoReconcile(),
+                    objKafka.getValidateCheckout(),
+                   EGenerationType.valueOf(objKafka.getGenerationType())
             );
             mediator.send(command);
         } catch (Exception ex) {

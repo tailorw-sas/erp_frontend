@@ -1,13 +1,13 @@
 package com.kynsoft.finamer.payment.domain.dto;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import java.time.OffsetDateTime;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -39,6 +39,11 @@ public class PaymentDetailDto {
     private Long parentId;
     private Double applyDepositValue;
     private Boolean applayPayment;
+    private Long reverseFrom;
+    private Long reverseFromParentId;//Esta variable es para poder controlar el undo luego de realizar un reverse.
+    private boolean reverseTransaction;
+    private boolean createByCredit;//Para identificar cuando un Details fue creado por un proceso automatico de la HU154.
+    private boolean canceledTransaction;
 
     public PaymentDetailDto(UUID id, Status status, PaymentDto payment, ManagePaymentTransactionTypeDto transactionType, Double amount, String remark, List<PaymentDetailDto> children, Double bookingId, String invoiceId, OffsetDateTime transactionDate, String firstName, String lastName, String reservation, String couponNo, Integer adults, Integer childrens, Boolean applayPayment) {
         this.id = id;

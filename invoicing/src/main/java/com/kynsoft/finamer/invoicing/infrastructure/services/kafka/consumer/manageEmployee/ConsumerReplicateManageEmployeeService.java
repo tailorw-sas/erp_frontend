@@ -18,7 +18,7 @@ public class ConsumerReplicateManageEmployeeService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-replicate-manage-employee", groupId = "payment-entity-replica")
+    @KafkaListener(topics = "finamer-replicate-manage-employee", groupId = "invoicing-entity-replica")
     public void listen(ReplicateManageEmployeeKafka objKafka) {
         try {
             CreateManageEmployeeCommand command = new CreateManageEmployeeCommand(objKafka.getId(), objKafka.getFirstName(), objKafka.getLastName(), objKafka.getEmail());

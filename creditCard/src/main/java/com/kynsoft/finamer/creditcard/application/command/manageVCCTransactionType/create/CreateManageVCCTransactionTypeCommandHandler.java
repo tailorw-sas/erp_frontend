@@ -19,7 +19,9 @@ public class CreateManageVCCTransactionTypeCommandHandler implements ICommandHan
         service.create(new ManageVCCTransactionTypeDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
+                command.getName(),
+                command.getIsDefault(),
+                command.getSubcategory()
         ));
     }
 }

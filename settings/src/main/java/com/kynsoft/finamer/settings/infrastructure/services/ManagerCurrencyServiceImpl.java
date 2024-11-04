@@ -105,4 +105,16 @@ public class ManagerCurrencyServiceImpl implements IManagerCurrencyService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManagerCurrencyDto> findAllToReplicate() {
+        List<ManagerCurrency> objects = this.repositoryQuery.findAll();
+        List<ManagerCurrencyDto> dtos = new ArrayList<>();
+
+        for(ManagerCurrency object : objects){
+            dtos.add(object.toAggregate());
+        }
+
+        return dtos;
+    }
+
 }

@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
+import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
@@ -15,12 +16,9 @@ import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckApplyDepositR
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDepositToApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckGreaterThanOrEqualToTheTransactionAmountRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.createIncomeTransaction.ProducerCreateIncomeTransactionService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -37,20 +35,24 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
     private final IPaymentDetailService paymentDetailService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IPaymentService paymentService;
-
     private final IManageEmployeeService manageEmployeeService;
+    private final IManageInvoiceStatusService statusService;
     private final ProducerCreateIncomeTransactionService producerCreateIncomeService;
+
+    @Value("${payment.relate.invoice.status.code}")
+    private String RELATE_INCOME_STATUS_CODE;
 
     public CreatePaymentDetailApplyDepositFromFileCommandHandler(IPaymentDetailService paymentDetailService,
                                                                  IManagePaymentTransactionTypeService paymentTransactionTypeService,
                                                                  IPaymentService paymentService,
                                                                  IManageEmployeeService manageEmployeeService,
-                                                                 IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+                                                                 IPaymentStatusHistoryService paymentAttachmentStatusHistoryService, IManageInvoiceStatusService statusService,
                                                                  ProducerCreateIncomeTransactionService producerCreateIncomeService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
         this.manageEmployeeService = manageEmployeeService;
+        this.statusService = statusService;
         this.producerCreateIncomeService = producerCreateIncomeService;
     }
 
@@ -99,7 +101,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
                 null,
                 null,
                 null,
-                false
+                true
         );
 
         children.setParentId(paymentDetailDto.getPaymentDetailId());
@@ -114,11 +116,12 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
 
         this.paymentService.update(paymentUpdate);
         command.setPaymentResponse(paymentUpdate);
-        this.sendToCreateRelatedIncome(children, employeeDto.getFirstName(), command.getTransactionTypeForAdjustment());
+        ManageInvoiceStatusDto manageInvoiceStatusDto = statusService.findByCode(RELATE_INCOME_STATUS_CODE);
+        this.sendToCreateRelatedIncome(children, employeeDto.getFirstName(), command.getTransactionTypeForAdjustment(),manageInvoiceStatusDto.getId());
 
     }
 
-    private void sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto, String employeeName, UUID transactionType) {
+    private void sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto, String employeeName, UUID transactionType,UUID status) {
         PaymentDto paymentDto = paymentDetailDto.getPayment();
         CreateIncomeTransactionKafka createIncomeTransactionSuccessKafka = new CreateIncomeTransactionKafka();
         UUID incomeId = UUID.randomUUID();
@@ -128,7 +131,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         createIncomeTransactionSuccessKafka.setInvoiceDate(LocalDateTime.now());
         createIncomeTransactionSuccessKafka.setIncomeAmount(paymentDetailDto.getAmount());
         createIncomeTransactionSuccessKafka.setManual(false);
-        //createIncomeKafka.setInvoiceStatus();
+        createIncomeTransactionSuccessKafka.setInvoiceStatus(status);
         createIncomeTransactionSuccessKafka.setStatus(Status.ACTIVE.name());
         createIncomeTransactionSuccessKafka.setTransactionTypeAdjustment(transactionType);
         createIncomeTransactionSuccessKafka.setEmployeeAdjustment(employeeName);

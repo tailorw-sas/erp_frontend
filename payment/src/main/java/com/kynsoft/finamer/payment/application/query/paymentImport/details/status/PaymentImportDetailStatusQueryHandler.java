@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.application.query.paymentImport.details.status;
 
-import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsoft.finamer.payment.domain.services.IPaymentImportDetailService;
 import lombok.AllArgsConstructor;

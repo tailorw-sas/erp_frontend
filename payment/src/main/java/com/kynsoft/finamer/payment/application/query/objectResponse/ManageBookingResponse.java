@@ -2,11 +2,12 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
+
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -17,8 +18,6 @@ public class ManageBookingResponse implements IResponse {
     private UUID id;
     private Long bookingId;
     private String reservationNumber;
-    //private LocalDateTime checkIn;
-    //private LocalDateTime checkOut;
 
     private String fullName;
     private String firstName;
@@ -32,12 +31,12 @@ public class ManageBookingResponse implements IResponse {
     private ManageInvoiceResponse invoice;
     private ManageBookingResponse parentResponse;
 
+    private LocalDateTime bookingDate;
+
     public ManageBookingResponse(ManageBookingDto dto) {
         this.id = dto.getId();
         this.bookingId = dto.getBookingId();
         this.reservationNumber = dto.getReservationNumber();
-        //this.checkIn = dto.getCheckIn();
-        //this.checkOut = dto.getCheckOut();
         this.fullName = dto.getFullName();
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
@@ -48,6 +47,7 @@ public class ManageBookingResponse implements IResponse {
         this.children = dto.getChildren();
         this.invoice = dto.getInvoice() != null ? new ManageInvoiceResponse(dto.getInvoice()) : null;
         this.parentResponse = dto.getParent() != null ? new ManageBookingResponse(dto.getParent()) : null;
+        this.bookingDate = dto.getBookingDate();
     }
 
 }

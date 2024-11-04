@@ -8,6 +8,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.rules.manageInvoiceTransactionType.ManageInvoiceTransactionTypeDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceTransactionType.ProducerUpdateManageInvoiceTransactionTypeService;
 import org.springframework.stereotype.Component;
@@ -30,7 +31,9 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
     @Override
     public void handle(UpdateManageInvoiceTransactionTypeCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Invoice Transaction Type ID cannot be null."));
-
+        if(command.isDefaults()) {
+            RulesChecker.checkRule(new ManageInvoiceTransactionTypeDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
         ManageInvoiceTransactionTypeDto dto = service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -44,10 +47,11 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
         UpdateIfNotNull.updateBoolean(dto::setIsRemarkRequired, command.getIsRemarkRequired(), dto.getIsRemarkRequired(), update::setUpdate);
         UpdateIfNotNull.updateInteger(dto::setMinNumberOfCharacters, command.getMinNumberOfCharacters(), dto.getMinNumberOfCharacters(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setDefaults, command.isDefaults(), dto.isDefaults(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageInvoiceTransactionTypeService.update(new UpdateManageInvoiceTransactionTypeKafka(dto.getId(), dto.getName()));
+            this.producerUpdateManageInvoiceTransactionTypeService.update(new UpdateManageInvoiceTransactionTypeKafka(dto.getId(), dto.getName(), dto.isDefaults()));
         }
     }
 

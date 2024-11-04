@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface ITransactionService {
 
-    Long create(TransactionDto dto);
+    TransactionDto create(TransactionDto dto);
 
     void update(TransactionDto dto);
 
@@ -29,4 +29,8 @@ public interface ITransactionService {
     boolean compareParentTransactionAmount(Long parentId, Double amount);
 
     Double findSumOfAmountByParentId(Long parentId);
+
+    void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto);
+
+    void sendTransactionPaymentLinkEmail(TransactionDto transactionDto, String paymentLink);
 }

@@ -13,4 +13,5 @@ public class UpdateManageAgencyRequest {
     private String name;
     private String status;
     private UUID agencyType;
+    private UUID client;
 }

@@ -5,6 +5,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import lombok.Setter;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,8 +32,9 @@ public class ManageInvoiceToPaymentResponse implements IResponse {
     private ManageAgencyDto agency;
     private EInvoiceType invoiceType;
     private EInvoiceStatus status;
-
+    private ManageInvoiceStatusDto manageInvoiceStatusDto;
     private List<ManageBookingDto> bookings;
+    private String couponNumbers;
 
     public ManageInvoiceToPaymentResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -45,6 +48,11 @@ public class ManageInvoiceToPaymentResponse implements IResponse {
         this.invoiceNo = dto.getInvoiceNo();
         this.bookings = dto.getBookings();
         this.status = dto.getStatus();
+       this.couponNumbers = bookings.stream()
+                .map(ManageBookingDto::getCouponNumber)
+                .filter(coupon -> coupon != null && !coupon.isEmpty())
+                .collect(Collectors.joining(","));
+       this.manageInvoiceStatusDto =dto.getManageInvoiceStatus();
     }
 
     private String deleteHotelInfo(String input) {

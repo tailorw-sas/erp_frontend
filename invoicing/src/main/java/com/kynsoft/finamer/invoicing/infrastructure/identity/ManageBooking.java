@@ -100,6 +100,8 @@ public class ManageBooking {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "manageBooking")
     private List<PaymentDetail> paymentDetails;
 
+    private String contract;
+
     public ManageBooking(ManageBookingDto dto) {
         this.id = dto.getId();
         this.hotelCreationDate = dto.getHotelCreationDate();
@@ -137,6 +139,7 @@ public class ManageBooking {
         this.nights = dto.getCheckIn() != null && dto.getCheckOut() !=null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
         this.parent = dto.getParent() != null ? new ManageBooking(dto.getParent()) : null;
+        this.contract = dto.getContract();
     }
 
     public ManageBookingDto toAggregate() {
@@ -151,7 +154,7 @@ public class ManageBooking {
                 roomRates != null ? roomRates.stream().map(b -> {
                     return b.toAggregateSample();
                 }).collect(Collectors.toList()) : null, nights,
-                parent != null ? parent.toAggregateSample() : null);
+                parent != null ? parent.toAggregateSample() : null, contract);
     }
 
     public ManageBookingDto toAggregateSample() {
@@ -165,7 +168,7 @@ public class ManageBooking {
                 roomCategory != null ? roomCategory.toAggregate() : null,
                 roomRates != null ? roomRates.stream().map(b -> {
                     return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, nights, null);
+                }).collect(Collectors.toList()) : null, nights, null, contract);
     }
 
     @PostLoad

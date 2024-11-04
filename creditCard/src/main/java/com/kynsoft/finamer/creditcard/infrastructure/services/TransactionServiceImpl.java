@@ -1,5 +1,10 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.application.mailjet.MailJetRecipient;
+import com.kynsof.share.core.application.mailjet.MailJetVar;
+import com.kynsof.share.core.application.mailjet.MailService;
+import com.kynsof.share.core.application.mailjet.SendMailJetEMailRequest;
+import com.kynsof.share.core.domain.EMailjetType;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -8,7 +13,8 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
-import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionSearchResponse;
+import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionSearchResponse;
+import com.kynsoft.finamer.creditcard.domain.dto.TemplateDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
@@ -20,11 +26,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 public class TransactionServiceImpl implements ITransactionService {
@@ -35,15 +40,27 @@ public class TransactionServiceImpl implements ITransactionService {
     @Autowired
     private final TransactionReadDataJPARepository repositoryQuery;
 
-    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand, TransactionReadDataJPARepository repositoryQuery) {
+    @Autowired
+    private final ManageTransactionStatusServiceImpl statusService;
+
+    @Autowired
+    private final MailService mailService;
+
+    @Autowired
+    private final TemplateEntityServiceImpl templateEntityService;
+
+    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand, TransactionReadDataJPARepository repositoryQuery, ManageTransactionStatusServiceImpl statusService, MailService mailService, TemplateEntityServiceImpl templateEntityService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.statusService = statusService;
+        this.mailService = mailService;
+        this.templateEntityService = templateEntityService;
     }
 
     @Override
-    public Long create(TransactionDto dto) {
+    public TransactionDto create(TransactionDto dto) {
         Transaction entity = new Transaction(dto);
-        return this.repositoryCommand.save(entity).getId();
+        return this.repositoryCommand.save(entity).toAggregate();
     }
 
     @Override
@@ -143,4 +160,77 @@ public class TransactionServiceImpl implements ITransactionService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    //Conformar el correo para confirmar que la transaccion fue Recivida
+    @Override
+    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto){
+        if(transactionDto.getEmail() != null){
+            TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_CONFIRMATION_VOUCHER);
+            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+            request.setTemplateId(Integer.parseInt(templateDto.getTemplateCode()));
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String transactionDateStr = transactionDto.getPaymentDate() != null ? transactionDto.getPaymentDate().format(formatter) : "";
+
+            NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
+            String formattedAmount = currencyFormatter.format(transactionDto.getAmount());
+
+            // Variables para el template de email, cambiar cuando keimer genere la plantilla
+            List<MailJetVar> vars = Arrays.asList(
+                    new MailJetVar("commerce", "Finamer Do"),
+                    new MailJetVar("merchant", transactionDto.getMerchant().getDescription()),
+                    new MailJetVar("hotel", transactionDto.getHotel().getName()),
+                    new MailJetVar("number_id", transactionDto.getId()),
+                    new MailJetVar("transaction_type", "Sale"),
+                    new MailJetVar("status", transactionDto.getStatus().getName()),
+                    new MailJetVar("payment_date", transactionDateStr),
+                    new MailJetVar("authorization_number", "N/A"),
+                    new MailJetVar("card_type", transactionDto.getCreditCardType().getName()),
+                    new MailJetVar("card_number", transactionDto.getCardNumber()),
+                    new MailJetVar("amount_usd", formattedAmount),
+                    new MailJetVar("ibtis_usd", "$0.00"),
+                    new MailJetVar("reference", transactionDto.getReferenceNumber()),
+                    new MailJetVar("user", transactionDto.getGuestName()),
+                    new MailJetVar("modality", transactionDto.getMethodType().name())
+            );
+            request.setMailJetVars(vars);
+
+            // All Recipients
+            List<MailJetRecipient> recipients = new ArrayList<>();
+            if (transactionDto.getEmail() != null && !transactionDto.getEmail().isEmpty()) {
+                recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
+            }
+            if (transactionDto.getHotelContactEmail() != null && !transactionDto.getHotelContactEmail().isEmpty()) {
+                recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
+            }
+            request.setRecipientEmail(recipients);
+
+            mailService.sendMail(request);
+        }
+    }
+
+    @Override
+    public void sendTransactionPaymentLinkEmail(TransactionDto transactionDto, String paymentLink) {
+        TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_LINK);
+        SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+        request.setTemplateId(Integer.parseInt(templateDto.getTemplateCode())); // Cambiar en configuración
+
+        // Variables para el template de email
+        List<MailJetVar> vars = Arrays.asList(
+                new MailJetVar("payment_link", paymentLink),
+                new MailJetVar("invoice_amount", transactionDto.getAmount().toString())
+        );
+        request.setMailJetVars(vars);
+
+        // Recipients
+        List<MailJetRecipient> recipients = new ArrayList<>();
+        recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
+        // Add hotel contact recipient if exists
+        if (transactionDto.getHotelContactEmail() != null && !transactionDto.getHotelContactEmail().isEmpty()) {
+            recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
+        }
+        request.setRecipientEmail(recipients);
+        mailService.sendMail(request);
+    }
+
 }

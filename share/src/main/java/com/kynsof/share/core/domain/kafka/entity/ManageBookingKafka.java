@@ -28,4 +28,5 @@ public class ManageBookingKafka {
     private Integer children;
     private UUID invoice;
     private UUID bookingParent;
+    private LocalDateTime bookingDate;
 }

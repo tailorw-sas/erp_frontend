@@ -1,9 +1,9 @@
 package com.kynsoft.finamer.payment.application.command.payment.update;
 
-import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Getter
@@ -21,4 +21,5 @@ public class UpdatePaymentRequest {
     private UUID hotel;
     private UUID bankAccount;
     private UUID attachmentStatus;
+    private UUID employee;
 }

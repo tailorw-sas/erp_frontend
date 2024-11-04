@@ -17,17 +17,11 @@ public class ParameterizationResponse implements IResponse {
 
     private UUID id;
     private Boolean isActive;
-    private String transactionStatusCode;
-    private String transactionCategory;
-    private String transactionSubCategory;
-    private String refundTransactionStatusCode;
+    private int decimals;
 
     public ParameterizationResponse(ParameterizationDto dto){
         this.id = dto.getId();
         this.isActive = dto.getIsActive();
-        this.transactionStatusCode = dto.getTransactionStatusCode();
-        this.transactionCategory = dto.getTransactionCategory();
-        this.transactionSubCategory = dto.getTransactionSubCategory();
-        this.refundTransactionStatusCode = dto.getRefundTransactionStatusCode();
+        this.decimals = dto.getDecimals();
     }
 }

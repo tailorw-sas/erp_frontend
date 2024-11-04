@@ -14,7 +14,7 @@ import com.kynsoft.finamer.invoicing.domain.event.importError.CreateImportErrorE
 import com.kynsoft.finamer.invoicing.domain.event.importStatus.CreateImportStatusEvent;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.InvoiceReconcileImportService;
-import com.kynsoft.finamer.invoicing.domain.services.StorageService;
+import com.kynsof.share.core.domain.service.IStorageService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.InvoiceReconcileImportError;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.InvoiceReconcileImportProcessStatusRedisEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcile.InvoiceReconcileImportErrorRedisRepository;
@@ -32,6 +32,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,13 +45,13 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
 
     private final IManageInvoiceService invoiceService;
 
-    private final StorageService storageService;
+    private final IStorageService storageService;
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public InvoiceReconcileImportServiceImpl(InvoiceReconcileImportProcessStatusRedisRepository statusRedisRepository,
                                              InvoiceReconcileImportErrorRedisRepository errorRedisRepository,
-                                             IManageInvoiceService invoiceService, StorageService storageService,
+                                             IManageInvoiceService invoiceService, IStorageService storageService,
                                              ApplicationEventPublisher applicationEventPublisher) {
         this.statusRedisRepository = statusRedisRepository;
         this.errorRedisRepository = errorRedisRepository;
@@ -111,6 +112,7 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
                 return false;
             }
         } catch (Exception e) {
+            log.error(e.getMessage());
             processError("File name is not valid: " + invoiceId, importProcessId, file.getName());
             return false;
         }
@@ -132,14 +134,15 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
     }
 
     private void createInvoiceAttachment(File attachment, InvoiceReconcileImportRequest request) {
+        log.info(Objects.isNull(attachment)?"El attachment es null":attachment.getName());
         try (InputStream inputStream = new FileInputStream(attachment)) {
             ManageInvoiceDto manageInvoiceDto = invoiceService.findByInvoiceId(Long.parseLong(getInvoiceIdFromFileName(attachment)));
             CreateAttachmentEvent createAttachmentEvent = new CreateAttachmentEvent(this,
                     manageInvoiceDto.getId(),
                     request.getEmployee(),
                     UUID.fromString(request.getEmployeeId()),
-                    String.valueOf(getInvoiceIdFromFileName(attachment)),
-                    "Uploaded from file",
+                    attachment.getName(),
+                    "Attachment was inserted by one massive upload",
                     inputStream.readAllBytes()
             );
             applicationEventPublisher.publishEvent(createAttachmentEvent);

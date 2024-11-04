@@ -13,21 +13,12 @@ import com.kynsoft.finamer.payment.application.query.attachmentType.search.GetSe
 import com.kynsoft.finamer.payment.application.query.manageResourceType.search.GetSearchManageResourceTypeQuery;
 import com.kynsoft.finamer.payment.application.query.objectResponse.AttachmentTypeResponse;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ResourceTypeResponse;
-import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import com.kynsoft.finamer.payment.infrastructure.excel.remote.SaveFileS3Message;
-import com.kynsoft.finamer.payment.infrastructure.identity.AttachmentType;
-import com.kynsoft.finamer.payment.infrastructure.identity.ResourceType;
 import io.jsonwebtoken.lang.Assert;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -35,7 +26,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 public class CreateAttachmentEventHandler implements ApplicationListener<CreateAttachmentEvent> {

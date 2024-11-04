@@ -7,8 +7,6 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
-import com.kynsoft.finamer.payment.application.query.paymentImport.details.status.PaymentImportDetailStatusQuery;
-import com.kynsoft.finamer.payment.application.query.paymentImport.details.status.PaymentImportDetailStatusResponse;
 import com.kynsoft.finamer.payment.application.query.paymentImport.payment.error.PaymentImportSearchErrorQuery;
 import com.kynsoft.finamer.payment.application.query.paymentImport.payment.status.PaymentImportStatusQuery;
 import com.kynsoft.finamer.payment.application.query.paymentImport.payment.status.PaymentImportStatusResponse;
@@ -36,6 +34,8 @@ public class PaymentImportService implements IPaymentImportService {
 
     private final PaymentImportProcessStatusRepository statusRepository;
 
+    private AbstractPaymentImportHelperService paymentImportHelperService;
+
     public PaymentImportService(ApplicationEventPublisher paymentEventPublisher,
                                 PaymentImportHelperProvider providerImportHelperService,
                                 PaymentImportProcessStatusRepository statusRepository
@@ -48,7 +48,7 @@ public class PaymentImportService implements IPaymentImportService {
     @Async
     @Override
     public void importPaymentFromFile(PaymentImportRequest request) {
-        AbstractPaymentImportHelperService paymentImportHelperService = providerImportHelperService.
+        paymentImportHelperService = providerImportHelperService.
                 provideImportHelperService(request.getImportPaymentType());
         try {
             ReaderConfiguration readerConfiguration = new ReaderConfiguration();
@@ -58,19 +58,19 @@ public class PaymentImportService implements IPaymentImportService {
             readerConfiguration.setReadLastActiveSheet(true);
             readerConfiguration.setStrictHeaderOrder(true);
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
-                   new PaymentImportStatusDto(EPaymentImportProcessStatus.RUNNING.name(),
-                    request.getImportProcessId())));
+                    new PaymentImportStatusDto(EPaymentImportProcessStatus.RUNNING.name(),
+                            request.getImportProcessId())));
             paymentImportHelperService.readExcel(readerConfiguration, request);
-        }catch (ExcelException e){
+        } catch (ExcelException e) {
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
-                    new PaymentImportStatusDto(null,EPaymentImportProcessStatus.FINISHED.name(),
-                            request.getImportProcessId(),true,e.getMessage())));
+                    new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
+                            request.getImportProcessId(), true, e.getMessage())));
             throw new RuntimeException(e);
         }
-            paymentImportHelperService.readPaymentCacheAndSave(request);
-            paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
-                    new PaymentImportStatusDto(EPaymentImportProcessStatus.FINISHED.name(), request.getImportProcessId())));
-            paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
+        paymentImportHelperService.readPaymentCacheAndSave(request);
+        paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
+                new PaymentImportStatusDto(EPaymentImportProcessStatus.FINISHED.name(), request.getImportProcessId())));
+        paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
 
     }
 
@@ -79,10 +79,10 @@ public class PaymentImportService implements IPaymentImportService {
         PaymentImportStatusDto paymentImportStatusDto = statusRepository.findByImportProcessId(query.getImportProcessId())
                 .map(PaymentImportProcessStatusEntity::toAggregate)
                 .orElseThrow();
-        if (paymentImportStatusDto.isHasError()){
+        if (paymentImportStatusDto.isHasError()) {
             throw new ExcelException(paymentImportStatusDto.getExceptionMessage());
         }
-        return new PaymentImportStatusResponse(paymentImportStatusDto.getStatus()) ;
+        return new PaymentImportStatusResponse(paymentImportStatusDto.getStatus(), paymentImportHelperService.getTotalProcessRow());
     }
 
     @Override
@@ -92,7 +92,7 @@ public class PaymentImportService implements IPaymentImportService {
         FilterCriteria filterCriteria = query.getSearchRequest().getFilter().get(0);
         Objects.requireNonNull(filterCriteria);
         Objects.requireNonNull(filterCriteria.getValue());
-        EImportPaymentType eImportPaymentType =EImportPaymentType.valueOf((String) filterCriteria.getValue());
+        EImportPaymentType eImportPaymentType = EImportPaymentType.valueOf((String) filterCriteria.getValue());
         AbstractPaymentImportHelperService paymentImportHelperService = providerImportHelperService.provideImportHelperService(eImportPaymentType);
         return paymentImportHelperService.getPaymentImportErrors(importProcessId, PageableUtil.createPageable(query.getSearchRequest()));
     }

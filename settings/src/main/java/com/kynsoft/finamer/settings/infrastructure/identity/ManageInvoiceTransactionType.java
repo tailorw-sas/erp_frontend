@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -19,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manage_invoice_transaction_type")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_invoice_transaction_type",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageInvoiceTransactionType implements Serializable {
 
     @Id
@@ -60,6 +64,9 @@ public class ManageInvoiceTransactionType implements Serializable {
     @Column(name = "default_remark")
     private String defaultRemark;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean defaults;
+
     public ManageInvoiceTransactionType(ManageInvoiceTransactionTypeDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -72,12 +79,13 @@ public class ManageInvoiceTransactionType implements Serializable {
         this.isRemarkRequired = dto.getIsRemarkRequired();
         this.minNumberOfCharacters = dto.getMinNumberOfCharacters();
         this.defaultRemark = dto.getDefaultRemark();
+        this.defaults = dto.isDefaults();
     }
 
     public ManageInvoiceTransactionTypeDto toAggregate(){
         return new ManageInvoiceTransactionTypeDto(
                 id, code, description, status, name, isAgencyRateAmount, isNegative, isPolicyCredit,
-                isRemarkRequired, minNumberOfCharacters, defaultRemark
+                isRemarkRequired, minNumberOfCharacters, defaultRemark, defaults
         );
     }
 }

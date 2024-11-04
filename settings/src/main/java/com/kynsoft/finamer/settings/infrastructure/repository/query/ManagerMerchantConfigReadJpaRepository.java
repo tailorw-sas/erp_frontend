@@ -10,10 +10,13 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ManagerMerchantConfigReadJpaRepository extends JpaRepository<ManagerMerchantConfig, UUID>, JpaSpecificationExecutor<ManagerMerchantConfig> {
     Page<ManagerMerchantConfig> findAll(Specification specification, Pageable pageable);
+
+    Optional<ManagerMerchantConfig> findByManagerMerchant_Id(UUID uuid);
 
     @Query(value = "SELECT COUNT(b) FROM ManagerMerchant b WHERE b.managerMerchant.id = :managerMerchant",nativeQuery = true)
     Long countByManagerMerchantConfig(@Param("managerMerchant") UUID managerMerchant);

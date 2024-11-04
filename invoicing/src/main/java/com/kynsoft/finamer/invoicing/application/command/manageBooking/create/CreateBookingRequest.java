@@ -39,4 +39,5 @@ public class CreateBookingRequest {
     private String nightType;
     private String roomType;
     private String roomCategory;
+    private String contract;
 }

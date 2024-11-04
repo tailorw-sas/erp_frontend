@@ -3,13 +3,14 @@ package com.kynsoft.finamer.payment.infrastructure.identity;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -42,6 +43,16 @@ public class ManageInvoice {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
     private List<ManageBooking> bookings;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_hotel")
+    private ManageHotel hotel;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_agency")
+    private ManageAgency agency;
+
+    private Boolean autoRec;
+
     public ManageInvoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceId = dto.getInvoiceId();
@@ -57,6 +68,9 @@ public class ManageInvoice {
         this.hasAttachment = dto.getHasAttachment();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.invoiceDate = dto.getInvoiceDate();
+        this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
+        this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
+        this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : null;
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -70,7 +84,10 @@ public class ManageInvoice {
                 null,
                 hasAttachment,
                 null,
-                invoiceDate
+                invoiceDate,
+                Objects.nonNull(hotel) ? hotel.toAggregate() : null,
+                Objects.nonNull(agency) ? agency.toAggregate() : null,
+                autoRec != null ? autoRec : null
         );
     }
 
@@ -87,7 +104,10 @@ public class ManageInvoice {
                         }).collect(Collectors.toList()) : null,
                 hasAttachment,
                 parent != null ? parent.toAggregateSample() : null,
-                invoiceDate
+                invoiceDate,
+                Objects.nonNull(hotel) ? hotel.toAggregate() : null,
+                Objects.nonNull(agency) ? agency.toAggregate() : null,
+                autoRec != null ? autoRec : null
         );
     }
 

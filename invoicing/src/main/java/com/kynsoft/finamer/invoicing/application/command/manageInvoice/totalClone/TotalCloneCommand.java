@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClo
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,11 +28,14 @@ public class TotalCloneCommand implements ICommand {
     private UUID clonedInvoice;
     private Long clonedInvoiceId;
     private String clonedInvoiceNo;
+    private IMediator mediator;
 
-    public TotalCloneCommand(UUID invoiceToClone, UUID agency, LocalDateTime invoiceDate,
+    public TotalCloneCommand(UUID invoiceToClone,
+                             UUID agency, LocalDateTime invoiceDate,
                              UUID employeeId, String employeeName,
                              List<TotalCloneAttachmentRequest> attachments,
-                             List<TotalCloneBookingRequest> bookings, UUID hotel) {
+                             List<TotalCloneBookingRequest> bookings, UUID hotel, IMediator mediator
+    ) {
 
         this.clonedInvoice = UUID.randomUUID();
         this.invoiceToClone = invoiceToClone;
@@ -42,18 +46,20 @@ public class TotalCloneCommand implements ICommand {
         this.attachments = attachments;
         this.bookings = bookings;
         this.hotel = hotel;
+        this.mediator = mediator;
     }
 
-    public static TotalCloneCommand fromRequest(TotalCloneRequest request){
+    public static TotalCloneCommand fromRequest(TotalCloneRequest request, IMediator mediator){
         return new TotalCloneCommand(
                 request.getInvoiceToClone(),
                 request.getAgency(),
                 request.getInvoiceDate(),
                 request.getEmployeeId(),
                 request.getEmployeeName(),
-                request.attachments,
-                request.bookings,
-                request.getHotel()
+                request.getAttachments(),
+                request.getBookings(),
+                request.getHotel(),
+                mediator
         );
     }
 

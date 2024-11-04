@@ -48,18 +48,31 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
         UpdateIfNotNull.updateBoolean(dto::setNegative, command.getNegative(), dto.getNegative(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setPolicyCredit, command.getPolicyCredit(), dto.getPolicyCredit(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setRemarkRequired, command.getRemarkRequired(), dto.getRemarkRequired(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(dto::setDeposit, command.getDeposit(), dto.getDeposit(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(dto::setApplyDeposit, command.getApplyDeposit(), dto.getApplyDeposit(), update::setUpdate);
+        //UpdateIfNotNull.updateBoolean(dto::setDeposit, command.getDeposit(), dto.getDeposit(), update::setUpdate);
+        //UpdateIfNotNull.updateBoolean(dto::setApplyDeposit, command.getApplyDeposit(), dto.getApplyDeposit(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setAntiToIncome, command.getAntiToIncome(), dto.getAntiToIncome(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(dto::setPaymentInvoice, command.getPaymentInvoice(), dto.getPaymentInvoice(), update::setUpdate);
+        //UpdateIfNotNull.updateBoolean(dto::setPaymentInvoice, command.getPaymentInvoice(), dto.getPaymentInvoice(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDebit, command.getDebit(), dto.getDebit(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setExpenseToBooking, command.isExpenseToBooking(), dto.isExpenseToBooking(), update::setUpdate);
 //        if (UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate)) {
 //            RulesChecker.checkRule(new ManagePaymentTransactionTypeDefaultMustBeUniqueRule(service, command.getId()));
 //        }
 
         if(UpdateIfNotNull.updateBoolean(dto::setIncomeDefault, command.getIncomeDefault(), dto.getIncomeDefault(), update::setUpdate)){
             RulesChecker.checkRule(new ManagePaymentTransactionTypeIncomeDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
+
+        if(UpdateIfNotNull.updateBoolean(dto::setPaymentInvoice, command.getPaymentInvoice(), dto.getPaymentInvoice(), update::setUpdate)){
+            RulesChecker.checkRule(new ManagePaymentTransactionTypePaymentInvoiceMustBeUniqueRule(this.service, command.getId()));
+        }
+
+        if(UpdateIfNotNull.updateBoolean(dto::setDeposit, command.getDeposit(), dto.getDeposit(), update::setUpdate)){
+            RulesChecker.checkRule(new ManagePaymentTransactionTypeDepositMustBeUniqueRule(this.service, command.getId()));
+        }
+
+        if(UpdateIfNotNull.updateBoolean(dto::setApplyDeposit, command.getApplyDeposit(), dto.getApplyDeposit(), update::setUpdate)){
+            RulesChecker.checkRule(new ManagePaymentTransactionTypeApplyDepositMustBeUniqueRule(this.service, command.getId()));
         }
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);

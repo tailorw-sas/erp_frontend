@@ -6,13 +6,10 @@ import com.kynsoft.finamer.payment.infrastructure.services.report.content.Abstra
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.ReportContentProviderFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
-import static com.kynsoft.finamer.payment.infrastructure.services.report.util.ReportUtil.createPaymentReportResponse;
 
 @Service(PaymentReportPaymentDetailsService.BEAN_ID)
 public class PaymentReportPaymentDetailsService implements IPaymentReport {

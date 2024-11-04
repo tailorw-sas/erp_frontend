@@ -11,6 +11,9 @@ import com.kynsoft.finamer.settings.domain.dto.ModuleDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNameMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNonNoneMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusWhitAttachmentMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusWhitOutAttachmentMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageModuleService;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentAttachmentStatus.ProducerUpdateManagePaymentAttachmentStatusService;
@@ -49,19 +52,42 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         if (command.getDefaults()) {
             RulesChecker.checkRule(new ManagePaymentAttachmentStatusDefaultMustBeUniqueRule(service, command.getId()));
         }
+        if (command.isNonNone()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusNonNoneMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.isPatWithAttachment()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusWhitAttachmentMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.isPwaWithOutAttachment()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusWhitOutAttachmentMustBeUniqueRule(service, command.getId()));
+        }
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setPermissionCode, command.getPermissionCode(), dto.getPermissionCode(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setShow, command.getShow(), dto.getShow(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setNonNone, command.isNonNone(), dto.isNonNone(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setPatWithAttachment, command.isPatWithAttachment(), dto.isPatWithAttachment(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setPwaWithOutAttachment, command.isPwaWithOutAttachment(), dto.isPwaWithOutAttachment(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setSupported, command.isSupported(), dto.isSupported(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setOtherSupport, command.isOtherSupport(), dto.isOtherSupport(), update::setUpdate);
+
         List<ManagePaymentAttachmentStatusDto> managePaymentAttachmentStatusDtoList = service.findByIds(command.getNavigate());
         dto.setRelatedStatuses(managePaymentAttachmentStatusDtoList);
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         this.updateModule(dto::setModule, command.getModule(), dto.getModule().getId(), update::setUpdate);
 
         this.service.update(dto);
-        this.producerUpdateManagePaymentAttachmentStatusService.update(new UpdateManagePaymentAttachmentStatusKafka(dto.getId(), dto.getName(), command.getStatus().name(), dto.getDefaults()));
-//        if (update.getUpdate() > 0) {
-//        }
+        this.producerUpdateManagePaymentAttachmentStatusService.update(new UpdateManagePaymentAttachmentStatusKafka(
+                dto.getId(), 
+                dto.getName(), 
+                command.getStatus().name(), 
+                dto.getDefaults(), 
+                dto.isNonNone(), 
+                dto.isPatWithAttachment(), 
+                dto.isPwaWithOutAttachment(),
+                dto.isSupported(),
+                dto.isOtherSupport()
+        ));
     }
 
     private void updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {

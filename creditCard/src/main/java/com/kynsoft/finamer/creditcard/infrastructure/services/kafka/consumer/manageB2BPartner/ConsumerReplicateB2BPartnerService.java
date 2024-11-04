@@ -24,7 +24,7 @@ public class ConsumerReplicateB2BPartnerService {
     public void listen(ReplicateB2BPartnerKafka objKafka) {
         try {
             CreateManagerB2BPartnerCommand command1 = new CreateManagerB2BPartnerCommand(objKafka.getId(),objKafka.getCode(),objKafka.getDescription(),
-                    objKafka.getName(),Status.valueOf(objKafka.getStatus()),"","","","","",objKafka.getB2BPartnerTypeDto());
+                    objKafka.getName(),Status.valueOf(objKafka.getStatus()),objKafka.getUrl(),objKafka.getIp(),objKafka.getUserName(),objKafka.getPassword(),objKafka.getToken(),objKafka.getB2BPartnerTypeDto());
             mediator.send(command1);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateB2BPartnerService.class.getName()).log(Level.SEVERE, null, ex);

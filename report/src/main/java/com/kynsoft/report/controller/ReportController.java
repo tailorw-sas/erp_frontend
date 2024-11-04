@@ -25,7 +25,7 @@ public class ReportController {
     public ResponseEntity<?> getTemplate(@RequestBody GenerateTemplateRequest request) {
 
         GenerateTemplateCommand command = new GenerateTemplateCommand(request.getParameters(),
-                request.getJasperReportCode());
+                request.getJasperReportCode(), request.getReportFormatType());
         GenerateTemplateMessage response = mediator.send(command);
 
         // Return the PDF as a ResponseEntity with headers

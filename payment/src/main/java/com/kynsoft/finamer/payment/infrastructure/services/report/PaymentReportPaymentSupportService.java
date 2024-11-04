@@ -7,20 +7,11 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentReport;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.ReportContentProviderFactory;
-import com.kynsoft.finamer.payment.infrastructure.services.report.util.ReportUtil;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import static com.kynsoft.finamer.payment.infrastructure.services.report.util.ReportUtil.createPaymentReportResponse;
+import java.util.*;
 
 @Service(PaymentReportPaymentSupportService.BEAN_ID)
 public class PaymentReportPaymentSupportService implements IPaymentReport {

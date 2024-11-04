@@ -74,7 +74,7 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                                                 command.getHotelBookingNumber()
                                                                 .split("\\s+")[command.getHotelBookingNumber()
                                                                                 .split("\\s+").length - 1],
-                                                invoiceDto.getHotel().getId()));
+                                                invoiceDto.getHotel().getId(), command.getHotelBookingNumber()));
                         }
                 }
 
@@ -120,7 +120,8 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                                 nightTypeDto,
                                 roomTypeDto,
                                 roomCategoryDto,
-                                null, null, null);
+                                null, null, null,
+                                command.getContract());
                 bookingService.create(newBooking);
 
                 try {

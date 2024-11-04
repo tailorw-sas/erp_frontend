@@ -80,7 +80,7 @@ public class BookingServiceImpl implements ImportBookingService {
                 }
             }
             validatorFactory.removeValidators();
-            bookingImportHelperService.createInvoiceFromGroupedBooking(request.getImportProcessId());
+            bookingImportHelperService.createInvoiceFromGroupedBooking(request);
             BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
                     .status(EProcessStatus.FINISHED)
                     .total(reader.totalRows())

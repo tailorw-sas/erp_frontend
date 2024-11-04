@@ -1,16 +1,11 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.event.process;
 
 import com.kynsoft.finamer.payment.domain.dto.PaymentImportStatusDto;
-import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentImportProcessStatus;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportProcessStatusEntity;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportProcessStatusRepository;
-import io.jsonwebtoken.lang.Assert;
 import org.springframework.context.ApplicationListener;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 @Component

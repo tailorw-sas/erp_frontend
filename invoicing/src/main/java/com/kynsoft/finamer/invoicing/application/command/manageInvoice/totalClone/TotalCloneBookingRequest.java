@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -38,4 +39,6 @@ public class TotalCloneBookingRequest {
     private UUID nightType;
     private UUID roomType;
     private UUID roomCategory;
+    private String contract;
+    List<TotalCloneRoomRateRequest> roomRates;
 }

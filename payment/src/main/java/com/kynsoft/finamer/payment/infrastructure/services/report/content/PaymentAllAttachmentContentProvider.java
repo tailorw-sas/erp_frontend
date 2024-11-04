@@ -2,7 +2,6 @@ package com.kynsoft.finamer.payment.infrastructure.services.report.content;
 
 import com.kynsof.share.core.domain.service.IReportGenerator;
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
-import com.kynsoft.finamer.payment.application.query.objectResponse.MasterPaymentAttachmentResponse;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
 import org.slf4j.Logger;
@@ -11,13 +10,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class  PaymentAllAttachmentContentProvider extends AbstractReportContentProvider {
     private final Logger logger = LoggerFactory.getLogger(PaymentAllAttachmentContentProvider.class);

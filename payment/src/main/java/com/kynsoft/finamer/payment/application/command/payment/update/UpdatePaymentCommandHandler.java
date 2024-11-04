@@ -5,28 +5,14 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageBankAccountDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentAttachmentStatusDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentSourceDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.payment.domain.services.IManageBankAccountService;
-import com.kynsoft.finamer.payment.domain.services.IManageClientService;
-import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentAttachmentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentSourceService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.rules.payment.UpdatePaymentValidateChangeStatusRule;
+import com.kynsoft.finamer.payment.domain.services.*;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDate;
 import java.util.UUID;
-
 import java.util.function.Consumer;
-
-import org.springframework.stereotype.Component;
 
 @Component
 public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymentCommand> {
@@ -40,6 +26,9 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
     private final IManagePaymentAttachmentStatusService attachmentStatusService;
     private final IPaymentService paymentService;
 
+    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IManageEmployeeService manageEmployeeService;
+
     public UpdatePaymentCommandHandler(IManagePaymentSourceService sourceService, 
                                        IManagePaymentStatusService statusService, 
                                        IManageClientService clientService, 
@@ -47,7 +36,9 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
                                        IManageHotelService hotelService, 
                                        IManageBankAccountService bankAccountService, 
                                        IManagePaymentAttachmentStatusService attachmentStatusService, 
-                                       IPaymentService paymentService) {
+                                       IPaymentService paymentService,
+                                       IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+                                       IManageEmployeeService manageEmployeeService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -56,6 +47,8 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
         this.bankAccountService = bankAccountService;
         this.attachmentStatusService = attachmentStatusService;
         this.paymentService = paymentService;
+        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.manageEmployeeService = manageEmployeeService;
     }
 
     @Override
@@ -79,16 +72,17 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
 
         this.updateDate(paymentDto::setTransactionDate, command.getTransactionDate(), paymentDto.getTransactionDate(), update::setUpdate);
         this.updateManagePaymentSource(paymentDto::setPaymentSource, command.getPaymentSource(), paymentDto.getPaymentSource().getId(), update::setUpdate);
-        this.updateManagePaymentStatus(paymentDto::setPaymentStatus, command.getPaymentStatus(), paymentDto.getPaymentStatus().getId(), update::setUpdate);
+        this.updateManagePaymentStatus(paymentDto::setPaymentStatus, command.getPaymentStatus(), paymentDto.getPaymentStatus().getId(), update::setUpdate, paymentDto, command.getEmployee());
         this.updateManageClient(paymentDto::setClient, command.getClient(), paymentDto.getClient().getId(), update::setUpdate);
         this.updateManageAgency(paymentDto::setAgency, command.getAgency(), paymentDto.getAgency().getId(), update::setUpdate);
         this.updateManageHotel(paymentDto::setHotel, command.getHotel(), paymentDto.getHotel().getId(), update::setUpdate);
-        this.updateManageBankAccount(paymentDto::setBankAccount, command.getBankAccount(), paymentDto.getBankAccount().getId(), update::setUpdate);
+//        this.updateManageBankAccount(paymentDto::setBankAccount, command.getBankAccount(), paymentDto.getBankAccount().getId(), update::setUpdate);
         this.updateManageAttachmentStatus(paymentDto::setAttachmentStatus, command.getAttachmentStatus(), paymentDto.getAttachmentStatus().getId(), update::setUpdate);
 
-        if (update.getUpdate() > 0) {
-            this.paymentService.update(paymentDto);
-        }
+        //if (update.getUpdate() > 0) {
+        paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+        this.paymentService.update(paymentDto);
+        //}
 
     }
 
@@ -103,15 +97,31 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
         return false;
     }
 
-    private boolean updateManagePaymentStatus(Consumer<ManagePaymentStatusDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+    private boolean updateManagePaymentStatus(Consumer<ManagePaymentStatusDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update, PaymentDto paymentDto, UUID employee) {
         if (newValue != null && !newValue.equals(oldValue)) {
             ManagePaymentStatusDto paymentStatusDto = this.statusService.findById(newValue);
+            RulesChecker.checkRule(new UpdatePaymentValidateChangeStatusRule(paymentDto.getPaymentStatus(), paymentStatusDto, paymentDto.isApplyPayment()));
+            ManageEmployeeDto employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
+            createPaymentAttachmentStatusHistory(employeeDto, paymentDto, paymentStatusDto);
             setter.accept(paymentStatusDto);
             update.accept(1);
 
             return true;
         }
         return false;
+    }
+
+    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
+    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, ManagePaymentStatusDto paymentStatusDto) {
+
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Update Payment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(paymentStatusDto.getCode() + "-" + paymentStatusDto.getName());
+
+        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
     private boolean updateManageClient(Consumer<ManageClientDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {

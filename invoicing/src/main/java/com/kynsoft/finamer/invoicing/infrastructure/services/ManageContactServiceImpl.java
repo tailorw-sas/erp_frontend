@@ -8,6 +8,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageContactResponse;
+import com.kynsoft.finamer.invoicing.domain.IManageContactService;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageContactDto;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageContact;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageContactWriteDataJPARepository;

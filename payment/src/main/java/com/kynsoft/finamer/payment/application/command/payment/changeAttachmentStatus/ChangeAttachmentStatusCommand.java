@@ -15,18 +15,21 @@ public class ChangeAttachmentStatusCommand implements ICommand {
 
     private EAttachment attachmentStatus;
     private UUID payment;
+    private UUID employee;
 
     private PaymentDto paymentResponse;
 
-    public ChangeAttachmentStatusCommand(EAttachment attachmentStatus, UUID payment) {
+    public ChangeAttachmentStatusCommand(EAttachment attachmentStatus, UUID payment, UUID employee) {
         this.attachmentStatus = attachmentStatus;
         this.payment = payment;
+        this.employee = employee;
     }
 
     public static ChangeAttachmentStatusCommand fromRequest(ChangeAttachmentStatusRequest request) {
         return new ChangeAttachmentStatusCommand(
                 request.getStatus(),
-                request.getPayment()
+                request.getPayment(),
+                request.getEmployee()
         );
     }
 

@@ -1,0 +1,133 @@
+@Library(['PullRequestInfo', 'emailNotification']) _
+import com.tailorwsas.notificaciones.NotificadorEmail
+
+pipeline {
+    
+    agent any
+
+    parameters {
+        booleanParam(name: 'FORCE_BUILD', defaultValue: false, description: 'Forzar la ejecución del pipeline sin verificar cambios')
+    }
+    
+    environment {
+        SISTEMA = 'ERP'
+		GITHUB_REPO = 'erp_backend'
+		GIT_TOKEN = "${env.GITHUB_TOKEN}"
+        ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
+        DOCKER_IMAGE_NAME = 'tailorw/erp-audit:version'
+        SRC = 'audit'
+        SRC_SHARE = 'audit-agent'
+        GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
+        DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
+        NAMESPACE = 'finamer'
+        K3S_CREDENTIALS = 'KubernetesCredential-env'
+        YAML = 'audit.yaml'
+        DEPLOYMENT_NAME = 'audit'
+        URL_DEV = credentials("URL-K3S-dev")
+        URL_QA = credentials("URL-K3S-qa")
+        EMAIL_FROM = "${env.CORREO_ORIGEN}"
+        ESTADO_OK = 'OK'
+        ESTADO_ERROR = 'ERROR'
+	    DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
+    }
+    
+    triggers {
+        githubPush()
+    }
+
+    stages {
+
+        stage ('Check for changes') {
+            steps {
+                echo '* * * * * *STAGE: Checking for changes in a specific project * * * * * *'
+                script {
+                    if (!params.FORCE_BUILD){
+                        def folderPaths = [env.SRC, env.SRC_SHARE]
+                        def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                        def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
+                        if (changesInFolder) {
+                            echo "Changes detected in folders: ${SRC} y/o ${SRC_SHARE}"
+                        } else {
+                            echo "* * * * * * * * No changes detected in folders: ${SRC} y/o ${SRC_SHARE} * * * * * * * *"
+                            currentBuild.result = 'NOT_BUILT'
+                            error('No changes detected in folders: $SRC y/o $SRC_SHARE' )
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage ('Initialize variables') {
+            steps {
+                echo '* * * * STAGE: Initializing variables * * * *'
+                script {   
+                    def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
+                    env.BRANCH_NAME = branch
+
+                    def dockerImage = env.DOCKER_IMAGE_NAME.replace('version', env.BRANCH_NAME)
+                    env.DOCKER_IMAGE = dockerImage
+
+                    def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
+                    env.SERVER_K3S_CREDENTIALS = k3sCredentials
+
+                    if (!params.FORCE_BUILD){
+			            def prInfo = pullrequests.getPullRequestInfoByGitCommit(env.SISTEMA, env.GITHUB_REPO, env.GIT_COMMIT, env.GIT_TOKEN)
+			            env.PR_TITLE = prInfo.title
+			            env.PR_AUTHOR = prInfo.author
+			            env.EMAIL_AUTHOR = prInfo.authorEmail
+		            }else{
+			            env.PR_TITLE = 'MANUAL EXECUTION'
+			            env.PR_AUTHOR = 'Jenkins Admin'
+			            env.EMAIL_AUTHOR = env.DEFAULT_EMAIL
+		            }
+					
+                    if(env.BRANCH_NAME == 'dev'){
+                        env.SERVER_K3S_URL = env.URL_DEV
+                        env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
+                    }
+                    if(env.BRANCH_NAME == 'qa'){
+                        env.SERVER_K3S_URL = env.URL_QA
+                        env.EMAIL_LIST = env.EMAIL_LIST_QA
+                    }
+                }
+            }
+        }
+
+        stage ('Create docker image'){
+            steps {
+                echo '* * * * STAGE: Creating docker image * * * *'
+                dir("${SRC}"){
+                    sh 'docker build --no-cache -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg ENVIRONMENT=$BRANCH_NAME .'
+                    withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
+                        sh 'docker push $DOCKER_IMAGE'
+                    }
+                }
+            }
+        }
+
+        stage ('Publish to Kubernetes') {
+            steps {
+                echo '* * * * STAGE: Publishing to kubernetes * * * *'
+                withKubeConfig(credentialsId: "${SERVER_K3S_CREDENTIALS}", namespace: "${NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: "${SERVER_K3S_URL}") {
+                    //sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
+                    sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            script {
+                def notificator = new NotificadorEmail(this)
+                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
+            }
+        }
+        failure {
+            script {
+                def notificator = new NotificadorEmail(this)
+                notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER, env.WORKSPACE)
+            }
+        }
+    }
+}

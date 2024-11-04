@@ -21,7 +21,7 @@ public class ConsumerReplicateManageVCCTransactionTypeService {
     @KafkaListener(topics = "finamer-replicate-manage-vcc-transaction-type", groupId = "vcc-entity-replica")
     public void listen(ReplicateManageVCCTransactionTypeKafka entity) {
         try {
-            CreateManageVCCTransactionTypeCommand command = new CreateManageVCCTransactionTypeCommand(entity.getId(), entity.getCode(), entity.getName());
+            CreateManageVCCTransactionTypeCommand command = new CreateManageVCCTransactionTypeCommand(entity.getId(), entity.getCode(), entity.getName(), entity.getIsDefault(), entity.getSubcategory());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageVCCTransactionTypeService.class.getName()).log(Level.SEVERE, null, ex);

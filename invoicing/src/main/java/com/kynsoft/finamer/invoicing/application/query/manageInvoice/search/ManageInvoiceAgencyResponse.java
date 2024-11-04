@@ -13,12 +13,14 @@ public class ManageInvoiceAgencyResponse {
     private String code;
     private String name;
     private ManagerB2BPartnerResponse sentB2BPartner;
+    private ManageClientResponse client;
 
     public ManageInvoiceAgencyResponse(ManageAgencyDto projection) {
         this.id = projection.getId();
         this.code = projection.getCode();
         this.name = projection.getName();
         this.sentB2BPartner = projection.getSentB2BPartner() != null ? new ManagerB2BPartnerResponse(projection.getSentB2BPartner()) : null;
+        this.client = projection.getClient() != null ? new ManageClientResponse(projection.getClient()) : null;
     }
 
 }

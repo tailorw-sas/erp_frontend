@@ -71,6 +71,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        this.totalProcessRow=0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
         paymentDetailValidatorFactory.createValidators();
         ExcelBeanReader<PaymentDetailRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentDetailRow.class);
@@ -84,6 +85,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             }
             if (paymentDetailValidatorFactory.validate(row)) {
                 cachingPaymentImport(row);
+                this.totalProcessRow++;
             }
         }
     }
@@ -170,7 +172,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                           UUID transactionTypeIdForAdjustment, String remarks) {
         CreatePaymentDetailApplyDepositCommand createPaymentDetailApplyDepositCommand =
                 new CreatePaymentDetailApplyDepositCommand(Status.ACTIVE, paymentDetail, transactionType, amount, remarks, employee, transactionTypeIdForAdjustment);
-        ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand);
+        ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand,false);
         applicationEventPublisher.publishEvent(applyDepositEvent);
 
     }

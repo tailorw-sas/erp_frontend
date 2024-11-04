@@ -3,22 +3,24 @@ package com.kynsoft.finamer.payment.infrastructure.identity;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -48,6 +50,8 @@ public class Payment implements Serializable {
     private ManagePaymentSource paymentSource;
     private String reference;
     private LocalDate transactionDate;
+
+    private LocalTime dateTime;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "payment_status_id")
@@ -104,12 +108,21 @@ public class Payment implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean applyPayment;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean paymentSupport;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean createByCredit;
+
     //@CreationTimestamp
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     @Column(nullable = true, updatable = true)
     private OffsetDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    private ImportType importType;
 
     @PrePersist
     protected void prePersist() {
@@ -141,6 +154,10 @@ public class Payment implements Serializable {
         this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
         this.eAttachment = dto.getEAttachment();
         this.applyPayment = dto.isApplyPayment();
+        this.paymentSupport = dto.isPaymentSupport();
+        this.createByCredit = dto.isCreateByCredit();
+        this.dateTime = dto.getTransactionDateTime() != null ? dto.getTransactionDateTime() : LocalTime.now();
+        this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
     }
 
     public PaymentDto toAggregate() {
@@ -172,7 +189,8 @@ public class Payment implements Serializable {
                             return b.toAggregateSimple();
                         }).collect(Collectors.toList()) : null,
                 createdAt,
-                eAttachment != null ? eAttachment : EAttachment.NONE
+                eAttachment != null ? eAttachment : EAttachment.NONE,
+                dateTime
         );
     }
 
@@ -214,7 +232,11 @@ public class Payment implements Serializable {
                             return b.toAggregateSimpleNotPayment();
                         }).collect(Collectors.toList()) : null,
                 eAttachment != null ? eAttachment : EAttachment.NONE,
-                applyPayment
+                applyPayment,
+                paymentSupport,
+                createByCredit,
+                dateTime,
+                importType
         );
     }
 

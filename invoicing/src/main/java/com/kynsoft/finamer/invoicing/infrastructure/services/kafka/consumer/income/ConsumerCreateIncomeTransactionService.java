@@ -110,7 +110,7 @@ public class ConsumerCreateIncomeTransactionService {
         return bookings.stream().map(booking -> new ManageBookingKafka(
                 booking.getId(),
                 booking.getBookingId(),
-                booking.getReservationNumber().toString(),
+                booking.getHotelBookingNumber(),
                 booking.getCheckIn(),
                 booking.getCheckOut(),
                 booking.getFullName(),
@@ -122,7 +122,8 @@ public class ConsumerCreateIncomeTransactionService {
                 booking.getAdults(),
                 booking.getChildren(),
                 Objects.nonNull(booking.getInvoice()) ? booking.getInvoice().getId() : null,
-                Objects.nonNull(booking.getParent()) ? booking.getParent().getId() : null
+                Objects.nonNull(booking.getParent()) ? booking.getParent().getId() : null,
+                booking.getBookingDate()
         )).collect(Collectors.toList());
     }
 

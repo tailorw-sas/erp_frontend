@@ -15,6 +15,9 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.create.Crea
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.delete.DeletePaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.delete.DeletePaymentDetailMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionMessage;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplication.CreateUndoApplicationRequest;
@@ -30,11 +33,11 @@ import com.kynsoft.finamer.payment.application.command.paymentDetailSplitDeposit
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentDetailResponse;
 import com.kynsoft.finamer.payment.application.query.paymentDetail.getById.FindPaymentDetailByIdQuery;
 import com.kynsoft.finamer.payment.application.query.paymentDetail.search.GetSearchPaymentDetailQuery;
-
-import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/payment-detail")
@@ -71,6 +74,14 @@ public class PaymentDetailController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/reverse-transaction")
+    public ResponseEntity<CreateReverseTransactionMessage> applyPayment(@RequestBody CreateReverseTransactionRequest request) {
+        CreateReverseTransactionCommand createCommand = CreateReverseTransactionCommand.fromRequest(request, mediator);
+        CreateReverseTransactionMessage response = mediator.send(createCommand);
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/apply-deposit")
     public ResponseEntity<CreatePaymentDetailApplyDepositMessage> createApplyDeposit(@RequestBody CreatePaymentDetailApplyDepositRequest request) {
         CreatePaymentDetailApplyDepositCommand createCommand = CreatePaymentDetailApplyDepositCommand.fromRequest(request, mediator);
@@ -98,7 +109,7 @@ public class PaymentDetailController {
     @DeleteMapping(path = "/{id}/employee/{employeeId}")
     public ResponseEntity<?> deleteById(@PathVariable UUID id, @PathVariable UUID employeeId) {
 
-        DeletePaymentDetailCommand command = new DeletePaymentDetailCommand(id, employeeId);
+        DeletePaymentDetailCommand command = new DeletePaymentDetailCommand(id, employeeId, false);
         DeletePaymentDetailMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);

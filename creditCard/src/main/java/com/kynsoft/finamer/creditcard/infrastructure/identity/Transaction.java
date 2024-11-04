@@ -25,8 +25,10 @@ public class Transaction implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "transaction_uuid")
+
+    @Column(name = "transaction_uuid", unique = true)
     private UUID transactionUuid;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_merchant_id")
     private ManageMerchant merchant;
@@ -45,6 +47,10 @@ public class Transaction implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_language_id")
     private ManageLanguage language;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_merchant_currency_id")
+    private ManagerMerchantCurrency merchantCurrency;
 
     private Double amount;
 
@@ -97,6 +103,19 @@ public class Transaction implements Serializable {
     @Column(name = "permit_refund")
     private Boolean permitRefund = true;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean manual;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean adjustment;
+
+    @Column(name = "payment_date")
+    private LocalDateTime paymentDate;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "bank_reconciliation")
+    private ManageBankReconciliation reconciliation;
+
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
         this.merchant = dto.getMerchant() != null ? new ManageMerchant(dto.getMerchant()) : null;
@@ -123,13 +142,18 @@ public class Transaction implements Serializable {
         if(dto.getPermitRefund() != null){
             this.permitRefund = dto.getPermitRefund();
         }
+        this.merchantCurrency = dto.getMerchantCurrency() != null ? new ManagerMerchantCurrency(dto.getMerchantCurrency()) : null;
         transactionUuid= dto.getTransactionUuid();
+        this.manual = dto.isManual();
+        this.paymentDate = dto.getPaymentDate();
+        this.reconciliation = dto.getReconciliation() != null ? new ManageBankReconciliation(dto.getReconciliation()) : null;
+        this.adjustment = dto.isAdjustment();
     }
 
     private TransactionDto toAggregateParent() {
         return new TransactionDto(
                 id,transactionUuid, checkIn, reservationNumber, referenceNumber,
-                createdAt.toLocalDate());
+                createdAt != null ? createdAt.toLocalDate() : null);
     }
 
     public TransactionDto toAggregate(){
@@ -148,10 +172,14 @@ public class Transaction implements Serializable {
                 commission,
                 status != null ? status.toAggregate() : null,
                 parent != null ? parent.toAggregateParent() : null,
-                createdAt.toLocalDate(),
+                createdAt != null ? createdAt.toLocalDate() : null,
                 transactionCategory != null ? transactionCategory.toAggregate() : null,
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
-                netAmount, permitRefund
+                netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null,
+                manual,
+                adjustment,
+                paymentDate,
+                reconciliation != null ? reconciliation.toAggregateSimple() : null
         );
     }
 }

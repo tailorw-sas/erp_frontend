@@ -23,7 +23,7 @@ public class UploadFileCommandHandler implements ICommandHandler<UploadFileComma
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(dataBuffer -> {
                     InputStream inputStream = dataBuffer.asInputStream();
-                    String remotePath = "/files/" + command.getFile().filename();
+                    String remotePath ="/"+ command.getPath();
 
                     return Mono.fromRunnable(() -> {
                         try {

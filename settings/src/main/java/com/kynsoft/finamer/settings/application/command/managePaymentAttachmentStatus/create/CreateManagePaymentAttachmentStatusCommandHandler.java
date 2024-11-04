@@ -10,6 +10,9 @@ import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusCodeSizeRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNameMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusNonNoneMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusWhitAttachmentMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.managePaymentAttachementStatus.ManagePaymentAttachmentStatusWhitOutAttachmentMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageModuleService;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentAttachmentStatus.ProducerReplicateManagePaymentAttachmentStatusService;
@@ -41,6 +44,15 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
         if (command.getDefaults()) {
             RulesChecker.checkRule(new ManagePaymentAttachmentStatusDefaultMustBeUniqueRule(service, command.getId()));
         }
+        if (command.isNonNone()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusNonNoneMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.isPatWithAttachment()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusWhitAttachmentMustBeUniqueRule(service, command.getId()));
+        }
+        if (command.isPwaWithOutAttachment()) {
+            RulesChecker.checkRule(new ManagePaymentAttachmentStatusWhitOutAttachmentMustBeUniqueRule(service, command.getId()));
+        }
 
         List<ManagePaymentAttachmentStatusDto> managePaymentAttachmentStatusDtoList = service.findByIds(command.getNavigate());
 
@@ -49,8 +61,20 @@ public class CreateManagePaymentAttachmentStatusCommandHandler implements IComma
         service.create(
                 new ManagePaymentAttachmentStatusDto(command.getId(), command.getCode(), command.getName(),
                         command.getStatus(),  moduleDto, command.getShow(), command.getDefaults(), command.getPermissionCode(),
-                        command.getDescription(), managePaymentAttachmentStatusDtoList));
+                        command.getDescription(), managePaymentAttachmentStatusDtoList, command.isNonNone(), command.isPatWithAttachment(), 
+                        command.isPwaWithOutAttachment(), command.isSupported(), command.isOtherSupport()));
 
-        this.paymentAttachmentStatusService.create(new ReplicateManagePaymentAttachmentStatusKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name(), command.getDefaults()));
+        this.paymentAttachmentStatusService.create(new ReplicateManagePaymentAttachmentStatusKafka(
+                command.getId(), 
+                command.getCode(), 
+                command.getName(), 
+                command.getStatus().name(), 
+                command.getDefaults(),
+                command.isNonNone(),
+                command.isPatWithAttachment(),
+                command.isPwaWithOutAttachment(),
+                command.isSupported(),
+                command.isOtherSupport()
+        ));
     }
 }

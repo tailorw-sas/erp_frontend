@@ -5,27 +5,15 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
-import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
-import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.masterPaymentAttachment.MasterPaymetAttachmentWhitDefaultTrueMustBeUniqueRule;
-import com.kynsoft.finamer.payment.domain.services.IAttachmentStatusHistoryService;
-import com.kynsoft.finamer.payment.domain.services.IManageAttachmentTypeService;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
-import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import com.kynsoft.finamer.payment.domain.services.*;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import java.util.function.Consumer;
-
-import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHandler<UpdateMasterPaymentAttachmentCommand> {
@@ -38,19 +26,22 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IPaymentService paymentService;
 
     public UpdateMasterPaymentAttachmentCommandHandler(IMasterPaymentAttachmentService masterPaymentAttachmentService,
             IManageAttachmentTypeService manageAttachmentTypeService,
             IManageResourceTypeService manageResourceTypeService,
             IManageEmployeeService manageEmployeeService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService) {
+            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IPaymentService paymentService) {
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
         this.manageAttachmentTypeService = manageAttachmentTypeService;
         this.manageResourceTypeService = manageResourceTypeService;
         this.manageEmployeeService = manageEmployeeService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.paymentService = paymentService;
     }
 
     @Override
@@ -78,6 +69,11 @@ public class UpdateMasterPaymentAttachmentCommandHandler implements ICommandHand
         if (update.getUpdate() > 0) {
             this.masterPaymentAttachmentService.update(masterPaymentAttachmentDto);
             this.deleteAttachmentStatusHistory(employeeDto, masterPaymentAttachmentDto.getResource(), masterPaymentAttachmentDto.getFileName(), masterPaymentAttachmentDto.getAttachmentId());
+            if (this.masterPaymentAttachmentService.countByResourceAndAttachmentTypeIsDefault(masterPaymentAttachmentDto.getResource().getId()) == 0) {
+                PaymentDto paymentDto = masterPaymentAttachmentDto.getResource();
+                paymentDto.setPaymentSupport(false);
+                this.paymentService.update(paymentDto);
+            }
 //            this.createPaymentAttachmentStatusHistory(employeeDto, masterPaymentAttachmentDto.getResource(), masterPaymentAttachmentDto.getFileName());
         }
 

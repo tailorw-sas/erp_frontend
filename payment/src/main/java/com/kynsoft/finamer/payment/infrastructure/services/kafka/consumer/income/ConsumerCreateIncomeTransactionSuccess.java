@@ -1,35 +1,35 @@
 package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.income;
 
-import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionKafka;
 import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionSuccessKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
-import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
-import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManageBooking;
+import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 @Service
 public class ConsumerCreateIncomeTransactionSuccess {
     private final IManageInvoiceService manageInvoiceService;
     private final IPaymentDetailService paymentDetailService;
-
     private final IManageBookingService manageBookingService;
 
+    private final IManageHotelService manageHotelService;
+    private final IManageAgencyService manageAgencyService;
+
     public ConsumerCreateIncomeTransactionSuccess(IManageInvoiceService manageInvoiceService,
-                                                  IPaymentDetailService paymentDetailService, IManageBookingService manageBookingService) {
+                                                  IPaymentDetailService paymentDetailService,
+                                                  IManageBookingService manageBookingService,
+                                                  IManageHotelService manageHotelService,
+                                                  IManageAgencyService manageAgencyService) {
         this.manageInvoiceService = manageInvoiceService;
         this.paymentDetailService = paymentDetailService;
         this.manageBookingService = manageBookingService;
+        this.manageHotelService = manageHotelService;
+        this.manageAgencyService = manageAgencyService;
     }
 
     @KafkaListener(topics = "finamer-create-income-transaction-success", groupId = "income-entity-replica")
@@ -59,11 +59,14 @@ public class ConsumerCreateIncomeTransactionSuccess {
                booking.getAdults(),
                booking.getChildren(),
                null,
-               Objects.nonNull(booking.getBookingParent())?manageBookingService.findById(booking.getBookingParent()):null
+               Objects.nonNull(booking.getBookingParent())?manageBookingService.findById(booking.getBookingParent()):null,
+              booking.getBookingDate()
        )).toList();
     }
 
     private ManageInvoiceDto createManageInvoice(CreateIncomeTransactionSuccessKafka objKafka,List<ManageBookingDto> bookingDtos){
+        ManageHotelDto manageHotelDto = manageHotelService.findById(objKafka.getHotel());
+        ManageAgencyDto manageAgencyDto = manageAgencyService.findById(objKafka.getAgency());
         return new ManageInvoiceDto(
                 objKafka.getId(),
                 objKafka.getInvoiceId(),
@@ -74,7 +77,10 @@ public class ConsumerCreateIncomeTransactionSuccess {
                 bookingDtos,
                 false,
                 objKafka.getInvoiceParent() != null ? this.manageInvoiceService.findById(objKafka.getInvoiceParent()) : null,
-                objKafka.getInvoiceDate()
+                objKafka.getInvoiceDate(),
+                manageHotelDto,
+                manageAgencyDto,
+                false
         );
     }
 

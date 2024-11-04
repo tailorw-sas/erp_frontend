@@ -84,7 +84,8 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
                     nightTypeDto,
                     roomTypeDto,
                     roomCategoryDto,
-                    null, null, null);
+                    null, null, null,
+                    element.getContract());
             bookingService.create(newBookingDto);
 
             //TODO: aqui se envia el booking para payment

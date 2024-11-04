@@ -14,8 +14,9 @@ import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import java.util.UUID;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @Component
 public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler<CreateApplyOtherDeductionsCommand> {
@@ -76,9 +77,10 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
             );
 
             this.paymentDetailService.create(newDetailDto);
-            command.getMediator().send(new ApplyPaymentDetailCommand(newDetailDto.getId(), bookingDto.getId()));
+            command.getMediator().send(new ApplyPaymentDetailCommand(newDetailDto.getId(), bookingDto.getId(), command.getEmployee()));
         }
 
+        paymentDto.setApplyPayment(true);
         this.paymentService.update(paymentDto);
 
         command.setPaymentResponse(paymentDto);

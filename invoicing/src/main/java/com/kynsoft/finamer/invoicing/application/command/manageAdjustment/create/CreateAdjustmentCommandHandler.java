@@ -1,15 +1,21 @@
 package com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
+import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdjustmentCommand> {
@@ -56,7 +62,8 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
                 command.getId(),
                 null,
                 command.getAmount(),
-                command.getDate(),
+                //command.getDate(),
+                this.date(roomRateDto.getBooking().getInvoice().getHotel().getId()),
                 command.getDescription(),
                 transactionTypeDto,
                 paymnetTransactionTypeDto,
@@ -73,4 +80,14 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
         bookingService.calculateInvoiceAmount(this.bookingService.findById(roomRateDto.getBooking().getId()));
         invoiceService.calculateInvoiceAmount(this.invoiceService.findById(roomRateDto.getBooking().getInvoice().getId()));
     }
+
+    private LocalDateTime date(UUID hotel) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
+    }
+
 }

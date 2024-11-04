@@ -1,16 +1,15 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ParameterizationDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTypeService;
-import com.kynsoft.finamer.invoicing.domain.services.IParameterizationService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoiceType;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceTypeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceTypeReadDataJPARepository;
@@ -31,13 +30,9 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
     @Autowired
     private final ManageInvoiceTypeReadDataJPARepository repositoryQuery;
 
-    @Autowired
-    private final IParameterizationService parameterizationService;
-
-    public ManageInvoiceTypeServiceImpl(ManageInvoiceTypeWriteDataJPARepository repositoryCommand, ManageInvoiceTypeReadDataJPARepository repositoryQuery, IParameterizationService parameterizationService) {
+    public ManageInvoiceTypeServiceImpl(ManageInvoiceTypeWriteDataJPARepository repositoryCommand, ManageInvoiceTypeReadDataJPARepository repositoryQuery) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
-        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -87,22 +82,46 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
 
     @Override
     public ManageInvoiceTypeDto findByEInvoiceType(EInvoiceType invoiceType) {
-        ParameterizationDto parameterization = this.parameterizationService.findActiveParameterization();
-        ManageInvoiceTypeDto invoiceTypeDto = null;
-        if(parameterization != null){
-            invoiceTypeDto = switch (invoiceType) {
-                case CREDIT -> this.findByCode(parameterization.getTypeCredit());
-                case INVOICE -> this.findByCode(parameterization.getTypeInvoice());
-                case INCOME -> this.findByCode(parameterization.getTypeIncome());
-                case OLD_CREDIT -> this.findByCode(parameterization.getTypeOldCredit());
-            };
-        }
-        return invoiceTypeDto;
+        return switch (invoiceType) {
+            case CREDIT, OLD_CREDIT -> this.repositoryQuery.findByCredit()
+                    .map(ManageInvoiceType::toAggregate)
+                    .orElseThrow(() -> new BusinessException(
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND,
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND.getReasonPhrase()
+                    ));
+            case INVOICE -> this.repositoryQuery.findByInvoice()
+                    .map(ManageInvoiceType::toAggregate)
+                    .orElseThrow(() -> new BusinessException(
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND,
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND.getReasonPhrase()
+                    ));
+            case INCOME -> this.repositoryQuery.findByIncome()
+                    .map(ManageInvoiceType::toAggregate)
+                    .orElseThrow(() -> new BusinessException(
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND,
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND.getReasonPhrase()
+                    ));
+        };
     }
 
     @Override
     public ManageInvoiceTypeDto findByCode(String code) {
         return this.repositoryQuery.findByCode(code).map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByIncome() {
+        return this.repositoryQuery.findByIncome().map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByCredit() {
+        return this.repositoryQuery.findByCredit().map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByInvoice() {
+        return this.repositoryQuery.findByInvoice().map(ManageInvoiceType::toAggregate).orElse(null);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

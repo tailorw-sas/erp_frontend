@@ -1,10 +1,7 @@
 package com.kynsoft.finamer.payment.application.command.paymentImport.detail;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EImportPaymentType;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-import org.springframework.http.codec.multipart.FilePart;
 
 @Data
 public class PaymentImportDetailRequest {

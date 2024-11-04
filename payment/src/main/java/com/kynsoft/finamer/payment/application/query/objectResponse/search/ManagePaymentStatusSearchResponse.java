@@ -17,11 +17,21 @@ public class ManagePaymentStatusSearchResponse implements IResponse {
     private UUID id;
     private String code;
     private String name;
+    private boolean confirmed;
+    private Boolean applied;
+    private boolean cancelled;
+    private boolean transit;
+    private String status;
 
     public ManagePaymentStatusSearchResponse(ManagePaymentStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.confirmed = dto.isConfirmed();
+        this.applied = dto.getApplied();
+        this.cancelled = dto.isCancelled();
+        this.transit = dto.isTransit();
+        this.status = dto.getStatus();
     }
 
 }

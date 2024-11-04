@@ -29,4 +29,5 @@ public class ManageInvoiceKafka {
     private List<AttachmentKafka> attachments;
     private Boolean hasAttachment;
     private LocalDateTime invoiceDate;
+    private Boolean autoRec;
 }

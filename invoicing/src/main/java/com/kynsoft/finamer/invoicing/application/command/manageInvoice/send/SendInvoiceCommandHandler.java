@@ -9,21 +9,32 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.service.IFtpService;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgencyContact;
+import com.kynsoft.finamer.invoicing.infrastructure.services.AccountStatementService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.InvoiceXmlService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
-import jakarta.xml.bind.JAXBException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 
 @Component
 @Transactional
@@ -36,11 +47,19 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final IFtpService ftpService;
     private final InvoiceReportProviderFactory invoiceReportProviderFactory;
+    private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
+    private final IManageAgencyContactService manageAgencyContactService;
+    private final AccountStatementService accountStatementService;
+    private final IInvoiceCloseOperationService closeOperationService;
 
     public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService,
                                      IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,
                                      IManageInvoiceStatusService manageInvoiceStatusService,
-                                     FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory) {
+                                     FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory,
+                                     IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                     IManageAgencyContactService manageAgencyContactService,
+                                     AccountStatementService accountStatementService,
+                                     IInvoiceCloseOperationService closeOperationService) {
 
         this.service = service;
         this.mailService = mailService;
@@ -49,184 +68,276 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.ftpService = ftpService;
         this.invoiceReportProviderFactory = invoiceReportProviderFactory;
+        this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.manageAgencyContactService = manageAgencyContactService;
+        this.accountStatementService = accountStatementService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     @Transactional
     public void handle(SendInvoiceCommand command) {
         ManageEmployeeDto manageEmployeeDto = manageEmployeeService.findById(UUID.fromString(command.getEmployee()));
-        // Obtener la lista de facturas por sus IDs
         List<ManageInvoiceDto> invoices = this.service.findByIds(command.getInvoice());
 
-        // Agrupar facturas por agencia
-        Map<ManageAgencyDto, List<ManageInvoiceDto>> invoicesByAgency = new HashMap<>();
-        for (ManageInvoiceDto invoice : invoices) {
-            if (!invoice.getStatus().equals(EInvoiceStatus.SENT) && !invoice.getStatus().equals(EInvoiceStatus.RECONCILED)) {
-                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.SERVICE_NOT_FOUND,
-                        new ErrorField("id", DomainErrorMessage.SERVICE_NOT_FOUND.getReasonPhrase())));
-            }
-            invoicesByAgency.computeIfAbsent(invoice.getAgency(), k -> new ArrayList<>()).add(invoice);
+        if (invoices.isEmpty()) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.SERVICE_NOT_FOUND,
+                    new ErrorField("id", DomainErrorMessage.SERVICE_NOT_FOUND.getReasonPhrase())));
+        }
+        ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
+        if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
+            sendEmail(command, invoices.get(0).getAgency(), invoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getLastName());
         }
 
-       ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
-        // Enviar correos agrupados por agencia
-        for (Map.Entry<ManageAgencyDto, List<ManageInvoiceDto>> entry : invoicesByAgency.entrySet()) {
-            ManageAgencyDto agency = entry.getKey();
-            List<ManageInvoiceDto> agencyInvoices = entry.getValue();
-            if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
-                sendEmail(command, agency, agencyInvoices, manageEmployeeDto, manageInvoiceStatus);
-            }
-
-            if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
-                try {
-                    bavel(agency, agencyInvoices, manageInvoiceStatus);
-                } catch (DocumentException | IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            if (agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
-
-                try {
-                    sendFtp(agency, agencyInvoices, manageInvoiceStatus);
-                } catch (DocumentException | IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
+        if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
+            bavel(invoices.get(0).getAgency(), invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
         }
+        if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
+            sendFtp(command, invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
+        }
+
         command.setResult(true);
     }
 
-    private void updateStatusAgency(ManageInvoiceDto invoice, ManageInvoiceStatusDto manageInvoiceStatus) {
-        invoice.setStatus(EInvoiceStatus.SENT);
-        invoice.setManageInvoiceStatus(manageInvoiceStatus);
-        if (!invoice.getStatus().equals(EInvoiceStatus.SENT)) {
-            invoice.setReSend(true);
+    private void updateStatusAgency(List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+        for (ManageInvoiceDto manageInvoiceDto : invoices) {
+            if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.RECONCILED)) {
+                manageInvoiceDto.setStatus(EInvoiceStatus.SENT);
+                manageInvoiceDto.setManageInvoiceStatus(manageInvoiceStatus);
+                this.invoiceStatusHistoryService.create(
+                        new InvoiceStatusHistoryDto(
+                                UUID.randomUUID(),
+                                manageInvoiceDto,
+                                "The invoice data was inserted.",
+                                null,
+                                employee,
+                                EInvoiceStatus.SENT
+                        )
+                );
+                this.service.update(manageInvoiceDto);
+            }
+            else if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
+                manageInvoiceDto.setReSend(true);
+                manageInvoiceDto.setReSendDate(LocalDate.now());
+                this.service.update(manageInvoiceDto);
+            }
+
         }
-        this.service.update(invoice);
     }
 
-    private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus) throws DocumentException, IOException {
+    private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
         for (ManageInvoiceDto invoice : invoices) {
             try {
                 var xmlContent = invoiceXmlService.generateInvoiceXml(invoice);
                 String nameFile = invoice.getInvoiceNumber() + ".xml";
                 InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8));
                 ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
-                        agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21);
-                updateStatusAgency(invoice, manageInvoiceStatus);
+                        agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21, "bvl");
+
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                invoice.setSendStatusError(e.getMessage());
+                service.update(invoice);
             }
         }
+        updateStatusAgency(invoices, manageInvoiceStatus, employee);
     }
 
-    private void sendFtp(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus) throws DocumentException, IOException {
-        for (ManageInvoiceDto invoice : invoices) {
-            Optional<ByteArrayOutputStream> invoiceBooking = getInvoicesBooking(invoice.getId().toString());
-            if (invoiceBooking.isPresent()) {
-                String nameFile = invoice.getInvoiceNumber() + ".pdf";
+    private void sendFtp(SendInvoiceCommand command, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+        // Paso 2: Definir si quieres agrupar por cliente o no
+        boolean groupByClient = command.isGroupByClient(); // O false, según lo que necesites
 
-                // Convertir ByteArrayOutputStream a InputStream directamente
-                //TODO capturar los datos de conexcion del ftp que viene en el b2B parnet
-                try (InputStream inputStream = new ByteArrayInputStream(invoiceBooking.get().toByteArray())) {
-                    ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
-                            agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21);
-                    updateStatusAgency(invoice, manageInvoiceStatus);
-                    System.out.println("Archivo subido exitosamente al FTP.");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new RuntimeException("Error al subir el archivo al servidor FTP: " + e.getMessage(), e);
-                }
-            } else {
-                System.out.println("No se pudo obtener el archivo de las facturas.");
+        // Paso 3: Llamar al método para generar los PDFs
+        try {
+            InvoiceGrouper invoiceGrouper = new InvoiceGrouper(invoiceReportProviderFactory);
+            List<GeneratedInvoice> generatedPDFs = invoiceGrouper.generateInvoicesPDFs(invoices, groupByClient, command.isWithAttachment());
+
+            // Paso 4: Procesar los PDFs generados (por ejemplo, guardarlos o enviarlos)
+            for (GeneratedInvoice generatedInvoice : generatedPDFs) {
+                // Aquí puedes guardar o enviar el PDF, por ejemplo, a un FTP, por correo, o guardarlo en disco
+                InputStream pdfStream = new ByteArrayInputStream(generatedInvoice.getPdfStream().toByteArray());
+                //LocalDate currentDate = LocalDate.now();
+                LocalDateTime currentDate =  generateDate(generatedInvoice.getInvoices().get(0).getHotel().getId());
+                // Desglosar los valores en separado si se necesita
+                String monthFormatted = currentDate.format(DateTimeFormatter.ofPattern("MM"));
+                String dayFormatted = currentDate.format(DateTimeFormatter.ofPattern("dd"));
+
+                String path = currentDate.getYear() + "/" + monthFormatted + "/" + dayFormatted + "/"
+                        + invoices.get(0).getHotel().getCode();
+                ftpService.sendFile(pdfStream, generatedInvoice.getNameFile(), generatedInvoice.getIp(),
+                        generatedInvoice.getUserName(), generatedInvoice.getPassword(), 21, path);
+                updateStatusAgency( generatedInvoice.getInvoices(), manageInvoiceStatus, employee);
+
+//                savePDF(pdf);
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+
+//        // Agrupar facturas por agencia
+//        Map<UUID, List<ManageInvoiceDto>> invoicesByAgency = invoices.stream()
+//                .collect(Collectors.groupingBy(invoice -> invoice.getAgency().getId()));
+
+        Map<UUID, Map<UUID, List<ManageInvoiceDto>>> invoicesByAgencyAndHotel = invoices.stream()
+                .collect(Collectors.groupingBy(
+                        invoice -> invoice.getAgency().getId(), // Primero agrupamos por agencia
+                        Collectors.groupingBy(invoice -> invoice.getHotel().getId()) // Luego agrupamos por hotel
+                ));
+
+        for (Map.Entry<UUID, Map<UUID, List<ManageInvoiceDto>>> agencyEntry : invoicesByAgencyAndHotel.entrySet()) {
+            UUID agencyId = agencyEntry.getKey(); // ID de la agencia
+            Map<UUID, List<ManageInvoiceDto>> invoicesByHotel = agencyEntry.getValue(); // Facturas agrupadas por hotel
+
+            System.out.println("Agencia ID: " + agencyId);
+
+            for (Map.Entry<UUID, List<ManageInvoiceDto>> hotelEntry : invoicesByHotel.entrySet()) {
+                UUID hotelId = hotelEntry.getKey(); // ID del hotel
+                List<ManageInvoiceDto> invoicesHotel = hotelEntry.getValue(); // Lista de facturas para este hotel
+
+
+                SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+                List<MailJetRecipient> recipients = getMailJetRecipients(agency, employeeDto, request, invoicesHotel);
+                request.setRecipientEmail(recipients);
+                //Var
+                List<MailJetVar> vars = getMailJetVars(agency, request, invoicesHotel);
+
+                request.setMailJetVars(vars);
+
+                //Adjuntos
+                List<MailJetAttachment> attachments = getMailJetAttachments(invoicesHotel);
+
+                request.setMailJetAttachments(attachments);
+                mailService.sendMail(request);
+                updateInvoices(invoices, manageInvoiceStatus, employee);
+//                System.out.println("\tHotel ID: " + hotelId);
+//                for (ManageInvoiceDto invoice : invoicesHotel) {
+//                    // Aquí puedes procesar cada factura individualmente
+//                    System.out.println("\t\tFactura: " + invoice);
+//                }
             }
         }
+//        for (Map.Entry<UUID, List<ManageInvoiceDto>> agencyEntry : invoicesByAgency.entrySet()) {
+//            List<ManageInvoiceDto> agencyInvoices = agencyEntry.getValue();
+//
+//            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+//            List<MailJetRecipient> recipients = getMailJetRecipients(agency, employeeDto, request, agencyInvoices);
+//            request.setRecipientEmail(recipients);
+//            //Var
+//            List<MailJetVar> vars = getMailJetVars(agency, request, agencyInvoices);
+//
+//            request.setMailJetVars(vars);
+//
+//            //Adjuntos
+//            List<MailJetAttachment> attachments = getMailJetAttachments(agencyInvoices);
+//
+//            request.setMailJetAttachments(attachments);
+//            mailService.sendMail(request);
+//            updateInvoices(invoices);
+//        }
     }
 
-    private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus) {
+    private List<MailJetAttachment> getMailJetAttachments(List<ManageInvoiceDto> agencyInvoices) {
+        List<MailJetAttachment> attachments = new ArrayList<>();
+        List<UUID> ids = agencyInvoices.stream().map(ManageInvoiceDto::getId).toList();
+        SendAccountStatementRequest sendAccountStatementRequest = new SendAccountStatementRequest(ids);
+        SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
 
-        SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+        MailJetAttachment attachment = new MailJetAttachment(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Content-Type para archivo .xlsx
+                "AccountStatement.xlsx",  // Nombre del archivo
+                sendAccountStatementResponse.getFile()
+        );
+        attachments.add(attachment);
+        return attachments;
+    }
 
-        request.setTemplateId(6285030); // Cambiar en configuración
+    private static List<MailJetVar> getMailJetVars(ManageAgencyDto agency, SendMailJetEMailRequest request, List<ManageInvoiceDto> agencyInvoices) {
+        request.setSubject("INVOICES for -" + agency.getCode() + "-" + agency.getName());
+        double totalAmount = agencyInvoices.stream()
+                .mapToDouble(invoice -> invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount() : 0.0)
+                .sum();
+        String invoiceAmount = String.format("%.2f", totalAmount);
 
-        // Recipients
+        // Variables para el template de email
+        return Arrays.asList(
+                new MailJetVar("invoice_date", new Date().toString()),
+                new MailJetVar("invoice_amount", invoiceAmount)
+        );
+    }
+
+    private List<MailJetRecipient> getMailJetRecipients(ManageAgencyDto agency, ManageEmployeeDto employeeDto, SendMailJetEMailRequest request, List<ManageInvoiceDto> agencyInvoices) {
+        request.setTemplateId(6285030);
         List<MailJetRecipient> recipients = new ArrayList<>();
         recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
         recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName() + " " + employeeDto.getLastName()));
         recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
-        recipients.add(new MailJetRecipient("enrique.muguercia2016@gmail.com", "Enrique Basto"));
-        recipients.add(new MailJetRecipient("reimardelgado@gmail.com", "Enrique Basto"));
         recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
-        //TODO send email employee
-        request.setRecipientEmail(recipients);
-        // Adjuntar todas las facturas de la agencia
 
-        for (ManageInvoiceDto invoice : invoices) {
-            try {
-                request.setSubject("INVOICES for " + agency.getName() + "-" + invoice.getInvoiceNo());
-                // Variables para el template de email
-                List<MailJetVar> vars = Arrays.asList(
-                        new MailJetVar("invoice_date", new Date().toString()),
-                        new MailJetVar("invoice_amount", invoice.getInvoiceAmount().toString())
-                );
-
-                request.setMailJetVars(vars);
-                List<MailJetAttachment> attachments = new ArrayList<>();
-                // Crear el adjunto con el XML
-                String nameFileXml = invoice.getInvoiceNumber() + ".xml"; // Cambiar la extensión a .xml
-                // MailJetAttachment attachmentXML = new MailJetAttachment("application/xml", nameFileXml, base64Xml);
-                //   attachments.add(attachmentXML);
-                Optional<ByteArrayOutputStream> invoiceBooking = getInvoicesBooking(invoice.getId().toString());
-                String nameFile = invoice.getInvoiceNumber() + ".pdf";
-                byte[] pdfBytes = invoiceBooking.get().toByteArray();
-
-                // Codificar los bytes en Base64
-                String base64EncodedPDF = Base64.getEncoder().encodeToString(pdfBytes);
-
-                MailJetAttachment attachment = new MailJetAttachment("application/pdf", nameFile, base64EncodedPDF);
-                attachments.add(attachment);
-                request.setMailJetAttachments(attachments);
-                try {
-                    mailService.sendMail(request);
-                    updateStatusAgency(invoice, manageInvoiceStatus);
-                } catch (Exception ignored) {
+        ManageAgencyDto manageAgencyDto = agencyInvoices.get(0).getAgency();
+        ManageHotelDto manageHotelDto = agencyInvoices.get(0).getHotel();
+        List<ManageAgencyContact> contactList = manageAgencyContactService.findContactsByHotelAndAgency(manageHotelDto.getId(), manageAgencyDto.getId());
+        if (!contactList.isEmpty()) {
+            // Dividimos la cadena en un array de correos
+            String[] emailAddresses = contactList.get(0).getEmailContact().split(";");
+            for (String email : emailAddresses) {
+                email = email.trim();
+                if (!email.isEmpty()) {
+                    recipients.add(new MailJetRecipient(email, "Contact"));
                 }
-            } catch (DocumentException | IOException e) {
-                throw new RuntimeException(e);
             }
-
         }
+        return recipients;
+    }
 
+    private  void updateInvoices(List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+        for (ManageInvoiceDto manageInvoiceDto : invoices) {
+            if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.RECONCILED)) {
+                manageInvoiceDto.setStatus(EInvoiceStatus.SENT);
+                manageInvoiceDto.setManageInvoiceStatus(manageInvoiceStatus);
+                this.invoiceStatusHistoryService.create(
+                        new InvoiceStatusHistoryDto(
+                                UUID.randomUUID(),
+                                manageInvoiceDto,
+                                "The invoice data was inserted.",
+                                null,
+                                employee,
+                                EInvoiceStatus.SENT
+                        )
+                );
+            }if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
+                manageInvoiceDto.setReSend(true);
+                manageInvoiceDto.setReSendDate(LocalDate.now());
+            }
+            service.update(manageInvoiceDto);
+        }
 
     }
 
-
-    private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds) throws DocumentException, IOException {
-        // Configurar los servicios del reporte.
+    private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds, SendInvoiceCommand command) throws DocumentException, IOException {
+        EInvoiceReportType reportType = command.isWithAttachment()
+                ? EInvoiceReportType.INVOICE_AND_BOOKING
+                : EInvoiceReportType.INVOICE_SUPPORT;
         Map<EInvoiceReportType, IInvoiceReport> services = new HashMap<>();
-        services.put(EInvoiceReportType.INVOICE_AND_BOOKING,
-                invoiceReportProviderFactory.getInvoiceReportService(EInvoiceReportType.INVOICE_AND_BOOKING));
+        services.put(reportType, invoiceReportProviderFactory.getInvoiceReportService(reportType));
 
-        // Obtener el contenido del reporte
         Optional<Map<String, byte[]>> response = getReportContent(services, invoiceIds);
 
-        // Verificar si la respuesta está presente y tiene contenido
         if (response.isPresent() && !response.get().isEmpty()) {
-            // Tomar el primer contenido del mapa de bytes y convertirlo a ByteArrayOutputStream
-            byte[] content = response.get().values().iterator().next(); // Obtiene el primer valor del mapa
+            byte[] content = response.get().values().iterator().next();
 
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 outputStream.write(content);
                 return Optional.of(outputStream);
             } catch (IOException e) {
                 e.printStackTrace();
-                // Manejar la excepción según corresponda
                 return Optional.empty();
             }
         } else {
-            // Si no hay contenido, devolver Optional.empty()
             System.out.println("No se pudo obtener el contenido del reporte.");
             return Optional.empty();
         }
@@ -251,8 +362,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             result.put(invoiceId, PDFUtils.mergePDFtoByte(finalContent));
         }
 
-
-        // Retornar el mapa de resultados si no está vacío
         return result.isEmpty() ? Optional.empty() : Optional.of(result);
     }
 
@@ -261,6 +370,15 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         orderedContent.add(content.getOrDefault(EInvoiceReportType.INVOICE_AND_BOOKING, Optional.empty()));
         orderedContent.add(content.getOrDefault(EInvoiceReportType.INVOICE_SUPPORT, Optional.empty()));
         return orderedContent;
+    }
+
+    private LocalDateTime generateDate(UUID hotel) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
 }

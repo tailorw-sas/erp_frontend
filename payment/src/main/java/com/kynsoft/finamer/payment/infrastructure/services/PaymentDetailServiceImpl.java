@@ -14,20 +14,14 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentDetailWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManagePaymentDetailReadDataJPARepository;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,11 +50,16 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public void delete(PaymentDetailDto dto) {
-        try{
-            this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
-        }
+        PaymentDetail update = new PaymentDetail(dto);
+
+        update.setCanceledTransaction(true);
+
+        this.repositoryCommand.save(update);
+//        try{
+//            this.repositoryCommand.deleteById(dto.getId());
+//        } catch (Exception e){
+//            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+//        }
     }
 
     @Override
@@ -88,7 +87,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public List<PaymentDetailDto> findByPaymentId(UUID paymentId) {
-        Optional<List<PaymentDetail>> result= repositoryQuery.findAllByPayment(paymentId);
+        Optional<List<PaymentDetail>> result = repositoryQuery.findAllByPayment(paymentId);
         return result.map(paymentDetails -> paymentDetails.stream().map(PaymentDetail::toAggregate).toList()).orElse(Collections.EMPTY_LIST);
     }
 
@@ -105,7 +104,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     @Override
     public List<UUID> bulk(List<PaymentDetailDto> toSave) {
 
-        return this.repositoryCommand.saveAll( toSave.stream().map(PaymentDetail::new).collect(Collectors.toList()))
+        return this.repositoryCommand.saveAll(toSave.stream().map(PaymentDetail::new).collect(Collectors.toList()))
                 .stream().map(PaymentDetail::getId).toList();
     }
 
@@ -130,6 +129,20 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public PaymentDetailDto findByPaymentDetailId(Long paymentDetailId) {
+        Optional<PaymentDetail> userSystem = this.repositoryQuery.findByPaymentDetailId(paymentDetailId);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public Long countByApplyPaymentAndPaymentId(UUID id) {
+        return this.repositoryQuery.countByApplyPaymentAndPaymentId(id);
     }
 
 }

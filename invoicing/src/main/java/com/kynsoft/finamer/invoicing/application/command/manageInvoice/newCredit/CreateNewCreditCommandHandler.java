@@ -4,10 +4,12 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
+import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -61,10 +65,10 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     public void handle(CreateNewCreditCommand command) {
         ManageInvoiceDto parentInvoice = this.invoiceService.findById(command.getInvoice());
         ManageHotelDto hotelDto = this.hotelService.findById(parentInvoice.getHotel().getId());
-        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-                this.closeOperationService,
-                command.getInvoiceDate().toLocalDate(),
-                hotelDto.getId()));
+//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+//                this.closeOperationService,
+//                command.getInvoiceDate().toLocalDate(),
+//                hotelDto.getId()));
 
         //preparando lo necesario
         List<ManageBookingDto> parentBookings = parentInvoice.getBookings();
@@ -79,7 +83,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             Double bookingAmount = parentBooking.getInvoiceAmount();
             Double newBookingAmount = bookingRequest.getAmount();
 
-            if(!Objects.equals(bookingAmount, newBookingAmount)){
+            if(newBookingAmount != 0){
                 //en caso de que venga positivo
                 if (newBookingAmount > 0) {
                     newBookingAmount = -newBookingAmount;
@@ -132,9 +136,16 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             invoiceAmount+=newBookingAmount;
         }
 
+        int cont = 0;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
+            RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
+                    command.getAttachmentCommands().get(i).getFile()
+            ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
+            if(attachmentType.isAttachInvDefault()) {
+                cont++;
+            }
 
             ResourceTypeDto resourceTypeDto = resourceTypeService.findById(command.getAttachmentCommands().get(i).getPaymentResourceType());
 
@@ -149,6 +160,13 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                     UUID.fromString(command.getEmployee()), null, resourceTypeDto);
 
             attachments.add(attachmentDto);
+        }
+        //debe venir al menos un attachment de tipo attinvdefault
+        if(cont == 0){
+            throw new BusinessException(
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+            );
         }
 
         //preparando los datos del nuevo invoice
@@ -180,7 +198,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 0L,
                 0L,
                 invoiceNumber,
-                command.getInvoiceDate(),
+                //command.getInvoiceDate(),
+                this.invoiceDate(parentInvoice.getHotel().getId()),
                 dueDate,
                 true,
                 invoiceAmount,
@@ -201,6 +220,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 parentInvoice,
                 0.0
         );
+        invoiceDto.setOriginalAmount(invoiceAmount);
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
         this.producerReplicateManageInvoiceService.create(created);
 
@@ -234,4 +254,14 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             );
         }
     }
+
+    private LocalDateTime invoiceDate(UUID hotel) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
+    }
+
 }

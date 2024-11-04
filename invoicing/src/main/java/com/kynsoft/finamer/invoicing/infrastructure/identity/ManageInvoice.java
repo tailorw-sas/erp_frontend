@@ -3,8 +3,9 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,6 +48,8 @@ public class ManageInvoice {
     private LocalDate dueDate;
 
     private Boolean isManual;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean autoRec;
 
     private Boolean reSend;
@@ -65,6 +68,7 @@ public class ManageInvoice {
     @JoinColumn(name = "invoice_status_id")
     private ManageInvoiceStatus manageInvoiceStatus;
 
+    private Double originalAmount;
     private Double invoiceAmount;
 
     @Column(name = "due_amount", nullable = false)
@@ -85,19 +89,23 @@ public class ManageInvoice {
     @Enumerated(EnumType.STRING)
     private EInvoiceStatus invoiceStatus;
 
+    @Enumerated(EnumType.STRING)
+    private ImportType importType;
+
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
     private List<ManageBooking> bookings;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.MERGE)
     private List<ManageAttachment> attachments;
 
-    @Column(nullable = true)
-    private Boolean deleted = false;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
     private Double credits;
+
+    private String sendStatusError;
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean hasAttachments;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -106,20 +114,18 @@ public class ManageInvoice {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = true, updatable = true)
-    private LocalDateTime deletedAt;
-
     public ManageInvoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceNumber = dto.getInvoiceNumber();
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
         this.invoiceAmount = dto.getInvoiceAmount();
+        this.originalAmount = dto.getOriginalAmount() != null ? dto.getOriginalAmount() : null;
         this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
         this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
         this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
         this.invoiceStatus = dto.getStatus();
-        this.autoRec = false;
+        this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : false;
         this.bookings = dto.getBookings() != null ? dto.getBookings().stream().map(_booking -> {
             ManageBooking booking = new ManageBooking(_booking);
             booking.setInvoice(this);
@@ -140,26 +146,30 @@ public class ManageInvoice {
                 : null;
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
-        this.invoiceNumberPrefix= InvoiceUtils.getInvoiceNumberPrefix(dto.getInvoiceNumber());
+        this.invoiceNumberPrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getInvoiceNo();
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
+        this.sendStatusError = dto.getSendStatusError();
+        this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
     }
 
     public ManageInvoiceDto toAggregateSample() {
 
-        return new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
                 invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 null, credits);
-
+        manageInvoiceDto.setOriginalAmount(originalAmount);
+        manageInvoiceDto.setImportType(importType);
+        return manageInvoiceDto;
     }
 
     public ManageInvoiceDto toAggregate() {
-        return new ManageInvoiceDto(id, invoiceId,
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId,
                 invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec,
@@ -170,6 +180,24 @@ public class ManageInvoice {
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 parent != null ? parent.toAggregateSample() : null, credits);
+        manageInvoiceDto.setOriginalAmount(originalAmount);
+        manageInvoiceDto.setImportType(importType);
+        return manageInvoiceDto;
+    }
+
+    public ManageInvoiceDto toAggregateSearch() {
+
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+                invoiceAmount, dueAmount,
+                hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
+                autoRec, null, null, reSend, reSendDate,
+                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
+                parent != null ? parent.toAggregateSample() : null, credits);
+        manageInvoiceDto.setSendStatusError(sendStatusError);
+        manageInvoiceDto.setOriginalAmount(originalAmount);
+        manageInvoiceDto.setImportType(importType);
+        return manageInvoiceDto;
     }
 
     @PostLoad
@@ -177,7 +205,7 @@ public class ManageInvoice {
         if (dueAmount == null) {
             dueAmount = 0.0;
         }
-
+        hasAttachments = (attachments != null && !attachments.isEmpty());
     }
 
 }

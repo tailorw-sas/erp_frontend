@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -21,6 +22,31 @@ public interface ManageInvoiceStatusReadDataJPARepository extends JpaRepository<
     @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
-    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.code = :code AND b.deleted = false")
+    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.code = :code")
     ManageInvoiceStatus findByCode(@Param("code") String code);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.sentStatus = true AND b.id <> :id")
+    Long countBySentStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.reconciledStatus = true AND b.id <> :id")
+    Long countByReconciledStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.canceledStatus = true AND b.id <> :id")
+    Long countByCanceledStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceStatus b WHERE b.processStatus = true AND b.id <> :id")
+    Long countByProcessStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.sentStatus = true AND b.status = 'ACTIVE'")
+    Optional<ManageInvoiceStatus> findBySentStatus();
+
+    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.reconciledStatus = true AND b.status = 'ACTIVE'")
+    Optional<ManageInvoiceStatus> findByReconciledStatus();
+
+    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.canceledStatus = true AND b.status = 'ACTIVE'")
+    Optional<ManageInvoiceStatus> findByCanceledStatus();
+
+    @Query("SELECT b FROM ManageInvoiceStatus b WHERE b.processStatus = true AND b.status = 'ACTIVE'")
+    Optional<ManageInvoiceStatus> findByProcessStatus();
+
 }

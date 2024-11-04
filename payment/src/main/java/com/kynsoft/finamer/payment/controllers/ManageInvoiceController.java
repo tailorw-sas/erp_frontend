@@ -5,9 +5,15 @@ import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.query.manageInvoice.search.GetSearchManageInvoiceQuery;
+import com.kynsoft.finamer.payment.application.query.manageInvoice.sendAccountStatement.SendAccountStatementQuery;
+import com.kynsoft.finamer.payment.application.query.manageInvoice.sendAccountStatement.SendAccountStatementRequest;
+import com.kynsoft.finamer.payment.application.query.manageInvoice.sendAccountStatement.SendAccountStatementResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/payment/manage-invoice")
@@ -26,6 +32,15 @@ public class ManageInvoiceController {
 
         GetSearchManageInvoiceQuery query = new GetSearchManageInvoiceQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/send-account-statement")
+    public ResponseEntity<?> sendAccountStatement(@RequestBody SendAccountStatementRequest request) {
+
+
+        SendAccountStatementQuery query = new SendAccountStatementQuery(request.getInvoiceIds());
+        SendAccountStatementResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
 }

@@ -12,6 +12,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IManagerClientService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.util.ReportUtil;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -170,13 +171,13 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
         String agencyName = manageInvoiceDto.getAgency().getName();
         String code = manageInvoiceDto.getAgency().getCode();
         String month = LocalDate.now().getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
-        return agencyName + "-" + code + "-" + month;
+        return code + "-" + agencyName + "-" + month;
     }
 
     private String resolveSingleFileName(String invoiceId) {
         ManageInvoiceDto manageInvoiceDto = manageInvoiceService.findById(UUID.fromString(invoiceId));
-        String hotelName = manageInvoiceDto.getHotel().getName();
+        String hotelCode = manageInvoiceDto.getHotel().getCode();
         String invoiceNumber = manageInvoiceDto.getInvoiceNumber();
-        return hotelName + "-" + invoiceNumber;
+        return hotelCode + "-" + InvoiceUtils.getInvoiceNumberPrefix(invoiceNumber);
     }
 }

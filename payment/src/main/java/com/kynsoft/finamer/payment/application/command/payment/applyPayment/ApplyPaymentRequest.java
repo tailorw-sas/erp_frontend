@@ -1,9 +1,9 @@
 package com.kynsoft.finamer.payment.application.command.payment.applyPayment;
 
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -15,4 +15,5 @@ public class ApplyPaymentRequest {
     private boolean applyPaymentBalance;
     private List<UUID> invoices;
     private List<UUID> deposits;
+    private UUID employee;
 }

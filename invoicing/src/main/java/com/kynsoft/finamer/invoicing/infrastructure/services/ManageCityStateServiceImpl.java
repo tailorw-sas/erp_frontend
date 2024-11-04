@@ -61,10 +61,8 @@ public class ManageCityStateServiceImpl implements IManageCityStateService {
     @Override
     public ManageCityStateDto findById(UUID id) {
         Optional<ManageCityState> userSystem = this.repositoryQuery.findById(id);
-        if (userSystem.isPresent()) {
-            return userSystem.get().toAggregate();
-        }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_CITY_STATE_NOT_FOUND, new ErrorField("id", "Manage City State not found.")));
+        return userSystem.map(ManageCityState::toAggregate).orElse(null);
+        //        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_CITY_STATE_NOT_FOUND, new ErrorField("id", "Manage City State not found.")));
     }
 
     @Override

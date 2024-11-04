@@ -19,13 +19,18 @@ import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaym
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentMessage;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentRequest;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentResponse;
+import com.kynsoft.finamer.payment.application.query.payment.countByAgency.CountAgencyByPaymentBalanceAndDepositBalanceQuery;
+import com.kynsoft.finamer.payment.application.query.payment.countByAgency.CountAgencyByPaymentBalanceAndDepositBalanceResponse;
+import com.kynsoft.finamer.payment.application.query.payment.excelExporter.GetPaymentExcelExporterQuery;
+import com.kynsoft.finamer.payment.application.query.payment.excelExporter.PaymentExcelExporterResponse;
+import com.kynsoft.finamer.payment.application.query.payment.excelExporter.SearchExcelExporter;
 import com.kynsoft.finamer.payment.application.query.payment.getById.FindPaymentByIdQuery;
 import com.kynsoft.finamer.payment.application.query.payment.search.GetSearchPaymentQuery;
-
-import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -56,13 +61,6 @@ public class PaymentController {
 
     @PostMapping(path = "/change-attachment-status")
     public ResponseEntity<ChangeAttachmentStatusMessage> attachmentStatus(@RequestBody ChangeAttachmentStatusRequest request) {
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
-        System.err.println("####################################################");
         ChangeAttachmentStatusCommand createCommand = ChangeAttachmentStatusCommand.fromRequest(request);
         ChangeAttachmentStatusMessage response = mediator.send(createCommand);
 
@@ -94,7 +92,16 @@ public class PaymentController {
 
         return ResponseEntity.ok(response);
     }
-    
+
+    @GetMapping(path = "/agency/{agencyId}")
+    public ResponseEntity<?> CountAgencyByPaymentBalanceAndDepositBalance(@PathVariable UUID agencyId) {
+
+        CountAgencyByPaymentBalanceAndDepositBalanceQuery query = new CountAgencyByPaymentBalanceAndDepositBalanceQuery(agencyId);
+        CountAgencyByPaymentBalanceAndDepositBalanceResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
@@ -103,4 +110,14 @@ public class PaymentController {
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
+
+    @PostMapping("/excel-exporter")
+    public ResponseEntity<?> excelExporter(@RequestBody SearchExcelExporter request) {
+        Pageable pageable = PageableUtil.createPageable(request.getSearch());
+
+        GetPaymentExcelExporterQuery query = new GetPaymentExcelExporterQuery(pageable, request.getSearch().getFilter(), request.getSearch().getQuery(), request.getFileName());
+        PaymentExcelExporterResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
 }

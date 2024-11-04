@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "manage_payment_attachment_status")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_payment_attachment_status",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManagePaymentAttachmentStatus {
     @Id
     @Column(name = "id")
@@ -51,6 +55,21 @@ public class ManagePaymentAttachmentStatus {
 
     @Column(nullable = true)
     private Boolean defaults;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean nonNone;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean patWithAttachment;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean pwaWithOutAttachment;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean supported;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean otherSupport;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -82,19 +101,25 @@ public class ManagePaymentAttachmentStatus {
                     .map(ManagePaymentAttachmentStatus::new)
                     .collect(Collectors.toList());
         }
+        this.nonNone = dto.isNonNone();
+        this.patWithAttachment = dto.isPatWithAttachment();
+        this.pwaWithOutAttachment = dto.isPwaWithOutAttachment();
+        this.supported = dto.isSupported();
+        this.otherSupport = dto.isOtherSupport();
     }
 
     public ManagePaymentAttachmentStatusDto toAggregateSample() {
         return new ManagePaymentAttachmentStatusDto(
                 id, code, name, status, module != null ? module.toAggregate() : null, show, defaults, permissionCode, description,
-                null
+                null, nonNone, patWithAttachment, pwaWithOutAttachment, supported, otherSupport
         );
     }
 
     public ManagePaymentAttachmentStatusDto toAggregate() {
         return new ManagePaymentAttachmentStatusDto(
                 id, code, name, status, module != null ? module.toAggregate() : null, show, defaults, permissionCode, description,
-                relatedStatuses != null ? relatedStatuses.stream().map(ManagePaymentAttachmentStatus::toAggregateSample).toList() : null
+                relatedStatuses != null ? relatedStatuses.stream().map(ManagePaymentAttachmentStatus::toAggregateSample).toList() : null,
+                nonNone, patWithAttachment, pwaWithOutAttachment, supported, otherSupport
         );
     }
 }

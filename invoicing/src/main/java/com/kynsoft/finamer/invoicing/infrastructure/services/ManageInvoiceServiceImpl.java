@@ -21,6 +21,8 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.excel.ExportInvoiceRow;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
@@ -30,9 +32,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageInvoiceServiceImpl implements IManageInvoiceService {
@@ -47,7 +51,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final IInvoiceCloseOperationService closeOperationService;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-            ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
+                                    ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
@@ -87,6 +91,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         entity.setInvoiceNumber(invoiceNumber);
         entity.setInvoiceNo(lastInvoiceNo);
         dto.setInvoiceNo(lastInvoiceNo);
+        String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" +lastInvoiceNo;
+        entity.setInvoiceNumberPrefix(invoicePrefix);
 
         return this.repositoryCommand.saveAndFlush(entity).toAggregate();
     }
@@ -104,6 +110,18 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
+    public PaginatedResponse sendList(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+
+        GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
+        //getPaginatedResponseTest(example);
+        //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedSendListResponse(data);
+    }
+
+    @Override
     public PaginatedResponse searchToPayment(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
@@ -115,7 +133,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream) {
-        List<ManageInvoiceResponse> data = this.search(pageable, filterCriteria).getData();
+        List<ManageInvoiceSearchResponse> data = this.search(pageable, filterCriteria).getData();
 
         List<ExportInvoiceRow> rows = new ArrayList<>();
         List<String> sheets = new ArrayList<>();
@@ -123,7 +141,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         rows.add(new ExportInvoiceRow(0, "Id", "Inv. No", "Due Date", "Manual", "Amount", "Hotel", "Agency", "Type", "Status", null));
 
         for (int i = 0; i < data.size(); i++) {
-            ManageInvoiceResponse invoice = data.get(i);
+            ManageInvoiceSearchResponse invoice = data.get(i);
             rows.add(new ExportInvoiceRow(0, invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", invoice.getInvoiceNumber(), invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "", invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "", invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "", invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", null));
 
         }
@@ -150,35 +168,60 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
                         && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
                         || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
-                Boolean isHasAttachments = entity.getAttachments() != null && !entity.getAttachments().isEmpty();
-                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSample(), isHasAttachments, isCloseOperation);
-//                InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(response.getHotel().getId());
-//                if (response.getInvoiceDate().toLocalDate().isBefore(closeOperationDto.getBeginDate())
-//                        || response.getInvoiceDate().toLocalDate().isAfter(closeOperationDto.getEndDate())) {
-//                    response.setIsInCloseOperation(false);
-//                }
-              responseList.add(response);
+                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSearch(),
+                        entity.getHasAttachments(), isCloseOperation);
+                responseList.add(response);
             } catch (Exception e) {
                 System.err.print(e.getMessage());
-//                ManageInvoiceResponse response = new ManageInvoiceResponse(entity.toAggregate());
-//                response.setIsInCloseOperation(false);
-//                responseList.add(response);
             }
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
-//    private PaginatedResponse getPaginatedResponseTest(Page<ManageInvoiceSimpleProjection> data) {
-//        List<ManageInvoiceResponse> responseList = new ArrayList<>();
-//        for (ManageInvoiceSimpleProjection entity : data.getContent()) {
-//            Long valor = entity.getInvoiceNo();
-//            String result =  entity.getHotel().getCode();
-//            String entro = "";
-//        }
-//        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
-//                data.getTotalElements(), data.getSize(), data.getNumber());
-//    }
+    private PaginatedResponse getPaginatedSendListResponse(Page<ManageInvoice> data) {
+        // Filtramos el contenido de acuerdo a las condiciones
+        List<ManageInvoiceSearchResponse> filteredResponseList = data.getContent().stream()
+                .filter(entity -> {
+                    ManageAgency agency = entity.getAgency();
+                    List<ManageBooking> bookings = entity.getBookings();
+                    return (agency != null && !agency.getValidateCheckout()) || (bookings != null && !hasPastDueBooking(bookings));
+                })
+                .map(entity -> new ManageInvoiceSearchResponse(entity.toAggregateSearch(), null, null))
+                .collect(Collectors.toList());
+
+        // Calculamos el total de elementos después del filtrado
+        int totalFilteredElements = filteredResponseList.size();
+
+        // Calculamos el total de páginas según el tamaño original de la página
+        int pageSize = data.getSize();
+        int totalPages = (int) Math.ceil((double) totalFilteredElements / pageSize);
+
+        // Devolvemos la respuesta paginada con los datos filtrados y calculados
+        return new PaginatedResponse(
+                filteredResponseList,              // Lista de datos filtrados
+                totalPages,                        // Total de páginas basado en los datos filtrados
+                totalFilteredElements,             // Total de elementos después del filtrado
+                (long) totalFilteredElements,      // Total de elementos
+                pageSize,                          // Tamaño de la página original
+                data.getNumber()                   // Número de la página actual (0-indexado)
+        );
+    }
+
+    public boolean hasPastDueBooking(List<ManageBooking> bookings) {
+        LocalDate currentDate = LocalDate.now(); // Obtener la fecha actual (sin hora)
+        if (bookings != null && !bookings.isEmpty()) {
+            for (ManageBooking booking : bookings) {
+                if (booking.getCheckOut() != null &&
+                        (booking.getCheckOut().toLocalDate().isBefore(currentDate) ||
+                                booking.getCheckOut().toLocalDate().isEqual(currentDate))) {
+                    return true; // Si checkOut es antes o igual a currentDate, devolver true
+                }
+            }
+        }
+
+        return false; // Si no se encontró ningún booking con checkOut anterior o igual, devolver false
+    }
 
     private PaginatedResponse getPaginatedResponseToPayment(Page<ManageInvoice> data) {
         List<ManageInvoiceToPaymentResponse> responseList = new ArrayList<>();
@@ -263,7 +306,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public ManageInvoiceDto findByInvoiceId(long id) {
         return repositoryQuery.findByInvoiceId(id)
                 .map(ManageInvoice::toAggregate)
-                .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
+                .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
                         new ErrorField("invoiceId", "The invoice not found."))));
     }
 

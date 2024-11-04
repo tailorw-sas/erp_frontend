@@ -18,7 +18,9 @@ public class UpdateManageCreditCardTypeCommandHandler implements ICommandHandler
     public void handle(UpdateManageCreditCardTypeCommand command) {
         ManageCreditCardTypeDto test = this.service.findById(command.getId());
         test.setName(command.getName());
+        test.setDescription(command.getDescription());
+        test.setFirstDigit(command.getFirstDigit());
+        test.setStatus(command.getStatus());
         this.service.update(test);
-
     }
 }

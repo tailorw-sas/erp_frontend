@@ -1,11 +1,16 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.update;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
-import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingCheckBookingAmountAndBookingBalanceRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateChangeAgencyRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateChangeStatusRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -20,55 +25,64 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
     private final IManageAgencyService agencyService;
     private final IManageHotelService hotelService;
     private final IManageInvoiceTypeService iManageInvoiceTypeService;
+    private final IManageInvoiceStatusService invoiceStatusService;
 
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
-    private final ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService;
+    private final ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService;
+    private final IInvoiceCloseOperationService closeOperationService;
 
     public UpdateInvoiceCommandHandler(IManageInvoiceService service,
             IManageAgencyService agencyService,
             IManageHotelService hotelService,
             IManageInvoiceTypeService iManageInvoiceTypeService,
             IInvoiceStatusHistoryService invoiceStatusHistoryService,
-            ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService) {
+            ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService,
+            IManageInvoiceStatusService invoiceStatusService,
+            IInvoiceCloseOperationService closeOperationService) {
         this.service = service;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.iManageInvoiceTypeService = iManageInvoiceTypeService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
+        this.invoiceStatusService = invoiceStatusService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     public void handle(UpdateInvoiceCommand command) {
 
         ManageInvoiceDto dto = this.service.findById(command.getId());
-
+        RulesChecker.checkRule(new ManageBookingCheckBookingAmountAndBookingBalanceRule(dto.getInvoiceAmount(), dto.getDueAmount()));
         ConsumerUpdate update = new ConsumerUpdate();
+        if (command.getInvoiceDate() != null && !command.getInvoiceDate().equals(dto.getInvoiceDate())) {
+            RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, dto.getInvoiceDate().toLocalDate(), dto.getHotel().getId()));
+            this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(), update::setUpdate);
+        }
 
-        UpdateIfNotNull.updateBoolean(dto::setIsManual, command.getIsManual(), dto.getIsManual(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(dto::setReSend, command.getReSend(), dto.getReSend(), update::setUpdate);
-        UpdateIfNotNull.updateDouble(dto::setInvoiceAmount, command.getInvoiceAmount(), dto.getInvoiceAmount(),
-                update::setUpdate);
-        this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(),
-                update::setUpdate);
-        this.updateAgency(dto::setAgency, command.getAgency(), dto.getAgency().getId(), update::setUpdate);
-        this.updateHotel(dto::setHotel, command.getHotel(), dto.getHotel().getId(), update::setUpdate);
-        this.updateDate(dto::setDueDate, command.getDueDate(), dto.getDueDate(), update::setUpdate);
-        this.updateDate(dto::setReSendDate, command.getReSendDate(), dto.getReSendDate(), update::setUpdate);
+        if (!command.getAgency().equals(dto.getAgency().getId())) {
+            RulesChecker.checkRule(new ManageInvoiceValidateChangeAgencyRule(dto.getStatus()));
+            this.updateAgency(dto::setAgency, command.getAgency(), dto.getAgency().getId(), update::setUpdate);
+        }
+        if (command.getInvoiceStatus() != null) {
 
-        // dto.setInvoiceNumber(InvoiceType.getInvoiceTypeCode(dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE) + "-" + dto.getInvoiceNo().toString());
-        // update.setUpdate(1);
+            ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findById(command.getInvoiceStatus());
+            //if (!dto.getStatus().equals(EInvoiceStatus.CANCELED) && command.getStatus().equals(EInvoiceStatus.CANCELED)) {
+            if (!dto.getStatus().equals(EInvoiceStatus.CANCELED) && invoiceStatusDto.isCanceledStatus()) {
+                RulesChecker.checkRule(new ManageInvoiceValidateChangeStatusRule(dto.getStatus()));
+                dto.setStatus(EInvoiceStatus.CANCELED);
+                dto.setManageInvoiceStatus(this.invoiceStatusService.findByCanceledStatus());
+            }
+        }
+
         this.service.calculateInvoiceAmount(dto);
+        this.service.update(dto);
         try {
             //TODO: aqui se envia para actualizar el invoice en payment
-            this.producerUpdateManageInvoiceService.update(dto);
+            this.producerUpdateManageInvoiceService.create(this.service.findById(dto.getId()));
         } catch (Exception e) {
         }
-        if (update.getUpdate() > 0) {
-            this.service.update(dto);
-        }
-
     }
 
     public void updateLocalDateTime(Consumer<LocalDateTime> setter, LocalDateTime newValue, LocalDateTime oldValue,
@@ -85,6 +99,14 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
             setter.accept(agencyDto);
             update.accept(1);
 
+        }
+    }
+
+    public void updateManageInvoiceStatus(Consumer<ManageInvoiceStatusDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findById(newValue);
+            setter.accept(invoiceStatusDto);
+            update.accept(1);
         }
     }
 

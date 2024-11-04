@@ -39,6 +39,7 @@ public class ManageBookingResponse implements IResponse {
     private String folioNumber;
     private Double hotelAmount;
     private String description;
+    private String contract;
     private ManageInvoiceDto invoice;
     private ManageRatePlanDto ratePlan;
     private ManageNightTypeDto nightType;
@@ -71,6 +72,7 @@ public class ManageBookingResponse implements IResponse {
         this.folioNumber = dto.getFolioNumber();
         this.hotelAmount = dto.getHotelAmount();
         this.description = dto.getDescription();
+        this.contract = dto.getContract();
         this.invoice = dto.getInvoice();
         this.ratePlan = dto.getRatePlan();
         this.nightType = dto.getNightType();

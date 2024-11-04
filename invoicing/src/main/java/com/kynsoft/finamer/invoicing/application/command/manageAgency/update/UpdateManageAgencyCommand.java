@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageAgency.update;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,6 +33,8 @@ public class UpdateManageAgencyCommand implements ICommand {
     private String city;
     private Integer creditDay;
     private Boolean autoReconcile;
+    private Boolean validateCheckout;
+    private EGenerationType generationType;
 
     @Override
     public ICommandMessage getMessage() {

@@ -5,23 +5,13 @@ import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
-import com.kynsoft.finamer.payment.domain.dto.ManageBankAccountDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentSourceDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentBankRowError;
-import com.kynsoft.finamer.payment.domain.services.AbstractPaymentImportHelperService;
-import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.payment.domain.services.IManageBankAccountService;
-import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentSourceService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.mapper.PaymentBankRowMapper;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.bank.PaymentBankValidatorFactory;
@@ -52,11 +42,17 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
     private final IManagePaymentSourceService paymentSourceService;
     private final IManagePaymentStatusService paymentStatusService;
     private final PaymentBankRowMapper paymentBankRowMapper;
+    private final IManagePaymentAttachmentStatusService attachmentStatusService;
+    private final IPaymentStatusHistoryService paymentStatusHistoryService;
+
+    private final IManageEmployeeService employeeService;
 
     @Value("${payment.source.bank.code}")
     private String PAYMENT_SOURCE_BANK_CODE;
     @Value("${payment.status.confirm.code}")
     private String PAYMENT_STATUS_CONF_CODE;
+    @Value("${payment.default.attachment.status.code}")
+    private String PAYMENT_ATTACHMENT_STATUS;
 
     public PaymentImportBankHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
                                               PaymentImportBankErrorRepository paymentImportErrorRepository,
@@ -68,7 +64,10 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
                                               IManageBankAccountService bankAccountService,
                                               IManagePaymentSourceService paymentSourceService,
                                               IManagePaymentStatusService paymentStatusService,
-                                              PaymentBankRowMapper paymentBankRowMapper) {
+                                              PaymentBankRowMapper paymentBankRowMapper,
+                                              IManagePaymentAttachmentStatusService attachmentStatusService,
+                                              IPaymentStatusHistoryService paymentStatusHistoryService,
+                                              IManageEmployeeService employeeService) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentImportErrorRepository = paymentImportErrorRepository;
@@ -81,11 +80,15 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
         this.paymentSourceService = paymentSourceService;
         this.paymentStatusService = paymentStatusService;
         this.paymentBankRowMapper = paymentBankRowMapper;
+        this.attachmentStatusService = attachmentStatusService;
+        this.paymentStatusHistoryService = paymentStatusHistoryService;
+        this.employeeService = employeeService;
     }
 
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        this.totalProcessRow = 0;
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
         paymentBankValidatorFactory.createValidators();
         ExcelBeanReader<PaymentBankRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentBankRow.class);
@@ -95,6 +98,7 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
             row.setImportType(request.getImportPaymentType().name());
             if (paymentBankValidatorFactory.validate(row)) {
                 cachingPaymentImport(row);
+                this.totalProcessRow++;
             }
         }
     }
@@ -112,7 +116,7 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
         do {
             cacheList = paymentImportCacheRepository.findAllByImportProcessId(importProcessId, pageable);
             paymentImportCacheRepository.deleteAll(cacheList.getContent());
-            pageable=pageable.next();
+            pageable = pageable.next();
         } while (cacheList.hasNext());
     }
 
@@ -144,12 +148,26 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
                     paymentDto.setId(UUID.randomUUID());
                     paymentDto.setApplied(0.0);
                     paymentDto.setNotApplied(0.0);
+                    paymentDto.setAttachmentStatus(attachmentStatusService.findByCode(PAYMENT_ATTACHMENT_STATUS));
                     return paymentDto;
                 }).toList();
-                paymentService.createBulk(paymentDtoList);
-               pageable= pageable.next();
+                List<PaymentDto> createdPayment = paymentService.createBulk(paymentDtoList);
+                createdPayment.forEach(paymentDto -> createPaymentAttachmentStatusHistory(employeeService.findById(request.getEmployeeId()), paymentDto));
+                pageable = pageable.next();
             } while (cacheList.hasNext());
         }
+    }
+
+    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Creating Payment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+
+        this.paymentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
     @Override

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -28,4 +29,5 @@ public class ManageBookingDto {
     private Integer children;
     private ManageInvoiceDto invoice;
     private ManageBookingDto parent;
+    private LocalDateTime bookingDate;
 }

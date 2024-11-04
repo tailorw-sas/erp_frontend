@@ -3,10 +3,10 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.createPaym
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -19,14 +19,16 @@ public class CreatePaymentDetailTypeCashCommand implements ICommand {
     private double invoiceAmount;
     private LocalDateTime invoiceDate;
     private boolean applyPayment;
+    private boolean createByCredit;
 
-    public CreatePaymentDetailTypeCashCommand(PaymentDto paymentCash, UUID booking, double invoiceAmount, boolean applyPayment, LocalDateTime invoiceDate) {
+    public CreatePaymentDetailTypeCashCommand(PaymentDto paymentCash, UUID booking, double invoiceAmount, boolean applyPayment, LocalDateTime invoiceDate, boolean createByCredit) {
         this.id = UUID.randomUUID();
         this.paymentCash = paymentCash;
         this.booking = booking;
         this.invoiceAmount = invoiceAmount;
         this.applyPayment = applyPayment;
         this.invoiceDate = invoiceDate;
+        this.createByCredit = createByCredit;
     }
 
     @Override

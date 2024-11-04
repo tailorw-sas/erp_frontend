@@ -32,7 +32,28 @@ public class CreateManagePaymentStatusCommandHandler implements ICommandHandler<
             RulesChecker.checkRule(new ManagePaymentStatusAppliedMustBeUniqueRule(service, command.getId()));
         }
 
-        service.create(new ManagerPaymentStatusDto(command.getId(), command.getCode(), command.getName(), command.getStatus(), command.getCollected(), command.getDescription(), command.getDefaults(), command.getApplied()));
-        this.producerReplicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name(), command.getApplied()));
+        service.create(new ManagerPaymentStatusDto(
+                command.getId(), 
+                command.getCode(), 
+                command.getName(), 
+                command.getStatus(), 
+                command.getCollected(), 
+                command.getDescription(), 
+                command.getDefaults(), 
+                command.getApplied(), 
+                command.isConfirmed(),
+                command.isCancelled(),
+                command.isTransit()
+        ));
+        this.producerReplicateManagePaymentStatusService.create(new ReplicateManagePaymentStatusKafka(
+                command.getId(), 
+                command.getCode(), 
+                command.getName(), 
+                command.getStatus().name(), 
+                command.getApplied(), 
+                command.isConfirmed(),
+                command.isCancelled(),
+                command.isTransit()
+        ));
     }
 }

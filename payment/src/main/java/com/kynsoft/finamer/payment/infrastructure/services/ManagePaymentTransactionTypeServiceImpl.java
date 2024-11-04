@@ -14,16 +14,15 @@ import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionType
 import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentTransactionType;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentTransactionTypeWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManagePaymentTransactionTypeReadDataJPARepository;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTransactionTypeService {

@@ -96,6 +96,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 ConsumerUpdate updatePayment = new ConsumerUpdate();
                 UpdateIfNotNull.updateDouble(incomeDto::setInvoiceAmount, invoiceAmount, updatePayment::setUpdate);
                 UpdateIfNotNull.updateDouble(incomeDto::setDueAmount, invoiceAmount, updatePayment::setUpdate);
+                incomeDto.setOriginalAmount(invoiceAmount);
                 roomRateDto.setInvoiceAmount(invoiceAmount);
                 roomRateDto.setAdjustments(adjustmentDtos);
 
@@ -132,7 +133,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                                 null,
                                 null,
                                 roomRates,
-                                null, null);
+                                null, null, null);
                 this.bookingService.create(bookingDto);
 
                 // this.manageAdjustmentService.create(adjustmentDtos);

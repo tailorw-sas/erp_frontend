@@ -3,7 +3,6 @@ package com.kynsoft.finamer.payment.infrastructure.excel.event.createAttachment;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
-import java.util.List;
 import java.util.UUID;
 
 @Getter

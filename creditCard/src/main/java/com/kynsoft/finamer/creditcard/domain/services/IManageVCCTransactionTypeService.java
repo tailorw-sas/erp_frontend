@@ -25,4 +25,8 @@ public interface IManageVCCTransactionTypeService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     ManageVCCTransactionTypeDto findByCode(String code);
+
+    ManageVCCTransactionTypeDto findByIsDefaultAndNotIsSubcategory();
+
+    ManageVCCTransactionTypeDto findByIsDefaultAndIsSubcategory();
 }

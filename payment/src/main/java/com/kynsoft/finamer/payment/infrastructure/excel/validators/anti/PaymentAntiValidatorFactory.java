@@ -1,11 +1,9 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.anti;
 
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
-import com.kynsoft.finamer.payment.domain.excel.PaymentImportError;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentAntiRowError;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.infrastructure.excel.event.PaymentImportErrorEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.error.anti.PaymentImportAntiErrorEvent;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import org.springframework.context.ApplicationEventPublisher;

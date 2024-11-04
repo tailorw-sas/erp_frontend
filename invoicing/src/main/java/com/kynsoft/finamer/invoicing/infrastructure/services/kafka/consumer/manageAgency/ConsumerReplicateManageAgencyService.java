@@ -30,7 +30,7 @@ public class ConsumerReplicateManageAgencyService {
             CreateManageAgencyCommand command = new CreateManageAgencyCommand(objKafka.getId(), objKafka.getCode(),
                     objKafka.getName(), objKafka.getClient(), EGenerationType.valueOf(objKafka.getGenerationType()),
                     objKafka.getStatus(),objKafka.getCif(),objKafka.getAddress(),objKafka.getSentB2BPartner(),objKafka.getCityState(),objKafka.getCountry(), 
-                    objKafka.getMailingAddress(), objKafka.getZipCode(), objKafka.getCity(), objKafka.getCreditDay(), objKafka.getAutoReconcile());
+                    objKafka.getMailingAddress(), objKafka.getZipCode(), objKafka.getCity(), objKafka.getCreditDay(), objKafka.getAutoReconcile(), objKafka.getValidateCheckout());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageAgencyService.class.getName()).log(Level.SEVERE, null, ex);

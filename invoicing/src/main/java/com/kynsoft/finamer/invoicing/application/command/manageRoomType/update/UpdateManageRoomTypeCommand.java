@@ -11,8 +11,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UpdateManageRoomTypeCommand implements ICommand {
 
-    private UUID id;
-    private String name;
+    private final UUID id;
+    private final String name;
+    private final String status;
 
     @Override
     public ICommandMessage getMessage() {

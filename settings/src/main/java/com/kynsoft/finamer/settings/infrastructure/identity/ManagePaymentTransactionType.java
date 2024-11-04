@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -19,6 +21,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Setter
 @Entity
 @Table(name = "manage_payment_transaction_type")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_payment_transaction_type",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManagePaymentTransactionType implements Serializable {
 
     @Id
@@ -46,6 +50,9 @@ public class ManagePaymentTransactionType implements Serializable {
     private Boolean paymentInvoice;
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean debit;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean expenseToBooking;
 
     private Integer minNumberOfCharacter;
     private String defaultRemark;
@@ -83,6 +90,7 @@ public class ManagePaymentTransactionType implements Serializable {
         this.incomeDefault = dto.getIncomeDefault();
         this.paymentInvoice = dto.getPaymentInvoice();
         this.debit = dto.getDebit();
+        this.expenseToBooking = dto.isExpenseToBooking();
     }
 
     public ManagePaymentTransactionTypeDto toAggregate(){
@@ -99,7 +107,8 @@ public class ManagePaymentTransactionType implements Serializable {
                 antiToIncome,
                 incomeDefault,
                 paymentInvoice,
-                debit
+                debit,
+                expenseToBooking
         );
     }
 

@@ -10,27 +10,17 @@ import java.util.UUID;
 public class CreateParameterizationCommand implements ICommand {
 
     private UUID id;
-    private String transactionStatusCode;
-    private String transactionCategory;
-    private String transactionSubCategory;
-    private String refundTransactionStatusCode;
+    private int decimals;
 
     public CreateParameterizationCommand(
-            String transactionStatusCode, String transactionCategory,
-            String transactionSubCategory, String refundTransactionStatusCode){
+            int decimals){
         this.id = UUID.randomUUID();
-        this.transactionStatusCode = transactionStatusCode;
-        this.transactionCategory = transactionCategory;
-        this.transactionSubCategory = transactionSubCategory;
-        this.refundTransactionStatusCode = refundTransactionStatusCode;
+        this.decimals = decimals;
     }
 
     public static CreateParameterizationCommand fromRequest(CreateParameterizationRequest request){
         return new CreateParameterizationCommand(
-                request.getTransactionStatusCode(),
-                request.getTransactionCategory(),
-                request.getTransactionSubCategory(),
-                request.getRefundTransactionStatusCode()
+                request.getDecimals()
         );
     }
 

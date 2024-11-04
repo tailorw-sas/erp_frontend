@@ -18,4 +18,6 @@ public class CreateManageInvoiceTransactionTypeRequest {
     private Boolean isRemarkRequired;
     private Integer minNumberOfCharacters;
     private String defaultRemark;
+
+    private boolean defaults;
 }

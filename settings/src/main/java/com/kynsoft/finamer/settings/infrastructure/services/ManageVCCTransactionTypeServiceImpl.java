@@ -101,4 +101,14 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
         return objectDtos;
     }
 
+    @Override
+    public Long countByIsDefaultsAndNotSubcategoryAndNotId(UUID id) {
+        return this.repositoryQuery.countByIsDefaultsAndNotSubCategoryAndNotId(id);
+    }
+
+    @Override
+    public Long countByIsDefaultsAndSubCategoryAndNotId(UUID id) {
+        return this.repositoryQuery.countByIsDefaultsAndSubCategoryAndNotId(id);
+    }
+
 }

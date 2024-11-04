@@ -6,13 +6,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManagePaymentTransactionTypeDto {
+public class ManagePaymentTransactionTypeDto implements Serializable {
     private UUID id;
     private String code;
     private String description;
@@ -32,5 +33,6 @@ public class ManagePaymentTransactionTypeDto {
     private Boolean incomeDefault;
     private Boolean paymentInvoice;
     private Boolean debit;
+    private boolean expenseToBooking;
 
 }
