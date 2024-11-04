@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import {reactive, ref, watch} from 'vue'
 import { z } from 'zod'
 import dayjs from 'dayjs'
 import type { Ref } from 'vue'
@@ -127,7 +127,7 @@ const fields: Array<FieldDefinitionType> = [
 
 const columns: IColumn[] = [
   { field: 'referenceId', header: 'Id', type: 'text' },
-  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant' }, sortable: true },
+  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
@@ -257,13 +257,6 @@ async function getList() {
     options.value.loading = true
     BindTransactionList.value = []
     const newListItems = []
-    payload.value.filter = [{
-      key: 'reconciliation.id',
-      operator: 'EQUALS',
-      value: idItem.value,
-      logicalOperation: 'AND'
-    }]
-
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -418,6 +411,9 @@ async function bindTransactionsOnline(transactions: any[]) {
     }
     const response: any = await GenericService.create(confApi.moduleApi, `${confApi.uriApi}/add-transactions`, payload)
     if (response) {
+      if (response.detailsAmount) {
+        subTotals.value.amount = response.detailsAmount
+      }
       // Guarda el id del elemento creado
       const newIds = [...response.adjustmentIds || [], ...response.transactionIds || []]
       if (newIds.length === 1) {
@@ -477,7 +473,10 @@ async function unbindTransactionsOnline() {
     payload.bankReconciliation = idItem.value
     payload.transactionsIds = transactionsIds
 
-    await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
+    const response: any = await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
+    if (response && response.detailsAmount) {
+      subTotals.value.amount = response.detailsAmount
+    }
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     getList()
   }
@@ -636,9 +635,17 @@ function removeUnbindSelectedTransactions(newTransactions: any[]) {
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  if (parseFilter) {
+    const index = parseFilter.findIndex((filter: IFilter) => filter.key === 'referenceId')
+    if (index !== -1) {
+      parseFilter[index].key = 'id'
+    }
+  }
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  // getList()
+
+  // TODO: FALTA HACER FILTRADO LOCAL
   // Aqui primero el filtro debe ser local y luego ya si con el api
+  getList()
 }
 
 function onSortField(event: any) {
@@ -655,11 +662,24 @@ async function onRowRightClick(event: any) {
   contextMenu.value.show(event.originalEvent)
 }
 
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getList()
+})
+
 onMounted(async () => {
   if (route?.query?.id) {
     const id = route.query.id.toString()
     idItem.value = id
     getItemById(id)
+    payload.value.filter = [{
+      key: 'reconciliation.id',
+      operator: 'EQUALS',
+      value: idItem.value,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }]
     getList()
   }
 })
