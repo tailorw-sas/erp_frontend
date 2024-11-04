@@ -141,7 +141,6 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 async function onMultipleSelect(data: any) {
   selectedElements.value = data
-  console.log(selectedElements.value, 'que hay aqui')
 }
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
@@ -183,8 +182,6 @@ async function getList() {
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    console.log(response.data)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -210,7 +207,8 @@ async function getList() {
           loadingDelete: false,
           // invoiceDate: new Date(iterator?.invoiceDate),
           agencyCd: iterator?.agency?.code,
-          dueAmount: iterator?.dueAmount || 0,
+          dueAmount: iterator?.dueAmount ? formatNumber(Number(iterator?.dueAmount)) : 0,
+          invoiceAmount: iterator?.invoiceAmount ? formatNumber(Number(iterator?.invoiceAmount)) : 0,
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
 
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
