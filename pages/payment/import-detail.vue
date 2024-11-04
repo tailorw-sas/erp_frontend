@@ -115,7 +115,16 @@ async function getErrorList() {
         }
 
         // const datTemp = new Date(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        newListItems.push(
+          {
+            ...iterator.row,
+            id: iterator.id,
+            balance: iterator.row.balance ? formatNumber(iterator.row.balance) : 0,
+            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
