@@ -228,7 +228,7 @@ async function getItemById(id: string) {
           HotelList.value = [response.hotel]
         }
         item.value.amount = response.amount
-        item.value.paidDate = response.paidDate ? dayjs(response.paidDate).format('YYYY-MM-DD') : null
+        item.value.paidDate = response.paidDate ? dayjs(response.paidDate).toDate() : null
         item.value.remark = response.remark
         subTotals.value.amount = response.detailsAmount
       }
