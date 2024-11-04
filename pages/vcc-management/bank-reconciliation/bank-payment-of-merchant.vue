@@ -398,6 +398,49 @@ async function getMerchantBankAccountList(query: string) {
   }
 }
 
+async function bindTransactionsOnline(transactions: any[]) {
+  try {
+    loadingSaveAll.value = true
+    const payload: { [key: string]: any } = {}
+    payload.bankReconciliationId = idItem.value
+
+    if (transactions.length > 0) {
+      payload.transactionIds = transactions.filter((t: any) => !t.adjustment).map((i: any) => i.id)
+      const adjustmentTransactions = transactions.filter((t: any) => t.adjustment)
+      payload.adjustmentRequests = adjustmentTransactions.map((elem: any) => ({
+        agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
+        transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
+        transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
+        amount: parseFormattedNumber(elem.amount),
+        reservationNumber: elem.reservationNumber,
+        referenceNumber: elem.referenceNumber
+      }))
+    }
+    const response: any = await GenericService.create(confApi.moduleApi, `${confApi.uriApi}/add-transactions`, payload)
+    if (response) {
+      // Guarda el id del elemento creado
+      const newIds = [...response.adjustmentIds || [], ...response.transactionIds || []]
+      if (newIds.length === 1) {
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${newIds[0]} was bounded successfully`, life: 10000 })
+      }
+      else {
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transactions ${newIds.join(', ')} were bounded successfully`, life: 10000 })
+      }
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
+    }
+    getList()
+  }
+  catch (error: any) {
+    loadingSaveAll.value = false
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    loadingSaveAll.value = false
+  }
+}
+
 async function unbindTransactions() {
   if (idItem.value) {
     unbindTransactionsOnline()
@@ -434,7 +477,7 @@ async function unbindTransactionsOnline() {
     payload.bankReconciliation = idItem.value
     payload.transactionsIds = transactionsIds
 
-    await GenericService.create(confApi.moduleApi, 'transactions/unbind', payload)
+    await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     getList()
   }
@@ -480,6 +523,36 @@ async function createItem(item: { [key: string]: any }) {
   }
 }
 
+async function updateItem(item: { [key: string]: any }) {
+  if (item) {
+    const payload: { [key: string]: any } = {}
+    payload.paidDate = item.paidDate ? dayjs(item.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.remark = item.remark || ''
+    /* if (item.transactions.length > 0) {
+      payload.transactions = item.transactions.filter((t: any) => !t.adjustment).map((i: any) => i.id)
+      const adjustmentTransactions = item.transactions.filter((t: any) => t.adjustment)
+      payload.adjustmentTransactions = adjustmentTransactions.map((elem: any) => ({
+        agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
+        transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
+        transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
+        amount: parseFormattedNumber(elem.amount),
+        reservationNumber: elem.reservationNumber,
+        referenceNumber: elem.referenceNumber
+      }))
+    } */
+    const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
+    if (response && response.id) {
+      // Guarda el id del elemento creado
+      idItem.value = response.id
+      LocalBindTransactionList.value = []
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant ${response.reconciliationId ?? ''} was updated successfully`, life: 10000 })
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
+    }
+  }
+}
+
 async function saveItem(item: { [key: string]: any }) {
   if (subTotals.value.amount > item.amount) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
@@ -489,12 +562,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   if (idItem.value) {
     try {
-      // await updateItem(item)
-      idItem.value = ''
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+      await updateItem(item)
     }
     catch (error: any) {
-      // successOperation = false
+      loadingSaveAll.value = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
@@ -507,7 +578,7 @@ async function saveItem(item: { [key: string]: any }) {
       await getList()
     }
     catch (error: any) {
-      loadingSaveAll.value = true
+      loadingSaveAll.value = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
@@ -521,18 +592,32 @@ async function handleSave(event: any) {
   }
 }
 
-function addAdjustmentLocal(data: any) {
+function bindAdjustment(data: any) {
+  const newAdjustment = formatAdjustment(data)
+  if (idItem.value) {
+    bindTransactionsOnline([newAdjustment])
+  }
+  else {
+    LocalBindTransactionList.value.push(newAdjustment)
+  }
+}
+
+function formatAdjustment(data: any) {
   data.id = v4() // id temporal para poder eliminar de forma local
   data.checkIn = dayjs().format('YYYY-MM-DD')
   subTotals.value.amount += data.amount
   data.amount = formatNumber(data.amount)
   data.adjustment = true
-  LocalBindTransactionList.value.push(data)
+  return data
 }
 
-function removeUnbindSelectedTransactions(newTransactions: any[]) {
-  const ids = new Set(newTransactions.map(item => item.id))
-  selectedElements.value = selectedElements.value.filter(item => ids.has(item.id) || !item.id)
+function bindManualTransactions(data: any[]) {
+  if (idItem.value) {
+    bindTransactionsOnline(data)
+  }
+  else {
+    setTransactions(data)
+  }
 }
 
 function setTransactions(event: any) {
@@ -541,6 +626,11 @@ function setTransactions(event: any) {
   LocalBindTransactionList.value = [...event, ...adjustmentList]
   const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
   subTotals.value.amount = totalAmount
+}
+
+function removeUnbindSelectedTransactions(newTransactions: any[]) {
+  const ids = new Set(newTransactions.map(item => item.id))
+  selectedElements.value = selectedElements.value.filter(item => ids.has(item.id) || !item.id)
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -698,13 +788,13 @@ onMounted(async () => {
       <BankPaymentMerchantBindTransactionsDialog
         :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="computedLocalBindTransactionList"
         :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
-        @update:list-items="($event) => setTransactions($event)"
+        @update:list-items="($event) => bindManualTransactions($event)"
         @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
       />
     </div>
     <VCCNewAdjustmentTransaction
       is-local :open-dialog="newAdjustmentTransactionDialogVisible"
-      @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" @on-save-local="($event) => addAdjustmentLocal($event)"
+      @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" @on-save-local="($event) => bindAdjustment($event)"
     />
     <ContextMenu ref="contextMenu" :model="menuListItems">
       <template #itemicon="{ item }">
