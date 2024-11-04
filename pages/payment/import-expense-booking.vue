@@ -131,7 +131,18 @@ async function getErrorList() {
         }
 
         // const datTemp = new Date(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, checkIn: dayjs(iterator.row.checkIn).format('YYYY-MM-DD'), checkOut: dayjs(iterator.row.checkOut).format('YYYY-MM-DD'), impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        newListItems.push(
+          {
+            ...iterator.row,
+            id: iterator.id,
+            checkIn: dayjs(iterator.row.checkIn).format('YYYY-MM-DD'),
+            checkOut: dayjs(iterator.row.checkOut).format('YYYY-MM-DD'),
+            balance: iterator.row.balance ? formatNumber(iterator.row.balance) : 0,
+            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }

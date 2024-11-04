@@ -109,7 +109,17 @@ async function getErrorList() {
         }
 
         const dateTemp = !iterator.row ? null : convertirAFechav2(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, transactionDate: dateTemp, impSta: `Warning row ${iterator.row.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        newListItems.push(
+          {
+            ...iterator.row,
+            id: iterator.id,
+            transactionDate: dateTemp,
+            impSta: `Warning row ${iterator.row.rowNumber}: \n ${rowError}`,
+            amount: iterator.row.amount ? formatNumber(iterator.row.amount) : 0,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
