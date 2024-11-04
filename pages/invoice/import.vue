@@ -137,8 +137,8 @@ async function getErrorList() {
             id: iterator.id,
             fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`,
             impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
-            hotelInvoiceAmount: iterator.hotelInvoiceAmount ? formatNumber(iterator.hotelInvoiceAmount) : 0.00,
-            invoiceAmount: iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount) : 0.00,
+            hotelInvoiceAmount: iterator.row.hotelInvoiceAmount ? formatNumber(iterator.row.hotelInvoiceAmount) : 0.00,
+            invoiceAmount: iterator.row.invoiceAmount ? formatNumber(iterator.row.invoiceAmount) : 0.00,
             rowExpandable,
             loadingEdit: false,
             loadingDelete: false
