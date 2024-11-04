@@ -178,7 +178,8 @@ async function getPrintList() {
         agencyCd: iterator?.agency?.code,
         hasAttachments: iterator.hasAttachments,
         aging: 0,
-        dueAmount: iterator?.dueAmount || 0,
+        dueAmount: iterator?.dueAmount ? formatNumber(iterator.dueAmount) : 0,
+        invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator.invoiceAmount) : 0,
         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
         hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
         manageInvoiceType: { ...iterator?.manageInvoiceType, name: `${iterator?.manageInvoiceType?.code || ''}-${iterator?.manageInvoiceType?.name || ''}` }
