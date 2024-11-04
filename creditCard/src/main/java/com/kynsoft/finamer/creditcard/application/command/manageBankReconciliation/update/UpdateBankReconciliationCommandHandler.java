@@ -5,14 +5,10 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.create.CreateBankReconciliationAdjustmentRequest;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
-import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAmountRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,18 +19,12 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
 
     private final ITransactionService transactionService;
 
-    private final IManageAgencyService agencyService;
+    private final IBankReconciliationAdjustmentService bankReconciliationAdjustmentService;
 
-    private final IManageTransactionStatusService transactionStatusService;
-
-    private final IManageVCCTransactionTypeService transactionTypeService;
-
-    public UpdateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, ITransactionService transactionService, IManageAgencyService agencyService, IManageTransactionStatusService transactionStatusService, IManageVCCTransactionTypeService transactionTypeService) {
+    public UpdateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, ITransactionService transactionService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService) {
         this.bankReconciliationService = bankReconciliationService;
         this.transactionService = transactionService;
-        this.agencyService = agencyService;
-        this.transactionStatusService = transactionStatusService;
-        this.transactionTypeService = transactionTypeService;
+        this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
     }
 
     @Override
@@ -46,14 +36,14 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         UpdateIfNotNull.updateLocalDateTime(dto::setPaidDate, command.getPaidDate(), dto.getPaidDate(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setRemark, command.getRemark(), dto.getRemark(), update::setUpdate);
 
-        //comprobar si son diferentes los ids de las transactions para mandar a actualizar
+        //comprobar si no es nula la lista y son diferentes los ids de las transactions para mandar a actualizar
         Set<Long> reconciliationTransactionIds = dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet());
-        if (!reconciliationTransactionIds.equals(command.getTransactions())) {
+        if (command.getTransactions() != null && !reconciliationTransactionIds.equals(command.getTransactions())) {
             updateTransactions(dto, command.getTransactions());
         }
 
         if (command.getAdjustmentTransactions() != null && !command.getAdjustmentTransactions().isEmpty()) {
-            List<Long> adjustmentIds = createAdjustments(command.getAdjustmentTransactions(), dto);
+            List<Long> adjustmentIds = this.bankReconciliationAdjustmentService.createAdjustments(command.getAdjustmentTransactions(), dto);
             command.setAdjustmentTransactionIds(adjustmentIds);
         }
 
@@ -89,45 +79,6 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         }
         reconciliation.setTransactions(transactionList);
         this.bankReconciliationService.update(reconciliation);
-    }
-
-    private List<Long> createAdjustments(List<UpdateBankReconciliationAdjustmentRequest> adjustmentRequest, ManageBankReconciliationDto reconciliationDto){
-        List<Long> ids = new ArrayList<>();
-        Set<TransactionDto> adjustmentTransactions = new HashSet<>();
-        for (UpdateBankReconciliationAdjustmentRequest request : adjustmentRequest) {
-            RulesChecker.checkRule(new AdjustmentTransactionAmountRule(request.getAmount()));
-
-            ManageAgencyDto agencyDto = this.agencyService.findById(request.getAgency());
-            ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.RECEIVE);
-            ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findById(request.getTransactionCategory());
-            ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findById(request.getTransactionSubCategory());
-
-            //todo: calculo de la commission
-            double commission = 0;
-            double netAmount = request.getAmount() - commission;
-
-            TransactionDto transactionDto = this.transactionService.create(new TransactionDto(
-                    UUID.randomUUID(),
-                    agencyDto,
-                    transactionCategory,
-                    transactionSubCategory,
-                    request.getAmount(),
-                    request.getReservationNumber(),
-                    request.getReferenceNumber(),
-                    transactionStatusDto,
-                    0.0,
-                    LocalDate.now(),
-                    netAmount,
-                    LocalDate.now(),
-                    false,
-                    true
-            ));
-            adjustmentTransactions.add(transactionDto);
-            ids.add(transactionDto.getId());
-        }
-        reconciliationDto.getTransactions().addAll(adjustmentTransactions);
-        this.bankReconciliationService.update(reconciliationDto);
-        return ids;
     }
 
 }

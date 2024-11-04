@@ -1,9 +1,7 @@
-package com.kynsoft.finamer.creditcard.application.command.transaction.removeReconciliation;
+package com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.removeTransactions;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.creditcard.domain.dto.ManageBankReconciliationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.services.IManageBankReconciliationService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import org.springframework.stereotype.Component;
 
@@ -12,11 +10,8 @@ public class RemoveReconciliationCommandHandler implements ICommandHandler<Remov
 
     private final ITransactionService transactionService;
 
-    private final IManageBankReconciliationService bankReconciliationService;
-
-    public RemoveReconciliationCommandHandler(ITransactionService transactionService, IManageBankReconciliationService bankReconciliationService) {
+    public RemoveReconciliationCommandHandler(ITransactionService transactionService) {
         this.transactionService = transactionService;
-        this.bankReconciliationService = bankReconciliationService;
     }
 
     @Override
