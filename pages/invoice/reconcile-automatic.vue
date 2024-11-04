@@ -229,7 +229,8 @@ async function getList() {
           loadingDelete: false,
           // invoiceDate: new Date(iterator?.invoiceDate),
           agencyCd: iterator?.agency?.code,
-          dueAmount: iterator?.dueAmount || 0,
+          dueAmount: iterator?.dueAmount ? formatNumber(Number(iterator?.dueAmount)) : 0,
+          invoiceAmount: iterator?.invoiceAmount ? formatNumber(Number(iterator?.invoiceAmount)) : 0,
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
 
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
