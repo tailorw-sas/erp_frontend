@@ -293,6 +293,7 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
+        iterator.referenceId = String(iterator.id)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         iterator.amount = formatNumber(iterator.amount)
