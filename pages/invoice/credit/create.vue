@@ -1065,7 +1065,7 @@ onMounted(async () => {
         />
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
-        <InputText
+        <InputNumber
           v-if="!loadingSaveAll"
           v-model="formattedInvoiceAmount"
           show-clear

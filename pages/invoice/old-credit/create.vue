@@ -1244,9 +1244,12 @@ onMounted(async () => {
         />
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
-        <InputText
+        <InputNumber
           v-if="!loadingSaveAll"
-          v-model="formattedInvoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
+          v-model="formattedInvoiceAmount"
+          show-clear
+          :disabled="true"
+          @update:model-value="($event) => {
             invoiceAmountError = false
             // onUpdate('invoiceAmount', $event)
           }"
