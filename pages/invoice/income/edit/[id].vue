@@ -14,6 +14,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import dayjs from 'dayjs'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
+import InputNumber from 'primevue/inputnumber'
 
 
 
@@ -990,7 +991,7 @@ onMounted(async () => {
           />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText v-model="invoiceAmount" :disabled="true" v-if="!loadingSaveAll"/>
+          <InputNumber v-model="invoiceAmount" :disabled="true" v-if="!loadingSaveAll"/>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-invoiceStatus="{ item: data, onUpdate }">

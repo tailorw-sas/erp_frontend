@@ -1291,8 +1291,8 @@ async function getRoomRateList() {
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
         agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` },
-        rateAdult: iterator.adults > 0 ? rateAdult.toFixed(2) : 0,
-        rateChildren: iterator.children > 0 ? rateChildren.toFixed(2) : 0,
+        rateAdult: iterator.adults > 0 ? formatNumber(rateAdult) : 0,
+        rateChildren: iterator.children > 0 ? formatNumber(rateChildren) : 0,
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
@@ -1611,8 +1611,8 @@ async function getBookingItemById(id: string) {
         item2.value.couponNumber = response.couponNumber
         item2.value.adults = response.adults
         item2.value.children = response.children
-        item2.value.rateAdult = response.rateAdult
-        item2.value.rateChild = response.rateChild
+        item2.value.rateAdult = formatNumber(response.rateAdult)
+        item2.value.rateChild = formatNumber(response.rateChild)
         item2.value.hotelInvoiceNumber = response.hotelInvoiceNumber
         item2.value.folioNumber = response.folioNumber
         item2.value.hotelAmount = String(response.hotelAmount)
@@ -1784,6 +1784,16 @@ onMounted(async () => {
         @delete="requireConfirmationToDelete($event)"
         @submit="saveItem($event)"
       >
+        <template #field-invoiceOriginalAmount="{ onUpdate, item: data, fields, field }">
+          <InputNumber
+            v-if="!loadingSaveAll"
+            v-model="data.invoiceOriginalAmount"
+            show-clear
+            :disabled="fields.find((f) => f.field === field)?.disabled"
+            @update:model-value="onUpdate('invoiceOriginalAmount', $event)"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
         <template #field-hotelCreationDate="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
@@ -1797,7 +1807,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-if="!loadingSaveAll"
             v-model="data.invoiceAmount"
             show-clear
@@ -1810,18 +1820,28 @@ onMounted(async () => {
               else {
                 value = toPositive(value)
               }
-              onUpdate('invoiceAmount', String(value))
+              onUpdate('invoiceAmount', Number(value))
             }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-hotelAmount="{ onUpdate, item: data, fields, field }">
-          <InputText
+          <InputNumber
             v-if="!loadingSaveAll"
             v-model="data.hotelAmount"
             show-clear
             :disabled="fields.find((f) => f.field === field)?.disabled"
             @update:model-value="onUpdate('hotelAmount', $event)"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
+        <template #field-dueAmount="{ onUpdate, item: data, fields, field }">
+          <InputNumber
+            v-if="!loadingSaveAll"
+            v-model="data.dueAmount"
+            show-clear
+            :disabled="fields.find((f) => f.field === field)?.disabled"
+            @update:model-value="onUpdate('dueAmount', $event)"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>

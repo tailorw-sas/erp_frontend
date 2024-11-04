@@ -990,7 +990,7 @@ onMounted(async () => {
           />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText v-model="invoiceAmount" :disabled="true" v-if="!loadingSaveAll"/>
+          <InputNumber v-model="invoiceAmount" :disabled="true" v-if="!loadingSaveAll"/>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-invoiceStatus="{ item: data, onUpdate }">
