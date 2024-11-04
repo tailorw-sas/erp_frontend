@@ -480,6 +480,36 @@ async function createItem(item: { [key: string]: any }) {
   }
 }
 
+async function updateItem(item: { [key: string]: any }) {
+  if (item) {
+    const payload: { [key: string]: any } = {}
+    payload.paidDate = item.paidDate ? dayjs(item.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.remark = item.remark || ''
+    /* if (item.transactions.length > 0) {
+      payload.transactions = item.transactions.filter((t: any) => !t.adjustment).map((i: any) => i.id)
+      const adjustmentTransactions = item.transactions.filter((t: any) => t.adjustment)
+      payload.adjustmentTransactions = adjustmentTransactions.map((elem: any) => ({
+        agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
+        transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
+        transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
+        amount: parseFormattedNumber(elem.amount),
+        reservationNumber: elem.reservationNumber,
+        referenceNumber: elem.referenceNumber
+      }))
+    } */
+    const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
+    if (response && response.id) {
+      // Guarda el id del elemento creado
+      idItem.value = response.id
+      LocalBindTransactionList.value = []
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant ${response.reconciliationId ?? ''} was updated successfully`, life: 10000 })
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
+    }
+  }
+}
+
 async function saveItem(item: { [key: string]: any }) {
   if (subTotals.value.amount > item.amount) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
@@ -489,12 +519,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   if (idItem.value) {
     try {
-      // await updateItem(item)
-      idItem.value = ''
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+      await updateItem(item)
     }
     catch (error: any) {
-      // successOperation = false
+      loadingSaveAll.value = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
@@ -507,7 +535,7 @@ async function saveItem(item: { [key: string]: any }) {
       await getList()
     }
     catch (error: any) {
-      loadingSaveAll.value = true
+      loadingSaveAll.value = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
