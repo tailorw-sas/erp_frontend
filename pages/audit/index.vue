@@ -1,0 +1,520 @@
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue'
+import type { PageState } from 'primevue/paginator'
+import { z } from 'zod'
+import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
+import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2'
+import type { GenericObject } from '~/types'
+import { GenericService } from '~/services/generic-services'
+import type { IData } from '~/components/table/interfaces/IModelData'
+
+// VARIABLES -----------------------------------------------------------------------------------------
+const toast = useToast()
+const confirm = useConfirm()
+const listItems = ref<any[]>([])
+const formReload = ref(0)
+
+const loadingSaveAll = ref(false)
+const idItem = ref('')
+const idItemToLoadFirstTime = ref('')
+const loadingSearch = ref(false)
+const loadingDelete = ref(false)
+const filterToSearch = ref<IData>({
+  criterial: null,
+  search: '',
+})
+const confApi = reactive({
+  moduleApi: 'audit',
+  uriApi: 'audit/config',
+})
+
+const fields: Array<FieldDefinitionType> = [
+    {
+    field: 'auditCreate',
+    header: 'Audit Create',
+    dataType: 'check',
+    class: 'field col-12 mt-0 required',
+    headerClass: 'mb-1',
+  },
+  {
+    field: 'auditUpdate',
+    header: 'Audit Update',
+    dataType: 'check',
+    class: 'field col-12 mt-1 required',
+    headerClass: 'mb-1',
+  },
+  {
+    field: 'auditDelete',
+    header: 'Audit Delete',
+    dataType: 'check',
+    class: 'field col-12 mt-1 required',
+    headerClass: 'mb-1',
+  },
+ /* {
+    field: 'serviceName',
+    header: 'Service Name',
+    dataType: 'text',
+    class: 'field col-12 required',
+    headerClass: 'mb-1',
+    validation: z.string().trim().min(1, 'The name field is requiredd').max(50, 'Maximum 50 characters')
+  },
+  {
+    field: 'entityName',
+    header: 'Entity Name',
+    dataType: 'text',
+    class: 'field col-12 required',
+    headerClass: 'mb-1',
+    validation: z.string().trim().min(1, 'The name field is requiredd').max(50, 'Maximum 50 characters')
+  },
+ */
+]
+
+const item = ref<GenericObject>({
+  auditCreate: false,
+  auditUpdate: false,
+  auditDelete: false,
+  serviceName: '',
+  entityName:''
+  
+})
+
+const itemTemp = ref<GenericObject>({
+  auditCreate: false,
+  auditUpdate: false,
+  auditDelete: false,
+  serviceName: '',
+  entityName:''
+  
+})
+
+
+
+// -------------------------------------------------------------------------------------------------------
+const ENUM_FILTER = [
+  { id: 'serviceName', name: 'Service' },
+  { id: 'entityName', name: 'Entity' },
+]
+// TABLE COLUMNS -----------------------------------------------------------------------------------------
+const columns: IColumn[] = [
+  { field: 'serviceName', header: 'Service Name', type: 'text' },
+  { field: 'entityName', header: 'Entity Name', type: 'text' },
+  { field: 'auditCreate', header: 'Audit Create', type: 'bool' },
+  { field: 'auditUpdate', header: 'Audit Update', type: 'bool' },
+  { field: 'auditDelete', header: 'Audit Delete', type: 'bool' },
+
+]
+// -------------------------------------------------------------------------------------------------------
+
+// TABLE OPTIONS -----------------------------------------------------------------------------------------
+const options = ref({
+  tableName: 'Audit',
+  moduleApi: 'audit',
+  uriApi: 'audit/config',
+  loading: false,
+  actionsAsMenu: false,
+  messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
+})
+const payloadOnChangePage = ref<PageState>()
+const payload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 50,
+  page: 0,
+ sortBy: '',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+const pagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+// -------------------------------------------------------------------------------------------------------
+
+// FUNCTIONS ---------------------------------------------------------------------------------------------
+function clearForm() {
+  item.value = { ...itemTemp.value }
+  idItem.value = ''
+  
+  
+  formReload.value++
+}
+
+async function getList() {
+  if (options.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    idItemToLoadFirstTime.value = ''
+    options.value.loading = true
+    listItems.value = []
+    const newListItems = []
+
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi,payload.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    const existingIds = new Set(listItems.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      /*if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.status = statusToBoolean(iterator.status)
+      }
+*/
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    listItems.value = [...listItems.value, ...newListItems]
+
+    if (listItems.value.length > 0) {
+      idItemToLoadFirstTime.value = listItems.value[0].id
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
+function searchAndFilter() {
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  if (filterToSearch.value.criterial && filterToSearch.value.search) {
+    payload.value.filter = [...payload.value.filter, {
+      key: filterToSearch.value.criterial ? filterToSearch.value.criterial.id : '',
+      operator: 'LIKE',
+      value: filterToSearch.value.search,
+      logicalOperation: 'AND',
+      type: 'filterSearch',
+    }]
+  }
+  getList()
+}
+
+function clearFilterToSearch() {
+  payload.value = {
+    filter: [],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'serviceName',
+    sortType: ENUM_SHORT_TYPE.DESC
+  }
+  filterToSearch.value.criterial = ENUM_FILTER[0]
+  filterToSearch.value.search = ''
+  getList()
+}
+
+async function resetListItems() {
+  payload.value.page = 0
+  getList()
+}
+
+async function getItemById(id: string) {
+  if (id) {
+    idItem.value = id
+    loadingSaveAll.value = true
+    try {
+      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+      console.log(response,'??')
+      if (response) {
+        item.value.id = response.auditConfigurationDto.id
+        item.value.auditCreate = response.auditConfigurationDto.auditCreate
+        item.value.auditUpdate = response.auditConfigurationDto.auditUpdate
+        item.value.auditDelete = response.auditConfigurationDto.auditDelete
+        item.value.serviceName = response.auditConfigurationDto.serviceName
+        item.value.entityName = response.auditConfigurationDto.entityName
+      }
+        formReload.value += 1
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Logs could not be loaded', life: 3000 })
+      }
+    }
+    finally {
+      loadingSaveAll.value = false
+    }
+  }
+}
+
+
+
+async function updateItem(item: { [key: string]: any }) {
+  loadingSaveAll.value = true
+  const payload: { [key: string]: any } = { ...item }
+ 
+  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+}
+
+async function deleteItem(id: string) {
+  try {
+    loadingDelete.value = true
+    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
+    clearForm()
+    getList()
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
+    loadingDelete.value = false
+  }
+  finally {
+    loadingDelete.value = false
+  }
+}
+
+async function saveItem(item: { [key: string]: any }) {
+  loadingSaveAll.value = true
+  let successOperation = true
+  if (idItem.value) {
+    try {
+      await updateItem(item)
+      idItem.value = ''
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    }
+    catch (error: any) {
+      successOperation = false
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+  }
+ /* else {
+    try {
+      await createItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    }
+    catch (error: any) {
+      successOperation = false
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+  }*/
+  loadingSaveAll.value = false
+  if (successOperation) {
+    clearForm()
+    getList()
+  }
+}
+
+function requireConfirmationToSave(item: any) {
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    saveItem(item)
+  }
+  else {
+    const { event } = item
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        saveItem(item)
+      },
+      reject: () => {
+        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+      }
+    })
+  }
+}
+function requireConfirmationToDelete(event: any) {
+  if (!useRuntimeConfig().public.showDeleteConfirm) {
+    deleteItem(idItem.value)
+  }
+  else {
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      acceptClass: 'p-button-danger',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        deleteItem(idItem.value)
+      },
+      reject: () => {}
+    })
+  }
+}
+
+
+async function parseDataTableFilter(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  payload.value.filter = [...payload.value.filter, ...parseFilter || []]
+  getList()
+}
+  
+
+function onSortField(event: any) {
+  if (event) {
+    if (event.sortField === 'auditCreate'|| event.sortField ==='auditUpdate' || event.sortField=== 'auditDelete') {
+      // Invertir el orden de sortType
+      payload.value.sortType = event.sortOrder === 'ASC' ? 'DESC' : 'ASC';
+    } else {
+      // Para otros campos, simplemente toma el orden dado
+      payload.value.sortType = event.sortOrder;
+    }
+    
+    // Asigna el campo de ordenación
+    payload.value.sortBy = event.sortField;
+    
+    // Aplica el filtro
+    parseDataTableFilter(event.filter);
+  }
+}
+
+const disabledSearch = computed(() => {
+  // return !(filterToSearch.value.criterial && filterToSearch.value.search)
+  return false
+})
+
+const disabledClearSearch = computed(() => {
+  return !(filterToSearch.value.criterial && filterToSearch.value.search)
+})
+// -------------------------------------------------------------------------------------------------------
+
+// WATCH FUNCTIONS -------------------------------------------------------------------------------------
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getList()
+})
+
+watch(() => idItemToLoadFirstTime.value, async (newValue) => {
+  if (!newValue) {
+    clearForm()
+  }
+  else {
+    await getItemById(newValue)
+  }
+})
+// -------------------------------------------------------------------------------------------------------
+
+// TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
+onMounted(() => {
+  filterToSearch.value.criterial = ENUM_FILTER[0]
+  if (useRuntimeConfig().public.loadTableData) {
+    getList()
+  }
+})
+// -------------------------------------------------------------------------------------------------------
+</script>
+
+<template>
+  <div class="flex justify-content-between align-items-center">
+    <h3 class="mb-0">
+     Logs
+    </h3>
+  
+  </div>
+  <div class="grid">
+    <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9">
+      <div class="card p-0">
+        <Accordion :active-index="0" class="mb-2">
+          <AccordionTab>
+            <template #header>
+              <div class="text-white font-bold custom-accordion-header">
+                Filters
+              </div>
+            </template>
+            <div class="flex gap-4 flex-column lg:flex-row">
+              <div class="flex align-items-center gap-2">
+                <label for="email3">Criteria</label>
+                <div class="w-full lg:w-auto">
+                  <Dropdown
+                    v-model="filterToSearch.criterial"
+                    :options="[...ENUM_FILTER]"
+                    option-label="name"
+                    placeholder="Criteria"
+                    return-object="false"
+                    class="align-items-center w-full"
+                    show-clear
+                  />
+                </div>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <label for="email">Search</label>
+                <div class="w-full lg:w-auto">
+                  <IconField icon-position="left" class="w-full">
+                    <InputText v-model="filterToSearch.search" type="text" placeholder="Search" class="w-full" />
+                    <InputIcon class="pi pi-search" />
+                  </IconField>
+                </div>
+              </div>
+              <div class="flex align-items-center">
+                <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter" />
+                <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :disabled="disabledClearSearch" :loading="loadingSearch" @click="clearFilterToSearch" />
+              </div>
+            <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
+            </div> -->
+            <!-- <div class="col-12 md:col-5 flex justify-content-end">
+            </div> -->
+            </div>
+          </AccordionTab>
+        </Accordion>
+      </div>
+      <DynamicTable
+        :data="listItems"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-confirm-create="clearForm"
+        @open-edit-dialog="getItemById($event)"
+        @update:clicked-item="getItemById($event)"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter"
+        @on-list-item="resetListItems"
+        @on-sort-field="onSortField"
+      />
+    </div>
+    <div class="col-12 order-1 md:order-0 md:col-6 xl:col-3">
+      <div>
+        <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+         Edit
+        </div>
+        <div class="card p-4">
+          <EditFormV2
+            :key="formReload"
+            :fields="fields"
+            :item="item"
+            :show-actions="true"
+            :hide-delete-button="true"
+            
+            :loading-save="loadingSaveAll"
+            :loading-delete="loadingDelete"
+            @cancel="clearForm"
+            @delete="requireConfirmationToDelete($event)"
+            @submit="requireConfirmationToSave($event)"
+          >
+          <template #form-footer="props">
+              <div class="flex justify-content-end">
+              
+                  <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
+              
+                <Button v-tooltip.top="'Cancel'" class="w-3rem mx-2" icon="pi pi-times" severity="secondary" :loading="loadingSaveAll" @click="clearForm" />
+              </div>
+            </template>
+        
+          </EditFormV2>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

@@ -4,6 +4,7 @@ import { useToast } from 'primevue/usetoast'
 import { v4 as uuidv4 } from 'uuid'
 import type { PageState } from 'primevue/paginator'
 import { filter } from 'lodash'
+import dayjs from 'dayjs'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
@@ -19,7 +20,7 @@ const importModel = ref({
   importFile: '',
   // totalAmount: 0,
   hotel: '',
-  attachFile: null,
+  attachFile: [] as File[],
   employee: '',
 })
 const uploadComplete = ref(false)
@@ -29,12 +30,12 @@ const totalImportedRows = ref(0)
 
 const confApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment-detail/import',
+  uriApi: 'payment/import',
 })
 
 const confPaymentApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment-detail',
+  uriApi: 'payment',
 })
 
 const hotelList = ref<any[]>([])
@@ -48,16 +49,16 @@ const idItem = ref('')
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'bookingId', header: 'Booking Id', type: 'text' },
-  { field: 'InvoiceNo', header: 'Invoice No', type: 'text' },
-  { field: 'FullName', header: 'Full Name', type: 'text' },
-  { field: 'ReservationNo', header: 'Reservation No', type: 'text' },
-  { field: 'couponNo', header: 'Coupon No', type: 'text' },
-  { field: 'checkIn', header: 'Check In', type: 'text' },
-  { field: 'checkOut', header: 'Check Out', type: 'text' },
+  { field: 'invoiceNo', header: 'Invoice No', type: 'text' },
+  { field: 'fullName', header: 'Full Name', type: 'text' },
+  { field: 'reservationNumber', header: 'Reservation No', type: 'text' },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text' },
+  { field: 'checkIn', header: 'Check In', type: 'date' },
+  { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'adults', header: 'Adults', type: 'text' },
   { field: 'children', header: 'Children', type: 'text' },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'trans', header: 'Trans.', type: 'text' },
+  { field: 'balance', header: 'Amount', type: 'text' },
+  { field: 'transactionType', header: 'Trans.', type: 'text' },
   { field: 'remarks', header: 'Remark', type: 'text' },
   { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false },
 ]
@@ -67,7 +68,7 @@ const columns: IColumn[] = [
 const options = ref({
   tableName: 'Payment Import Expense to booking',
   moduleApi: 'payment',
-  uriApi: 'payment-expense-booking/import',
+  uriApi: 'payment/import',
   loading: false,
   showDelete: false,
   showFilters: true,
@@ -98,7 +99,9 @@ const pagination = ref<IPagination>({
   search: ''
 })
 // -------------------------------------------------------------------------------------------------------
-
+const fileNames = computed(() => {
+  return importModel.value.attachFile.map(file => file.name).join(', ')
+})
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
 async function getErrorList() {
@@ -128,7 +131,18 @@ async function getErrorList() {
         }
 
         // const datTemp = new Date(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        newListItems.push(
+          {
+            ...iterator.row,
+            id: iterator.id,
+            checkIn: dayjs(iterator.row.checkIn).format('YYYY-MM-DD'),
+            checkOut: dayjs(iterator.row.checkOut).format('YYYY-MM-DD'),
+            balance: iterator.row.balance ? formatNumber(iterator.row.balance) : 0,
+            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -155,9 +169,18 @@ async function onChangeFile(event: any) {
 
 async function onChangeAttachFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
-    attachFile.value = event.target.files[0]
-    importModel.value.attachFile = attachFile.value.name
-    event.target.value = ''
+    const files: File[] = Array.from(event.target.files)
+    const pdfFiles = files.filter(file => file.type === 'application/pdf')
+
+    if (pdfFiles.length > 0) {
+      importModel.value.attachFile = pdfFiles // Almacena objetos File
+    }
+    else {
+      importModel.value.attachFile = [] // Limpia si no hay PDFs
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select only PDF files.', life: 10000 })
+    }
+
+    event.target.value = '' // Limpia el input
     await activeImport()
   }
 }
@@ -174,24 +197,30 @@ async function importExpenseBooking() {
     }
     const uuid = uuidv4()
     idItem.value = uuid
-    const base64String: any = await fileToBase64(inputFile.value)
-    const base64 = base64String.split('base64,')[1]
-    const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
+    const file = await inputFile.value
+    // const base64String: any = await fileToBase64(inputFile.value)
+    // const base64 = base64String.split('base64,')[1]
+    // const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
 
-    const base64String1: any = await fileToBase64(attachFile.value)
-    const base641 = base64String1.split('base64,')[1]
-    const file1 = await base64ToFile(base641, attachFile.value.name, attachFile.value.type)
+    const pdfFiles = importModel.value.attachFile // Usa el modelo correcto
+
+    if (!pdfFiles || pdfFiles.length === 0) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one file', life: 10000 })
+      return
+    }
 
     const formData = new FormData()
     formData.append('file', file)
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.BOOKING)
     // formData.append('totalAmount', importModel.value.totalAmount.toFixed(0).toString())
-    formData.append('hotel', importModel.value.hotel)
-    formData.append('employee', userData?.value?.user?.userId || '')
-    formData.append('attachment', file1)
+    formData.append('hotelId', importModel.value.hotel)
+    formData.append('employeeId', userData?.value?.user?.userId || '')
+    for (const fileInput of pdfFiles) {
+      formData.append('attachments', fileInput)
+    }
 
-    // await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
+    await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
     successOperation = false
@@ -201,9 +230,9 @@ async function importExpenseBooking() {
   }
 
   if (successOperation) {
-    // await validateStatusImport()
+    await validateStatusImport()
     if (!haveErrorImportStatus.value) {
-      // await getErrorList()
+      await getErrorList()
       if (listItems.value.length === 0) {
         toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 0 })
         options.value.loading = false
@@ -223,7 +252,7 @@ async function validateStatusImport() {
       try {
         const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
         status = response.status
-        totalImportedRows.value = response.totalRows ?? 0
+        totalImportedRows.value = response.total ?? 0
       }
       catch (error: any) {
         toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
@@ -391,7 +420,7 @@ onMounted(async () => {
                   <div class="w-full">
                     <div class="p-inputgroup w-full">
                       <InputText
-                        ref="attachUpload" v-model="importModel.attachFile" placeholder="Choose file"
+                        ref="attachUpload" v-model="fileNames" placeholder="Choose file"
                         class="w-full" show-clear aria-describedby="inputtext-help"
                       />
                       <span class="p-inputgroup-addon p-0 m-0">
@@ -400,7 +429,7 @@ onMounted(async () => {
                     </div>
                     <small id="username-help" style="color: #808080;">Select a file of type PDF</small>
                     <input
-                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf"
+                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf" webkitdirectory multiple
                       @change="onChangeAttachFile($event)"
                     >
                   </div>

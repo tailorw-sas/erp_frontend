@@ -14,9 +14,15 @@ const props = defineProps({
     type: Boolean,
     required: true
   },
+  isLocal: {
+    type: Boolean,
+    required: true,
+    default: false
+  }
 })
 const emits = defineEmits<{
   (e: 'onCloseDialog', value: boolean): void
+  (e: 'onSaveLocal', value: any): void
 }>()
 
 const $primevue = usePrimeVue()
@@ -64,11 +70,15 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'amount',
     header: 'Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The amount field is required')
-      .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-      .refine(val => Number.parseFloat(val) > 0, {
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
+    validation: z.number({
+      invalid_type_error: 'The amount field must be a number',
+      required_error: 'The amount field is required',
+    })
+      .refine(val => Number.parseFloat(String(val)) > 0, {
         message: 'The amount must be greater than zero',
       })
   },
@@ -96,7 +106,7 @@ const item = ref<GenericObject>({
   agency: null,
   transactionCategory: null,
   subCategory: null,
-  amount: '0',
+  amount: 0,
   reservationNumber: '',
   referenceNumber: '',
 })
@@ -105,7 +115,7 @@ const itemTemp = ref<GenericObject>({
   agency: null,
   transactionCategory: null,
   subCategory: null,
-  amount: '0',
+  amount: 0,
   reservationNumber: '',
   referenceNumber: '',
 })
@@ -131,7 +141,12 @@ function clearForm() {
 
 function requireConfirmationToSave(item: any) {
   if (!useRuntimeConfig().public.showSaveConfirm) {
-    save(item)
+    if (props.isLocal) {
+      saveLocal(item)
+    }
+    else {
+      save(item)
+    }
   }
   else {
     confirm.require({
@@ -142,7 +157,12 @@ function requireConfirmationToSave(item: any) {
       rejectLabel: 'Cancel',
       acceptLabel: 'Accept',
       accept: async () => {
-        await save(item)
+        if (props.isLocal) {
+          saveLocal(item)
+        }
+        else {
+          await save(item)
+        }
       },
       reject: () => {}
     })
@@ -166,6 +186,11 @@ async function save(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
   }
+}
+
+function saveLocal(item: { [key: string]: any }) {
+  emits('onSaveLocal', item)
+  onClose(false)
 }
 
 async function getCategoryList(query: string, isDefault: boolean = false) {
@@ -401,8 +426,16 @@ watch(() => props.openDialog, (newValue) => {
     v-model:visible="dialogVisible"
     modal
     header="New Adjustment Transaction"
-    class="w-8 md:w-6 lg:w-4 card p-0"
-    content-class="border-round-bottom border-top-1 surface-border pb-0"
+    :style="{ width: '50rem' }"
+    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+    }"
     @hide="onClose(true)"
   >
     <div class="mt-4 p-4">
@@ -466,7 +499,7 @@ watch(() => props.openDialog, (newValue) => {
     </div>
     <template #footer>
       <div class="flex justify-content-end mr-4">
-        <Button v-tooltip.top="'Save'" label="Save" icon="pi pi-save" :loading="loadingSaveAll" class="mr-2" @click="saveSubmit($event)" />
+        <Button v-tooltip.top="'Apply'" label="Apply" icon="pi pi-save" :loading="loadingSaveAll" class="mr-2" @click="saveSubmit($event)" />
         <Button v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" icon="pi pi-times" @click="onClose(true)" />
       </div>
     </template>

@@ -91,7 +91,11 @@ const props = defineProps({
   refetchInvoice: { type: Function, default: () => { } },
   getInvoiceAgency: { type: Function, default: () => { } },
   sortBooking: Function as any,
-  nightTypeRequired: Boolean
+  nightTypeRequired: Boolean,
+  invoiceType:{
+    type: String,
+    required: false
+  }
 })
 
 const toast = useToast()
@@ -261,7 +265,7 @@ const Fields = ref<Array<Container>>([
         field: 'couponNumber',
         header: 'Coupon No.',
         dataType: 'text',
-        class: 'field col-12 md: required',
+        class: 'field col-12',
         headerClass: 'mb-1',
         ...(couponNumberValidation.value ? { validation: z.string().min(1, 'The coupon no. field is required').regex(new RegExp(couponNumberValidation.value), 'The coupon no. field is invalid') } : { validation: z.string().min(1, 'The coupon no. field is required') })
 
@@ -319,7 +323,6 @@ const Fields = ref<Array<Container>>([
           required_error: 'The Check Out field is required',
           invalid_type_error: 'The Check Out field is required',
         })
-
       },
 
       {
@@ -328,7 +331,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'select',
         class: 'field col-12',
         headerClass: 'mb-1',
-
       },
       {
         field: 'roomNumber',
@@ -336,8 +338,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-        
-
       },
       {
         field: 'children',
@@ -346,7 +346,6 @@ const Fields = ref<Array<Container>>([
         class: 'field col-12 ',
         headerClass: 'mb-1',
         validation: z.number().nonnegative('The Children field must not be negative').nullable()
-
       },
       {
         field: 'rateChild',
@@ -355,7 +354,6 @@ const Fields = ref<Array<Container>>([
         class: 'field col-12 ',
         headerClass: 'mb-1',
         validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
-
       },
 
       {
@@ -364,7 +362,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'text',
         class: 'field col-12 ',
         headerClass: 'mb-1',
-
       },
       {
         field: 'hotelAmount',
@@ -372,8 +369,7 @@ const Fields = ref<Array<Container>>([
         dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.string().min(1, 'The Hotel Amount field is required').refine(val => +val <= 0, 'The Hotel Amount field must be greater than 0').nullable()
-
+        validation: z.number().min(1, 'The Hotel Amount field is required').refine(val => +val <= 0, 'The Hotel Amount field must be greater than 0').nullable()
       },
 
       {
@@ -382,7 +378,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'select',
         class: `field col-12 ${nightTypeRequired.value ? 'required' : ''}`,
         headerClass: 'mb-1',
-
       },
 
     ],
@@ -441,12 +436,9 @@ const fieldsV2: Array<FieldDefinitionType> = [
     field: 'couponNumber',
     header: 'Coupon No.',
     dataType: 'text',
-    class: 'field col-12 md:col-3 required',
+    class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-
   },
-
-
   // Check In
   {
     field: 'checkIn',
@@ -473,7 +465,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     })
   },
 
-  // Adults
+  // //Adults
   {
     field: 'adults',
     header: 'Adult',
@@ -482,57 +474,78 @@ const fieldsV2: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
     validation: z.number().min(1, 'The Adults field must be greater than 0').nullable()
   },
+  // // Contract
+      {
+        field: 'contract',
+        header: 'Contract',
+        dataType: 'text',
+        class: 'field col-12 md:col-3',
+        headerClass: 'mb-1',
+        //validation: z.string().regex(/^[a-z0-9]+$/i, 'No se permiten caracteres especiales').nullable()
+      },
 
-  // Children
-  {
-    field: 'children',
-    header: 'Child',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().nonnegative('The Children field must not be negative').nullable()
+  // // Children
+  // {
+  //   field: 'children',
+  //   header: 'Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().nonnegative('The Children field must not be negative').nullable()
 
-  },
+  // },
 
 
-  // Rate Adult
-  {
-    field: 'rateAdult',
-    header: 'Rate Adult',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().min(0, 'The Rate Adult field must be greater or equal than 0')
-  },
+  // // Rate Adult
+  // {
+  //   field: 'rateAdult',
+  //   header: 'Rate Adult',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().min(0, 'The Rate Adult field must be greater or equal than 0')
+  // },
   // Rate Child
-  {
-    field: 'rateChild',
-    header: 'Rate Child',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
-  },
+  // {
+  //   field: 'rateChild',
+  //   header: 'Rate Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
+  // },
 
 
   // Invoice Amount
   {
     field: 'invoiceAmount',
-    header: 'Invoice Amount',
+    header: 'Booking Amount',
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    ...(route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT ? { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value >= 0, { message: 'The Invoice Amount field must be greater or equals than 0' }) })
+    ...(route.query.type === InvoiceType.OLD_CREDIT 
+    || route.query.type === InvoiceType.CREDIT 
+    || props.invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT 
+    || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT 
+    ? { 
+      validation: z
+      .number().min(1, 'The Invoice Amount field is required')
+      .refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.number().min(1, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must be greater than 0' }) })
   },
 
   // Hotel Amount
   {
     field: 'hotelAmount',
     header: 'Hotel Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
-    validation: z.string().trim().regex(/^\d+$/, 'The Hotel Amount field must be greater than or equal to 0')
+    validation: z.number().refine((val: number) => {
+      if ((Number(val) < 0)) {
+        return false
+      }
+      return true
+    }, { message: 'The Hotel Amount field must be greater or equals than 0' }).nullable()
     // validation: z.string().trim().regex(/^\d+$/, 'Only numeric characters allowed')
   },
 
@@ -637,7 +650,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     field: 'description',
     header: 'Remark',
     dataType: 'text',
-    class: 'field col-12 md:col-9',
+    class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
   },
 ]
@@ -652,8 +665,8 @@ const item = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-  invoiceAmount: '0',
-  roomNumber: '0',
+  invoiceAmount: 0,
+  roomNumber: 0,
   couponNumber: '',
   adults: 0,
   children: 0,
@@ -661,7 +674,7 @@ const item = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -681,9 +694,8 @@ const itemTemp = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-
-  invoiceAmount: '0',
-  roomNumber: '0',
+  invoiceAmount: 0,
+  roomNumber: 0,
   couponNumber: '',
   adults: 0,
   children: 0,
@@ -691,7 +703,7 @@ const itemTemp = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: '0',
+  hotelAmount: 0,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -723,7 +735,7 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  //{ field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
 
   { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -748,6 +760,10 @@ const ENUM_FILTER = [
 const finalColumns = ref<IColumn[]>(Columns)
 
 async function openEditBooking(item: any) {
+  // if (item?.id) {
+  //   await navigateTo({ path: `booking/${item?.id}`, query: { type: props.invoiceType } }, { open: { target: '_blank' } })
+  // }
+  
   props.openDialog()
   if (item?.id) {
     idItem.value = item?.id
@@ -759,6 +775,179 @@ async function openEditBooking(item: any) {
     idItem.value = item
     idItemToLoadFirstTime.value = item
     await GetItemById(item)
+  }
+}
+
+async function newOpenEditBooking(item: any) {
+  console.log('OPEN EDIT BOOKING', item);
+  if (props.isCreationDialog) {
+    openEditBooking(item)
+  } else {
+    if (item?.id) {
+      await navigateTo({ path: `booking/${item?.id}`, query: { type: props.invoiceType } }, { open: { target: '_blank' } })
+    }
+  }
+
+  
+  // props.openDialog()
+  // if (item?.id) {
+  //   idItem.value = item?.id
+  //   idItemToLoadFirstTime.value = item?.id
+  //   await GetItemById(item?.id)
+  // }
+
+  // if (typeof item === 'string') {
+  //   idItem.value = item
+  //   idItemToLoadFirstTime.value = item
+  //   await GetItemById(item)
+  // }
+}
+
+async function getPaymentDetailBybookingId(id: string) {
+  try {
+      optionsPaymentDetailsApplied.value.loading = true
+      paymentDetailsAppliedList.value = []
+      const count: SubTotals = { depositAmount: 0 }
+      const newListItems = []
+      const objFilter = payloadPaymentDetailsApplied.value.filter.find(item => item.key === 'manageBooking.id')
+
+    if (objFilter) {
+      objFilter.value = id
+    }
+    else {
+      payloadPaymentDetailsApplied.value.filter.push({
+        key: 'manageBooking.id',
+        operator: 'EQUALS',
+        value: id,
+        logicalOperation: 'AND'
+      })
+    }
+
+    const response = await GenericService.search('payment', 'payment-detail', payloadPaymentDetailsApplied.value)
+    console.log(response);
+    
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    paginationPaymentDetailsApplied.value.page = page
+    paginationPaymentDetailsApplied.value.limit = size
+    paginationPaymentDetailsApplied.value.totalElements = totalElements
+    paginationPaymentDetailsApplied.value.totalPages = totalPages
+
+    const existingIds = new Set(paymentDetailsAppliedList.value.map(item => id))
+
+    for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        count.depositAmount += iterator.amount
+        iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
+          ? Number.parseFloat(iterator.amount).toString()
+          : '0'
+
+        iterator.amount = formatNumber(iterator.amount)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.status = statusToBoolean(iterator.status)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionDate')) {
+        iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'parentId')) {
+        iterator.parentId = iterator.parentId ? iterator.parentId.toString() : ''
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionType')) {
+        iterator.deposit = iterator.transactionType.deposit
+        iterator.transactionType.name = `${iterator.transactionType.code} - ${iterator.transactionType.name}`
+
+        if (iterator.deposit) {
+          iterator.rowClass = 'row-deposit' // Clase CSS para las transacciones de tipo deposit
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
+        iterator.adults = iterator.manageBooking?.adults?.toString()
+        iterator.childrens = iterator.manageBooking?.children?.toString()
+        iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
+        iterator.fullName = iterator.manageBooking?.fullName
+        iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
+
+        if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && iterator?.transactionType?.cash) {
+          iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
+          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+        }
+        else if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && !iterator?.transactionType?.cash) {
+          iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
+          iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
+          iterator.bookingId = iterator?.manageBooking.parentResponse?.bookingId
+          iterator.invoiceNumber = iterator?.manageBooking.invoice?.parent?.invoiceNumber
+        }
+        else {
+          iterator.bookingId = iterator.manageBooking?.bookingId
+          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber
+        }
+      }
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    paymentDetailsAppliedList.value = [...paymentDetailsAppliedList.value, ...newListItems]
+      
+    } catch (error) {
+      optionsPaymentDetailsApplied.value.loading = false
+        console.log(error);  
+    } finally {
+      optionsPaymentDetailsApplied.value.loading = false
+    }
+}
+
+async function parseDataTableFilter(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsPaymentDetailsApplied.value)
+  const objFilterForPaymentId = parseFilter?.find((item: IFilter) => item?.key === 'paymentNo')
+  if (objFilterForPaymentId) {
+    objFilterForPaymentId.key = 'payment.paymentId'
+  }
+  const objFilterForFullName = parseFilter?.find((item: IFilter) => item?.key === 'fullName')
+  if (objFilterForFullName) {
+    objFilterForFullName.key = 'manageBooking.fullName'
+  }
+  payloadPaymentDetailsApplied.value.filter = [...parseFilter || []]
+  getPaymentDetailBybookingId(selectedBooking.value?.id)
+}
+
+
+function onSortField(event: any) {
+  if (event) {
+    if (event.sortField === 'transactionType') {
+      event.sortField = 'transactionType.name'
+    }
+    if (event.sortField === 'paymentNo') {
+      event.sortField = 'payment.paymentId'
+    }
+    if (event.sortField === 'fullName') {
+      event.sortField = 'manageBooking.fullName'
+    }
+    // if (event.sortField === 'transactionDate') {
+    //   event.sortField = 'manageBooking.fullName'
+    // }
+    
+    payloadPaymentDetailsApplied.value.sortBy = event.sortField
+    payloadPaymentDetailsApplied.value.sortType = event.sortOrder
+    parseDataTableFilter(event.filter)
+  }
+}
+
+interface SubTotals {
+  depositAmount: number
+}
+
+async function openModalPaymentDetail(item: any) {
+  if (item?.id) {
+    try {
+      await getPaymentDetailBybookingId(item?.id)
+      openDialogPaymentDetailsApplied.value = true
+    } catch (error) {}
   }
 }
 
@@ -996,7 +1185,6 @@ async function getBookingList(clearFilter: boolean = false) {
 
     
     const response = await GenericService.search(Options.value.moduleApi, Options.value.uriApi, Payload.value)
-    console.log(response)
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     Pagination.value.page = page
@@ -1021,7 +1209,10 @@ async function getBookingList(clearFilter: boolean = false) {
         agency: { ...iterator?.invoice?.agency, name: `${iterator?.invoice?.agency?.code}-${iterator?.invoice?.agency?.name}` },
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`,
-        originalAmount: iterator?.invoiceAmount
+        originalAmount: iterator?.invoiceAmount,
+        invoiceAmount: formatNumber(iterator?.invoiceAmount),
+        dueAmount: formatNumber(iterator?.dueAmount),
+        hotelAmount: formatNumber(iterator?.hotelAmount),
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
@@ -1110,7 +1301,7 @@ async function GetItemById(id: string) {
       item.value.firstName = element.firstName
       item.value.lastName = element.lastName
 
-      item.value.invoiceAmount = element.invoiceAmount ? String(element.invoiceAmount) : '0'
+      item.value.invoiceAmount = element.invoiceAmount ? Number(element.invoiceAmount) : '0'
       item.value.roomNumber = element.roomNumber
       item.value.couponNumber = element.couponNumber
       item.value.adults = element.adults
@@ -1119,7 +1310,7 @@ async function GetItemById(id: string) {
       item.value.rateChild = element.rateChild
       item.value.hotelInvoiceNumber = element.hotelInvoiceNumber
       item.value.folioNumber = element.folioNumber
-      item.value.hotelAmount = element.hotelAmount ? String(element?.hotelAmount) : '0'
+      item.value.hotelAmount = element.hotelAmount ? Number(element?.hotelAmount) : 0
       item.value.description = element.description
       item.value.invoice = element.invoice
       item.value.ratePlan = element.ratePlan?.name == '-' ? null : element.ratePlan
@@ -1146,7 +1337,7 @@ async function GetItemById(id: string) {
         item.value.firstName = response.firstName
         item.value.lastName = response.lastName
 
-        item.value.invoiceAmount = response.invoiceAmount ? String(response?.invoiceAmount) : '0'
+        item.value.invoiceAmount = response.invoiceAmount ? Number(response?.invoiceAmount) : 0
         item.value.roomNumber = response.roomNumber
         item.value.couponNumber = response.couponNumber
         item.value.adults = response.adults
@@ -1155,7 +1346,7 @@ async function GetItemById(id: string) {
         item.value.rateChild = response.rateChild
         item.value.hotelInvoiceNumber = response.hotelInvoiceNumber
         item.value.folioNumber = response.folioNumber
-        item.value.hotelAmount = String(response.hotelAmount)
+        item.value.hotelAmount = Number(response.hotelAmount)
         item.value.description = response.description
         item.value.invoice = response.invoice
         item.value.ratePlan = response.ratePlan?.name == '-' ? null : response.ratePlan
@@ -1411,15 +1602,32 @@ watch(() => props.forceUpdate, () => {
   }
 })
 
-function onRowRightClick(event: any) {
+const computedShowMenuItemAddRoomRate = computed(() => {
+    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ROOM-RATE-CREATE'])))
+  })
+  const computedShowMenuItemEditBooking = computed(() => {
+    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:BOOKING-EDIT'])))
+  })
 
-  console.log(props.invoiceObj);
-  if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-    return;
+function onRowRightClick(event: any) {
+  if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {  
+    menuModel.value = [
+      {
+        label: 'Payment Details Applied',
+        command: () => openModalPaymentDetail(selectedBooking.value),
+        disabled: computedShowMenuItemEditBooking
+      },
+    ]
   }
 
   if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-    return;
+    menuModel.value = [
+      {
+        label: 'Payment Details Applied',
+        command: () => openModalPaymentDetail(selectedBooking.value),
+        disabled: computedShowMenuItemEditBooking
+      },
+    ]
   }
 
   selectedBooking.value = event.data
@@ -1431,8 +1639,6 @@ function onCellEditComplete(val: any) {
   if (props.isCreationDialog) {
     if (route.query.type === InvoiceType.CREDIT) {
       val.newData.invoiceAmount = toNegative(val.newData.invoiceAmount)
-
-      console.log(val.newData);
 
       if (toPositive(val.newData.invoiceAmount) > toPositive(val.newData.originalAmount)) {
         toast.add({ severity: 'error', summary: 'Error', detail: "Booking invoice amount cannot be greater than original amount", life: 10000 })
@@ -1447,6 +1653,95 @@ function onCellEditComplete(val: any) {
 }
 
 
+// CODE FOR MODAL PAYMENT DETAILS
+const openDialogPaymentDetailsApplied = ref(false)
+const paymentDetailsAppliedList = ref<any[]>([])
+
+const columnsPaymentDetailsApplied = ref<IColumn[]>([
+  { field: 'paymentDetailId', header: 'Id', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '90px', sortable: true, showFilter: true, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
+  { field: 'transactionDate', header: 'Transaction Date', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'amount', header: 'D. Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'remark', header: 'Remark', type: 'text', width: '90px', sortable: true, showFilter: true },
+])
+
+const optionsPaymentDetailsApplied = ref({
+  tableName: 'Payment Details',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/search-payment',
+  expandableRows: false,
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+
+const payloadPaymentDetailsApplied = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+const paginationPaymentDetailsApplied = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
+const onChangePagePaymentDetailsApplied = ref<PageState>()
+
+function getStatusBadgeBackgroundColor(code: string) {
+  switch (code) {
+    case 'PROCECSED': return '#FF8D00'
+    case 'RECONCILED': return '#005FB7'
+    case 'SENT': return '#006400'
+    case 'CANCELED': return '#888888'
+    case 'PENDING': return '#686868'
+
+    default:
+      return '#686868'
+  }
+}
+
+function getStatusName(code: string) {
+  switch (code) {
+    case 'PROCECSED': return 'Processed'
+
+    case 'RECONCILED': return 'Reconciled'
+    case 'SENT': return 'Sent'
+    case 'CANCELED': return 'Cancelled'
+    case 'PENDING': return 'Pending'
+
+    default:
+      return ''
+  }
+}
+
+
+function closeModalPaymentDetailApplied() {
+  openDialogPaymentDetailsApplied.value = false
+}
+
+function goToFormInNewTab(item: any) {
+  const paymentId = item.hasOwnProperty('paymentId') ? item.paymentId : item
+  const url = `/payment/form?id=${encodeURIComponent(paymentId)}`
+  window.open(url, '_blank')
+}
+
+watch(onChangePagePaymentDetailsApplied, async (newValue) => {
+  payloadPaymentDetailsApplied.value.page = newValue?.page ? newValue?.page : 0
+  payloadPaymentDetailsApplied.value.pageSize = newValue?.rows ? newValue.rows : 10
+  await getPaymentDetailBybookingId(selectedBooking.value?.id)
+})
+
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
   Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
@@ -1454,7 +1749,7 @@ watch(PayloadOnChangePage, (newValue) => {
 })
 
 
-onMounted(() => {
+onMounted(() => { 
   
   if (props.selectedInvoice) {
     Payload.value.filter = [{
@@ -1490,38 +1785,41 @@ onMounted(() => {
 
     { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
-      { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
-
+      //{ field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-
       { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-
       { field: 'originalAmount', header: 'Original Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
 
     ]
   }
 
-  const computedShowMenuItemAddRoomRate = computed(() => {
-    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ROOM-RATE-CREATE'])))
-  })
-  const computedShowMenuItemEditBooking = computed(() => {
-    return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:BOOKING-EDIT'])))
-  })
+  
   menuModel.value = [
     {
       label: 'Add Room Rate',
       command: () => props.openRoomRateDialog(selectedBooking.value),
       disabled: computedShowMenuItemAddRoomRate
     },
+    // {
+    //   label: 'Edit booking',
+    //   command: () => openEditBooking(selectedBooking.value),
+    //   disabled: computedShowMenuItemEditBooking
+    // },
+    // Esto es solo para pruebas
     {
       label: 'Edit booking',
-      command: () => openEditBooking(selectedBooking.value),
+      command: () => newOpenEditBooking(selectedBooking.value),
       disabled: computedShowMenuItemEditBooking
-    }
+    },
+    {
+      label: 'Payment Details Applied',
+      command: () => openModalPaymentDetail(selectedBooking.value),
+      disabled: computedShowMenuItemEditBooking
+    },
   ]
 
   if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
@@ -1560,17 +1858,17 @@ onMounted(() => {
       @on-row-double-click="($event) => {
 
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-          return;
-        }
+        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
+        //   return;
+        // }
 
-        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-          return;
-        }
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+        //   return;
+        // }
 
-        if (!props.isDetailView) {
-          openEditBooking($event)
-        }
+        // if (!props.isDetailView) {
+        //   openEditBooking($event)
+        // }
       }">
 
 
@@ -1579,26 +1877,26 @@ onMounted(() => {
           <Row>
             <Column 
               footer="Totals:"
-              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 7 : 10"
+              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 9"
               footer-style="text-align:right; font-weight: 700"
             />
             <Column 
               v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="Number.parseFloat(totalHotelAmount.toFixed(2))"
+              :footer="formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700"
             />
             <Column 
               v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="Number.parseFloat(totalOriginalAmount.toFixed(2))"
+              :footer="formatNumber(Math.round((totalOriginalAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700"
             />
             <Column 
-              :footer="Number.parseFloat(totalInvoiceAmount.toFixed(2))"
+              :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700"
             />
             <Column 
               v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="Number.parseFloat(totalDueAmount.toFixed(2))"
+              :footer="formatNumber(Math.round((totalDueAmount + Number.EPSILON) * 100) / 100)"
               footer-style="font-weight: 700" 
             />
           
@@ -1618,20 +1916,90 @@ onMounted(() => {
   <ContextMenu v-if="!isDetailView" ref="bookingContextMenu" :model="menuModel" />
 
   <div v-if="isDialogOpen" style="h-fit">
-    <BookingDialog :fields="Fields" :fieldsv2="fieldsV2" :item="item" :open-dialog="isDialogOpen"
-      :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
-      :require-confirmation-to-save="saveBooking" :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
-      :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" :close-dialog="() => {
+    <BookingDialog 
+      :fields="Fields" 
+      :fieldsv2="fieldsV2" 
+      :item="item" 
+      :open-dialog="isDialogOpen"
+      :form-reload="formReload" 
+      :loading-save-all="loadingSaveAll" 
+      :clear-form="ClearForm"
+      :require-confirmation-to-save="saveBooking" 
+      :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
+      :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" 
+      :close-dialog="() => {
         ClearForm()
         closeDialog()
-      }" container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
-      content-class="w-full" :night-type-list="nightTypeList" :rate-plan-list="ratePlanList"
-      :room-category-list="roomCategoryList" :room-type-list="roomTypeList" :get-night-type-list="getNightTypeList"
-      :get-room-category-list="getRoomCategoryList" :get-room-type-list="getRoomTypeList"
-      :getrate-plan-list="getratePlanList" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel"
-      :is-night-type-required="nightTypeRequired" :coupon-number-validation="couponNumberValidation"
-      :invoice-obj="currentInvoice" />
+      }" 
+      container-class="grid grid-cols-2 justify-content-around mx-4 my-2 w-full" 
+      class="h-fit p-2 overflow-y-hidden"
+      content-class="w-full" 
+      :night-type-list="nightTypeList" 
+      :rate-plan-list="ratePlanList"
+      :room-category-list="roomCategoryList" 
+      :room-type-list="roomTypeList" 
+      :get-night-type-list="getNightTypeList"
+      :get-room-category-list="getRoomCategoryList" 
+      :get-room-type-list="getRoomTypeList"
+      :getrate-plan-list="getratePlanList" 
+      :invoice-agency="invoiceAgency" 
+      :invoice-hotel="invoiceHotel"
+      :is-night-type-required="nightTypeRequired" 
+      :coupon-number-validation="couponNumberValidation"
+      :invoice-obj="currentInvoice"
+    />
   </div>
+
+  <Dialog
+    v-model:visible="openDialogPaymentDetailsApplied"
+    modal
+    class="mx-3 sm:mx-0"
+    content-class="border-round-bottom border-top-1 surface-border"
+    :style="{ width: 'auto' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog-history',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
+    }"
+    @hide="closeModalPaymentDetailApplied()"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Payment Details
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-3">
+          <DynamicTable
+            class="card p-0"
+            :data="paymentDetailsAppliedList"
+            :columns="columnsPaymentDetailsApplied"
+            :options="optionsPaymentDetailsApplied"
+            :pagination="paginationPaymentDetailsApplied"
+            @on-change-filter="parseDataTableFilter"
+            @on-sort-field="onSortField"
+            @on-change-pagination="onChangePagePaymentDetailsApplied = $event"
+            @on-row-double-click="($event) => {
+              if ($event && $event?.paymentId) {
+                goToFormInNewTab($event?.paymentId)
+              }              
+            }"
+          >
+            <template #column-status="{ data: item }">
+              <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
+            </template>
+          </DynamicTable>
+        </div>
+      </template>
+    </Dialog>
 </template>
 
 <style>

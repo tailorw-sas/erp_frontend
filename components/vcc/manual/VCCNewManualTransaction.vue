@@ -33,6 +33,7 @@ const dialogVisible = ref(props.openDialog)
 const loadingSaveAll = ref(false)
 const loadingDefaultMerchant = ref(false)
 const loadingDefaultLanguage = ref(false)
+const loadingDefaultCurrency = ref(false)
 const confApi = reactive({
   moduleApi: 'creditcard',
   uriApi: 'transactions/manual',
@@ -86,11 +87,15 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'amount',
     header: 'Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 md:col-6 required',
-    validation: z.string().trim().min(1, 'The amount field is required')
-      .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-      .refine(val => Number.parseFloat(val) > 0, {
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
+    validation: z.number({
+      invalid_type_error: 'The amount field must be a number',
+      required_error: 'The amount field is required',
+    })
+      .refine(val => Number.parseFloat(String(val)) > 0, {
         message: 'The amount must be greater than zero',
       })
   },
@@ -146,6 +151,13 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-6',
     validation: z.string().trim().email('Invalid email').or(z.string().length(0))
   },
+  {
+    field: 'merchantCurrency',
+    header: 'Merchant Currency',
+    dataType: 'select',
+    class: 'field col-12 md:col-6 required',
+    validation: validateEntityStatus('merchant currency'),
+  },
 ]
 
 const item = ref<GenericObject>({
@@ -154,13 +166,14 @@ const item = ref<GenericObject>({
   hotel: null,
   agency: null,
   language: null,
-  amount: '0',
+  amount: 0,
   checkIn: '',
   reservationNumber: '',
   referenceNumber: '',
   hotelContactEmail: '',
   guestName: '',
   email: '',
+  merchantCurrency: null
 })
 
 const itemTemp = ref<GenericObject>({
@@ -169,23 +182,25 @@ const itemTemp = ref<GenericObject>({
   hotel: null,
   agency: null,
   language: null,
-  amount: '0',
+  amount: 0,
   checkIn: new Date(),
   reservationNumber: '',
   referenceNumber: '',
   hotelContactEmail: '',
   guestName: '',
   email: '',
+  merchantCurrency: null
 })
 
 const MerchantList = ref<any[]>([])
 const HotelList = ref<any[]>([])
 const AgencyList = ref<any[]>([])
 const LanguageList = ref<any[]>([])
+const CurrencyList = ref<any[]>([])
 
 const ENUM_METHOD_TYPE = [
-  { id: 'LINK', name: 'Link' },
   { id: 'POST', name: 'Post' },
+  { id: 'LINK', name: 'Link' },
 ]
 
 async function getObjectValues($event: any) {
@@ -200,6 +215,7 @@ function onClose(isCancel: boolean) {
 
 function clearForm() {
   item.value = { ...itemTemp.value }
+
   formReload.value++
 }
 
@@ -262,6 +278,7 @@ async function save(item: { [key: string]: any }) {
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
     payload.methodType = typeof payload.methodType === 'object' ? payload.methodType.id : payload.methodType
+    payload.merchantCurrency = typeof payload.merchantCurrency === 'object' ? payload.merchantCurrency.id : payload.merchantCurrency
     delete payload.event
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
@@ -423,51 +440,65 @@ async function getAgencyList(query: string) {
   }
 }
 
-async function getLanguageList(query: string, isDefault: boolean = false) {
+async function getLanguageByMerchantList(query: string, isDefault: boolean = false) {
   try {
+    if (!item.value.merchant) {
+      return // No listar si no hay merchant seleccionado
+    }
     if (isDefault) {
       loadingDefaultLanguage.value = true
     }
     const payload = {
       filter: isDefault
         ? [{
-            key: 'defaults',
+            key: 'manageLanguage.defaults',
             operator: 'EQUALS',
             value: true,
             logicalOperation: 'AND'
           }, {
-            key: 'code',
+            key: 'manageLanguage.code',
             operator: 'LIKE',
             value: query,
             logicalOperation: 'OR'
           }, {
-            key: 'name',
+            key: 'manageLanguage.name',
             operator: 'LIKE',
             value: query,
             logicalOperation: 'OR'
           }, {
-            key: 'status',
+            key: 'manageLanguage.status',
             operator: 'EQUALS',
             value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }, {
+            key: 'manageMerchant.id',
+            operator: 'EQUALS',
+            value: item.value.merchant.id,
             logicalOperation: 'AND'
           }]
         : [
             {
-              key: 'name',
+              key: 'manageLanguage.name',
               operator: 'LIKE',
               value: query,
               logicalOperation: 'OR'
             },
             {
-              key: 'code',
+              key: 'manageLanguage.code',
               operator: 'LIKE',
               value: query,
               logicalOperation: 'OR'
             },
             {
-              key: 'status',
+              key: 'manageLanguage.status',
               operator: 'EQUALS',
               value: 'ACTIVE',
+              logicalOperation: 'AND'
+            },
+            {
+              key: 'manageMerchant.id',
+              operator: 'EQUALS',
+              value: item.value.merchant.id,
               logicalOperation: 'AND'
             }
           ],
@@ -477,17 +508,12 @@ async function getLanguageList(query: string, isDefault: boolean = false) {
       pageSize: 20,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-language', payload)
+    const response = await GenericService.create('creditcard', 'merchant-language-code/languages', payload)
     const { data: dataList } = response
     LanguageList.value = []
 
     for (const iterator of dataList) {
-      LanguageList.value = [...LanguageList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
-    }
-
-    if (isDefault && LanguageList.value.length > 0) {
-      item.value.language = LanguageList.value[0]
-      formReload.value += 1
+      LanguageList.value = [...LanguageList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status || 'ACTIVE' }]
     }
   }
   catch (error) {
@@ -496,6 +522,60 @@ async function getLanguageList(query: string, isDefault: boolean = false) {
   finally {
     if (isDefault) {
       loadingDefaultLanguage.value = false
+    }
+  }
+}
+
+async function getCurrencyByMerchantList(query: string, isDefault: boolean = false) {
+  try {
+    if (!item.value.merchant) {
+      return // No listar si no hay merchant seleccionado
+    }
+    if (isDefault) {
+      loadingDefaultCurrency.value = true
+    }
+    const payload = {
+      filter: [{
+        key: 'managerCurrency.code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'managerCurrency.name',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }, {
+        key: 'managerMerchant.id',
+        operator: 'EQUALS',
+        value: item.value.merchant.id,
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      sortBy: 'managerCurrency.code',
+      sortType: 'ASC',
+      pageSize: 20,
+      page: 0,
+    }
+    const response = await GenericService.search('settings', 'manage-merchant-currency', payload)
+    const { data: dataList } = response
+    CurrencyList.value = []
+
+    for (const iterator of dataList) {
+      CurrencyList.value = [...CurrencyList.value, { id: iterator.id, name: `${iterator.managerCurrency.code} - ${iterator.managerCurrency.name}`, status: iterator.status || 'ACTIVE' }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading currency list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultCurrency.value = false
     }
   }
 }
@@ -530,13 +610,41 @@ watch(() => item.value, async (newValue) => {
   }
 })
 
+async function getDefaultLanguages(onUpdate?: (fieldKey: string, value: any) => void) {
+  await getLanguageByMerchantList('', true)
+  if (onUpdate) {
+    onUpdate('language' ?? '', LanguageList.value[0] || null)
+  }
+  else {
+    if (LanguageList.value.length > 0) {
+      item.value.language = LanguageList.value[0]
+      formReload.value += 1
+    }
+  }
+}
+
+async function getDefaultCurrency(onUpdate?: (fieldKey: string, value: any) => void) {
+  await getCurrencyByMerchantList('', true)
+  if (onUpdate) {
+    onUpdate('merchantCurrency' ?? '', CurrencyList.value[0] || null)
+  }
+  else {
+    if (CurrencyList.value.length > 0) {
+      item.value.merchantCurrency = CurrencyList.value[0]
+      formReload.value += 1
+    }
+  }
+}
+
 watch(() => props.openDialog, async (newValue) => {
   dialogVisible.value = newValue
   if (newValue) {
     clearForm()
+    item.value.methodType = ENUM_METHOD_TYPE[0]
     handleMethodTypeChange('')
-    getLanguageList('', true)
     await getMerchantList('', true)
+    getDefaultLanguages()
+    getDefaultCurrency()
     // getHotelList('')
   }
 })
@@ -547,8 +655,16 @@ watch(() => props.openDialog, async (newValue) => {
     v-model:visible="dialogVisible"
     modal
     header="New Manual Transaction"
-    class="w-10 lg:w-6 card p-0"
-    content-class="border-round-bottom border-top-1 surface-border pb-0"
+    :style="{ width: '50rem' }"
+    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+    }"
     @hide="onClose(true)"
   >
     <div class="mt-4 p-4">
@@ -575,8 +691,15 @@ watch(() => props.openDialog, async (newValue) => {
               onUpdate('merchant', $event)
               item.merchant = $event
               if (item.hotel) {
+                item.hotel = null
                 onUpdate('hotel', null)
               }
+              if (item.language) {
+                item.language = null
+                onUpdate('language', null)
+              }
+              getDefaultLanguages(onUpdate)
+              getDefaultCurrency(onUpdate)
             }"
             @load="($event) => getMerchantList($event)"
           />
@@ -641,7 +764,23 @@ watch(() => props.openDialog, async (newValue) => {
             @change="($event) => {
               onUpdate('language', $event)
             }"
-            @load="($event) => getLanguageList($event)"
+            @load="($event) => getLanguageByMerchantList($event)"
+          />
+          <Skeleton v-else height="2rem" class="" />
+        </template>
+        <template #field-merchantCurrency="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingDefaultCurrency && !loadingSaveAll"
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :disabled="CurrencyList.length === 1 && data.merchantCurrency"
+            :model="data.merchantCurrency"
+            :suggestions="CurrencyList"
+            @change="($event) => {
+              onUpdate('merchantCurrency', $event)
+            }"
+            @load="($event) => getCurrencyByMerchantList($event)"
           />
           <Skeleton v-else height="2rem" class="" />
         </template>

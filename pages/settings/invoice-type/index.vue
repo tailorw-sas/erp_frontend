@@ -50,7 +50,26 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'enabledToPolicy',
-    header: 'Enabled to policy',
+    header: 'Enabled To Policy',
+    dataType: 'check',
+    class: 'field col-12 required mb-3',
+  },
+  {
+    field: 'income',
+    header: 'Income',
+    dataType: 'check',
+    class: 'field col-12 required mb-3',
+  },
+
+  {
+    field: 'credit',
+    header: 'Credit',
+    dataType: 'check',
+    class: 'field col-12 required mb-3',
+  },
+  {
+    field: 'invoice',
+    header: 'Invoice',
     dataType: 'check',
     class: 'field col-12 required mb-3',
   },
@@ -76,6 +95,9 @@ const item = ref<GenericObject>({
   description: '',
   status: true,
   enabledToPolicy: false,
+  income: false,
+  credit: false,
+  invoice: false,
 })
 
 const itemTemp = ref<GenericObject>({
@@ -84,6 +106,9 @@ const itemTemp = ref<GenericObject>({
   description: '',
   status: true,
   enabledToPolicy: false,
+  income: false,
+  credit: false,
+  invoice: false,
 })
 
 const formTitle = computed(() => {
@@ -230,6 +255,9 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
         item.value.enabledToPolicy = response.enabledToPolicy
+        item.value.income = response.income
+        item.value.credit = response.credit
+        item.value.invoice = response.invoice
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -490,6 +518,57 @@ onMounted(() => {
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
+            <template #field-income="{ item: data, onUpdate, fields: dataFields, field }">
+              <Checkbox
+                id="income"
+                v-model="data.income"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('income', $event)
+                  if ($event) {
+                    onUpdate('credit', false)
+                    onUpdate('invoice', false)
+                  }
+                }"
+              />
+              <label for="income" class="ml-1 font-bold">
+                {{ dataFields.find((f) => f.field === field)?.header }}
+              </label>
+            </template>
+            <template #field-credit="{ item: data, onUpdate, fields: dataFields, field }">
+              <Checkbox
+                id="credit"
+                v-model="data.credit"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('credit', $event)
+                  if ($event) {
+                    onUpdate('income', false)
+                    onUpdate('invoice', false)
+                  }
+                }"
+              />
+              <label for="credit" class="ml-1 font-bold">
+                {{ dataFields.find((f) => f.field === field)?.header }}
+              </label>
+            </template>
+            <template #field-invoice="{ item: data, onUpdate, fields: dataFields, field }">
+              <Checkbox
+                id="invoice"
+                v-model="data.invoice"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('invoice', $event)
+                  if ($event) {
+                    onUpdate('income', false)
+                    onUpdate('credit', false)
+                  }
+                }"
+              />
+              <label for="invoice" class="ml-1 font-bold">
+                {{ dataFields.find((f) => f.field === field)?.header }}
+              </label>
+            </template>
             <template #form-footer="props">
               <div class="flex justify-content-end">
                 <IfCan :perms="idItem ? ['INVOICE-TYPE:EDIT'] : ['INVOICE-TYPE:CREATE']">

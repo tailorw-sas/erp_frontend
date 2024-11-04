@@ -63,6 +63,52 @@ async function onChangeAttachFile(event: any) {
   }
 }
 
+/*async function onChangeAttachFile(event: any) {
+  if (event.target.files && event.target.files.length > 0) {
+    const files: File[] = Array.from(event.target.files);
+    const pdfFiles = files.filter(file => file.type === 'application/pdf');
+
+    if (pdfFiles.length > 0) {
+      const invalidFiles = pdfFiles.filter(file => {
+        // Extrae el nombre del archivo sin extensión
+        const fileName = file.name.split('.')[0];
+        // Verifica si el nombre del archivo es un número
+        return isNaN(Number(fileName)); // Retorna true si no es un número
+      });
+
+      if (invalidFiles.length > 0) {
+        // Si hay archivos inválidos, muestra un toast con el detalle del error
+        invalidFiles.forEach((file) => {
+          toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `El archivo '${file.name}' no es válido. Su nombre debe ser un número.`,
+            life: 10000
+          });
+        });
+        importModel.value.attachFile = []; // Limpia si hay archivos inválidos
+      } else {
+        // Si todos los archivos son válidos, almacena los archivos PDF
+        importModel.value.attachFile = pdfFiles; // Almacena objetos File
+        pdfFiles.forEach((file) => {
+          console.log(`Archivo PDF seleccionado: ${file.name}`);
+        });
+      }
+    } else {
+      importModel.value.attachFile = []; // Limpia si no hay PDFs
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Please select only PDF files.',
+        life: 10000
+      });
+    }
+
+    event.target.value = ''; // Limpia el input
+    await activeImport();
+  }
+}
+*/
 async function activeImport() {
   if (importModel.value.attachFile !== null) {
     uploadComplete.value = false
@@ -184,7 +230,7 @@ async function importFile() {
   options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
-  let count = 0;
+  let count = 0
 
   try {
     const selectedFiles = importModel.value.attachFile // Usa el modelo correcto
@@ -222,20 +268,6 @@ async function importFile() {
       formData.append('files', fileInput)
     }
 
-    /*   const base64Array = []
-    for (const fileInput of selectedFiles) {
-      const base64String: any = await fileToBase64(fileInput)
-      const base64 = base64String.split('base64,')[1]
-
-      const file = await base64ToFile(base64, fileInput.name, fileInput.type)
-
-      // Agrega cada archivo al FormData
-      base64Array.push(file)
-    }
-    base64Array.forEach((file, index) => {
-      formData.append('files[]', file)
-    }) */
-
     // Agrega información adicional al FormData
     formData.append('importProcessId', uuid)
     formData.append('employeeId', userData?.value?.user?.userId)
@@ -243,7 +275,7 @@ async function importFile() {
 
     // Envía los datos al servicio
     await GenericService.importReconcileFile(confApi.moduleApi, confApi.uriApi, formData)
-    count = selectedFiles.length;
+    count = selectedFiles.length
   }
   catch (error: any) {
     successOperation = false
@@ -258,12 +290,12 @@ async function importFile() {
 
     if (!haveErrorImportStatus.value) {
       await getErrorList()
-     if (listItems.value.length === 0) {
+      if (listItems.value.length === 0) {
         options.value.loading = false
         navigateTo('/invoice')
-        const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`;
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 0 });
-           }
+        const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 0 })
+      }
     }
   }
 

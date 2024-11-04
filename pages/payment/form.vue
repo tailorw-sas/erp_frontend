@@ -3,10 +3,10 @@ import dayjs from 'dayjs'
 import { z } from 'zod'
 import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
-import { get } from 'lodash'
+import { filter, get } from 'lodash'
 import { formatNumber, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { FieldDefinitionType } from '~/components/form/EditFormV2'
+import type { FieldDefinition, FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -32,11 +32,12 @@ const enableSplitAction = ref(false)
 const enableDepositSummaryAction = ref(false)
 const formReload = ref(0)
 const formReloadAgency = ref(0)
-const refPaymentDetailForm = ref(0)
 const dialogPaymentDetailFormReload = ref(0)
+const dialogPaymentDetailFormReloadEdit = ref(0)
 const amountOfDetailItem = ref(0) // Temp
 
 const loadingSaveAll = ref(false)
+const loadingSaveAllForEdit = ref(false)
 const loadingDelete = ref(false)
 const loadingPrintDetail = ref(false)
 
@@ -52,10 +53,14 @@ const bankAccountList = ref<any[]>([])
 const paymentStatusList = ref<any[]>([])
 const attachmentStatusList = ref<any[]>([])
 const onOffDialogPaymentDetail = ref(false)
+const onOffDialogPaymentDetailEdit = ref(false)
 const onOffDialogPaymentDetailSummary = ref(false)
 const hasBeenEdited = ref(0)
 const hasBeenCreated = ref(0)
-const actionOfModal = ref<'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined>(undefined)
+const actionOfModal = ref<'new-detail' | 'edit-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined>(undefined)
+
+const showReverseTransaction = ref(false)
+const showCanceledDetails = ref(false)
 
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
@@ -71,13 +76,104 @@ const subTotals = ref<SubTotals>({ depositAmount: 0 })
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 
-const paymentDetailsList = ref<any[]>([])
+const paymentDetailsList = ref<any[]>([
+  // {
+  //   id: '1',
+  //   paymentDetailId: 'PD12345',
+  //   bookingId: 'BKG20231001',
+  //   invoiceNumber: 'INV001234',
+  //   transactionDate: '2024-10-01',
+  //   fullName: 'John Doe',
+  //   reservationNumber: 'RES001',
+  //   couponNumber: 'CUP2023',
+  //   adults: 2,
+  //   children: 1,
+  //   amount: 250.00,
+  //   transactionType: { name: 'Online Payment', code: 'OP001', status: true, cash: false, deposit: true, applyDeposit: false },
+  //   rowClass: 'row-deposit',
+  //   parentId: 'PARENT001',
+  //   reverseFromParentId: 'REV_PARENT001',
+  //   remark: 'Payment processed successfully',
+  // },
+  // {
+  //   id: '2',
+  //   paymentDetailId: 'PD12346',
+  //   bookingId: 'BKG20231002',
+  //   invoiceNumber: 'INV001235',
+  //   transactionDate: '2024-10-02',
+  //   fullName: 'Jane Smith',
+  //   reservationNumber: 'RES002',
+  //   couponNumber: 'CUP2024',
+  //   adults: 1,
+  //   children: 0,
+  //   amount: 150.00,
+  //   transactionType: { name: 'Cash Payment', code: 'CP001', status: true, cash: true, deposit: false, applyDeposit: true },
+  //   parentId: 'PARENT002',
+  //   reverseFromParentId: 'REV_PARENT002',
+  //   remark: 'Paid at reception',
+  // },
+  // {
+  //   id: '3',
+  //   paymentDetailId: 'PD12347',
+  //   bookingId: 'BKG20231003',
+  //   invoiceNumber: 'INV001236',
+  //   transactionDate: '2024-10-03',
+  //   fullName: 'Alice Johnson',
+  //   reservationNumber: 'RES003',
+  //   couponNumber: 'CUP2025',
+  //   adults: 3,
+  //   children: 2,
+  //   amount: 500.00,
+  //   transactionType: { name: 'Credit Card', code: 'CC001', status: true, cash: false, deposit: true, applyDeposit: true },
+  //   rowClass: 'row-deposit',
+  //   parentId: 'PARENT003',
+  //   reverseFromParentId: 'REV_PARENT003',
+  //   remark: 'Split payment with partner',
+  // },
+  // {
+  //   id: '4',
+  //   paymentDetailId: 'PD12348',
+  //   bookingId: 'BKG20231004',
+  //   invoiceNumber: 'INV001237',
+  //   transactionDate: '2024-10-04',
+  //   fullName: 'Bob Brown',
+  //   reservationNumber: 'RES004',
+  //   couponNumber: 'CUP2026',
+  //   adults: 2,
+  //   children: 0,
+  //   amount: 300.00,
+  //   transactionType: { name: 'Bank Transfer', code: 'BT001', status: false, cash: false, deposit: true, applyDeposit: false },
+  //   rowClass: 'row-deposit',
+  //   parentId: 'PARENT004',
+  //   reverseFromParentId: 'REV_PARENT004',
+  //   remark: 'Pending bank confirmation',
+  // },
+  // {
+  //   id: '5',
+  //   paymentDetailId: 'PD12349',
+  //   bookingId: 'BKG20231005',
+  //   invoiceNumber: 'INV001238',
+  //   transactionDate: '2024-10-05',
+  //   fullName: 'Maria Lopez',
+  //   reservationNumber: 'RES005',
+  //   couponNumber: 'CUP2027',
+  //   adults: 4,
+  //   children: 1,
+  //   amount: 700.00,
+  //   transactionType: { name: 'Online Payment', code: 'OP002', status: true, cash: false, deposit: false, applyDeposit: true },
+  //   parentId: 'PARENT005',
+  //   reverseFromParentId: 'REV_PARENT005',
+  //   remark: 'Early check-in applied',
+  // }
+])
+const paymentStatusOfGetById = ref({} as GenericObject)
 
 const contextMenu = ref()
 const objItemSelectedForRightClick = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToInvoice = ref({} as GenericObject)
 const objItemSelectedForRightClickUndoApplication = ref({} as GenericObject)
+const objItemSelectedForRightClickReverseTransaction = ref({} as GenericObject)
 const allMenuListItems = ref([
   {
     id: 'applayDeposit',
@@ -97,21 +193,21 @@ const allMenuListItems = ref([
     disabled: true,
     visible: true,
   },
-  {
-    id: 'undoApplication',
-    label: 'Undo Application',
-    icon: 'pi pi-undo',
-    iconSvg: '',
-    command: ($event: any) => undoApplication($event),
-    disabled: true,
-    visible: true,
-  },
+  // {
+  //   id: 'undoApplication',
+  //   label: 'Undo Application',
+  //   icon: 'pi pi-undo',
+  //   iconSvg: '',
+  //   command: ($event: any) => undoApplication($event),
+  //   disabled: true,
+  //   visible: true,
+  // },
   {
     id: 'reverseTransaction',
     label: 'Reverse Transaction',
     icon: 'pi pi-undo',
     iconSvg: '',
-    command: ($event: any) => {},
+    command: ($event: any) => reverseTransaction($event),
     disabled: true,
     visible: true,
   },
@@ -151,7 +247,7 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'reservationNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -294,6 +390,11 @@ const confApiPaymentDetailUndoApplication = reactive({
   uriApi: 'payment-detail/undo-application',
 })
 
+const confApiPaymentDetailReverseTransaction = reactive({
+  moduleApi: 'payment',
+  uriApi: 'payment-detail/reverse-transaction',
+})
+
 const confApiPaymentDetail = reactive({
   moduleApi: 'payment',
   uriApi: 'payment-detail',
@@ -333,7 +434,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
-  { field: 'reverseFrom', header: 'Reverse From', width: 'auto', type: 'date' },
+  { field: 'reverseFromParentId', header: 'Reverse From', width: 'auto', type: 'text' },
   { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
 
 ]
@@ -630,6 +731,164 @@ const itemDetailsTemp = ref({
   childrenTotalValue: 0,
 })
 
+const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
+  {
+    field: 'paymentDetailId',
+    header: 'Id',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'bookingId',
+    header: 'Booking Id',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'invoiceNumber',
+    header: 'Invoice No.',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'transactionDate',
+    header: 'Transaction Date',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'fullName',
+    header: 'Full Name',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'reservationNumber',
+    header: 'Reservation No.',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'couponNumber',
+    header: 'Coupon No.',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  // {
+  //   field: 'checkIn',
+  //   header: 'Check In',
+  //   dataType: 'text',
+  //   disabled: true,
+  //   class: 'field col-12 md:col-6',
+  // },
+  // {
+  //   field: 'checkOut',
+  //   header: 'Check Out',
+  //   dataType: 'text',
+  //   disabled: true,
+  //   class: 'field col-12 md:col-6',
+  // },
+  {
+    field: 'adults',
+    header: 'Adult',
+    dataType: 'number',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'childrens',
+    header: 'Children',
+    dataType: 'number',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'bookingDate',
+    header: 'Booking Date',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+  },
+  {
+    field: 'amount',
+    header: 'D. Amount',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+    // helpText: `Max amount: ${item.value.paymentBalance.toString()}`,
+    // validation: decimalSchema.shape.amount
+  },
+  {
+    field: 'transactionType',
+    header: 'Payment Transaction Type',
+    dataType: 'select',
+    disabled: true,
+    class: 'field col-12 md:col-6',
+    validation: validateEntityStatus('transaction category'),
+  },
+  {
+    field: 'reconciledManually',
+    header: 'Reconciled Manually',
+    dataType: 'check',
+    class: 'field col-12 md:col-6 mt-3 mb-3',
+    disabled: true,
+  },
+  {
+    field: 'deposit',
+    header: 'Deposit',
+    dataType: 'check',
+    class: 'field col-12 md:col-6 mt-3',
+    disabled: true,
+  },
+  {
+    field: 'remark',
+    header: 'Remark',
+    dataType: 'textarea',
+    class: 'field col-12',
+  },
+])
+
+const itemDetailsForEdit = ref({
+  id: '',
+  payment: '',
+  transactionType: null,
+  amount: '0',
+  remark: '',
+  status: '',
+  oldAmount: '',
+  paymentDetail: '',
+  applyDepositValue: '0',
+  childrens: 0,
+  childrenTotalValue: 0,
+  transactionDate: null,
+  bookingDate: null,
+  reconciledManually: false,
+})
+
+const itemDetailsTempForEdit = ref({
+  id: '',
+  payment: '',
+  transactionType: null,
+  amount: '0',
+  remark: '',
+  status: '',
+  oldAmount: '',
+  paymentDetail: '',
+  applyDepositValue: '0',
+  childrens: 0,
+  childrenTotalValue: 0,
+  transactionDate: null,
+  bookingDate: null,
+  reconciledManually: false,
+})
+
 const options = ref({
   tableName: 'Payment Details',
   moduleApi: 'payment',
@@ -659,10 +918,12 @@ function isObjectEmpty(obj) {
   return Object.keys(obj).length === 0
 }
 
-function getNameByActions(action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined) {
+function getNameByActions(action: 'new-detail' | 'edit-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined) {
   switch (action) {
     case 'new-detail':
-      return itemDetails.value.id ? 'Edit Payment Details' : 'New Payment Details'
+      return itemDetailsForEdit.value.id ? 'Edit Payment Details' : 'New Payment Details'
+    case 'edit-detail':
+      return 'Edit Payment Details'
     case 'deposit-transfer':
       return 'New Deposit Detail'
     case 'split-deposit':
@@ -680,6 +941,11 @@ function clearForm() {
 
 function clearFormDetails() {
   itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
+  actionOfModal.value = 'new-detail'
+}
+
+function clearFormDetailsForEdit() {
+  itemDetailsForEdit.value = JSON.parse(JSON.stringify(itemDetailsTempForEdit.value))
   actionOfModal.value = 'new-detail'
 }
 
@@ -718,15 +984,10 @@ function openDialogPaymentDetails(event: any) {
   onOffDialogPaymentDetail.value = true
 }
 
-function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined = undefined) {
-  const idDetailTemp = JSON.parse(JSON.stringify(idDetail))
-  if (action !== undefined) {
-    actionOfModal.value = action
-  }
-  if (idDetailTemp && actionOfModal.value !== 'deposit-transfer') {
-    itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
+function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined = undefined, createOrEdit: 'create' | 'edit' = 'create') {
+  if (createOrEdit === 'edit') {
+    const idDetailTemp = JSON.parse(JSON.stringify(idDetail))
     const objToEditTemp = paymentDetailsList.value.find(x => x.id === (typeof idDetailTemp === 'object' ? idDetailTemp.id : idDetailTemp))
-
     const objToEdit = JSON.parse(JSON.stringify(objToEditTemp))
 
     if (objToEdit) {
@@ -734,104 +995,151 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
       objToEdit.oldAmount = objToEdit.amount.toString()
       objToEdit.amount = formatToTwoDecimalPlaces(objToEdit.amount)
       itemDetails.value = { ...objToEdit }
-      itemDetails.value.paymentDetail = idDetailTemp
-
-      if (actionOfModal.value === 'new-detail') {
-        if (itemDetails.value?.transactionType?.cash === false && itemDetails.value?.transactionType?.deposit === false) {
-          const decimalSchema = z.object(
-            {
-              amount: z
-                .string()
-                .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0), { message: 'The amount must be greater than zero' })
-            },
-          )
-          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', 'Max amount: ∞')
-          // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
-        }
-        else {
-          const decimalSchema = z.object(
-            {
-              amount: z
-                .string()
-                .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
-            },
-          )
-
-          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
-          // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
-          // const decimalSchema = z.object(
-          //   {
-          //     amount: z
-          //       .string()
-          //       .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0) && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and lessor equal than Payment Balance' })
-          //   },
-          // )
-          // updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-          // updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
-        }
-      }
-      if (actionOfModal.value === 'split-deposit') {
-        const amountString = objToEditTemp.amount
-        const sanitizedAmount = amountString.replace(/,/g, '') // Elimina las comas
-        const amountTemp = sanitizedAmount ? Math.abs(Number(sanitizedAmount)) : 0
-
-        const minValueToApply = (amountTemp - 0.01).toFixed(2)
-        const decimalSchema = z.object(
-          {
-            remark: z.string(),
-            amount: z
-              .string()
-              .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((amountTemp - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
-          }
-        )
-        updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
-        // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
-        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${minValueToApply}`)
-      }
-      if (actionOfModal.value === 'apply-deposit') {
-        const oldAmount = objToEditTemp.amount ? Math.abs(Number.parseFloat(objToEditTemp.amount.replace(/,/g, ''))) : 0
-
-        const childrenTotalValue = itemDetails.value.childrenTotalValue
-
-        const minValueToApply = (oldAmount - childrenTotalValue - 0.01).toFixed(2)
-
-        const decimalSchema = z.object(
-          {
-            remark: z.string(),
-            amount: z
-              .string()
-              .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat(value) <= Number.parseFloat(minValueToApply)), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
-          }
-        )
-        updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
-        // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
-        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount to apply: ${Number.parseFloat(minValueToApply)} | Initial amount: ${oldAmount}`)
-      }
     }
-
-    onOffDialogPaymentDetail.value = true
   }
-  if (actionOfModal.value === 'deposit-transfer') {
-    itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
-    const decimalSchema = z.object(
-      {
-        remark: z.string(),
-        amount: z
-          .string()
-          .refine(value => !Number.isNaN(Number.parseFloat(value)) && Number.parseFloat(value) >= 0.01 && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+  else {
+    const idDetailTemp = JSON.parse(JSON.stringify(idDetail))
+    if (action !== undefined) {
+      actionOfModal.value = action
+    }
+    if (idDetailTemp && actionOfModal.value !== 'deposit-transfer') {
+      itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
+      const objToEditTemp = paymentDetailsList.value.find(x => x.id === (typeof idDetailTemp === 'object' ? idDetailTemp.id : idDetailTemp))
+
+      const objToEdit = JSON.parse(JSON.stringify(objToEditTemp))
+
+      if (objToEdit) {
+        objToEdit.amount = Math.abs(objToEdit.amount).toString()
+        objToEdit.oldAmount = objToEdit.amount.toString()
+        objToEdit.amount = formatToTwoDecimalPlaces(objToEdit.amount)
+        itemDetails.value = { ...objToEdit }
+        itemDetails.value.paymentDetail = idDetailTemp
+
+        if (actionOfModal.value === 'new-detail') {
+          if (itemDetails.value?.transactionType?.cash === false && itemDetails.value?.transactionType?.deposit === false) {
+            const decimalSchema = z.object(
+              {
+                amount: z
+                  .string()
+                  .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0), { message: 'The amount must be greater than zero' })
+              },
+            )
+            updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+            updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', 'Max amount: ∞')
+            // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+          }
+          else {
+            const decimalSchema = z.object(
+              {
+                amount: z
+                  .string()
+                  .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+              },
+            )
+
+            updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+            updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
+            // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+            // const decimalSchema = z.object(
+            //   {
+            //     amount: z
+            //       .string()
+            //       .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0) && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and lessor equal than Payment Balance' })
+            //   },
+            // )
+            // updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+            // updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
+          }
+        }
+        if (actionOfModal.value === 'split-deposit') {
+          const amountString = objToEditTemp.amount
+          const sanitizedAmount = amountString.replace(/,/g, '') // Elimina las comas
+          const amountTemp = sanitizedAmount ? Math.abs(Number(sanitizedAmount)) : 0
+
+          const minValueToApply = (amountTemp - 0.01).toFixed(2)
+          const decimalSchema = z.object(
+            {
+              remark: z.string(),
+              amount: z
+                .string()
+                .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((amountTemp - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
+            }
+          )
+          updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
+          // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${minValueToApply}`)
+        }
+        if (actionOfModal.value === 'apply-deposit') {
+          const oldAmount = objToEditTemp.amount ? Math.abs(Number.parseFloat(objToEditTemp.amount.replace(/,/g, ''))) : 0
+
+          const childrenTotalValue = itemDetails.value.childrenTotalValue
+
+          // const minValueToApply = (oldAmount - childrenTotalValue - 0.01).toFixed(2)
+          const minValueToApply = (oldAmount - childrenTotalValue).toFixed(2)
+
+          const decimalSchema = z.object(
+            {
+              remark: z.string(),
+              amount: z
+                .string()
+                .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat(value) <= Number.parseFloat(minValueToApply)), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
+            }
+          )
+          updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
+          // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount to apply: ${Number.parseFloat(minValueToApply)} | Initial amount: ${oldAmount}`)
+        }
       }
-    )
-    // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
-    // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', true)
-    updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-    updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${item.value.paymentBalance}`)
+
+      onOffDialogPaymentDetail.value = true
+    }
+    if (actionOfModal.value === 'deposit-transfer') {
+      itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
+      const decimalSchema = z.object(
+        {
+          remark: z.string(),
+          amount: z
+            .string()
+            .refine(value => !Number.isNaN(Number.parseFloat(value)) && Number.parseFloat(value) >= 0.01 && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+        }
+      )
+      // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
+      // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', true)
+      updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
+      updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${item.value.paymentBalance}`)
+    }
   }
 
   onOffDialogPaymentDetail.value = true
+}
+
+// id: string;
+// payment: string;
+// transactionType: null;
+// amount: string;
+// remark: string;
+// status: string;
+// oldAmount: string;
+// paymentDetail: string;
+// applyDepositValue: string;
+// children: never[];
+// childrenTotalValue: number;
+
+function openDialogPaymentDetailsEdit(idDetail: any = null) {
+  if (idDetail && idDetail.id) {
+    itemDetailsForEdit.value = JSON.parse(JSON.stringify(itemDetailsTempForEdit.value))
+    itemDetailsForEdit.value = {
+      ...itemDetailsForEdit.value,
+      ...idDetail,
+      transactionDate: dayjs(idDetail?.transactionDate).format('YYYY-MM-DD') || '',
+      bookingDate: dayjs(idDetail?.manageBooking?.bookingDate).format('YYYY-MM-DD') || '',
+      reconciledManually: idDetail.manageBooking?.invoice?.reconciledManually || false
+    }
+  }
+  onOffDialogPaymentDetailEdit.value = true
+  dialogPaymentDetailFormReloadEdit.value += 1
 }
 
 function dialogPaymentDetailSummary() {
@@ -846,9 +1154,29 @@ function goToForm(item: string) {
 }
 
 function navigateToInvoice($event: any) {
-  if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
-    const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
-    window.open(url, '_blank')
+  if (objItemSelectedForRightClickNavigateToInvoice.value?.transactionType?.cash) {
+    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
+      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
+      window.open(url, '_blank')
+    }
+  }
+  else if (objItemSelectedForRightClickNavigateToInvoice.value?.transactionType?.applyDeposit) {
+    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id) {
+      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id}`
+      window.open(url, '_blank')
+    }
+    else {
+      if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
+        const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
+        window.open(url, '_blank')
+      }
+    }
+  }
+  else {
+    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
+      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
+      window.open(url, '_blank')
+    }
   }
 }
 
@@ -936,6 +1264,11 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       // successOperation = false
+      if (error.data.data.error && error.data.data.error.status === 1127) {
+        item.paymentStatus = paymentStatusOfGetById.value
+        formReload.value++
+      }
+
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
@@ -954,13 +1287,36 @@ async function saveItem(item: { [key: string]: any }) {
   // }
 }
 
+function disabledFields(objItem: { [key: string]: any }, fields: FieldDefinition[]) {
+  updateFieldProperty(fields, 'paymentAmount', 'disabled', true)
+  updateFieldProperty(fields, 'hotel', 'disabled', true)
+  updateFieldProperty(fields, 'paymentSource', 'disabled', true)
+  updateFieldProperty(fields, 'reference', 'disabled', true)
+  updateFieldProperty(fields, 'transactionDate', 'disabled', true)
+  updateFieldProperty(fields, 'status', 'disabled', false)
+  if (actionOfModal.value !== 'split-deposit') {
+    updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${objItem.paymentBalance}`)
+  }
+  if (!objItem.paymentStatus.confirmed && !objItem.paymentStatus.applied) {
+    updateFieldProperty(fields, 'remark', 'disabled', true)
+  }
+  else {
+    updateFieldProperty(fields, 'remark', 'disabled', false)
+  }
+  if (!objItem.paymentStatus.confirmed) {
+    updateFieldProperty(fields, 'client', 'disabled', true)
+  }
+  else {
+    updateFieldProperty(fields, 'client', 'disabled', false)
+  }
+}
+
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-
       if (response) {
         item.value.id = id
         item.value.paymentId = response.paymentId
@@ -1039,11 +1395,18 @@ async function getItemById(id: string) {
           ? {
               id: response.paymentStatus.id,
               name: `${response.paymentStatus.code} - ${response.paymentStatus.name}`,
-              status: response.paymentStatus.status
+              code: response.paymentStatus.code,
+              originalName: response.paymentStatus.name,
+              status: response.paymentStatus.status,
+              applied: response.paymentStatus.applied,
+              confirmed: response.paymentStatus.confirmed
             }
           : null
         paymentStatusList.value = [paymentStatusTemp]
         item.value.paymentStatus = paymentStatusTemp
+        if (paymentStatusTemp) {
+          paymentStatusOfGetById.value = paymentStatusTemp
+        }
 
         const paymentSourceTemp = response.paymentSource
           ? {
@@ -1059,10 +1422,9 @@ async function getItemById(id: string) {
       // item.value = { ...formatNumbersInObject(item.value, ['paymentAmount', 'depositAmount', 'otherDeductions', 'identified', 'notIdentified']) }
 
       fields[0].disabled = true
-      updateFieldProperty(fields, 'status', 'disabled', false)
-      if (actionOfModal.value !== 'split-deposit') {
-        updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${item.value.paymentBalance}`)
-      }
+
+      disabledFields(item.value, fields)
+
       formReload.value += 1
 
       await getListPaymentDetail()
@@ -1078,7 +1440,11 @@ async function getItemById(id: string) {
   }
 }
 
-async function getListPaymentDetail() {
+const somePaymenWithApplyPayment = computed(() => {
+  return paymentDetailsList.value.some(item => item.applyPayment)
+})
+
+async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, cancel: boolean } = { reverse: false, cancel: false }) {
   const count: SubTotals = { depositAmount: 0 }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -1088,6 +1454,109 @@ async function getListPaymentDetail() {
     options.value.loading = true
     paymentDetailsList.value = []
     const newListItems = []
+
+    if (showReverseTransaction.value && showCanceledDetails.value) {
+      const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
+
+      if (objFilterForReverseFalse) {
+        objFilterForReverseFalse.value = true
+        objFilterForReverseFalse.logicalOperation = 'OR'
+      }
+      else {
+        payload.value.filter.push({
+          key: 'reverseTransaction',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'OR'
+        })
+      }
+
+      const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+      if (objFilterForCanceledFalse) {
+        objFilterForCanceledFalse.value = true
+        objFilterForCanceledFalse.logicalOperation = 'OR'
+      }
+      else {
+        payload.value.filter.push({
+          key: 'canceledTransaction',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'OR'
+        })
+      }
+    }
+    else {
+      if (showReverseTransaction.value) {
+        // aplicar el filtro
+        const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
+
+        if (objFilterForReverseFalse) {
+          objFilterForReverseFalse.value = true
+          objFilterForReverseFalse.logicalOperation = 'OR'
+        }
+        else {
+          payload.value.filter.push({
+            key: 'reverseTransaction',
+            operator: 'EQUALS',
+            value: true,
+            logicalOperation: 'OR'
+          })
+        }
+      }
+      else {
+        // filtrar para que no aparezca el de reversado
+        const objFilterForReverseTrue = payload.value.filter.find(item => item.key === 'reverseTransaction')
+
+        if (objFilterForReverseTrue) {
+          objFilterForReverseTrue.value = false
+          objFilterForReverseTrue.logicalOperation = 'AND'
+        }
+        else {
+          payload.value.filter.push({
+            key: 'reverseTransaction',
+            operator: 'EQUALS',
+            value: false,
+            logicalOperation: 'AND'
+          })
+        }
+      }
+
+      if (showCanceledDetails.value) {
+        // aplicar el filtro
+        const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+        if (objFilterForCanceledFalse) {
+          objFilterForCanceledFalse.value = true
+          objFilterForCanceledFalse.logicalOperation = 'OR'
+        }
+        else {
+          payload.value.filter.push({
+            key: 'canceledTransaction',
+            operator: 'EQUALS',
+            value: true,
+            logicalOperation: 'OR'
+          })
+        }
+      }
+      else {
+        // filtrar para que no aparezca el de reversado
+        const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+        if (objFilterForCanceledFalse) {
+          objFilterForCanceledFalse.value = false
+          objFilterForCanceledFalse.logicalOperation = 'AND'
+        }
+        else {
+          payload.value.filter.push({
+            key: 'canceledTransaction',
+            operator: 'EQUALS',
+            value: false,
+            logicalOperation: 'AND'
+          })
+        }
+      }
+    }
 
     const objFilter = payload.value.filter.find(item => item.key === 'payment.id')
 
@@ -1104,8 +1573,6 @@ async function getListPaymentDetail() {
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    console.log(response)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -1114,7 +1581,7 @@ async function getListPaymentDetail() {
     pagination.value.totalPages = totalPages
 
     const existingIds = new Set(paymentDetailsList.value.map(item => item.id))
-
+    // reverseFromParentId
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.depositAmount += iterator.amount
@@ -1173,6 +1640,9 @@ async function getListPaymentDetail() {
     }
 
     paymentDetailsList.value = [...paymentDetailsList.value, ...newListItems]
+    // if (paymentDetailsList.value.length === 0 && item.value?.paymentStatus?.confirmed === true) {
+    //   updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
+    // }
   }
   catch (error) {
     console.error(error)
@@ -1190,7 +1660,9 @@ function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolea
   if (!mainItem) {
     return false // Si no se encuentra el objeto principal, devolver false
   }
-
+  else if (mainItem?.reverseTransaction || mainItem?.canceledTransaction) {
+    return false
+  }
   const hasDeposit = (item: TransactionItem): boolean => {
     // Verificar si es de tipo deposit
     // Verificar que no se le haya aplicado deposito anteriormente
@@ -1328,62 +1800,68 @@ async function createPaymentDetails(item: { [key: string]: any }) {
 
 async function updatePaymentDetails(item: { [key: string]: any }) {
   if (item) {
-    // loadingSaveAll.value = true
+    loadingSaveAllForEdit.value = true
     const payload: { [key: string]: any } = { ...item }
-    payload.payment = idItem.value || ''
-    payload.amount = Number.parseFloat(payload.amount)
-    payload.employee = userData?.value?.user?.userId || ''
-    payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+    // payload.payment = idItem.value || ''
+    // payload.amount = Number.parseFloat(payload.amount)
+    // payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
 
     try {
-      switch (actionOfModal.value) {
-        case 'new-detail':
-          confApiPaymentDetail.uriApi = 'payment-detail'
-          await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
-          break
-        case 'deposit-transfer':
-          confApiPaymentDetail.uriApi = 'payment-detail'
-          await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
-          break
-        case 'split-deposit': {
-          const payloadSplit = {
-            amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
-            paymentDetail: item.id,
-            remark: item.remark,
-            transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
-            status: 'ACTIVE'
-          }
-          confApiPaymentDetail.uriApi = 'payment-detail/split'
-          await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payloadSplit)
-          break
-        }
-        case 'apply-deposit':{
-          const payloadApplyDeposit = {
-            amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
-            paymentDetail: item.id,
-            remark: item.remark,
-            employee: userData?.value?.user?.userId || '',
-            transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
-            status: 'ACTIVE'
-          }
-          confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
-          await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadApplyDeposit)
-          actionOfModal.value = 'new-detail'
-          break
-        }
-        default:
-          throw new Error('Invalid action')
-      }
+      await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, {
+        employee: userData?.value?.user?.userId || '',
+        remark: payload.remark
+      })
 
-      onOffDialogPaymentDetail.value = false
-      clearFormDetails()
+      // switch (actionOfModal.value) {
+      //   case 'new-detail':
+      //     confApiPaymentDetail.uriApi = 'payment-detail'
+      //     await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
+      //     break
+      //   case 'deposit-transfer':
+      //     confApiPaymentDetail.uriApi = 'payment-detail'
+      //     await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
+      //     break
+      //   case 'split-deposit': {
+      //     const payloadSplit = {
+      //       amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
+      //       paymentDetail: item.id,
+      //       remark: item.remark,
+      //       transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
+      //       status: 'ACTIVE'
+      //     }
+      //     confApiPaymentDetail.uriApi = 'payment-detail/split'
+      //     await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payloadSplit)
+      //     break
+      //   }
+      //   case 'apply-deposit':{
+      //     const payloadApplyDeposit = {
+      //       amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
+      //       paymentDetail: item.id,
+      //       remark: item.remark,
+      //       employee: userData?.value?.user?.userId || '',
+      //       transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
+      //       status: 'ACTIVE'
+      //     }
+      //     confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
+      //     await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadApplyDeposit)
+      //     actionOfModal.value = 'new-detail'
+      //     break
+      //   }
+      //   default:
+      //     throw new Error('Invalid action')
+      // }
+
+      onOffDialogPaymentDetailEdit.value = false
+      loadingSaveAllForEdit.value = false
+      clearFormDetailsForEdit()
     }
     catch (error) {
+      loadingSaveAllForEdit.value = false
       console.error('Error updating payment details:', error)
       // Handle error (e.g., show error message to the user)
     }
     finally {
-      // loadingSaveAll.value = false
+      loadingSaveAllForEdit.value = false
       actionOfModal.value = 'new-detail'
     }
   }
@@ -1489,7 +1967,7 @@ function requireConfirmationToDelete(event: any) {
     rejectLabel: 'Cancel',
     acceptLabel: 'Accept',
     accept: async () => {
-      // await deleteItem(idItem.value)
+      await deleteItem(idItemDetail.value)
     },
     reject: () => {}
   })
@@ -1717,6 +2195,9 @@ function disableBtnDelete(idDetail: string): boolean {
   if (!item) {
     return false
   }
+  else if (item.reverseTransaction || item.canceledTransaction) {
+    return true
+  }
   else if (item.hasApplyDeposit || item.applyPayment) {
     return true
   }
@@ -1725,15 +2206,35 @@ function disableBtnDelete(idDetail: string): boolean {
   }
 }
 
+function updateRowClassExceptId(id: string) {
+  if (!id) {
+    paymentDetailsList.value.forEach((item) => {
+      if ('rowClass' in item && item.transactionType.deposit) {
+        item.rowClass = 'row-deposit'
+      }
+    })
+  }
+  else {
+    paymentDetailsList.value.forEach((item) => {
+      if ('rowClass' in item && item.id !== id && item.transactionType.deposit) {
+        item.rowClass = 'row-deposit'
+      }
+    })
+  }
+}
+
 async function rowSelected(rowData: any) {
+  const paymentDetailObjt = paymentDetailsList.value.find(item => item.id === rowData)
+  if (paymentDetailObjt && 'rowClass' in paymentDetailObjt) {
+    paymentDetailObjt.rowClass = ''
+    updateRowClassExceptId(rowData)
+  }
   if (rowData !== null && rowData !== undefined && rowData !== '') {
     idItemDetail.value = rowData
     idPaymentDetail.value = rowData
 
     enableSplitAction.value = hasDepositTransaction(rowData, paymentDetailsList.value)
     disabledBtnDelete.value = disableBtnDelete(rowData)
-
-    // Variables que puedo usar para deshabilitar el boton eliminar: hasApplyDeposit, applyPayment
   }
   else {
     idItemDetail.value = ''
@@ -1741,6 +2242,7 @@ async function rowSelected(rowData: any) {
     actionOfModal.value = 'new-detail'
     enableSplitAction.value = false
     disabledBtnDelete.value = true
+    updateRowClassExceptId(rowData)
   }
 }
 
@@ -1754,6 +2256,18 @@ function onCloseDialog($event: any) {
   itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
   dialogPaymentDetailFormReload.value += 1
   onOffDialogPaymentDetail.value = $event
+}
+
+function onCloseDialogEdit($event: any) {
+  if ($event === false) {
+    isSplitAction.value = false
+    actionOfModal.value = 'new-detail'
+    payloadToApplyPayment.value.applyPayment = false
+    payloadToApplyPayment.value.booking = ''
+  }
+  itemDetailsForEdit.value = JSON.parse(JSON.stringify(itemDetailsTempForEdit.value))
+  dialogPaymentDetailFormReloadEdit.value += 1
+  onOffDialogPaymentDetailEdit.value = $event
 }
 
 function onCloseDialogSummary($event: any) {
@@ -1802,14 +2316,69 @@ async function handleSave(event: any) {
   }
 }
 
-async function undoApplication(event: any) {
+function undoApplication(event: any) {
+  confirm.require({
+    message: 'Are you sure you want to revert the payment application?',
+    header: 'Question',
+    icon: 'pi pi-exclamation-triangle',
+    rejectClass: 'p-button-danger p-button-outlined',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Accept',
+    accept: () => {
+      applyUndoApplication(event)
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected the action', life: 3000 })
+    }
+  })
+}
+
+async function applyUndoApplication(event: any) {
   try {
     if (objItemSelectedForRightClickUndoApplication.value?.id) {
       const payload = {
         paymentDetail: objItemSelectedForRightClickUndoApplication.value?.id || ''
       }
       await GenericService.create(confApiPaymentDetailUndoApplication.moduleApi, confApiPaymentDetailUndoApplication.uriApi, payload)
-      getListPaymentDetail()
+      if (route?.query?.id) {
+        const id = route.query.id.toString()
+        await getItemById(id)
+      }
+    }
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
+function reverseTransaction(event: any) {
+  confirm.require({
+    message: 'Are you sure you want to revert this transaction?',
+    header: 'Question',
+    icon: 'pi pi-exclamation-triangle',
+    rejectClass: 'p-button-danger p-button-outlined',
+    rejectLabel: 'Cancel',
+    acceptLabel: 'Accept',
+    accept: () => {
+      applyReverseTransaction(event)
+    },
+    reject: () => {
+      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected the action', life: 3000 })
+    }
+  })
+}
+
+async function applyReverseTransaction(event: any) {
+  try {
+    if (objItemSelectedForRightClickReverseTransaction.value?.id) {
+      const payload = {
+        paymentDetail: objItemSelectedForRightClickReverseTransaction.value?.id || ''
+      }
+      await GenericService.create(confApiPaymentDetailReverseTransaction.moduleApi, confApiPaymentDetailReverseTransaction.uriApi, payload)
+      if (route?.query?.id) {
+        const id = route.query.id.toString()
+        await getItemById(id)
+      }
     }
   }
   catch (error) {
@@ -1856,7 +2425,7 @@ async function historyGetList() {
       iterator.paymentStatus = iterator.status
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
-        if (iterator.employee.firstName && iterator.employee.lastName) {
+        if (iterator?.employee?.firstName && iterator?.employee?.lastName) {
           iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
         }
       }
@@ -1950,6 +2519,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
 
     // Validacion para bucsar por los hoteles
     if (item.value.hotel && item.value.hotel.id) {
+      // El hotel que tiene la cabecera del payment debe pertenecer a la misma trading company
       if (item.value.hotel.applyByTradingCompany) {
         // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
         const filter: FilterCriteria[] = [
@@ -1964,6 +2534,12 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
             logicalOperation: 'AND',
             operator: 'EQUALS',
             value: item.value.hotel?.manageTradingCompany,
+          },
+          {
+            key: 'applyByTradingCompany',
+            logicalOperation: 'AND',
+            operator: 'EQUALS',
+            value: true,
           },
         ]
         const objQueryToSearch = {
@@ -2006,6 +2582,39 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
         }
       }
     }
+
+    const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
+
+    if (objFilterEnabledToApply) {
+      objFilterEnabledToApply.value = true
+    }
+    else {
+      applyPaymentPayload.value.filter.push(
+        {
+          key: 'invoice.manageInvoiceStatus.enabledToApply',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        }
+      )
+    }
+
+    const objFilterProcessStatus = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.processStatus')
+
+    if (objFilterProcessStatus) {
+      objFilterProcessStatus.value = false
+    }
+    else {
+      applyPaymentPayload.value.filter.push(
+        {
+          key: 'invoice.manageInvoiceStatus.processStatus',
+          operator: 'EQUALS',
+          value: false,
+          logicalOperation: 'AND'
+        }
+      )
+    }
+
     const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -2055,8 +2664,6 @@ async function openDialogStatusHistory() {
 }
 
 async function openModalApplyPayment($event: any) {
-  console.log($event)
-  console.log('originalEvent' in $event)
   if ('originalEvent' in $event) {
     isApplyPaymentFromTheForm.value = false
   }
@@ -2341,10 +2948,11 @@ function onRowContextMenu(event: any) {
   // }
 
   // Validacion para el undo application
-  const dateOfItemForReverse = dayjs(event.data?.transactionDate)
-  const currentDateForReverse = dayjs().format('YYYY-MM-DD')
-  if (event && event.data && event.data.applyPayment === true && dateOfItemForReverse.isBefore(currentDateForReverse)) {
-    // objItemSelectedForRightClickUndoApplication.value = event.data
+  // const dateOfItemForReverse = dayjs(event.data?.transactionDate)
+  // const currentDateForReverse = dayjs().format('YYYY-MM-DD')
+  // // && dateOfItemForReverse.isBefore(currentDateForReverse)
+  if (event && event.data && event.data.applyPayment === true) {
+    objItemSelectedForRightClickReverseTransaction.value = event.data
     const menuItemReverseTransaction = allMenuListItems.value.find(item => item.id === 'reverseTransaction')
     if (menuItemReverseTransaction) {
       menuItemReverseTransaction.disabled = false
@@ -2352,7 +2960,7 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    // objItemSelectedForRightClickUndoApplication.value = {}
+    objItemSelectedForRightClickReverseTransaction.value = {}
     const menuItemReverseTransaction = allMenuListItems.value.find(item => item.id === 'reverseTransaction')
     if (menuItemReverseTransaction) {
       menuItemReverseTransaction.disabled = true
@@ -2361,10 +2969,9 @@ function onRowContextMenu(event: any) {
   }
   // if (status.value === 'authenticated' && (isAdmin || authStore.can(['PAYMENT-MANAGEMENT:UNDO-APPLICATION']))) {
   // }
-
   // Mostrar menu contextual si hay items visibles
   const allHidden = allMenuListItems.value.every(item => !item.visible)
-  if (!allHidden) {
+  if (!allHidden && detailItemForApplyPayment.value.canceledTransaction === false && detailItemForApplyPayment.value.reverseTransaction === false) {
     contextMenu.value.show(event.originalEvent)
   }
   else {
@@ -2408,6 +3015,36 @@ function closeModalApplyPayment() {
   openDialogApplyPayment.value = false
 }
 
+function disableAgency(data: any) {
+  let result = false
+  if (data.client === null) {
+    result = true
+  }
+  else if (data.paymentStatus.name === 'CON - Confirmed') {
+    result = false
+  }
+  else {
+    result = true
+  }
+
+  return result
+}
+
+function disableBankAccount(data: any) {
+  let result = false
+  if (data.hotel === null) {
+    result = true
+  }
+  else if (data.paymentStatus.name === 'CON - Confirmed') {
+    result = false
+  }
+  else {
+    result = true
+  }
+
+  return result
+}
+
 watch(() => hasBeenEdited.value, async (newValue) => {
   if (newValue) {
     if (route?.query?.id) {
@@ -2433,6 +3070,14 @@ watch(() => hasBeenCreated.value, async (newValue) => {
 // Watcher
 watch(() => paymentDetailsList.value, (newValue) => {
   enableDepositSummaryAction.value = hasDepositSummaryTransaction(newValue)
+
+  // paymentDetailsList.value.length === 0 && item.value.paymentStatus.cancelled === false  Esto es lo que va
+  if (paymentDetailsList.value.length === 0 && (item.value.paymentStatus.code !== 'CAN' || item.value.paymentStatus.name !== 'CAN - Cancelled')) {
+    updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
+  }
+  else {
+    updateFieldProperty(fields, 'paymentStatus', 'disabled', true)
+  }
 })
 
 watch(() => route?.query?.id, async (newValue) => {
@@ -2471,6 +3116,7 @@ onMounted(async () => {
     loadDefaultsValues()
   }
 })
+const checkboxValue1 = ref(false)
 </script>
 
 <template>
@@ -2494,12 +3140,13 @@ onMounted(async () => {
         @submit="handleSave($event)"
         @delete="requireConfirmationToDelete($event)"
       >
-        <template #field-paymentAmount="{ item: data, onUpdate }">
+        <template #field-paymentAmount="{ item: data, onUpdate, fields: listFields, field }">
           <InputNumber
             v-if="!loadingSaveAll"
             v-model="data.paymentAmount"
             show-clear
             mode="decimal"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             :readonly="idItem !== ''"
             :min-fraction-digits="2"
             :max-fraction-digits="4"
@@ -2513,7 +3160,70 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #field-client="{ item: data, onUpdate }">
+        <template #field-paymentStatus="{ item: data, onUpdate, fields: listFields, field }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :model="data.paymentStatus"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled"
+            :suggestions="[...paymentStatusList]"
+            @change="($event) => {
+              onUpdate('paymentStatus', $event)
+            }"
+            @load="async($event) => {
+              const objQueryToSearch = {
+                query: $event,
+                keys: ['name', 'code'],
+              }
+              const filter: FilterCriteria[] = somePaymenWithApplyPayment === false ? [
+                {
+                  key: 'status',
+                  logicalOperation: 'AND',
+                  operator: 'EQUALS',
+                  value: 'ACTIVE',
+                },
+                {
+                  key: 'id',
+                  logicalOperation: 'OR',
+                  operator: 'EQUALS',
+                  value: paymentStatusOfGetById?.id || '',
+                },
+                {
+                  key: 'cancelled',
+                  logicalOperation: 'OR',
+                  operator: 'EQUALS',
+                  value: true,
+                },
+              ] : [
+                {
+                  key: 'status',
+                  logicalOperation: 'AND',
+                  operator: 'EQUALS',
+                  value: 'ACTIVE',
+                },
+                {
+                  key: 'code',
+                  logicalOperation: 'AND',
+                  operator: 'NOT_EQUALS',
+                  value: 'TRA',
+                },
+                {
+                  key: 'applied',
+                  logicalOperation: 'OR',
+                  operator: 'NOT_EQUALS',
+                  value: true,
+                },
+              ]
+
+              await getPaymentStatusList(objApis.paymentStatus.moduleApi, objApis.paymentStatus.uriApi, objQueryToSearch, filter)
+            }"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
+
+        <template #field-client="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
@@ -2521,6 +3231,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.client"
             :suggestions="[...clientList]"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             @change="async ($event) => {
               onUpdate('client', $event)
               const filter: FilterCriteria[] = [
@@ -2559,7 +3270,8 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-        <template #field-paymentSource="{ item: data, onUpdate }">
+
+        <template #field-paymentSource="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
@@ -2567,6 +3279,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.paymentSource"
             :suggestions="[...paymentSourceList]"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             @change="($event) => {
               onUpdate('paymentSource', $event)
             }"
@@ -2586,12 +3299,14 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-        <template #field-transactionDate="{ item: data, onUpdate }">
+
+        <template #field-transactionDate="{ item: data, onUpdate, fields: listFields, field }">
           <Calendar
             v-if="!loadingSaveAll"
             v-model="data.transactionDate"
             date-format="yy-mm-dd"
             :max-date="new Date()"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             @update:model-value="($event) => {
               onUpdate('transactionDate', $event)
             }"
@@ -2608,7 +3323,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.agency"
             :suggestions="[...agencyList]"
-            :disabled="!data.client"
+            :disabled="disableAgency(data)"
             @change="($event) => {
               onUpdate('agency', $event)
             }"
@@ -2636,7 +3351,8 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-        <template #field-hotel="{ item: data, onUpdate }">
+
+        <template #field-hotel="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
@@ -2644,6 +3360,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.hotel"
             :suggestions="[...hotelList]"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             @change="async ($event) => {
               onUpdate('hotel', $event)
 
@@ -2686,6 +3403,7 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
+
         <template #field-bankAccount="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
@@ -2693,7 +3411,7 @@ onMounted(async () => {
             field="name"
             item-value="id"
             :model="data.bankAccount"
-            :disabled="!data.hotel"
+            :disabled="disableBankAccount(data)"
             :suggestions="[...bankAccountList]"
             @change="($event) => {
               onUpdate('bankAccount', $event)
@@ -2722,34 +3440,7 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-        <template #field-paymentStatus="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
-            id="autocomplete"
-            field="name"
-            item-value="id"
-            :model="data.paymentStatus"
-            :disabled="true"
-            :suggestions="[...paymentStatusList]"
-            @change="($event) => {
-              onUpdate('paymentStatus', $event)
-            }"
-            @load="async($event) => {
-              const objQueryToSearch = {
-                query: $event,
-                keys: ['name', 'code'],
-              }
-              const filter: FilterCriteria[] = [{
-                key: 'status',
-                logicalOperation: 'AND',
-                operator: 'EQUALS',
-                value: 'ACTIVE',
-              }]
-              await getPaymentStatusList(objApis.paymentStatus.moduleApi, objApis.paymentStatus.uriApi, objQueryToSearch, filter)
-            }"
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
+
         <template #field-attachmentStatus="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
@@ -2780,6 +3471,17 @@ onMounted(async () => {
         </template>
       </EditFormV2>
     </div>
+    <!-- <div class="flex align-items-center mb-2">
+      <Checkbox
+        id="showReverseTransaction"
+        v-model="showReverseTransaction"
+        :binary="true"
+        @update:model-value="($event) => {
+          getListPaymentDetail($event)
+        }"
+      />
+      <label for="showReverseTransaction" class="ml-2 font-bold text-primary"> Show Reverse Transaction </label>
+    </div> -->
     <DynamicTable
       :data="paymentDetailsList"
       :columns="columns"
@@ -2790,19 +3492,51 @@ onMounted(async () => {
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
       @on-row-right-click="onRowContextMenu($event)"
+      @on-row-double-click="openDialogPaymentDetailsEdit($event)"
     >
-      <!-- @on-row-double-click="openDialogPaymentDetailsByAction($event, 'new-detail')" -->
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold;" />
+            <Column footer="" :colspan="8" footer-style="text-align:right; font-weight: bold;">
+              <template #footer>
+                <div class="flex align-items-center gap-4">
+                  <div class="flex align-items-center">
+                    <Checkbox
+                      id="showReverseTransaction"
+                      v-model="showReverseTransaction"
+                      :disabled="route?.query?.id ? false : true"
+                      :binary="true"
+                      :pt="{ box: { class: 'custom-checkbox' } }"
+                      @update:model-value="($event) => {
+                        getListPaymentDetail($event)
+                      }"
+                    />
+                    <!-- :pt="{ root: { class: 'custom-checkbox' } }" -->
+                    <label for="showReverseTransaction" class="ml-2 font-bold"> Show Reverse Transaction </label>
+                  </div>
+                  <div class="flex align-items-center">
+                    <Checkbox
+                      id="showCanceledDetails"
+                      v-model="showCanceledDetails"
+                      :disabled="route?.query?.id ? false : true"
+                      :binary="true"
+                      :pt="{ box: { class: 'custom-checkbox' } }"
+                      @update:model-value="($event) => {
+                        getListPaymentDetail($event)
+                      }"
+                    />
+                    <label for="showCanceledDetails" class="ml-2 font-bold"> Show Canceled Details </label>
+                  </div>
+                </div>
+              </template>
+            </Column>
+            <Column footer="Totals:" :colspan="0" footer-style="text-align:right; font-weight: bold;" />
             <Column :footer="formatNumber(Math.round((subTotals.depositAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
             <Column :colspan="4" />
           </Row>
         </ColumnGroup>
       </template>
     </DynamicTable>
-
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT'] : ['PAYMENT-MANAGEMENT:CREATE']">
         <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
@@ -2859,7 +3593,7 @@ onMounted(async () => {
         <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
-        <Button v-tooltip.top="'Delete'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem(idItemDetail)" />
+        <Button v-tooltip.top="'Annular'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-ban" @click="requireConfirmationToDelete($event)" />
       </IfCan>
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
@@ -2879,6 +3613,23 @@ onMounted(async () => {
         @update:amount="amountOfDetailItem = $event"
       />
     </div>
+
+    <div v-show="onOffDialogPaymentDetailEdit">
+      <DialogPaymentDetailFormEdit
+        :key="dialogPaymentDetailFormReloadEdit"
+        :visible="onOffDialogPaymentDetailEdit"
+        :fields="fieldPaymentDetailsForEdit"
+        :item="itemDetailsForEdit"
+        :title="getNameByActions(actionOfModal)"
+        :selected-payment="item"
+        action="new-detail"
+        :loading-save-all="loadingSaveAllForEdit"
+        @update:visible="onCloseDialogEdit($event)"
+        @save="saveAndReload($event)"
+        @update:amount="amountOfDetailItem = $event"
+      />
+    </div>
+
     <div v-if="attachmentDialogOpen">
       <PaymentAttachmentDialog
         :is-create-or-edit-payment="route?.query?.id ? 'edit' : 'create'"
@@ -2965,7 +3716,7 @@ onMounted(async () => {
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
-            Apply Payment Details
+            Select Booking
           </h5>
         </div>
       </template>
@@ -3132,4 +3883,21 @@ onMounted(async () => {
 .custom-dialog-history .p-dialog-footer {
   background-color: #ffffff;
 }
+.custom-checkbox {
+  border-color: white;
+}
+// .p-checkbox.p-component > .p-checkbox-box {
+//   border-color: white;
+// }
+// .p-checkbox.p-component > .p-checkbox-box {
+//   border-color: white;
+// }
+// .p-checkbox.p-component.p-highlight >.p-checkbox-box {
+//   background-color: white; /* Fondo blanco cuando esté marcado */
+//   border-color: white;      /* Borde blanco */
+// }
+
+// .p-checkbox.p-component.p-highlight >.p-checkbox-box > .p-checkbox-icon {
+//   color: blue; /* Color del check en azul */
+// }
 </style>

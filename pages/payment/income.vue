@@ -181,7 +181,7 @@ const adjustmentPayload = ref<IQueryRequest>({
 
 const objApis = ref({
   invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
-  invoiceStatus: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
+  invoiceStatus: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' },
   agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
   hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
   bankAccount: { moduleApi: 'settings', uriApi: 'manage-bank-account' },
@@ -196,17 +196,17 @@ const objApisLoading = ref({
 
 const columns: IColumn[] = [
   { field: 'bookingId', header: 'ID', type: 'text' },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
+  // { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text' },
-  { field: 'cuponNumber', header: 'Cupon No.', type: 'text' },
+  { field: 'cuponNumber', header: 'Coupon No.', type: 'text' },
   { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
   { field: 'checkIn', header: 'Check In', type: 'date' },
   { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'nights', header: 'Nights', type: 'text' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Booking Amount', type: 'text' },
 
 ]
 
@@ -222,16 +222,16 @@ const adjustmentColumns: IColumn[] = [
 
 const roomRateColumns: IColumn[] = [
   { field: 'roomRateId', header: 'Id', type: 'text' },
-  { field: 'fullName', header: 'Full Name', type: 'text' },
+  // { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'checkIn', header: 'Check In', type: 'date' },
   { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'adults', header: 'Adults', type: 'text' },
   { field: 'children', header: 'Children', type: 'text' },
-  { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
+  // { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
   { field: 'nights', header: 'Nights', type: 'text' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
+  // { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text' },
 ]
 
 const formTitle = computed(() => {
@@ -673,7 +673,7 @@ async function createItem(item: { [key: string]: any }) {
       // Guarda el id del elemento creado
       idItem.value = response.id
       LocalAttachmentList.value = []
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice INC-${response.invoiceId ?? ''} was created successful`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice ${response.invoiceNumber ?? ''} was created successfully`, life: 10000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -1319,7 +1319,7 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
-                <Column footer="Totals:" :colspan="10" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
                 <Column :footer="String(totalhotelbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                 <Column :footer="String(totalamountbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
@@ -1346,7 +1346,7 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
-                <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                <Column footer="Totals:" :colspan="6" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
                 <Column :footer="String(totalHotel)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                 <Column :footer="String(totalInvoice)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
@@ -1408,7 +1408,7 @@ onMounted(async () => {
       <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
       <Button v-tooltip.top="'Import'" class="w-3rem ml-1" disabled icon="pi pi-download" />
 
-      <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
+      <Button v-if="false" v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
 
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-1" icon="pi pi-times" severity="secondary" @click="() => navigateTo('/payment')" />
     </div>

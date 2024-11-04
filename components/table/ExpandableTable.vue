@@ -36,7 +36,6 @@ const props = defineProps({
       showDelete?: boolean
       showLocalDelete?: boolean
       showFilters?: boolean
-      showToolBar?: boolean
       showTitleBar?: boolean
       messageToDelete: string
       search?: boolean
@@ -140,12 +139,12 @@ const menuItems = ref([
   {
     items: [
       {
-        label: 'Editar',
+        label: 'Edit',
         icon: 'pi pi-pencil',
         action: 'edit'
       },
       {
-        label: 'Eliminar',
+        label: 'Delete',
         icon: 'pi pi-trash',
         action: 'delete'
       }
@@ -484,40 +483,6 @@ getOptionsList()
         scrollable scroll-height="60vh" @row-dblclick="onDoubleClickItem" @row-expand="onRowExpand" @row-collapse="onRowCollapse"
         @sort="onSortField" @update:selection="onSelectItem" @update:filters="onChangeFilters" @row-contextmenu="onRowRightClick"
       >
-        <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
-          <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <span class="flex mt-2 md:mt-0">
-              <div class="my-2">
-                <h5 class="m-0">{{ options?.tableName }}</h5>
-              </div>
-              <Divider layout="vertical" />
-              <Button
-                v-tooltip.right="'Clear'" type="button" icon="pi pi-filter-slash" severity="primary" label="Clear"
-                outlined @click="clearFilter1(filters1)"
-              />
-              <Divider layout="vertical" />
-              <span v-if="props.options?.search || false">
-                <InputText
-                  v-model="filters1.search.value" class="w-full sm:w-auto"
-                  placeholder="Press enter to search..."
-                />
-                <Button
-                  label="Buscar" icon="pi pi-plus" class="mx-2" severity="primary"
-                  @click="onChangeFilters(filters1)"
-                >
-                  <i class="pi pi-search" />
-                </Button>
-              </span>
-            </span>
-            <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2">
-              <Button
-                v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" class="mr-2" severity="primary"
-                @click="openNew"
-              />
-            </div>
-          </div>
-        </template>
-
         <template #empty>
           <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
             <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
@@ -780,13 +745,13 @@ getOptionsList()
                 aria-controls="overlay_menu" :loading="data.loadingEdit" @click="onAttend(data)"
               />
               <Button
-                v-if="options?.hasOwnProperty('showEdit') ? options?.showEdit : true" v-tooltip.left="'Editar'"
+                v-if="options?.hasOwnProperty('showEdit') ? options?.showEdit : true" v-tooltip.left="'Edit'"
                 type="button" icon="pi pi-pencil" severity="primary" class="mx-1" text aria-haspopup="true"
                 aria-controls="overlay_menu" :loading="data.loadingEdit" @click="onEdit(data)"
               />
               <Button
                 v-if="options?.hasOwnProperty('showDelete') ? options?.showDelete : true"
-                v-tooltip.left="'Eliminar'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
+                v-tooltip.left="'Delete'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
                 aria-haspopup="true" aria-controls="overlay_menu" :loading="data.loadingDelete"
                 @click="showConfirmDelete(data)"
               />
@@ -794,7 +759,7 @@ getOptionsList()
               <!-- Local -->
               <Button
                 v-if="options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false"
-                v-tooltip.left="'Eliminar'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
+                v-tooltip.left="'Delete'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
                 aria-haspopup="true" aria-controls="overlay_menu" :loading="data.loadingDelete"
                 @click="showConfirmDelete(data)"
               />
@@ -830,7 +795,7 @@ getOptionsList()
   <!-- Dialog Delete -->
   <DialogDelete
     v-if="clickedItem" :open-dialog="openDialogDelete" :data="clickedItem"
-    :message="props.options?.messageToDelete ? props.options.messageToDelete : '¿Estás seguro que desea eliminar el elemento seleccionado?'"
+    :message="props.options?.messageToDelete ? props.options.messageToDelete : 'Are you sure you want to delete the selected item?'"
     @on-close-dialog="closeDialogDelete"
     @on-delete-confirmed="deleteItem($event, options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false)"
   />

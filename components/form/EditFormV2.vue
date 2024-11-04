@@ -11,6 +11,7 @@ const props = defineProps<{
   loadingSave?: boolean
   loadingDelete?: boolean
   showActions?: boolean
+  showActionsInline?: boolean
   forceSave?: boolean
   formClass?: string
   containerClass?: string
@@ -18,14 +19,15 @@ const props = defineProps<{
   backendValidation?: { [key: string]: string[] }
   hideDeleteButton?: boolean
   showCancel?: boolean
+  errorList?: { [key: string]: string[] }
 }>()
 
-const emit = defineEmits(['update:field', 'clearField', 'submit', 'cancel', 'delete', 'forceSave'])
+const emit = defineEmits(['update:field', 'reactiveUpdateField', 'clearField', 'submit', 'cancel', 'delete', 'forceSave', 'update:errorsList'])
 
 const hideCancelLocal = ref(props.hideCancel)
 const $primevue = usePrimeVue()
 const fieldValues = reactive<{ [key: string]: any }>({})
-const errors = reactive<{ [key: string]: string[] }>({})
+const errors = reactive<{ [key: string]: string[] }>(props.errorList || {})
 const objFile = ref<IFileMetadata | null>(null)
 
 props.fields.forEach((field) => {
@@ -86,7 +88,7 @@ function validateField(fieldKey: string, value: any) {
   if (field && field.validation) {
     const result = field.validation.safeParse(value)
     if (!result.success) {
-      errors[fieldKey] = result.error.issues.map(e => e.message)
+      errors[fieldKey] = result && result.error ? result.error.issues.map(e => e.message) : []
     }
     else {
       delete errors[fieldKey]
@@ -127,11 +129,19 @@ function formatSize(bytes: number) {
   return `${formattedSize} ${sizes[i]}`
 }
 
+watch(errors, (newVal, oldVal) => {
+  emit('update:errorsList', errors)
+}, { deep: true })
+
 watch(() => props.forceSave, () => {
   if (props.forceSave) {
     submitForm()
     emit('forceSave')
   }
+})
+
+watch(fieldValues, (newVal) => {
+  emit('reactiveUpdateField', newVal)
 })
 </script>
 
@@ -321,7 +331,7 @@ watch(() => props.forceSave, () => {
             </span>
           </slot>
           <!-- Field Help -->
-          <small v-if="field.helpText">{{ field.helpText }}</small>
+          <small v-if="field.helpText" :class="field.helpTextClass ? field.helpTextClass : ''">{{ field.helpText }}</small>
 
           <!-- Validation errors -->
           <div v-if="true" class="flex">
@@ -349,6 +359,13 @@ watch(() => props.forceSave, () => {
         <button v-if="field.showClearButton" @click="clearField(field.field)">
           Clear
         </button>
+      </div>
+      <div v-if="showActionsInline" class="flex align-self-center justify-content-end my-2">
+        <slot name="form-btns-inline" :item="{ fieldValues, submitForm, cancelForm, deleteItem, item }">
+          <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSave" @click="submitForm($event)" />
+          <Button v-if="!hideDeleteButton" v-tooltip.top="'Delete'" outlined class="w-3rem" severity="danger" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem($event)" />
+          <Button v-if="props.showCancel" v-tooltip.top="'Cancel'" class="w-3rem mx-2" icon="pi pi-times" severity="secondary" :loading="loadingSave" @click="cancelForm" />
+        </slot>
       </div>
     </div>
     <!-- General Footer slot of the form -->

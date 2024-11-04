@@ -158,11 +158,10 @@ onMounted(() => {
           />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id && route.query.type !== InvoiceType.CREDIT"
             @update:model-value="($event) => {
-              console.log(invoiceObj)
               let value: any = $event
               if (route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.CREDIT){
                 value = toNegative(value)
@@ -170,17 +169,17 @@ onMounted(() => {
               else {
                 value = toPositive(value)
               }
-              onUpdate('invoiceAmount', String(value))
+              onUpdate('invoiceAmount', value)
             }"
           />
         </template>
-        <template #field-hotelAmount="{ onUpdate, item: data }">
+        <!-- <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
-            show-clear 
+            show-clear
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
-        </template>
+        </template> -->
         <template #field-checkIn="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
@@ -215,7 +214,6 @@ onMounted(() => {
             </template>
           </DebouncedAutoCompleteComponent>
         </template>
-
         <template #field-roomCategory="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
@@ -228,7 +226,6 @@ onMounted(() => {
             </template>
           </DebouncedAutoCompleteComponent>
         </template>
-
         <template #field-bookingDate="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
@@ -240,7 +237,6 @@ onMounted(() => {
             }"
           />
         </template>
-
         <template #field-roomType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
@@ -253,14 +249,12 @@ onMounted(() => {
             </template>
           </DebouncedAutoCompleteComponent>
         </template>
-
         <template #header-nightType="{ field }">
           <strong>
             {{ typeof field.header === 'function' ? field.header() : field.header }}
           </strong>
           <span v-if="isNightTypeRequired" class="p-error">*</span>
         </template>
-
         <template #field-nightType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"

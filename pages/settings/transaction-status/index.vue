@@ -29,7 +29,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-transaction-status',
 })
 
@@ -71,6 +71,36 @@ const fields: Array<FieldDefinitionType> = [
     field: 'visible',
     header: 'Visible',
     dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'sentStatus',
+    header: 'Sent Status',
+    dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'refundStatus',
+    header: 'Refund Status',
+    dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'receivedStatus',
+    header: 'Received Status',
+    dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'declinedStatus',
+    header: 'Declined Status',
+    dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'cancelledStatus',
+    header: 'Cancelled Status',
+    dataType: 'check',
     class: 'field col-12 mb-3',
   },
   {
@@ -96,6 +126,11 @@ const item = ref<GenericObject>({
   enablePayment: false,
   navigate: [],
   visible: false,
+  sentStatus: false,
+  refundStatus: false,
+  receivedStatus: false,
+  declinedStatus: false,
+  cancelledStatus: false,
   description: '',
   status: true
 })
@@ -107,6 +142,11 @@ const itemTemp = ref<GenericObject>({
   enablePayment: false,
   navigate: [],
   visible: false,
+  sentStatus: false,
+  refundStatus: false,
+  receivedStatus: false,
+  declinedStatus: false,
+  cancelledStatus: false,
   status: true
 })
 
@@ -131,7 +171,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Transaction Status',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-transaction-status',
   loading: false,
   actionsAsMenu: false,
@@ -292,17 +332,22 @@ async function getItemById(id: string) {
   try {
     const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
     if (response) {
-      const { id, name, description, status, code, enablePayment, visible, navigate } = response
+      const { id, name, description, status, code, enablePayment, visible, navigate, sentStatus, refundStatus, receivedStatus, declinedStatus, cancelledStatus } = response
 
       item.value = {
         ...item.value,
         id,
         name,
-        description,
+        description: description ?? '',
         status: statusToBoolean(status),
         code,
         enablePayment,
         visible,
+        sentStatus,
+        refundStatus,
+        receivedStatus,
+        declinedStatus,
+        cancelledStatus,
         navigate: navigate
           .map((nav: any) => navigateListItems.value.find((item: any) => item.id === nav?.id))
           .filter((nav: any) => nav !== null)

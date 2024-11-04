@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { v4 } from 'uuid'
 import AttachmentHistoryTotal from './AttachmentHistoryTotal.vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { Container } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -54,6 +54,7 @@ const props = defineProps({
     required: false
   }
 })
+const emit = defineEmits(['update:listItems', 'deleteListItems'])
 
 const { data: userData } = useAuth()
 
@@ -176,6 +177,7 @@ const Fields: Array<Container> = [
         dataType: 'textarea',
         class: 'field col-12 ',
         headerClass: 'mb-1',
+        
 
       },
 
@@ -186,7 +188,7 @@ const Fields: Array<Container> = [
 ]
 
 const attachmentHistoryDialogOpen = ref<boolean>(false)
-
+const listItemsLocal = ref<any[]>([...props.listItems])
 const selectedAttachment = ref<string>('')
 
 const Columns: IColumn[] = [
@@ -448,9 +450,16 @@ async function createItem(item: { [key: string]: any }) {
 
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
-
     payload.type = item.type?.id
-    await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+
+    if (props.isCreationDialog) {
+      payload.id = v4()
+      payload.type = item.type
+      emit('update:listItems', payload)
+    }
+    else {
+      await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+    }
   }
 }
 
@@ -508,12 +517,6 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      if (props.isCreationDialog) {
-        item.id = v4()
-        await props.addItem(item)
-        clearForm()
-        return loadingSaveAll.value = false
-      }
       await createItem(item)
     }
     catch (error: any) {
@@ -524,7 +527,9 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    if (!props.isCreationDialog) {
+      getList()
+    }
   }
 }
 
@@ -634,6 +639,12 @@ function showHistory() {
 }
 
 function downloadFile() {
+  if (listItemsLocal.value?.length > 0) {
+    // Selecciona el primer elemento automáticamente
+    item.value = { ...listItemsLocal.value[0] }; // Asigna el primer elemento a item.value
+    idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id; // Carga el ID del primer elemento
+  }
+
   if (item.value) {
     const link = document.createElement('a')
     link.href = item.value.file
@@ -649,6 +660,35 @@ watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
 })
 
+
+// Función que actualiza la propiedad de un campo específico
+  // Función que actualiza la propiedad de un campo específico
+  const updateFieldProperty = (fields: Container[], fieldName: string, property: string, value: any) => {
+      fields.forEach(field => {
+        if (field.childs) {
+          field.childs.forEach((child: any) => { // Especificar el tipo de child
+            if (child.field === fieldName) {
+              child[property] = value; // Actualiza la propiedad deseada
+            }
+          });
+        }
+      });
+    };
+
+    watch(() => idItem.value, (newValue) => {
+      if (newValue === '') {
+        updateFieldProperty(Fields, 'filename', 'disabled', false);
+        updateFieldProperty(Fields, 'remark', 'disabled', false);
+        
+        updateFieldProperty(Fields, 'type', 'disabled', true);
+        
+      } else {
+        updateFieldProperty(Fields, 'filename', 'disabled', true);
+        updateFieldProperty(Fields, 'remark', 'disabled', true);
+      }
+    });
+
+
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
     clearForm()
@@ -657,6 +697,7 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
     await getItemById(newValue)
   }
 })
+
 
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
@@ -710,6 +751,7 @@ onMounted(async () => {
             </div>
           </div>
           <div style="max-width: 700px; overflow: auto;">
+            <!--            <pre>{{listItems}}</pre> -->
             <DynamicTable
               :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="options"
               :pagination="Pagination" @update:clicked-item="getItemById($event)"
@@ -737,7 +779,7 @@ onMounted(async () => {
                   field="name"
                   item-value="id"
                   :model="resourceTypeSelected"
-                  :disabled="resourceTypeSelected"
+                  :disabled="resourceTypeSelected "
                   :suggestions="resourceTypeList"
                   @change="($event) => {
                     onUpdate('resourceType', $event)
@@ -754,6 +796,7 @@ onMounted(async () => {
                     </div>
                   </template>
                 </DebouncedAutoCompleteComponent>
+                <Skeleton v-else height="2rem" class="mb-2" />
                 <span v-if="typeError" class="error-message p-error text-xs">The Resource type field is
                   required</span>
               </template>
@@ -765,8 +808,8 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                  :disabled="isCreationDialog && ListItems.length > 0"
-                  :suggestions="attachmentTypeList" @change="($event) => {
+                   :disabled="idItem !== '' || (isCreationDialog ? ListItems.some((item: any) => item.type?.attachInvDefault) : !listItemsLocal.some((item: any) => item.type?.attachInvDefault))"
+                   :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
                     typeError = false
                   }"
@@ -781,6 +824,7 @@ onMounted(async () => {
                     </div>
                   </template>
                 </DebouncedAutoCompleteComponent>
+                <Skeleton v-else height="2rem" class="mb-2" />
                 <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
                   required</span>
               </template>
@@ -791,7 +835,7 @@ onMounted(async () => {
               }
 
               <template #field-file="{ onUpdate, item: data }">
-                <FileUpload
+                <FileUpload  :disabled="idItem !== ''"  
                   accept="application/pdf"
                   :max-file-size="300 * 1024 * 1024" :multiple="false" auto custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
@@ -855,7 +899,7 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
                   <Button
-                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="!idItem"
+                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="listItemsLocal.length ===0 && ListItems.length ===0"
                     @click="downloadFile"
                   />
                 </IfCan>

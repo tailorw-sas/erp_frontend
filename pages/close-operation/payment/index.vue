@@ -9,7 +9,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { getLastDayOfMonth } from '~/utils/helpers'
-import { ENUM_SHORT_TYPE } from '~/utils/Enums'
+import { CALENDAR_MODE, ENUM_SHORT_TYPE } from '~/utils/Enums'
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
 const listItems = ref<any[]>([])
@@ -39,7 +39,7 @@ const confHotelApi = reactive({
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
-  { field: 'date', header: 'Current Close Operation', type: 'date-editable', width: '50px', widthTruncate: '50px', props: { isRange: true } },
+  { field: 'date', header: 'Current Close Operation', type: 'date-editable', width: '50px', widthTruncate: '50px', props: { isRange: true, calendarMode: CALENDAR_MODE.MONTH } },
   { field: 'status', header: 'Active', type: 'bool', width: '25px', widthTruncate: '25px', showFilter: false },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ async function getList() {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'beginDate')) {
-        iterator.date = iterator.beginDate
+        iterator.date = dayjs(iterator.beginDate).toDate()
       }
     }
     listItems.value = [...dataList]
@@ -406,7 +406,7 @@ onMounted(async () => {
         @on-cell-edit-complete="saveItem"
       />
       <div class="flex justify-content-end">
-        <Button class="ml-2" icon="pi pi-times"  severity="secondary" @click="() => { navigateTo('/') }" />
+        <Button class="ml-2" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/') }" />
       </div>
     </div>
   </div>

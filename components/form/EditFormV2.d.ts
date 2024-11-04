@@ -15,6 +15,7 @@ interface FieldDefinition {
   footerStyle?: any | null
   footerClass?: any | null
   errorClass?: any | null
+  resetValidation?: boolean
   containerFieldClass?: any | null
   showClearButton?: boolean | null
   maxConstraints?: number | null
@@ -26,6 +27,7 @@ interface FieldDefinition {
   validation?: z.ZodTypeAny
   backendValidation?: Array<ValidationErrorType>
   helpText?: string
+  helpTextClass?: string
   onUpdate?: (value: any) => void
 }
 

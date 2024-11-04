@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     'Authorization': `Bearer ${token?.access_token}`,
   }
 
-  const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/creditcard/api/payment/redirect`, {
+  const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/creditcard/api/transactions/redirectTypePost`, {
     method: 'POST',
     body: payload,
     headers: defaultHeaders

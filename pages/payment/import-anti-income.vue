@@ -122,7 +122,16 @@ async function getErrorList() {
         }
 
         // const datTemp = new Date(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        newListItems.push(
+          {
+            ...iterator.row,
+            id: iterator.id,
+            amount: iterator.row.amount ? formatNumber(iterator.row.amount) : 0,
+            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -217,7 +226,7 @@ async function validateStatusImport() {
       try {
         const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
         status = response.status
-        totalImportedRows.value = response.totalRows ?? 0
+        totalImportedRows.value = response.total ?? 0
       }
       catch (error: any) {
         toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })

@@ -122,18 +122,25 @@ const fields: Array<FieldDefinitionType> = [
     field: 'incomeDefault',
     header: 'Income Default',
     dataType: 'check',
-    class: 'field col-12 mb-3',
+    class: 'field col-12',
   },
   {
     field: 'paymentInvoice',
     header: 'Payment Invoice',
     dataType: 'check',
-    class: 'field col-12 mb-3',
+    class: 'field col-12',
     validation: z.boolean()
   },
   {
     field: 'antiToIncome',
     header: 'Anti To Income',
+    dataType: 'check',
+    class: 'field col-12',
+    validation: z.boolean()
+  },
+  {
+    field: 'expenseToBooking',
+    header: 'Expense To Booking',
     dataType: 'check',
     class: 'field col-12 mb-3',
     validation: z.boolean()
@@ -189,6 +196,7 @@ const item = ref<GenericObject>({
   applyDeposit: false,
   defaults: false,
   antiToIncome: false,
+  expenseToBooking: false,
   paymentInvoice: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
@@ -211,6 +219,7 @@ const itemTemp = ref<GenericObject>({
   defaults: false,
   antiToIncome: false,
   paymentInvoice: false,
+  expenseToBooking: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
 })
@@ -369,6 +378,7 @@ async function getItemById(id: string) {
         item.value.defaults = response.defaults
         item.value.incomeDefault = response.incomeDefault
         item.value.antiToIncome = response.antiToIncome
+        item.value.expenseToBooking = response.expenseToBooking
         item.value.paymentInvoice = response.paymentInvoice
         item.value.debit = response.debit
         updateFieldProperty(fields, 'minNumberOfCharacter', 'disabled', !response.remarkRequired)
@@ -645,7 +655,7 @@ onMounted(() => {
                   }
                 }"
               />
-              <label for="cash" class="ml-2 font-bold">
+              <label for="cash" class="ml-1 font-bold">
                 Cash
               </label>
             </template>
@@ -663,7 +673,7 @@ onMounted(() => {
                   }
                 }"
               />
-              <label for="cash" class="ml-2 font-bold">
+              <label for="cash" class="ml-1 font-bold">
                 Deposit
               </label>
             </template>
@@ -681,7 +691,7 @@ onMounted(() => {
                   }
                 }"
               />
-              <label for="cash" class="ml-2 font-bold">
+              <label for="cash" class="ml-1 font-bold">
                 Apply Deposit
               </label>
             </template>
@@ -696,7 +706,7 @@ onMounted(() => {
                   onUpdate('minNumberOfCharacter', 0)
                 }"
               />
-              <label for="remarkRequired" class="ml-2 font-bold">
+              <label for="remarkRequired" class="ml-1 font-bold">
                 Remark Required
                 <span :class="fields.find(field => field.field === 'remarkRequired')?.class.includes('required') ? 'p-error font-semibold' : ''" />
               </label>

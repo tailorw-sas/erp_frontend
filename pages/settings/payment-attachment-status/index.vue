@@ -17,7 +17,7 @@ const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const formReload = ref(0)
-
+const loadingData = ref(false)
 const loadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
@@ -83,6 +83,36 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 mb-3',
   },
   {
+    field: 'nonNone',
+    header: 'Non None',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
+    field: 'patWithAttachment',
+    header: 'Pay With Attachment',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
+    field: 'pwaWithOutAttachment',
+    header: 'Pay WithOut Attachment',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
+    field: 'supported',
+    header: 'Supported',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
+    field: 'otherSupport',
+    header: 'Other Support',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
     field: 'permissionCode',
     header: 'Permission Code',
     dataType: 'text',
@@ -114,6 +144,11 @@ const item = ref<GenericObject>({
   permissionCode: '',
   show: false,
   defaults: false,
+  nonNone: false,
+  patWithAttachment: false,
+  pwaWithOutAttachment: false,
+  supported: false,
+  otherSupport: false,
   status: true
 })
 
@@ -126,6 +161,11 @@ const itemTemp = ref<GenericObject>({
   permissionCode: '',
   show: false,
   defaults: false,
+  nonNone: false,
+  patWithAttachment: false,
+  pwaWithOutAttachment: false,
+  supported: false,
+  otherSupport: false,
   status: true
 })
 
@@ -286,6 +326,11 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.show = response.show === null ? false : response.show
         item.value.defaults = response.defaults === null ? false : response.defaults
+        item.value.nonNone = response.nonNone === null ? false : response.nonNone
+        item.value.patWithAttachment = response.patWithAttachment === null ? false : response.patWithAttachment
+        item.value.pwaWithOutAttachment = response.pwaWithOutAttachment === null ? false : response.pwaWithOutAttachment
+        item.value.supported = response.supported === null ? false : response.supported
+        item.value.otherSupport = response.otherSupport === null ? false : response.otherSupport
         item.value.navigate = response.navigate.map((nav: any) => {
           let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
           if (!enumStatus) {
@@ -431,6 +476,7 @@ async function getIdentityModuleList(query: string = '') {
 
 async function getForSelectNavigateList(query: string = '') {
   try {
+    loadingData.value = true
     const payload
         = {
           filter: [
@@ -469,6 +515,9 @@ async function getForSelectNavigateList(query: string = '') {
   }
   catch (error) {
     console.error('Error loading payment attachment status list:', error)
+  }
+  finally{
+    loadingData.value = false
   }
 }
 
@@ -685,7 +734,7 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
             <template #field-navigate="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+          <!--   <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
@@ -698,7 +747,22 @@ onMounted(() => {
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
               />
-
+--> 
+<DebouncedMultiSelectComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.navigate"
+                :suggestions="[...navigateListItems]"
+                :loading="loadingData"
+                :max-selected-labels="2"
+                @change="($event) => {
+                  onUpdate('navigate', $event)
+                  data.navigate = $event
+                }"
+                @load="($event) => getForSelectNavigateList($event)"
+              />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>

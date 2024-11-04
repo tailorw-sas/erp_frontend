@@ -102,8 +102,8 @@ const props = defineProps({
   getInvoiceHotel: { type: Function, default: () => {} },
   setActive: { type: Function, required: true },
   active: { type: Number, required: true },
-  bookingList: Array<any>,
-  roomRateList: Array<any>,
+  bookingList: { type: Array, required: true },
+  roomRateList: { type: Array, required: true },
   adjustmentList: Array<any>,
   sortRoomRate: Function as any,
   sortAdjustment: Function as any,
@@ -143,6 +143,11 @@ const props = defineProps({
     }
   }
 })
+
+const emits = defineEmits<{
+  (e: 'onSaveBookingEdit', value: boolean): void
+  (e: 'onSaveRoomRateInBookingEdit', value: any): void
+}>()
 
 const activeTab = ref(props.active)
 
@@ -360,6 +365,7 @@ onMounted(async () => {
             :add-item="addBooking"
             :update-item="updateBooking"
             :list-items="bookingList"
+            :room-rate-list="roomRateList"
             :night-type-required="nightTypeRequired"
             :is-creation-dialog="isCreationDialog"
             :invoice-obj="invoiceObj"
@@ -368,6 +374,12 @@ onMounted(async () => {
             :is-detail-view="isDetailView"
             :show-totals="showTotals"
             :bookings-total-obj="bookingsTotalObj"
+            @on-save-booking-edit="($event) => {
+              emits('onSaveBookingEdit', $event)
+            }"
+            @on-save-room-rate-in-booking-edit="($event) => {
+              emits('onSaveRoomRateInBookingEdit', $event)
+            }"
           />
         </TabPanel>
         <TabPanel v-if="showTabs">

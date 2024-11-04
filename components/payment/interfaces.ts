@@ -27,4 +27,7 @@ export interface TransactionItem {
   hasApplyDeposit: boolean
   children: TransactionItem[] // Array de objetos TransactionItem para hijos
   createdAt: string
+  canceledTransaction?: boolean
+  reverseTransaction?: boolean
+
 }

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
-import { date, z } from 'zod'
+import { z } from 'zod'
 import type { IData } from '../table/interfaces/IModelData'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -100,9 +100,7 @@ const { data: userData } = useAuth()
 
 const openDialogHistory = ref(false)
 const historyList = ref<any[]>([])
-const clickedItem = ref<any>([])
 const loadingDelete = ref(false)
-const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
 
 const idItem = ref('')
 
@@ -263,13 +261,6 @@ const options = ref({
 })
 
 const Pagination = ref<IPagination>({
-  page: 0,
-  limit: 50,
-  totalElements: 0,
-  totalPages: 0,
-  search: ''
-})
-const PaginationHistory = ref<IPagination>({
   page: 0,
   limit: 50,
   totalElements: 0,
@@ -977,7 +968,7 @@ function requireConfirmationToSave(item: any) {
 
 async function clearFormAndReload() {
   clearForm()
-  // await loadDefaultsValues()
+  await loadDefaultsValues()
 }
 
 function requireConfirmationToDelete(event: any) {
@@ -1133,6 +1124,18 @@ watch(() => idItem.value, async (newValue) => {
   }
 })
 
+watch(payloadOnChangePageHistory, (newValue) => {
+  payloadHistory.value.page = newValue?.page ? newValue?.page : 0
+  payloadHistory.value.pageSize = newValue?.rows ? newValue.rows : 10
+  historyGetList()
+})
+
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getList()
+})
+
 // watch(() => listItemsLocal.value, async (newValue) => {
 //   console.log('listItemsLocal Se ejecuto el watch', newValue.length)
 
@@ -1144,12 +1147,17 @@ watch(() => idItem.value, async (newValue) => {
 // }, { deep: true })
 
 onMounted(async () => {
-  loadDefaultsValues()
   if (externalProps.isCreateOrEditPayment !== 'create') {
     await getList()
     if (idItem.value) {
       await getItemById(idItem.value)
     }
+    else {
+      await clearFormAndReload()
+    }
+  }
+  else {
+    await clearFormAndReload()
   }
 })
 </script>

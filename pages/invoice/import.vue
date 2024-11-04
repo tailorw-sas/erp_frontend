@@ -10,6 +10,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { ENUM_INVOICE_IMPORT_TYPE } from '~/utils/Enums'
 
 const toast = useToast()
+const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
@@ -130,7 +131,19 @@ async function getErrorList() {
           rowError += `- ${err.message} \n`
         }
         rowExpandable.push({ ...iterator.row })
-        newListItems.push({ ...iterator.row, id: iterator.id, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, rowExpandable, loadingEdit: false, loadingDelete: false })
+        newListItems.push(
+          {
+            ...iterator.row,
+            id: iterator.id,
+            fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`,
+            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            hotelInvoiceAmount: iterator.row.hotelInvoiceAmount ? formatNumber(iterator.row.hotelInvoiceAmount) : 0.00,
+            invoiceAmount: iterator.row.invoiceAmount ? formatNumber(iterator.row.invoiceAmount) : 0.00,
+            rowExpandable,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -175,6 +188,7 @@ async function importFile() {
     formData.append('file', file)
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_INVOICE_IMPORT_TYPE.NO_VIRTUAL)
+    formData.append('employee', userData?.value?.user?.name || '')
     await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {

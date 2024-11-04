@@ -14,6 +14,7 @@ import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import createClientDialog from '~/components/clientForm/createClientDialog.vue'
 import { validateEntityStatus } from '~/utils/schemaValidations'
+import ContactAgencyPage from '~/pages/settings/agency-contact/index.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -26,10 +27,12 @@ const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
 const loadingDelete = ref(false)
+const contactDialogVisible = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
 })
+const agencyContact = ref<any>({})
 const confApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
@@ -77,6 +80,14 @@ const fields: Array<FieldDefinitionType> = [
     hidden: false,
     headerClass: 'mb-1',
     validation: validateEntityStatus('agency type'),
+  },
+
+  {
+    field: 'contact',
+    header: 'Send Agency Contact',
+    hidden: true,
+    dataType: 'text',
+    class: 'field col-12',
   },
   {
     field: 'generationType',
@@ -179,6 +190,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
     validation: z.string().email('Invalid email').or(z.string().length(0))
   },
   {
@@ -187,6 +199,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
     validation: z.string().email('Invalid email').or(z.string().length(0))
   },
   {
@@ -195,6 +208,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
   },
   {
     field: 'isDefault',
@@ -273,7 +287,9 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Active',
     dataType: 'check',
     disabled: true,
-    class: 'field col-12 mt-3 mb-3',
+    helpText: '',
+    helpTextClass: 'p-error text-xs ml-3',
+    class: 'field col-12 mt-3 mb-3 mr-3',
   },
 ]
 
@@ -435,7 +451,9 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
   // clientObject.value = {}
+  updateFieldProperty(fields, 'contact', 'hidden', true)
   updateFieldProperty(fields, 'status', 'disabled', true)
+  updateFieldProperty(fields, 'status', 'helpText', '')
   fields[0].disabled = false
   formReload.value++
 }
@@ -514,13 +532,24 @@ async function resetListItems() {
   getList()
 }
 
+async function hasAssociatedData(id: string) {
+  try {
+    // inActive
+    const { inActive } = await GenericService.getById('payment', 'payment/agency', id)
+    return inActive
+  }
+  catch (error) {
+    console.error('Error loading hasAssociatedData:', error)
+    return false
+  }
+}
+
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-
       if (response) {
         item.value.id = response.id
         item.value.code = response.code
@@ -593,8 +622,19 @@ async function getItemById(id: string) {
 
         item.value.generationType = ENUM_GENERATION_TYPE.find(i => i.id === response.generationType)
       }
+      const hasAssociated = await hasAssociatedData(response.id)
+
+      if (hasAssociated === false) {
+        updateFieldProperty(fields, 'status', 'disabled', true)
+        updateFieldProperty(fields, 'status', 'helpText', 'Agency has active balances')
+      }
+      else {
+        updateFieldProperty(fields, 'status', 'disabled', false)
+        updateFieldProperty(fields, 'status', 'helpText', '')
+      }
+
       fields[0].disabled = true
-      updateFieldProperty(fields, 'status', 'disabled', false)
+      updateFieldProperty(fields, 'contact', 'hidden', false)
       formReload.value += 1
     }
     catch (error) {
@@ -1028,6 +1068,11 @@ function onSortField(event: any) {
   }
 }
 
+async function openContactDialogVisible(item: any) {
+  agencyContact.value = { agency: { id: item.id, name: item.name, status: 'ACTIVE' } }
+  contactDialogVisible.value = true
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -1149,6 +1194,17 @@ onMounted(() => {
                 }"
                 @load="($event) => getAgencyTypeList($event)"
               />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+
+            <template #field-contact>
+              <InputGroup v-if="!loadingSaveAll">
+                <InputText placeholder="Send Agency Contact" disabled />
+                <Button
+                  icon="pi pi-eye" type="button" text aria-haspopup="true" aria-controls="overlay_menu_filter"
+                  @click="openContactDialogVisible(item)"
+                />
+              </InputGroup>
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
 
@@ -1367,6 +1423,13 @@ onMounted(() => {
               </div>
             </template>
           </EditFormV2>
+          <DynamicContentModal
+            :visible="contactDialogVisible"
+            :component="ContactAgencyPage"
+            :component-props="agencyContact"
+            :header="`Agency ${item.code} - ${item.name}`"
+            @close="contactDialogVisible = $event"
+          />
         </div>
       </div>
     </div>

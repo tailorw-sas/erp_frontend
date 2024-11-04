@@ -44,7 +44,6 @@ const options = ref({
   moduleApi: 'identity',
   uriApi: 'users',
   loading: false,
-  showToolBar: false,
   showAcctions: true,
 })
 const payloadOnChangePage = ref<PageState>()

@@ -23,6 +23,7 @@ const formReload = ref(0)
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
+const loadingData = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const filterToSearch = ref<IData>({
@@ -30,7 +31,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'invoicing',
   uriApi: 'manage-invoice-status',
 })
 
@@ -83,7 +84,25 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'processStatus',
-    header: 'Process Status',
+    header: 'Processed Status',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'sentStatus',
+    header: 'Sent Status',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'reconciledStatus',
+    header: 'Reconciled Status',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'canceledStatus',
+    header: 'Cancelled Status',
     dataType: 'check',
     class: 'field col-12 required',
   },
@@ -118,6 +137,9 @@ const item = ref<GenericObject>({
   enabledToApply: false,
   enabledToPolicy: false,
   processStatus: false,
+  sentStatus: false,
+  canceledStatus: false,
+  reconciledStatus: false,
   showClone: false,
   navigate: [],
 })
@@ -132,6 +154,9 @@ const itemTemp = ref<GenericObject>({
   enabledToApply: false,
   enabledToPolicy: false,
   processStatus: false,
+  sentStatus: false,
+  canceledStatus: false,
+  reconciledStatus: false,
   showClone: false,
   navigate: [],
 })
@@ -162,7 +187,7 @@ const formTitle = computed(() => {
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Invoice Status',
-  moduleApi: 'settings',
+  moduleApi: 'invoicing',
   uriApi: 'manage-invoice-status',
   loading: false,
   actionsAsMenu: false,
@@ -243,21 +268,21 @@ async function getList() {
   }
 }
 
-async function getForSelectNavigateList(id: string = '') {
+async function getForSelectNavigateList(query: string = '') {
   try {
-    navigateListItems.value = []
+    loadingData.value = true
     const payload = {
       filter: [
         {
           key: 'name',
           operator: 'LIKE',
-          value: id,
+          value: query,
           logicalOperation: 'OR'
         },
         {
           key: 'code',
           operator: 'LIKE',
-          value: id,
+          value: query,
           logicalOperation: 'OR'
         },
         {
@@ -268,16 +293,22 @@ async function getForSelectNavigateList(id: string = '') {
         }
       ],
       query: '',
-      pageSize: 200,
+      pageSize: 50,
       page: 0,
       sortBy: 'code',
       sortType: ENUM_SHORT_TYPE.DESC
     }
+    if (idItem.value) {
+      payload.filter = [...payload.filter, {
+        key: 'id',
+        operator: 'NOT_EQUALS',
+        value: idItem.value,
+        logicalOperation: 'AND'
+      }]
+    }
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload)
     const { data: dataList } = response
-
     navigateListItems.value = dataList
-      .filter((item: any) => item.id !== id)
       .map((item: any) => ({
         id: item.id,
         name: `${item.code} - ${item.name}`,
@@ -286,6 +317,9 @@ async function getForSelectNavigateList(id: string = '') {
   }
   catch (error) {
     console.error(error)
+  }
+  finally {
+    loadingData.value = false
   }
 }
 
@@ -333,11 +367,14 @@ async function getItemById(id: string) {
         item.value.enabledToApply = response.enabledToApply
         item.value.enabledToPolicy = response.enabledToPolicy
         item.value.processStatus = response.processStatus
+        item.value.sentStatus = response.sentStatus
+        item.value.reconciledStatus = response.reconciledStatus
+        item.value.canceledStatus = response.canceledStatus
         item.value.showClone = response.showClone
         item.value.navigate = response.navigate.map((nav: any) => {
           let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
           if (!enumStatus) {
-            enumStatus = { id: nav.id, name: nav.name, status: nav.status }
+            enumStatus = { id: nav.id, name: `${nav.code} - ${nav.name}`, status: nav.status }
             navigateListItems.value.push(enumStatus)
           }
           return enumStatus
@@ -608,7 +645,7 @@ onMounted(() => {
             @submit="requireConfirmationToSave($event)"
           >
             <template #field-navigate="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <!--              <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
@@ -618,6 +655,21 @@ onMounted(() => {
                 :suggestions="[...navigateListItems]"
                 @change="($event) => {
                   onUpdate('navigate', $event)
+                }"
+                @load="($event) => getForSelectNavigateList($event)"
+              /> -->
+              <DebouncedMultiSelectComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.navigate"
+                :suggestions="[...navigateListItems]"
+                :loading="loadingData"
+                :max-selected-labels="2"
+                @change="($event) => {
+                  onUpdate('navigate', $event)
+                  data.navigate = $event
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
               />

@@ -28,7 +28,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-bank-account',
 })
 
@@ -40,10 +40,10 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'managerMerchant',
     header: 'Merchant',
-    dataType: 'select',
+    dataType: 'multi-select',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: validateEntityStatus('merchant'),
+    validation: validateEntitiesForSelectMultiple('merchants').nonempty('The merchant field is required'),
   },
   {
     field: 'manageBank',
@@ -66,6 +66,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Credit Card Type',
     dataType: 'multi-select',
     class: 'field col-12 required',
+    headerClass: 'mb-1',
     validation: validateEntitiesForSelectMultiple('creditCardTypes').nonempty('The credit card type field is required'),
   },
   {
@@ -86,7 +87,7 @@ const fields: Array<FieldDefinitionType> = [
 ]
 
 const item = ref<GenericObject>({
-  managerMerchant: null,
+  managerMerchant: [],
   manageBank: null,
   description: '',
   accountNumber: '',
@@ -125,7 +126,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Merchant Bank Account',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-bank-account',
   loading: false,
   showDelete: false,
@@ -187,10 +188,10 @@ async function getList() {
 
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'managerMerchant')) {
-        iterator.managerMerchant = { id: iterator.managerMerchant.id, name: iterator.managerMerchant.description }
+        iterator.managerMerchant = { name: iterator.managerMerchant.map((item: any) => item.description).join(', ') }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageBank')) {
-        iterator.manageBank = { id: iterator.manageBank.id, name: iterator.manageBank.name }
+        iterator.manageBank = { id: iterator.manageBank.id, name: `${iterator.manageBank.code} - ${iterator.manageBank.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
@@ -235,16 +236,16 @@ async function getItemById(id: string) {
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
       if (response) {
-        const objMerchant = {
+        /* const objMerchant = {
           id: response.managerMerchant.id,
           name: `${response.managerMerchant.code} ${response.managerMerchant.description ? `- ${response.managerMerchant.description}` : ''}`,
           status: response.managerMerchant.status
         }
+        MerchantList.value = [objMerchant]
+        item.value.managerMerchant = objMerchant */
         item.value.id = response.id
         item.value.description = response.description
         item.value.accountNumber = response.accountNumber
-        MerchantList.value = [objMerchant]
-        item.value.managerMerchant = objMerchant
         BankList.value = [response.manageBank]
         const objBank = {
           id: response.manageBank.id,
@@ -253,10 +254,20 @@ async function getItemById(id: string) {
         }
         item.value.manageBank = objBank
         item.value.status = statusToBoolean(response.status)
-        if (CreditCardTypeList.value.length === 0) {
-          await getCreditCardTypeList()
-        }
-        item.value.creditCardTypes = findMatches(response.creditCardTypes, CreditCardTypeList.value)
+        const updatedCCTypeList = response.creditCardTypes.map((elem: any) => ({
+          ...elem, // Copia todas las propiedades existentes
+          name: `${elem.code} - ${elem.name}`, // Añade la nueva propiedad
+          status: 'ACTIVE'
+        }))
+        item.value.creditCardTypes = updatedCCTypeList
+        CreditCardTypeList.value = [...updatedCCTypeList]
+        const updatedMerchants = response.managerMerchant.map((elem: any) => ({
+          ...elem, // Copia todas las propiedades existentes
+          name: `${elem.code} - ${elem.description}`, // Añade la nueva propiedad
+          status: 'ACTIVE'
+        }))
+        item.value.managerMerchant = updatedMerchants
+        MerchantList.value = [...updatedMerchants]
       }
       updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
@@ -304,7 +315,7 @@ async function createItem(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
     payload.managerBank = typeof payload.manageBank === 'object' ? payload.manageBank.id : payload.manageBank
-    payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
+    payload.managerMerchant = payload.managerMerchant.map((p: any) => p.id)
     payload.creditCardTypes = payload.creditCardTypes.map((p: any) => p.id)
     delete payload.event
     delete payload.manageBank
@@ -317,7 +328,7 @@ async function updateItem(item: { [key: string]: any }) {
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
   payload.managerBank = typeof payload.manageBank === 'object' ? payload.manageBank.id : payload.manageBank
-  payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
+  payload.managerMerchant = payload.managerMerchant.map((p: any) => p.id)
   payload.creditCardTypes = payload.creditCardTypes.map((p: any) => p.id)
   delete payload.event
   delete payload.manageBank
@@ -441,11 +452,21 @@ async function getCreditCardTypeList(query: string = '') {
     }
 
     const response = await GenericService.search('settings', 'manage-credit-card-type', payload)
-    const { data: dataList } = response
+    let { data: dataList } = response
     CreditCardTypeList.value = []
-    for (const iterator of dataList) {
-      CreditCardTypeList.value = [...CreditCardTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
-    }
+
+    dataList = dataList.map((elem: any) => ({
+      ...elem, // Copia todas las propiedades existentes
+      name: `${elem.code} - ${elem.name}`, // Añade la nueva propiedad
+      status: elem.status
+    }))
+
+    const mergedSuggestions = [
+      ...item.value.creditCardTypes, // Mantén los elementos seleccionados previamente
+      ...dataList.filter((s: any) => !item.value.creditCardTypes.some((item: any) => item.id === s.id)) // Filtra duplicados
+    ]
+
+    CreditCardTypeList.value = [...mergedSuggestions]
   }
   catch (error) {
     console.error('Error loading manage credit card type list:', error)
@@ -472,16 +493,25 @@ async function getMerchantList(query: string) {
         logicalOperation: 'AND'
       }],
       query: '',
-      pageSize: 20,
+      pageSize: 200,
       page: 0,
     }
     const response = await GenericService.search('settings', 'manage-merchant', payload)
-    const { data: dataList } = response
+    let { data: dataList } = response
     MerchantList.value = []
 
-    for (const iterator of dataList) {
-      MerchantList.value = [...MerchantList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.description}`, status: iterator.status }]
-    }
+    dataList = dataList.map((elem: any) => ({
+      ...elem, // Copia todas las propiedades existentes
+      name: `${elem.code} - ${elem.description}`, // Añade la nueva propiedad
+      status: elem.status
+    }))
+
+    const mergedSuggestions = [
+      ...item.value.managerMerchant, // Mantén los elementos seleccionados previamente
+      ...dataList.filter((s: any) => !item.value.managerMerchant.some((item: any) => item.id === s.id)) // Filtra duplicados
+    ]
+
+    MerchantList.value = [...mergedSuggestions]
   }
   catch (error) {
     console.error('Error loading merchant list:', error)
@@ -664,6 +694,7 @@ onMounted(() => {
                 id="autocomplete"
                 field="name"
                 item-value="id"
+                :multiple="true"
                 :model="data.managerMerchant"
                 :suggestions="MerchantList"
                 @change="($event) => {

@@ -11,34 +11,19 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import type { IData } from '~/components/table/interfaces/IModelData'
 
 const toast = useToast()
-const listItems = ref<any[]>([])
 const totalInvoiceAmount = ref(0)
 const idItemToLoadFirstTime = ref('')
 const listPrintItems = ref<any[]>([])
 
 const totalDueAmount = ref(0)
 
-const filterAllDateRange = ref(false)
-const loadingSearch = ref(false)
-
-const loadingSaveAll = ref(false)
-
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
-const groupByClient = ref(false)
-const invoiceSupport = ref(false)
-const invoiceAndBookings = ref(true)
 
 const objPayloadOfCheckBox = ref({
   groupByClient: false,
   invoiceSupport: false,
   invoiceAndBookings: true
 })
-
-const objPayloadOfCheckBoxTemp = {
-  groupByClient: false,
-  invoiceSupport: false,
-  invoiceAndBookings: true
-}
 
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -81,14 +66,13 @@ const confagencyListApi = reactive({
 // VARIABLES -----------------------------------------------------------------------------------------
 
 //
-const idItem = ref('')
 const ENUM_FILTER = [
   { id: 'id', name: 'Id' },
 ]
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text' },
-  { field: 'manageInvoiceType', header: 'Type', type: 'select',objApi:confinvoiceApi },
+  { field: 'manageInvoiceType', header: 'Type', type: 'select', objApi: confinvoiceApi },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
@@ -100,6 +84,7 @@ const columns: IColumn[] = [
   { field: 'hasAttachments', header: 'Attachment', type: 'bool' },
   { field: 'aging', header: 'Aging', type: 'text' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -119,12 +104,7 @@ const options = ref({
 })
 
 const payload = ref<IQueryRequest>({
-  filter: [{
-    key: 'invoiceStatus',
-    operator: 'IN', // Cambia a 'IN' para incluir varios valores
-    value: ['RECONCILED', 'SENT'],
-    logicalOperation: 'AND'
-  }],
+  filter: [],
   query: '',
   pageSize: 50,
   page: 0,
@@ -154,6 +134,19 @@ async function getPrintList() {
     options.value.loading = true
     listPrintItems.value = []
     const newListItems = []
+    const objFilterForInvoiceStatus = payload.value.filter.find(item => item.key === 'invoiceStatus')
+
+    if (objFilterForInvoiceStatus) {
+      objFilterForInvoiceStatus.value = ['SENT', 'RECONCILED']
+    }
+    else {
+      payload.value.filter.push({
+        key: 'invoiceStatus',
+        operator: 'IN',
+        value: ['SENT', 'RECONCILED'],
+        logicalOperation: 'AND'
+      })
+    }
 
     totalInvoiceAmount.value = 0
     totalDueAmount.value = 0
@@ -183,6 +176,7 @@ async function getPrintList() {
         loadingDelete: false,
         //  invoiceDate: new Date(iterator?.invoiceDate),
         agencyCd: iterator?.agency?.code,
+        hasAttachments: iterator.hasAttachments,
         aging: 0,
         dueAmount: iterator?.dueAmount || 0,
         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
@@ -207,7 +201,7 @@ async function getPrintList() {
 
 async function savePrint() {
   options.value.loading = true
-  const startTime = Date.now(); // Captura el tiempo de inicio
+  const startTime = Date.now() // Captura el tiempo de inicio
   try {
     let nameOfPdf = ''
     const payloadTemp: any = {
@@ -236,17 +230,17 @@ async function savePrint() {
     a.click()
     window.URL.revokeObjectURL(url)
     document.body.removeChild(a)
-    const endTime = Date.now(); // Captura el tiempo de fin
-    const totalTime = ((endTime - startTime) / 1000).toFixed(2); // Tiempo total en segundos
-    const totalFiles = selectedElements.value.length; // Total de archivos descargados
+    const endTime = Date.now() // Captura el tiempo de fin
+    const totalTime = ((endTime - startTime) / 1000).toFixed(2) // Tiempo total en segundos
+    const totalFiles = selectedElements.value.length // Total de archivos descargados
 
     // Mostrar el mensaje en el toast
     toast.add({
-      severity:'info',
+      severity: 'info',
       summary: 'Confirmed',
       detail: `The process was executed successfully, records printed  ${totalFiles}`,
       life: 0 // Duración del toast en milisegundos
-    });
+    })
   }
   catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Transaction was failed', life: 3000 })
@@ -343,7 +337,6 @@ async function getAgencyList(query: string = '') {
   }
 }
 
-
 async function clearForm() {
   await goToList()
 }
@@ -355,12 +348,47 @@ async function resetListItems() {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      /*   if (parseFilter[i]?.key === 'status') {
+        parseFilter[i].key = 'invoiceStatus'
+      }
+*/
+      if (parseFilter[i]?.key === 'status') {
+        parseFilter[i].key = 'invoiceStatus'
+      }
+
+      if (parseFilter[i]?.key === 'invoiceNumber') {
+        parseFilter[i].key = 'invoiceNumberPrefix'
+      }
+    }
+  }
+
   payload.value.filter = [...parseFilter || []]
   getPrintList()
 }
+// payload.value.filter = [...parseFilter || []]
+// getPrintList()
+// }
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'hotel') {
+      event.sortField = 'hotel.name'
+    }
+    if (event.sortField === 'status') {
+      event.sortField = 'invoiceStatus'
+    }
+    if (event.sortField === 'agency') {
+      event.sortField = 'agency.name'
+    }
+    if (event.sortField === 'agencyCd') {
+      event.sortField = 'agency.code'
+    }
+
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'invoiceNumberPrefix'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     getPrintList()
@@ -372,7 +400,7 @@ function getStatusName(code: string) {
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
-    case 'CANCELED': return 'Canceled'
+    case 'CANCELED': return 'Cancelled'
     case 'PENDING': return 'Pending'
 
     default:
@@ -384,7 +412,7 @@ function getStatusBadgeBackgroundColor(code: string) {
     case 'PROCECSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
-    case 'CANCELED': return '#F90303'
+    case 'CANCELED': return '#888888'
     case 'PENDING': return '#686868'
 
     default:
@@ -529,10 +557,9 @@ onMounted(async () => {
               <Row>
                 <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: 700" />
 
-                <Column :colspan="1"  :footer="`$${totalInvoiceAmount.toFixed(2)}`"footer-style="text-align:left; font-weight: 700" />
-                <Column :colspan="1"  :footer="`$${totalDueAmount.toFixed(2)}`" footer-style="text-align:left; font-weight: 700" />
-                <Column :colspan="3"  footer-style="text-align:right; font-weight: 700" />
-    
+                <Column :colspan="1" :footer="`$${totalInvoiceAmount.toFixed(2)}`"footer-style="text-align:left; font-weight: 700" />
+                <Column :colspan="1" :footer="`$${totalDueAmount.toFixed(2)}`" footer-style="text-align:left; font-weight: 700" />
+                <Column :colspan="3" footer-style="text-align:right; font-weight: 700" />
               </Row>
             </ColumnGroup>
           </template>
@@ -583,7 +610,7 @@ onMounted(async () => {
         </div>
 
         <div class="flex align-items-end justify-content-end">
-          <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" @click="savePrint"  :disabled="selectedElements.length === 0" />
+          <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" :disabled="selectedElements.length === 0" @click="savePrint" />
           <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
         </div>
       </div>

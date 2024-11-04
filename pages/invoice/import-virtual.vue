@@ -131,7 +131,19 @@ async function getErrorList() {
           rowError += `- ${err.message} \n`
         }
         rowExpandable.push({ ...iterator.row })
-        newListItems.push({ ...iterator.row, id: iterator.id, fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, rowExpandable, loadingEdit: false, loadingDelete: false })
+        newListItems.push(
+          {
+            ...iterator.row,
+            id: iterator.id,
+            fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`,
+            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            hotelInvoiceAmount: iterator.row.hotelInvoiceAmount ? formatNumber(iterator.row.hotelInvoiceAmount) : 0.00,
+            invoiceAmount: iterator.row.invoiceAmount ? formatNumber(iterator.row.invoiceAmount) : 0.00,
+            rowExpandable,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }

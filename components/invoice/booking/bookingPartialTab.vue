@@ -487,24 +487,24 @@ const fieldsV2: Array<FieldDefinitionType> = [
   },
 
 
-  // Rate Adult
-  {
-    field: 'rateAdult',
-    header: 'Rate Adult',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().min(0, 'The Rate Adult field must be greater or equal than 0')
-  },
-  // Rate Child
-  {
-    field: 'rateChild',
-    header: 'Rate Child',
-    dataType: 'number',
-    class: 'field col-12 md:col-3',
-    headerClass: 'mb-1',
-    validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
-  },
+  // // Rate Adult
+  // {
+  //   field: 'rateAdult',
+  //   header: 'Rate Adult',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().min(0, 'The Rate Adult field must be greater or equal than 0')
+  // },
+  // // Rate Child
+  // {
+  //   field: 'rateChild',
+  //   header: 'Rate Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-3',
+  //   headerClass: 'mb-1',
+  //   validation: z.number().nonnegative('The Rate Child field must be greater than 0').nullable()
+  // },
 
 
   // Invoice Amount
@@ -721,7 +721,7 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'bookingId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+ // { field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
 
   { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -1540,24 +1540,16 @@ onMounted(() => {
       @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
       @on-list-item="ResetListItems" @on-sort-field="OnSortField" 
       @on-table-cell-edit-complete="onCellEditComplete" @on-row-double-click="($event) => {
-
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-
-
-          return;
-        }
-
-        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
-          return;
-        }
-
-        if (!props.isDetailView) {
-          openEditBooking($event)
-        }
-
-
-
+        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
+        //   return;
+        // }
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+        //   return;
+        // }
+        // if (!props.isDetailView) {
+        //   openEditBooking($event)
+        // }
       }">
 
 
@@ -1565,15 +1557,15 @@ onMounted(() => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:"
-              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 10"
+              :colspan="isDetailView ? 8 : route.query.type === InvoiceType.CREDIT && props.isCreationDialog ? 6 : 9"
               footer-style="text-align:right; font-weight: 700" />
             <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalHotelAmount" footer-style="font-weight: 700" />
+              :footer="totalHotelAmount.toString()" footer-style="font-weight: 700" />
             <Column v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalOriginalAmount" footer-style="font-weight: 700" />
-            <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+              :footer="totalOriginalAmount.toString()" footer-style="font-weight: 700" />
+            <Column :footer="totalInvoiceAmount.toString()" footer-style="font-weight: 700" />
             <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
+              :footer="totalInvoiceAmount.toString()" footer-style="font-weight: 700" />
 
 
           </Row>

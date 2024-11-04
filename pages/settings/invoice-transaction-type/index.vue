@@ -68,10 +68,16 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 required',
   },
   {
+    field: 'defaults',
+    header: 'Default',
+    dataType: 'check',
+    class: 'field col-12 ',
+  },
+  {
     field: 'isRemarkRequired',
     header: 'Remark Required',
     dataType: 'check',
-    class: 'field col-12 mb-3',
+    class: 'field col-12 mb-3 font-bold',
   },
   {
     field: 'minNumberOfCharacters',
@@ -111,6 +117,7 @@ const item = ref<GenericObject>({
   isAgencyRateAmount: false,
   isNegative: false,
   isPolicyCredit: false,
+  defaults:false,
   isRemarkRequired: false,
   minNumberOfCharacters: 0,
   defaultRemark: '',
@@ -125,6 +132,7 @@ const itemTemp = ref<GenericObject>({
   isNegative: false,
   isPolicyCredit: false,
   isRemarkRequired: false,
+  defaults:false,
   minNumberOfCharacters: 0,
   defaultRemark: '',
 })
@@ -273,6 +281,7 @@ async function getItemById(id: string) {
         item.value.description = response.description
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
+        item.value.defaults = response.defaults
         item.value.isAgencyRateAmount = response.isAgencyRateAmount
         item.value.isNegative = response.isNegative
         item.value.isPolicyCredit = response.isPolicyCredit

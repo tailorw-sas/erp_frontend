@@ -178,11 +178,84 @@ export const GenericService = {
     })
   },
 
+  async importReconcileAuto(MODULE_NAME: string, URI_API: string, formData: FormData) {
+    const { $api } = useNuxtApp()
+    // const formData = new FormData()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+
+    return $api(url, {
+      method: 'POST',
+      body: formData
+
+    })
+  },
+
+  async importSearchAuto(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/import-search-auto`
+    return $api<PaginatedResponse>(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
   async createInvoiceType(MODULE_NAME: string, URI_API: string, payload: any) {
     const { $api } = useNuxtApp()
     const serverUrl = useRequestURL()
     const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
     return $api<PaginatedResponse>(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
+  async sendList(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/send-list`
+    return $api<SearchResponse>(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
+  async sendFormData(MODULE_NAME: string, URI_API: string, formData: FormData) {
+    const { $api } = useNuxtApp()
+    // const formData = new FormData()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+
+    return $api(url, {
+      method: 'POST',
+      body: formData
+
+    })
+  },
+
+  async searchShareFileById(MODULE_NAME: string, URI_API: string, ID: string, SUB_CONTROLLER = '', ID2: string = '') {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    let url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/${ID}`
+    if (SUB_CONTROLLER !== '') {
+      url += `/${SUB_CONTROLLER}`
+    }
+    if (ID2 !== '') {
+      url += `/${ID2}`
+    }
+    return $api<any>(url, {
+      method: 'GET',
+    })
+  },
+
+  async searchShareFile(MODULE_NAME: string, URI_API: string, payload: IQueryRequest) {
+    const { $api } = useNuxtApp()
+
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+    return $api<SearchResponse>(url, {
       method: 'POST',
       body: payload
     })

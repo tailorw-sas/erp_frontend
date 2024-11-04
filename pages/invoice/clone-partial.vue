@@ -50,6 +50,7 @@ const bookingList = ref<any[]>([])
 const roomRateList = ref<any[]>([])
 const loadedRoomRates = ref<any[]>([])
 const adjustmentList = ref<any[]>([])
+const auxList = ref<any[]>([])
 const attachmentList = ref<any[]>([])
 
 const confClonationPartialApi = reactive({
@@ -61,6 +62,7 @@ const nightTypeRequired = ref(false)
 const requiresFlatRate = ref(false)
 
 const invoiceAmountError = ref(false)
+const showAdjustmentInTable = ref(false)
 const invoiceAmountErrorMessage = ref('')
 
 const hotelList = ref<any[]>([])
@@ -710,29 +712,6 @@ async function getAttachmentList(globalSelectedInvoicing: any) {
   }
 }
 
-async function findBookingByInvoiceId() {
-  console.log('id desde find booking', globalSelectedInvoicing)
-  try {
-    const bookings = await getBookingClonationList() // Obtener el listado completo de bookings
-
-    return bookings
-  }
-  catch (error) {
-    console.error('Error al buscar el booking asociado a la factura:', error)
-    return []
-  }
-}
-
-async function findRoomRates() {
-  try {
-    const roomRates = await getRoomRateClonationList(globalSelectedInvoicing)
-    console.log('Room Rates encontrados:', roomRates)
-  }
-  catch (error) {
-    console.error('Error al buscar los room rates asociados a la factura:', error)
-    return []
-  }
-}
 /*
 async function findRoomRates() {
   try {
@@ -752,26 +731,7 @@ async function findRoomRates() {
   }
 }
 */
-async function findAdjustments() {
-  try {
-    const adjustmentList = await getAdjustmentList(globalSelectedInvoicing)
-    return adjustmentList
-  }
-  catch (error) {
-    console.error('Error al buscar los adjustments asociados a la factura:', error)
-    return []
-  }
-}
-async function getAttachments(globalSelectedInvoicing: any) {
-  try {
-    const attachments = await getAttachmentList(globalSelectedInvoicing)
-    return attachments
-  }
-  catch (error) {
-    console.error('Error al buscar los attachments asociados a la factura:', error)
-    return [] // Devolver una lista de adjuntos vacía en caso de error
-  }
-}
+
 // Variante 1
 async function createPartialClonation(item: { [key: string]: any }) {
   try {
@@ -813,19 +773,14 @@ async function createPartialClonation(item: { [key: string]: any }) {
           adjustment: {
             id: adjustment.id,
             amount: adjustment.amount,
-            transaction: adjustment.transaction,
-            date:adjustment.date,
+            transactionType: adjustment.transaction.id,
+            description: adjustment.description,
+            date: adjustment.date,
             employee: adjustment.employee
           }
         })
       }
     }
-
-    // Realizar cualquier otra manipulación necesaria en el payload
-
-    console.log('Payload:', payload)
-    console.log('Attchments locales:', attachments)
-    console.log('roomRateAdjustments:', payload.roomRateAdjustments)
 
     // Llamada al servicio genérico para enviar el payload al servidor
     const response = await GenericService.create(confClonationPartialApi.moduleApi, confClonationPartialApi.uriApi, payload)
@@ -839,7 +794,6 @@ async function createPartialClonation(item: { [key: string]: any }) {
     loadingSaveAll.value = false
   }
 }
-
 
 async function getHotelList(query = '') {
   try {
@@ -1070,54 +1024,73 @@ async function deleteItem(id: string) {
   }
 }
 
+/*
 function disabledButtonSave() {
-    let result = false;
+  const roomRateIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.roomRateId));
 
-    if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
-       
-        const bookingIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.bookingId));
-
-        for (let i = 0; i < roomRateList.value.length; i++) {
-            const roomRate = roomRateList.value[i];
-
-            if (!bookingIdsWithAdjustments.has(roomRate.bookingId)) {
-                result = true; // Deshabilitar el botón si al menos un room rate por booking no tiene ajustes asociados
-                break; // Se encontró un room rate sin ajustes, por lo tanto, se deshabilita el botón
-            }
-        }
-    } else {
-        result = false; // Deshabilitar el botón si no hay ajustes o adjuntos
+  for (let i = 0; i < roomRateList.value.length; i++) {
+    const roomRate = roomRateList.value[i];
+    if (!roomRateIdsWithAdjustments.has(roomRate.id)) {
+       return true; // Deshabilitar el botón si al menos un room rate no tiene ajustes asociados
     }
-
-  
-    return result;
-}
-
-//Funcion para el cloando total
-/*function disabledButtonSave() {
-  let result = false
-  if (adjustmentList.value.length === 0 || attachmentList.value.length === 0) {
-    result = true
   }
-  else {
-    const listIds = roomRateList.value.map((roomRate: any) => roomRate.id)
-    if (listIds.length === 0) {
-      result = true
+
+  return false; // Habilitar el botón si todos los room rates tienen ajustes asociados
+}
+*/
+// Funcion para el cloando total
+function disabledButtonSave() {
+  let result = true
+
+  if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
+    return true
+  }
+
+  const bookingIds = [...new Set(roomRateList.value.map(roomRate => roomRate.bookingId))]
+
+  // Caso 1: Para un booking con un room rate, el room rate debe tener un ajuste(ok)
+  if (bookingIds.length === 1) {
+    const roomRate = roomRateList.value.find(roomRate => roomRate.bookingId === bookingIds[0])
+    result = adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id)
+  }
+
+  // Caso 2: Para un booking con dos room rates, al menos uno debe tener un ajuste (ok)
+  if (bookingIds.length === 1) {
+    const roomRates = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingIds[0])
+    result = roomRates.some(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id))
+  }
+  // Caso 4: Para más de un booking con más de un room rate, al menos uno de los room rates de cada booking debe tener un ajuste (OK)
+  if (bookingIds.length > 1) {
+    for (const bookingId of bookingIds) {
+      const roomRatesForBooking = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingId)
+      const atLeastOneRateWithAdjustment = roomRatesForBooking.some(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id))
+
+      // Si al menos un room rate para un booking tiene un ajuste, continuar con los demás bookings
+      if (atLeastOneRateWithAdjustment) {
+        continue
+      }
+      else {
+        return true // Si no se encontró ningún room rate con ajuste para un booking, deshabilitar el botón
+      }
     }
-    else {
-      // recorrer la lista de ids y ver si todos los ids existen en la lista de adjustments y la propiedad a verificar se llama roomRate
-      for (let i = 0; i < listIds.length; i++) {
-        if (!adjustmentList.value.some((adjustment: any) => adjustment.roomRate === listIds[i])) {
-          result = true
-          break
-        }
+
+    return false // Si al menos un room rate con ajuste fue encontrado para cada booking, habilitar el botón
+  }
+  // caso 3 mas de un booking con un roomrate cada uno (ok)
+  if (bookingIds.length > 1) {
+    for (const bookingId of bookingIds) {
+      const roomRatesForBooking = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingId)
+      const roomRatesWithAdjustments = roomRatesForBooking.filter(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id))
+
+      // Si el número de room rates con ajustes es diferente del número total de room rates para un booking, deshabilitar botón
+      if (roomRatesWithAdjustments.length !== roomRatesForBooking.length) {
+        return true
       }
     }
   }
-  return result
-}
-*/
 
+  return false
+}
 
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
@@ -1135,7 +1108,7 @@ async function saveItem(item: { [key: string]: any }) {
       itemDetails = await getItemById(response.cloned)
 
       // Actualizar los campos del item con los detalles obtenidos
-      const invoiceNo = itemDetails.invoiceNo
+      const invoiceNo = itemDetails.invoiceNumber
       toast.add({
         severity: 'info',
         summary: 'Confirmed',
@@ -1164,8 +1137,6 @@ async function saveItem(item: { [key: string]: any }) {
         await getBookingClonationList()
         await getRoomRateClonationList(idItemCreated.value)
         await getItemById(itemDetails.cloned)
-        console.log(itemDetails.cloned,'ID DEL INVOICE')
-        console.log(getItemById,'QUE MUESTRA AQUI')
         //  await getItemById(itemDetails.cloned)
 
         // Obtener los detalles del elemento recién creado
@@ -1579,7 +1550,8 @@ function addAdjustment(adjustment: any) {
         ...adjustment?.transactionType,
         name: `${adjustment?.transactionType?.code || ''}-${adjustment?.transactionType?.name || ''}`
       },
-      date: dayjs(adjustment?.date).startOf('day').toISOString()
+      date: dayjs(adjustment?.date).startOf('day').toISOString(),
+
     }
   ]
   calcInvoiceAmountByAdjustment()
@@ -1640,7 +1612,6 @@ onMounted(async () => {
   if (route.query.type === InvoiceType.INVOICE && route.query.selected) {
     await getBookingList()
     await getRoomRateList(globalSelectedInvoicing)
-    console.log(adjustmentList, 'listado de ajustes')
     //   calcInvoiceAmount()
     calcInvoiceAmountByAdjustment()
     calcInvoiceAmountInBookingByRoomRate()
@@ -1714,15 +1685,30 @@ onMounted(async () => {
       <template #form-footer="props">
         <div style="width: 100%; height: 100%;">
           <InvoicePartialTabView
-            :requires-flat-rate="requiresFlatRate" :get-invoice-hotel="getInvoiceHotel"
-            :invoice-obj-amount="invoiceAmount" :is-dialog-open="bookingDialogOpen"
-            :close-dialog="() => { bookingDialogOpen = false }" :open-dialog="handleDialogOpen"
-            :selected-booking="selectedBooking" :open-adjustment-dialog="openAdjustmentDialog"
-            :force-update="forceUpdate" :sort-adjustment="sortAdjustment" :sort-booking="sortBooking"
-            :sort-room-rate="sortRoomRate" :toggle-force-update="toggleForceUpdate" :room-rate-list="roomRateList"
-            :update-room-rate="updateRoomRate" :is-creation-dialog="idItemCreated === ''" :invoice-obj="item"
-            :selected-invoice="idItemCreated" :booking-list="bookingList" :adjustment-list="adjustmentList"
-            :add-adjustment="addAdjustment" :update-adjustment="updateAdjustment" :active="active" :set-active="($event) => {
+            :requires-flat-rate="requiresFlatRate"
+            :get-invoice-hotel="getInvoiceHotel"
+            :invoice-obj-amount="invoiceAmount"
+            :is-dialog-open="bookingDialogOpen"
+            :close-dialog="() => { bookingDialogOpen = false }"
+            :open-dialog="handleDialogOpen"
+            :selected-booking="selectedBooking"
+            :open-adjustment-dialog="openAdjustmentDialog"
+            :force-update="forceUpdate"
+            :sort-adjustment="sortAdjustment"
+            :sort-booking="sortBooking"
+            :sort-room-rate="sortRoomRate"
+            :toggle-force-update="toggleForceUpdate"
+            :room-rate-list="roomRateList"
+            :update-room-rate="updateRoomRate"
+            :is-creation-dialog="idItemCreated === ''"
+            :invoice-obj="item"
+            :selected-invoice="idItemCreated"
+            :booking-list="bookingList"
+            :adjustment-list="[]"
+            :add-adjustment="addAdjustment"
+            :update-adjustment="updateAdjustment"
+            :active="active"
+            :set-active="($event) => {
               active = $event
             }" :open-adjustment-dialog-first-time="showAdjustmentDialogFirstTime"
           />
@@ -1754,9 +1740,14 @@ onMounted(async () => {
           <AttachmentDialogClone
             :add-item="addAttachment"
             :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem); }"
-            :is-creation-dialog="idItemCreated === ''" header="Manage Invoice Attachment" :list-items="attachmentList"
-            :open-dialog="attachmentDialogOpen" :update-item="updateAttachment"
-            :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item" :delete-item="deleteAttachment"
+            :is-creation-dialog="idItemCreated === ''"
+            header="Manage Invoice Attachment"
+            :list-items="attachmentList"
+            :open-dialog="attachmentDialogOpen"
+            :update-item="updateAttachment"
+            :selected-invoice="globalSelectedInvoicing"
+            :selected-invoice-obj="item"
+            :delete-item="deleteAttachment"
           />
         </div>
       </template>

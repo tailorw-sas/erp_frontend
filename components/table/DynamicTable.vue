@@ -4,6 +4,7 @@ import { FilterMatchMode } from 'primevue/api'
 import BlockUI from 'primevue/blockui'
 import type { DataTableFilterMeta } from 'primevue/datatable'
 import type { PageState } from 'primevue/paginator'
+import type { PropType } from 'vue'
 import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterfaces'
 import { getLastDayOfMonth } from '../../utils/helpers'
 import type { IColumn, IObjApi } from './interfaces/ITableInterfaces'
@@ -34,12 +35,12 @@ const props = defineProps({
       showDelete?: boolean
       showLocalDelete?: boolean
       showFilters?: boolean
-      showToolBar?: boolean
       showTitleBar?: boolean
       messageToDelete: string
       search?: boolean
       selectionMode?: 'single' | 'multiple' | undefined
       expandableRows?: boolean
+      selectAllItemByDefault?: boolean
     }>
   },
   pagination: {
@@ -66,7 +67,11 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: true,
-  }
+  },
+  selectedItems: {
+    type: Array as PropType<any[]>,
+    required: false,
+  },
 })
 
 const emits = defineEmits<{
@@ -79,6 +84,7 @@ const emits = defineEmits<{
   (e: 'openDeleteDialog', value: any): void
   (e: 'onLocalDelete', value: any): void
   (e: 'update:clickedItem', value: any): void
+  (e: 'update:selectedItems', value: any): void
   (e: 'onSortField', value: any): void
   (e: 'onRowDoubleClick', value: any): void
   (e: 'onRowRightClick', value: any): void
@@ -153,12 +159,12 @@ const menuItems = ref([
   {
     items: [
       {
-        label: 'Editar',
+        label: 'Edit',
         icon: 'pi pi-pencil',
         action: 'edit'
       },
       {
-        label: 'Eliminar',
+        label: 'Delete',
         icon: 'pi pi-trash',
         action: 'delete'
       }
@@ -224,15 +230,16 @@ function onEdit(item: any) {
 }
 
 function onSelectItem(item: any) {
-  // console.log(item, typeof item === 'object', Array.isArray(item))
   if (item) {
     if (Array.isArray(item)) {
       if (item.length > 0) {
         const ids = item.map((i: any) => i.id)
         emits('update:clickedItem', ids)
+        emits('update:selectedItems', item)
       }
       else if (item.length === 0) {
         emits('update:clickedItem', [])
+        emits('update:selectedItems', [])
       }
     }
     else {
@@ -436,7 +443,6 @@ function onSortField(event: any) {
 
 function haveFilterApplay(filtersValue: any, column: any) {
   let result = false
-
   if (column.type === 'bool') {
     result = filtersValue[column.field].value !== null
   }
@@ -478,14 +484,28 @@ function clearSelectedItems() {
 }
 
 watch(() => props.data, async (newValue) => {
-  if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
-    clickedItem.value = props.data[0]
+  if (props.options?.selectAllItemByDefault) {
+    clickedItem.value = props.data
+  }
+  else {
+    if (newValue.length > 0 && props.options?.selectionMode === 'multiple' && props.selectedItems && props.selectedItems.length > 0) {
+      // Filtra los elementos de newValue que están en selectedItems comparando por id
+      clickedItem.value = newValue.filter((item: any) =>
+        props.selectedItems?.some(selected => selected.id === item.id)
+      )
+    }
+    else if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
+      clickedItem.value = props.data[0]
+    }
   }
 })
 
 onMounted(() => {
   getDataFromSelectors()
-  if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
+  if (props.options?.selectAllItemByDefault) {
+    clickedItem.value = props.data
+  }
+  else if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
     clickedItem.value = props.data[0]
   }
 })
@@ -541,28 +561,6 @@ defineExpose({ clearSelectedItems })
         @row-expand="onRowExpand"
         @row-collapse="onRowCollapse"
       >
-        <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
-          <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <span class="flex mt-2 md:mt-0">
-              <div class="my-2">
-                <h5 class="m-0">{{ options?.tableName }}</h5>
-              </div>
-              <Divider layout="vertical" />
-              <Button v-tooltip.right="'Clear'" type="button" icon="pi pi-filter-slash" severity="primary" label="Clear" outlined @click="clearFilter1(filters1)" />
-              <Divider layout="vertical" />
-              <span v-if="props.options?.search || false">
-                <InputText v-model="filters1.search.value" class="w-full sm:w-auto" placeholder="Press enter to search..." />
-                <Button label="Buscar" icon="pi pi-plus" class="mx-2" severity="primary" @click="onChangeFilters(filters1)">
-                  <i class="pi pi-search" />
-                </Button>
-              </span>
-            </span>
-            <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2">
-              <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" class="mr-2" severity="primary" @click="openNew" />
-            </div>
-          </div>
-        </template>
-
         <template #empty>
           <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
             <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
@@ -614,14 +612,13 @@ defineExpose({ clearSelectedItems })
             <slot v-if="column.type === 'slot-text'" :name="`column-${column.field}`" :data="data" :column="column" />
             <slot v-if="column.type === 'slot-select'" :name="`column-${column.field}`" :data="data" :column="column" />
             <slot v-if="column.type === 'slot-icon'" :name="`column-${column.field}`" :data="data" :column="column" />
+            <slot v-if="column.type === 'slot-date-editable'" :name="`column-${column.field}`" :data="data" :column="column" />
             <span v-if="column.type === 'icon' && column.icon">
               <Button :icon="column.icon" class="p-button-rounded p-button-text w-2rem h-2rem" aria-label="Submit" />
             </span>
-
-            <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null" v-tooltip.top="data[column.field].name" class="truncate">
-              <span v-if="column.type === 'select' || column.type === 'local-select'">
-                {{ data[column.field].name }}
-              </span>
+            <span v-else-if="column.type === 'date-editable'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate w-full">
+              <span v-if="column.props?.isRange">{{ formatRangeDate(data[column.field]) }}</span>
+              <span v-else>{{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}</span>
             </span>
             <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
               {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : '' }}
@@ -629,9 +626,10 @@ defineExpose({ clearSelectedItems })
             <span v-else-if="column.type === 'datetime'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
               {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}
             </span>
-            <span v-else-if="column.type === 'date-editable'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate w-full">
-              <span v-if="column.props?.isRange">{{ formatRangeDate(data[column.field]) }}</span>
-              <span v-else>{{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}</span>
+            <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null" v-tooltip.top="data[column.field].name" class="truncate">
+              <span v-if="column.type === 'select' || column.type === 'local-select'">
+                {{ data[column.field].name }}
+              </span>
             </span>
             <span v-else-if="column.type === 'image'">
               <NuxtImg v-if="data[column.field]" :src="data[column.field]" alt="Avatar" class="avatar" />
@@ -796,12 +794,12 @@ defineExpose({ clearSelectedItems })
           <template #filterclear="{ field }">
             <Button type="button" label="Clear" severity="secondary" @click="clearIndividualFilter(field)" />
           </template>
-          <template v-if="column.type === 'date-editable'" #editor="{ data, field }">
+          <template v-if="column.type === 'date-editable'" #editor="{ data: dataList, field }">
             <Calendar
-              v-model="data[field]" :manual-input="false"
-              style="width: 100%" view="month"
+              v-model="dataList[field]" :manual-input="false"
+              style="width: 100%" :view="column.props?.calendarMode || 'month'"
               date-format="yy-mm-dd"
-              @update:model-value="onCellEditComplete($event, data)"
+              @update:model-value="onCellEditComplete($event, dataList)"
             />
           </template>
           <template v-if="column.editable && column.type === 'text'" #editor="{ data, field }">
@@ -906,7 +904,7 @@ defineExpose({ clearSelectedItems })
     v-if="clickedItem"
     :open-dialog="openDialogDelete"
     :data="clickedItem"
-    :message="props.options?.messageToDelete ? props.options.messageToDelete : '¿Estás seguro que desea eliminar el elemento seleccionado?'"
+    :message="props.options?.messageToDelete ? props.options.messageToDelete : 'Are you sure you want to delete the selected item?'"
     @on-close-dialog="closeDialogDelete"
     @on-delete-confirmed="deleteItem($event, options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false)"
   />

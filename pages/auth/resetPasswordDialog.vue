@@ -8,7 +8,7 @@ const props = defineProps({
   message: {
     type: String,
     required: false,
-    default: '¿Estás seguro que desea eliminar el registro seleccionado?'
+    default: 'Are you sure you want to delete the selected record?'
   },
   openDialog: {
     type: Boolean,
@@ -81,11 +81,11 @@ async function resetPassword() {
     loading.value = true
 
     if (form.newPassword.value === '' || form.confirmPassword.value === '') {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Las contraseñas no pueden estar vacias', life: 3000 })
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Passwords cannot be empty', life: 3000 })
     }
 
     if (form.newPassword.value !== form.confirmPassword.value && form.confirmPassword.value !== '') {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Las contraseñas no coinciden', life: 3000 })
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Passwords do not match', life: 3000 })
     }
     const { token } = await executeRecaptcha('resetPassword')
     await repo.changePasswordLogged({ payload: { newPassword: form.newPassword.value, otp: form.otp.value }, tokenCaptcha: token })
@@ -123,7 +123,7 @@ onMounted(async () => {
   <Dialog
     v-model:visible="dialogVisible"
     modal
-    header="Cambiar contraseña"
+    header="Change Password"
     class="mx-3 sm:mx-0 sm:w-full md:w-3"
     content-class="border-round-bottom border-top-1 surface-border"
     @hide="dialogVisible = false"
@@ -132,7 +132,7 @@ onMounted(async () => {
       <div class="col-12">
         <div class="flex justify-content-center mt-5 mb-2">
           <span class="text-600 font-medium" style="text-align: center">
-            Escriba el código de seguridad enviado a su correo electrónico:
+            Enter the security code sent to your email:
           </span>
         </div>
         <div class="flex mb-3 justify-content-center">
@@ -166,8 +166,8 @@ onMounted(async () => {
       </div>
     </div>
     <template #footer>
-      <Button label="Cancelar" icon="pi pi-times" severity="secondary" text @click="cancelResetPassword" />
-      <Button label="Cambiar contraseña" icon="pi pi-check" text :disabled="loading" @click="resetPassword" />
+      <Button label="Cancel" icon="pi pi-times" severity="secondary" text @click="cancelResetPassword" />
+      <Button label="Change Password" icon="pi pi-check" text :disabled="loading" @click="resetPassword" />
     </template>
   </Dialog>
 </template>

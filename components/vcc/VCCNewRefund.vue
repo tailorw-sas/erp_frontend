@@ -8,6 +8,7 @@ import Divider from 'primevue/divider'
 import { GenericService } from '~/services/generic-services'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
+import { parseFormattedNumber } from '~/utils/helpers'
 
 const props = defineProps({
   openDialog: {
@@ -61,13 +62,17 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'grossAmount',
     header: 'Gross Amount',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
     class: 'field col-12 md:col-4',
-    validation: z.string().trim().min(1, 'The gross amount field is required')
-      .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-      .refine(val => Number.parseFloat(val) > 0, {
-        message: 'The amount must be greater than zero',
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
+    validation: z.number({
+      invalid_type_error: 'The gross amount field must be a number',
+      required_error: 'The gross amount field is required',
+    })
+      .refine(val => Number.parseFloat(String(val)) > 0, {
+        message: 'The gross amount must be greater than zero',
       })
   },
   {
@@ -80,13 +85,17 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'netAmount',
     header: 'Net Amount',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
     class: 'field col-12 md:col-4',
-    validation: z.string().trim().min(1, 'The net amount field is required')
-      .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-      .refine(val => Number.parseFloat(val) > 0, {
-        message: 'The amount must be greater than zero',
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
+    validation: z.number({
+      invalid_type_error: 'The net amount field must be a number',
+      required_error: 'The net amount field is required',
+    })
+      .refine(val => Number.parseFloat(String(val)) > 0, {
+        message: 'The net amount must be greater than zero',
       })
   },
   {
@@ -120,9 +129,11 @@ const fields: Array<FieldDefinitionType> = [
   }
 ]
 
-const validationPartialAmount = z.string().trim().min(1, 'The partial field is required')
-  .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-  .refine(val => Number.parseFloat(val) > 0, {
+const validationPartialAmount = z.number({
+  invalid_type_error: 'The partial field must be a number',
+  required_error: 'The partial field is required',
+})
+  .refine(val => Number.parseFloat(String(val)) > 0, {
     message: 'The amount must be greater than zero',
   })
 
@@ -191,13 +202,13 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   item.value.transactionId = String(props.parentTransaction.id)
   item.value.reference = props.parentTransaction.referenceNumber
-  item.value.grossAmount = String(props.parentTransaction.amount)
+  item.value.grossAmount = parseFormattedNumber(props.parentTransaction.amount)
   item.value.transactionCommission = String(props.parentTransaction.commission)
-  item.value.netAmount = String(props.parentTransaction.netAmount)
+  item.value.netAmount = parseFormattedNumber(props.parentTransaction.netAmount)
   item.value.selectedAmount = {
     type: '',
-    total: '0',
-    partial: '0',
+    total: 0,
+    partial: 0,
   }
   formReload.value++
 }
@@ -251,10 +262,10 @@ function saveSubmit(event: Event) {
 
 function handleRefundTypeChange(value: any) {
   if (value === 'gross') {
-    item.value.selectedAmount.total = props.parentTransaction.amount
+    item.value.selectedAmount.total = parseFormattedNumber(props.parentTransaction.amount)
   }
   else {
-    item.value.selectedAmount.total = props.parentTransaction.netAmount
+    item.value.selectedAmount.total = parseFormattedNumber(props.parentTransaction.netAmount)
   }
   if (!item.value.selectedAmount.type) {
     item.value.selectedAmount.type = 'TOTAL'
@@ -329,10 +340,13 @@ watch(() => props.openDialog, (newValue) => {
               />
               <div class="ml-2">
                 <strong for="total">Total</strong>
-                <InputText
+                <InputNumber
                   v-model="data.selectedAmount.total"
                   show-clear
                   disabled
+                  mode="decimal"
+                  :min-fraction-digits="2"
+                  :max-fraction-digits="4"
                   @change="($event) => {
                     onUpdate('amountTotal', $event)
                   }"
@@ -348,10 +362,13 @@ watch(() => props.openDialog, (newValue) => {
               />
               <div class="ml-2">
                 <strong for="partial">Partial</strong>
-                <InputText
+                <InputNumber
                   v-model="data.selectedAmount.partial"
                   show-clear
                   :disabled="!data.refundType || data.selectedAmount.type === 'TOTAL'"
+                  mode="decimal"
+                  :min-fraction-digits="2"
+                  :max-fraction-digits="4"
                   @update:model-value="validatePartialField"
                 />
                 <div v-if="partialErrors.length > 0" class="w-full p-error text-xs">

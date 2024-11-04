@@ -241,22 +241,22 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
 
   },
-  {
-    field: 'rateAdult',
-    header: 'Rate Adult',
-    dataType: 'number',
-    class: 'field col-12 md:col-6',
-    headerClass: 'mb-1',
+  // {
+  //   field: 'rateAdult',
+  //   header: 'Rate Adult',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-6',
+  //   headerClass: 'mb-1',
 
-  },
-  {
-    field: 'rateChild',
-    header: 'Rate Child',
-    dataType: 'number',
-    class: 'field col-12 md:col-6',
-    headerClass: 'mb-1',
+  // },
+  // {
+  //   field: 'rateChild',
+  //   header: 'Rate Child',
+  //   dataType: 'number',
+  //   class: 'field col-12 md:col-6',
+  //   headerClass: 'mb-1',
 
-  },
+  // },
 
   {
     field: 'invoiceAmount',
@@ -462,17 +462,17 @@ const Columns: IColumn[] = [
 
   { field: 'roomRateId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
-  { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
   { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'adults', header: 'Adults', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
 ]
 
@@ -898,8 +898,6 @@ watch(() => props.bookingObj, () => {
     checkIn: dayjs(props.bookingObj?.checkIn).toDate(),
     checkOut: dayjs(props.bookingObj?.checkOut).toDate(),
   }
-  console.log(item.value)
-  console.log(props.bookingObj)
 })
 </script>
 
@@ -912,14 +910,14 @@ watch(() => props.bookingObj, () => {
       @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
-        if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
-          return;
-        }
+        // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
+        //   return;
+        // }
 
-        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
-          return;
-        }
-        openEditDialog($event)
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
+        //   return;
+        // }
+        // openEditDialog($event)
 
       }"
     >
@@ -932,7 +930,7 @@ watch(() => props.bookingObj, () => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column
-              footer="Totals:" :colspan="!isDetailView ? 9 : 10"
+              footer="Totals:" :colspan="!isDetailView ? 6 : 7"
               footer-style="text-align:right; font-weight: 700"
             />
             <Column :footer="props.roomRateTotalObj.totalHotelAmount" footer-style="font-weight: 700" />

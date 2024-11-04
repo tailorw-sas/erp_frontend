@@ -104,6 +104,7 @@ const confResourceTypeApi = reactive({
 
 const idItem = ref('')
 const item = ref<GenericObject>({
+  id: '',
   type: null,
   filename: '',
   file: '',
@@ -117,6 +118,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
+  id: '',
   type: null,
   filename: '',
   file: '',
@@ -550,6 +552,11 @@ async function saveItem(item: { [key: string]: any }) {
         item.id = v4()
         await props.addItem(item)
         await clearForm()
+
+        if (listItemsLocal.value?.length > 0) {
+          await getItemById(listItemsLocal.value[0].id)
+        }
+
         return loadingSaveAll.value = false
       }
       await createItem(item)
@@ -564,6 +571,9 @@ async function saveItem(item: { [key: string]: any }) {
     clearForm()
     await getList()
   }
+}
+function disabledBtnDeleteAttachment() {
+  return (ListItems.value.length <= 1) || (disableDeleteBtn.value === false ? (!idItem.value || (!props.isCreationDialog && props.selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)) : true)
 }
 
 function requireConfirmationToDelete(event: any) {
@@ -665,36 +675,101 @@ function showHistory() {
 }
 
 function downloadFile() {
-  if (props.isCreationDialog) {
-    const reader = new FileReader()
-    reader.readAsDataURL(item.value.file)
-    reader.onload = (e) => {
-      const tempLink = document.createElement('a')
-      tempLink.style.display = 'none'
-      tempLink.href = e.target.result as string
-      tempLink.download = item.value.filename
-      document.body.appendChild(tempLink)
-      tempLink.click()
-      document.body.removeChild(tempLink)
+  // if (props.isCreationDialog) {
+  //   const reader = new FileReader()
+  //   reader.readAsDataURL(item.value.file)
+  //   reader.onload = (e) => {
+  //     const tempLink = document.createElement('a')
+  //     tempLink.style.display = 'none'
+  //     tempLink.href = e.target.result as string
+  //     tempLink.download = item.value.filename
+  //     document.body.appendChild(tempLink)
+  //     tempLink.click()
+  //     document.body.removeChild(tempLink)
+  //   }
+
+  //   return
+  // }
+
+  // if (item.value) {
+  //   const link = document.createElement('a')
+  //   link.href = item.value.file
+  //   link.setAttribute('download', `${item.value.filename}`)
+  //   link.setAttribute('target', '_blank')
+  //   document.body.appendChild(link)
+  //   link.click()
+  //   document.body.removeChild(link)
+  // }
+}
+
+function openFileInNewWindow() {
+  if (item.value && item.value.file) {
+    if (typeof item.value.file === 'string' && item.value.file.length > 0) {
+      window.open(item.value.file, '_blank')
     }
+    else if (typeof item.value.file === 'object') {
+      const fileData = item.value.file
+      const fileName = item.value.filename || 'downloaded_file'
 
-    return
-  }
+      const blob = new Blob([fileData], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
 
-  if (item.value) {
-    const link = document.createElement('a')
-    link.href = item.value.file
-    link.setAttribute('download', `${item.value.filename}`)
-    link.setAttribute('target', '_blank')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      window.open(url, '_blank')
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'File not found', life: 3000 })
+    }
   }
 }
 
 const haveAttachmentWithAttachmentTypeInv = computed(() => {
   return ListItems.value?.some((attachment: any) => attachment?.type?.code === 'INV')
 })
+
+function isFieldDisabled() {
+  if (!props.isCreationDialog) {
+    // !ListItems.value.some(item => item.type?.attachInvDefault)
+    if (item.value && item.value.id) {
+      return true
+    }
+    else {
+      return !ListItems.value.some(item => item.type?.attachInvDefault)
+    }
+  }
+  else if (props.isCreationDialog) {
+    if (item.value && item.value.id) {
+      return true
+    }
+    else {
+      return !listItemsLocal.value.some(item => item.type?.attachInvDefault)
+    }
+  }
+  return false
+}
+
+function disabledBtnSave(propsValue: any): boolean {
+  if (item.value && item.value.id) {
+    return true
+  }
+  else if (propsValue.item.fieldValues.file) {
+    return false
+  }
+  else {
+    return true
+  }
+}
+function disabledFields(): boolean {
+  if (item.value && item.value.id) {
+    return true
+  }
+  else {
+    return false
+  }
+}
+
+function disabledBtnCreate(): boolean {
+  return false
+}
 
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
@@ -743,6 +818,7 @@ onMounted(async () => {
   else {
     if (listItemsLocal.value?.length > 0) {
       idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id
+      await getItemById(idItemToLoadFirstTime.value)
     }
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
@@ -811,8 +887,13 @@ onMounted(async () => {
             >
               <template #field-resourceType="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-                  :model="resourceTypeSelected" :disabled="resourceTypeSelected" :suggestions="resourceTypeList"
+                  v-if="!loadingSaveAll"
+                  id="autocomplete"
+                  field="name"
+                  item-value="id"
+                  :model="resourceTypeSelected"
+                  :disabled="resourceTypeSelected"
+                  :suggestions="resourceTypeList"
                   @change="($event) => {
                     onUpdate('resourceType', $event)
                     typeError = false
@@ -827,10 +908,11 @@ onMounted(async () => {
                     </div>
                   </template>
                 </DebouncedAutoCompleteComponent>
+                <Skeleton v-else height="2rem" class="mb-2" />
                 <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
                   required</span>
               </template>
-
+              <!-- :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? (!haveAttachmentWithAttachmentTypeInv) : (!isCreationDialog && ListItems.length > 0)" -->
               <template #field-type="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
                   v-if="!loadingSaveAll"
@@ -838,7 +920,7 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                  :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? (!haveAttachmentWithAttachmentTypeInv) : (!isCreationDialog && ListItems.length > 0)"
+                  :disabled="isFieldDisabled()"
                   :suggestions="attachmentTypeList"
                   @change="($event) => {
                     onUpdate('type', $event)
@@ -854,19 +936,19 @@ onMounted(async () => {
                     </div>
                   </template>
                 </DebouncedAutoCompleteComponent>
+                <Skeleton v-else height="2rem" class="mb-2" />
                 <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
                   required</span>
               </template>
-              async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
-              const file = event.files[0]
-              objFile.value = file
-              listFields[fieldKey] = file
-              }
 
               <template #field-file="{ onUpdate, item: data }">
                 <FileUpload
-                  accept="application/pdf" :max-file-size="300 * 1024 * 1024" :multiple="false" auto
-                  custom-upload @uploader="(event: any) => {
+                  accept="application/pdf"
+                  :max-file-size="300 * 1024 * 1024"
+                  :multiple="false"
+                  auto
+                  custom-upload
+                  @uploader="(event: any) => {
                     const file = event.files[0]
                     onUpdate('file', file)
                     onUpdate('filename', data.file.name || data.file.split('/')[data.file.split('/')?.length - 1])
@@ -877,7 +959,7 @@ onMounted(async () => {
                       <div class="flex gap-2">
                         <Button
                           id="btn-choose" class="p-2" icon="pi pi-plus"
-                          :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)" text @click="chooseCallback()"
+                          :disabled="disabledFields(data)" text @click="chooseCallback()"
                         />
                         <Button
                           icon="pi pi-times" class="ml-2" severity="danger"
@@ -910,11 +992,13 @@ onMounted(async () => {
                 </FileUpload>
               </template>
               <template #field-filename="{ item: data }">
-                <InputText v-model="data.filename" field="filename" show-clear :disabled="!isCreationDialog" />
+                <InputText v-model="data.filename" field="filename" show-clear :disabled="true" />
               </template>
               <template #field-remark="{ item: data }">
                 <Textarea
-                  v-model="data.remark" field="remark" :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)"
+                  v-model="data.remark"
+                  field="remark"
+                  :disabled="disabledFields()"
                   rows="5"
                 />
               </template>
@@ -924,15 +1008,17 @@ onMounted(async () => {
                 >
                   <Button
                     v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-                    :disabled="!props.item?.fieldValues?.file || idItem !== '' || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
+                    :disabled="disabledBtnSave(props)"
                     @click="saveItem(props.item.fieldValues)"
                   />
                 </IfCan>
-                
+
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
+                  <!-- :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)"  -->
                   <Button
                     v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus"
-                    :disabled="(documentOptionHasBeenUsed && invoice?.manageInvoiceStatus?.code === 'PROC') ? false : (!isCreationDialog && ListItems.length > 0)" @click="() => {
+                    :disabled="disabledBtnCreate()"
+                    @click="() => {
                       idItem = ''
                       item = itemTemp
                       clearForm()
@@ -943,7 +1029,7 @@ onMounted(async () => {
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
                   <Button
                     v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="!idItem"
-                    @click="downloadFile"
+                    @click="openFileInNewWindow"
                   />
                 </IfCan>
 
@@ -958,7 +1044,7 @@ onMounted(async () => {
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
                   <Button
                     v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
-                    :disabled="disableDeleteBtn === false ? (!idItem || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)) : true"
+                    :disabled="disabledBtnDeleteAttachment()"
                     @click="requireConfirmationToDelete"
                   />
                 </IfCan>

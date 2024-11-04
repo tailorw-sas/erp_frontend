@@ -160,7 +160,7 @@ onMounted(() => {
         <template #field-invoiceAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.invoiceAmount"
-            show-clear 
+            show-clear
             @update:model-value="($event) => {
               console.log(invoiceObj)
               let value: any = $event
@@ -177,7 +177,7 @@ onMounted(() => {
         <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
-            show-clear 
+            show-clear
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
         </template>

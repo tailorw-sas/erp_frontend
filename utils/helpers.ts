@@ -394,3 +394,31 @@ function formatDate(value) {
 
   return parseAndFormatDate(value)
 }
+
+export function formatNumber(number: any) {
+  // Asegúrate de que el número sea válido
+  if (Number.isNaN(number)) {
+    throw new TypeError('El valor proporcionado no es un número.')
+  }
+
+  // Utiliza Intl.NumberFormat para formatear el número
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4
+  }).format(number)
+}
+
+export function parseFormattedNumber(formattedNumber: string): number {
+  // Elimina cualquier carácter que no sea un número, punto o signo negativo
+  const sanitizedNumber = formattedNumber.replace(/[^0-9.-]/g, '')
+
+  // Convierte el string en un número
+  const parsedNumber = Number.parseFloat(sanitizedNumber)
+
+  // Verifica si el resultado es un número válido
+  if (Number.isNaN(parsedNumber)) {
+    throw new TypeError('El valor proporcionado no se puede convertir en un número.')
+  }
+
+  return parsedNumber
+}

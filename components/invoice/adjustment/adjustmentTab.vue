@@ -249,7 +249,7 @@ const Columns: IColumn[] = [
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'amount', header: 'Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'roomRateId', header: 'Room Rate', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'paymentTransactionType', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'date', header: 'Transaction Date', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'employee', header: 'Employee', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'description', header: 'Description', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -263,7 +263,6 @@ const ENUM_FILTER = [
 ]
 
 async function openEditDialog(item: any) {
-  console.log(item)
   props.openDialog()
   if (item?.id) {
     idItem.value = item?.id
@@ -298,7 +297,9 @@ const route = useRoute()
 
 const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
-  filter: [],
+  filter: [
+
+  ],
   query: '',
   pageSize: 10,
   page: 0,
@@ -339,6 +340,7 @@ async function getAdjustmentList() {
     totalAmount.value = 0
 
     const response = await GenericService.search(Options.value.moduleApi, Options.value.uriApi, Payload.value)
+    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -664,11 +666,6 @@ function OnSortField(event: any) {
   }
 }
 
-function openDialog() {
-  dialogOpen.value = true
-  console.log(dialogOpen)
-}
-
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
     getAdjustmentList()
@@ -698,6 +695,11 @@ onMounted(() => {
       operator: 'EQUALS',
       value: props.selectedInvoice,
       logicalOperation: 'AND'
+    }, {
+      key: 'roomRate.booking.invoice.isCloned',
+      operator: 'EQUALS', // Usamos 'EQUALS' para igualar
+      value: false, // Buscamos aquellos que no están clonados
+      logicalOperation: 'AND' // Operación lógica
     }]
   }
   if (!props.isCreationDialog) {
@@ -709,10 +711,17 @@ onMounted(() => {
 <template>
   <div>
     <DynamicTable
-      :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns" :options="Options"
-      :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-row-right-click="onRowRightClick" @on-sort-field="OnSortField"
+      :data="isCreationDialog ? listItems as any : ListItems"
+      :columns="Columns"
+      :options="Options"
+      :pagination="Pagination"
+      @on-confirm-create="ClearForm"
+      @open-edit-dialog="OpenEditDialog($event)"
+      @on-change-pagination="PayloadOnChangePage = $event"
+      @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems"
+      @on-row-right-click="onRowRightClick"
+      @on-sort-field="OnSortField"
       @on-row-double-click="($event) => {
 
       }"

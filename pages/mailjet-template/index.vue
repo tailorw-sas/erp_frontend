@@ -9,13 +9,16 @@ import { GenericService } from '~/services/generic-services'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import { ENUM_SHORT_TYPE } from '~/utils/Enums'
+import { ENUM_MAIL_TEMPLATE_TYPE, ENUM_SHORT_TYPE } from '~/utils/Enums'
+import { validateEntityStatus } from '~/utils/schemaValidations'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
+const LanguageList = ref<any[]>([])
 const loadingSaveAll = ref(false)
+const loadingLanguage = ref(false)
 const loadingDelete = ref(false)
 const listConfigMailjet = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
@@ -64,6 +67,24 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'This is a required field').max(50, 'Maximum 50 characters')
   },
   {
+    field: 'type',
+    header: 'Type',
+    dataType: 'select',
+    class: 'field col-12 required',
+    validation: z.object({
+      id: z.string(),
+      name: z.string(),
+    }).nullable()
+      .refine(value => value && value.id && value.name, { message: `The type field is required` })
+  },
+  {
+    field: 'language',
+    header: 'Language',
+    dataType: 'select',
+    class: 'field col-12 required',
+    validation: validateEntityStatus('language'),
+  },
+  {
     field: 'description',
     header: 'Description',
     dataType: 'textarea',
@@ -77,6 +98,8 @@ const item = ref<GenericObject>({
   description: '',
   mailjetConfigId: '',
   templateCode: '',
+  type: null,
+  language: ''
 })
 
 const itemTemp = ref<GenericObject>({
@@ -84,6 +107,8 @@ const itemTemp = ref<GenericObject>({
   description: '',
   mailjetConfigId: '',
   templateCode: '',
+  type: null,
+  language: ''
 })
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
@@ -91,6 +116,8 @@ const columns = ref<IColumn[]>([
   { field: 'templateCode', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
+  { field: 'languageCode', header: 'Language Code', type: 'text' },
+  { field: 'type', header: 'Type', type: 'text' },
   { field: 'createdAt', header: 'Created At', type: 'date' },
 ])
 // -------------------------------------------------------------------------------------------------------
@@ -221,6 +248,38 @@ async function getListMeijetConfig() {
   }
 }
 
+async function getLanguagesList(filters: any[]) {
+  try {
+    const payload
+        = {
+          filter: [
+            ...filters,
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
+          query: '',
+          pageSize: 20,
+          page: 0,
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.DESC
+        }
+
+    const response = await GenericService.search('settings', 'manage-language', payload)
+    const { data: dataList } = response
+    LanguageList.value = []
+    for (const iterator of dataList) {
+      LanguageList.value = [...LanguageList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error on loading languages list:', error)
+  }
+}
+
 async function resetListItems() {
   payload.value.page = 0
   getList()
@@ -238,6 +297,13 @@ async function getItemById(id: string) {
         item.value.templateCode = response.templateCode
         item.value.name = response.name
         item.value.description = response.description
+        item.value.type = ENUM_MAIL_TEMPLATE_TYPE.find((i: any) => i.id === response.type)
+        if (response.languageCode) {
+          getLanguageByCode(response.languageCode)
+        }
+        else {
+          item.value.language = null
+        }
       }
       formReload.value += 1
     }
@@ -252,11 +318,36 @@ async function getItemById(id: string) {
   }
 }
 
+async function getLanguageByCode(code: string) {
+  try {
+    loadingLanguage.value = true
+    const filters = [
+      {
+        key: 'code',
+        operator: 'LIKE',
+        value: code,
+        logicalOperation: 'AND',
+      }
+    ]
+    await getLanguagesList(filters)
+    if (LanguageList.value.length > 0) {
+      item.value.language = LanguageList.value[0]
+      formReload.value++
+    }
+  }
+  finally {
+    loadingLanguage.value = false
+  }
+}
+
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.mailjetConfigId = typeof payload.mailjetConfigId === 'object' ? payload.mailjetConfigId.id : payload.mailjetConfigId
+    payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
+    payload.languageCode = typeof payload.language === 'object' ? payload.language.code : payload.language
+    delete payload.language
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
@@ -265,6 +356,9 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.mailjetConfigId = typeof payload.mailjetConfigId === 'object' ? payload.mailjetConfigId.id : payload.mailjetConfigId
+  payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
+  payload.languageCode = typeof payload.language === 'object' ? payload.language.code : payload.language
+  delete payload.language
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -479,6 +573,7 @@ onMounted(async () => {
             :show-actions="true"
             :loading-save="loadingSaveAll"
             :loading-delete="loadingDelete"
+            hide-delete-button
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
@@ -493,6 +588,49 @@ onMounted(async () => {
                 placeholder="Select Config Mailjet"
                 @update:model-value="($event) => {
                   onUpdate('mailjetConfigId', $event)
+                }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-type="{ item: data, onUpdate }">
+              <Dropdown
+                v-if="!loadingSaveAll"
+                v-model="data.type"
+                :options="[...ENUM_MAIL_TEMPLATE_TYPE]"
+                option-label="name"
+                return-object="false"
+                show-clear
+                @update:model-value="($event) => {
+                  onUpdate('type', $event)
+                }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-language="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll && !loadingLanguage"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.language"
+                :suggestions="LanguageList"
+                @change="($event) => {
+                  onUpdate('language', $event)
+                }"
+                @load="($event) => {
+                  const filters = [{
+                                     key: 'name',
+                                     operator: 'LIKE',
+                                     value: $event,
+                                     logicalOperation: 'OR',
+                                   },
+                                   {
+                                     key: 'code',
+                                     operator: 'LIKE',
+                                     value: $event,
+                                     logicalOperation: 'OR',
+                                   }]
+                  getLanguagesList(filters)
                 }"
               />
               <Skeleton v-else height="2rem" class="mb-2" />

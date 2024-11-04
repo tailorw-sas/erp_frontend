@@ -10,7 +10,7 @@ const props = defineProps({
   message: {
     type: String,
     required: false,
-    default: '¿Estás seguro que desea eliminar el registro seleccionado?'
+    default: 'Are you sure you want to delete the selected record?'
   },
   openDialog: {
     type: Boolean,
@@ -33,7 +33,7 @@ function processMessage(data: any, message?: string): string {
   if (!message) { return '' } // Si no se proporciona un mensaje, retornar cadena vacía
 
   // Expresión regular para encontrar las variables entre {{ y }}
-  const regex = /{{\s*(.*?)\s*}}/g
+  const regex = /\{\{\s*(.*?)\s*\}\}/g
 
   // Reemplazar las variables en el mensaje con sus valores correspondientes
   const processedMessage = message.replace(regex, (match, key) => {
@@ -73,14 +73,14 @@ watch(() => props.openDialog, (newValue) => {
 </script>
 
 <template>
-  <Dialog v-model:visible="dialogVisible" :style="{ width: '450px' }" header="Eliminar registro" :modal="true" :closable="false">
+  <Dialog v-model:visible="dialogVisible" :style="{ width: '450px' }" header="Delete record" :modal="true" :closable="false">
     <div class="flex align-items-center justify-content-center my-3">
       <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
       <span>{{ message }}</span>
     </div>
     <template #footer>
       <Button label="No" icon="pi pi-times" text @click="closeDialog" />
-      <Button label="Sí" icon="pi pi-check" text severity="danger" @click="confirmDelete(props.data?.id)" />
+      <Button label="Yes" icon="pi pi-check" text severity="danger" @click="confirmDelete(props.data?.id)" />
     </template>
   </Dialog>
 </template>

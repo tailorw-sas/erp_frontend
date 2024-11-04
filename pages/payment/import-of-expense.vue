@@ -9,6 +9,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { base64ToFile } from '~/utils/helpers'
 
 const toast = useToast()
+const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
@@ -26,7 +27,7 @@ const confApi = reactive({
 
 const confPaymentApi = reactive({
   moduleApi: 'payment',
-  uriApi: 'payment-detail',
+  uriApi: 'payment',
 })
 // VARIABLES -----------------------------------------------------------------------------------------
 const idItem = ref('')
@@ -106,7 +107,17 @@ async function getErrorList() {
           rowError += `- ${err.message} \n`
         }
         const dateTemp = !iterator.row ? null : convertirAFechav2(iterator.row.transactionDate)
-        newListItems.push({ ...iterator.row, id: iterator.id, transactionDate: dateTemp, impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`, loadingEdit: false, loadingDelete: false })
+        newListItems.push(
+          {
+            ...iterator.row,
+            id: iterator.id,
+            transactionDate: dateTemp,
+            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            amount: iterator.row.amount ? formatNumber(iterator.row.amount) : 0,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -151,6 +162,7 @@ async function importFile() {
     formData.append('file', file)
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.EXPENSE)
+    formData.append('employeeId', userData?.value?.user?.userId)
     await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
@@ -183,7 +195,7 @@ async function validateStatusImport() {
       try {
         const response = await GenericService.getById(confPaymentApi.moduleApi, confPaymentApi.uriApi, idItem.value, 'import-status')
         status = response.status
-        totalImportedRows.value = response.totalRows ?? 0
+        totalImportedRows.value = response.total ?? 0
       }
       catch (error: any) {
         toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })

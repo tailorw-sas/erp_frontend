@@ -116,6 +116,10 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  invoiceType: {
+    type: String,
+    required: false
+  }
 })
 
 const activeTab = ref(props.active)
@@ -302,7 +306,6 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-
   if (props.isCreationDialog) {
     showTabs.value = route.query.type !== InvoiceType.CREDIT
   }
@@ -313,7 +316,7 @@ onMounted(async () => {
   <div class="justify-content-center align-center ">
     <div style="width: 100%; height: 100%;">
       <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
-        <TabPanel>
+        <TabPanel v-if="route.name !== 'invoice-edit-booking-id'">
           <template #header>
             <div class="flex align-items-center gap-2 p-2" :style="`${active === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-calendar" style="font-size: 1.5rem" />
@@ -326,8 +329,6 @@ onMounted(async () => {
               </span>
             </div>
           </template>
-
-          <!-- BookingTab -> components/invoice/booking/bookingTab.vue  -->
           <BookingTab
             :refetch-invoice="refetchInvoice"
             :get-invoice-agency="getInvoiceAgency"
@@ -349,6 +350,7 @@ onMounted(async () => {
             :invoice-hotel="invoiceHotel"
             :is-detail-view="isDetailView"
             :show-totals="showTotals"
+            :invoice-type="props.invoiceType"
           />
         </TabPanel>
         <TabPanel v-if="showTabs">
@@ -412,10 +414,20 @@ onMounted(async () => {
 
               adjustmentDialogOpen = false;
 
-            }" :open-dialog="handleDialogOpen" :refetch-invoice="refetchInvoice"
-            :selected-room-rate="selectedRoomRate" :sort-adjustment="sortAdjustment" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :list-items="adjustmentList" :add-item="addAdjustment"
-            :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any" :is-detail-view="isDetailView" :show-totals="showTotals"
+            }"
+            :open-dialog="handleDialogOpen"
+            :refetch-invoice="refetchInvoice"
+            :selected-room-rate="selectedRoomRate"
+            :sort-adjustment="sortAdjustment"
+            :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate"
+            :list-items="adjustmentList"
+            :add-item="addAdjustment"
+            :update-item="updateAdjustment"
+            :is-creation-dialog="isCreationDialog"
+            :selected-invoice="selectedInvoice"
+            :is-detail-view="isDetailView"
+            :show-totals="showTotals"
           />
         </TabPanel>
       </TabView>

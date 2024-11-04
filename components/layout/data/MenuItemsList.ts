@@ -169,11 +169,11 @@ export const model = ref([
             icon: 'pi pi-fw pi-folder',
             to: '/settings/agency-type'
           },
-          // {
-          //   label: 'Agency',
-          //   icon: 'pi pi-fw pi-folder',
-          //   to: ''
-          // },
+          {
+            label: 'Agency Contact',
+            icon: 'pi pi-fw pi-folder',
+            to: '/settings/agency-contact'
+          },
           {
             label: 'Client',
             icon: 'pi pi-fw pi-folder',
@@ -507,6 +507,11 @@ export const model = ref([
             icon: 'pi pi-fw pi-folder',
             to: '/settings/merchant-config'
           },
+          {
+            label: 'Merchant Language',
+            icon: 'pi pi-fw pi-folder',
+            to: '/settings/merchant-language'
+          },
           // {
           //   label: 'Reconcile Status',
           //   icon: 'pi pi-fw pi-folder',
@@ -579,7 +584,19 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/report-config'),
               items: []
-            }
+            },
+            {
+              label: 'Report View',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/report-config/view'),
+              items: []
+            },
+            {
+              label: 'Logs',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/audit'),
+              items: []
+            },
           ]
         },
       ],
@@ -600,12 +617,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/close-operation/payment'),
               items: []
             },
-            // {
-            //   label: 'Payment Status',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/payment-status'),
-            //   items: []
-            // },
+            {
+              label: 'Payment Status',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/payment-status'),
+              items: []
+            },
             // {
             //   label: 'Payment Transaction Status',
             //   icon: 'pi pi-fw pi-file',
@@ -643,12 +660,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/close-operation/invoice'),
               items: []
             },
-            {
-              label: 'Invoice Parameterization',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/parameterization/invoice'),
-              items: []
-            },
           ]
         }
       ],
@@ -666,12 +677,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'VCC Close Operation',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/close-operation/vcc'),
-              items: []
-            },
-            {
-              label: 'VCC Parameterization',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/parameterization/vcc'),
               items: []
             },
           ]
@@ -850,12 +855,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/payment/attachment-type'),
               items: []
             },
-            // {
-            //   label: 'Payment Transaction Status',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/payment-transaction-status'),
-            //   items: []
-            // }
           ]
         }
       ],
@@ -935,6 +934,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
             {
+              label: 'Merchant Language',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/merchant-language'),
+              items: []
+            },
+            {
               label: 'Reconcile Transaction Status',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/reconcile-transaction-status'),
@@ -944,6 +949,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'Transaction Status',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/transaction-status'),
+              items: []
+            },
+            {
+              label: 'Payment Transaction Status',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/payment-transaction-status'),
               items: []
             }
           ]

@@ -56,7 +56,6 @@ const options = ref({
   moduleApi: 'settings',
   uriApi: 'manage-employee',
   loading: false,
-  showToolBar: false,
   showAcctions: false,
 })
 const payloadOnChangePage = ref<PageState>()

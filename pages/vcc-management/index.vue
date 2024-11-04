@@ -3,19 +3,22 @@ import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
+import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import type { MenuItem } from '~/components/menu/MenuItems'
+import { formatNumber } from '~/pages/payment/utils/helperFilters'
 // VARIABLES -----------------------------------------------------------------------------------------
-
+const toast = useToast()
 const authStore = useAuthStore()
 const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
 
 const listItems = ref<any[]>([])
 const newManualTransactionDialogVisible = ref(false)
+const editManualTransactionDialogVisible = ref(false)
 const newAdjustmentTransactionDialogVisible = ref(false)
 const newRefundDialogVisible = ref(false)
 const loadingSaveAll = ref(false)
@@ -33,14 +36,29 @@ const filterToSearch = ref<IData>({
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
+const selectedTransactionId = ref('')
 const contextMenu = ref()
+
+enum MenuType {
+  refund, resendEmail
+}
 
 const allMenuListItems = [
   {
+    type: MenuType.refund,
     label: 'Refund',
     icon: 'pi pi-dollar',
     command: () => openNewRefundDialog(),
-    disabled: false
+    disabled: false,
+    isCollection: true // que pertenecen a un status en el collection status
+  },
+  {
+    type: MenuType.resendEmail,
+    label: 'Resend Payment Link',
+    icon: 'pi pi-send',
+    command: () => resendPaymentLink(),
+    disabled: false,
+    isCollection: false
   },
 ]
 
@@ -99,8 +117,8 @@ const legend = ref(
       colClass: 'pr-3',
     },
     {
-      name: 'Canceled',
-      color: '#FF1405',
+      name: 'Cancelled',
+      color: '#888888',
       colClass: 'pr-3',
     },
     {
@@ -117,14 +135,14 @@ const legend = ref(
 )
 
 const sClassMap: IStatusClass[] = [
-  { status: 'Sent', class: 'text-sent' },
-  { status: 'Created', class: 'text-created' },
-  { status: 'Received', class: 'text-received' },
-  { status: 'Declined', class: 'text-declined' },
-  { status: 'Paid', class: 'text-paid' },
-  { status: 'Canceled', class: 'text-canceled' },
-  { status: 'Reconciled', class: 'text-reconciled' },
-  { status: 'Refund', class: 'text-refund' },
+  { status: 'Sent', class: 'vcc-text-sent' },
+  { status: 'Created', class: 'vcc-text-created' },
+  { status: 'Received', class: 'vcc-text-received' },
+  { status: 'Declined', class: 'vcc-text-declined' },
+  { status: 'Paid', class: 'vcc-text-paid' },
+  { status: 'Cancelled', class: 'vcc-text-cancelled' },
+  { status: 'Reconciled', class: 'vcc-text-reconciled' },
+  { status: 'Refund', class: 'vcc-text-refund' },
 ]
 ////
 
@@ -143,7 +161,7 @@ const createItems: Array<MenuItem> = ref([{
 }, {
   label: 'Adjustment Transaction',
   command: () => openNewAdjustmentTransactionDialog(),
-  disabled: computedShowMenuItemAdjustmentTransaction.value
+  disabled: true
 }])
 
 // -------------------------------------------------------------------------------------------------------
@@ -155,13 +173,14 @@ const columns: IColumn[] = [
   { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
-  { field: 'creditCardType', header: 'CC Type', type: 'text', },
+  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
+  { field: 'methodType', header: 'Method Type', type: 'text' },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'netAmount', header: 'T.Amount', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
+  { field: 'status', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
@@ -226,6 +245,12 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = iterator.status.name
       }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
+        iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
+        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
+      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
         iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
       }
@@ -234,15 +259,15 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
-        iterator.amount = String(iterator.amount)
+        iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
         count.commission += iterator.commission
-        iterator.commission = String(iterator.commission)
+        iterator.commission = formatNumber(iterator.commission)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
         count.net += iterator.netAmount
-        iterator.netAmount = iterator.netAmount ? String(iterator.netAmount) : '0'
+        iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
@@ -277,7 +302,7 @@ function searchAndFilter() {
     sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    newPayload.filter = [{
+    newPayload.filter = [...newPayload.filter, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'EQUALS',
       value: filterToSearch.value.search,
@@ -287,6 +312,13 @@ function searchAndFilter() {
   }
   else {
     newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    // Filtro para no mostrar transacciones de ajuste
+    // newPayload.filter = [...newPayload.filter, {
+    //   key: 'adjustment',
+    //   operator: 'EQUALS',
+    //   value: false,
+    //   logicalOperation: 'AND',
+    // }]
     // Date
     if (filterToSearch.value.from) {
       newPayload.filter = [...newPayload.filter, {
@@ -633,6 +665,22 @@ function onSortField(event: any) {
   }
 }
 
+async function resendPaymentLink() {
+  try {
+    if (contextMenuTransaction.value.id) {
+      options.value.loading = true
+      await GenericService.create('creditcard', 'transactions/resend-payment-link', { id: contextMenuTransaction.value.id })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    }
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
 async function openNewManualTransactionDialog() {
   newManualTransactionDialogVisible.value = true
 }
@@ -643,6 +691,13 @@ async function openNewAdjustmentTransactionDialog() {
 
 async function openNewRefundDialog() {
   newRefundDialogVisible.value = true
+}
+
+async function onCloseEditManualTransactionDialog(isCancel: boolean) {
+  editManualTransactionDialogVisible.value = false
+  if (!isCancel) {
+    getList()
+  }
 }
 
 async function onCloseNewManualTransactionDialog(isCancel: boolean) {
@@ -666,27 +721,54 @@ async function onCloseNewRefundDialog(isCancel: boolean = true) {
   }
 }
 
+function onDoubleClick(item: any) {
+  console.log(item)
+  if (item.manual || item.parent) {
+    const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
+    selectedTransactionId.value = id
+    editManualTransactionDialogVisible.value = true
+  }
+}
+
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criteria && filterToSearch.value.search)
   return false
 })
 
-async function findMenuItems(status: string) {
+async function findCollectionStatusMenuOptions(status: string) {
   const collection: any = collectionStatusList.value.find(item => item?.name.toLowerCase() === status.toLowerCase())
-  menuListItems.value = []
   if (collection) {
     const navigateOptions = collection.navigate.map((n: any) => n.name.toLowerCase())
-    menuListItems.value = allMenuListItems.filter((element: any) => navigateOptions.includes(element.label.toLowerCase()))
+    // se agregan los elementos que pertenecen al navigate de dicho status
+    menuListItems.value = allMenuListItems.filter((element: any) => element.isCollection && navigateOptions.includes(element.label.toLowerCase()))
+  }
+}
+
+function findNoCollectionStatusMenuOptions() {
+  const noCollectionItems: any[] = allMenuListItems.filter((element: any) => !element.isCollection)
+  for (let i = 0; i < noCollectionItems.length; i++) {
+    const element = noCollectionItems[i]
+    if (element.type === MenuType.resendEmail && contextMenuTransaction.value.methodType === 'LINK') {
+      menuListItems.value.push(element)
+    }
   }
 }
 
 async function onRowRightClick(event: any) {
+  // console.log(event.data)
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
-  await findMenuItems(contextMenuTransaction.value.status)
+  menuListItems.value = [] // Elementos que se van a mostrar en el menu
+  // Agrega a la lista las opciones que estan presentes en el navigate para el collection status del estado del elemento seleccionado
+  await findCollectionStatusMenuOptions(contextMenuTransaction.value.status)
   if (menuListItems.value.length > 0) {
     const enableManualTransaction = (status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
+    // aqui se valida que hayan fondos disponibles para la devolucion
     setRefundAvailable(enableManualTransaction ? contextMenuTransaction.value.permitRefund : false)
+  }
+  // Agregar opciones que no son tipo coleccion:
+  findNoCollectionStatusMenuOptions()
+  if (menuListItems.value.length > 0) {
     contextMenu.value.show(event.originalEvent)
   }
 }
@@ -696,6 +778,10 @@ function setRefundAvailable(isAvailable: boolean) {
   if (menuItem) {
     menuItem.disabled = !isAvailable
   }
+}
+
+function openBankReconciliation() {
+  window.open('/vcc-management/bank-reconciliation', '_blank')
 }
 // -------------------------------------------------------------------------------------------------------
 
@@ -725,6 +811,7 @@ onMounted(() => {
     </h3>
     <div class="my-2 flex justify-content-end px-0">
       <PopupNavigationMenu menu-id="vcc-menu" :items="createItems" icon="pi pi-plus" label="New" class="vcc-menu" />
+      <Button class="ml-2" icon="pi pi-building-columns" label="Bank Reconciliation" @click="openBankReconciliation()" />
       <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled />
       <Button class="ml-2" icon="pi pi-download" label="Export" disabled />
     </div>
@@ -917,14 +1004,15 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
         @on-row-right-click="onRowRightClick"
+        @on-row-double-click="onDoubleClick($event)"
       >
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
-              <Column :footer="Math.round((subTotals.amount + Number.EPSILON) * 100) / 100" />
-              <Column :footer="Math.round((subTotals.commission + Number.EPSILON) * 100) / 100" />
-              <Column :footer="Math.round((subTotals.net + Number.EPSILON) * 100) / 100" />
+              <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
+              <Column :footer="formatNumber(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)" />
+              <Column :footer="formatNumber(Math.round((subTotals.commission + Number.EPSILON) * 100) / 100)" />
+              <Column :footer="formatNumber(Math.round((subTotals.net + Number.EPSILON) * 100) / 100)" />
               <Column :colspan="2" />
             </Row>
           </ColumnGroup>
@@ -935,6 +1023,7 @@ onMounted(() => {
     <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />
     <VCCNewAdjustmentTransaction :open-dialog="newAdjustmentTransactionDialogVisible" @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" />
     <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog($event)" />
+    <VCCEditManualTransaction :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="onCloseEditManualTransactionDialog($event)" />
   </div>
 </template>
 
@@ -954,44 +1043,4 @@ onMounted(() => {
     cursor: pointer;
   }
 }
-
-.text-sent {
-  background-color: #006400;
-  color: #fff;
-}
-.text-created {
-  background-color: #FF8D00;
-  color: #fff;
-}
-.text-received {
-  background-color: #3403F9;
-  color: #fff;
-}
-.text-declined {
-  background-color: #661E22;
-  color: #fff;
-}
-.text-paid {
-  background-color: #2E892E;
-  color: #fff;
-}
-.text-canceled {
-  background-color: #FF1405;
-  color: #fff;
-}
-.text-reconciled {
-  background-color: #05D2FF;
-  color: #fff;
-}
-.text-refund {
-  background-color: #666666;
-  color: #fff;
-}
-
-// .p-datatable-tfoot {
-//   background-color: #42A5F5;
-//   tr td {
-//     color: #fff;
-//   }
-// }
 </style>

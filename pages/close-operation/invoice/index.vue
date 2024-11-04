@@ -102,7 +102,7 @@ async function getList() {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'beginDate')) {
-        iterator.date = iterator.beginDate
+        iterator.date = dayjs(iterator.beginDate).toDate()
       }
     }
     listItems.value = [...dataList]

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
-import { string, z } from 'zod'
+import { any, string, z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
@@ -29,6 +29,7 @@ const { status, data } = useAuth()
 const isAdmin = (data.value?.user as any)?.isAdmin === true
 const menu = ref()
 let selectedInvoice = ref('')
+let selectedInvoiceObj = ref<any>()
 const menu_import = ref()
 const menu_send = ref()
 const menu_reconcile = ref()
@@ -39,7 +40,7 @@ const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const listPrintItems = ref<any[]>([])
 const formReload = ref(0)
-const invoiceTypeList = ref<any[]>()
+const invoiceTypeList = ref<any[]>([])
 
 const totalInvoiceAmount = ref(0)
 const totalDueAmount = ref(0)
@@ -56,15 +57,11 @@ const attachmentHistoryDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const doubleFactorOpen = ref<boolean>(false)
 const doubleFactorTotalOpen = ref<boolean>(false)
+const changeAgencyDialogOpen = ref<boolean>(false)
+const paymentsDialogOpen = ref<boolean>(false)
 const attachmentInvoice = <any>ref(null)
 
 const active = ref(0)
-
-
-const confClientApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-client',
-})
 
 
 const itemSend = ref<GenericObject>({
@@ -72,15 +69,17 @@ const itemSend = ref<GenericObject>({
   invoice:null,
 })
 
+const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
 const loadingDelete = ref(false)
+const statusListForFilter = ref<any[]>([])
 const filterToSearch = ref<IData>({
   criteria: ENUM_INVOICE_CRITERIA[3],
   search: '',
-  client: [],
-  agency: [],
-  hotel: [{ id: 'All', name: 'All', code: 'All' }],
-  status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
-  invoiceType: [{ id: 'All', name: 'All', code: 'All' }],
+  client: [allDefaultItem],
+  agency: [allDefaultItem],
+  hotel: [allDefaultItem],
+  status: [],
+  invoiceType: [allDefaultItem],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
 
@@ -92,6 +91,13 @@ const confApi = reactive({
   uriApi: 'manage-invoice',
 })
 
+const objApis = ref({
+  client: { moduleApi: 'settings', uriApi: 'manage-client' },
+  agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
+  hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
+  status: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' },
+  invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
+})
 
 const confAttachmentApi = reactive({
   moduleApi: 'invoicing',
@@ -124,9 +130,9 @@ const confclientListApi = reactive({
   uriApi: 'manage-client',
 })
 
-const confClonationPartialApi = reactive({
+const confClonationApi = reactive({
   moduleApi: 'invoicing',
-  uriApi: 'manage-invoice/partial-clone',
+  uriApi: 'manage-invoice/total-clone-invoice',
 })
 
 const confhotelListApi = reactive({
@@ -174,16 +180,24 @@ const invoiceContextMenu = ref()
 const invoiceAllContextMenuItems = ref([
   {
     label: 'Change Agency',
-    icon: 'pi pi-pencil',
-    command: () => { },
+    icon: 'pi pi-arrow-right-arrow-left',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
+    command: () => {
+      changeAgencyDialogOpen.value = true
+    },
     default: true,
     showItem: false,
   },
   {
     label: 'New Credit',
     icon: 'pi pi-credit-card',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
-      navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
+      navigateTo(`invoice/credit/create?selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
     },
     default: true,
     disabled: computedShowMenuItemNewCedit,
@@ -191,7 +205,11 @@ const invoiceAllContextMenuItems = ref([
   },
   {
     label: 'Status History',
-    icon: 'pi pi-file',
+    iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
+    viewBox: '0 -960 960 960',
+    width: '19px',
+    height: '19px',
+    icon:'',
     command: handleAttachmentHistoryDialogOpen,
     default: true,
     disabled: computedShowMenuItemShowHistory,
@@ -200,6 +218,10 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Document',
     icon: 'pi pi-paperclip',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
+    viewBox:'',
     command: () => {
       attachmentDialogOpen.value = true
     },
@@ -210,6 +232,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Print',
     icon: 'pi pi-print',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
       if (attachmentInvoice.value?.hasAttachments) {
         exportAttachments()
@@ -222,6 +247,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Clone',
     icon: 'pi pi-copy',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => doubleFactor(),
     default: true,
    // disabled: computedShowClone,
@@ -230,6 +258,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Adjustment',
     icon: 'pi pi-wrench',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
     },
     default: true,
@@ -238,6 +269,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Undo Import',
     icon: 'pi pi-file-import',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => { },
     default: true,
     showItem: false,
@@ -245,13 +279,21 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Payments',
     icon: 'pi pi-money-bill',
-    command: () => { },
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
+    command: () => {
+      paymentsDialogOpen.value = true
+    },
     default: true,
     showItem: false,
   },
   {
     label: 'Clone Complete',
     icon: 'pi pi-clone',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
       doubleFactorTotal()
     },
@@ -261,6 +303,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Re-Send',
     icon: 'pi pi-send',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => { SendInvoiceByType() },
     default: true,
     showItem: false,
@@ -268,6 +313,9 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'Send',
     icon: 'pi pi-send',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => { SendInvoiceByType() },
     default: true,
     showItem: false,
@@ -275,13 +323,19 @@ const invoiceAllContextMenuItems = ref([
   {
     label: 'From Invoice',
     icon: 'pi pi-receipt',
-    command: () => { },
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
+    command: () => { onFromInvoice() },
     default: true,
     showItem: false,
   },
   {
     label: 'Clone Total',
     icon: 'pi pi-clone',
+    width: '24px',
+    height: '24px',
+    iconSvg:'',
     command: () => {
       doubleFactorTotal()
     },
@@ -401,7 +455,12 @@ async function SendInvoiceByType() {
   loadingSaveAll.value = false
 }
 
-
+async function onFromInvoice() {
+  const id = selectedInvoiceObj.value.parent
+  if (id) {
+    await getItemById({ id: id, type: 'INVOICE', status: '' })
+  }
+}
 
 async function createSend() {
    // Opcional: Puedes manejar el estado de carga aquí
@@ -443,17 +502,72 @@ async function handleApplyClick() {
     // Redirecciona a la nueva interfaz
     navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
 
-    console.log('Hola estoy en la función');
+   
    
     // Cierra el diálogo
     handleDialogClose();
   
 }
-function handleTotalApplyClick() {
-  entryCode.value = '';
-  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } }),
-    handleDialogCloseTotal();
+async function createClonation() {
+  try {
+    loadingSaveAll.value = true;
+
+    // Crear el payload con solo los datos necesarios
+    const payload = {
+      invoiceToClone: selectedInvoice, // ID del invoice seleccionado
+      employeeName: userData?.value?.user?.name // ID del empleado autenticado
+    };
+
+    // Realizar la llamada al servicio
+    return await GenericService.create(confClonationApi.moduleApi, confClonationApi.uriApi, payload);
+  } catch (error: any) {
+    console.error('Error en createClonation:', error?.data?.data?.error?.errorMessage);
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: error?.data?.data?.error?.errorMessage || error?.message, 
+      life: 10000 
+    });
+  } finally {
+    loadingSaveAll.value = false;
+  }
 }
+async function handleTotalApplyClick() {
+  entryCode.value = '';
+
+  /*try {
+    const response: any = await createClonation();
+
+    if (response && response.clonedInvoice) {
+      const clonedInvoiceId = response.clonedInvoice; // Asegúrate de que el ID esté en esta propiedad
+      const clonedInvoiceNo=response.clonedInvoiceNo;
+      toast.add({
+        severity: 'info',
+        summary: 'Confirmed',
+        detail: `The clonation invoice ${clonedInvoiceNo} was created successfully`,
+        life: 10000
+      })
+      // Redirigir a la página de edición con el ID del invoice clonado
+      navigateTo({ path: `/invoice/edit/${clonedInvoiceId}` });
+    }
+  } catch (error: any) {
+    // Mostrar un toast con el mensaje de error
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error in Clonation', 
+      detail: error?.data?.data?.error?.errorMessage || error?.message, 
+      life: 10000 
+    });
+  } finally {
+    handleDialogCloseTotal();
+  }
+
+  */
+  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
+
+  handleDialogCloseTotal();
+}
+
 
 const createItems = ref([
   {
@@ -466,9 +580,14 @@ const createItems = ref([
   //   command: () => navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${expandedInvoice.value}`),
   //   disabled: computedShowMenuItemCredit
   // },
+  // {
+  //   label: 'Old Credit',
+  //   command: () => navigateTo(`invoice/create?type=${InvoiceType.OLD_CREDIT}`, { open: { target: '_blank' } }),
+  //   disabled: computedShowMenuItemOldCredit
+  // },
   {
     label: 'Old Credit',
-    command: () => navigateTo(`invoice/create?type=${InvoiceType.OLD_CREDIT}`, { open: { target: '_blank' } }),
+    command: () => navigateTo(`invoice/old-credit/create`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemOldCredit
   },
 ])
@@ -549,7 +668,9 @@ const computedShowMenuItemImportBookingFromFile = computed(() => {
 const computedShowMenuItemImportBookingFromVirtual = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:IMPORT-BOOKING-FROM-VIRTUAL'])))
 })
-
+const computedShowMenuItemUndoImport = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:UNDO-IMPORT'])))
+})
 const itemsMenuImport = ref([
   {
     label: 'Booking From File',
@@ -560,23 +681,28 @@ const itemsMenuImport = ref([
     label: 'Booking From File (Virtual Hotels)',
     command: () => navigateTo('invoice/import-virtual'),
     disabled: computedShowMenuItemImportBookingFromVirtual
+  },
+  {
+    label: 'Undo Import',
+    command: () => navigateTo('invoice/undo-import',{ open: { target: '_blank' } }),
+    //disabled: computedShowMenuItemUndoImport
   }
 ])
 
 const itemsMenuSend = ref([
   {
-    label: 'By Ftp',
-    command: () => navigateTo(`invoice/sendInvoice?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
+    label: 'By FTP',
+    command: () => navigateTo(`invoice/sendInvoice-ftp?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromFile
   },
   {
     label: 'By Email',
-    command: () => navigateTo(`invoice/sendInvoice?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } }),
+    command: () => navigateTo(`invoice/sendInvoice-email?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromVirtual
   },
   {
     label: 'By Bavel',
-    command: () => navigateTo(`invoice/sendInvoice?type=${ENUM_INVOICE_SEND_TYPE.BAVEL}`, { open: { target: '_blank' } }),
+    command: () => navigateTo(`invoice/sendInvoice-bavel?type=${ENUM_INVOICE_SEND_TYPE.BAVEL}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromVirtual
   }
 ])
@@ -612,7 +738,8 @@ const columns: IColumn[] = [
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
   // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
   // { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'local-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+  // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'select', objApi: objApis.value.status, sortable: true },
+  { field: 'invoiceStatus', header: 'Status', width: '100px', frozen: true, type: 'select', objApi: objApis.value.status, sortable: true },
 ]
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
@@ -679,6 +806,15 @@ const paginationPrint = ref<IPagination>({
   totalElements: 0,
   totalPages: 0,
   search: ''
+})
+
+const payloadForStatus = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 // -------------------------------------------------------------------------------------------------------
 
@@ -759,9 +895,6 @@ async function getList() {
     totalDueAmount.value = 0
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    console.log(response.data);
-    
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -786,16 +919,14 @@ async function getList() {
           loadingDelete: false, 
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
-          dueAmount: iterator?.dueAmount || 0, 
+          dueAmount: iterator?.dueAmount ? formatNumber(iterator?.dueAmount) : 0, 
+          invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator?.invoiceAmount) : 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
-
-
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
 
-      
       totalInvoiceAmount.value += iterator.invoiceAmount
       totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
@@ -809,6 +940,7 @@ async function getList() {
   }
   finally {
     options.value.loading = false
+    isFirstTimeInOnMounted.value = false
   }
 }
 
@@ -887,13 +1019,32 @@ async function getPrintList() {
   }
 }
 
-console.log(listItems,'ver que trae aqui')
-const openEditDialog = async (item: any, type: string) => await navigateTo({ path: `invoice/edit/${item}`, query: { type: type } }, { open: { target: '_blank' } })
+async function openEditDialog (item: any, type: string) {  
+  switch (type) {
+    case InvoiceType.INVOICE:
+      await navigateTo({ path: `invoice/edit/${item}` }, { open: { target: '_blank' } })
+      break
+    case InvoiceType.CREDIT:
+      await navigateTo({ path: `invoice/credit/edit/${item}` }, { open: { target: '_blank' } })
+      break
+    case InvoiceType.OLD_CREDIT:
+      await navigateTo({ path: `invoice/credit/edit/${item}` }, { open: { target: '_blank' } })
+      break
+    case InvoiceType.INCOME:
+      await navigateTo({ path: `invoice/income/edit/${item}` }, { open: { target: '_blank' } })
+      break
+    default:
+      await navigateTo({ path: `invoice/edit/${item}` }, { open: { target: '_blank' } })
+      break
+  }
+}
 
 async function resetListItems() {
   payload.value.page = 0
   getList()
 }
+
+const isFirstTimeInOnMounted = ref(false)
 
 function searchAndFilter() {
   payload.value = {
@@ -906,24 +1057,23 @@ function searchAndFilter() {
   }
 
   if (!filterToSearch.value.search) {
-    if (filterToSearch.value.includeInvoicePaid) {
-      payload.value.filter = [...payload.value.filter, {
-        key: 'dueAmount',
-        operator: 'EQUALS',
-        value: 0,
-        logicalOperation: 'AND'
-      }]
-    } else {
-      payload.value.filter = [...payload.value.filter, {
-        key: 'dueAmount',
-        operator: 'GREATER_THAN_OR_EQUAL_TO',
-        value: 1,
-        logicalOperation: 'AND'
-      }]
+    if (isFirstTimeInOnMounted.value === false) {
+      if (filterToSearch.value.includeInvoicePaid) {
+        payload.value.filter = [...payload.value.filter, {
+          key: 'dueAmount',
+          operator: 'EQUALS',
+          value: 0,
+          logicalOperation: 'AND'
+        }]
+      } else {
+        payload.value.filter = [...payload.value.filter, {
+          key: 'dueAmount',
+          operator: 'GREATER_THAN_OR_EQUAL_TO',
+          value: 1,
+          logicalOperation: 'AND'
+        }]
+      }
     }
-
-
-
     if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
       const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
       const itemIds = filteredItems?.map((item: any) => item?.id)
@@ -945,15 +1095,12 @@ function searchAndFilter() {
         logicalOperation: 'AND'
       }]
     }
-
-
-
     if (filterToSearch.value.status?.length > 0) {
-      const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
+      const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')      
       if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
+        const itemIds = filteredItems?.map((item: any) => item?.id)        
         payload.value.filter = [...payload.value.filter, {
-          key: 'invoiceStatus',
+          key: 'manageInvoiceStatus.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND'
@@ -1017,13 +1164,10 @@ function searchAndFilter() {
       return hotelError.value = true
     }
   }
-
-
-
   getList()
 }
 
-function clearFilterToSearch() {
+async function clearFilterToSearch() {
   payload.value = {
     filter: [],
     query: '',
@@ -1035,22 +1179,19 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criteria: ENUM_INVOICE_CRITERIA[3],
     search: '',
-    client: [],
-    agency: [],
-    hotel: [{ id: 'All', name: 'All', code: 'All' }],
-    status: [{ id: 'PROCECSED', name: 'Processed' }, { id: 'RECONCILED', name: 'Reconciled' }, { id: 'SENT', name: 'Sent' },],
-    invoiceType: [{ id: 'All', name: 'All', code: 'All' }],
+    client: [allDefaultItem],
+    agency: [allDefaultItem],
+    hotel: [allDefaultItem],
+    invoiceType: [allDefaultItem],
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
-
     includeInvoicePaid: true
   }
+  await getStatusListTemp()
   getList()
 }
 async function getItemById(data: { id: string, type: string, status: any }) {
-
-  openEditDialog(data?.id, data?.type)
-
+  await openEditDialog(data?.id, data?.type)
 }
 
 function handleDialogOpen() {
@@ -1141,214 +1282,397 @@ function requireConfirmationToDelete(event: any) {
   })
 }
 
-async function getHotelList(query = '') {
-  try {
-    const payload
-      = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
+// async function getHotelList(query = '') {
+//   try {
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'code',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ],
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
 
-    hotelList.value = [{ id: 'All', name: 'All', code: 'All' }]
-    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
+//     hotelList.value = [{ id: 'All', name: 'All', code: 'All' }]
+//     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
+//     const { data: dataList } = response
+//     for (const iterator of dataList) {
+//       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+//     }
+//   }
+//   catch (error) {
+//     console.error('Error loading hotel list:', error)
+//   }
+// }
+
+// async function getClientList(query = '') {
+//   try {
+//     debugger
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ],
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
+//     let clientTemp: any[] = []
+//     clientList.value = [allDefaultItem]
+//     const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
+//      const { data: dataList } = response
+//     for (const iterator of dataList) {
+//        clientList.value = [...clientList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+//      }
+//   }
+//   catch (error) {
+//     console.error('Error loading client list:', error)
+//   }
+// }
+
+interface DataListItem {
+  id: string
+  name: string
+  code: string
+  status: string
+  description?: string
+}
+
+interface ListItem {
+  id: string
+  name: string
+  status: boolean | string
+  code?: string
+  description?: string
+}
+
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.name}`,
+    status: data.status,
+    code: data.code,
+    description: data.description
   }
 }
 
-async function getClientList(query = '') {
-  try {
-    const payload
-      = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
-
-    clientList.value = [{ id: 'All', name: 'All', code: 'All' }]
-    const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      clientList.value = [...clientList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
+interface DataListItemForStatus {
+  id: string
+  name: string
+  code: string
+  status: string
+  description?: string
+  invoiceStatus: {
+    sentStatus: boolean
+    reconciledStatus: boolean
+    canceledStatus: boolean
+    processStatus: boolean
   }
 }
 
-async function getStatusList(query = '') {
-  try {
-    statusList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_STATUS]
+interface ListItemForStatus {
+  id: string
+  name: string
+  status: boolean | string
+  code?: string
+  description?: string
+  sentStatus?: boolean
+  reconciledStatus?: boolean
+  canceledStatus?: boolean
+  processStatus?: boolean
+}
 
-    if (query) {
-      statusList.value = statusList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
+function mapFunctionStatus(data: DataListItemForStatus): ListItemForStatus {  
+  return {
+    id: data.id,
+    name: `${data.name}`,
+    status: data.status,
+    code: data.code,
+    description: data.description,
+    sentStatus: data.invoiceStatus.sentStatus,
+    reconciledStatus: data.invoiceStatus.reconciledStatus,
+    canceledStatus: data.invoiceStatus.canceledStatus,
+    processStatus: data.invoiceStatus.processStatus
   }
 }
 
-async function getInvoiceTypeList(query = '') {
-  try {
-
-    const payload
-      = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
-
-    invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }]
-    const response = await GenericService.search(confinvoiceTypeListApi.moduleApi, confinvoiceTypeListApi.uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
-
-    // invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_TYPE]
-
-    // if (query) {
-    //   invoiceTypeList.value = invoiceTypeList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
-    // }
-
-
-  }
-  catch (error) {
-    console.error('Error loading invoice type list:', error)
+function mapFunctionForType(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    code: data.code,
+    description: data.description
   }
 }
 
-async function getAgencyList(query = '') {
+async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
+  let clientTemp: any[] = []
+  clientList.value = [allDefaultItem]
+  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  clientList.value = [...clientList.value, ...clientTemp]
+}
+async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  let agencyTemp: any[] = []
+  agencyList.value = [allDefaultItem]
+  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  agencyList.value = [...agencyList.value, ...agencyTemp]
+}
+async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
+async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  let hotelTemp: any[] = []
+  hotelList.value = [allDefaultItem]
+  hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  hotelList.value = [...hotelList.value, ...hotelTemp]
+}
+async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
+async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  let statusTemp: any[] = []
+  statusList.value = [allDefaultItem]
+  statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  statusList.value = [...statusList.value, ...statusTemp]
+}
+
+// async function getStatusListLoadValuesByDefaults(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+//   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+// }
+
+async function getStatusListTemp() {
   try {
-    const payload
-      = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ] as any,
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
-
-    agencyList.value = [{ id: 'All', name: 'All', code: 'All' }]
-
-    if (filterToSearch.value.client?.length === 0) {
-      return agencyList.value = []
-    }
-    const clientIds: any[] = []
-
-    filterToSearch.value?.client?.forEach((client: any) => clientIds.push(client?.id))
-
-    payload.filter.push({
-      key: 'client.id',
-      operator: 'IN',
-      value: clientIds,
-      logicalOperation: 'AND'
-    })
-
-    const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
+    const filter: FilterCriteria[] = [
+      {
+        key: 'status',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+      },
+      {
+        key: 'processStatus',
+        logicalOperation: 'OR',
+        operator: 'EQUALS',
+        value: true
+      },
+      {
+        key: 'sentStatus',
+        logicalOperation: 'OR',
+        operator: 'EQUALS',
+        value: true
+      },
+      {
+        key: 'reconciledStatus',
+        logicalOperation: 'OR',
+        operator: 'EQUALS',
+        value: true
+      }
+    ]
+    payloadForStatus.value.filter = filter
+    const response = await GenericService.search(objApis.value.status.moduleApi, objApis.value.status.uriApi, payloadForStatus.value)
+    if (response) {
+      
+      filterToSearch.value.status = [
+        ...response.data.map((item: any) => (
+          { 
+            id: item.id, 
+            name: item.name, 
+            code: item.code,
+            description: item.description,
+            status: item.status 
+          }
+        )
+        ),
+      ]
+      statusList.value = [
+        ...response.data.map((item: any) => (
+          { 
+            id: item.id, 
+            name: item.name, 
+            code: item.code,
+            description: item.description,
+            status: item.status 
+          }
+        )),
+      ]
+    }    
   }
   catch (error) {
-    console.error('Error loading agency list:', error)
+    console.error('Error loading status list:', error)
   }
 }
+
+// {
+//   "id": "a2befe8a-d335-4be0-94be-a8ed38a6d4f2",
+//   "name": "Sent",
+//   "status": "ACTIVE",
+//   "code": "SENT",
+//   "description": ""
+// }
+
+// async function getStatusList(query = '') {
+//   try {
+//     statusList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_STATUS]
+
+//     if (query) {
+//       statusList.value = statusList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
+//     }
+//   }
+//   catch (error) {
+//     console.error('Error loading hotel list:', error)
+//   }
+// }
+
+async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  let invoiceTypeListTemp: any[] = []
+  invoiceTypeList.value = [allDefaultItem]
+  invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionForType, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })    
+  invoiceTypeList.value = [...invoiceTypeList.value, ...invoiceTypeListTemp]
+}
+
+// async function getInvoiceTypeList(query = '') {
+//   try {
+
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'code',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ],
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
+
+//     invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }]
+//     const response = await GenericService.search(confinvoiceTypeListApi.moduleApi, confinvoiceTypeListApi.uriApi, payload)
+//     const { data: dataList } = response
+//     for (const iterator of dataList) {
+//       invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+//     }
+
+//     // invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_TYPE]
+
+//     // if (query) {
+//     //   invoiceTypeList.value = invoiceTypeList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
+//     // }
+
+
+//   }
+//   catch (error) {
+//     console.error('Error loading invoice type list:', error)
+//   }
+// }
+
+// async function getAgencyList(query = '') {
+//   try {
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'code',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ] as any,
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
+
+//     agencyList.value = [{ id: 'All', name: 'All', code: 'All' }]
+
+//     if (filterToSearch.value.client?.length === 0) {
+//       return agencyList.value = []
+//     }
+//     const clientIds: any[] = []
+
+//     filterToSearch.value?.client?.forEach((client: any) => clientIds.push(client?.id))
+
+//     payload.filter.push({
+//       key: 'client.id',
+//       operator: 'IN',
+//       value: clientIds,
+//       logicalOperation: 'AND'
+//     })
+
+//     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
+//     const { data: dataList } = response
+//     for (const iterator of dataList) {
+//       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+//     }
+//   }
+//   catch (error) {
+//     console.error('Error loading agency list:', error)
+//   }
+// }
 
 async function parseDataTableFilter(payloadFilter: any) {
   console.log(payloadFilter);
@@ -1369,6 +1693,10 @@ async function parseDataTableFilter(payloadFilter: any) {
 
       if (parseFilter[i]?.key === 'status') {
         parseFilter[i].key = 'invoiceStatus'
+      }
+
+      if (parseFilter[i]?.key === 'invoiceNumber') {
+        parseFilter[i].key = 'invoiceNumberPrefix'
       }
 
     }
@@ -1392,21 +1720,21 @@ function onSortField(event: any) {
     if(event.sortField === 'status') {
       event.sortField = 'invoiceStatus'
     }
-    // if (event.sortField === 'invoiceNumber') {
-    //   event.sortField = 'invoiceNumber'
-    // }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'invoiceNumberPrefix'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     getList()
   }
 }
 
-function getStatusBadgeBackgroundColor(code: string) {
+function getStatusBadgeBackgroundColor(code: string) {  
   switch (code) {
-    case 'PROCECSED': return '#FF8D00'
+    case 'PROCESSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
-    case 'CANCELED': return '#F90303'
+    case 'CANCELLED': return '#888888'
     case 'PENDING': return '#686868'
 
     default:
@@ -1416,11 +1744,46 @@ function getStatusBadgeBackgroundColor(code: string) {
 
 function getStatusName(code: string) {
   switch (code) {
-    case 'PROCECSED': return 'Processed'
-
+    case 'PROCESSED': return 'Processed'
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
-    case 'CANCELED': return 'Canceled'
+    case 'CANCELLED': return 'Cancelled'
+    case 'PENDING': return 'Pending'
+
+    default:
+      return ''
+  }
+}
+
+interface InvoiceStatus {
+  id: string;
+  code: string;
+  name: string;
+  showClone: boolean;
+  enabledToApply: boolean;
+  sentStatus: boolean;
+  reconciledStatus: boolean;
+  canceledStatus: boolean;
+  processStatus: boolean;
+}
+
+
+function getStatusBadgeBackgroundColorByItem(item: InvoiceStatus) { 
+  if (!item) return
+  if (item.processStatus) return '#FF8D00'
+  if (item.sentStatus) return '#006400'
+  if (item.reconciledStatus) return '#005FB7'
+  if (item.canceledStatus) return '#888888'
+}
+
+function getStatusNameByItem(item: InvoiceStatus) {
+
+
+  switch (code) {
+    case 'PROCESSED': return 'Processed'
+    case 'RECONCILED': return 'Reconciled'
+    case 'SENT': return 'Sent'
+    case 'CANCELLED': return 'Cancelled'
     case 'PENDING': return 'Pending'
 
     default:
@@ -1464,9 +1827,17 @@ function findMenuItemByLabelSetShow(label: string, list: any[], showItem: boolea
   }
 }
 
+async function onCloseChangeAgencyDialog(isCancel: boolean) {
+  changeAgencyDialogOpen.value = false
+  if (!isCancel) {
+    getList()
+  }
+}
+
 function onRowRightClick(event: any) {
 
   selectedInvoice = event.data.id
+  selectedInvoiceObj.value = event.data
   setMenuOptions()
 
   if (event.data?.invoiceType !== InvoiceType.INVOICE || ![InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)) {
@@ -1481,15 +1852,14 @@ function onRowRightClick(event: any) {
     }
 
     // Mostrar undo import solo para Processed y no sea manual (Solo para invoice)
-    // Codigo comentado hasta que se impplemente la importacion de Inssist, ya que otra condicion es que se muestre para las importadas desde Inssist
-    // No Borrar.
-    /*if (event?.data?.status === InvoiceStatus.PROCECSED && !event.data.isManual) {
+    if (event?.data?.status === InvoiceStatus.PROCECSED && !event.data.isManual) {
       findMenuItemByLabelSetShow('Undo Import', invoiceContextMenuItems.value, true)
-    }*/
+    }
 
     // Mostrar Clone Complete solo para Reconciled,Sent y e iguales amounts. Debe estar en close operation el invoice date
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
-      && event?.data.dueAmount === event?.data.invoiceAmount && event.data.isInCloseOperation) {
+      && event?.data.dueAmount === event?.data.invoiceAmount && event.data.isInCloseOperation &&
+      event?.data.dueAmount > 0) {
       findMenuItemByLabelSetShow('Clone Complete', invoiceContextMenuItems.value, true)
     }
   }
@@ -1525,8 +1895,9 @@ function onRowRightClick(event: any) {
     findMenuItemByLabelSetShow('Send', invoiceContextMenuItems.value, true)
   }
 
-  // From Invoice
-  if (event?.data?.status === InvoiceStatus.CANCELED && [InvoiceType.CREDIT, InvoiceType.OLD_CREDIT].includes(event.data?.invoiceType)) {
+  // From Invoice // Solo se debe mostrar la opcion si el parentId no es null, o sea, si es un Credit
+  if ([InvoiceType.CREDIT].includes(event.data?.invoiceType)
+      && selectedInvoiceObj.value.parent) { //indica si es de tipo credit, ya que los old-credit no tienen padre
     findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
   }
 
@@ -1573,11 +1944,11 @@ watch(filterToSearch, () => {
 // -------------------------------------------------------------------------------------------------------
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
-onMounted(() => {
+onMounted(async () => {
+  isFirstTimeInOnMounted.value = true
   filterToSearch.value.criterial = ENUM_FILTER[0]
-
-  getList()
-  
+  await getStatusListTemp()  
+  searchAndFilter()
 })
 
 const legend = ref(
@@ -1719,56 +2090,85 @@ const legend = ref(
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" multiple field="name"
-                        item-value="id" :model="filterToSearch.client" :suggestions="clientList" placeholder=""
-                        :disabled="disableClient" style="max-width: 400px;" @load="($event) => getClientList($event)"
-                        @change="($event) => {
-
-                          if (!filterToSearch.client.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        class="w-full"
+                        :multiple="true"
+                        :model="filterToSearch.client"
+                        :suggestions="[...clientList]"
+                        @change="async ($event) => {
+                          if (!filterToSearch.client.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.client = $event.filter((element: any) => element?.id === 'All')
                           }
                           else {
-
                             filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
                           }
-
-                          filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : []
-                        }">
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                        <template #chip="{ value }">
-                          <div>
-                            {{ value?.code }}
-                          </div>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
+                          if (filterToSearch.client.length === 0) {
+                            filterToSearch.agency = []
+                          }
+                        }"
+                        @load="async($event) => {
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          const filter: FilterCriteria[] = [{
+                            key: 'status',
+                            logicalOperation: 'AND',
+                            operator: 'EQUALS',
+                            value: 'ACTIVE',
+                          }]
+                          await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <div class="w-full lg:w-auto">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" placeholder="" multiple
-                        field="name" item-value="id" :model="filterToSearch.agency" :suggestions="agencyList"
-                        :disabled="disableClient" style="max-width: 400px;" @change="($event) => {
-
-                          if (!filterToSearch.agency.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        class="w-full"
+                        :multiple="true"
+                        :model="filterToSearch.agency"
+                        :suggestions="[...agencyList]"
+                        @change="($event) => {
+                          if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
                           }
                           else {
-
                             filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
                           }
+                        }"
+                        @load="async($event) => {
+                          let ids = []
+                          if (filterToSearch.client.length > 0) {
+                            ids = filterToSearch.client.map((element: any) => element?.id)
+                          }
 
-                        }" @load="($event) => getAgencyList($event)">
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                        <template #chip="{ value }">
-                          <div>
-                            {{ value?.code }}-{{ value?.name }}
-                          </div>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'client.id',
+                              logicalOperation: 'AND',
+                              operator: 'IN',
+                              value: ids,
+                            },
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }, filter)
+                        }"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1784,55 +2184,79 @@ const legend = ref(
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full" style=" z-index:5">
                       <div class="flex gap-2 w-full">
-                        <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
-                          item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList" placeholder=""
-                          class="w-full" @load="($event) => getHotelList($event)" @change="($event) => {
-
-                            if (!filterToSearch.hotel.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                            }
-                            else {
-
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                            }
-                            hotelError = false
-
-                          }">
-                          <template #option="props">
-                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                          </template>
-                          <template #chip="{ value }">
-                            <div>
-                              {{ value?.code }}-{{ value?.name }}
-                            </div>
-                          </template>
-                        </DebouncedAutoCompleteComponent>
+                        <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        class="w-full"
+                        field="name"
+                        item-value="id"
+                        :multiple="true"
+                        :model="filterToSearch.hotel"
+                        :suggestions="[...hotelList]"
+                        @change="($event) => {
+                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }"
+                        @load="async($event) => {
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                         <div v-if="hotelError" class="flex align-items-center text-sm">
                           <span style="color: red; margin-right: 3px; margin-left: 3px;">You must select the "Hotel"
-                            field
-                            as required</span>
+                            field as required</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <div class="w-full lg:w-auto">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
-                        item-value="id" :model="filterToSearch.status" :suggestions="statusList" placeholder=""
-                        @load="($event) => getStatusList($event)" @change="($event) => {
-                          if (!filterToSearch.status.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        class="w-full"
+                        field="name"
+                        item-value="id"
+                        :multiple="true"
+                        :model="filterToSearch.status"
+                        :suggestions="[...statusList]"
+                        @change="($event) => {
+                          if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
                           }
                           else {
-
                             filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
                           }
-                        }">
-                        <template #option="props">
-                          <span>{{ props.item.name }}</span>
-                        </template>
-
-                      </DebouncedAutoCompleteComponent>
+                        }"
+                        @load="async($event) => {
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getStatusList(objApis.status.moduleApi, objApis.status.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1905,27 +2329,38 @@ const legend = ref(
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="name" multiple
-                        placeholder="" item-value="id" :model="filterToSearch.invoiceType"
-                        :suggestions="invoiceTypeList" style="max-width: 400px;"
-                        @load="($event) => getInvoiceTypeList($event)" @change="($event) => {
-                          if (!filterToSearch.invoiceType.find(element => element?.id === 'All') && $event.find(element => element?.id === 'All')) {
+                      <DebouncedAutoCompleteComponent
+                        id="autocomplete"
+                        class="w-full"
+                        field="name"
+                        item-value="id"
+                        :multiple="true"
+                        :model="filterToSearch.invoiceType"
+                        :suggestions="[...invoiceTypeList]"
+                        @change="($event) => {
+                          if (!filterToSearch.invoiceType.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.invoiceType = $event.filter((element: any) => element?.id === 'All')
                           }
                           else {
-
                             filterToSearch.invoiceType = $event.filter((element: any) => element?.id !== 'All')
                           }
-                        }">
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                        <template #chip="{ value }">
-                          <div>
-                            {{ value?.code }}-{{ value?.name }}
-                          </div>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
+                        }"
+                        @load="async($event) => {
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getInvoiceTypeList(objApis.invoiceType.moduleApi, objApis.invoiceType.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2 w-full">
@@ -1977,25 +2412,41 @@ const legend = ref(
         </template>
 
         <template #expanded-item="props">
-          <InvoiceTabView :invoice-obj-amount="0" :selected-invoice="props.itemId" :is-dialog-open="bookingDialogOpen"
-            :close-dialog="() => { bookingDialogOpen = false }" :open-dialog="handleDialogOpen" :active="active"
-            :set-active="($event) => { active = $event }" :is-detail-view="true"  />
+          <InvoiceTabView 
+            :invoice-obj-amount="0" 
+            :selected-invoice="props.itemId" 
+            :is-dialog-open="bookingDialogOpen"
+            :close-dialog="() => { bookingDialogOpen = false }" 
+            :open-dialog="handleDialogOpen" 
+            :active="active"
+            :set-active="($event) => { active = $event }" 
+            :is-detail-view="true"  
+          />
         </template>
 
-        <template #column-status="props">
+        <!-- <template #column-status="props">
           <Badge :value="getStatusName(props.item)"
             :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item)}`" />
+        </template> -->
+
+        <!-- Asi estaba antes -->
+        <!-- <template #column-invoiceStatus="props">
+          <Badge v-if="props.item" :value="getStatusName(props.item?.name?.toUpperCase())"
+            :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item?.name?.toUpperCase())}`" />
+        </template> -->
+
+        <template #column-invoiceStatus="props">
+          <Badge v-if="props.item" :value="props.item?.name"
+            :style="`background-color: ${getStatusBadgeBackgroundColorByItem(props?.item)}`" />
         </template>
 
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
             <Row>
               <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: 700" />
-              <Column :footer="totalInvoiceAmount" footer-style="font-weight: 700" />
-              <Column :footer="totalDueAmount" footer-style="font-weight: 700" />
+              <Column :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
+              <Column :footer="formatNumber(Math.round((totalDueAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
               <Column :colspan="9" />
-
-
             </Row>
           </ColumnGroup>
         </template>
@@ -2003,10 +2454,21 @@ const legend = ref(
 
       </ExpandableTable>
     </div>
-    <ContextMenu ref="invoiceContextMenu" :model="invoiceContextMenuItems" />
+    <ContextMenu ref="invoiceContextMenu" :model="invoiceContextMenuItems" >
+      <template #itemicon="{ item }">
+      <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" :height="item.height" :viewBox="item.viewBox" :width="item.width" fill="#8d8faa">
+          <path :d="item.iconSvg" />
+        </svg>
+      </div>
+      <div v-else class="w-2rem flex justify-content-center align-items-center">
+        <i v-if="item.icon" :class="item.icon" />
+      </div>
+    </template>
+  </ContextMenu>
   </div>
   <div v-if="attachmentDialogOpen">
-    <AttachmentDialog 
+    <AttachmentDialogForManagerInvoice 
       :close-dialog="() => { attachmentDialogOpen = false, getList() }" 
       :is-creation-dialog="false"
       header="Manage Invoice Attachment" 
@@ -2120,6 +2582,20 @@ const legend = ref(
       :open-dialog="exportAttachmentsDialogOpen" 
       :payload="payload" 
       :invoice="attachmentInvoice"
+    />
+  </div>
+  <div v-if="changeAgencyDialogOpen">
+    <InvoiceChangeAgencyDialog
+      :open-dialog="changeAgencyDialogOpen"
+      :selected-invoice="selectedInvoiceObj"
+      @on-close-dialog="onCloseChangeAgencyDialog($event)"
+    />
+  </div>
+  <div v-if="paymentsDialogOpen">
+    <InvoicePaymentDetailsDialog
+        :open-dialog="paymentsDialogOpen"
+        :selected-invoice="selectedInvoiceObj"
+        @on-close-dialog="() => { paymentsDialogOpen = false }"
     />
   </div>
 
