@@ -1533,7 +1533,6 @@ async function applyPaymentGetList() {
                 // }
 
                 const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
-                console.log('applyPaymentOptions', response)
 
                 const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1614,8 +1613,6 @@ async function applyPaymentGetList() {
               }
 
               const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
-              console.log('applyPaymentOptions', response)
-
               const { data: dataList, page, size, totalElements, totalPages } = response
 
               applyPaymentPagination.value.page = page
