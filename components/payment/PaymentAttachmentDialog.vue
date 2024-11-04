@@ -1279,6 +1279,7 @@ onMounted(async () => {
                       <span>{{ props.item.name }}</span>
                     </template>
                   </DebouncedAutoCompleteComponent>
+                  <Skeleton v-else height="2rem" class="mb-2" />
                 </template>
 
                 <template #field-attachmentType="{ item: data, onUpdate }">
@@ -1307,6 +1308,7 @@ onMounted(async () => {
                       <span>{{ props.item.name }}</span>
                     </template>
                   </DebouncedAutoCompleteComponent>
+                  <Skeleton v-else height="2rem" class="mb-2" />
                 </template>
 
                 <template #field-employee="{ item: data, onUpdate }">
@@ -1325,6 +1327,7 @@ onMounted(async () => {
                       <span>{{ props.item.name }}</span>
                     </template>
                   </DebouncedAutoCompleteComponent>
+                  <Skeleton v-else height="2rem" class="mb-2" />
                 </template>
 
                 <template #field-path="{ item: data, onUpdate }">

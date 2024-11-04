@@ -3866,12 +3866,6 @@ const checkboxValue1 = ref(false)
   </div>
 </template>
 
-<!-- paymentAndDetails: true,
-  paymentSupport: false,
-  allPaymentsSupport: false,
-  invoiceRelated: false,
-  invoiceRelatedWithSupport: false -->
-
   <style lang="scss">
   .row-deposit {
     background-color: #e0f2f194;
