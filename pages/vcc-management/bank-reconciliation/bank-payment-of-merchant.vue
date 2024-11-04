@@ -434,7 +434,7 @@ async function unbindTransactionsOnline() {
     payload.bankReconciliation = idItem.value
     payload.transactionsIds = transactionsIds
 
-    await GenericService.create(confApi.moduleApi, 'transactions/unbind', payload)
+    await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     getList()
   }
