@@ -574,6 +574,13 @@ async function saveItem(item: { [key: string]: any }) {
       // Deshabilitar campos restantes del formulario
       await navigateTo({ path: '/vcc-management/bank-reconciliation/bank-payment-of-merchant', query: { id: idItem.value } })
       await getItemById(idItem.value)
+      payload.value.filter = [{
+        key: 'reconciliation.id',
+        operator: 'EQUALS',
+        value: idItem.value,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
       await getList()
     }
     catch (error: any) {
