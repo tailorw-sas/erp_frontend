@@ -327,7 +327,7 @@ function clearFilterToSearch() {
     to: new Date(),
   }
   filterToSearch.value.criterial = ENUM_FILTER[0]
-  getList()
+  searchAndFilter()
 }
 
 async function getHotelList(query: string = '') {
