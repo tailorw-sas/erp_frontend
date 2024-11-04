@@ -22,27 +22,25 @@ public class RemoveReconciliationCommandHandler implements ICommandHandler<Remov
     @Override
     public void handle(RemoveReconciliationCommand command) {
         ManageBankReconciliationDto bankReconciliationDto = command.getBankReconciliation() != null ? this.bankReconciliationService.findById(command.getBankReconciliation()) : null;
-        double details = bankReconciliationDto != null ? bankReconciliationDto.getDetailsAmount() : 0;
         for (Long id : command.getTransactionsIds()){
             TransactionDto transactionDto = this.transactionService.findById(id);
             if (bankReconciliationDto != null && transactionDto.getReconciliation().getId().equals(command.getBankReconciliation())){
                 if (transactionDto.isAdjustment()){
-                    transactionDto.setReconciliation(null);
-                    details -= transactionDto.getAmount();
-                    this.transactionService.update(transactionDto);
-                    this.transactionService.delete(transactionDto);
+                    if (bankReconciliationDto.getTransactions().remove(transactionDto)){
+                        transactionDto.setReconciliation(null);
+                        this.transactionService.update(transactionDto);
+                        this.transactionService.delete(transactionDto);
+                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getAmount());
+                    }
                 } else {
-                    transactionDto.setReconciliation(null);
-                    details -= transactionDto.getAmount();
-                    this.transactionService.update(transactionDto);
+                    if (bankReconciliationDto.getTransactions().remove(transactionDto)){
+                        transactionDto.setReconciliation(null);
+                        this.transactionService.update(transactionDto);
+                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getAmount());
+                    }
                 }
             }
         }
-        //si actualizo con el mismo bankReconciliationDto me volveria a cargar las transacciones
-        if (bankReconciliationDto != null && !command.getTransactionsIds().isEmpty()) {
-            ManageBankReconciliationDto dto = this.bankReconciliationService.findById(command.getBankReconciliation());
-            dto.setDetailsAmount(details);
-            this.bankReconciliationService.update(dto);
-        }
+        this.bankReconciliationService.update(bankReconciliationDto);
     }
 }
