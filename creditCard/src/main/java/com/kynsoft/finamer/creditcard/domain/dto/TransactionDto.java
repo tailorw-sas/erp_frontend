@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -120,5 +121,18 @@ public class TransactionDto {
         this.transactionDate = transactionDate;
         this.permitRefund = permitRefund;
         this.adjustment = adjustment;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TransactionDto that = (TransactionDto) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
