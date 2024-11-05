@@ -236,9 +236,9 @@ const invoiceAllContextMenuItems = ref([
     height: '24px',
     iconSvg:'',
     command: () => {
-      if (attachmentInvoice.value?.hasAttachments) {
-        exportAttachments()
-      }
+      exportAttachments()
+      // if (attachmentInvoice.value?.hasAttachments) {
+      // }
     },
     default: true,
     disabled: computedShowMenuItemPrint,
