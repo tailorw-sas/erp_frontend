@@ -30,10 +30,13 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
 
     private final IInvoiceCloseOperationService closeOperationService;
 
-
     public CreateAdjustmentCommandHandler(IManageAdjustmentService adjustmentService,
-                                          IManageInvoiceTransactionTypeService transactionTypeService, IManageRoomRateService roomRateService,
-                                          IManageBookingService bookingService, IManageInvoiceService invoiceService, IInvoiceCloseOperationService closeOperationService, IManagePaymentTransactionTypeService paymentTransactionTypeService) {
+            IManageInvoiceTransactionTypeService transactionTypeService,
+            IManageRoomRateService roomRateService,
+            IManageBookingService bookingService,
+            IManageInvoiceService invoiceService,
+            IInvoiceCloseOperationService closeOperationService,
+            IManagePaymentTransactionTypeService paymentTransactionTypeService) {
         this.adjustmentService = adjustmentService;
         this.transactionTypeService = transactionTypeService;
         this.roomRateService = roomRateService;
@@ -42,7 +45,6 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
         this.closeOperationService = closeOperationService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
     }
-
 
     @Override
     public void handle(CreateAdjustmentCommand command) {
@@ -53,12 +55,12 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
                 : null;
 
         ManagePaymentTransactionTypeDto paymnetTransactionTypeDto = command.getPaymentTransactionType() != null
-        ? paymentTransactionTypeService.findById(command.getPaymentTransactionType())
-        : null;
+                ? paymentTransactionTypeService.findById(command.getPaymentTransactionType())
+                : null;
 
         List<ManageAdjustmentDto> adjustmentDtoList = roomRateDto.getAdjustments() != null ? roomRateDto.getAdjustments() : new LinkedList<>();
 
-        adjustmentDtoList.add (new ManageAdjustmentDto(
+        adjustmentDtoList.add(new ManageAdjustmentDto(
                 command.getId(),
                 null,
                 command.getAmount(),
@@ -68,12 +70,14 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
                 transactionTypeDto,
                 paymnetTransactionTypeDto,
                 null,
-                command.getEmployee()));
+                command.getEmployee(),
+                false
+        ));
 
         roomRateDto.setAdjustments(adjustmentDtoList);
 
         if (command.getAmount() != null) {
-            roomRateDto.setInvoiceAmount(roomRateDto.getInvoiceAmount() != null ? roomRateDto.getInvoiceAmount() + command.getAmount(): command.getAmount());
+            roomRateDto.setInvoiceAmount(roomRateDto.getInvoiceAmount() != null ? roomRateDto.getInvoiceAmount() + command.getAmount() : command.getAmount());
             this.roomRateService.update(roomRateDto);
         }
 

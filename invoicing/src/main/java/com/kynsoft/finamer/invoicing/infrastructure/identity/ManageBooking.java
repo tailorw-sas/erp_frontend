@@ -102,6 +102,9 @@ public class ManageBooking {
 
     private String contract;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean deleteInvoice;
+
     public ManageBooking(ManageBookingDto dto) {
         this.id = dto.getId();
         this.hotelCreationDate = dto.getHotelCreationDate();
@@ -140,6 +143,7 @@ public class ManageBooking {
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
         this.parent = dto.getParent() != null ? new ManageBooking(dto.getParent()) : null;
         this.contract = dto.getContract();
+        this.deleteInvoice = dto.isDeleteInvoice();
     }
 
     public ManageBookingDto toAggregate() {
@@ -154,7 +158,7 @@ public class ManageBooking {
                 roomRates != null ? roomRates.stream().map(b -> {
                     return b.toAggregateSample();
                 }).collect(Collectors.toList()) : null, nights,
-                parent != null ? parent.toAggregateSample() : null, contract);
+                parent != null ? parent.toAggregateSample() : null, contract, deleteInvoice);
     }
 
     public ManageBookingDto toAggregateSample() {
@@ -168,7 +172,7 @@ public class ManageBooking {
                 roomCategory != null ? roomCategory.toAggregate() : null,
                 roomRates != null ? roomRates.stream().map(b -> {
                     return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, nights, null, contract);
+                }).collect(Collectors.toList()) : null, nights, null, contract, deleteInvoice);
     }
 
     @PostLoad

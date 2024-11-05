@@ -27,6 +27,9 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.Send
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImportInvoice.UndoImportInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImportInvoice.UndoImportInvoiceMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImportInvoice.UndoImportInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceRequest;
@@ -99,6 +102,17 @@ public class InvoiceController {
         PartialCloneInvoiceCommand command = PartialCloneInvoiceCommand.fromRequest(request);
 
         PartialCloneInvoiceMessage message = this.mediator.send(command);
+
+        return ResponseEntity.ok(message);
+
+    }
+
+    @PostMapping("/undo")
+    public ResponseEntity<UndoImportInvoiceMessage> createBulk(@RequestBody UndoImportInvoiceRequest request) {
+
+        UndoImportInvoiceCommand command = UndoImportInvoiceCommand.fromRequest(request, mediator);
+
+        UndoImportInvoiceMessage message = this.mediator.send(command);
 
         return ResponseEntity.ok(message);
 

@@ -63,6 +63,9 @@ public class ManageAttachment {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean deleteInvoice;
+
     public ManageAttachment(ManageAttachmentDto dto) {
 
         this.id = dto.getId();
@@ -74,18 +77,41 @@ public class ManageAttachment {
         this.type = dto.getType() != null ? new ManageAttachmentType(dto.getType()) : null;
         this.employee = dto.getEmployee();
         this.employeeId = dto.getEmployeeId();
-        this.paymentResourceType = dto.getPaymentResourceType() != null ?  new ResourceType(dto.getPaymentResourceType()) : null;
+        this.paymentResourceType = dto.getPaymentResourceType() != null ? new ResourceType(dto.getPaymentResourceType()) : null;
+        this.deleteInvoice = dto.isDeleteInvoice();
     }
 
     public ManageAttachmentDto toAggregate() {
-        return new ManageAttachmentDto(id, attachmentId, filename, file, remark,
+        return new ManageAttachmentDto(
+                id, 
+                attachmentId, 
+                filename, 
+                file, 
+                remark,
                 type != null ? type.toAggregate() : null,
-                invoice != null ? invoice.toAggregateSample() : null, employee, employeeId, createdAt, paymentResourceType != null ? paymentResourceType.toAggregate() : null);
+                invoice != null ? invoice.toAggregateSample() : null, 
+                employee, 
+                employeeId, 
+                createdAt, 
+                paymentResourceType != null ? paymentResourceType.toAggregate() : null,
+                deleteInvoice
+        );
     }
 
     public ManageAttachmentDto toAggregateSample() {
-        return new ManageAttachmentDto(id, attachmentId, filename, file, remark,
+        return new ManageAttachmentDto(
+                id, 
+                attachmentId, 
+                filename, 
+                file, 
+                remark,
                 type != null ? type.toAggregate() : null,
-                null, employee, employeeId,createdAt,  paymentResourceType != null ? paymentResourceType.toAggregate() : null);
+                null, 
+                employee, 
+                employeeId, 
+                createdAt, 
+                paymentResourceType != null ? paymentResourceType.toAggregate() : null,
+                deleteInvoice
+        );
     }
 }

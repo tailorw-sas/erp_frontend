@@ -116,6 +116,15 @@ public class ManageAttachmentServiceImpl implements IManageAttachmentService {
         this.repositoryCommand.saveAll(attachments);
     }
 
+    @Override
+    public void deleteInvoice(ManageAttachmentDto dto) {
+        ManageAttachment entity = new ManageAttachment(dto);
+        entity.setDeleteInvoice(true);
+        entity.setUpdatedAt(LocalDateTime.now());
+
+        repositoryCommand.save(entity);
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

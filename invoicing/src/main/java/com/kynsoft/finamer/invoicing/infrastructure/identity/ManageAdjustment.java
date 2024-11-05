@@ -59,6 +59,9 @@ public class ManageAdjustment {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean deleteInvoice;
+
     public ManageAdjustment(ManageAdjustmentDto dto) {
         this.id = dto.getId();
         this.amount = dto.getAmount();
@@ -68,17 +71,35 @@ public class ManageAdjustment {
         this.transaction = dto.getTransaction() != null ? new ManageInvoiceTransactionType(dto.getTransaction()) : null;
         this.roomRate = dto.getRoomRate() != null ? new ManageRoomRate(dto.getRoomRate()) : null;
         this.paymentTransactionType = dto.getPaymentTransactionType() != null ? new ManagePaymentTransactionType(dto.getPaymentTransactionType()) : null;
+        this.deleteInvoice = dto.isDeleteInvoice();
     }
 
     public ManageAdjustmentDto toAggregate() {
-        return new ManageAdjustmentDto(id, adjustmentId, amount, date, description,
-                transaction != null ? transaction.toAggregate() : null, paymentTransactionType != null ? paymentTransactionType.toAggregate() : null,
-                roomRate != null ? roomRate.toAggregate() : null, employee);
+        return new ManageAdjustmentDto(
+                id, 
+                adjustmentId, 
+                amount, 
+                date, 
+                description,
+                transaction != null ? transaction.toAggregate() : null, 
+                paymentTransactionType != null ? paymentTransactionType.toAggregate() : null,
+                roomRate != null ? roomRate.toAggregate() : null, 
+                employee,
+                deleteInvoice
+        );
     }
 
     public ManageAdjustmentDto toAggregateSample() {
-        return new ManageAdjustmentDto(id, adjustmentId, amount, date, description,
-                transaction != null ? transaction.toAggregate() : null, paymentTransactionType != null ? paymentTransactionType.toAggregate() : null,
-                null, employee);
+        return new ManageAdjustmentDto(
+                id, 
+                adjustmentId, amount, 
+                date, 
+                description,
+                transaction != null ? transaction.toAggregate() : null, 
+                paymentTransactionType != null ? paymentTransactionType.toAggregate() : null,
+                null, 
+                employee,
+                deleteInvoice
+        );
     }
 }

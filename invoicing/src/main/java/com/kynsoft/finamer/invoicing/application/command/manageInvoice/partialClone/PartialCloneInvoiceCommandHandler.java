@@ -46,7 +46,6 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
     private final IInvoiceCloseOperationService closeOperationService;
 
     public PartialCloneInvoiceCommandHandler(
-
             IManageInvoiceService service,
             IManageAttachmentTypeService attachmentTypeService,
             ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
@@ -121,13 +120,14 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                             adjustmentRequest.getAdjustment().getDate(),
                             adjustmentRequest.getAdjustment().getDescription(),
                             adjustmentRequest.getAdjustment().getTransactionType() != null
-                                    ? this.transactionTypeService.findById(adjustmentRequest.getAdjustment().getTransactionType())
-                                    : null,
+                            ? this.transactionTypeService.findById(adjustmentRequest.getAdjustment().getTransactionType())
+                            : null,
                             adjustmentRequest.getAdjustment().getPaymentTransactionType() != null
-                                    ? this.paymentTransactionTypeService.findById(adjustmentRequest.getAdjustment().getPaymentTransactionType())
-                                    : null,
+                            ? this.paymentTransactionTypeService.findById(adjustmentRequest.getAdjustment().getPaymentTransactionType())
+                            : null,
                             null,
-                            adjustmentRequest.getAdjustment().getEmployee()
+                            adjustmentRequest.getAdjustment().getEmployee(),
+                            false
                     ));
                     roomRate.setAdjustments(adjustmentDtoList);
                 }
@@ -158,7 +158,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
             ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
-            if(attachmentType.isAttachInvDefault()) {
+            if (attachmentType.isAttachInvDefault()) {
                 cont++;
             }
             ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
@@ -169,11 +169,15 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                     command.getAttachmentCommands().get(i).getRemark(),
                     attachmentType,
                     null, command.getAttachmentCommands().get(i).getEmployee(),
-                    command.getAttachmentCommands().get(i).getEmployeeId(), null, null);
+                    command.getAttachmentCommands().get(i).getEmployeeId(), 
+                    null, 
+                    null,
+                    false
+            );
 
             attachmentDtos.add(attachmentDto);
         }
-        if(cont == 0){
+        if (cont == 0) {
             throw new BusinessException(
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
@@ -183,7 +187,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         for (ManageBookingDto booking : bookingDtos) {
             this.calculateBookingHotelAmount(booking);
         }
-        if(!validateManageAdjustments(bookingDtos)){
+        if (!validateManageAdjustments(bookingDtos)) {
             throw new BusinessException(
                     DomainErrorMessage.MANAGE_BOOKING_ADJUSTMENT,
                     DomainErrorMessage.MANAGE_BOOKING_ADJUSTMENT.getReasonPhrase()
@@ -201,8 +205,8 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
-                UUID.randomUUID(), 
-                0L, 
+                UUID.randomUUID(),
+                0L,
                 0L,
                 invoiceNumber,
                 //invoiceToClone.getInvoiceDate(), 
@@ -210,21 +214,21 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 invoiceToClone.getDueDate(),
                 true,
                 invoiceToClone.getInvoiceAmount(),
-                invoiceToClone.getInvoiceAmount(), 
-                invoiceToClone.getHotel(), 
+                invoiceToClone.getInvoiceAmount(),
+                invoiceToClone.getHotel(),
                 invoiceToClone.getAgency(),
-                invoiceToClone.getInvoiceType(), 
+                invoiceToClone.getInvoiceType(),
                 status,
-                false, 
-                bookingDtos, 
-                attachmentDtos, 
-                null, 
-                null, 
-                invoiceToClone.getManageInvoiceType(), 
-                invoiceStatus, 
-                null, 
-                true, 
-                invoiceToClone, 
+                false,
+                bookingDtos,
+                attachmentDtos,
+                null,
+                null,
+                invoiceToClone.getManageInvoiceType(),
+                invoiceStatus,
+                null,
+                true,
+                invoiceToClone,
                 0.00
         );
 
@@ -232,7 +236,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         ManageInvoiceDto created = service.create(invoiceDto);
 
         //calcular el amount de los bookings
-        for(ManageBookingDto booking : created.getBookings()){
+        for (ManageBookingDto booking : created.getBookings()) {
             this.bookingService.calculateInvoiceAmount(booking);
         }
         //calcular el amount del invoice
@@ -256,7 +260,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         );
 
         //attachment status history
-        for(ManageAttachmentDto attachment : created.getAttachments()){
+        for (ManageAttachmentDto attachment : created.getAttachments()) {
             this.attachmentStatusHistoryService.create(
                     new AttachmentStatusHistoryDto(
                             UUID.randomUUID(),
@@ -323,6 +327,5 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         // Si todos los ManageBooking tienen al menos un ManageAdjustment, retornamos true
         return true;
     }
-
 
 }

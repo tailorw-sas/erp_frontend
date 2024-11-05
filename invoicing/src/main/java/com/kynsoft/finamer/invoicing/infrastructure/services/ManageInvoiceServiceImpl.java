@@ -244,6 +244,15 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
+    public void deleteInvoice(ManageInvoiceDto dto) {
+        ManageInvoice entity = new ManageInvoice(dto);
+        entity.setDeleteInvoice(true);
+        entity.setUpdatedAt(LocalDateTime.now());
+
+        repositoryCommand.save(entity);
+    }
+
+    @Override
     public void delete(ManageInvoiceDto dto) {
         try {
             this.repositoryCommand.deleteById(dto.getId());

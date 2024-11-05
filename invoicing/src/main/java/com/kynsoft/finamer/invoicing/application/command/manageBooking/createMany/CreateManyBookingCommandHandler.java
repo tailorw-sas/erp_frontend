@@ -21,10 +21,12 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
     private final ProducerReplicateManageBookingService producerReplicateManageBookingService;
 
     public CreateManyBookingCommandHandler(IManageBookingService bookingService,
-            IManageInvoiceService invoiceService,
-            IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
-            IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
-            ProducerReplicateManageBookingService producerReplicateManageBookingService) {
+                                            IManageInvoiceService invoiceService,
+                                            IManageRatePlanService ratePlanService, 
+                                            IManageNightTypeService nightTypeService,
+                                            IManageRoomTypeService roomTypeService, 
+                                            IManageRoomCategoryService roomCategoryService,
+                                            ProducerReplicateManageBookingService producerReplicateManageBookingService) {
         this.bookingService = bookingService;
         this.invoiceService = invoiceService;
         this.ratePlanService = ratePlanService;
@@ -85,7 +87,9 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
                     roomTypeDto,
                     roomCategoryDto,
                     null, null, null,
-                    element.getContract());
+                    element.getContract(),
+                    false
+            );
             bookingService.create(newBookingDto);
 
             //TODO: aqui se envia el booking para payment
