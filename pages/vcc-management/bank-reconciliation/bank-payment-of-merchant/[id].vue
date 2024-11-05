@@ -9,7 +9,7 @@ import { useRoute } from 'vue-router'
 import ContextMenu from 'primevue/contextmenu'
 import { v4 } from 'uuid'
 import BankPaymentMerchantBindTransactionsDialog
-  from '../../../components/vcc/bank-reconciliation/BankPaymentMerchantBindTransactionsDialog.vue'
+  from '~/components/vcc/bank-reconciliation/BankPaymentMerchantBindTransactionsDialog.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
