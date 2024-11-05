@@ -163,8 +163,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                     invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", //Id
                     invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", //Type
                     invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", //Hotel
-                    "",//Agency Cd
-                    invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "",//Agency
+                    invoice.getAgency() != null ? invoice.getAgency().getCode() : "",//Agency,//Agency Cd
+                    invoice.getAgency() != null ? invoice.getAgency().getName() : "",//Agency
                     invoice.getInvoiceNumber(),//Inv. No
                     invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "",//Gen. Date
                     invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", //Status
