@@ -81,7 +81,7 @@ public class BookingRow {
         manageBookingDto.setHotelAmount(this.hotelInvoiceAmount);
         manageBookingDto.setFirstName(Objects.nonNull(this.firstName) ? this.firstName : "");
         manageBookingDto.setLastName(Objects.nonNull(this.lastName) ? this.lastName : "");
-        manageBookingDto.setFullName(Objects.nonNull(this.firstName) ? this.firstName : " " + " " + (Objects.nonNull(this.lastName) ? this.lastName : ""));
+        manageBookingDto.setFullName(buildFullName());
         manageBookingDto.setHotelBookingNumber(Objects.nonNull(this.hotelBookingNumber) ? this.hotelBookingNumber : "");
         manageBookingDto.setHotelInvoiceNumber(Objects.nonNull(this.hotelInvoiceNumber) ? this.hotelInvoiceNumber : "");
         manageBookingDto.setDescription(Objects.nonNull(this.remarks) ? this.remarks : "");
@@ -91,6 +91,19 @@ public class BookingRow {
         // manageBookingDto.setAmountPax();
         manageBookingDto.setBookingDate(DateUtil.parseDateToDateTime(this.bookingDate));
         return manageBookingDto;
+    }
+
+    private String buildFullName(){
+        if (Objects.nonNull(this.firstName) && (Objects.nonNull(this.lastName))){
+            return firstName+" "+lastName;
+        }
+        if (Objects.nonNull(firstName)){
+            return firstName;
+        }
+        if (Objects.nonNull(lastName)){
+            return lastName;
+        }
+        return "";
     }
 
 }
