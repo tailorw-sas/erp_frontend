@@ -61,12 +61,12 @@ const sClassMap: IStatusClass[] = [
 
 const columns: IColumn[] = [
   { field: 'id', header: 'Id', type: 'text' },
-  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant' }, sortable: true },
+  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
   { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap },
+  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, showFilter: false },
 ]
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -158,44 +158,6 @@ async function getList() {
     options.value.loading = true
     BindTransactionList.value = []
     const newListItems = []
-
-    await getCollectionStatusList()
-    const statusIds = collectionStatusRefundReceivedList.value.map((elem: any) => elem.id)
-
-    const merchantIds = props.currentBankPayment.merchantBankAccount.managerMerchant.map((item: any) => item.id)
-    const creditCardTypeIds = props.currentBankPayment.merchantBankAccount.creditCardTypes.map((item: any) => item.id)
-
-    payload.value.filter = [{
-      key: 'hotel.id',
-      operator: 'EQUALS',
-      value: props.currentBankPayment.hotel.id,
-      logicalOperation: 'AND'
-    }, {
-      key: 'merchant.id',
-      operator: 'IN',
-      value: merchantIds,
-      logicalOperation: 'AND'
-    }, {
-      key: 'creditCardType.id',
-      operator: 'IN',
-      value: creditCardTypeIds,
-      logicalOperation: 'AND'
-    }, {
-      key: 'amount',
-      operator: 'LESS_THAN_OR_EQUAL_TO',
-      value: props.currentBankPayment.amount,
-      logicalOperation: 'AND'
-    }, {
-      key: 'reconciliation',
-      operator: 'IS_NULL',
-      value: '',
-      logicalOperation: 'AND'
-    }, {
-      key: 'status.id',
-      operator: 'IN',
-      value: statusIds,
-      logicalOperation: 'AND'
-    }]
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
@@ -302,9 +264,52 @@ watch(payloadOnChangePage, (newValue) => {
   getList()
 })
 
-onMounted(() => {
+onMounted(async () => {
   selectedElements.value = [...props.selectedItems]
   collectionStatusRefundReceivedList.value = [...props.validCollectionStatusList]
+  await getCollectionStatusList()
+  const statusIds = collectionStatusRefundReceivedList.value.map((elem: any) => elem.id)
+
+  const merchantIds = props.currentBankPayment.merchantBankAccount.managerMerchant.map((item: any) => item.id)
+  const creditCardTypeIds = props.currentBankPayment.merchantBankAccount.creditCardTypes.map((item: any) => item.id)
+
+  payload.value.filter = [{
+    key: 'hotel.id',
+    operator: 'EQUALS',
+    value: props.currentBankPayment.hotel.id,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'merchant.id',
+    operator: 'IN',
+    value: merchantIds,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'creditCardType.id',
+    operator: 'IN',
+    value: creditCardTypeIds,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'amount',
+    operator: 'LESS_THAN_OR_EQUAL_TO',
+    value: props.currentBankPayment.amount,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'reconciliation',
+    operator: 'IS_NULL',
+    value: '',
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'status.id',
+    operator: 'IN',
+    value: statusIds,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }]
   getList()
 })
 </script>
