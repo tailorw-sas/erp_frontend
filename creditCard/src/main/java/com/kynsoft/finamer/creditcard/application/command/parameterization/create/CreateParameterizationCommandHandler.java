@@ -18,21 +18,8 @@ public class CreateParameterizationCommandHandler implements ICommandHandler<Cre
 
     @Override
     public void handle(CreateParameterizationCommand command) {
-        ParameterizationDto actual = this.service.findActiveParameterization();
-
-        if(Objects.isNull(actual)){
-            this.service.create(new ParameterizationDto(
-                    command.getId(), true, command.getTransactionStatusCode(),
-                    command.getTransactionCategory(), command.getTransactionSubCategory(),
-                    command.getRefundTransactionStatusCode()
-            ));
-        } else {
-            this.service.delete(actual);
-            this.service.create(new ParameterizationDto(
-                    command.getId(), true, command.getTransactionStatusCode(),
-                    command.getTransactionCategory(), command.getTransactionSubCategory(),
-                    command.getRefundTransactionStatusCode()
-            ));
-        }
+        this.service.create(new ParameterizationDto(
+                command.getId(), true, command.getDecimals()
+        ));
     }
 }

@@ -18,6 +18,7 @@ public class MerchantBankAccountToReconciliationResponse {
     private String description;
     private Set<MerchantToBankReconciliationResponse> managerMerchant;
     private ManageBankToBankReconciliationResponse manageBank;
+    private Set<CreditCardTypeToBankReconciliationResponse> creditCardTypes;
 
     public MerchantBankAccountToReconciliationResponse(ManageMerchantBankAccountDto dto){
         this.id = dto.getId();
@@ -25,5 +26,6 @@ public class MerchantBankAccountToReconciliationResponse {
         this.description = dto.getDescription();
         this.managerMerchant = dto.getManagerMerchant() != null ? dto.getManagerMerchant().stream().map(MerchantToBankReconciliationResponse::new).collect(Collectors.toSet()) : null;
         this.manageBank = dto.getManageBank() != null ? new ManageBankToBankReconciliationResponse(dto.getManageBank()) : null;
+        this.creditCardTypes = dto.getCreditCardTypes() != null ? dto.getCreditCardTypes().stream().map(CreditCardTypeToBankReconciliationResponse::new).collect(Collectors.toSet()) : null;
     }
 }

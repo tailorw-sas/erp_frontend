@@ -11,4 +11,5 @@ public class ImportBookingRequest {
     private String importProcessId;
     private byte [] file;
     private EImportType importType;
+    private String employee;
 }

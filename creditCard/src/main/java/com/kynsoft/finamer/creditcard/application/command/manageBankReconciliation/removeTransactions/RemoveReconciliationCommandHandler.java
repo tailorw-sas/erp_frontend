@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.transaction.removeReconciliation;
+package com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.removeTransactions;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageBankReconciliationDto;
@@ -21,29 +21,26 @@ public class RemoveReconciliationCommandHandler implements ICommandHandler<Remov
 
     @Override
     public void handle(RemoveReconciliationCommand command) {
+        ManageBankReconciliationDto bankReconciliationDto = command.getBankReconciliation() != null ? this.bankReconciliationService.findById(command.getBankReconciliation()) : null;
         for (Long id : command.getTransactionsIds()){
             TransactionDto transactionDto = this.transactionService.findById(id);
-            if (command.getBankReconciliation() != null){
-                if (transactionDto.getReconciliation().getId().equals(command.getBankReconciliation())){
-                    if (transactionDto.isAdjustment()){
+            if (bankReconciliationDto != null && transactionDto.getReconciliation().getId().equals(command.getBankReconciliation())){
+                if (transactionDto.isAdjustment()){
+                    if (bankReconciliationDto.getTransactions().remove(transactionDto)){
                         transactionDto.setReconciliation(null);
                         this.transactionService.update(transactionDto);
                         this.transactionService.delete(transactionDto);
-                    } else {
+                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getAmount());
+                    }
+                } else {
+                    if (bankReconciliationDto.getTransactions().remove(transactionDto)){
                         transactionDto.setReconciliation(null);
                         this.transactionService.update(transactionDto);
+                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getAmount());
                     }
-                }
-            } else {
-                if (transactionDto.isAdjustment()){
-                    transactionDto.setReconciliation(null);
-                    this.transactionService.update(transactionDto);
-                    this.transactionService.delete(transactionDto);
-                } else {
-                    transactionDto.setReconciliation(null);
-                    this.transactionService.update(transactionDto);
                 }
             }
         }
+        this.bankReconciliationService.update(bankReconciliationDto);
     }
 }

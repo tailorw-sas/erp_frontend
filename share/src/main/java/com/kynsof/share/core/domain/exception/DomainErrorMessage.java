@@ -356,7 +356,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_TRANSACTION_TYPE_CHECK_CREDIT(1134, Series.DOMAIN_ERROR,"Another item already exists with credit default."),
     INVOICE_TYPE_NOT_FOUND(1135, Series.DOMAIN_ERROR, "Invoice type not found or inactive."),
     INVOICE_STATUS_NOT_FOUND(1136, Series.DOMAIN_ERROR, "Invoice status not found or inactive."),
-    CREDIT_CARD_TYPE_NOT_FOUND(1137, Series.DOMAIN_ERROR, "Transaction Credit Card Type not found.");
+    CREDIT_CARD_TYPE_NOT_FOUND(1137, Series.DOMAIN_ERROR, "Transaction Credit Card Type not found."),
+    COMMISSION_NOT_FOUND(1138, Series.DOMAIN_ERROR, "There are no available commissions to apply.");
 
     private static final DomainErrorMessage[] VALUES;
 

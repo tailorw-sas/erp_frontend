@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.transaction.removeReconciliation;
+package com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.removeTransactions;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -133,7 +133,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream) {
-        List<ManageInvoiceResponse> data = this.search(pageable, filterCriteria).getData();
+        List<ManageInvoiceSearchResponse> data = this.search(pageable, filterCriteria).getData();
 
         List<ExportInvoiceRow> rows = new ArrayList<>();
         List<String> sheets = new ArrayList<>();
@@ -141,7 +141,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         rows.add(new ExportInvoiceRow(0, "Id", "Inv. No", "Due Date", "Manual", "Amount", "Hotel", "Agency", "Type", "Status", null));
 
         for (int i = 0; i < data.size(); i++) {
-            ManageInvoiceResponse invoice = data.get(i);
+            ManageInvoiceSearchResponse invoice = data.get(i);
             rows.add(new ExportInvoiceRow(0, invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", invoice.getInvoiceNumber(), invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "", invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "", invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "", invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", null));
 
         }
