@@ -33,6 +33,7 @@ const openDialogApplyPaymentOtherDeduction = ref(false)
 const disabledBtnApplyPayment = ref(true)
 const disabledBtnApplyPaymentOtherDeduction = ref(true)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
+const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
 const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
 const paymentDetailsTypeDepositList = ref<any[]>([])
@@ -2440,6 +2441,7 @@ function onRowContextMenu(event: any) {
   objClientFormChangeAgency.value = event?.data?.client
   currentAgencyForChangeAgency.value = event?.data?.agency
   listClientFormChangeAgency.value = event?.data?.client ? [event?.data?.client] : []
+  objItemSelectedForRightClickChangeAgency.value = event.data
 
   if (event && event.data) {
     paymentSelectedForAttachment.value = event.data
@@ -2559,28 +2561,28 @@ async function onRowDoubleClickInDataTableForChangeAgency(event: any) {
   try {
     optionsOfTableChangeAgency.value.loading = true
     const payloadToApplyPayment: GenericObject = {
-      payment: objItemSelectedForRightClickApplyPayment.value.id || '',
-      transactionDate: objItemSelectedForRightClickApplyPayment.value.transactionDate,
-      reference: objItemSelectedForRightClickApplyPayment.value.reference,
-      remark: objItemSelectedForRightClickApplyPayment.value.remark,
-      paymentSource: objItemSelectedForRightClickApplyPayment.value.paymentSource?.id || '',
-      paymentStatus: objItemSelectedForRightClickApplyPayment.value.paymentStatus?.id || '',
+      payment: objItemSelectedForRightClickChangeAgency.value.id || '',
+      transactionDate: objItemSelectedForRightClickChangeAgency.value.transactionDate,
+      reference: objItemSelectedForRightClickChangeAgency.value.reference,
+      remark: objItemSelectedForRightClickChangeAgency.value.remark,
+      paymentSource: objItemSelectedForRightClickChangeAgency.value.paymentSource?.id || '',
+      paymentStatus: objItemSelectedForRightClickChangeAgency.value.paymentStatus?.id || '',
       client: event.client || '',
       agency: event?.id,
-      hotel: objItemSelectedForRightClickApplyPayment.value.hotel?.id || '',
-      bankAccount: objItemSelectedForRightClickApplyPayment.value.bankAccount?.id || '',
-      attachmentStatus: objItemSelectedForRightClickApplyPayment.value.attachmentStatus?.id || '',
+      hotel: objItemSelectedForRightClickChangeAgency.value.hotel?.id || '',
+      bankAccount: objItemSelectedForRightClickChangeAgency.value.bankAccount?.id || '',
+      attachmentStatus: objItemSelectedForRightClickChangeAgency.value.attachmentStatus?.id || '',
     }
 
-    await GenericService.update(options.value.moduleApi, options.value.uriApi, objItemSelectedForRightClickApplyPayment.value.id || '', payloadToApplyPayment)
+    await GenericService.update(options.value.moduleApi, options.value.uriApi, objItemSelectedForRightClickChangeAgency.value.id || '', payloadToApplyPayment)
     openDialogApplyPayment.value = false
     toast.add({ severity: 'success', summary: 'Successful', detail: 'The agency has been changed successfully', life: 3000 })
     getList()
     openDialogChangeAgency.value = false
   }
-  catch (error) {
+  catch (error: any) {
     openDialogApplyPayment.value = false
-    toast.add({ severity: 'error', summary: 'Error', detail: 'The agency could not be changed', life: 3000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errors[0]?.message ? error?.data?.data?.error?.errors[0]?.message : 'The agency could not be changed', life: 3000 })
   }
   finally {
     optionsOfTableChangeAgency.value.loading = false
