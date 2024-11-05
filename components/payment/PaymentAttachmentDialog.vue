@@ -1332,7 +1332,7 @@ onMounted(async () => {
 
                 <template #field-path="{ item: data, onUpdate }">
                   <FileUpload
-                    v-if="!loadingSaveAll" :max-file-size="1000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
+                    v-if="!loadingSaveAll" :max-file-size="100000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
                     @uploader="($event: any) => {
                       customBase64Uploader($event, fieldsV2, 'path');
                       onUpdate('path', $event)
