@@ -829,6 +829,8 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+      console.log(response)
+
       if (response) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
@@ -1434,7 +1436,15 @@ async function getratePlanList(query = '') {
     const { data: dataList } = response
     ratePlanList.value = []
     for (const iterator of dataList) {
-      ratePlanList.value = [...ratePlanList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      ratePlanList.value = [
+        ...ratePlanList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          code: iterator.code,
+          status: iterator.status
+        }
+      ]
     }
   }
   catch (error) {
@@ -1481,7 +1491,7 @@ async function getRoomCategoryList(query = '') {
         ...roomCategoryList.value,
         {
           id: iterator.id,
-          name: iterator.name,
+          name: `${iterator.code} - ${iterator.name}`,
           code: iterator.code,
           status: iterator.status
         }
@@ -1527,7 +1537,7 @@ async function getRoomTypeList(query = '') {
     const { data: dataList } = response
     roomTypeList.value = []
     for (const iterator of dataList) {
-      roomTypeList.value = [...roomTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      roomTypeList.value = [...roomTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code, status: iterator.status }]
     }
   }
   catch (error) {
@@ -1569,7 +1579,7 @@ async function getNightTypeList(query = '') {
     const { data: dataList } = response
     nightTypeList.value = []
     for (const iterator of dataList) {
-      nightTypeList.value = [...nightTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      nightTypeList.value = [...nightTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code, status: iterator.status }]
     }
   }
   catch (error) {
@@ -1619,10 +1629,10 @@ async function getBookingItemById(id: string) {
         item2.value.description = response.description
         item2.value.invoice = response.invoice
         item2.value.invoiceOriginalAmount = response.invoice.originalAmount
-        item2.value.ratePlan = response.ratePlan?.name === '-' ? null : response.ratePlan
-        item2.value.nightType = response.nightType
-        item2.value.roomType = response.roomType?.name === '-' ? null : response.roomType
-        item2.value.roomCategory = response.roomCategory
+        item2.value.ratePlan = response.ratePlan ? { id: response.ratePlan.id, name: `${response.ratePlan.code} - ${response.ratePlan.name}`, code: response.ratePlan.code, status: response.ratePlan.status } : null
+        item2.value.nightType = response.nightType ? { id: response.nightType.id, name: `${response.nightType.code} - ${response.nightType.name}`, code: response.nightType.code, status: response.nightType.status } : null
+        item2.value.roomType = response.roomType ? { id: response.roomType.id, name: `${response.roomType.code} - ${response.roomType.name}`, code: response.roomType.code, status: response.roomType.status } : null
+        item2.value.roomCategory = response.roomCategory ? { id: response.roomCategory.id, name: `${response.roomCategory.code} - ${response.roomCategory.name}`, code: response.roomCategory.code, status: response.roomCategory.status } : null
       }
 
       // Validacion para el campo hotelInvoiceNumber
@@ -1717,7 +1727,7 @@ async function getBookingItemById(id: string) {
       }
       else {
         const objField = fieldsV2.find(field => field.field === 'nightType')
-        updateFieldProperty(fieldsV2, 'nightType', 'validation', z.string().nullable())
+        updateFieldProperty(fieldsV2, 'nightType', 'validation', z.object({}).nullable())
         updateFieldProperty(fieldsV2, 'nightType', 'class', `${objField?.class}`)
       }
 
@@ -1884,9 +1894,9 @@ onMounted(async () => {
             }"
             @load="($event) => getratePlanList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
@@ -1897,9 +1907,9 @@ onMounted(async () => {
               onUpdate('roomCategory', $event)
             }" @load="($event) => getRoomCategoryList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
@@ -1917,14 +1927,20 @@ onMounted(async () => {
         </template>
         <template #field-roomType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.roomType" :suggestions="roomTypeList" @change="($event) => {
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :model="data.roomType"
+            :suggestions="roomTypeList"
+            @change="($event) => {
               onUpdate('roomType', $event)
-            }" @load="($event) => getRoomTypeList($event)"
+            }"
+            @load="($event) => getRoomTypeList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
@@ -1949,9 +1965,9 @@ onMounted(async () => {
             }"
             @load="($event) => getNightTypeList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
