@@ -64,5 +64,6 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
             bankReconciliationDto.setTransactions(bankReconciliationTransactions);
             this.bankReconciliationService.update(bankReconciliationDto);
         }
+        command.setDetailsAmount(bankReconciliationDto.getDetailsAmount());
     }
 }
