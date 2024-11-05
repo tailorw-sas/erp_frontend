@@ -16,4 +16,5 @@ public class AddTransactionsMessage implements ICommandMessage {
     private UUID bankReconciliationId;
     private Set<Long> transactionIds;
     private List<Long> adjustmentIds;
+    private double detailsAmount;
 }

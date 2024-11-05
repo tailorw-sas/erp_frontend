@@ -42,5 +42,6 @@ public class RemoveReconciliationCommandHandler implements ICommandHandler<Remov
             }
         }
         this.bankReconciliationService.update(bankReconciliationDto);
+        command.setDetailsAmount(bankReconciliationDto.getDetailsAmount());
     }
 }

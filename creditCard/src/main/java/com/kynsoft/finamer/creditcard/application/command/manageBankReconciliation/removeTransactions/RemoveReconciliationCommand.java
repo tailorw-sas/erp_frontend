@@ -2,7 +2,6 @@ package com.kynsoft.finamer.creditcard.application.command.manageBankReconciliat
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,11 +10,16 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class RemoveReconciliationCommand implements ICommand {
 
     private UUID bankReconciliation;
     private List<Long> transactionsIds;
+    private double detailsAmount;
+
+    public RemoveReconciliationCommand(UUID bankReconciliation, List<Long> transactionsIds) {
+        this.bankReconciliation = bankReconciliation;
+        this.transactionsIds = transactionsIds;
+    }
 
     public static RemoveReconciliationCommand fromRequest(RemoveReconciliationRequest request){
         return new RemoveReconciliationCommand(
@@ -26,6 +30,6 @@ public class RemoveReconciliationCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new RemoveReconciliationMessage(bankReconciliation, transactionsIds);
+        return new RemoveReconciliationMessage(bankReconciliation, transactionsIds, detailsAmount);
     }
 }
