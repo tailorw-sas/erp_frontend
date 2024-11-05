@@ -12,7 +12,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanWriter;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
-import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceStatus;
@@ -32,6 +31,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -51,7 +51,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final IInvoiceCloseOperationService closeOperationService;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-                                    ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
+            ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
@@ -91,7 +91,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         entity.setInvoiceNumber(invoiceNumber);
         entity.setInvoiceNo(lastInvoiceNo);
         dto.setInvoiceNo(lastInvoiceNo);
-        String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" +lastInvoiceNo;
+        String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
         entity.setInvoiceNumberPrefix(invoicePrefix);
 
         return this.repositoryCommand.saveAndFlush(entity).toAggregate();
@@ -138,12 +138,44 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         List<ExportInvoiceRow> rows = new ArrayList<>();
         List<String> sheets = new ArrayList<>();
 
-        rows.add(new ExportInvoiceRow(0, "Id", "Inv. No", "Due Date", "Manual", "Amount", "Hotel", "Agency", "Type", "Status", null));
+        rows.add(new ExportInvoiceRow(
+                0,
+                "Id",
+                "Type",
+                "Hotel",
+                "Agency Cd",
+                "Agency",
+                "Inv. No",
+                "Gen. Date",
+                "Status",
+                "Manual",
+                "Amount",
+                "Due Amount",
+                "Auto Rec",
+                null
+        ));
 
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         for (int i = 0; i < data.size(); i++) {
             ManageInvoiceSearchResponse invoice = data.get(i);
-            rows.add(new ExportInvoiceRow(0, invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", invoice.getInvoiceNumber(), invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "", invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "", invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "", invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", null));
-
+            rows.add(new ExportInvoiceRow(
+                    0,
+                    invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", //Id
+                    invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", //Type
+                    invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", //Hotel
+                    "",//Agency Cd
+                    invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "",//Agency
+                    invoice.getInvoiceNumber(),//Inv. No
+                    invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "",//Gen. Date
+                    invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", //Status
+                    invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", //Manual
+                    decimalFormat.format(invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount() : "0.00"),//Amount
+                    decimalFormat.format(invoice.getDueAmount() != null ? invoice.getDueAmount() : "0.00"),//Due Amount
+                    //invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "", //Amount
+                    //invoice.getDueAmount() != null ? invoice.getDueAmount().toString() : "", //Due Amount
+                    invoice.getAutoRec() != null ? invoice.getAutoRec().toString() : "", //Auto Rec
+                    null
+            ));
         }
 
         sheets.add("Invoice List");
@@ -199,12 +231,12 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         // Devolvemos la respuesta paginada con los datos filtrados y calculados
         return new PaginatedResponse(
-                filteredResponseList,              // Lista de datos filtrados
-                totalPages,                        // Total de páginas basado en los datos filtrados
-                totalFilteredElements,             // Total de elementos después del filtrado
-                (long) totalFilteredElements,      // Total de elementos
-                pageSize,                          // Tamaño de la página original
-                data.getNumber()                   // Número de la página actual (0-indexado)
+                filteredResponseList, // Lista de datos filtrados
+                totalPages, // Total de páginas basado en los datos filtrados
+                totalFilteredElements, // Total de elementos después del filtrado
+                (long) totalFilteredElements, // Total de elementos
+                pageSize, // Tamaño de la página original
+                data.getNumber() // Número de la página actual (0-indexado)
         );
     }
 
@@ -212,9 +244,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         LocalDate currentDate = LocalDate.now(); // Obtener la fecha actual (sin hora)
         if (bookings != null && !bookings.isEmpty()) {
             for (ManageBooking booking : bookings) {
-                if (booking.getCheckOut() != null &&
-                        (booking.getCheckOut().toLocalDate().isBefore(currentDate) ||
-                                booking.getCheckOut().toLocalDate().isEqual(currentDate))) {
+                if (booking.getCheckOut() != null
+                        && (booking.getCheckOut().toLocalDate().isBefore(currentDate)
+                        || booking.getCheckOut().toLocalDate().isEqual(currentDate))) {
                     return true; // Si checkOut es antes o igual a currentDate, devolver true
                 }
             }
@@ -316,7 +348,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return repositoryQuery.findByInvoiceId(id)
                 .map(ManageInvoice::toAggregate)
                 .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
-                        new ErrorField("invoiceId", "The invoice not found."))));
+                new ErrorField("invoiceId", "The invoice not found."))));
     }
 
     @Override
