@@ -24,6 +24,7 @@ public class ManageAttachmentDto {
     private UUID employeeId;
     private LocalDateTime createdAt;
     private ResourceTypeDto paymentResourceType;
+    private boolean deleteInvoice;
 
     public ManageAttachmentDto(ManageAttachmentDto dto) {
         this.id = UUID.randomUUID();

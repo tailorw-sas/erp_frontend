@@ -51,7 +51,10 @@ public class CreateRoomRateCommandHandler implements ICommandHandler<CreateRoomR
                 command.getHotelAmount(),
                 command.getRemark(),
                 bookingDto,
-                null, null));
+                null, 
+                null,
+                false
+        ));
 
         ManageBookingDto updateBookingDto = this.bookingService.findById(bookingDto.getId());
         bookingService.calculateInvoiceAmount(updateBookingDto);
