@@ -160,6 +160,13 @@ const pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+const paginationFirstLocal = ref(0) // Índice inicial de la página actual
+
+const paginatedData = computed(() => {
+  const start = paginationFirstLocal.value
+  const end = start + pagination.value.limit
+  return LocalBindTransactionList.value.slice(start, end)
+})
 
 const computedTransactionAmountSelected = computed(() => {
   const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0) : 0
@@ -673,6 +680,11 @@ async function onRowRightClick(event: any) {
   contextMenu.value.show(event.originalEvent)
 }
 
+function onChangeLocalPagination(event: any) {
+  paginationFirstLocal.value = event.first
+  pagination.value.limit = event.rows
+}
+
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
@@ -792,10 +804,11 @@ onMounted(async () => {
     </div>
     <!-- <pre>{{ selectedElements }}</pre> -->
     <DynamicTable
-      :data="idItem ? BindTransactionList : LocalBindTransactionList"
+      :data="idItem ? BindTransactionList : paginatedData"
       :columns="columns"
       :options="options"
       :pagination="pagination"
+      :show-local-pagination="!idItem"
       :selected-items="selectedElements"
       @on-change-pagination="payloadOnChangePage = $event"
       @on-change-filter="parseDataTableFilter"
@@ -810,6 +823,14 @@ onMounted(async () => {
             <Column :footer="formatNumber(subTotals.amount)" />
           </Row>
         </ColumnGroup>
+      </template>
+      <template #pagination>
+        <Paginator
+          :rows="Number(pagination.limit) || 50"
+          :total-records="pagination.totalElements"
+          :rows-per-page-options="[10, 20, 30, 50]"
+          @page="onChangeLocalPagination($event)"
+        />
       </template>
     </DynamicTable>
     <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">

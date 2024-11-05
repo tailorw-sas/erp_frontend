@@ -72,6 +72,12 @@ const props = defineProps({
     type: Array as PropType<any[]>,
     required: false,
   },
+  // Mostrar el componente de paginación
+  showLocalPagination: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 })
 
 const emits = defineEmits<{
@@ -878,16 +884,18 @@ defineExpose({ clearSelectedItems })
         <slot name="datatable-footer" />
       </DataTable>
     </div>
-
     <div class="flex justify-content-center align-items-center mt-3 card p-0">
+      <div v-if="props.showLocalPagination">
+        <slot name="pagination" />
+      </div>
       <Paginator
-        v-if="props.pagination"
+        v-else-if="props.pagination"
         :rows="Number(props.pagination.limit) || 50"
         :total-records="props.pagination.totalElements"
         :rows-per-page-options="[10, 20, 30, 50]"
         @page="onChangePageOrLimit($event)"
       />
-      <Divider layout="vertical" />
+      <Divider layout="vertical" v-if="props.pagination"/>
       <div class="flex align-items-center mx-3">
         <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
           <span>
