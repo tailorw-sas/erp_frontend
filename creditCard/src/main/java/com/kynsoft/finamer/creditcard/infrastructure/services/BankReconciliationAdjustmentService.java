@@ -6,7 +6,9 @@ import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliati
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAmountRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationListOfAmountDetailsRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -71,9 +73,14 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
     }
 
     @Override
+    @Transactional
     public List<Long> createAdjustments(List<UpdateBankReconciliationAdjustmentRequest> adjustmentRequest, ManageBankReconciliationDto reconciliationDto) {
         List<Long> ids = new ArrayList<>();
         Set<TransactionDto> adjustmentTransactions = new HashSet<>();
+
+        List<Double> amounts = adjustmentRequest.stream().map(UpdateBankReconciliationAdjustmentRequest::getAmount).toList();
+        RulesChecker.checkRule(new BankReconciliationListOfAmountDetailsRule(reconciliationDto.getAmount(), reconciliationDto.getDetailsAmount(), amounts));
+
         for (UpdateBankReconciliationAdjustmentRequest request : adjustmentRequest) {
             RulesChecker.checkRule(new AdjustmentTransactionAmountRule(request.getAmount()));
 

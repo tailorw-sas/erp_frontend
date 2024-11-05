@@ -48,18 +48,18 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IInvoiceCloseOperationService closeOperationService;
 
     public TotalCloneCommandHandler(IManageInvoiceService invoiceService,
-                                    IManageAgencyService agencyService,
-                                    IManageHotelService hotelService,
-                                    IManageAttachmentTypeService attachmentTypeService,
-                                    IManageBookingService bookingService,
-                                    IManageInvoiceStatusService invoiceStatusService,
-                                    ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
-                                    IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
-                                    IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
-                                    IInvoiceStatusHistoryService invoiceStatusHistoryService,
-                                    IAttachmentStatusHistoryService attachmentStatusHistoryService, 
-                                    IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
-                                    IInvoiceCloseOperationService closeOperationService) {
+            IManageAgencyService agencyService,
+            IManageHotelService hotelService,
+            IManageAttachmentTypeService attachmentTypeService,
+            IManageBookingService bookingService,
+            IManageInvoiceStatusService invoiceStatusService,
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+            IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
+            IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
+            IInvoiceStatusHistoryService invoiceStatusHistoryService,
+            IAttachmentStatusHistoryService attachmentStatusHistoryService,
+            IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
+            IInvoiceCloseOperationService closeOperationService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -76,7 +76,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.invoiceTransactionTypeService = invoiceTransactionTypeService;
         this.closeOperationService = closeOperationService;
     }
-
 
 //    @Override
 //    public void handle(TotalCloneCommand command){
@@ -194,7 +193,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 //            );
 //        }
 //    }
-
     @Override
     public void handle(TotalCloneCommand command) {
 
@@ -205,7 +203,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
         //vienen todos los attachments juntos, lo del padre y los nuevos
-        for (TotalCloneAttachmentRequest attachmentRequest: command.getAttachments()) {
+        for (TotalCloneAttachmentRequest attachmentRequest : command.getAttachments()) {
             RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
                     attachmentRequest.getFile()
             ));
@@ -223,19 +221,21 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     attachmentRequest.getEmployeeName(),
                     attachmentRequest.getEmployeeId(),
                     null,
-                    null);
+                    null,
+                    false
+            );
 
             attachmentDtos.add(attachmentDto);
         }
 
-        for(TotalCloneBookingRequest bookingRequest : command.getBookings()){
+        for (TotalCloneBookingRequest bookingRequest : command.getBookings()) {
             //no se agregan nuevos booking solo se pueden editar, el id siempre debe venir
             ManageBookingDto bookingToClone = this.bookingService.findById(bookingRequest.getId());
             List<ManageRoomRateDto> roomRateDtoList = new ArrayList<>();
 
             //cambiando los ids de los room rates para poder guardarlos
             //no me llevo los adjustments
-            for (TotalCloneRoomRateRequest roomRate : bookingRequest.getRoomRates()){
+            for (TotalCloneRoomRateRequest roomRate : bookingRequest.getRoomRates()) {
                 long nights = this.calculateNights(roomRate.getCheckIn(), roomRate.getCheckOut());
                 double rateAdult = roomRate.getAdults() != null ? this.calculateRateAdult(roomRate.getInvoiceAmount(), nights, roomRate.getAdults()) : 0.00;
                 double rateChild = roomRate.getChildren() != null ? this.calculateRateChild(roomRate.getInvoiceAmount(), nights, roomRate.getChildren()) : 0.00;
@@ -255,7 +255,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         roomRate.getRemark(),
                         null,
                         new ArrayList<>(),
-                        nights
+                        nights,
+                        false
                 );
                 roomRateDtoList.add(roomRateDto);
             }
@@ -307,7 +308,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     roomRateDtoList,
                     null,
                     bookingToClone,
-                    bookingRequest.getContract()
+                    bookingRequest.getContract(),
+                    false
             );
             bookings.add(newBooking);
         }
@@ -394,7 +396,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         );
 
         //attachment status history
-        for(ManageAttachmentDto attachment : created.getAttachments()) {
+        for (ManageAttachmentDto attachment : created.getAttachments()) {
             this.attachmentStatusHistoryService.create(
                     new AttachmentStatusHistoryDto(
                             UUID.randomUUID(),
@@ -419,10 +421,10 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
-    private void setInvoiceToCloneAmounts(ManageInvoiceDto invoiceDto, String employee){
+    private void setInvoiceToCloneAmounts(ManageInvoiceDto invoiceDto, String employee) {
 
-        for (ManageBookingDto bookingDto : invoiceDto.getBookings()){
-            for (ManageRoomRateDto roomRateDto : bookingDto.getRoomRates()){
+        for (ManageBookingDto bookingDto : invoiceDto.getBookings()) {
+            for (ManageRoomRateDto roomRateDto : bookingDto.getRoomRates()) {
                 List<ManageAdjustmentDto> adjustmentDtoList = new ArrayList<>();
                 ManageAdjustmentDto adjustmentDto = new ManageAdjustmentDto(
                         UUID.randomUUID(),
@@ -433,7 +435,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         this.invoiceTransactionTypeService.findByDefaults(),
                         null,
                         null,
-                        employee
+                        employee,
+                        false
                 );
                 adjustmentDtoList.add(adjustmentDto);
                 roomRateDto.setAdjustments(adjustmentDtoList);

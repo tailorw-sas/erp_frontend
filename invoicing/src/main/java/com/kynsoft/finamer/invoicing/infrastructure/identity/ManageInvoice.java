@@ -107,6 +107,9 @@ public class ManageInvoice {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean hasAttachments;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean deleteInvoice;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -152,6 +155,7 @@ public class ManageInvoice {
         this.credits = dto.getCredits();
         this.sendStatusError = dto.getSendStatusError();
         this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
+        this.deleteInvoice = dto.isDeleteInvoice();
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -165,6 +169,7 @@ public class ManageInvoice {
                 null, credits);
         manageInvoiceDto.setOriginalAmount(originalAmount);
         manageInvoiceDto.setImportType(importType);
+        manageInvoiceDto.setDeleteInvoice(deleteInvoice);
         return manageInvoiceDto;
     }
 
@@ -182,6 +187,7 @@ public class ManageInvoice {
                 parent != null ? parent.toAggregateSample() : null, credits);
         manageInvoiceDto.setOriginalAmount(originalAmount);
         manageInvoiceDto.setImportType(importType);
+        manageInvoiceDto.setDeleteInvoice(deleteInvoice);
         return manageInvoiceDto;
     }
 
@@ -197,6 +203,7 @@ public class ManageInvoice {
         manageInvoiceDto.setSendStatusError(sendStatusError);
         manageInvoiceDto.setOriginalAmount(originalAmount);
         manageInvoiceDto.setImportType(importType);
+        manageInvoiceDto.setDeleteInvoice(deleteInvoice);
         return manageInvoiceDto;
     }
 

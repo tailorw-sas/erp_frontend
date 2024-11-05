@@ -68,7 +68,8 @@ public class CreateRoomRateOtherCommandHandler implements ICommandHandler<Create
                 command.getRemark(),
                 bookingDto,
                 null,
-                nights
+                nights,
+                false
         ));
 
         ManageBookingDto updateBookingDto = this.bookingService.findById(bookingDto.getId());

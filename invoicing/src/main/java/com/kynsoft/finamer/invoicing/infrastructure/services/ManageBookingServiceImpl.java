@@ -182,6 +182,15 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
+    public void deleteInvoice(ManageBookingDto dto) {
+        ManageBooking entity = new ManageBooking(dto);
+        entity.setDeleteInvoice(true);
+        entity.setUpdatedAt(LocalDateTime.now());
+
+        repositoryCommand.save(entity);
+    }
+
+    @Override
     public List<ManageBookingDto> findAllToReplicate() {
         List<ManageBooking> objects = this.repositoryQuery.findAll();
         List<ManageBookingDto> objectDtos = new ArrayList<>();

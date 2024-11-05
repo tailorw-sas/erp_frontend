@@ -23,10 +23,10 @@ import org.hibernate.generator.EventType;
 @Entity
 @Table(name = "manage_room_rate")
 public class ManageRoomRate {
+
     @Id
     @Column(name = "id")
     private UUID id;
-
 
     @Column(columnDefinition = "serial", name = "room_rate_serial_id")
     @Generated(event = EventType.INSERT)
@@ -49,6 +49,9 @@ public class ManageRoomRate {
 
     @Column(nullable = true)
     private Boolean deleted = false;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean deleteInvoice;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "roomRate", orphanRemoval = true)
     private List<ManageAdjustment> adjustments;
@@ -87,22 +90,23 @@ public class ManageRoomRate {
             return adjustment;
         }).collect(Collectors.toList()) : null;
 
-        this.nights = dto.getCheckIn() != null && dto.getCheckOut() !=null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
+        this.nights = dto.getCheckIn() != null && dto.getCheckOut() != null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
+        this.deleteInvoice = dto.isDeleteInvoice();
     }
 
     public ManageRoomRateDto toAggregate() {
         return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, invoiceAmount, roomNumber, adults, children,
-                rateAdult, rateChild, hotelAmount, remark, booking !=null ?  booking.toAggregate() : null,
+                rateAdult, rateChild, hotelAmount, remark, booking != null ? booking.toAggregate() : null,
                 adjustments != null ? adjustments.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, nights);
+                            return b.toAggregateSample();
+                        }).collect(Collectors.toList()) : null, nights, deleteInvoice);
     }
 
     public ManageRoomRateDto toAggregateSample() {
         return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, invoiceAmount, roomNumber, adults, children,
                 rateAdult, rateChild, hotelAmount, remark, null,
                 adjustments != null ? adjustments.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, nights);
+                            return b.toAggregateSample();
+                        }).collect(Collectors.toList()) : null, nights, deleteInvoice);
     }
 }

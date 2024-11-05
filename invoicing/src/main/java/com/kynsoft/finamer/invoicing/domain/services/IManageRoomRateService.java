@@ -3,7 +3,6 @@ package com.kynsoft.finamer.invoicing.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
@@ -30,4 +29,6 @@ public interface IManageRoomRateService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<ManageRoomRateDto> findByIds(List<UUID> ids);
+
+    void deleteInvoice(ManageRoomRateDto dto);
 }
