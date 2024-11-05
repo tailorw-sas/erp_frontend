@@ -1361,6 +1361,7 @@ function updateBookingLocal(booking: any) {
       bookingToEdit.couponNumber = booking.couponNumber
       bookingToEdit.folioNumber = booking.folioNumber
       bookingToEdit.hotelBookingNumber = booking.hotelBookingNumber
+      bookingToEdit.hotelInvoiceNumber = booking.hotelInvoiceNumber
       bookingToEdit.firstName = booking.firstName
       bookingToEdit.lastName = booking.lastName
       bookingToEdit.hotelCreationDate = booking.hotelCreationDate
