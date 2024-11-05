@@ -617,12 +617,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/close-operation/payment'),
               items: []
             },
-            {
-              label: 'Payment Status',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/payment-status'),
-              items: []
-            },
+            // {
+            //   label: 'Payment Status',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/settings/payment-status'),
+            //   items: []
+            // },
             // {
             //   label: 'Payment Transaction Status',
             //   icon: 'pi pi-fw pi-file',
