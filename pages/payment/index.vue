@@ -1502,35 +1502,35 @@ async function applyPaymentGetList() {
                   })
                 }
 
-                // const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
+                const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
 
-                // if (objFilterDueAmount) {
-                //   objFilterDueAmount.value = 0
-                // }
-                // else {
-                //   applyPaymentPayload.value.filter.push({
-                //     key: 'dueAmount',
-                //     operator: 'GREATER_THAN',
-                //     value: 0,
-                //     logicalOperation: 'AND'
-                //   })
-                // }
+                if (objFilterDueAmount) {
+                  objFilterDueAmount.value = '0.00'
+                }
+                else {
+                  applyPaymentPayload.value.filter.push({
+                    key: 'dueAmount',
+                    operator: 'GREATER_THAN',
+                    value: '0.00',
+                    logicalOperation: 'AND'
+                  })
+                }
 
-                // const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'manageInvoiceStatus.enabledToApply')
+                const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'manageInvoiceStatus.enabledToApply')
 
-                // if (objFilterEnabledToApply) {
-                //   objFilterEnabledToApply.value = true
-                // }
-                // else {
-                //   applyPaymentPayload.value.filter.push(
-                //     {
-                //       key: 'manageInvoiceStatus.enabledToApply',
-                //       operator: 'EQUALS',
-                //       value: true,
-                //       logicalOperation: 'AND'
-                //     }
-                //   )
-                // }
+                if (objFilterEnabledToApply) {
+                  objFilterEnabledToApply.value = true
+                }
+                else {
+                  applyPaymentPayload.value.filter.push(
+                    {
+                      key: 'manageInvoiceStatus.enabledToApply',
+                      operator: 'EQUALS',
+                      value: true,
+                      logicalOperation: 'AND'
+                    }
+                  )
+                }
 
                 const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
@@ -1693,38 +1693,37 @@ async function applyPaymentGetList() {
                 }
               }
 
-              // const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
 
-              // if (objFilterDueAmount) {
-              //   objFilterDueAmount.value = 0
-              // }
-              // else {
-              //   applyPaymentPayload.value.filter.push({
-              //     key: 'dueAmount',
-              //     operator: 'GREATER_THAN',
-              //     value: 0,
-              //     logicalOperation: 'AND'
-              //   })
-              // }
+              if (objFilterDueAmount) {
+                objFilterDueAmount.value = '0.00'
+              }
+              else {
+                applyPaymentPayload.value.filter.push({
+                  key: 'dueAmount',
+                  operator: 'GREATER_THAN',
+                  value: '0.00',
+                  logicalOperation: 'AND'
+                })
+              }
 
-              // const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'manageInvoiceStatus.enabledToApply')
+              const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'manageInvoiceStatus.enabledToApply')
 
-              // if (objFilterEnabledToApply) {
-              //   objFilterEnabledToApply.value = true
-              // }
-              // else {
-              //   applyPaymentPayload.value.filter.push(
-              //     {
-              //       key: 'manageInvoiceStatus.enabledToApply',
-              //       operator: 'EQUALS',
-              //       value: true,
-              //       logicalOperation: 'AND'
-              //     }
-              //   )
-              // }
+              if (objFilterEnabledToApply) {
+                objFilterEnabledToApply.value = true
+              }
+              else {
+                applyPaymentPayload.value.filter.push(
+                  {
+                    key: 'manageInvoiceStatus.enabledToApply',
+                    operator: 'EQUALS',
+                    value: true,
+                    logicalOperation: 'AND'
+                  }
+                )
+              }
 
               const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
-              console.log('applyPaymentOptions', response)
 
               const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -2409,11 +2408,17 @@ function sumAmountOfPaymentDetailTypeDeposit(transactions: any[]) {
   }
 
   return transactions.reduce((total, item) => {
-    const amount = Number.parseFloat(item.amount.replace(/,/g, ''))
+    let applyDepositValue = 0
+    if (typeof item.applyDepositValue === 'number') {
+      applyDepositValue = Number.parseFloat(item.applyDepositValue)
+    }
+    else if (typeof item.applyDepositValue === 'string') {
+      applyDepositValue = Number.parseFloat(item.applyDepositValue.replace(/,/g, ''))
+    }
 
     // Verificar si el amount es un número válido y sumarlo
-    if (!Number.isNaN(amount)) {
-      return total + Math.abs(amount) // Convertir a positivo y sumar
+    if (!Number.isNaN(applyDepositValue)) {
+      return total + Math.abs(applyDepositValue) // Convertir a positivo y sumar
     }
 
     return total
@@ -3529,10 +3534,17 @@ onMounted(async () => {
       @hide="closeModalApplyPayment()"
     >
       <template #header>
-        <div class="flex justify-content-between">
-          <h5 class="m-0">
-            Select Invoice
-          </h5>
+        <div class="flex justify-content-between align-items-center w-full">
+          <div>
+            <h5 class="m-0">
+              Select Invoice
+            </h5>
+          </div>
+          <div class="font-bold mr-5">
+            <h5 class="m-0">
+              Payment: {{ objItemSelectedForRightClickApplyPayment.paymentId }}
+            </h5>
+          </div>
         </div>
       </template>
       <template #default>
