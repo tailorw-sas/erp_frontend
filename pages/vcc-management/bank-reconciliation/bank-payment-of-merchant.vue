@@ -608,7 +608,7 @@ function bindAdjustment(data: any) {
     bindTransactionsOnline([newAdjustment])
   }
   else {
-    LocalBindTransactionList.value.push(newAdjustment)
+    LocalBindTransactionList.value = [...LocalBindTransactionList.value, newAdjustment]
   }
 }
 
@@ -676,7 +676,15 @@ async function onRowRightClick(event: any) {
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
-  getList()
+  if (idItem.value) { // Aplicar paginacion onLine
+    getList()
+  }
+})
+
+watch(() => LocalBindTransactionList.value, async (newValue) => {
+  if (newValue && !idItem.value) {
+    pagination.value.totalElements = newValue?.length ?? 0
+  }
 })
 
 onMounted(async () => {
