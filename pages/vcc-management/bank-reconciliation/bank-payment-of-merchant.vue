@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {reactive, ref, watch} from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { z } from 'zod'
 import dayjs from 'dayjs'
 import type { Ref } from 'vue'
@@ -187,15 +187,18 @@ async function onMultipleSelect(data: any) {
   const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
   const currentPageSelectedIds = new Set(data.map((item: any) => item.id))
 
+  const listItems = idItem.value ? BindTransactionList.value : LocalBindTransactionList.value
+  // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
+  const selectedPreviously = selectedElements.value.filter((item: any) =>
+    currentPageSelectedIds.has(item.id) || !listItems.some((pageItem: any) => pageItem.id === item.id)
+  )
+  // Agregar nuevos elementos seleccionados en la página actual
+  const newElements = data.filter((item: any) => !selectedIds.has(item.id))
   // Crear un nuevo array que contenga la selección global optimizada
   // Actualizar selectedElements solo una vez
   selectedElements.value = [
-    // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
-    ...selectedElements.value.filter((item: any) =>
-      currentPageSelectedIds.has(item.id) || !LocalBindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
-    ),
-    // Agregar nuevos elementos seleccionados en la página actual
-    ...data.filter((item: any) => !selectedIds.has(item.id))
+    ...selectedPreviously,
+    ...newElements
   ]
 }
 
@@ -459,7 +462,7 @@ function unbindTransactionsLocal() {
     LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.referenceId !== transactionId)
     selectedElements.value = selectedElements.value.filter((item: any) => item.referenceId !== transactionId)
   } */
-  const transactionId = contextMenuTransaction.value.id
+  const transactionId = String(contextMenuTransaction.value.id)
   LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
   selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
   subTotals.value.amount -= parseFormattedNumber(contextMenuTransaction.value.amount)
@@ -478,6 +481,7 @@ async function unbindTransactionsOnline() {
       subTotals.value.amount = response.detailsAmount
     }
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
+    selectedElements.value = selectedElements.value.filter((item: any) => item.id !== String(contextMenuTransaction.value.id))
     getList()
   }
   catch (error: any) {
@@ -778,6 +782,7 @@ onMounted(async () => {
         </template>
       </EditFormV2>
     </div>
+    <!-- <pre>{{ selectedElements }}</pre> -->
     <DynamicTable
       :data="idItem ? BindTransactionList : LocalBindTransactionList"
       :columns="columns"
