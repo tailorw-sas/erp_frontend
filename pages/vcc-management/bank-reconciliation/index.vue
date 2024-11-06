@@ -63,8 +63,8 @@ const statusList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
 
 const confStatusListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-transaction-status',
+  moduleApi: 'creditcard',
+  uriApi: 'manage-reconcile-transaction-status',
 })
 
 const confHotelListApi = reactive({

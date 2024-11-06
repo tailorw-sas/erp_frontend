@@ -191,7 +191,7 @@ async function onMultipleSelect(data: any) {
 
   // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
   const selectedPreviously = selectedElements.value.filter((item: any) =>
-    currentPageSelectedIds.has(item.id) || !LocalBindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
+    currentPageSelectedIds.has(item.id) || !paginatedData.value.some((pageItem: any) => pageItem.id === item.id)
   )
   // Agregar nuevos elementos seleccionados en la página actual
   const newElements = data.filter((item: any) => !selectedIds.has(item.id))
