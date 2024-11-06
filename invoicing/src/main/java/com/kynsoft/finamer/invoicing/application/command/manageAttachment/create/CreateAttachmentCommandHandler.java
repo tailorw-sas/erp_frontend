@@ -95,9 +95,6 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                     false
             ));
 
-            this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(),
-                    command.getEmployeeId());
-
             if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCECSED)) {
                 invoiceDto.setStatus(EInvoiceStatus.RECONCILED);
                 ManageInvoiceStatusDto invoiceStatus = invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
