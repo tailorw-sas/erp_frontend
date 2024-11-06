@@ -266,7 +266,10 @@ const Fields = ref<FieldDefinitionType[]>([
   },
 ])
 
-
+const propsParentId = ref({
+  id: '',
+  label: 'Credit From:',
+})
 
 // VARIABLES -----------------------------------------------------------------------------------------
 
@@ -638,6 +641,7 @@ async function getItemById(id: string) {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id) 
            
       if (response) {
+        propsParentId.value.id = response?.parent?.invoiceId
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
         item.value.dueDate = response.dueDate
@@ -960,8 +964,13 @@ onMounted(async () => {
 
 <template>
   <div class="justify-content-center align-center ">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
+    <div class="font-bold text-lg px-4 bg-primary custom-card-header flex justify-content-between">
+      <div>
+        {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
+      </div>
+      <div>
+         {{propsParentId?.label}} {{ propsParentId?.id }}
+      </div>
     </div>
     <div class="p-4">
       <EditFormV2 
