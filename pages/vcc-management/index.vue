@@ -40,11 +40,22 @@ const selectedTransactionId = ref('')
 const contextMenu = ref()
 
 enum MenuType {
-  refund, resendEmail
+  refund, resendLink, resendPost, cancelled, document
 }
 
 const allMenuListItems = [
   {
+    index: 1,
+    type: MenuType.document,
+    label: 'Document',
+    icon: 'pi pi-paperclip',
+    command: () => {},
+    disabled: false,
+    isCollection: false,
+    default: true
+  },
+  {
+    index: 2,
     type: MenuType.refund,
     label: 'Refund',
     icon: 'pi pi-dollar',
@@ -53,10 +64,31 @@ const allMenuListItems = [
     isCollection: true // que pertenecen a un status en el collection status
   },
   {
-    type: MenuType.resendEmail,
-    label: 'Resend Payment Link',
+    // Mostrar siempre
+    index: 3,
+    type: MenuType.cancelled,
+    label: 'Cancelled',
+    icon: 'pi pi-times-circle',
+    command: () => {},
+    disabled: false,
+    isCollection: false,
+    default: true
+  },
+  {
+    index: 4,
+    type: MenuType.resendLink,
+    label: 'ReSend Link',
     icon: 'pi pi-send',
-    command: () => resendPaymentLink(),
+    command: () => resendLink(),
+    disabled: false,
+    isCollection: false
+  },
+  {
+    index: 5,
+    type: MenuType.resendPost,
+    label: 'ReSend Post',
+    icon: 'pi pi-send',
+    command: () => resendPost(),
     disabled: false,
     isCollection: false
   },
@@ -71,7 +103,7 @@ const merchantList = ref<any[]>([])
 const ccTypeList = ref<any[]>([])
 
 const confStatusListApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-transaction-status',
 })
 const confMerchantListApi = reactive({
@@ -180,7 +212,7 @@ const columns: IColumn[] = [
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'netAmount', header: 'T.Amount', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'status', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
+  { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
@@ -243,7 +275,7 @@ async function getList() {
 
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = iterator.status.name
+        iterator.statusName = iterator.status.name
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
@@ -665,7 +697,23 @@ function onSortField(event: any) {
   }
 }
 
-async function resendPaymentLink() {
+async function resendLink() {
+  try {
+    if (contextMenuTransaction.value.id) {
+      options.value.loading = true
+      await GenericService.create('creditcard', 'transactions/resend-payment-link', { id: contextMenuTransaction.value.id })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    }
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
+async function resendPost() {
   try {
     if (contextMenuTransaction.value.id) {
       options.value.loading = true
@@ -740,15 +788,20 @@ async function findCollectionStatusMenuOptions(status: string) {
   if (collection) {
     const navigateOptions = collection.navigate.map((n: any) => n.name.toLowerCase())
     // se agregan los elementos que pertenecen al navigate de dicho status
-    menuListItems.value = allMenuListItems.filter((element: any) => element.isCollection && navigateOptions.includes(element.label.toLowerCase()))
+    const navigates = allMenuListItems.filter((element: any) => element.isCollection && navigateOptions.includes(element.label.toLowerCase()))
+    menuListItems.value = [...menuListItems.value, ...navigates]
   }
 }
 
 function findNoCollectionStatusMenuOptions() {
+  const data = contextMenuTransaction.value
   const noCollectionItems: any[] = allMenuListItems.filter((element: any) => !element.isCollection)
   for (let i = 0; i < noCollectionItems.length; i++) {
     const element = noCollectionItems[i]
-    if (element.type === MenuType.resendEmail && contextMenuTransaction.value.methodType === 'LINK') {
+    if (element.type === MenuType.resendLink && data.methodType === 'LINK' && (data.status.isSent || data.status.isDeclined)) {
+      menuListItems.value.push(element)
+    }
+    if (element.type === MenuType.resendPost && data.methodType === 'POST' && (data.status.isSent || data.status.isDeclined)) {
       menuListItems.value.push(element)
     }
   }
@@ -759,8 +812,9 @@ async function onRowRightClick(event: any) {
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
   menuListItems.value = [] // Elementos que se van a mostrar en el menu
+  menuListItems.value = allMenuListItems.filter((e: any) => e.default) // Agregar elementos por defecto
   // Agrega a la lista las opciones que estan presentes en el navigate para el collection status del estado del elemento seleccionado
-  await findCollectionStatusMenuOptions(contextMenuTransaction.value.status)
+  await findCollectionStatusMenuOptions(contextMenuTransaction.value.statusName)
   if (menuListItems.value.length > 0) {
     const enableManualTransaction = (status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
     // aqui se valida que hayan fondos disponibles para la devolucion
@@ -769,6 +823,7 @@ async function onRowRightClick(event: any) {
   // Agregar opciones que no son tipo coleccion:
   findNoCollectionStatusMenuOptions()
   if (menuListItems.value.length > 0) {
+    menuListItems.value = menuListItems.value.sort((a, b) => a.index - b.index)
     contextMenu.value.show(event.originalEvent)
   }
 }
