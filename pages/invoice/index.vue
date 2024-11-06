@@ -1057,21 +1057,44 @@ function searchAndFilter() {
 
   if (!filterToSearch.value.search) {
     if (isFirstTimeInOnMounted.value === false) {
-      if (filterToSearch.value.includeInvoicePaid) {
-        payload.value.filter = [...payload.value.filter, {
-          key: 'dueAmount',
-          operator: 'EQUALS',
-          value: 0,
-          logicalOperation: 'AND'
-        }]
-      } else {
-        payload.value.filter = [...payload.value.filter, {
-          key: 'dueAmount',
-          operator: 'GREATER_THAN_OR_EQUAL_TO',
-          value: 1,
-          logicalOperation: 'AND'
-        }]
+      
+      const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
+
+      if (filterToSearch.value.includeInvoicePaid !== undefined && filterToSearch.value.includeInvoicePaid !== null) {
+        const operator = filterToSearch.value.includeInvoicePaid ? 'EQUALS' : 'NOT_EQUALS';
+        const filterValue = 0;
+
+        if (filterObjIncludeInvoicePaid) {
+          filterObjIncludeInvoicePaid.operator = operator;
+          filterObjIncludeInvoicePaid.value = filterValue;
+        } else {
+          payload.value.filter.push({
+            key: 'dueAmount',
+            operator,
+            value: filterValue,
+            logicalOperation: 'AND'
+          });
+        }
+      } else if (filterObjIncludeInvoicePaid) {
+        payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
       }
+
+
+      // if (filterToSearch.value.includeInvoicePaid) {
+      //   payload.value.filter = [...payload.value.filter, {
+      //     key: 'dueAmount',
+      //     operator: 'EQUALS',
+      //     value: 0,
+      //     logicalOperation: 'AND'
+      //   }]
+      // } else if (filterToSearch.value.includeInvoiceUnpaid === false) {
+      //   payload.value.filter = [...payload.value.filter, {
+      //     key: 'dueAmount',
+      //     operator: 'NOT_EQUALS',
+      //     value: 0,
+      //     logicalOperation: 'AND'
+      //   }]
+      // }
     }
     if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
       const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
@@ -1168,7 +1191,7 @@ function searchAndFilter() {
   getList()
 }
 
-async function clearFilterToSearch() {
+async function clearFilterToSearch() {  
   payload.value = {
     filter: [],
     query: '',
@@ -1178,7 +1201,7 @@ async function clearFilterToSearch() {
     sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value = {
-    criteria: ENUM_INVOICE_CRITERIA[3],
+    criteria: ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceId'),
     search: '',
     client: [],
     agency: [],
@@ -2367,7 +2390,7 @@ const legend = ref(
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2 w-full">
-                    <Checkbox id="all-check-2" v-model="filterToSearch.includeInvoicePaid" :binary="true" />
+                    <TriStateCheckbox id="all-check-2" v-model="filterToSearch.includeInvoicePaid" />
                     <label for="all-check-2" class="font-bold">Include Invoice Paid</label>
                   </div>
                   <div class="flex align-items-center gap-2" />
