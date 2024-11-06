@@ -44,12 +44,6 @@ const items = ref([
         disabled: false,
         permission: [],
       },
-      {
-        id: 'group',
-        label: 'Group',
-        disabled: false,
-        permission: [],
-      }
     ]
   }
 ])
