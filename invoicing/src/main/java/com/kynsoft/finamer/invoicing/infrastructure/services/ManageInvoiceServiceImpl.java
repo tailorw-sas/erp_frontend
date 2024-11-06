@@ -140,6 +140,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         rows.add(new ExportInvoiceRow(
                 0,
+                "Has Attachment",
                 "Id",
                 "Type",
                 "Hotel",
@@ -155,11 +156,59 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 null
         ));
 
+        double cant = 0.00;
+        double totalsAmount = 0.00;
+
+        double cantPro = 0.00;
+        double totalsAmountPro = 0.00;
+
+        double cantWai = 0.00;
+        double totalsAmountWai = 0.00;
+
+        double cantRec = 0.00;
+        double totalsAmountRec = 0.00;
+
+        double cantCan = 0.00;
+        double totalsAmountCan = 0.00;
+
+        double cantSen = 0.00;
+        double totalsAmountSen = 0.00;
+
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         for (int i = 0; i < data.size(); i++) {
             ManageInvoiceSearchResponse invoice = data.get(i);
+            cant++;
+            totalsAmount = totalsAmount + invoice.getInvoiceAmount();
+            String status = "";
+            switch (invoice.getStatus()) {
+                case PROCECSED -> {
+                    cantPro++;
+                    totalsAmountPro = totalsAmountPro + invoice.getInvoiceAmount();
+                    status = "PROCESSED";
+                }
+                case RECONCILED -> {
+                    cantRec++;
+                    totalsAmountRec = totalsAmountRec + invoice.getInvoiceAmount();
+                    status = "RECONCILED";
+                }
+                case SENT -> {
+                    cantSen++;
+                    totalsAmountSen = totalsAmountSen + invoice.getInvoiceAmount();
+                    status = "SENT";
+                }
+                case CANCELED -> {
+                    cantCan++;
+                    totalsAmountCan = totalsAmountCan + invoice.getInvoiceAmount();
+                    status = "CANCELED";
+                }
+                default -> {
+                    status = "";
+                    System.out.print("Other Status");
+                }
+            }
             rows.add(new ExportInvoiceRow(
                     0,
+                    invoice.getHasAttachments() ? "1" : "0",
                     invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", //Id
                     invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", //Type
                     invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", //Hotel
@@ -167,7 +216,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                     invoice.getAgency() != null ? invoice.getAgency().getName() : "",//Agency
                     invoice.getInvoiceNumber(),//Inv. No
                     invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "",//Gen. Date
-                    invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", //Status
+                    //invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", //Status
+                    status, //Status
                     invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", //Manual
                     decimalFormat.format(invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount() : "0.00"),//Amount
                     decimalFormat.format(invoice.getDueAmount() != null ? invoice.getDueAmount() : "0.00"),//Due Amount
@@ -177,6 +227,42 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                     null
             ));
         }
+
+        rows.add(new ExportInvoiceRow(
+                0,
+                "",
+                "Totals",
+                "#" + cant,//totals
+                "",
+                "",
+                "Pro #" + cantPro,
+                "Wai #" + cantWai,
+                "Rec #" + cantRec,
+                "Can #" + cantCan,
+                "Sen #" + cantSen,
+                "",
+                "",
+                "",
+                null
+        ));
+
+        rows.add(new ExportInvoiceRow(
+                0,
+                "",
+                "Totals",
+                "$" + totalsAmount,//totals
+                "",
+                "",
+                "Pro $" + decimalFormat.format(totalsAmountPro),
+                "Wai $" + decimalFormat.format(totalsAmountWai),
+                "Rec $" + decimalFormat.format(totalsAmountRec),
+                "Can $" + decimalFormat.format(totalsAmountCan),
+                "Sen $" + decimalFormat.format(totalsAmountSen),
+                "",
+                "",
+                "",
+                null
+        ));
 
         sheets.add("Invoice List");
 

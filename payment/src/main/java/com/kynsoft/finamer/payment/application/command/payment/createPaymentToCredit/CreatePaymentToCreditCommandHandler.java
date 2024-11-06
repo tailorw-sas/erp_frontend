@@ -16,6 +16,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.createPayme
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeDeposit.CreatePaymentDetailTypeDepositMessage;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
@@ -109,7 +110,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 paymentAmount,
                 0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                paymentAmount,
+                0.0,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
@@ -119,6 +120,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         );
 
         paymentDto.setCreateByCredit(true);
+        paymentDto.setImportType(ImportType.AUTOMATIC);
+        paymentDto.setApplyPayment(true);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         PaymentDetailDto parentDetailDto = this.createPaymentDetailsToCreditDeposit(paymentSave, command);
 //        if (command.getInvoiceDto().getBookings() != null) {
@@ -177,7 +180,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 paymentAmount,
                 0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                paymentAmount,
+                0.0,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
@@ -187,6 +190,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         );
 
         paymentDto.setCreateByCredit(true);
+        paymentDto.setImportType(ImportType.AUTOMATIC);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         if (command.getInvoiceDto().getBookings() != null) {
             for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
