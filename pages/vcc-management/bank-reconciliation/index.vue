@@ -5,7 +5,7 @@ import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
 import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type {IColumn, IPagination, IStatusClass} from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
@@ -148,8 +148,8 @@ const pagination = ref<IPagination>({
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 function goToPaymentOfMerchantInNewTab(item: any) {
   const id = item.hasOwnProperty('id') ? item.id : item
-  const url = `/vcc-management/bank-reconciliation/bank-payment-of-merchant?id=${encodeURIComponent(id)}`
-  window.open(url, '_blank')
+  const url = `/vcc-management/bank-reconciliation/bank-payment-of-merchant/${id}`
+  navigateTo({ path: url, params: { id } }, { open: { target: '_blank' } })
 }
 
 async function getList() {
