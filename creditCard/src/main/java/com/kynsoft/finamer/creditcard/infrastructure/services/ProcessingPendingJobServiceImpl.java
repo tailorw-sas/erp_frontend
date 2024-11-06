@@ -89,12 +89,13 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
                     createOrUpdate(cardnetProcessErrorLogDto);
                 }
             } else {
-                // Cancelar transaccion y marcarla como procesada
-                TransactionDto transactionDto = transactionService.findByUuid(cardnetJobDto.getTransactionId());
-                ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(ETransactionResultStatus.CANCELLED);
-                transactionDto.setStatus(transactionStatusDto);
-                transactionService.update(transactionDto);
+                // Cancelar transaccion
+                // TransactionDto transactionDto = transactionService.findByUuid(cardnetJobDto.getTransactionId());
+                // ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(ETransactionResultStatus.CANCELLED);
+                // transactionDto.setStatus(transactionStatusDto);
+                // transactionService.update(transactionDto);
 
+                // marcarla como procesada
                 cardnetJobDto.setIsProcessed(true);
                 cardnetJobService.update(cardnetJobDto);
             }
