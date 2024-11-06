@@ -100,7 +100,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
 
             if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCECSED)) {
                 invoiceDto.setStatus(EInvoiceStatus.RECONCILED);
-                ManageInvoiceStatusDto invoiceStatus = invoiceStatusService.findByCode(EInvoiceStatus.RECONCILED.getCode());
+                ManageInvoiceStatusDto invoiceStatus = invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
                 invoiceDto.setManageInvoiceStatus(invoiceStatus);
                 this.manageInvoiceService.update(invoiceDto);
                 this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
