@@ -1482,7 +1482,6 @@ async function getRoomCategoryList(query = '') {
         sortBy: 'createdAt',
         sortType: ENUM_SHORT_TYPE.DESC
       }
-
     const response = await GenericService.search(confroomCategoryApi.moduleApi, confroomCategoryApi.uriApi, payload)
     const { data: dataList } = response
     roomCategoryList.value = []
@@ -1586,7 +1585,6 @@ async function getNightTypeList(query = '') {
     console.error('Error loading hotel list:', error)
   }
 }
-
 async function getBookingItemById(id: string) {
   if (id) {
     idItem.value = id
