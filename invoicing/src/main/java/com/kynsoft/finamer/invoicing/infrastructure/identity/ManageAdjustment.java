@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manage_adjustment")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_adjustment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageAdjustment {
 
     @Id

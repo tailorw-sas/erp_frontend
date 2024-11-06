@@ -1,6 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,6 +24,8 @@ import org.hibernate.generator.EventType;
 @Setter
 @Entity
 @Table(name = "manage_room_rate")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_room_rate",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageRoomRate {
 
     @Id
