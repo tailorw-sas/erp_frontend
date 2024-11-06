@@ -1060,40 +1060,67 @@ function searchAndFilter() {
       
       const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
 
-      if (filterToSearch.value.includeInvoicePaid !== undefined && filterToSearch.value.includeInvoicePaid !== null) {
-        const operator = filterToSearch.value.includeInvoicePaid ? 'EQUALS' : 'NOT_EQUALS';
-        const filterValue = 0;
+      switch (filterToSearch.value.includeInvoicePaid) {
+        case true:
+          // Elimina el filtro de 'dueAmount' si existe, para que muestre todos
+          if (filterObjIncludeInvoicePaid) {
+            payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
+          }
+          break;
 
-        if (filterObjIncludeInvoicePaid) {
-          filterObjIncludeInvoicePaid.operator = operator;
-          filterObjIncludeInvoicePaid.value = filterValue;
-        } else {
-          payload.value.filter.push({
-            key: 'dueAmount',
-            operator,
-            value: filterValue,
-            logicalOperation: 'AND'
-          });
-        }
-      } else if (filterObjIncludeInvoicePaid) {
-        payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
+        case false:
+          // Solo muestra los que tienen dueAmount igual a 0
+          if (filterObjIncludeInvoicePaid) {
+            filterObjIncludeInvoicePaid.operator = 'EQUALS';
+            filterObjIncludeInvoicePaid.value = 0;
+          } else {
+            payload.value.filter.push({
+              key: 'dueAmount',
+              operator: 'EQUALS',
+              value: 0,
+              logicalOperation: 'AND'
+            });
+          }
+          break;
+
+        default:
+          // Muestra los elementos que no son 0 (por defecto)
+          if (filterObjIncludeInvoicePaid) {
+            filterObjIncludeInvoicePaid.operator = 'NOT_EQUALS';
+            filterObjIncludeInvoicePaid.value = 0;
+          } else {
+            payload.value.filter.push({
+              key: 'dueAmount',
+              operator: 'NOT_EQUALS',
+              value: 0,
+              logicalOperation: 'AND'
+            });
+          }
+          break;
       }
 
 
-      // if (filterToSearch.value.includeInvoicePaid) {
-      //   payload.value.filter = [...payload.value.filter, {
-      //     key: 'dueAmount',
-      //     operator: 'EQUALS',
-      //     value: 0,
-      //     logicalOperation: 'AND'
-      //   }]
-      // } else if (filterToSearch.value.includeInvoiceUnpaid === false) {
-      //   payload.value.filter = [...payload.value.filter, {
-      //     key: 'dueAmount',
-      //     operator: 'NOT_EQUALS',
-      //     value: 0,
-      //     logicalOperation: 'AND'
-      //   }]
+
+
+      // const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
+
+      // if (filterToSearch.value.includeInvoicePaid !== undefined && filterToSearch.value.includeInvoicePaid !== null) {
+      //   const operator = filterToSearch.value.includeInvoicePaid ? 'EQUALS' : 'NOT_EQUALS';
+      //   const filterValue = 0;
+
+      //   if (filterObjIncludeInvoicePaid) {
+      //     filterObjIncludeInvoicePaid.operator = operator;
+      //     filterObjIncludeInvoicePaid.value = filterValue;
+      //   } else {
+      //     payload.value.filter.push({
+      //       key: 'dueAmount',
+      //       operator,
+      //       value: filterValue,
+      //       logicalOperation: 'AND'
+      //     });
+      //   }
+      // } else if (filterObjIncludeInvoicePaid) {
+      //   payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
       // }
     }
     if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
@@ -1753,6 +1780,20 @@ function onSortField(event: any) {
   }
 }
 
+const checkboxLabel = computed(() => {
+  switch (filterToSearch.value.includeInvoicePaid) {
+    case true:
+      return "Include all invoices";
+    case false:
+      return "Include paid invoices only";
+    case null:
+      return "Exclude paid invoices";
+    default:
+      return "Exclude paid invoices";
+  }
+});
+
+
 function getStatusBadgeBackgroundColor(code: string) {  
   switch (code) {
     case 'PROCESSED': return '#FF8D00'
@@ -2390,8 +2431,12 @@ const legend = ref(
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2 w-full">
-                    <TriStateCheckbox id="all-check-2" v-model="filterToSearch.includeInvoicePaid" />
-                    <label for="all-check-2" class="font-bold">Include Invoice Paid</label>
+                    <TriStateCheckbox 
+                      id="all-check-2" 
+                      v-model="filterToSearch.includeInvoicePaid"
+                    />
+                    <!-- <label for="all-check-2" class="font-bold">Include Invoice Paid</label> -->
+                    <label for="all-check-2" class="font-bold">{{checkboxLabel}}</label>
                   </div>
                   <div class="flex align-items-center gap-2" />
                 </div>

@@ -22,7 +22,7 @@ const authStore = useAuthStore()
 const { status, data: userData } = useAuth()
 const isAdmin = (userData.value?.user as any)?.isAdmin === true
 
-const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
+// const  = { id: 'All', name: 'All', status: 'ACTIVE' }
 const listItems = ref<any[]>([])
 const clientItemsList = ref<any[]>([])
 const agencyItemsList = ref<any[]>([])
@@ -206,33 +206,33 @@ const legend = ref(
 )
 const filterAllDateRange = ref(false)
 const filterToSearch = ref<GenericObject>({
-  client: [allDefaultItem],
-  agency: [allDefaultItem],
+  client: [],
+  agency: [],
   allClientAndAgency: false,
-  hotel: [allDefaultItem],
-  status: [allDefaultItem],
+  hotel: [],
+  status: [],
   from: '',
   to: '',
   allFromAndTo: false,
   criteria: null,
   value: '',
-  type: allDefaultItem,
+  type: '',
   payApplied: null,
   detail: true,
 })
 
 const filterToSearchTemp = ref<GenericObject>({
-  client: [allDefaultItem],
-  agency: [allDefaultItem],
+  client: [],
+  agency: [],
   allClientAndAgency: false,
-  hotel: [allDefaultItem],
-  status: [allDefaultItem],
+  hotel: [],
+  status: [],
   from: '',
   to: '',
   allFromAndTo: false,
   criteria: null,
   value: '',
-  type: allDefaultItem,
+  type: '',
   payApplied: null,
   detail: true,
 })
@@ -1296,13 +1296,13 @@ function mapFunctionForStatus(data: DataListItemForStatus): DataListItemForStatu
 
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
   let clientTemp: any[] = []
-  clientItemsList.value = [allDefaultItem]
+  clientItemsList.value = []
   clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   clientItemsList.value = [...clientItemsList.value, ...clientTemp]
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
-  agencyItemsList.value = [allDefaultItem]
+  agencyItemsList.value = []
   agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   agencyItemsList.value = [...agencyItemsList.value, ...agencyTemp]
 }
@@ -1311,7 +1311,7 @@ async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { 
 }
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let hotelTemp: any[] = []
-  hotelItemsList.value = [allDefaultItem]
+  hotelItemsList.value = []
   hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   hotelItemsList.value = [...hotelItemsList.value, ...hotelTemp]
 }
@@ -1320,7 +1320,7 @@ async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { q
 }
 async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let statusTemp: any[] = []
-  statusItemsList.value = [allDefaultItem]
+  statusItemsList.value = []
   statusTemp = await getDataList<DataListItemForStatus, ListItemForStatus>(moduleApi, uriApi, filter, queryObj, mapFunctionForStatus, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   statusItemsList.value = [...statusItemsList.value, ...statusTemp]
 }
