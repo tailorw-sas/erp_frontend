@@ -24,6 +24,10 @@ public class BookingBalanceValidator extends ExcelRuleValidator<PaymentExpenseBo
             errorFieldList.add(new ErrorField("balance","Balance field can't be empty"));
             return false;
         }
+        if (obj.getBalance()<=0){
+            errorFieldList.add(new ErrorField("balance","Balance field must be greater than 0"));
+            return false;
+        }
         if (Objects.nonNull(obj.getBookingId()) && bookingService.exitBookingByGenId(Long.parseLong(obj.getBookingId()))){
             ManageBookingDto manageBookingDto = bookingService.findByGenId(Long.parseLong(obj.getBookingId()));
             if (obj.getBalance()>manageBookingDto.getAmountBalance()){

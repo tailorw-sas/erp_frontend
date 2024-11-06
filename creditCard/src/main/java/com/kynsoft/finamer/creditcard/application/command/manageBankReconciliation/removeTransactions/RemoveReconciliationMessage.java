@@ -14,4 +14,5 @@ public class RemoveReconciliationMessage implements ICommandMessage {
     private final String command = "REMOVE_RECONCILIATIONS";
     private final UUID bankReconciliation;
     private final List<Long> transactionsIds;
+    private double detailsAmount;
 }

@@ -18,6 +18,7 @@ public class AddTransactionsCommand implements ICommand {
     private Set<Long> transactionIds;
     private List<UpdateBankReconciliationAdjustmentRequest> adjustmentRequests;
     private List<Long> adjustmentIds;
+    private double detailsAmount;
 
     public AddTransactionsCommand(UUID bankReconciliationId, Set<Long> transactionIds, List<UpdateBankReconciliationAdjustmentRequest> adjustmentRequests) {
         this.bankReconciliationId = bankReconciliationId;
@@ -31,6 +32,6 @@ public class AddTransactionsCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new AddTransactionsMessage(bankReconciliationId, transactionIds, adjustmentIds);
+        return new AddTransactionsMessage(bankReconciliationId, transactionIds, adjustmentIds, detailsAmount);
     }
 }
