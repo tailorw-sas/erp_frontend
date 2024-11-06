@@ -24,7 +24,6 @@ const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
 const BindTransactionList = ref<any[]>([])
-const LocalBindTransactionList = ref<any[]>([])
 const collectionStatusRefundReceivedList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const forceSave = ref(false)
@@ -76,6 +75,7 @@ const fields: Array<FieldDefinitionType> = [
     field: 'merchantBankAccount',
     header: 'Bank Account',
     dataType: 'select',
+    disabled: true,
     class: 'field col-12 md:col-6 required',
     headerClass: 'mb-1',
     validation: validateEntityStatus('bank account'),
@@ -84,6 +84,7 @@ const fields: Array<FieldDefinitionType> = [
     field: 'hotel',
     header: 'Hotel',
     dataType: 'select',
+    disabled: true,
     class: 'field col-12 md:col-6 required',
     headerClass: 'mb-1',
     validation: validateEntityStatus('hotel'),
@@ -92,7 +93,7 @@ const fields: Array<FieldDefinitionType> = [
     field: 'amount',
     header: 'Amount',
     dataType: 'number',
-    disabled: false,
+    disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
     class: 'field col-12 md:col-3 required',
@@ -160,21 +161,10 @@ const pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
-const paginationFirstLocal = ref(0) // Índice inicial de la página actual
-
-const paginatedData = computed(() => {
-  const start = paginationFirstLocal.value
-  const end = start + pagination.value.limit
-  return LocalBindTransactionList.value.slice(start, end)
-})
 
 const computedTransactionAmountSelected = computed(() => {
   const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0) : 0
   return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
-})
-
-const computedLocalBindTransactionList = computed(() => {
-  return LocalBindTransactionList.value.filter((item: any) => !item.adjustment)
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -194,10 +184,9 @@ async function onMultipleSelect(data: any) {
   const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
   const currentPageSelectedIds = new Set(data.map((item: any) => item.id))
 
-  const listItems = idItem.value ? BindTransactionList.value : LocalBindTransactionList.value
   // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
   const selectedPreviously = selectedElements.value.filter((item: any) =>
-    currentPageSelectedIds.has(item.id) || !listItems.some((pageItem: any) => pageItem.id === item.id)
+    currentPageSelectedIds.has(item.id) || !BindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
   )
   // Agregar nuevos elementos seleccionados en la página actual
   const newElements = data.filter((item: any) => !selectedIds.has(item.id))
@@ -242,9 +231,6 @@ async function getItemById(id: string) {
         item.value.remark = response.remark
         subTotals.value.amount = response.detailsAmount
       }
-      updateFieldProperty(fields, 'merchantBankAccount', 'disabled', true)
-      updateFieldProperty(fields, 'hotel', 'disabled', true)
-      updateFieldProperty(fields, 'amount', 'disabled', true)
       formReload.value += 1
     }
     catch (error) {
@@ -401,7 +387,7 @@ async function getMerchantBankAccountList(query: string) {
   }
 }
 
-async function bindTransactionsOnline(transactions: any[]) {
+async function bindTransactions(transactions: any[]) {
   try {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = {}
@@ -448,34 +434,6 @@ async function bindTransactionsOnline(transactions: any[]) {
 }
 
 async function unbindTransactions() {
-  if (idItem.value) {
-    unbindTransactionsOnline()
-  }
-  else {
-    // Si no tiene id (transaccion de ajuste) entonces se busca por el temporal
-    unbindTransactionsLocal()
-  }
-}
-
-function unbindTransactionsLocal() {
-  /* if (contextMenuTransaction.value.id) {
-    const transactionId = contextMenuTransaction.value.id
-    LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
-    selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
-  }
-  else {
-    // Desvincular transacciones de ajuste local
-    const transactionId = contextMenuTransaction.value.referenceId
-    LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.referenceId !== transactionId)
-    selectedElements.value = selectedElements.value.filter((item: any) => item.referenceId !== transactionId)
-  } */
-  const transactionId = String(contextMenuTransaction.value.id)
-  LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
-  selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
-  subTotals.value.amount -= parseFormattedNumber(contextMenuTransaction.value.amount)
-}
-
-async function unbindTransactionsOnline() {
   try {
     loadingSaveAll.value = true
     const transactionsIds = [contextMenuTransaction.value.id]
@@ -500,61 +458,15 @@ async function unbindTransactionsOnline() {
   }
 }
 
-async function createItem(item: { [key: string]: any }) {
-  if (item) {
-    const payload: { [key: string]: any } = { ...item }
-    payload.paidDate = payload.paidDate ? dayjs(payload.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
-    payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
-    payload.merchantBankAccount = Object.prototype.hasOwnProperty.call(payload.merchantBankAccount, 'id') ? payload.merchantBankAccount.id : payload.merchantBankAccount
-    payload.detailsAmount = subTotals.value.amount
-
-    if (LocalBindTransactionList.value.length > 0) {
-      payload.transactions = LocalBindTransactionList.value.filter((t: any) => !t.adjustment).map((i: any) => i.id)
-      const adjustmentTransactions = LocalBindTransactionList.value.filter((t: any) => t.adjustment)
-      payload.adjustmentTransactions = adjustmentTransactions.map((elem: any) => ({
-        agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
-        transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
-        transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
-        amount: parseFormattedNumber(elem.amount),
-        reservationNumber: elem.reservationNumber,
-        referenceNumber: elem.referenceNumber
-      }))
-    }
-    const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-    if (response && response.id) {
-      // Guarda el id del elemento creado
-      idItem.value = response.id
-      LocalBindTransactionList.value = []
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant ${response.reconciliationId ?? ''} was created successfully`, life: 10000 })
-    }
-    else {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
-    }
-  }
-}
-
 async function updateItem(item: { [key: string]: any }) {
   if (item) {
     const payload: { [key: string]: any } = {}
     payload.paidDate = item.paidDate ? dayjs(item.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.remark = item.remark || ''
-    /* if (item.transactions.length > 0) {
-      payload.transactions = item.transactions.filter((t: any) => !t.adjustment).map((i: any) => i.id)
-      const adjustmentTransactions = item.transactions.filter((t: any) => t.adjustment)
-      payload.adjustmentTransactions = adjustmentTransactions.map((elem: any) => ({
-        agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
-        transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
-        transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
-        amount: parseFormattedNumber(elem.amount),
-        reservationNumber: elem.reservationNumber,
-        referenceNumber: elem.referenceNumber
-      }))
-    } */
     const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
     if (response && response.id) {
       // Guarda el id del elemento creado
       idItem.value = response.id
-      LocalBindTransactionList.value = []
       toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant ${response.reconciliationId ?? ''} was updated successfully`, life: 10000 })
     }
     else {
@@ -570,36 +482,16 @@ async function saveItem(item: { [key: string]: any }) {
   }
   // let successOperation = true
   loadingSaveAll.value = true
-  if (idItem.value) {
-    try {
-      await updateItem(item)
-    }
-    catch (error: any) {
-      loadingSaveAll.value = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
+  try {
+    await updateItem(item)
   }
-  else {
-    try {
-      await createItem(item)
-      // Deshabilitar campos restantes del formulario
-      await navigateTo({ path: '/vcc-management/bank-reconciliation/bank-payment-of-merchant', query: { id: idItem.value } })
-      await getItemById(idItem.value)
-      payload.value.filter = [{
-        key: 'reconciliation.id',
-        operator: 'EQUALS',
-        value: idItem.value,
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      }]
-      await getList()
-    }
-    catch (error: any) {
-      loadingSaveAll.value = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
+  catch (error: any) {
+    loadingSaveAll.value = false
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
-  loadingSaveAll.value = false
+  finally {
+    loadingSaveAll.value = false
+  }
 }
 
 async function handleSave(event: any) {
@@ -611,12 +503,7 @@ async function handleSave(event: any) {
 
 function bindAdjustment(data: any) {
   const newAdjustment = formatAdjustment(data)
-  if (idItem.value) {
-    bindTransactionsOnline([newAdjustment])
-  }
-  else {
-    LocalBindTransactionList.value = [...LocalBindTransactionList.value, newAdjustment]
-  }
+  bindTransactions([newAdjustment])
 }
 
 function formatAdjustment(data: any) {
@@ -626,28 +513,6 @@ function formatAdjustment(data: any) {
   data.amount = formatNumber(data.amount)
   data.adjustment = true
   return data
-}
-
-function bindManualTransactions(data: any[]) {
-  if (idItem.value) {
-    bindTransactionsOnline(data)
-  }
-  else {
-    setTransactions(data)
-  }
-}
-
-function setTransactions(event: any) {
-  removeUnbindSelectedTransactions(event)
-  const adjustmentList = [...LocalBindTransactionList.value].filter((item: any) => item.adjustment)
-  LocalBindTransactionList.value = [...event, ...adjustmentList]
-  const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
-  subTotals.value.amount = totalAmount
-}
-
-function removeUnbindSelectedTransactions(newTransactions: any[]) {
-  const ids = new Set(newTransactions.map(item => item.id))
-  selectedElements.value = selectedElements.value.filter(item => ids.has(item.id) || !item.id)
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -660,9 +525,6 @@ async function parseDataTableFilter(payloadFilter: any) {
     }
   }
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-
-  // TODO: FALTA HACER FILTRADO LOCAL
-  // Aqui primero el filtro debe ser local y luego ya si con el api
   getList()
 }
 
@@ -680,11 +542,6 @@ async function onRowRightClick(event: any) {
   contextMenu.value.show(event.originalEvent)
 }
 
-function onChangeLocalPagination(event: any) {
-  paginationFirstLocal.value = event.first
-  pagination.value.limit = event.rows
-}
-
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
@@ -693,15 +550,9 @@ watch(payloadOnChangePage, (newValue) => {
   }
 })
 
-watch(() => LocalBindTransactionList.value, async (newValue) => {
-  if (newValue && !idItem.value) {
-    pagination.value.totalElements = newValue?.length ?? 0
-  }
-})
-
 onMounted(async () => {
-  if (route?.query?.id) {
-    const id = route.query.id.toString()
+  if (route?.params?.id || '') {
+    const id = route.params?.id?.toString()
     idItem.value = id
     getItemById(id)
     payload.value.filter = [{
@@ -804,11 +655,10 @@ onMounted(async () => {
     </div>
     <!-- <pre>{{ selectedElements }}</pre> -->
     <DynamicTable
-      :data="idItem ? BindTransactionList : paginatedData"
+      :data="BindTransactionList"
       :columns="columns"
       :options="options"
       :pagination="pagination"
-      :show-local-pagination="!idItem"
       :selected-items="selectedElements"
       @on-change-pagination="payloadOnChangePage = $event"
       @on-change-filter="parseDataTableFilter"
@@ -823,14 +673,6 @@ onMounted(async () => {
             <Column :footer="formatNumber(subTotals.amount)" />
           </Row>
         </ColumnGroup>
-      </template>
-      <template #pagination>
-        <Paginator
-          :rows="Number(pagination.limit) || 50"
-          :total-records="pagination.totalElements"
-          :rows-per-page-options="[10, 20, 30, 50]"
-          @page="onChangeLocalPagination($event)"
-        />
       </template>
     </DynamicTable>
     <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
@@ -847,9 +689,9 @@ onMounted(async () => {
     </div>
     <div v-if="transactionsToBindDialogOpen">
       <BankPaymentMerchantBindTransactionsDialog
-        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="computedLocalBindTransactionList"
+        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items"
         :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
-        @update:list-items="($event) => bindManualTransactions($event)"
+        @update:list-items="($event) => bindTransactions($event)"
         @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
       />
     </div>

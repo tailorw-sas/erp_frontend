@@ -26,7 +26,8 @@ const props = defineProps({
   },
   selectedItems: {
     type: Array as PropType<any[]>,
-    required: true
+    required: false,
+    default: () => []
   },
   validCollectionStatusList: {
     type: Array as PropType<any[]>,
