@@ -119,10 +119,10 @@ const payload = ref<IQueryRequest>({
 
   ],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
-  // sortBy: 'name',
-  // sortType: ENUM_SHORT_TYPE.ASC
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 
 const payloadOnChangePage = ref<PageState>()
