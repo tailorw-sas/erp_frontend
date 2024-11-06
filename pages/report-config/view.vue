@@ -548,7 +548,11 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="card p-2" />
+      <div class="card p-2">
+        <object data="https://static.kynsoft.net/689_2024-10-31_12-14-01.pdf" type="application/pdf" width="100%" height="800px">
+          <p>Tu navegador no soporta PDF. <a href="https://static.kynsoft.net/689_2024-10-31_12-14-01.pdf">Descargar PDF</a>.</p>
+        </object>
+      </div>
     </div>
     <Toast position="top-center" :base-z-index="5" group="tc" />
     <ConfirmPopup group="headless" />
