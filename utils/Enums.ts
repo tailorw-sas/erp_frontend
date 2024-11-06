@@ -54,12 +54,12 @@ export const OBJ_ENUM_INVOICE_TYPE_CODE = {
 }
 
 export const ENUM_INVOICE_CRITERIA = [
-  { id: 'bookings.bookingId', name: 'Booking Id' },
-  { id: 'bookings.couponNumber', name: 'Coupon No' },
-  { id: 'bookings.fullName', name: 'Full Name' },
   { id: 'invoiceId', name: 'Invoice Id' },
   { id: 'invoiceNumberPrefix', name: 'Invoice No' },
+  { id: 'bookings.bookingId', name: 'Booking Id' },
+  { id: 'bookings.fullName', name: 'Full Name' },
   { id: 'bookings.hotelBookingNumber', name: 'Reservation No' },
+  { id: 'bookings.couponNumber', name: 'Coupon No' },
 ]
 
 export const ENUM_INVOICE_STATUS = [
