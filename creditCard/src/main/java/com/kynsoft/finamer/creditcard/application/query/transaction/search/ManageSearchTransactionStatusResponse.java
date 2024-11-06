@@ -19,7 +19,7 @@ public class ManageSearchTransactionStatusResponse implements IResponse {
     private String code;
     private String name;
     private Boolean visible;
-    private Boolean isReceived;
+    private Boolean isDeclined;
     private Boolean isSent;
 
     public ManageSearchTransactionStatusResponse(ManageTransactionStatusDto dto) {
@@ -27,7 +27,7 @@ public class ManageSearchTransactionStatusResponse implements IResponse {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.visible = dto.getVisible();
-        this.isReceived = dto.isReceivedStatus();
+        this.isDeclined = dto.isDeclinedStatus();
         this.isSent = dto.isSentStatus();
     }
 
