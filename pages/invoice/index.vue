@@ -69,20 +69,19 @@ const itemSend = ref<GenericObject>({
   invoice:null,
 })
 
-const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
+// const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
 const loadingDelete = ref(false)
 const statusListForFilter = ref<any[]>([])
 const filterToSearch = ref<IData>({
-  criteria: ENUM_INVOICE_CRITERIA[3],
+  criteria: ENUM_INVOICE_CRITERIA.find((i) => i.id === 'invoiceId'),
   search: '',
-  client: [allDefaultItem],
-  agency: [allDefaultItem],
-  hotel: [allDefaultItem],
+  client: [],
+  agency: [],
+  hotel: [],
   status: [],
-  invoiceType: [allDefaultItem],
+  invoiceType: [],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
-
   includeInvoicePaid: true
 })
 
@@ -115,7 +114,7 @@ const confSendApi = reactive({
 
 
 const disableClient = ref<boolean>(false)
-const disableDates = ref<boolean>(true)
+const disableDates = ref<boolean>(false)
 
 
 const expandedInvoice = ref('')
@@ -1160,7 +1159,9 @@ function searchAndFilter() {
     }
   }
   else {
-    if (filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[3]?.id && filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[4]?.id) {
+    const invoiceIdTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceId')?.id
+    const invoiceNumberTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceNumberPrefix')?.id
+    if (filterToSearch.value.criteria?.id !== invoiceIdTemp && filterToSearch.value.criteria?.id !== invoiceNumberTemp) {
       return hotelError.value = true
     }
   }
@@ -1179,10 +1180,10 @@ async function clearFilterToSearch() {
   filterToSearch.value = {
     criteria: ENUM_INVOICE_CRITERIA[3],
     search: '',
-    client: [allDefaultItem],
-    agency: [allDefaultItem],
-    hotel: [allDefaultItem],
-    invoiceType: [allDefaultItem],
+    client: [],
+    agency: [],
+    hotel: [],
+    invoiceType: [],
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
     includeInvoicePaid: true
@@ -1351,7 +1352,7 @@ function requireConfirmationToDelete(event: any) {
 //       sortType: ENUM_SHORT_TYPE.ASC
 //     }
 //     let clientTemp: any[] = []
-//     clientList.value = [allDefaultItem]
+//     clientList.value = []
 //     const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
 //      const { data: dataList } = response
 //     for (const iterator of dataList) {
@@ -1382,7 +1383,7 @@ interface ListItem {
 function mapFunction(data: DataListItem): ListItem {
   return {
     id: data.id,
-    name: `${data.name}`,
+    name: `${data.code} - ${data.name}`,
     status: data.status,
     code: data.code,
     description: data.description
@@ -1441,13 +1442,13 @@ function mapFunctionForType(data: DataListItem): ListItem {
 
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
   let clientTemp: any[] = []
-  clientList.value = [allDefaultItem]
+  clientList.value = []
   clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   clientList.value = [...clientList.value, ...clientTemp]
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
-  agencyList.value = [allDefaultItem]
+  agencyList.value = []
   agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   agencyList.value = [...agencyList.value, ...agencyTemp]
 }
@@ -1456,7 +1457,7 @@ async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { 
 }
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let hotelTemp: any[] = []
-  hotelList.value = [allDefaultItem]
+  hotelList.value = []
   hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   hotelList.value = [...hotelList.value, ...hotelTemp]
 }
@@ -1465,7 +1466,7 @@ async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { q
 }
 async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let statusTemp: any[] = []
-  statusList.value = [allDefaultItem]
+  statusList.value = []
   statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   statusList.value = [...statusList.value, ...statusTemp]
 }
@@ -1510,7 +1511,7 @@ async function getStatusListTemp() {
         ...response.data.map((item: any) => (
           { 
             id: item.id, 
-            name: item.name, 
+            name: `${item.code} - ${item.name}`, 
             code: item.code,
             description: item.description,
             status: item.status 
@@ -1522,7 +1523,7 @@ async function getStatusListTemp() {
         ...response.data.map((item: any) => (
           { 
             id: item.id, 
-            name: item.name, 
+            name: `${item.code} - ${item.name}`, 
             code: item.code,
             description: item.description,
             status: item.status 
@@ -1559,7 +1560,7 @@ async function getStatusListTemp() {
 
 async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let invoiceTypeListTemp: any[] = []
-  invoiceTypeList.value = [allDefaultItem]
+  invoiceTypeList.value = []
   invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionForType, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })    
   invoiceTypeList.value = [...invoiceTypeList.value, ...invoiceTypeListTemp]
 }
