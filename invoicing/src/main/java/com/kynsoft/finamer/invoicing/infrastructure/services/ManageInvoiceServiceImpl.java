@@ -141,6 +141,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         rows.add(new ExportInvoiceRow(
                 0,
                 "Id",
+                "Has Attachment",
                 "Type",
                 "Hotel",
                 "Agency Cd",
@@ -161,6 +162,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             rows.add(new ExportInvoiceRow(
                     0,
                     invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", //Id
+                    invoice.getHasAttachments().toString(),
                     invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", //Type
                     invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", //Hotel
                     invoice.getAgency() != null ? invoice.getAgency().getCode() : "",//Agency,//Agency Cd
