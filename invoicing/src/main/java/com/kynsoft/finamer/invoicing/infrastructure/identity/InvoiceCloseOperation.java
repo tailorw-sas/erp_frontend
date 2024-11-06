@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -20,6 +22,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Setter
 @Entity
 @Table(name = "invoice_close_operation")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "invoice_close_operation",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class InvoiceCloseOperation implements Serializable {
 
     @Id
