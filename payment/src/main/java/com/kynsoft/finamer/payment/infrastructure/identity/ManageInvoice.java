@@ -70,7 +70,7 @@ public class ManageInvoice {
         this.invoiceDate = dto.getInvoiceDate();
         this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
         this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
-        this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : null;
+        this.autoRec = dto.getAutoRec();
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -87,7 +87,7 @@ public class ManageInvoice {
                 invoiceDate,
                 Objects.nonNull(hotel) ? hotel.toAggregate() : null,
                 Objects.nonNull(agency) ? agency.toAggregate() : null,
-                autoRec != null ? autoRec : null
+                autoRec
         );
     }
 
@@ -107,7 +107,7 @@ public class ManageInvoice {
                 invoiceDate,
                 Objects.nonNull(hotel) ? hotel.toAggregate() : null,
                 Objects.nonNull(agency) ? agency.toAggregate() : null,
-                autoRec != null ? autoRec : null
+                autoRec
         );
     }
 
