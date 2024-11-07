@@ -172,14 +172,25 @@ public class InvoiceController {
         ExportInvoiceResponse data = mediator.send(query);
 
         final byte[] bytes = data.getStream().toByteArray();
-//        PaymentExcelExporterResponse response = new PaymentExcelExporterResponse(bytes, "file");
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice.xlsx");
         headers.add(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
         return ResponseEntity.ok().headers(headers).body(bytes);
-//        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/export-base64")
+    public ResponseEntity<?> exportBase64(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        ExportInvoiceQuery query = new ExportInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        ExportInvoiceResponse data = mediator.send(query);
+
+        final byte[] bytes = data.getStream().toByteArray();
+        PaymentExcelExporterResponse response = new PaymentExcelExporterResponse(bytes, "file");
+
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping(path = "/{id}")
