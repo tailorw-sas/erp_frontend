@@ -126,8 +126,12 @@ const columns: IColumn[] = [
   { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
+  { field: 'categoryType', header: 'Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
+  { field: 'subCategoryType', header: 'Sub Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
   { field: 'amount', header: 'Amount', type: 'text' },
+  { field: 'commission', header: 'Commission', type: 'text' },
+  { field: 'netAmount', header: 'T.Amount', type: 'text' },
 ]
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -520,7 +524,7 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
+            <Column footer="Totals:" :colspan="10" footer-style="text-align:right" />
             <Column :footer="formatNumber(subTotals.amount)" />
           </Row>
         </ColumnGroup>
