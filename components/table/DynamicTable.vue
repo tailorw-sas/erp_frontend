@@ -805,12 +805,16 @@ defineExpose({ clearSelectedItems })
             <Button type="button" label="Clear" severity="secondary" @click="clearIndividualFilter(field)" />
           </template>
           <template v-if="column.type === 'date-editable'" #editor="{ data: dataList, field }">
-            <Calendar
-              v-model="dataList[field]" :manual-input="false"
-              style="width: 100%" :view="column.props?.calendarMode || 'month'"
-              date-format="yy-mm-dd"
-              @update:model-value="onCellEditComplete($event, dataList)"
-            />
+            <slot :name="`column-${column.field}`" :item="{ dataList, field, column, onCellEditComplete }">
+              <Calendar
+                v-model="dataList[field]"
+                :manual-input="false"
+                style="width: 100%"
+                :view="column.props?.calendarMode || 'month'"
+                date-format="yy-mm-dd"
+                @update:model-value="onCellEditComplete($event, dataList)"
+              />
+            </slot>
           </template>
           <template v-if="column.editable && column.type === 'text'" #editor="{ data, field }">
             <InputText v-model="data[field]" style="width: 100%" autofocus fluid />
@@ -895,7 +899,7 @@ defineExpose({ clearSelectedItems })
         :rows-per-page-options="[10, 20, 30, 50]"
         @page="onChangePageOrLimit($event)"
       />
-      <Divider layout="vertical" v-if="props.pagination"/>
+      <Divider v-if="props.pagination" layout="vertical" />
       <div class="flex align-items-center mx-3">
         <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
           <span>

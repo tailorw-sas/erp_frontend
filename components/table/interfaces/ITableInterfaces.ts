@@ -3,7 +3,7 @@ import type { CALENDAR_MODE } from '~/utils/Enums'
 export interface IColumn {
   field: string
   header: string
-  type?: 'text' | 'obj' | 'bool' | 'select' | 'local-select' | 'date' | 'image' | 'icon' | 'custom-badge' | 'date-editable' | 'slot-select' | 'slot-icon' | 'slot-text' | 'datetime' | 'datetime-editable'
+  type?: 'text' | 'obj' | 'bool' | 'select' | 'local-select' | 'date' | 'image' | 'icon' | 'custom-badge' | 'date-editable' | 'slot-select' | 'slot-icon' | 'slot-text' | 'datetime' | 'datetime-editable' | 'slot-date-editable'
   tooltip?: string
   widthTruncate?: string
   sortable?: boolean

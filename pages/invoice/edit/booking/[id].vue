@@ -2000,6 +2000,17 @@ onMounted(async () => {
                       @on-sort-field="onSortFieldRoomRate"
                       @on-table-cell-edit-complete="onCellEditRoomRate($event)"
                     >
+                      <template #column-checkIn="{ item: objItem }">
+                        <Calendar
+                          v-model="objItem.dataList[objItem.field]"
+                          :manual-input="false"
+                          style="width: 100%"
+                          :max-date="new Date()"
+                          :view="objItem.column.props?.calendarMode || 'month'"
+                          date-format="yy-mm-dd"
+                          @update:model-value="objItem.onCellEditComplete($event, objItem.dataList)"
+                        />
+                      </template>
                       <template #datatable-footer>
                         <ColumnGroup type="footer" class="flex align-items-center">
                           <Row>
