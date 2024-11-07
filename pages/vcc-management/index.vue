@@ -192,16 +192,6 @@ const computedShowMenuItemAdjustmentTransaction = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:ADJUSTMENT-TRANSACTION'])))
 })
 
-const createItems: Array<MenuItem> = ref([{
-  label: 'Manual Transaction',
-  command: () => openNewManualTransactionDialog(),
-  disabled: computedShowMenuItemManualTransaction.value
-}, {
-  label: 'Adjustment Transaction',
-  command: () => openNewAdjustmentTransactionDialog(),
-  disabled: true
-}])
-
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
@@ -891,7 +881,7 @@ onMounted(() => {
       Virtual Credit Card Management
     </h3>
     <div class="my-2 flex justify-content-end px-0">
-      <PopupNavigationMenu menu-id="vcc-menu" :items="createItems" icon="pi pi-plus" label="New" class="vcc-menu" />
+      <Button class="ml-2" icon="pi pi-plus" label="New" @click="openNewManualTransactionDialog()" />
       <Button class="ml-2" icon="pi pi-building-columns" label="Bank Reconciliation" @click="openBankReconciliation()" />
       <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled />
       <Button class="ml-2" icon="pi pi-download" label="Export" disabled />
