@@ -218,12 +218,12 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                     invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "",//Gen. Date
                     //invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", //Status
                     status, //Status
-                    invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", //Manual
+                    invoice.getIsManual() ? "1" : "0", //Manual
                     decimalFormat.format(invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount() : "0.00"),//Amount
                     decimalFormat.format(invoice.getDueAmount() != null ? invoice.getDueAmount() : "0.00"),//Due Amount
                     //invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "", //Amount
                     //invoice.getDueAmount() != null ? invoice.getDueAmount().toString() : "", //Due Amount
-                    invoice.getAutoRec() != null ? invoice.getAutoRec().toString() : "", //Auto Rec
+                    invoice.getAutoRec() ? "1" : "0", //Auto Rec
                     null
             ));
         }
