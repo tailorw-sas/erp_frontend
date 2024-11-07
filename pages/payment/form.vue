@@ -1115,18 +1115,6 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
   onOffDialogPaymentDetail.value = true
 }
 
-// id: string;
-// payment: string;
-// transactionType: null;
-// amount: string;
-// remark: string;
-// status: string;
-// oldAmount: string;
-// paymentDetail: string;
-// applyDepositValue: string;
-// children: never[];
-// childrenTotalValue: number;
-
 function openDialogPaymentDetailsEdit(idDetail: any = null) {
   if (idDetail && idDetail.id) {
     itemDetailsForEdit.value = JSON.parse(JSON.stringify(itemDetailsTempForEdit.value))
@@ -1135,7 +1123,7 @@ function openDialogPaymentDetailsEdit(idDetail: any = null) {
       ...idDetail,
       transactionDate: dayjs(idDetail?.transactionDate).format('YYYY-MM-DD') || '',
       bookingDate: dayjs(idDetail?.manageBooking?.bookingDate).format('YYYY-MM-DD') || '',
-      reconciledManually: idDetail.manageBooking?.invoice?.reconciledManually || false
+      reconciledManually: idDetail.manageBooking?.invoice?.autoRec || false
     }
   }
   onOffDialogPaymentDetailEdit.value = true
@@ -1573,6 +1561,8 @@ async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, ca
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    // console.log(response)
+
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
