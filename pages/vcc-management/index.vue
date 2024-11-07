@@ -322,7 +322,13 @@ async function resetListItems() {
 
 function searchAndFilter() {
   const newPayload: IQueryRequest = {
-    filter: [],
+    filter: [{
+      key: 'adjustment',
+      operator: 'EQUALS',
+      value: false,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }],
     query: '',
     pageSize: 50,
     page: 0,
@@ -339,7 +345,7 @@ function searchAndFilter() {
     }]
   }
   else {
-    newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    newPayload.filter = [...newPayload.filter, ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
     // Filtro para no mostrar transacciones de ajuste
     // newPayload.filter = [...newPayload.filter, {
     //   key: 'adjustment',
