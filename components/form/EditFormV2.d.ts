@@ -28,6 +28,11 @@ interface FieldDefinition {
   backendValidation?: Array<ValidationErrorType>
   helpText?: string
   helpTextClass?: string
+  objApi?: {
+    moduleApi: string
+    uriApi: string
+    keyValue?: string
+  }
   onUpdate?: (value: any) => void
 }
 

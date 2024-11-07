@@ -76,6 +76,7 @@ const fields = ref<FieldDefinitionType[]>([
     header: 'Format Type',
     dataType: 'select',
     class: 'field col-12 md:col-1 required',
+    disabled: false,
     validation: z.object({
       id: z.string().min(1, 'This is a required field'),
       name: z.string().min(1, 'This is a required field'),
@@ -87,7 +88,8 @@ const fields = ref<FieldDefinitionType[]>([
     dataType: 'text',
     disabled: true,
     class: 'field col-12 md:col-1',
-    validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
+    validation: z.string().trim()
+    // validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
   },
 ])
 
@@ -108,7 +110,8 @@ const fieldsTemp = [
     dataType: 'text',
     disabled: true,
     class: 'field col-12 md:col-1',
-    validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
+    validation: z.string().trim()
+    // validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
   },
 ]
 // FORM CONFIG -------------------------------------------------------------------------------------------
@@ -223,8 +226,6 @@ async function getList() {
     listItems.value = [...listItems.value, ...newListItems]
 
     for (const element of listItems.value) {
-      console.log(listItemsMenu.value)
-
       listItemsMenu.value[0].items.push({
         label: `${element.code} - ${element.name}`,
         icon: 'pi pi-file-pdf',
@@ -308,14 +309,20 @@ function formatToDateTimeZero(date) {
   const formattedDate = new Date(date).toISOString().split('T')[0]
   return `${formattedDate}T00:00:00.000Z`
 };
-function saveItem(objItem: any) {
+async function saveItem(objItem: any) {
   if (objItem) {
     try {
       loadingSaveAllGetReport.value = true
-      const payload = Object.keys(objItem.value).reduce((acc: Record<string, any>, key) => {
+      const payload = {
+        parameters: {},
+        reportFormatType: typeof objItem.value.reportFormatType === 'object' ? objItem.value.reportFormatType.id : objItem.value.reportFormatType,
+        jasperReportCode: objItem.value.jasperReportCode
+      } as any
+
+      payload.parameters = Object.keys(objItem.value).reduce((acc: Record<string, any>, key) => {
         const value = objItem.value[key]
 
-        if (isDate(value)) {
+        if (isDate(value) && typeof value !== 'number') {
           acc[key] = formatToDateTimeZero(value) // Convertir a formato YYYY-MM-DDT00:00:00.000Z
         }
         else if (typeof value === 'object' && value !== null && value.id !== undefined) {
@@ -326,9 +333,10 @@ function saveItem(objItem: any) {
         }
         return acc
       }, {} as Record<string, any>)
-
-      const response = GenericService.create(confApi.moduleApi, confApi.uriApiReportGenerate, payload)
-      console.log(response)
+      delete payload?.parameters?.reportFormatType
+      delete payload?.parameters?.jasperReportCode
+      delete payload?.parameters?.event
+      await GenericService.create(confApi.moduleApi, confApi.uriApiReportGenerate, payload)
       loadingSaveAllGetReport.value = false
     }
     catch (error) {
@@ -440,18 +448,33 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
         keys: ['name', 'username', 'url'],
       }
       const result = await getParamsByReport('report', 'jasper-report-template-parameter', objQueryToSearch, filter)
-      fields.value = JSON.parse(JSON.stringify(fieldsTemp))
+      fields.value = [...fieldsTemp]
       if (result && result.length > 0) {
         for (const element of result) {
           item.value[element.paramName] = ''
-          fields.value = [...fields.value, {
-            field: element.paramName,
-            header: element.label,
-            dataType: element.componentType,
-            class: 'field col-12 md:col-2',
-          }]
+          if (element.componentType === 'select') {
+            fields.value = [...fields.value, {
+              field: element.paramName,
+              header: element.label,
+              dataType: element.componentType,
+              class: 'field col-12 md:col-2',
+              objApi: {
+                moduleApi: element.module,
+                uriApi: element.service
+              }
+            }]
+          }
+          else {
+            fields.value = [...fields.value, {
+              field: element.paramName,
+              header: element.label,
+              dataType: element.componentType,
+              class: 'field col-12 md:col-2'
+            }]
+          }
         }
       }
+
       if (code) {
         item.value.jasperReportCode = code
       }
@@ -463,6 +486,50 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
     catch (error) {
 
     }
+  }
+}
+
+const suggestionsData = ref<any[]>([])
+
+async function getDinamicData(query: string, moduleApi: string, uriApi: string) {
+  try {
+    const payload
+        = {
+          filter: [
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
+          query: '',
+          pageSize: 20,
+          page: 0,
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.ASC
+        }
+
+    const response = await GenericService.search(moduleApi, uriApi, payload)
+    const { data: dataList } = response
+    for (const iterator of dataList) {
+      suggestionsData.value = [...suggestionsData.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading agency type list:', error)
   }
 }
 
@@ -575,32 +642,39 @@ onMounted(async () => {
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
+            <template v-for="field in fields.filter(field => field.field !== 'reportFormatType' && field.dataType === 'select')" :key="field.field" #[`field-${field.field}`]="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data[field.field]"
+                :suggestions="[...suggestionsData]"
+                @change="($event) => {
+                  onUpdate(field.field, $event)
+                }"
+                @load="($event) => getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi)"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+
             <template #field-reportFormatType="{ item: data, onUpdate }">
               <Dropdown
                 v-if="!loadingSaveAllGetReport"
                 v-model="data.reportFormatType"
                 :options="[...REPORT_FORMATS_TYPE]"
                 option-label="name"
-                return-object="false"
                 @update:model-value="($event) => {
                   onUpdate('reportFormatType', $event)
                 }"
-              >
-                <!-- <template #option="props">
-                  {{ props.option?.code }}-{{ props.option?.name }}
-                </template>
-                <template #value="props">
-                  {{ props.value?.code }}-{{ props.value?.name }}
-                </template> -->
-              </Dropdown>
+              />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>
-          <!-- <pre>{{ item }}</pre> -->
         </div>
       </div>
 
-      <div class="card p-2">
+      <div v-if="false" class="card p-2">
         <object data="https://static.kynsoft.net/689_2024-10-31_12-14-01.pdf" type="application/pdf" width="100%" height="800px">
           <p>Tu navegador no soporta PDF. <a href="https://static.kynsoft.net/689_2024-10-31_12-14-01.pdf">Descargar PDF</a>.</p>
         </object>
