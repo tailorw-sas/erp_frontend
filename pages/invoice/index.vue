@@ -82,7 +82,7 @@ const filterToSearch = ref<IData>({
   invoiceType: [],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
-  includeInvoicePaid: true
+  includeInvoicePaid: null
 })
 
 const confApi = reactive({
@@ -1056,51 +1056,48 @@ function searchAndFilter() {
   }
 
   if (!filterToSearch.value.search) {
-    if (isFirstTimeInOnMounted.value === false) {
+    // if (isFirstTimeInOnMounted.value === false) {}
       
-      const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
+    const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
 
-      switch (filterToSearch.value.includeInvoicePaid) {
-        case true:
-          // Elimina el filtro de 'dueAmount' si existe, para que muestre todos
-          if (filterObjIncludeInvoicePaid) {
-            payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
-          }
-          break;
+    switch (filterToSearch.value.includeInvoicePaid) {
+      case true:
+        // Elimina el filtro de 'dueAmount' si existe, para que muestre todos
+        if (filterObjIncludeInvoicePaid) {
+          payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
+        }
+        break;
 
-        case false:
-          // Solo muestra los que tienen dueAmount igual a 0
-          if (filterObjIncludeInvoicePaid) {
-            filterObjIncludeInvoicePaid.operator = 'EQUALS';
-            filterObjIncludeInvoicePaid.value = 0;
-          } else {
-            payload.value.filter.push({
-              key: 'dueAmount',
-              operator: 'EQUALS',
-              value: 0,
-              logicalOperation: 'AND'
-            });
-          }
-          break;
+      case false:
+        // Solo muestra los que tienen dueAmount igual a 0
+        if (filterObjIncludeInvoicePaid) {
+          filterObjIncludeInvoicePaid.operator = 'EQUALS';
+          filterObjIncludeInvoicePaid.value = 0;
+        } else {
+          payload.value.filter.push({
+            key: 'dueAmount',
+            operator: 'EQUALS',
+            value: 0,
+            logicalOperation: 'AND'
+          });
+        }
+        break;
 
-        default:
-          // Muestra los elementos que no son 0 (por defecto)
-          if (filterObjIncludeInvoicePaid) {
-            filterObjIncludeInvoicePaid.operator = 'NOT_EQUALS';
-            filterObjIncludeInvoicePaid.value = 0;
-          } else {
-            payload.value.filter.push({
-              key: 'dueAmount',
-              operator: 'NOT_EQUALS',
-              value: 0,
-              logicalOperation: 'AND'
-            });
-          }
-          break;
-      }
-
-
-
+      default:
+        // Muestra los elementos que no son 0 (por defecto)
+        if (filterObjIncludeInvoicePaid) {
+          filterObjIncludeInvoicePaid.operator = 'NOT_EQUALS';
+          filterObjIncludeInvoicePaid.value = 0;
+        } else {
+          payload.value.filter.push({
+            key: 'dueAmount',
+            operator: 'NOT_EQUALS',
+            value: 0,
+            logicalOperation: 'AND'
+          });
+        }
+        break;
+    }
 
       // const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
 
@@ -1122,7 +1119,6 @@ function searchAndFilter() {
       // } else if (filterObjIncludeInvoicePaid) {
       //   payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
       // }
-    }
     if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
       const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
       const itemIds = filteredItems?.map((item: any) => item?.id)
