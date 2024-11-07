@@ -27,7 +27,7 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
     public void handle(CreateRedirectCommand command) {
         TransactionDto transactionDto = transactionService.findById(command.getRequestDto().getTransactionId());
         // No procesar transacciones completadas
-        if (!transactionDto.getStatus().isSentStatus()) {
+        if (!transactionDto.getStatus().isSentStatus() && !transactionDto.getStatus().isDeclinedStatus()) {
             throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
         }
 

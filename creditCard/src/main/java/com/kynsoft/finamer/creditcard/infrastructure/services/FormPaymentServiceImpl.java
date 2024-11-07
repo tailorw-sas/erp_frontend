@@ -221,6 +221,9 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 cardNetJobService.create(cardnetJobDto);
             } else {
                 cardNetSession = cardnetJobDto.getSession();
+                cardnetJobDto.setIsProcessed(false);
+                cardnetJobDto.setNumberOfAttempts(0);
+                cardNetJobService.update(cardnetJobDto);
             }
 
             // Paso 2: Generar Formulario

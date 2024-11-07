@@ -39,7 +39,7 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
             Claims claims = tokenService.validateToken(command.getToken());
             TransactionDto transactionDto = transactionService.findByUuid(UUID.fromString(claims.get("transactionUuid").toString()));
             // No procesar transacciones completadas
-            if (!transactionDto.getStatus().isSentStatus()) {
+            if (!transactionDto.getStatus().isSentStatus() && !transactionDto.getStatus().isDeclinedStatus()) {
                 throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
             }
 
