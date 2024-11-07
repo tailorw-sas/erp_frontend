@@ -717,8 +717,12 @@ async function resendPost() {
   try {
     if (contextMenuTransaction.value.id) {
       options.value.loading = true
-      await GenericService.create('creditcard', 'transactions/resend-payment-link', { id: contextMenuTransaction.value.id })
+      const response: any = await GenericService.create('creditcard', 'transactions/resend-post', { id: contextMenuTransaction.value.id })
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+      const htmlBody = response.result
+      const newTab = window.open('', '_blank')
+      newTab?.document.write(await htmlBody)
+      newTab?.document.close()
     }
   }
   catch (error: any) {
