@@ -24,6 +24,12 @@ const newRefundDialogVisible = ref(false)
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
+const accordionLoading = ref({
+  merchant: false,
+  hotel: false,
+  ccType: false,
+  status: false,
+})
 const contextMenuTransaction = ref()
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
@@ -476,6 +482,7 @@ async function getCollectionStatusList() {
 
 async function getHotelList(query: string = '') {
   try {
+    accordionLoading.value.hotel = true
     const payload = {
       filter: [
         {
@@ -514,10 +521,14 @@ async function getHotelList(query: string = '') {
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
+  finally {
+    accordionLoading.value.hotel = false
+  }
 }
 
 async function getMerchantList(query: string = '') {
   try {
+    accordionLoading.value.merchant = true
     const payload = {
       filter: [
         {
@@ -556,10 +567,14 @@ async function getMerchantList(query: string = '') {
   catch (error) {
     console.error('Error loading merchant list:', error)
   }
+  finally {
+    accordionLoading.value.merchant = false
+  }
 }
 
 async function getStatusList(query: string = '') {
   try {
+    accordionLoading.value.status = true
     const payload = {
       filter: [
         {
@@ -598,10 +613,14 @@ async function getStatusList(query: string = '') {
   catch (error) {
     console.error('Error loading status list:', error)
   }
+  finally {
+    accordionLoading.value.status = false
+  }
 }
 
 async function getCCTypeList(query: string = '') {
   try {
+    accordionLoading.value.ccType = true
     const payload = {
       filter: [
         {
@@ -639,6 +658,9 @@ async function getCCTypeList(query: string = '') {
   }
   catch (error) {
     console.error('Error loading credit card type list:', error)
+  }
+  finally {
+    accordionLoading.value.ccType = false
   }
 }
 
@@ -895,47 +917,53 @@ onMounted(() => {
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">Merchant:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.merchant" :suggestions="merchantList"
-                        @load="($event) => getMerchantList($event)" @change="($event) => {
-                          if (!filterToSearch.merchant.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.merchant = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.merchant = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.merchant"
+                      :suggestions="merchantList"
+                      :loading="accordionLoading.merchant"
+                      @change="($event) => {
+                        if (!filterToSearch.merchant.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.merchant = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.merchant = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getMerchantList($event)"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedMultiSelectComponent>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold" for="">Hotel:</label>
-                    <div class="w-full">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
-                        @load="($event) => getHotelList($event)" @change="($event) => {
-                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.hotel"
+                      :suggestions="hotelList"
+                      :loading="accordionLoading.hotel"
+                      @change="($event) => {
+                        if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getHotelList($event)"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
               </div>
@@ -943,46 +971,53 @@ onMounted(() => {
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">CC Type:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.ccType" :suggestions="ccTypeList" @change="($event) => {
-                          if (!filterToSearch.ccType.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.ccType = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.ccType = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }" @load="($event) => getCCTypeList($event)"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.ccType"
+                      :suggestions="ccTypeList"
+                      :loading="accordionLoading.ccType"
+                      @change="($event) => {
+                        if (!filterToSearch.ccType.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.ccType = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.ccType = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getCCTypeList($event)"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedMultiSelectComponent>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold" for="">Status:</label>
-                    <div class="w-full">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.status" :suggestions="statusList"
-                        @load="($event) => getStatusList($event)" @change="($event) => {
-                          if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.status"
+                      :suggestions="statusList"
+                      :loading="accordionLoading.status"
+                      @change="($event) => {
+                        if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getStatusList($event)"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
               </div>

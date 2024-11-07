@@ -47,6 +47,7 @@ const props = defineProps({
 
 const emit = defineEmits(['load', 'update:modelValue', 'change'])
 const allSuggestions = ref<any[]>(props.suggestions)
+const firstLoad = ref(false)
 
 const debouncedComplete = useDebounceFn((event: any) => {
   emit('load', event.value)
@@ -77,6 +78,8 @@ watch(() => props.suggestions, (newSuggestions) => {
 <template>
   <MultiSelect
     :id="props.id"
+    class="w-full"
+    style="overflow: hidden"
     :model-value="props.model"
     :options="allSuggestions"
     :option-label="props.field"
@@ -90,6 +93,12 @@ watch(() => props.suggestions, (newSuggestions) => {
       const ev = JSON.parse(JSON.stringify($event.value))
       await wait(50) // Espera 50ms
       emit('change', ev)
+    }"
+    @before-show="($event) => {
+      if (!firstLoad) { // Validar que se llame al servicio la primera vez que se abre el selector
+        emit('load', '')
+        firstLoad = true
+      }
     }"
   >
     <template #value>
@@ -121,16 +130,14 @@ watch(() => props.suggestions, (newSuggestions) => {
   display: inline-flex;
   align-items: center;
   border-radius: 16px; /* Borde redondeado */
-  font-size: 14px;
-  margin: 0px 2px;
+  font-size: 1rem;
+  margin-right: 2px;
   padding: 0.2145rem 0.571rem;
   background: rgba(68, 72, 109, 0.17);
   color: #44486D;
 }
 
-.chip-label {
-  margin-right: 8px;
-}
+.chip-label {}
 
 .remove-button {
   background-color: transparent;
@@ -139,7 +146,12 @@ watch(() => props.suggestions, (newSuggestions) => {
   cursor: pointer;
   display: flex;
   align-items: center;
+  padding: 0 0 0 6px;
   justify-content: center;
+}
+
+.p-multiselect .p-multiselect-label {
+  padding: 0.2145rem 0.571rem !important;
 }
 
 .remove-button:hover {
