@@ -25,6 +25,11 @@ export const ENUM_INVOICE_TYPE = [
   { id: 'OLD_CREDIT', name: 'Old Credit', code: 'OLD' }
 ]
 
+export const REPORT_FORMATS_TYPE = [
+  { id: 'PDF', name: 'PDF' },
+  { id: 'XLS', name: 'XLS' },
+]
+
 export enum InvoiceType {
   INVOICE = 'INVOICE',
   INCOME = 'INCOME',
