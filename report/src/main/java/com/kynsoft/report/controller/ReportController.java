@@ -33,32 +33,36 @@ import java.util.Map;
 public class ReportController {
 
     private final IMediator mediator;
-    private final IJasperReportTemplateService reportService;
+  //  private final IJasperReportTemplateService reportService;
     private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
-    public ReportController(IMediator mediator, IJasperReportTemplateService reportService) {
+    public ReportController(IMediator mediator
+            //, IJasperReportTemplateService reportService
+    ) {
         this.mediator = mediator;
-        this.reportService = reportService;
+     //   this.reportService = reportService;
     }
 
     @PostMapping(value = "/generate")
     public ResponseEntity<InputStreamResource> generatePdfReport(@RequestBody ReportRequest reportRequest) {
         try {
-            JasperReportTemplateDto reportTemplateDto = reportService.findByTemplateCode(reportRequest.getReportCode());
+            //JasperReportTemplateDto reportTemplateDto = reportService.findByTemplateCode(reportRequest.getReportCode());
             // Crear un DataSource personalizado con los datos de conexión
             DriverManagerDataSource customDataSource = new DriverManagerDataSource();
             customDataSource.setDriverClassName("org.postgresql.Driver"); // Cambia el driver según tu base de datos
-            customDataSource.setUrl(reportTemplateDto.getDbConectionDto().getUrl()); // URL de tu base de datos
+
+           // customDataSource.setUrl(reportTemplateDto.getDbConectionDto().getUrl()); // URL de tu base de datos
             //customDataSource.setUrl("jdbc:postgresql://172.20.41.100:5432/finamer-payments"); // URL de tu base de datos
-          //  customDataSource.setUrl("jdbc:postgresql://postgres-erp-rw.postgres.svc.cluster.local:5432/finamer-payments");
+            customDataSource.setUrl("jdbc:postgresql://postgres-erp-rw.postgres.svc.cluster.local:5432/finamer-payments");
             customDataSource.setUsername("finamer_rw"); // Usuario
             customDataSource.setPassword("5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc"); // Contraseña
 
             logger.info("Report code: {}", reportRequest.getReportCode());
-            logger.info("Database URL: {}", reportTemplateDto.getDbConectionDto().getUrl());
+            logger.info("Database URL: {}", "https://static.kynsoft.net/Blank_A4_2024-11-08_17-00-36.jrxml");
             logger.info("Parameters: {}", reportRequest.getParameters());
 
             // Cargar el archivo JRXML desde la URL proporcionada
-            JasperReport jasperReport = loadJasperReportFromUrl(reportTemplateDto.getFile());
+            JasperReport jasperReport = loadJasperReportFromUrl("https://static.kynsoft.net/Blank_A4_2024-11-08_17-00-36.jrxml");
+           // JasperReport jasperReport = loadJasperReportFromUrl(reportTemplateDto.getFile());
 
             // Llenar el reporte con la fuente de datos y parámetros
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, reportRequest.getParameters(), customDataSource.getConnection());
