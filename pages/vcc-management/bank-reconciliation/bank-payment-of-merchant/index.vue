@@ -126,8 +126,12 @@ const columns: IColumn[] = [
   { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
+  { field: 'categoryType', header: 'Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
+  { field: 'subCategoryType', header: 'Sub Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
   { field: 'amount', header: 'Amount', type: 'text' },
+  { field: 'commission', header: 'Commission', type: 'text' },
+  { field: 'netAmount', header: 'T.Amount', type: 'text' },
 ]
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -137,7 +141,6 @@ const options = ref({
   uriApi: 'transactions',
   loading: false,
   actionsAsMenu: false,
-  selectionMode: 'multiple',
   messageToDelete: 'Do you want to save the change?',
 })
 const payload = ref<IQueryRequest>({
@@ -164,7 +167,7 @@ const paginatedData = computed(() => {
 })
 
 const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0) : 0
+  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.netAmount), 0) : 0
   return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
 })
 
@@ -362,7 +365,15 @@ function formatAdjustment(data: any) {
   data.checkIn = dayjs().format('YYYY-MM-DD')
   subTotals.value.amount += data.amount
   data.amount = formatNumber(data.amount)
+  data.commission = formatNumber(0)
+  data.netAmount = formatNumber(data.amount)
   data.adjustment = true
+  if (data.transactionCategory) {
+    data.categoryType = data.transactionCategory
+  }
+  if (data.transactionSubCategory) {
+    data.subCategoryType = data.transactionSubCategory
+  }
   return data
 }
 
@@ -520,7 +531,7 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
+            <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
             <Column :footer="formatNumber(subTotals.amount)" />
           </Row>
         </ColumnGroup>
@@ -534,10 +545,10 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
         />
       </template>
     </DynamicTable>
-    <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
-      <Badge
+    <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
+      <!-- <Badge
         v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
-      />
+      /> -->
       <div>
         <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
         <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-plus" @click="openNewAdjustmentTransactionDialog()" />

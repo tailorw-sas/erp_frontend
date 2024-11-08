@@ -192,16 +192,6 @@ const computedShowMenuItemAdjustmentTransaction = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:ADJUSTMENT-TRANSACTION'])))
 })
 
-const createItems: Array<MenuItem> = ref([{
-  label: 'Manual Transaction',
-  command: () => openNewManualTransactionDialog(),
-  disabled: computedShowMenuItemManualTransaction.value
-}, {
-  label: 'Adjustment Transaction',
-  command: () => openNewAdjustmentTransactionDialog(),
-  disabled: true
-}])
-
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
@@ -332,7 +322,13 @@ async function resetListItems() {
 
 function searchAndFilter() {
   const newPayload: IQueryRequest = {
-    filter: [],
+    filter: [{
+      key: 'adjustment',
+      operator: 'EQUALS',
+      value: false,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }],
     query: '',
     pageSize: 50,
     page: 0,
@@ -349,7 +345,7 @@ function searchAndFilter() {
     }]
   }
   else {
-    newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    newPayload.filter = [...newPayload.filter, ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
     // Filtro para no mostrar transacciones de ajuste
     // newPayload.filter = [...newPayload.filter, {
     //   key: 'adjustment',
@@ -891,7 +887,7 @@ onMounted(() => {
       Virtual Credit Card Management
     </h3>
     <div class="my-2 flex justify-content-end px-0">
-      <PopupNavigationMenu menu-id="vcc-menu" :items="createItems" icon="pi pi-plus" label="New" class="vcc-menu" />
+      <Button class="ml-2" icon="pi pi-plus" label="New" @click="openNewManualTransactionDialog()" />
       <Button class="ml-2" icon="pi pi-building-columns" label="Bank Reconciliation" @click="openBankReconciliation()" />
       <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled />
       <Button class="ml-2" icon="pi pi-download" label="Export" disabled />
