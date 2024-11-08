@@ -37,5 +37,4 @@ COPY --from=builder /build/target/report-1.0.0.jar /app/report-1.0.0.jar
 # Expone el puerto que utiliza la aplicación
 EXPOSE 9909
 
-# Comando de inicio de la aplicación
-ENTRYPOINT ["java", "-jar", "/app/report-1.0.0.jar"]
+ENTRYPOINT ["java", "-Xmx512m", "-jar", "/app/report-1.0.0.jar"]
