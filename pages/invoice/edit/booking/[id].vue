@@ -998,7 +998,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   loadingSaveAll.value = false
   if (successOperation) {
-    formReload.value++
+    await getBookingItemById(route?.params?.id as string)
 
     // clearForm()
   }
@@ -1188,7 +1188,7 @@ async function onCellEditRoomRate(event: any) {
     if (saveButton.value) {
       saveButton.value.$el.click()
     }
-    reloadBookingItem(idItem.value)
+    await reloadBookingItem(idItem.value)
   }
   catch (error: any) {
     data[field] = dataTemp
@@ -2064,27 +2064,6 @@ onMounted(async () => {
                     </DynamicTable>
                   </TabPanel>
                 </TabView>
-
-                <!-- <InvoiceTabView
-                  :requires-flat-rate="requiresFlatRate"
-                  :get-invoice-hotel="getInvoiceHotel"
-                  :get-invoice-agency="getInvoiceAgency"
-                  :invoice-obj-amount="invoiceAmount"
-                  :is-dialog-open="bookingDialogOpen"
-                  :close-dialog="() => { bookingDialogOpen = false }"
-                  :open-dialog="handleDialogOpen"
-                  :selected-booking="selectedBooking"
-                  :force-update="forceUpdate"
-                  :toggle-force-update="update"
-                  :invoice-obj="item2"
-                  :refetch-invoice="refetchInvoice"
-                  :is-creation-dialog="false"
-                  :selected-invoice="selectedInvoice as any"
-                  :active="active"
-                  :set-active="($event) => { active = $event }"
-                  :showTotals="true"
-                  :invoiceType="route.query?.type?.toString()"
-                /> -->
               </div>
             </div>
             <div class="col-12 flex justify-content-end">
@@ -2106,7 +2085,7 @@ onMounted(async () => {
       </EditFormV2>
     </div>
 
-    <div v-if="attachmentDialogOpen">
+    <!-- <div v-if="attachmentDialogOpen">
       <AttachmentDialog
         :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
         :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
@@ -2127,9 +2106,10 @@ onMounted(async () => {
       :open-dialog="exportAttachmentsDialogOpen"
       :invoice="item"
     />
-  </div>
+  </div> -->
 
-  <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
+    <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
+  </div>
 </template>
 
 <style lang="scss">
