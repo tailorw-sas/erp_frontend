@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayInputStream;
@@ -34,12 +35,18 @@ public class ReportController {
     @PostMapping(value = "/generate", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<InputStreamResource> generatePdfReport(@RequestBody ReportRequest reportRequest) {
         try {
+            // Crear un DataSource personalizado con los datos de conexión
+            DriverManagerDataSource customDataSource = new DriverManagerDataSource();
+            customDataSource.setDriverClassName("org.postgresql.Driver"); // Cambia el driver según tu base de datos
+            customDataSource.setUrl("jdbc:postgresql://postgres-erp-rw.postgres.svc.cluster.local:5432/finamer-payments"); // URL de tu base de datos
+            customDataSource.setUsername("finamer_rw"); // Usuario
+            customDataSource.setPassword("5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc"); // Contraseña
+
             // Cargar el archivo JRXML desde la URL proporcionada
             JasperReport jasperReport = loadJasperReportFromUrl(reportRequest.getTemplateUrl());
 
-            // Llenar el reporte con datos y parámetros
-            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportRequest.getData());
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, reportRequest.getParameters(), dataSource);
+            // Llenar el reporte con la fuente de datos y parámetros
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, reportRequest.getParameters(), customDataSource.getConnection());
 
             // Exportar a PDF
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
