@@ -21,5 +21,7 @@ public class ManageReconcileTransactionStatusDto {
     private String name;
     private Boolean requireValidation;
     private List<ManageReconcileTransactionStatusDto> relatedStatuses;
-
+    private boolean created;
+    private boolean cancelled;
+    private boolean completed;
 }

@@ -36,6 +36,7 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
     }
 
     @Override
+    @Transactional
     public List<Long> createAdjustments(List<CreateBankReconciliationAdjustmentRequest> adjustmentRequest, Set<TransactionDto> transactionList) {
         List<Long> ids = new ArrayList<>();
         for (CreateBankReconciliationAdjustmentRequest request : adjustmentRequest) {
