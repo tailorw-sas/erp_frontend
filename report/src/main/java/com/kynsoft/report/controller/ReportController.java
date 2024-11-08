@@ -47,8 +47,8 @@ public class ReportController {
             customDataSource.setUrl(reportTemplateDto.getDbConectionDto().getUrl()); // URL de tu base de datos
             //customDataSource.setUrl("jdbc:postgresql://172.20.41.100:5432/finamer-payments"); // URL de tu base de datos
           //  customDataSource.setUrl("jdbc:postgresql://postgres-erp-rw.postgres.svc.cluster.local:5432/finamer-payments");
-            customDataSource.setUsername("finamer_rw"); // Usuario
-            customDataSource.setPassword("5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc"); // Contraseña
+            customDataSource.setUsername(reportTemplateDto.getDbConectionDto().getUsername()); // Usuario
+            customDataSource.setPassword(reportTemplateDto.getDbConectionDto().getPassword()); // Contraseña
 
             // Cargar el archivo JRXML desde la URL proporcionada
             JasperReport jasperReport = loadJasperReportFromUrl(reportTemplateDto.getFile());
