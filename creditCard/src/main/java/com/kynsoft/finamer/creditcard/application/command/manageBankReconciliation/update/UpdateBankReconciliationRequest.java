@@ -6,6 +6,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -15,4 +16,5 @@ public class UpdateBankReconciliationRequest {
     private String remark;
     private Set<Long> transactions;
     private List<UpdateBankReconciliationAdjustmentRequest> adjustmentTransactions;
+    private UUID transactionStatus;
 }
