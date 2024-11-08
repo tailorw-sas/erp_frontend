@@ -1950,6 +1950,7 @@ function recalculateFormData (booking: any = null) {
     itemClone.value.adults = Number(totalAdults)
     itemClone.value.hotelAmount = Number(totalHotelAmount)
     itemClone.value.invoiceAmount = Number(totalInvoiceAmount)
+    itemClone.value.dueAmount = Number(totalInvoiceAmount)
 
     const minCheckInAndMaxCheckOut = getMinCheckInAndMaxCheckOut(listRoomRateByBookingId)
     itemClone.value.checkIn = minCheckInAndMaxCheckOut.minCheckIn

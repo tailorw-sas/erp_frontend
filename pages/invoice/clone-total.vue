@@ -1505,6 +1505,7 @@ function onSaveRoomRateInBookingEdit(itemObj: any) {
         objBookingSelected.adults = Number(totalAdults)
         objBookingSelected.hotelAmount = Number(totalHotelAmount)
         objBookingSelected.invoiceAmount = Number(totalInvoiceAmount)
+        objBookingSelected.dueAmount = Number(totalInvoiceAmount)
 
         objBookingSelected.checkIn = formatDate(itemObj?.payload?.checkIn)
         objBookingSelected.checkOut = formatDate(itemObj?.payload?.checkOut)
@@ -1540,6 +1541,7 @@ function onSaveRoomRateInBookingEdit(itemObj: any) {
       }
     }
   }
+  calcInvoiceAmount()
 }
 
 watch(invoiceAmount, () => {
