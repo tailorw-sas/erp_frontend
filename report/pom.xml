@@ -104,7 +104,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>compile</scope>
+            <version>42.7.2</version> <!-- Ajusta la versión según sea necesario -->
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

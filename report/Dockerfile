@@ -37,4 +37,8 @@ COPY --from=builder /build/target/report-1.0.0.jar /app/report-1.0.0.jar
 # Expone el puerto que utiliza la aplicación
 EXPOSE 9909
 
-ENTRYPOINT ["java", "-Xmx512m", "-jar", "/app/report-1.0.0.jar"]
+# Variables de entorno para depuración y monitoreo
+ENV JAVA_TOOL_OPTIONS="-Xmx1024m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/ -Dlogging.level.org.springframework=DEBUG"
+
+# Comando de inicio de la aplicación con más memoria y recolección de basura mejorada
+ENTRYPOINT ["java", "-Xmx1024m", "-XX:+UseG1GC", "-jar", "/app/report-1.0.0.jar"]
