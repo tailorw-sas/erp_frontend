@@ -108,7 +108,7 @@ const columns: IColumn[] = [
   { field: 'detailsAmount', header: 'Details Amount', type: 'text' },
   { field: 'paidDate', header: 'Date', type: 'date' },
   { field: 'remark', header: 'Remark', type: 'text' },
-  // { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
+  { field: 'statusName', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, details: 0 })
@@ -177,8 +177,8 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = iterator.status?.name
+      if (Object.prototype.hasOwnProperty.call(iterator, 'reconcileStatus')) {
+        iterator.statusName = iterator.reconcileStatus?.name
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
@@ -301,7 +301,7 @@ function searchAndFilter() {
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
         newPayload.filter = [...newPayload.filter, {
-          key: 'status.id',
+          key: 'reconcileStatus.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND',
