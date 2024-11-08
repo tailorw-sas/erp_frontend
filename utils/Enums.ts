@@ -136,12 +136,13 @@ export const ENUM_ROUTEOFADMINISTRATIONS = [
 ]
 
 export const ENUM_USER_TYPE = [
-  { id: 'PROVIDERS', name: 'PROVEEDOR' },
-  { id: 'DOCTORS', name: 'DOCTOR' },
-  { id: 'NURSES', name: 'ENFERMERA' },
-  { id: 'ASSISTANTS', name: 'ASISTENTE' },
-  { id: 'SYSTEM', name: 'SISTEMA' },
-  { id: 'UNDEFINED', name: 'INDEFINIDO' },
+  { id: 'INTERNAL', name: 'INTERNAL' },
+  { id: 'PROVIDERS', name: 'PROVIDERS' },
+  { id: 'DOCTORS', name: 'DOCTORS' },
+  { id: 'NURSES', name: 'NURSES' },
+  { id: 'ASSISTANTS', name: 'ASSISTANTS' },
+  { id: 'SYSTEM', name: 'SYSTEM' },
+  { id: 'UNDEFINED', name: 'UNDEFINED' },
 ]
 
 export const ENUM_GUIDE = [

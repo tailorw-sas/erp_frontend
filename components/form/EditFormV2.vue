@@ -185,7 +185,7 @@ watch(fieldValues, (newVal) => {
                   :style="{ backgroundImage: `url(${typeof fieldValues[field.field] === 'string' ? fieldValues[field.field] : (fieldValues[field.field].hasOwnProperty('objectURL') ? fieldValues[field.field].objectURL : '')})`, backgroundSize: (objFile !== null && typeof objFile === 'object' && objFile.type === 'image/svg+xml') ? 'contain' : 'cover' }"
                 />
               </div>
-              <Skeleton v-else height="2rem" />
+              <Skeleton v-else height="180px" width="180px" />
               <div class="col-12">
                 <div class="flex justify-content-center align-items-center my-2">
                   <span>
