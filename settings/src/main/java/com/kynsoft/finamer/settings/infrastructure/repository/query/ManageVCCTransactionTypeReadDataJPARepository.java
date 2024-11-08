@@ -25,4 +25,6 @@ public interface ManageVCCTransactionTypeReadDataJPARepository extends JpaReposi
     @Query("SELECT COUNT(b) FROM ManageVCCTransactionType b WHERE b.isDefault = true AND b.subcategory = true AND b.id <> :id")
     Long countByIsDefaultsAndSubCategoryAndNotId(@Param("id") UUID id);
 
+    @Query("SELECT COUNT(b) FROM ManageVCCTransactionType b WHERE b.manual = true AND b.id <> :id")
+    Long countByManualAndNotId(@Param("id") UUID id);
 }

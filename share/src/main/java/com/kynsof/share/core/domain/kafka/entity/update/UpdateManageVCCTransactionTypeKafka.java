@@ -17,4 +17,6 @@ public class UpdateManageVCCTransactionTypeKafka {
     private String name;
     private Boolean isDefault;
     private Boolean subcategory;
+    private boolean manual;
+    private String status;
 }

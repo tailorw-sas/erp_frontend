@@ -9,6 +9,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeIsDefaultMustBeUniqueRule;
+import com.kynsoft.finamer.settings.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeIsManualMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeSubcategoryMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageVCCTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerUpdateManageVCCTransactionTypeService;
@@ -39,6 +40,9 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
                 RulesChecker.checkRule(new ManageVCCTransactionTypeIsDefaultMustBeUniqueRule(service, command.getId()));
             }
         }
+        if (command.isManual()){
+            RulesChecker.checkRule(new ManageVCCTransactionTypeIsManualMustBeUniqueRule(this.service, command.getId()));
+        }
         ManageVCCTransactionTypeDto dto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -60,7 +64,10 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageVCCTransactionTypeService.update(new UpdateManageVCCTransactionTypeKafka(dto.getId(), dto.getName(), dto.getIsDefault(), dto.getSubcategory()));
+            this.producerUpdateManageVCCTransactionTypeService.update(new UpdateManageVCCTransactionTypeKafka(
+                    dto.getId(), dto.getName(),
+                    dto.getIsDefault(), dto.getSubcategory(),
+                    dto.isManual(), dto.getStatus().name()));
         }
     }
 

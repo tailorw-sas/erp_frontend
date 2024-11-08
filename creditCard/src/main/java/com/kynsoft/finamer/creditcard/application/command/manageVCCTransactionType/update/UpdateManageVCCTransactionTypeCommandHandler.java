@@ -20,6 +20,8 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
         dto.setName(command.getName());
         dto.setIsDefault(command.getIsDefault());
         dto.setSubcategory(command.getSubcategory());
+        dto.setManual(command.isManual());
+        dto.setStatus(command.getStatus());
         this.service.update(dto);
     }
 

@@ -19,9 +19,12 @@ public interface ManageVCCTransactionTypeReadDataJPARepository extends JpaReposi
 
     Optional<ManageVCCTransactionType> findByCode(String code);
 
-    @Query("SELECT t FROM ManageVCCTransactionType t WHERE t.isDefault = true AND t.subcategory = false")
+    @Query("SELECT t FROM ManageVCCTransactionType t WHERE t.isDefault = true AND t.subcategory = false AND t.status = 'ACTIVE'")
     Optional<ManageVCCTransactionType> findByIsDefaultAndNotIsSubCategory();
 
-    @Query("SELECT t FROM ManageVCCTransactionType t WHERE t.isDefault = true AND t.subcategory = true")
+    @Query("SELECT t FROM ManageVCCTransactionType t WHERE t.isDefault = true AND t.subcategory = true AND t.status = 'ACTIVE'")
     Optional<ManageVCCTransactionType> findByIsDefaultAndIsSubCategory();
+
+    @Query("SELECT t FROM ManageVCCTransactionType t WHERE t.manual = true AND t.status = 'ACTIVE'")
+    Optional<ManageVCCTransactionType> findByManual();
 }

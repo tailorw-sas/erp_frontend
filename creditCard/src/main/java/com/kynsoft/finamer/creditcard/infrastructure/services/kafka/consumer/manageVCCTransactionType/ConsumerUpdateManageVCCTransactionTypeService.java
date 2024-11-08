@@ -4,6 +4,7 @@ package com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.ma
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageVCCTransactionTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageVCCTransactionType.update.UpdateManageVCCTransactionTypeCommand;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,13 @@ public class ConsumerUpdateManageVCCTransactionTypeService {
     @KafkaListener(topics = "finamer-update-manage-vcc-transaction-type", groupId = "vcc-entity-replica")
     public void listen(UpdateManageVCCTransactionTypeKafka objKafka) {
         try {
-            UpdateManageVCCTransactionTypeCommand command = new UpdateManageVCCTransactionTypeCommand(objKafka.getId(), objKafka.getName(), objKafka.getIsDefault(), objKafka.getSubcategory());
+            UpdateManageVCCTransactionTypeCommand command = new UpdateManageVCCTransactionTypeCommand(
+                    objKafka.getId(),
+                    objKafka.getName(),
+                    objKafka.getIsDefault(),
+                    objKafka.getSubcategory(),
+                    objKafka.isManual(),
+                    Status.valueOf(objKafka.getStatus()));
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageVCCTransactionTypeService.class.getName()).log(Level.SEVERE, null, ex);
