@@ -67,7 +67,25 @@ const fields: Array<FieldDefinitionType> = [
     field: 'requireValidation',
     header: 'Require Validation',
     dataType: 'check',
-    class: 'field col-12 required mb-3 mt-3',
+    class: 'field col-12 required mt-3',
+  },
+  {
+    field: 'created',
+    header: 'Created',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'completed',
+    header: 'Completed',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'cancelled',
+    header: 'Cancelled',
+    dataType: 'check',
+    class: 'field col-12 required mb-3',
   },
   {
     field: 'description',
@@ -92,6 +110,9 @@ const item = ref<GenericObject>({
   description: '',
   navigate: [],
   collected: false,
+  created: false,
+  completed: false,
+  cancelled: false,
   status: true
 })
 
@@ -101,6 +122,9 @@ const itemTemp = ref<GenericObject>({
   description: '',
   navigate: [],
   collected: false,
+  created: false,
+  completed: false,
+  cancelled: false,
   status: true
 })
 
@@ -298,6 +322,9 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.collected = response.collected
         item.value.requireValidation = response.requireValidation
+        item.value.created = response.created
+        item.value.completed = response.completed
+        item.value.cancelled = response.cancelled
         item.value.navigate = response.navigate.map((nav: any) => {
           let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
           if (!enumStatus) {
