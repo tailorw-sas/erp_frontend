@@ -2,6 +2,7 @@ package com.kynsoft.finamer.creditcard.application.command.manageVCCTransactionT
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,8 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
     private String name;
     private Boolean isDefault;
     private Boolean subcategory;
+    private boolean manual;
+    private Status status;
 
     @Override
     public ICommandMessage getMessage() {

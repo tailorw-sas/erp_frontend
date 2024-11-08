@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
 import com.kynsoft.finamer.creditcard.domain.dto.ManageVCCTransactionTypeDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,6 +35,12 @@ public class ManageVCCTransactionType implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean subcategory;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean manual;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -47,10 +54,12 @@ public class ManageVCCTransactionType implements Serializable {
         this.name = dto.getName();
         this.isDefault = dto.getIsDefault();
         this.subcategory = dto.getSubcategory();
+        this.manual = dto.isManual();
+        this.status = dto.getStatus();
     }
 
     public ManageVCCTransactionTypeDto toAggregate(){
-        return new ManageVCCTransactionTypeDto(id,code, name, isDefault, subcategory);
+        return new ManageVCCTransactionTypeDto(id,code, name, isDefault, subcategory, manual, status);
     }
 
 }

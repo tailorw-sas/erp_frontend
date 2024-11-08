@@ -9,6 +9,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageVCCTransactionTypeResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageVCCTransactionTypeDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.services.IManageVCCTransactionTypeService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageVCCTransactionType;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageVCCTransactionTypeWriteDataJPARepository;
@@ -50,6 +51,9 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
     public void delete(ManageVCCTransactionTypeDto dto) {
         ManageVCCTransactionType type = new ManageVCCTransactionType(dto);
         type.setIsDefault(false);
+        type.setSubcategory(false);
+        type.setManual(false);
+        type.setStatus(Status.INACTIVE);
         repositoryCommand.save(type);
     }
 
@@ -98,6 +102,11 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
     @Override
     public ManageVCCTransactionTypeDto findByIsDefaultAndIsSubcategory() {
         return this.repositoryQuery.findByIsDefaultAndIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageVCCTransactionTypeDto findByManual() {
+        return this.repositoryQuery.findByManual().map(ManageVCCTransactionType::toAggregate).orElse(null);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageVCCTransactionType> data) {
