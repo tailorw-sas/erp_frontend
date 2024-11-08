@@ -120,7 +120,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         );
 
         paymentDto.setCreateByCredit(true);
-        paymentDto.setImportType(ImportType.AUTOMATIC);
+        //paymentDto.setImportType(ImportType.AUTOMATIC);
         paymentDto.setApplyPayment(true);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         PaymentDetailDto parentDetailDto = this.createPaymentDetailsToCreditDeposit(paymentSave, command);
@@ -190,7 +190,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         );
 
         paymentDto.setCreateByCredit(true);
-        paymentDto.setImportType(ImportType.AUTOMATIC);
+        //paymentDto.setImportType(ImportType.AUTOMATIC);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         if (command.getInvoiceDto().getBookings() != null) {
             for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
