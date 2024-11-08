@@ -361,7 +361,9 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND(1139, Series.DOMAIN_ERROR, "Manage Reconcile Transaction Status not found."),
     MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_CREATED(1140, Series.DOMAIN_ERROR,"Another item already exists with created default."),
     MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_CANCELLED(1141, Series.DOMAIN_ERROR,"Another item already exists with cancelled default."),
-    MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_COMPLETED(1142, Series.DOMAIN_ERROR,"Another item already exists with completed default.");
+    MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_COMPLETED(1142, Series.DOMAIN_ERROR,"Another item already exists with completed default."),
+    MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS(1143, Series.DOMAIN_ERROR, "Manage Bank Reconciliation cannot be changed to completed status."),
+    MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS(1144, Series.DOMAIN_ERROR, "Manage Bank Reconciliation cannot be changed to cancelled status.");
 
     private static final DomainErrorMessage[] VALUES;
 
