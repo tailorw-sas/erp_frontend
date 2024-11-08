@@ -1902,7 +1902,7 @@ function onRowRightClick(event: any) {
   setMenuOptions()
   // Mostrar New Credit, solo para los invoice, en estados SENT y RECONCILED, cuyo balance sea distinto de cero
   if (event.data?.invoiceType !== InvoiceType.INVOICE || ![InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
-    || event.data?.dueAmount === 0) {
+    || (event.data?.dueAmount === 0 && event.data?.invoiceAmount === 0)) {
     invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.label !== 'New Credit')]
   }
 
