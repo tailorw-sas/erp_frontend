@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -13,6 +14,9 @@ import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInv
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -64,7 +68,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     public void handle(CreateIncomeCommand command) {
 
         RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
-        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
+//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
@@ -82,7 +86,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                 0L,
                 0L,
                 InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME),
-                command.getInvoiceDate(),
+                this.invoiceDate(hotelDto.getId()),
                 command.getDueDate(),
                 command.getManual(),
                 0.0,
@@ -180,5 +184,14 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         }
         this.attachmentService.create(dtos);
         return dtos;
+    }
+
+    private LocalDateTime invoiceDate(UUID hotel) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 }
