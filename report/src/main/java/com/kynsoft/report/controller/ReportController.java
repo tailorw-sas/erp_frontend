@@ -77,6 +77,7 @@ public class ReportController {
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(new InputStreamResource(inputStream));
         } catch (Exception e) {
+            logger.error("Error: {}", e.getMessage());
             throw new RuntimeException("Error generating report", e);
         }
     }
