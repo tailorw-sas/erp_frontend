@@ -6,11 +6,20 @@ import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplate
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeQuery;
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import net.sf.jasperreports.engine.*;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -20,6 +29,42 @@ public class ReportController {
 
     public ReportController(IMediator mediator) {
         this.mediator = mediator;
+    }
+
+    @PostMapping(value = "/generate", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<InputStreamResource> generatePdfReport(@RequestBody ReportRequest reportRequest) {
+        try {
+            // Cargar el archivo JRXML desde la URL proporcionada
+            JasperReport jasperReport = loadJasperReportFromUrl(reportRequest.getTemplateUrl());
+
+            // Llenar el reporte con datos y parámetros
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportRequest.getData());
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, reportRequest.getParameters(), dataSource);
+
+            // Exportar a PDF
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
+
+            // Preparar la respuesta HTTP
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "inline; filename=report.pdf");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(new InputStreamResource(inputStream));
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating report", e);
+        }
+    }
+
+    private JasperReport loadJasperReportFromUrl(String templateUrl) throws JRException {
+        try (InputStream inputStream = new URL(templateUrl).openStream()) {
+            return JasperCompileManager.compileReport(inputStream);
+        } catch (Exception e) {
+            throw new RuntimeException("Error loading JRXML template from URL: " + templateUrl, e);
+        }
     }
 
     @PostMapping(value = "/generate-template", produces = {MediaType.APPLICATION_PDF_VALUE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})
@@ -54,26 +99,10 @@ public class ReportController {
         }
     }
 
-//    @PostMapping(value = "/generate-template", produces = MediaType.TEXT_PLAIN_VALUE)
-//    public ResponseEntity<String> getTemplate(@RequestBody GenerateTemplateRequest request) {
-//
-//        GenerateTemplateCommand command = new GenerateTemplateCommand(request.getParameters(),
-//                request.getJasperReportCode(), request.getReportFormatType());
-//        GenerateTemplateMessage response = mediator.send(command);
-//
-//        // Retornar el resultado como texto
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.TEXT_PLAIN)
-//                .body("test");
-//
-//    }
-
     @GetMapping("/parameters/{reportCode}")
     public ResponseEntity<?> getReportParameters(@PathVariable String reportCode) {
         GetReportParameterByCodeQuery query = new GetReportParameterByCodeQuery(reportCode);
         GetReportParameterByCodeResponse response = mediator.send(query);
         return ResponseEntity.ok(response);
     }
-
 }
-
