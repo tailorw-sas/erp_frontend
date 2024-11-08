@@ -336,6 +336,7 @@ async function saveItem(objItem: any) {
       delete payload?.parameters?.reportFormatType
       delete payload?.parameters?.jasperReportCode
       delete payload?.parameters?.event
+      payload.parameters.paymentId = '2f440f61-1845-4ce4-a1e3-9038053f67b6'
       await GenericService.create(confApi.moduleApi, confApi.uriApiReportGenerate, payload)
       loadingSaveAllGetReport.value = false
     }
