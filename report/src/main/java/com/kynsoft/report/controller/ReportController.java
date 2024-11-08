@@ -1,6 +1,7 @@
 package com.kynsoft.report.controller;
 
 import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateCommand;
+import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateCommandHandler;
 import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateMessage;
 import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateRequest;
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeQuery;
@@ -11,6 +12,8 @@ import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 import com.kynsoft.report.infrastructure.services.ReportService;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,13 +34,13 @@ public class ReportController {
 
     private final IMediator mediator;
     private final IJasperReportTemplateService reportService;
-
+    private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
     public ReportController(IMediator mediator, IJasperReportTemplateService reportService) {
         this.mediator = mediator;
         this.reportService = reportService;
     }
 
-    @PostMapping(value = "/generate", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PostMapping(value = "/generate")
     public ResponseEntity<InputStreamResource> generatePdfReport(@RequestBody ReportRequest reportRequest) {
         try {
             JasperReportTemplateDto reportTemplateDto = reportService.findByTemplateCode(reportRequest.getReportCode());
@@ -49,6 +52,10 @@ public class ReportController {
           //  customDataSource.setUrl("jdbc:postgresql://postgres-erp-rw.postgres.svc.cluster.local:5432/finamer-payments");
             customDataSource.setUsername("finamer_rw"); // Usuario
             customDataSource.setPassword("5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc"); // Contraseña
+
+            logger.info("Report code: {}", reportRequest.getReportCode());
+            logger.info("Database URL: {}", reportTemplateDto.getDbConectionDto().getUrl());
+            logger.info("Parameters: {}", reportRequest.getParameters());
 
             // Cargar el archivo JRXML desde la URL proporcionada
             JasperReport jasperReport = loadJasperReportFromUrl(reportTemplateDto.getFile());
