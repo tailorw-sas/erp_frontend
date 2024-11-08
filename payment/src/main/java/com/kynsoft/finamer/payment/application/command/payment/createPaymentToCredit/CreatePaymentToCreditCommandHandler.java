@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.command.payment.createPaymentToCredit;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.attachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.payment.application.command.attachment.create.CreateAttachmentMessage;
 import com.kynsoft.finamer.payment.application.command.attachmentStatusHistory.create.CreateAttachmentStatusHistoryCommand;
@@ -42,6 +43,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
 
     private final IManageEmployeeService manageEmployeeService;
 
+    private final IPaymentCloseOperationService paymentCloseOperationService;
+
     public CreatePaymentToCreditCommandHandler(IManagePaymentSourceService sourceService,
             IManagePaymentStatusService statusService,
             IManageClientService clientService,
@@ -50,7 +53,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             IManageHotelService hotelService,
             IPaymentDetailService paymentDetailService,
             IManagePaymentAttachmentStatusService attachmentStatusService,
-            IManageEmployeeService manageEmployeeService) {
+            IManageEmployeeService manageEmployeeService,
+            IPaymentCloseOperationService paymentCloseOperationService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -60,6 +64,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         this.paymentDetailService = paymentDetailService;
         this.attachmentStatusService = attachmentStatusService;
         this.manageEmployeeService = manageEmployeeService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
     }
 
     @Override
@@ -95,11 +100,13 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 Status.ACTIVE,
                 paymentSourceDto,
                 deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()),
-                LocalDate.now(),
+                transactionDate(hotelDto.getId()),
+                //LocalDate.now(),
                 paymentStatusDto,
                 clientDto,
                 agencyDto,
                 hotelDto,
+                //hotelDto,
                 null,
                 attachmentStatusDto,
                 paymentAmount,
@@ -165,7 +172,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 Status.ACTIVE,
                 paymentSourceDto,
                 deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()),
-                LocalDate.now(),
+                //LocalDate.now(),
+                transactionDate(hotelDto.getId()),
                 paymentStatusDto,
                 clientDto,
                 agencyDto,
@@ -210,6 +218,15 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
 
         this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto, command);
 
+    }
+
+    private LocalDate transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDate.now();
+        }
+        return closeOperationDto.getEndDate();
     }
 
     private void createPaymentDetailsToCreditCash(PaymentDto paymentCash, ManageBookingDto booking, CreatePaymentToCreditCommand command) {
