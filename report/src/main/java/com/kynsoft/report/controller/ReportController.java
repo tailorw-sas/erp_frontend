@@ -43,7 +43,7 @@ public class ReportController {
     }
 
     @PostMapping(value = "/generate")
-    public ResponseEntity<InputStreamResource> generatePdfReport(@RequestBody ReportRequest reportRequest) {
+    public ResponseEntity<?> generatePdfReport(@RequestBody ReportRequest reportRequest) {
         try {
             //JasperReportTemplateDto reportTemplateDto = reportService.findByTemplateCode(reportRequest.getReportCode());
             // Crear un DataSource personalizado con los datos de conexión
@@ -51,7 +51,7 @@ public class ReportController {
             customDataSource.setDriverClassName("org.postgresql.Driver"); // Cambia el driver según tu base de datos
 
            // customDataSource.setUrl(reportTemplateDto.getDbConectionDto().getUrl()); // URL de tu base de datos
-            //customDataSource.setUrl("jdbc:postgresql://172.20.41.100:5432/finamer-payments"); // URL de tu base de datos
+           //customDataSource.setUrl("jdbc:postgresql://172.20.41.100:5432/finamer-payments"); // URL de tu base de datos
             customDataSource.setUrl("jdbc:postgresql://postgres-erp-rw.postgres.svc.cluster.local:5432/finamer-payments");
             customDataSource.setUsername("finamer_rw"); // Usuario
             customDataSource.setPassword("5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc"); // Contraseña
@@ -77,8 +77,6 @@ public class ReportController {
             headers.add("Content-Disposition", "inline; filename=report.pdf");
 
             return ResponseEntity.ok()
-                    .headers(headers)
-                    .contentType(MediaType.APPLICATION_PDF)
                     .body(new InputStreamResource(inputStream));
         } catch (Exception e) {
             logger.error("Error: {}", e.getMessage());
