@@ -21,21 +21,34 @@ public class ReportController {
         this.mediator = mediator;
     }
 
-    @PostMapping(value = "/generate-template", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<?> getTemplate(@RequestBody GenerateTemplateRequest request) {
+//    @PostMapping(value = "/generate-template", produces = MediaType.APPLICATION_PDF_VALUE)
+//    public ResponseEntity<?> getTemplate(@RequestBody GenerateTemplateRequest request) {
+//
+//        GenerateTemplateCommand command = new GenerateTemplateCommand(request.getParameters(),
+//                request.getJasperReportCode(), request.getReportFormatType());
+//        GenerateTemplateMessage response = mediator.send(command);
+//
+//        // Return the PDF as a ResponseEntity with headers
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.pdf")
+//                .contentType(MediaType.APPLICATION_PDF)
+//                .body(response.getResult());
+//
+//    }
+
+    @PostMapping(value = "/generate-template", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> getTemplate(@RequestBody GenerateTemplateRequest request) {
 
         GenerateTemplateCommand command = new GenerateTemplateCommand(request.getParameters(),
                 request.getJasperReportCode(), request.getReportFormatType());
         GenerateTemplateMessage response = mediator.send(command);
 
-        // Return the PDF as a ResponseEntity with headers
+        // Retornar el resultado como texto
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.pdf")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(response.getResult());
+                .contentType(MediaType.TEXT_PLAIN)
+                .body("test");
 
     }
-
 
     @GetMapping("/parameters/{reportCode}")
     public ResponseEntity<?> getReportParameters(@PathVariable String reportCode) {
