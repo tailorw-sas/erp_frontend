@@ -32,7 +32,7 @@ public class ManageVCCTransactionTypeResponse  implements IResponse {
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
     private String defaultRemark;
-
+    private boolean manual;
 
     public ManageVCCTransactionTypeResponse(ManageVCCTransactionTypeDto dto) {
         this.id = dto.getId();
@@ -49,6 +49,7 @@ public class ManageVCCTransactionTypeResponse  implements IResponse {
         this.subcategory = dto.getSubcategory();
         this.minNumberOfCharacter = dto.getMinNumberOfCharacter();
         this.defaultRemark = dto.getDefaultRemark();
+        this.manual = dto.isManual();
     }
 
 }
