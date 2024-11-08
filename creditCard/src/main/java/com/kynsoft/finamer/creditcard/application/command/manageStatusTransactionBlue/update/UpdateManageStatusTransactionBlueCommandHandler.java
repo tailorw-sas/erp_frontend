@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
+import com.kynsoft.finamer.creditcard.domain.services.IProcessErrorLogService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
@@ -17,16 +18,19 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
     private final TransactionPaymentLogsService transactionPaymentLogsService;
     private final ManageMerchantCommissionServiceImpl merchantCommissionService;
     private final IParameterizationService parameterizationService;
+    private final IProcessErrorLogService processErrorLogService;
+
     public UpdateManageStatusTransactionBlueCommandHandler(ITransactionService transactionService, ManageCreditCardTypeServiceImpl creditCardTypeService,
                                                            ManageTransactionStatusServiceImpl transactionStatusService,
                                                            TransactionPaymentLogsService transactionPaymentLogsService,
-                                                           ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService) {
+                                                           ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService) {
         this.transactionService = transactionService;
         this.creditCardTypeService = creditCardTypeService;
         this.transactionStatusService = transactionStatusService;
         this.transactionPaymentLogsService = transactionPaymentLogsService;
         this.merchantCommissionService = merchantCommissionService;
         this.parameterizationService = parameterizationService;
+        this.processErrorLogService = processErrorLogService;
     }
 
     @Override
@@ -40,7 +44,15 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         //si no encuentra la parametrization que agarre 2 decimales por defecto
         int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
 
-        double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn(), decimals);
+        double commission= 0.0;
+        try {
+            commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn(), decimals);
+        } catch (Exception e) {
+            ProcessErrorLogDto processErrorLogDto = new ProcessErrorLogDto();
+            processErrorLogDto.setTransactionId(transactionDto.getTransactionUuid());
+            processErrorLogDto.setError(e.getMessage());
+            this.processErrorLogService.create(processErrorLogDto);
+        }
         //independientemente del valor de la commission el netAmount tiene dos decimales
         double netAmount = BankerRounding.round(transactionDto.getAmount() - commission, 2);
 

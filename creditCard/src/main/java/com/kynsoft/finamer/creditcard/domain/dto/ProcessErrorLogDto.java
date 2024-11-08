@@ -11,7 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-public class CardnetProcessErrorLogDto {
+public class ProcessErrorLogDto {
 
     private Long id;
     private UUID transactionId;
