@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -9,6 +10,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageReconcileTransactionStatusResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageReconcileTransactionStatusDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.EReconcileTransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.services.IManageReconcileTransactionStatusService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageReconcileTransactionStatus;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageReconcileTransactionStatusWriteDataJPARepository;
@@ -84,6 +86,60 @@ public class ManageReconcileTransactionStatusServiceImpl implements IManageRecon
     @Override
     public List<ManageReconcileTransactionStatusDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(ManageReconcileTransactionStatus::toAggregate).toList();
+    }
+
+    @Override
+    public Long countByCreatedAndNotId(UUID id) {
+        return this.repositoryQuery.countByCreatedAndNotId(id);
+    }
+
+    @Override
+    public Long countByCancelledAndNotId(UUID id) {
+        return this.repositoryQuery.countByCancelledAndNotId(id);
+    }
+
+    @Override
+    public Long countByCompletedAndNotId(UUID id) {
+        return this.repositoryQuery.countByCompletedAndNotId(id);
+    }
+
+    @Override
+    public ManageReconcileTransactionStatusDto findByEReconcileTransactionStatus(EReconcileTransactionStatus transactionStatus) {
+        switch (transactionStatus) {
+            case CREATED -> {
+                return this.repositoryQuery.findByCreated()
+                        .map(ManageReconcileTransactionStatus::toAggregate)
+                        .orElseThrow(() ->
+                                new BusinessException(
+                                        DomainErrorMessage.MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND,
+                                        DomainErrorMessage.MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND.getReasonPhrase()
+                                )
+                        );
+            }
+            case CANCELLED -> {
+                return this.repositoryQuery.findByCancelled()
+                        .map(ManageReconcileTransactionStatus::toAggregate)
+                        .orElseThrow(() ->
+                                new BusinessException(
+                                        DomainErrorMessage.MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND,
+                                        DomainErrorMessage.MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND.getReasonPhrase()
+                                )
+                        );
+            }
+            case COMPLETED -> {
+                return this.repositoryQuery.findByCompleted()
+                        .map(ManageReconcileTransactionStatus::toAggregate)
+                        .orElseThrow(() ->
+                                new BusinessException(
+                                        DomainErrorMessage.MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND,
+                                        DomainErrorMessage.MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND.getReasonPhrase()
+                                ));
+            }
+        }
+        throw new BusinessException(
+                DomainErrorMessage.MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND,
+                DomainErrorMessage.MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND.getReasonPhrase()
+        );
     }
 
     @Override
