@@ -2435,7 +2435,6 @@ async function onExpandRowApplyPayment(event: any) {
 }
 
 function onRowContextMenu(event: any) {
-  console.log(event.data)
   idPaymentSelectedForPrint.value = event?.data?.id || ''
   isPrintByRightClick.value = true
   idPaymentSelectedForPrintChangeAgency.value = event?.data?.id || ''
