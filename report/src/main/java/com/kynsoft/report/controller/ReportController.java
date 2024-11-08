@@ -7,6 +7,7 @@ import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterBy
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,26 +24,34 @@ public class ReportController {
 
     @PostMapping(value = "/generate-template", produces = {MediaType.APPLICATION_PDF_VALUE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})
     public ResponseEntity<?> getTemplate(@RequestBody GenerateTemplateRequest request) {
-        GenerateTemplateCommand command = new GenerateTemplateCommand(request.getParameters(),
-                request.getJasperReportCode(), request.getReportFormatType());
-        GenerateTemplateMessage response = mediator.send(command);
+        try {
+            GenerateTemplateCommand command = new GenerateTemplateCommand(request.getParameters(),
+                    request.getJasperReportCode(), request.getReportFormatType());
+            GenerateTemplateMessage response = mediator.send(command);
 
-        // Determine content type based on requested format
-        String contentType;
-        String fileName;
-        if ("XLS".equalsIgnoreCase(request.getReportFormatType())) {
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            fileName = "report.xlsx";
-        } else {
-            contentType = MediaType.APPLICATION_PDF_VALUE;
-            fileName = "report.pdf";
+            // Verificar si el resultado es nulo o vacío
+            if (response == null || response.getResult() == null || response.getResult().length == 0) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al generar el reporte.");
+            }
+
+            String contentType;
+            String fileName;
+            if ("XLS".equalsIgnoreCase(request.getReportFormatType())) {
+                contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                fileName = "report.xlsx";
+            } else {
+                contentType = MediaType.APPLICATION_PDF_VALUE;
+                fileName = "report.pdf";
+            }
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(response.getResult());
+        } catch (Exception e) {
+            // Manejar errores y responder adecuadamente
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al procesar la solicitud.");
         }
-
-        // Return the file as a ResponseEntity with appropriate headers
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
-                .contentType(MediaType.parseMediaType(contentType))
-                .body(response.getResult());
     }
 
 //    @PostMapping(value = "/generate-template", produces = MediaType.TEXT_PLAIN_VALUE)
