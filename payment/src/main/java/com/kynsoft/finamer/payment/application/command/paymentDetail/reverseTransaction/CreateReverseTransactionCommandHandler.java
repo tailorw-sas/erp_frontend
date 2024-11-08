@@ -131,7 +131,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         updateChildrens.addAll(parent.getChildren());
         updateChildrens.add(reverseFrom);
         parent.setChildren(updateChildrens);
-        parent.setApplyDepositValue(parent.getApplyDepositValue() + reverseFrom.getAmount());
+        parent.setApplyDepositValue(parent.getApplyDepositValue() - reverseFrom.getAmount());
 
         this.paymentDetailService.update(parent);
     }
