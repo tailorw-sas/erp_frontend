@@ -208,7 +208,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             }
             rows.add(new ExportInvoiceRow(
                     0,
-                    invoice.getHasAttachments() ? "1" : "0",
+                    invoice.getHasAttachments() ? "true" : "false",
                     invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", //Id
                     invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", //Type
                     invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", //Hotel
