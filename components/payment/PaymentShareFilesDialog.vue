@@ -4,7 +4,7 @@ import { z } from 'zod'
 import dayjs from 'dayjs'
 import type { IData } from '../table/interfaces/IModelData'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -146,8 +146,8 @@ const item = ref<GenericObject>({
   paymentId: externalProps.selectedPayment.id || '',
   shareFileYear: dayjs().format('YYYY') || '',
   shareFileMonth: dayjs().format('MMMM') || '',
-  hotel: `${externalProps.selectedPayment.hotel.code}-${externalProps.selectedPayment.hotel.name}` || '',
-  agency: `${externalProps.selectedPayment.agency.code}-${externalProps.selectedPayment.agency.name}` || '',
+  hotel: `${externalProps.selectedPayment.hotel.name}` || '',
+  agency: `${externalProps.selectedPayment.agency.name}` || '',
   fileName: externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
   path: '',
 })
@@ -156,8 +156,8 @@ const itemTemp = ref<GenericObject>({
   paymentId: externalProps.selectedPayment.id || '',
   shareFileYear: dayjs().format('YYYY') || '',
   shareFileMonth: dayjs().format('MMMM') || '',
-  hotel: `${externalProps.selectedPayment.hotel.code}-${externalProps.selectedPayment.hotel.name}` || '',
-  agency: `${externalProps.selectedPayment.agency.code}-${externalProps.selectedPayment.agency.name}` || '',
+  hotel: `${externalProps.selectedPayment.hotel.name}` || '',
+  agency: `${externalProps.selectedPayment.agency.name}` || '',
   fileName: externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
   path: '',
 })
@@ -258,7 +258,7 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      shareFileList = [...shareFileList, { ...iterator, paymentId: iterator.resource?.paymentId || '' }]
+      shareFileList = [...shareFileList, { ...iterator, paymentId: iterator.resource?.paymentId || '', shareFileMonth: iterator.shareFileMonth ? dayjs(`2024-${iterator.shareFileMonth}-01`).format('MMMM') || '' : '' }]
     }
 
     listItems.value = [...shareFileList]
@@ -442,9 +442,9 @@ async function getItemById(id: string) {
         item.value.id = response.payment.id
         item.value.paymentId = response.payment.paymentId
         item.value.shareFileYear = response.shareFileYear
-        item.value.shareFileMonth = response.shareFileMonth
-        item.value.hotel = response.payment.hotel.name
-        item.value.agency = response.payment.agency.name
+        item.value.shareFileMonth = response.shareFileMonth ? dayjs(`2024-${response.shareFileMonth}-01`).format('MMMM') || '' : ''
+        item.value.hotel = `${response.payment.hotel.code} - ${response.payment.hotel.name}`
+        item.value.agency = `${response.payment.agency.code} - ${response.payment.agency.name}`
         item.value.fileName = response.fileName
         item.value.path = response.fileUrl // `https://static.kynsoft.net/${response.fileUrl}`
         pathFileLocal.value = response.path
@@ -523,6 +523,7 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 })
 onMounted(async () => {
   paymentSelect.value = externalProps.selectedPayment
+  console.log(externalProps.selectedPayment)
   await getList()
 })
 </script>
