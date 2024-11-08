@@ -6,6 +6,9 @@ import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplate
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeQuery;
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
+import com.kynsoft.report.domain.services.IJasperReportTemplateService;
+import com.kynsoft.report.infrastructure.services.ReportService;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.core.io.InputStreamResource;
@@ -27,23 +30,28 @@ import java.util.Map;
 public class ReportController {
 
     private final IMediator mediator;
+    private final IJasperReportTemplateService reportService;
 
-    public ReportController(IMediator mediator) {
+    public ReportController(IMediator mediator, IJasperReportTemplateService reportService) {
         this.mediator = mediator;
+        this.reportService = reportService;
     }
 
     @PostMapping(value = "/generate", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<InputStreamResource> generatePdfReport(@RequestBody ReportRequest reportRequest) {
         try {
+            JasperReportTemplateDto reportTemplateDto = reportService.findByTemplateCode(reportRequest.getReportCode());
             // Crear un DataSource personalizado con los datos de conexión
             DriverManagerDataSource customDataSource = new DriverManagerDataSource();
             customDataSource.setDriverClassName("org.postgresql.Driver"); // Cambia el driver según tu base de datos
-            customDataSource.setUrl("jdbc:postgresql://postgres-erp-rw.postgres.svc.cluster.local:5432/finamer-payments"); // URL de tu base de datos
+            customDataSource.setUrl(reportTemplateDto.getDbConectionDto().getUrl()); // URL de tu base de datos
+            //customDataSource.setUrl("jdbc:postgresql://172.20.41.100:5432/finamer-payments"); // URL de tu base de datos
+          //  customDataSource.setUrl("jdbc:postgresql://postgres-erp-rw.postgres.svc.cluster.local:5432/finamer-payments");
             customDataSource.setUsername("finamer_rw"); // Usuario
             customDataSource.setPassword("5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc"); // Contraseña
 
             // Cargar el archivo JRXML desde la URL proporcionada
-            JasperReport jasperReport = loadJasperReportFromUrl(reportRequest.getTemplateUrl());
+            JasperReport jasperReport = loadJasperReportFromUrl(reportTemplateDto.getFile());
 
             // Llenar el reporte con la fuente de datos y parámetros
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, reportRequest.getParameters(), customDataSource.getConnection());
