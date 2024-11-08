@@ -59,6 +59,7 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
         UpdateIfNotNull.updateBoolean(dto::setRemarkRequired, command.getRemarkRequired(), dto.getRemarkRequired(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setSubcategory, command.getSubcategory(), dto.getSubcategory(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setOnlyApplyNet, command.getOnlyApplyNet(), dto.getOnlyApplyNet(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setManual, command.isManual(), dto.isManual(), update::setUpdate);
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 
