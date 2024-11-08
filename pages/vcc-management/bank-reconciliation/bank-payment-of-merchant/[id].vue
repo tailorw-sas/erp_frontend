@@ -23,6 +23,7 @@ const toast = useToast()
 const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
+const StatusList = ref<any[]>([])
 const BindTransactionList = ref<any[]>([])
 const collectionStatusRefundReceivedList = ref<any[]>([])
 const loadingSaveAll = ref(false)
@@ -54,12 +55,18 @@ const confApi = reactive({
   uriApi: 'bank-reconciliation',
 })
 
+const confStatusListApi = reactive({
+  moduleApi: 'creditcard',
+  uriApi: 'manage-reconcile-transaction-status',
+})
+
 const item = ref({
   merchantBankAccount: null,
   hotel: null,
   amount: 0,
   paidDate: '',
   remark: '',
+  reconcileStatus: null,
 } as GenericObject)
 
 const itemTemp = ref({
@@ -68,6 +75,7 @@ const itemTemp = ref({
   amount: 0,
   paidDate: '',
   remark: '',
+  reconcileStatus: null,
 })
 
 const fields: Array<FieldDefinitionType> = [
@@ -93,7 +101,7 @@ const fields: Array<FieldDefinitionType> = [
     field: 'amount',
     header: 'Amount',
     dataType: 'number',
-    disabled: true,
+    disabled: false,
     minFractionDigits: 2,
     maxFractionDigits: 4,
     class: 'field col-12 md:col-3 required',
@@ -121,8 +129,16 @@ const fields: Array<FieldDefinitionType> = [
     field: 'remark',
     header: 'Remark',
     dataType: 'text',
-    class: 'field col-12 md:col-6',
+    class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
+  },
+  {
+    field: 'reconcileStatus',
+    header: 'Status',
+    dataType: 'select',
+    class: 'field col-12 md:col-3 required',
+    headerClass: 'mb-1',
+    validation: validateEntityStatus('status'),
   },
 ]
 
@@ -228,6 +244,12 @@ async function getItemById(id: string) {
           response.hotel.status = 'ACTIVE'
           item.value.hotel = response.hotel
           HotelList.value = [response.hotel]
+        }
+        if (response.reconcileStatus) {
+          response.reconcileStatus.name = `${response.reconcileStatus.code} - ${response.reconcileStatus.name}`
+          response.reconcileStatus.status = 'ACTIVE'
+          item.value.reconcileStatus = response.reconcileStatus
+          HotelList.value = [response.reconcileStatus]
         }
         item.value.amount = response.amount
         item.value.paidDate = response.paidDate ? dayjs(response.paidDate).toDate() : null
@@ -362,6 +384,43 @@ async function getHotelList(query: string) {
   }
 }
 
+async function getStatusList(query: string) {
+  try {
+    const payload = {
+      filter: [{
+        key: 'name',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      sortBy: 'createdAt',
+      sortType: 'ASC',
+      pageSize: 20,
+      page: 0,
+    }
+    const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
+    const { data: dataList } = response
+
+    for (const iterator of dataList) {
+      StatusList.value = [...StatusList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+}
+
 async function getMerchantBankAccountList(query: string) {
   try {
     const payload = {
@@ -472,6 +531,8 @@ async function updateItem(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = {}
     payload.paidDate = item.paidDate ? dayjs(item.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.remark = item.remark || ''
+    payload.amount = item.amount || ''
+    payload.reconcileStatus = typeof item.reconcileStatus === 'object' ? item.reconcileStatus.id : item.reconcileStatus
     const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
     if (response && response.id) {
       // Guarda el id del elemento creado
@@ -624,7 +685,6 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" />
         </template>
-        <!-- Agency -->
         <template #field-hotel="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
@@ -642,7 +702,22 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-
+        <template #field-reconcileStatus="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :model="data.reconcileStatus"
+            :suggestions="StatusList"
+            @change="($event) => {
+              onUpdate('reconcileStatus', $event)
+              item.reconcileStatus = $event
+            }"
+            @load="($event) => getStatusList($event)"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
         <template #field-merchantBankAccount="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
