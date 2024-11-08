@@ -67,6 +67,8 @@ const columns: IColumn[] = [
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
   { field: 'amount', header: 'Amount', type: 'text' },
+  { field: 'commission', header: 'Commission', type: 'text' },
+  { field: 'netAmount', header: 'T.Amount', type: 'text' },
   { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, showFilter: false },
 ]
 
@@ -98,7 +100,7 @@ const pagination = ref<IPagination>({
 })
 
 const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
+  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.netAmount), 0)
   return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
 })
 
@@ -514,7 +516,7 @@ onMounted(async () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
+            <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
             <Column :footer="formatNumber(subTotals.amount)" />
             <Column :colspan="1" />
           </Row>

@@ -146,7 +146,6 @@ const options = ref({
   uriApi: 'transactions',
   loading: false,
   actionsAsMenu: false,
-  selectionMode: 'multiple',
   messageToDelete: 'Do you want to save the change?',
 })
 const payloadOnChangePage = ref<PageState>()
@@ -167,7 +166,7 @@ const pagination = ref<IPagination>({
 })
 
 const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0) : 0
+  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.netAmount), 0) : 0
   return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
 })
 
@@ -283,6 +282,9 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'categoryType') && iterator.categoryType) {
         iterator.categoryType = { id: iterator.categoryType.id, name: `${iterator.categoryType.code} - ${iterator.categoryType.name}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'subCategoryType') && iterator.subCategoryType) {
+        iterator.subCategoryType = { id: iterator.subCategoryType.id, name: `${iterator.subCategoryType.code} - ${iterator.subCategoryType.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
         iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
@@ -676,16 +678,16 @@ onMounted(async () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="10" footer-style="text-align:right" />
+            <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
             <Column :footer="formatNumber(subTotals.amount)" />
           </Row>
         </ColumnGroup>
       </template>
     </DynamicTable>
-    <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
-      <Badge
+    <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
+      <!-- <Badge
         v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
-      />
+      /> -->
       <div>
         <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
         <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-plus" @click="openNewAdjustmentTransactionDialog()" />
