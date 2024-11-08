@@ -108,7 +108,7 @@ const columns: IColumn[] = [
   { field: 'detailsAmount', header: 'Details Amount', type: 'text' },
   { field: 'paidDate', header: 'Date', type: 'date' },
   { field: 'remark', header: 'Remark', type: 'text' },
-  { field: 'statusName', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
+  { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, details: 0 })

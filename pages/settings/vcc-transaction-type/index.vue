@@ -82,6 +82,12 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 required',
   },
   {
+    field: 'manual',
+    header: 'Manual',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
     field: 'remarkRequired',
     header: 'Remark Required',
     dataType: 'check',
@@ -129,6 +135,7 @@ const item = ref<GenericObject>({
   remarkRequired: false,
   subcategory: false,
   onlyApplyNet: false,
+  manual: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
   description: '',
@@ -144,6 +151,7 @@ const itemTemp = ref<GenericObject>({
   remarkRequired: false,
   subcategory: false,
   onlyApplyNet: false,
+  manual: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
   description: '',
@@ -294,6 +302,7 @@ async function getItemById(id: string) {
         item.value.isDefault = response.isDefault
         item.value.subcategory = response.subcategory
         item.value.onlyApplyNet = response.onlyApplyNet
+        item.value.manual = response.manual
         item.value.policyCredit = response.policyCredit
         item.value.remarkRequired = response.remarkRequired
         item.value.minNumberOfCharacter = response.minNumberOfCharacter
