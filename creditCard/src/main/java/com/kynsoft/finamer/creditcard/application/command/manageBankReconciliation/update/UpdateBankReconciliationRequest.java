@@ -16,5 +16,6 @@ public class UpdateBankReconciliationRequest {
     private String remark;
     private Set<Long> transactions;
     private List<UpdateBankReconciliationAdjustmentRequest> adjustmentTransactions;
-    private UUID transactionStatus;
+    private UUID reconcileStatus;
+    private Double amount;
 }

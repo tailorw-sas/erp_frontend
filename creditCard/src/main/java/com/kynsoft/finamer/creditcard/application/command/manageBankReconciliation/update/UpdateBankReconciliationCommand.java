@@ -22,15 +22,24 @@ public class UpdateBankReconciliationCommand implements ICommand {
     private Set<Long> transactions;
     private List<UpdateBankReconciliationAdjustmentRequest> adjustmentTransactions;
     private List<Long> adjustmentTransactionIds = new ArrayList<>();
-    private UUID transactionStatus;
+    private UUID reconcileStatus;
+    private Double amount;
 
-    public UpdateBankReconciliationCommand(UUID id, LocalDateTime paidDate, String remark, Set<Long> transactions, List<UpdateBankReconciliationAdjustmentRequest> adjustmentTransactions, UUID transactionStatus) {
+    public UpdateBankReconciliationCommand(
+            UUID id,
+            LocalDateTime paidDate,
+            String remark,
+            Set<Long> transactions,
+            List<UpdateBankReconciliationAdjustmentRequest> adjustmentTransactions,
+            UUID reconcileStatus,
+            Double amount) {
         this.id = id;
         this.paidDate = paidDate;
         this.remark = remark;
         this.transactions = transactions;
         this.adjustmentTransactions = adjustmentTransactions;
-        this.transactionStatus = transactionStatus;
+        this.reconcileStatus = reconcileStatus;
+        this.amount = amount;
     }
 
     public static UpdateBankReconciliationCommand fromRequest(UUID id, UpdateBankReconciliationRequest request){
@@ -40,7 +49,8 @@ public class UpdateBankReconciliationCommand implements ICommand {
                 request.getRemark(),
                 request.getTransactions(),
                 request.getAdjustmentTransactions(),
-                request.getTransactionStatus()
+                request.getReconcileStatus(),
+                request.getAmount()
         );
     }
 
