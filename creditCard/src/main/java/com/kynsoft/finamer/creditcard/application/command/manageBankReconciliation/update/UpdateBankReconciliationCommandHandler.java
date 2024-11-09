@@ -40,6 +40,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         ConsumerUpdate update = new ConsumerUpdate();
         UpdateIfNotNull.updateLocalDateTime(dto::setPaidDate, command.getPaidDate(), dto.getPaidDate(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setRemark, command.getRemark(), dto.getRemark(), update::setUpdate);
+        UpdateIfNotNull.updateDouble(dto::setAmount, command.getAmount(), dto.getAmount(), update::setUpdate);
 
         //comprobar si no es nula la lista y son diferentes los ids de las transactions para mandar a actualizar
         Set<Long> reconciliationTransactionIds = dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet());
@@ -52,8 +53,8 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
             command.setAdjustmentTransactionIds(adjustmentIds);
         }
 
-        if (command.getTransactionStatus() != null){
-            ManageReconcileTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getTransactionStatus());
+        if (command.getReconcileStatus() != null){
+            ManageReconcileTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getReconcileStatus());
             updateStatus(dto, transactionStatusDto);
         }
 
