@@ -52,7 +52,7 @@ const filterToSearch = ref<IData>({
 const confApi = reactive({
   moduleApi: 'report',
   uriApi: 'jasper-report-template',
-  uriApiReportGenerate: 'reports/generate-template'
+  uriApiReportGenerate: 'reports/generate/template'
 })
 const ENUM_FILTER = [
   { id: 'templateCode', name: 'Code' },
