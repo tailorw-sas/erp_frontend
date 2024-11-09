@@ -43,7 +43,7 @@ public class ReportController {
         //   this.reportService = reportService;
     }
 
-    @PostMapping(value = "/generate")
+    @PostMapping(value = "/generate/template")
     public ResponseEntity<?> generatePdfReport(@RequestBody ReportRequest reportRequest) {
         try {
             //JasperReportTemplateDto reportTemplateDto = reportService.findByTemplateCode(reportRequest.getReportCode());
