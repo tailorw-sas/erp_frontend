@@ -4,6 +4,7 @@ import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import dayjs from 'dayjs'
 import ReportParamPage from './params.vue'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -52,7 +53,7 @@ const filterToSearch = ref<IData>({
 const confApi = reactive({
   moduleApi: 'report',
   uriApi: 'jasper-report-template',
-  uriApiReportGenerate: 'reports/generate/template'
+  uriApiReportGenerate: 'reports-test/generate/template'
 })
 const ENUM_FILTER = [
   { id: 'templateCode', name: 'Code' },
@@ -87,6 +88,7 @@ const fields = ref<FieldDefinitionType[]>([
     header: 'Report Code',
     dataType: 'text',
     disabled: true,
+    hidden: true,
     class: 'field col-12 md:col-1',
     validation: z.string().trim()
     // validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
@@ -109,6 +111,7 @@ const fieldsTemp = [
     header: 'Report Code',
     dataType: 'text',
     disabled: true,
+    hidden: true,
     class: 'field col-12 md:col-1',
     validation: z.string().trim()
     // validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
@@ -336,8 +339,17 @@ async function saveItem(objItem: any) {
       delete payload?.parameters?.reportFormatType
       delete payload?.parameters?.jasperReportCode
       delete payload?.parameters?.event
-      payload.parameters.paymentId = '2f440f61-1845-4ce4-a1e3-9038053f67b6'
-      await GenericService.create(confApi.moduleApi, confApi.uriApiReportGenerate, payload)
+      // const payloadTemp = {
+      //   jasperReportCode: 'KKKK',
+      //   parameters: {
+      //     ReportTitle: 'Reporte de Ventas',
+      //   },
+      //   reportFormatType: 'PDF'
+      // }
+      const response = await GenericService.create(confApi.moduleApi, confApi.uriApiReportGenerate, payload)
+      if (response) {
+        loadPDF(response.base64Report)
+      }
       loadingSaveAllGetReport.value = false
     }
     catch (error) {
@@ -400,6 +412,8 @@ interface DataList {
   paramName: string
   service: string
   type: string
+  reportClass: string
+  reportValidation: any
 }
 
 interface ListItem {
@@ -410,6 +424,8 @@ interface ListItem {
   label: string
   module: string
   service: string
+  reportClass: string
+  reportValidation: any
 }
 
 function mapFunction(data: DataList): ListItem {
@@ -420,7 +436,9 @@ function mapFunction(data: DataList): ListItem {
     paramName: data.paramName,
     label: data.label,
     module: data.module,
-    service: data.service
+    service: data.service,
+    reportClass: data.reportClass,
+    reportValidation: data.reportValidation
   }
 }
 async function getParamsByReport(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]): Promise<ListItem[]> {
@@ -433,9 +451,12 @@ async function getParamsByReport(moduleApi: string, uriApi: string, queryObj: { 
 //   class: 'field col-12 md:col-1 required',
 //   validation: z.string().trim().min(1, 'The code field is required').max(50, 'Maximum 50 characters')
 // },
+
+const showForm = ref(false)
 async function loadParamsFieldByReportTemplate(id: string, code: string) {
   if (id) {
     try {
+      showForm.value = false
       const filter: FilterCriteria[] = [
         {
           key: 'jasperReportTemplate.id',
@@ -458,7 +479,8 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
               field: element.paramName,
               header: element.label,
               dataType: element.componentType,
-              class: 'field col-12 md:col-2',
+              class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
+              validation: element.reportValidation ? element.reportValidation : z.object({}).nullable(),
               objApi: {
                 moduleApi: element.module,
                 uriApi: element.service
@@ -467,14 +489,17 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
           }
           else {
             fields.value = [...fields.value, {
+
               field: element.paramName,
               header: element.label,
               dataType: element.componentType,
-              class: 'field col-12 md:col-2'
+              class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
+              validation: element.reportValidation ? element.reportValidation : z.string().trim()
             }]
           }
         }
       }
+      formReload.value++
 
       if (code) {
         item.value.jasperReportCode = code
@@ -482,10 +507,11 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
       else {
         item.value.jasperReportCode = ''
       }
-      formReload.value++
+
+      showForm.value = true
     }
     catch (error) {
-
+      console.log(error)
     }
   }
 }
@@ -542,6 +568,42 @@ async function getDinamicData(query: string, moduleApi: string, uriApi: string) 
 //   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 //   getList()
 // })
+const pdfUrl = ref('')
+function loadPDF(base64Report: string) {
+  pdfUrl.value = ''
+  // Convertir base64 a un ArrayBuffer
+  const byteCharacters = atob(base64Report)
+  const byteNumbers = Array.from({ length: byteCharacters.length })
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i)
+  }
+  const byteArray = new Uint8Array(byteNumbers)
+
+  if (item.value?.reportFormatType?.id === 'XLS') {
+    // Crear un Blob del ArrayBuffer con tipo MIME 'application/pdf'
+  // const blob = new Blob([byteArray], { type: 'application/pdf' })
+    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+
+    // Crear una URL del Blob y asignarla a pdfUrl
+    pdfUrl.value = URL.createObjectURL(blob)
+
+    // Abrir el PDF en una nueva ventana
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `report-file-${dayjs().format('YYYY-MM-DD')}.xlsx`
+    link.click()
+  }
+  else if (item.value?.reportFormatType?.id === 'PDF') {
+    // Crear un Blob del ArrayBuffer con tipo MIME 'application/pdf'
+    const blob = new Blob([byteArray], { type: 'application/pdf' })
+
+    // Crear una URL del Blob y asignarla a pdfUrl
+    pdfUrl.value = URL.createObjectURL(blob)
+
+    // Abrir el PDF en una nueva ventana
+    // window.open(pdfUrl.value, '_blank')
+  }
+}
 
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
@@ -632,6 +694,7 @@ onMounted(async () => {
             </AccordionTab>
           </Accordion>
           <EditFormV2
+            v-if="showForm"
             :key="formReload"
             :fields="fields"
             :item="item"
@@ -639,6 +702,7 @@ onMounted(async () => {
             :show-actions-inline="true"
             :loading-save="loadingSaveAllGetReport"
             container-class="grid pt-3 px-0"
+            @reactive-update-field="item = $event"
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
@@ -675,9 +739,9 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-if="false" class="card p-2">
-        <object data="https://static.kynsoft.net/689_2024-10-31_12-14-01.pdf" type="application/pdf" width="100%" height="800px">
-          <p>Tu navegador no soporta PDF. <a href="https://static.kynsoft.net/689_2024-10-31_12-14-01.pdf">Descargar PDF</a>.</p>
+      <div v-if="item?.reportFormatType?.id === 'PDF'" class="card p-2">
+        <object :data="pdfUrl" type="application/pdf" width="100%" height="800px">
+          <p>Your browser does not support PDF. <a :href="pdfUrl">Download PDF</a>.</p>
         </object>
       </div>
     </div>
