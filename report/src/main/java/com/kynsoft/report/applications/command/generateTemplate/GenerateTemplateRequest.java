@@ -12,7 +12,6 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GenerateTemplateRequest {
-
         private String jasperReportCode;
         private String reportFormatType;
         private Map<String, Object> parameters;
