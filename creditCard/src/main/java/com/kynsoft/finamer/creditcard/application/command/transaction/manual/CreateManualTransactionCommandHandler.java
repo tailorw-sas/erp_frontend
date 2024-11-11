@@ -82,8 +82,6 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 //        RulesChecker.checkRule(new ManualTransactionAgencyBookingFormatRule(agencyDto.getBookingCouponFormat()));
 //        RulesChecker.checkRule(new ManualTransactionReservationNumberRule(command.getReservationNumber(), agencyDto.getBookingCouponFormat()));
 
-        ManageCreditCardTypeDto creditCardTypeDto = null;
-
         ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.SENT);
         ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByManual();
         ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findByIsDefaultAndIsSubcategory();
@@ -97,8 +95,9 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 merchantDto, hotelDto
         );
 
-        double commission = 0;
-        double netAmount = command.getAmount() - commission;
+        double amount = transactionCategory.getOnlyApplyNet() ? 0.0 : command.getAmount();
+        double netAmount = command.getAmount();
+
         TransactionDto newTransaction = new TransactionDto(
                 command.getTransactionUuid(),
                 merchantDto,
@@ -106,7 +105,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 hotelDto,
                 agencyDto,
                 languageDto,
-                command.getAmount(),
+                amount,
                 command.getCheckIn(),
                 command.getReservationNumber(),
                 command.getReferenceNumber(),
@@ -115,8 +114,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 command.getEmail(),
                 merchantHotelEnrolleDto.getEnrolle(),
                 null,
-                creditCardTypeDto,
-                commission,
+                null,
+                0.0,
                 transactionStatusDto,
                 null,
                 transactionCategory,
