@@ -10,11 +10,23 @@ export default defineEventHandler(async (event): Promise<any> => {
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token?.access_token}`,
+    // 'Accept': 'application/pdf',
   }
-  const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}/generate/template`, {
-    method: 'POST',
-    body,
-    headers: defaultHeaders
-  })
-  return response
+  try {
+    const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}/generate/template`, {
+      method: 'POST',
+      body,
+      headers: defaultHeaders
+    })
+    return response
+  }
+  catch (error) {
+    console.log(error)
+  }
+  // const response = await $fetch(`${process.env.VITE_APP_BASE_URL}/${microservice}/api/${controller}/generate/template`, {
+  //   method: 'POST',
+  //   body,
+  //   headers: defaultHeaders
+  // })
+  // return response
 })
