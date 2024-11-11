@@ -173,8 +173,6 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     private ResponseEntity<String> redirectToCardNet(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
         try {
             // Paso 1: Enviar los datos para generar la sesión
-            //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
-
             String successUrl = merchantConfigDto.getSuccessUrl();
             String cancelUrl = merchantConfigDto.getErrorUrl();
             CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
@@ -190,6 +188,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                     transactionDto.getLanguage().getId()
             );
             String currencyCode = transactionDto.getMerchantCurrency().getValue();
+            String referenceNumberTrunc = transactionDto.getReferenceNumber().length() > 40 ? transactionDto.getReferenceNumber().substring(0, 40) : transactionDto.getReferenceNumber();
 
             requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
             requestData.put("CurrencyCode", currencyCode); // dejar 214 por ahora que es el peso dominicano. El usd es 840
@@ -202,7 +201,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             requestData.put("ReturnUrl", successUrl); //Campo successUrl de Merchant Config
             requestData.put("CancelUrl", cancelUrl); //Campo errorUrl de Merchant Config
             requestData.put("PageLanguaje", pageLanguaje.isBlank() ? "ING" : pageLanguaje); //Se envia por ahora ENG
-            requestData.put("TransactionId", String.valueOf(transactionDto.getId())); //Viene en el request
+            requestData.put("TransactionId", referenceNumberTrunc); //Viene en el request
             requestData.put("OrdenId", transactionDto.getId().toString()); //Viene en el request
             requestData.put("MerchantName", merchantConfigDto.getName()); //Campo name de Merchant Config
             requestData.put("IpClient", ""); // Campo ip del b2b partner del merchant
