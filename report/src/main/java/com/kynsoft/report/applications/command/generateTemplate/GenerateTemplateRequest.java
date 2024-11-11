@@ -16,10 +16,4 @@ public class GenerateTemplateRequest {
         private String jasperReportCode;
         private String reportFormatType;
         private Map<String, Object> parameters;
-
-        // Datos de la conexión
-        private String dbUrl;
-        private String dbUsername;
-        private String dbPassword;
-
 }
