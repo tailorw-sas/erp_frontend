@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
+import { useToast } from 'primevue/usetoast'
+import ContextMenu from 'primevue/contextmenu'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { GenericService } from '~/services/generic-services'
@@ -14,7 +16,25 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['update:detailsAmount'])
+
 const listItems = ref<any[]>([])
+const toast = useToast()
+const contextMenu = ref()
+const contextMenuTransaction = ref()
+
+const menuListItems = [
+  {
+    label: 'Unbind Transaction',
+    icon: 'pi pi-dollar',
+    iconSvg: 'M304.1 405.9c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-59.3 59.3-155.7 59.3-215 0-59.3-59.3-59.3-155.7 0-215l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-28.1 28.1-28.1 73.8 0 101.8 28.1 28.1 73.8 28.1 101.8 0l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6zm-56.6-260.2c4.7 4.7 12.3 4.7 17 0l44.7-44.7c28.1-28.1 73.8-28.1 101.8 0 28.1 28.1 28.1 73.8 0 101.8l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6c4.7 4.7 12.3 4.7 17 0l44.7-44.7c59.3-59.3 59.3-155.7 0-215-59.3-59.3-155.7-59.3-215 0l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6zm234.8 359.3l22.6-22.6c9.4-9.4 9.4-24.6 0-33.9L63.6 7c-9.4-9.4-24.6-9.4-33.9 0L7 29.7c-9.4 9.4-9.4 24.6 0 33.9l441.4 441.4c9.4 9.4 24.6 9.4 33.9 0z',
+    viewBox: '0 0 512 512',
+    width: '14px',
+    height: '14px',
+    command: () => unbindTransactions(),
+    disabled: false,
+  }
+]
 
 const sClassMap: IStatusClass[] = [
   { status: 'Sent', class: 'vcc-text-sent' },
@@ -215,6 +235,32 @@ async function getList() {
   }
 }
 
+async function onRowRightClick(event: any) {
+  contextMenu.value.hide()
+  contextMenuTransaction.value = event.data
+  contextMenu.value.show(event.originalEvent)
+}
+
+async function unbindTransactions() {
+  try {
+    const transactionsIds = [contextMenuTransaction.value.id]
+    const payload: { [key: string]: any } = {}
+    payload.bankReconciliation = props.bankReconciliationId
+    payload.transactionsIds = transactionsIds
+
+    const response: any = await GenericService.create('creditcard', 'bank-reconciliation/unbind', payload)
+    if (response && response.detailsAmount) {
+      emit('update:detailsAmount', response.detailsAmount)
+    }
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
+    getList()
+    // Emit reload detail amount
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+}
+
 onMounted(() => {
   searchAndFilter()
 })
@@ -231,7 +277,20 @@ onMounted(() => {
       @on-change-filter="parseDataTableFilter"
       @on-list-item="resetListItems"
       @on-sort-field="onSortField"
+      @on-row-right-click="onRowRightClick"
     />
+    <ContextMenu ref="contextMenu" :model="menuListItems">
+      <template #itemicon="{ item }">
+        <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" :height="item.height" :viewBox="item.viewBox" :width="item.width" fill="#8d8faa">
+            <path :d="item.iconSvg" />
+          </svg>
+        </div>
+        <div v-else class="w-2rem flex justify-content-center align-items-center">
+          <i v-if="item.icon" :class="item.icon" />
+        </div>
+      </template>
+    </ContextMenu>
   </div>
 </template>
 
