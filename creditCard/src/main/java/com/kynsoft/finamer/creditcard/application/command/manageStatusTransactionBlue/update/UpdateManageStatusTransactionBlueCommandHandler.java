@@ -9,6 +9,8 @@ import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 @Component
 public class UpdateManageStatusTransactionBlueCommandHandler implements ICommandHandler<UpdateManageStatusTransactionBlueCommand> {
 
@@ -64,6 +66,9 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         transactionDto.setNetAmount(netAmount);
         transactionDto.setPaymentDate(command.getRequest().getPaymentDate());
         transactionDto.setStatus(transactionStatusDto);
+        if (transactionStatusDto.isReceivedStatus()){
+            transactionDto.setTransactionDate(LocalDate.now());
+        }
         this.transactionService.update(transactionDto);
 
         //3- Actualizar vcc_transaction_payment_logs columna merchant_respose en vcc_transaction

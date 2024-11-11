@@ -11,6 +11,7 @@ import com.kynsoft.finamer.creditcard.domain.services.*;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 
@@ -101,7 +102,9 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             transactionDto.setCommission(commission);
             transactionDto.setNetAmount(netAmount);
             transactionDto.setPaymentDate(LocalDateTime.now());
-
+            if (transactionStatusDto.isReceivedStatus()){
+                transactionDto.setTransactionDate(LocalDate.now());
+            }
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);
 
