@@ -88,15 +88,8 @@ const fields: Array<FieldDefinitionType> = [
     field: 'referenceNumber',
     header: 'Reference Number',
     dataType: 'text',
-    class: 'field col-12 md:col-6',
-    validation: z.string().trim().refine((value) => {
-      if (value === '') {
-        return true
-      }
-      return /^\d+$/.test(value)
-    }, {
-      message: 'Only numeric characters allowed'
-    })
+    class: 'field col-12 md:col-6 required',
+    validation: z.string().trim().min(1, 'The reference number field is required').regex(/^\d+$/, 'Only numeric characters allowed')
   },
   {
     field: 'hotelContactEmail',

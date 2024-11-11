@@ -5,6 +5,7 @@ import type { IColumn, IPagination, IStatusClass } from '~/components/table/inte
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { GenericService } from '~/services/generic-services'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import { formatCardNumber } from '~/components/vcc/vcc_utils'
 
 const props = defineProps({
   bankReconciliationId: {
@@ -184,6 +185,9 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
+        iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         iterator.amount = formatNumber(iterator.amount)
