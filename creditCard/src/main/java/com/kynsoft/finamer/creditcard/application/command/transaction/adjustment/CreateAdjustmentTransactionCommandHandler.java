@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAmountRule;
+import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionReferenceNumberMustBeNullRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +32,7 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
     @Override
     public void handle(CreateAdjustmentTransactionCommand command) {
         RulesChecker.checkRule(new AdjustmentTransactionAmountRule(command.getAmount()));
+        RulesChecker.checkRule(new AdjustmentTransactionReferenceNumberMustBeNullRule(command.getReferenceNumber()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
 

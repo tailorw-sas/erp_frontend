@@ -24,16 +24,23 @@ public class ManageVCCTransactionType implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
-
+    @Column(unique = true)
     private String code;
 
     private String name;
 
-    @Column(columnDefinition = "boolean DEFAULT FALSE")
-    private Boolean isDefault;
+    private String description;
 
-    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean isActive;
+
+    private Boolean negative;
+    private Boolean isDefault;
     private Boolean subcategory;
+    private Boolean onlyApplyNet;
+    private Boolean policyCredit;
+    private Boolean remarkRequired;
+    private Integer minNumberOfCharacter;
+    private String defaultRemark;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean manual;
@@ -52,14 +59,29 @@ public class ManageVCCTransactionType implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
-        this.isDefault = dto.getIsDefault();
-        this.subcategory = dto.getSubcategory();
-        this.manual = dto.isManual();
+        this.description = dto.getDescription();
         this.status = dto.getStatus();
+        this.isActive = dto.getIsActive();
+        this.negative = dto.getNegative();
+        this.isDefault = dto.getIsDefault();
+        this.onlyApplyNet = dto.getOnlyApplyNet();
+        this.policyCredit = dto.getPolicyCredit();
+        this.remarkRequired = dto.getRemarkRequired();
+        this.subcategory = dto.getSubcategory();
+        this.minNumberOfCharacter = dto.getMinNumberOfCharacter();
+        this.defaultRemark = dto.getDefaultRemark();
+        this.manual = dto.isManual();
     }
 
     public ManageVCCTransactionTypeDto toAggregate(){
-        return new ManageVCCTransactionTypeDto(id,code, name, isDefault, subcategory, manual, status);
+        return new ManageVCCTransactionTypeDto(id,code, description, status, name, isActive, negative,
+                isDefault,
+                subcategory,
+                onlyApplyNet,
+                policyCredit,
+                remarkRequired,
+                minNumberOfCharacter,
+                defaultRemark, manual);
     }
 
 }

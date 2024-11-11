@@ -11,28 +11,28 @@ import org.springframework.stereotype.Service;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Service
-public class ConsumerUpdateManageVCCTransactionTypeService {
-
-    private final IMediator mediator;
-
-    public ConsumerUpdateManageVCCTransactionTypeService(IMediator mediator) {
-        this.mediator = mediator;
-    }
-
-    @KafkaListener(topics = "finamer-update-manage-vcc-transaction-type", groupId = "vcc-entity-replica")
-    public void listen(UpdateManageVCCTransactionTypeKafka objKafka) {
-        try {
-            UpdateManageVCCTransactionTypeCommand command = new UpdateManageVCCTransactionTypeCommand(
-                    objKafka.getId(),
-                    objKafka.getName(),
-                    objKafka.getIsDefault(),
-                    objKafka.getSubcategory(),
-                    objKafka.isManual(),
-                    Status.valueOf(objKafka.getStatus()));
-            mediator.send(command);
-        } catch (Exception ex) {
-            Logger.getLogger(ConsumerUpdateManageVCCTransactionTypeService.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-}
+//@Service
+//public class ConsumerUpdateManageVCCTransactionTypeService {
+//
+//    private final IMediator mediator;
+//
+//    public ConsumerUpdateManageVCCTransactionTypeService(IMediator mediator) {
+//        this.mediator = mediator;
+//    }
+//
+//    @KafkaListener(topics = "finamer-update-manage-vcc-transaction-type", groupId = "vcc-entity-replica")
+//    public void listen(UpdateManageVCCTransactionTypeKafka objKafka) {
+//        try {
+//            UpdateManageVCCTransactionTypeCommand command = new UpdateManageVCCTransactionTypeCommand(
+//                    objKafka.getId(),
+//                    objKafka.getName(),
+//                    objKafka.getIsDefault(),
+//                    objKafka.getSubcategory(),
+//                    objKafka.isManual(),
+//                    Status.valueOf(objKafka.getStatus()));
+//            mediator.send(command);
+//        } catch (Exception ex) {
+//            Logger.getLogger(ConsumerUpdateManageVCCTransactionTypeService.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//    }
+//}

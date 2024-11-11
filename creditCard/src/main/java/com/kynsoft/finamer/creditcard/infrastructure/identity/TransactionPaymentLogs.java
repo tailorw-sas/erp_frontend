@@ -43,16 +43,20 @@ public class TransactionPaymentLogs implements Serializable {
     @Column(name = "is_processed")
     private  Boolean isProcessed;
 
+    @Column(name = "transaction_number")
+    private Long transactionNumber;
+
     public TransactionPaymentLogs(TransactionPaymentLogsDto dto) {
         this.id = dto.getId();
         this.transactionId = dto.getTransactionId();
         this.merchantRequest = dto.getMerchantRequest();
         this.merchantResponse = dto.getMerchantResponse();
         this.isProcessed = dto.getIsProcessed();
+        this.transactionNumber = dto.getTransactionNumber();
     }
     public TransactionPaymentLogsDto toAggregate(){
         return new TransactionPaymentLogsDto(
-                 id,transactionId, merchantRequest, merchantResponse, isProcessed
+                 id,transactionId, merchantRequest, merchantResponse, isProcessed, transactionNumber
         );
     }
 }

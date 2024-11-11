@@ -19,5 +19,5 @@ public class TransactionPaymentLogsDto {
     private String merchantRequest;
     private String merchantResponse;
     private Boolean isProcessed;
-
+    private Long transactionNumber;
 }

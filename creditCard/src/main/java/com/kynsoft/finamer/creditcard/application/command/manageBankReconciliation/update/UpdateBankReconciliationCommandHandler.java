@@ -53,7 +53,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
             command.setAdjustmentTransactionIds(adjustmentIds);
         }
 
-        if (command.getReconcileStatus() != null){
+        if (command.getReconcileStatus() != null && command.getReconcileStatus() != dto.getReconcileStatus().getId()){
             ManageReconcileTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getReconcileStatus());
             updateStatus(dto, transactionStatusDto);
         }

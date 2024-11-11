@@ -31,4 +31,14 @@ public interface IManageVCCTransactionTypeService {
     ManageVCCTransactionTypeDto findByIsDefaultAndIsSubcategory();
 
     ManageVCCTransactionTypeDto findByManual();
+
+    Long countByCodeAndNotId(String code, UUID id);
+
+    List<ManageVCCTransactionTypeDto> findAllToReplicate();
+
+    Long countByIsDefaultsAndNotSubcategoryAndNotId(UUID id);
+
+    Long countByIsDefaultsAndSubCategoryAndNotId(UUID id);
+
+    Long countByManualAndNotId(UUID id);
 }

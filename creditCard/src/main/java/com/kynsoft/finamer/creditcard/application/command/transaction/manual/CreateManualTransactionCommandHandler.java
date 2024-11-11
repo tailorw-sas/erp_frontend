@@ -26,13 +26,9 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
     private final IManageLanguageService languageService;
 
-    private final IManageCreditCardTypeService creditCardTypeService;
-
     private final IManageTransactionStatusService transactionStatusService;
 
     private final IManageMerchantHotelEnrolleService merchantHotelEnrolleService;
-
-    private final IParameterizationService parameterizationService;
 
     private final IManageVCCTransactionTypeService transactionTypeService;
 
@@ -40,26 +36,34 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
     private final TokenService tokenService;
 
-    private final MailService mailService;
-
     private final IManageMerchantConfigService merchantConfigService;
 
     private final IManagerMerchantCurrencyService merchantCurrencyService;
 
-    public CreateManualTransactionCommandHandler(ITransactionService transactionService, IManageMerchantService merchantService, IManageHotelService hotelService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageCreditCardTypeService creditCardTypeService, IManageTransactionStatusService transactionStatusService, IManageMerchantHotelEnrolleService merchantHotelEnrolleService, IParameterizationService parameterizationService, IManageVCCTransactionTypeService transactionTypeService, ICreditCardCloseOperationService closeOperationService, TokenService tokenService, MailService mailService, IManageMerchantConfigService merchantConfigService, IManagerMerchantCurrencyService merchantCurrencyService) {
+    public CreateManualTransactionCommandHandler(
+            ITransactionService transactionService,
+            IManageMerchantService merchantService,
+            IManageHotelService hotelService,
+            IManageAgencyService agencyService,
+            IManageLanguageService languageService,
+            IManageTransactionStatusService transactionStatusService,
+            IManageMerchantHotelEnrolleService merchantHotelEnrolleService,
+            IManageVCCTransactionTypeService transactionTypeService,
+            ICreditCardCloseOperationService closeOperationService,
+            TokenService tokenService,
+            IManageMerchantConfigService merchantConfigService,
+            IManagerMerchantCurrencyService merchantCurrencyService) {
+
         this.transactionService = transactionService;
         this.merchantService = merchantService;
         this.hotelService = hotelService;
         this.agencyService = agencyService;
         this.languageService = languageService;
-        this.creditCardTypeService = creditCardTypeService;
         this.transactionStatusService = transactionStatusService;
         this.merchantHotelEnrolleService = merchantHotelEnrolleService;
-        this.parameterizationService = parameterizationService;
         this.transactionTypeService = transactionTypeService;
         this.closeOperationService = closeOperationService;
         this.tokenService = tokenService;
-        this.mailService = mailService;
         this.merchantConfigService = merchantConfigService;
         this.merchantCurrencyService = merchantCurrencyService;
     }
@@ -69,6 +73,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         RulesChecker.checkRule(new ManualTransactionAmountRule(command.getAmount()));
         RulesChecker.checkRule(new ManualTransactionCheckInBeforeRule(command.getCheckIn()));
         RulesChecker.checkRule(new ManualTransactionCheckInCloseOperationRule(this.closeOperationService, command.getCheckIn(), command.getHotel()));
+        RulesChecker.checkRule(new ManualTransactionReferenceNumberMustBeNullRule(command.getReferenceNumber()));
 
         ManageMerchantDto merchantDto = this.merchantService.findById(command.getMerchant());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
@@ -81,8 +86,6 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
 //        RulesChecker.checkRule(new ManualTransactionAgencyBookingFormatRule(agencyDto.getBookingCouponFormat()));
 //        RulesChecker.checkRule(new ManualTransactionReservationNumberRule(command.getReservationNumber(), agencyDto.getBookingCouponFormat()));
-
-        ManageCreditCardTypeDto creditCardTypeDto = null;
 
         ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.SENT);
         ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByManual();
@@ -97,8 +100,9 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 merchantDto, hotelDto
         );
 
-        double commission = 0;
-        double netAmount = command.getAmount() - commission;
+        double amount = transactionCategory.getOnlyApplyNet() ? 0.0 : command.getAmount();
+        double netAmount = command.getAmount();
+
         TransactionDto newTransaction = new TransactionDto(
                 command.getTransactionUuid(),
                 merchantDto,
@@ -106,7 +110,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 hotelDto,
                 agencyDto,
                 languageDto,
-                command.getAmount(),
+                amount,
                 command.getCheckIn(),
                 command.getReservationNumber(),
                 command.getReferenceNumber(),
@@ -115,8 +119,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 command.getEmail(),
                 merchantHotelEnrolleDto.getEnrolle(),
                 null,
-                creditCardTypeDto,
-                commission,
+                null,
+                0.0,
                 transactionStatusDto,
                 null,
                 transactionCategory,
