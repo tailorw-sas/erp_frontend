@@ -30,13 +30,13 @@ public class RemoveReconciliationCommandHandler implements ICommandHandler<Remov
                         transactionDto.setReconciliation(null);
                         this.transactionService.update(transactionDto);
                         this.transactionService.delete(transactionDto);
-                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getAmount());
+                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getNetAmount());
                     }
                 } else {
                     if (bankReconciliationDto.getTransactions().remove(transactionDto)){
                         transactionDto.setReconciliation(null);
                         this.transactionService.update(transactionDto);
-                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getAmount());
+                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getNetAmount());
                     }
                 }
             }

@@ -38,7 +38,7 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
         //obtener la suma de los amounts si no pertenecen ya a la reconciliacion
         List<Double> amounts = command.getTransactionIds().stream().map(id -> {
             if(!reconcileTransactions.contains(id)) {
-                return this.transactionService.findById(id).getAmount();
+                return this.transactionService.findById(id).getNetAmount();
             } return 0.0;
         }).toList();
         RulesChecker.checkRule(new BankReconciliationListOfAmountDetailsRule(bankReconciliationDto.getAmount(), bankReconciliationDto.getDetailsAmount(), amounts));
@@ -49,7 +49,7 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
             if (!reconcileTransactions.contains(transactionId)) {
                 TransactionDto transactionDto = this.transactionService.findById(transactionId);
                 bankReconciliationTransactions.add(transactionDto);
-                bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() + transactionDto.getAmount());
+                bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() + transactionDto.getNetAmount());
                 cont++;
             }
         }
