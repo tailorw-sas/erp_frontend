@@ -288,6 +288,11 @@ async function getMerchantBankAccountList(query: string) {
   }
 }
 
+function clearTransactions() {
+  LocalBindTransactionList.value = []
+  subTotals.value.amount = []
+}
+
 function unbindTransactions() {
   const transactionId = String(contextMenuTransaction.value.id)
   LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
@@ -489,6 +494,9 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
             :model="data.hotel"
             :suggestions="HotelList"
             @change="($event) => {
+              if (item.hotel && $event.id !== item.hotel.id) {
+                clearTransactions()
+              }
               onUpdate('hotel', $event)
               item.hotel = $event
             }"
