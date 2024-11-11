@@ -40,6 +40,7 @@ public class TransactionSearchResponse implements IResponse {
     private boolean adjustment;
     private ManageAgencyResponse agency;
     private ManageVCCTransactionTypeDto categoryType;
+    private ManageVCCTransactionTypeDto subCategoryType;
 
     public TransactionSearchResponse(TransactionDto dto){
         this.id = dto.getId();
@@ -61,5 +62,6 @@ public class TransactionSearchResponse implements IResponse {
         this.adjustment = dto.isAdjustment();
         this.agency = dto.getAgency() != null ? new ManageAgencyResponse(dto.getAgency()) : null;
         this.categoryType = dto.getTransactionCategory();
+        this.subCategoryType = dto.getTransactionSubCategory();
     }
 }

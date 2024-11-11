@@ -3,17 +3,11 @@ package com.kynsoft.finamer.creditcard.infrastructure.services;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommand;
 import com.kynsoft.finamer.creditcard.domain.dto.CardnetJobDto;
-import com.kynsoft.finamer.creditcard.domain.dto.CardnetProcessErrorLogDto;
-import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionResultStatus;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.dto.ProcessErrorLogDto;
 import com.kynsoft.finamer.creditcard.domain.services.IProcessingPendingJobService;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.CardnetJob;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.CardnetProcessErrorLog;
-import com.kynsoft.finamer.creditcard.infrastructure.repository.command.CardnetProcessErrorLogWriteDataJPARepository;
-import com.kynsoft.finamer.creditcard.infrastructure.repository.query.CardnetJobReadDataJPARepository;
-import com.kynsoft.finamer.creditcard.infrastructure.repository.query.CardnetProcessErrorLogReadDataJPARepository;
+import com.kynsoft.finamer.creditcard.infrastructure.identity.ProcessErrorLog;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ProcessErrorLogWriteDataJPARepository;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ProcessErrorLogReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -30,10 +24,10 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
     private final CardNetJobServiceImpl cardnetJobService;
 
     @Autowired
-    private final CardnetProcessErrorLogWriteDataJPARepository repositoryCradentProcessErrorCommand;
+    private final ProcessErrorLogWriteDataJPARepository repositoryCradentProcessErrorCommand;
 
     @Autowired
-    private final CardnetProcessErrorLogReadDataJPARepository repositoryCradentProcessErrorQuery;
+    private final ProcessErrorLogReadDataJPARepository repositoryCradentProcessErrorQuery;
 
     @Autowired
     private RestTemplate restTemplate; // Necesario para llamar a otro endpoint (Enpoint para verificar si se peude actualizar la transacción)
@@ -45,7 +39,7 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
 
     private final IMediator mediator;
 
-    public ProcessingPendingJobServiceImpl(CardnetProcessErrorLogReadDataJPARepository repositoryCradentProcessErrorQuery, CardnetProcessErrorLogWriteDataJPARepository repositoryCradentProcessErrorCommand, CardNetJobServiceImpl cardnetJobService, IMediator mediator, TransactionServiceImpl transactionService, ManageTransactionStatusServiceImpl transactionStatusService) {
+    public ProcessingPendingJobServiceImpl(ProcessErrorLogReadDataJPARepository repositoryCradentProcessErrorQuery, ProcessErrorLogWriteDataJPARepository repositoryCradentProcessErrorCommand, CardNetJobServiceImpl cardnetJobService, IMediator mediator, TransactionServiceImpl transactionService, ManageTransactionStatusServiceImpl transactionStatusService) {
         this.cardnetJobService = cardnetJobService;
         this.mediator = mediator;
         this.repositoryCradentProcessErrorCommand = repositoryCradentProcessErrorCommand;
@@ -69,7 +63,7 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
     private void processCardNetPendingTransactions(List<CardnetJobDto> list) {
         list.forEach(cardnetJobDto -> {
             if (cardnetJobDto.getNumberOfAttempts() < 4) {
-                CardnetProcessErrorLogDto cardnetProcessErrorLogDto = new CardnetProcessErrorLogDto();
+                ProcessErrorLogDto processErrorLogDto = new ProcessErrorLogDto();
                 try {
                     // Acción a ejecutar en cada elemento
                     UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()
@@ -83,10 +77,10 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
                     cardnetJobDto.setNumberOfAttempts(cardnetJobDto.getNumberOfAttempts() + 1);
                     cardnetJobService.update(cardnetJobDto);
                     // Manejo de la excepción, por ejemplo, registrar el error
-                    cardnetProcessErrorLogDto.setSession(cardnetJobDto.getSession());
-                    cardnetProcessErrorLogDto.setTransactionId(cardnetJobDto.getTransactionId());
-                    cardnetProcessErrorLogDto.setError(e.getMessage());
-                    createOrUpdate(cardnetProcessErrorLogDto);
+                    processErrorLogDto.setSession(cardnetJobDto.getSession());
+                    processErrorLogDto.setTransactionId(cardnetJobDto.getTransactionId());
+                    processErrorLogDto.setError(e.getMessage());
+                    createOrUpdate(processErrorLogDto);
                 }
             } else {
                 // Cancelar transaccion
@@ -103,17 +97,17 @@ public class ProcessingPendingJobServiceImpl implements IProcessingPendingJobSer
         });
     }
 
-    public void update(CardnetProcessErrorLogDto dto) {
-        CardnetProcessErrorLog entity = new CardnetProcessErrorLog(dto);
+    public void update(ProcessErrorLogDto dto) {
+        ProcessErrorLog entity = new ProcessErrorLog(dto);
         entity.setUpdatedAt(LocalDateTime.now());
         repositoryCradentProcessErrorCommand.save(entity);
     }
-    public void create(CardnetProcessErrorLogDto dto) {
-        CardnetProcessErrorLog data = new CardnetProcessErrorLog(dto);
+    public void create(ProcessErrorLogDto dto) {
+        ProcessErrorLog data = new ProcessErrorLog(dto);
         this.repositoryCradentProcessErrorCommand.save(data);
     }
 
-    public void createOrUpdate(CardnetProcessErrorLogDto dto){
+    public void createOrUpdate(ProcessErrorLogDto dto){
         if(repositoryCradentProcessErrorQuery.existsByTransactionId(dto.getTransactionId()))
             update(dto);
             else create(dto);

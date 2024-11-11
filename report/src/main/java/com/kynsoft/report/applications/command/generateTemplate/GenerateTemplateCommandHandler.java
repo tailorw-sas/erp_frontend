@@ -9,6 +9,7 @@ import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
+import net.sf.jasperreports.engine.fill.JRFileVirtualizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -20,10 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,52 +55,65 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
             }
             command.setResult(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error generating report: ", e);
+            throw new RuntimeException(e);
         }
     }
 
     public byte[] generatePdfReport(Map<String, Object> parameters, String reportPath, JasperReportTemplateDto reportTemplateDto) throws JRException, IOException {
         JasperReport jasperReport = getJasperReport(reportPath);
-        logger.error("Antes de crear la base de datos: {}", reportTemplateDto.getDbConectionDto().getName());
+        logger.info("Generating PDF report with database: {}", reportTemplateDto.getDbConectionDto().getName());
 
-        JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
-        String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
-        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
-        query = replaceQueryParameters(query, parameters);
-        logger.error("Base de datos: {}", query);
-        List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
+        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2, "temp/");
+        parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 
-        JRDataSource jrDataSource = new JRBeanCollectionDataSource(rows);
-        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
-        return JasperExportManager.exportReportToPdf(jasperPrint);
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
+            String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
+            NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+            query = replaceQueryParameters(query, parameters);
+            List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
+
+            JRDataSource jrDataSource = new JRBeanCollectionDataSource(rows);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
+            JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
+            return outputStream.toByteArray();
+        } finally {
+            virtualizer.cleanup();
+        }
     }
 
     public byte[] generateExcelReport(Map<String, Object> parameters, String reportPath, JasperReportTemplateDto reportTemplateDto) throws JRException, IOException {
         JasperReport jasperReport = getJasperReport(reportPath);
-        logger.error("Antes de crear la base de datos: {}", reportTemplateDto.getDbConectionDto().getName());
+        logger.info("Generating Excel report with database: {}", reportTemplateDto.getDbConectionDto().getName());
 
-        JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
-        String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
-        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
-        query = replaceQueryParameters(query, parameters);
-        logger.error("Base de datos: {}", query);
-        List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
+        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2, "temp/");
+        parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 
-        JRDataSource jrDataSource = new JRBeanCollectionDataSource(rows);
-        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
+            String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
+            NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+            query = replaceQueryParameters(query, parameters);
+            List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
 
-        JRXlsxExporter exporter = new JRXlsxExporter();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
-        exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
+            JRDataSource jrDataSource = new JRBeanCollectionDataSource(rows);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
 
-        SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
-        configuration.setDetectCellType(true);
-        configuration.setCollapseRowSpan(false);
-        exporter.setConfiguration(configuration);
+            JRXlsxExporter exporter = new JRXlsxExporter();
+            exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
 
-        exporter.exportReport();
-        return outputStream.toByteArray();
+            SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+            configuration.setDetectCellType(true);
+            configuration.setCollapseRowSpan(false);
+            exporter.setConfiguration(configuration);
+
+            exporter.exportReport();
+            return outputStream.toByteArray();
+        } finally {
+            virtualizer.cleanup();
+        }
     }
 
     private JdbcTemplate getJdbcTemplate(JasperReportTemplateDto reportTemplateDto) {
@@ -112,22 +123,25 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
     }
 
     private JasperReport getJasperReport(String reportPath) throws JRException, IOException {
-        InputStream jrxmlInput;
+        try (InputStream jrxmlInput = loadReportInputStream(reportPath)) {
+            logger.info("JRXML content loaded successfully from: {}", reportPath);
+            return JasperCompileManager.compileReport(jrxmlInput);
+        }
+    }
+
+    private InputStream loadReportInputStream(String reportPath) throws IOException {
         Resource localResource = resourceLoader.getResource("classpath:templates/" + reportPath);
         if (localResource.exists()) {
             logger.info("Loading JRXML template from local resources: templates/{}", reportPath);
-            jrxmlInput = localResource.getInputStream();
+            return localResource.getInputStream();
         } else {
             logger.warn("Local template not found, fetching JRXML template from URL: {}", reportPath);
-            jrxmlInput = new ByteArrayInputStream(Objects.requireNonNull(restTemplate.getForObject(reportPath, byte[].class)));
+            return new ByteArrayInputStream(Objects.requireNonNull(restTemplate.getForObject(reportPath, byte[].class)));
         }
-
-        logger.info("JRXML content loaded successfully.");
-        return JasperCompileManager.compileReport(jrxmlInput);
     }
 
     private DataSource createDataSource(String url, String username, String password) {
-        logger.error("Base de datos: {}", url);
+        logger.info("Connecting to database: {}", url);
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.postgresql.Driver");
         dataSource.setUrl(url);

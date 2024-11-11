@@ -85,7 +85,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ManageCreditCardTypeDto creditCardTypeDto = null;
 
         ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.SENT);
-        ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByIsDefaultAndNotIsSubcategory();
+        ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findByManual();
+        ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findByIsDefaultAndIsSubcategory();
 
         if (command.getMethodType().compareTo(MethodType.LINK) == 0) {
             RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getGuestName(), "gestName", "Guest name cannot be null."));
@@ -119,7 +120,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 transactionStatusDto,
                 null,
                 transactionCategory,
-                null,
+                transactionSubCategory,
                 netAmount,
                 true,
                 merchantCurrencyDto,

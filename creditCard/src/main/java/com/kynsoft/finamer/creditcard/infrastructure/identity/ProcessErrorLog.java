@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
-import com.kynsoft.finamer.creditcard.domain.dto.CardnetProcessErrorLogDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ProcessErrorLogDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,8 +18,8 @@ import java.util.UUID;
 @Setter
 @Entity
 
-@Table(name = "vcc_cardnet_process_error_logs")
-public class CardnetProcessErrorLog implements Serializable {
+@Table(name = "vcc_process_error_logs")
+public class ProcessErrorLog implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,15 +38,15 @@ public class CardnetProcessErrorLog implements Serializable {
 
     private String error;
 
-    public CardnetProcessErrorLog(CardnetProcessErrorLogDto dto) {
+    public ProcessErrorLog(ProcessErrorLogDto dto) {
         this.id = dto.getId();
         this.transactionId = dto.getTransactionId();
         this.session = dto.getSession();
         this.error = dto.getError();
 
     }
-    public CardnetProcessErrorLogDto toAggregate(){
-        return new CardnetProcessErrorLogDto(
+    public ProcessErrorLogDto toAggregate(){
+        return new ProcessErrorLogDto(
                 id,transactionId, session, error
         );
     }

@@ -357,7 +357,13 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     INVOICE_TYPE_NOT_FOUND(1135, Series.DOMAIN_ERROR, "Invoice type not found or inactive."),
     INVOICE_STATUS_NOT_FOUND(1136, Series.DOMAIN_ERROR, "Invoice status not found or inactive."),
     CREDIT_CARD_TYPE_NOT_FOUND(1137, Series.DOMAIN_ERROR, "Transaction Credit Card Type not found."),
-    COMMISSION_NOT_FOUND(1138, Series.DOMAIN_ERROR, "There are no available commissions to apply.");
+    COMMISSION_NOT_FOUND(1138, Series.DOMAIN_ERROR, "There are no available commissions to apply."),
+    MANAGE_RECONCILE_TRANSACTION_STATUS_NOT_FOUND(1139, Series.DOMAIN_ERROR, "Manage Reconcile Transaction Status not found."),
+    MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_CREATED(1140, Series.DOMAIN_ERROR,"Another item already exists with created default."),
+    MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_CANCELLED(1141, Series.DOMAIN_ERROR,"Another item already exists with cancelled default."),
+    MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_COMPLETED(1142, Series.DOMAIN_ERROR,"Another item already exists with completed default."),
+    MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS(1143, Series.DOMAIN_ERROR, "Manage Bank Reconciliation cannot be changed to completed status."),
+    MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS(1144, Series.DOMAIN_ERROR, "Manage Bank Reconciliation cannot be changed to cancelled status.");
 
     private static final DomainErrorMessage[] VALUES;
 

@@ -46,6 +46,9 @@ public class ManageVCCTransactionType implements Serializable {
     private Integer minNumberOfCharacter;
     private String defaultRemark;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean manual;
+
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -71,6 +74,7 @@ public class ManageVCCTransactionType implements Serializable {
         this.subcategory = dto.getSubcategory();
         this.minNumberOfCharacter = dto.getMinNumberOfCharacter();
         this.defaultRemark = dto.getDefaultRemark();
+        this.manual = dto.isManual();
     }
 
     public ManageVCCTransactionTypeDto toAggregate(){
@@ -81,7 +85,7 @@ public class ManageVCCTransactionType implements Serializable {
                 policyCredit,
                 remarkRequired,
                 minNumberOfCharacter,
-                defaultRemark);
+                defaultRemark, manual);
     }
 
 }

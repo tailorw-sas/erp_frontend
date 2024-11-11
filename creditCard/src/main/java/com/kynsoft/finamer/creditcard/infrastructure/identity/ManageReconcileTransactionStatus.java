@@ -47,6 +47,15 @@ public class ManageReconcileTransactionStatus implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean created;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean cancelled;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean completed;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -66,16 +75,19 @@ public class ManageReconcileTransactionStatus implements Serializable {
                     .map(ManageReconcileTransactionStatus::new)
                     .collect(Collectors.toList());
         }
+        this.created = dto.isCreated();
+        this.cancelled = dto.isCancelled();
+        this.completed = dto.isCompleted();
     }
     public ManageReconcileTransactionStatusDto toAggregateSample(){
         return new ManageReconcileTransactionStatusDto(
                 id,code, description, status, name, requireValidation,
-                null
+                null, created, cancelled, completed
         );
     }
 
     public ManageReconcileTransactionStatusDto toAggregate(){
-        return new ManageReconcileTransactionStatusDto(id,code, description, status, name, requireValidation, relatedStatuses != null ? relatedStatuses.stream().map(ManageReconcileTransactionStatus::toAggregateSample).toList() : null);
+        return new ManageReconcileTransactionStatusDto(id,code, description, status, name, requireValidation, relatedStatuses != null ? relatedStatuses.stream().map(ManageReconcileTransactionStatus::toAggregateSample).toList() : null, created, cancelled, completed);
     }
 
 }

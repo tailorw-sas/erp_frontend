@@ -2,6 +2,8 @@ package com.kynsoft.finamer.creditcard.application.command.manageBankReconciliat
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -21,10 +23,13 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
 
     private final IBankReconciliationAdjustmentService bankReconciliationAdjustmentService;
 
-    public UpdateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, ITransactionService transactionService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService) {
+    private final IManageReconcileTransactionStatusService transactionStatusService;
+
+    public UpdateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, ITransactionService transactionService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IManageReconcileTransactionStatusService transactionStatusService) {
         this.bankReconciliationService = bankReconciliationService;
         this.transactionService = transactionService;
         this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
+        this.transactionStatusService = transactionStatusService;
     }
 
     @Override
@@ -35,6 +40,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         ConsumerUpdate update = new ConsumerUpdate();
         UpdateIfNotNull.updateLocalDateTime(dto::setPaidDate, command.getPaidDate(), dto.getPaidDate(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setRemark, command.getRemark(), dto.getRemark(), update::setUpdate);
+        UpdateIfNotNull.updateDouble(dto::setAmount, command.getAmount(), dto.getAmount(), update::setUpdate);
 
         //comprobar si no es nula la lista y son diferentes los ids de las transactions para mandar a actualizar
         Set<Long> reconciliationTransactionIds = dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet());
@@ -45,6 +51,11 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         if (command.getAdjustmentTransactions() != null && !command.getAdjustmentTransactions().isEmpty()) {
             List<Long> adjustmentIds = this.bankReconciliationAdjustmentService.createAdjustments(command.getAdjustmentTransactions(), dto);
             command.setAdjustmentTransactionIds(adjustmentIds);
+        }
+
+        if (command.getReconcileStatus() != null){
+            ManageReconcileTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getReconcileStatus());
+            updateStatus(dto, transactionStatusDto);
         }
 
         if(update.getUpdate() > 0) {
@@ -80,6 +91,32 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         }
         reconciliation.setTransactions(transactionList);
         this.bankReconciliationService.update(reconciliation);
+    }
+
+    private void updateStatus(ManageBankReconciliationDto dto, ManageReconcileTransactionStatusDto transactionStatusDto){
+        if (!transactionStatusDto.isCreated() && !dto.getReconcileStatus().isCancelled()){
+            if (transactionStatusDto.isCompleted()){
+                if (dto.getAmount().equals(dto.getDetailsAmount())){
+                    dto.setReconcileStatus(transactionStatusDto);
+                    this.bankReconciliationService.update(dto);
+                } else {
+                    throw new BusinessException(
+                            DomainErrorMessage.MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS,
+                            DomainErrorMessage.MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS.getReasonPhrase()
+                    );
+                }
+            } else if (transactionStatusDto.isCancelled()){
+                if (dto.getTransactions().isEmpty() && !dto.getReconcileStatus().isCompleted()) {
+                    dto.setReconcileStatus(transactionStatusDto);
+                    this.bankReconciliationService.update(dto);
+                } else {
+                    throw new BusinessException(
+                            DomainErrorMessage.MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS,
+                            DomainErrorMessage.MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS.getReasonPhrase()
+                    );
+                }
+            }
+        }
     }
 
 }

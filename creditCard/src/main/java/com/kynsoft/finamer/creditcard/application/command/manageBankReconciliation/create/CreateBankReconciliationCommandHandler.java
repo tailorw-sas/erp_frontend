@@ -3,6 +3,7 @@ package com.kynsoft.finamer.creditcard.application.command.manageBankReconciliat
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.EReconcileTransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
@@ -20,25 +21,17 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
     private final ITransactionService transactionService;
 
-    private final IManageAgencyService agencyService;
-
     private final IManageReconcileTransactionStatusService reconcileTransactionStatusService;
 
-    private final IManageVCCTransactionTypeService transactionTypeService;
-
-    private final IManageTransactionStatusService transactionStatusService;
 
     private final IBankReconciliationAdjustmentService bankReconciliationAdjustmentService;
 
-    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageAgencyService agencyService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IManageVCCTransactionTypeService transactionTypeService, IManageTransactionStatusService transactionStatusService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService) {
+    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService) {
         this.bankReconciliationService = bankReconciliationService;
         this.merchantBankAccountService = merchantBankAccountService;
         this.hotelService = hotelService;
         this.transactionService = transactionService;
-        this.agencyService = agencyService;
         this.reconcileTransactionStatusService = reconcileTransactionStatusService;
-        this.transactionTypeService = transactionTypeService;
-        this.transactionStatusService = transactionStatusService;
         this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
     }
 
@@ -62,7 +55,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
         }
 
         //todo: reconcile status
-        ManageReconcileTransactionStatusDto reconcileTransactionStatusDto = null;
+        ManageReconcileTransactionStatusDto reconcileTransactionStatusDto = this.reconcileTransactionStatusService.findByEReconcileTransactionStatus(EReconcileTransactionStatus.CREATED);
 
         ManageBankReconciliationDto bankReconciliationDto = new ManageBankReconciliationDto(
                 command.getId(),

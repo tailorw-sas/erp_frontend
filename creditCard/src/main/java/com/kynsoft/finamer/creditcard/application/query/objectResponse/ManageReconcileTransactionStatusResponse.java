@@ -25,6 +25,9 @@ public class ManageReconcileTransactionStatusResponse implements IResponse {
     private String name;
     private Boolean requireValidation;
     private List<ManageReconcileTransactionStatusResponse> navigate;
+    private boolean created;
+    private boolean cancelled;
+    private boolean completed;
 
     public ManageReconcileTransactionStatusResponse(ManageReconcileTransactionStatusDto dto) {
         this.id = dto.getId();
@@ -34,6 +37,9 @@ public class ManageReconcileTransactionStatusResponse implements IResponse {
         this.description = dto.getDescription();
         this.requireValidation = dto.getRequireValidation();
         this.navigate = dto.getRelatedStatuses() != null ? dto.getRelatedStatuses().stream().map(ManageReconcileTransactionStatusResponse::new).toList() : null;
+        this.created = dto.isCreated();
+        this.cancelled = dto.isCancelled();
+        this.completed = dto.isCompleted();
     }
 
 }

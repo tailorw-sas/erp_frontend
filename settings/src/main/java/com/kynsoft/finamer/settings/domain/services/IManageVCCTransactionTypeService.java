@@ -27,4 +27,6 @@ public interface IManageVCCTransactionTypeService {
     Long countByIsDefaultsAndNotSubcategoryAndNotId(UUID id);
 
     Long countByIsDefaultsAndSubCategoryAndNotId(UUID id);
+
+    Long countByManualAndNotId(UUID id);
 }
