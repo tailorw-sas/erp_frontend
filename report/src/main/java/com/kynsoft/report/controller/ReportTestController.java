@@ -4,6 +4,8 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateRequest;
 import java.sql.Connection;
 import java.sql.DriverManager;
+
+import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
@@ -49,15 +51,18 @@ public class ReportTestController {
     public ResponseEntity<String> generateReport(@RequestBody GenerateTemplateRequest request) {
         Connection connection = null;
         try {
+            JasperReportTemplateDto reportTemplateDto = reportService.findByTemplateCode(request.getJasperReportCode());
             logger.info("Report code: {}", request.getJasperReportCode());
             logger.info("Report format type: {}", request.getReportFormatType());
             logger.info("Parameters: {}", request.getParameters());
+            logger.info("URL dataBase: {}", reportTemplateDto.getDbConectionDto().getUrl());
 
             // Cargar el archivo JRXML
-            JasperReport jasperReport = loadJasperReportFromUrl("https://static.kynsoft.net/Copia_de_Blank_A4_2024-11-09_11-48-00.jrxml");
+            JasperReport jasperReport = loadJasperReportFromUrl(reportTemplateDto.getFile());
 
             // Crear la conexión de base de datos usando los datos del request
-            connection = DriverManager.getConnection(request.getDbUrl(), request.getDbUsername(), request.getDbPassword());
+            connection = DriverManager.getConnection(reportTemplateDto.getDbConectionDto().getUrl(),
+                    reportTemplateDto.getDbConectionDto().getUsername(), reportTemplateDto.getDbConectionDto().getPassword());
 
             // Llenar el reporte usando la conexión de base de datos proporcionada
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, request.getParameters(), connection);
