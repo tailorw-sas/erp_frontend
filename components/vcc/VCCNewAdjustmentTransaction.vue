@@ -96,7 +96,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reference Number',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The reference number field is required').regex(/^\d+$/, 'Only numeric characters allowed')
+    validation: z.string().trim().min(1, 'The reference number field is required')
     // validation: z.string().trim().refine(value => value === '' || /^\d+$/.test(value), {
     //   message: 'Only numeric characters allowed'
     // })
