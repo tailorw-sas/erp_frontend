@@ -100,9 +100,6 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 merchantDto, hotelDto
         );
 
-        double amount = transactionCategory.getOnlyApplyNet() ? 0.0 : command.getAmount();
-        double netAmount = command.getAmount();
-
         TransactionDto newTransaction = new TransactionDto(
                 command.getTransactionUuid(),
                 merchantDto,
@@ -110,7 +107,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 hotelDto,
                 agencyDto,
                 languageDto,
-                amount,
+                command.getAmount(),
                 command.getCheckIn(),
                 command.getReservationNumber(),
                 command.getReferenceNumber(),
@@ -125,7 +122,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 null,
                 transactionCategory,
                 transactionSubCategory,
-                netAmount,
+                command.getAmount(),
                 true,
                 merchantCurrencyDto,
                 true
