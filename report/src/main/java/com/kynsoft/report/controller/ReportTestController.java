@@ -87,7 +87,6 @@ public class ReportTestController {
             // Convertir el reporte a Base64
             String base64Report = Base64.getEncoder().encodeToString(outputStream.toByteArray());
 
-            // Devolver el reporte en Base64 como JSON
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body("{\"base64Report\": \"" + base64Report + "\"}");
