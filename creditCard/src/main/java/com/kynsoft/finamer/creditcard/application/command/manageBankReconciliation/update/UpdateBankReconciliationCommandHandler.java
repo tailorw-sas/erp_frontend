@@ -72,7 +72,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         for (Long id : transactionsToUnlink) {
             TransactionDto transactionDto = this.transactionService.findById(id);
             transactionDto.setReconciliation(null);
-            reconciliation.setDetailsAmount(reconciliation.getDetailsAmount() - transactionDto.getAmount());
+            reconciliation.setDetailsAmount(reconciliation.getDetailsAmount() - transactionDto.getNetAmount());
             //si es de ajuste se elimina
             if(transactionDto.isAdjustment()){
                 this.transactionService.delete(transactionDto);
@@ -85,7 +85,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         for (Long transactionId : newTransactions) {
             if(!reconcileTransactions.contains(transactionId)) {
                 TransactionDto transactionDto = this.transactionService.findById(transactionId);
-                reconciliation.setDetailsAmount(reconciliation.getDetailsAmount() + transactionDto.getAmount());
+                reconciliation.setDetailsAmount(reconciliation.getDetailsAmount() + transactionDto.getNetAmount());
                 transactionList.add(transactionDto);
             }
         }

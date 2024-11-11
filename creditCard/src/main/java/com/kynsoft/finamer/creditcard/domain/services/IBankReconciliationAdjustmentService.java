@@ -10,7 +10,7 @@ import java.util.Set;
 
 public interface IBankReconciliationAdjustmentService {
 
-    List<Long> createAdjustments(List<CreateBankReconciliationAdjustmentRequest> adjustmentRequest, Set<TransactionDto> transactionList);
+    List<Long> createAdjustments(List<CreateBankReconciliationAdjustmentRequest> adjustmentRequest, Set<TransactionDto> transactionList, Double amount, Double detailsAmount);
 
     List<Long> createAdjustments(List<UpdateBankReconciliationAdjustmentRequest> adjustmentRequest, ManageBankReconciliationDto reconciliationDto);
 }
