@@ -8,8 +8,8 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import type { MenuItem } from '~/components/menu/MenuItems'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import { formatCardNumber } from '~/components/vcc/vcc_utils'
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
 const authStore = useAuthStore()
@@ -284,6 +284,9 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
+        iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
