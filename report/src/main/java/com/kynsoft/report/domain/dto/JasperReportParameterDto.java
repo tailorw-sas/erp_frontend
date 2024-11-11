@@ -21,5 +21,7 @@ public class JasperReportParameterDto {
     private String label;
     private String componentType;
     private JasperReportTemplateDto jasperReportTemplate;
+    private String reportClass;
+    private String reportValidation;
 
 }
