@@ -37,7 +37,6 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
     @Override
     public void handle(CreateBankReconciliationCommand command) {
-        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(command.getAmount(), command.getDetailsAmount()));
         ManageMerchantBankAccountDto merchantBankAccountDto = this.merchantBankAccountService.findById(command.getMerchantBankAccount());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
@@ -48,12 +47,13 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
                 transactionList.add(transactionDto);
             }
         }
-
+        Double detailsAmount = transactionList.stream().map(TransactionDto::getNetAmount).reduce(0.0, Double::sum);
+        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(command.getAmount(), detailsAmount));
         if (command.getAdjustmentTransactions() != null) {
-            List<Long> adjustmentIds = this.bankReconciliationAdjustmentService.createAdjustments(command.getAdjustmentTransactions(), transactionList);
+            List<Long> adjustmentIds = this.bankReconciliationAdjustmentService.createAdjustments(command.getAdjustmentTransactions(), transactionList, command.getAmount(), detailsAmount);
             command.setAdjustmentTransactionIds(adjustmentIds);
         }
-
+        detailsAmount = transactionList.stream().map(TransactionDto::getNetAmount).reduce(0.0, Double::sum);
         //todo: reconcile status
         ManageReconcileTransactionStatusDto reconcileTransactionStatusDto = this.reconcileTransactionStatusService.findByEReconcileTransactionStatus(EReconcileTransactionStatus.CREATED);
 
@@ -63,7 +63,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
                 merchantBankAccountDto,
                 hotelDto,
                 command.getAmount(),
-                command.getDetailsAmount(),
+                detailsAmount,
                 command.getPaidDate(),
                 command.getRemark(),
                 reconcileTransactionStatusDto,
