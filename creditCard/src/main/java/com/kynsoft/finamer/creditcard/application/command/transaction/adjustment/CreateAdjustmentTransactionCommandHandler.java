@@ -45,20 +45,21 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
         ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findById(command.getTransactionCategory());
         ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findById(command.getTransactionSubCategory());
 
-        double commission = 0;
+
         LocalDate transactionDate = command.getTransactionDate();
-        double netAmount = command.getAmount() - commission;
+        double amount = transactionCategory.getOnlyApplyNet() ? 0.0 : command.getAmount();
+        double netAmount = command.getAmount();
 
         TransactionDto transactionDto = this.service.create(new TransactionDto(
                 command.getTransactionUuid(),
                 agencyDto,
                 transactionCategory,
                 transactionSubCategory,
-                command.getAmount(),
+                amount,
                 command.getReservationNumber(),
                 command.getReferenceNumber(),
                 transactionStatusDto,
-                commission,
+                0.0,
                 transactionDate,
                 netAmount,
                 transactionDate,
