@@ -791,7 +791,9 @@ onMounted(() => {
       >
         <template #expansion="{ data: item }">
           <!--          <pre>{{item}}</pre> -->
-          <BankPaymentTransactions :bank-reconciliation-id="item.id" />
+          <BankPaymentTransactions :bank-reconciliation-id="item.id" @update:details-amount="($event) => {
+            item.detailsAmount = formatNumber($event)
+          }" />
         </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">

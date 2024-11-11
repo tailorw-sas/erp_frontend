@@ -16,6 +16,8 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['update:detailsAmount'])
+
 const listItems = ref<any[]>([])
 const toast = useToast()
 const contextMenu = ref()
@@ -248,7 +250,7 @@ async function unbindTransactions() {
 
     const response: any = await GenericService.create('creditcard', 'bank-reconciliation/unbind', payload)
     if (response && response.detailsAmount) {
-      // subTotals.value.amount = response.detailsAmount
+      emit('update:detailsAmount', response.detailsAmount)
     }
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     getList()
