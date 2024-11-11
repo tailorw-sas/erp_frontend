@@ -93,9 +93,9 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 String approvedUrl = merchantConfigDto.getSuccessUrl(); //Campo successUrl de Merchant Config
                 String declinedUrl = merchantConfigDto.getDeclinedUrl();//Campo declinedUrl de Merchant Config
                 String cancelUrl = merchantConfigDto.getErrorUrl();//Campo errorUrl de Merchant Config
-                String useCustomField1 = "0";  //Se mantiene asi por defecto
-                String customField1Label = "";//Se mantiene asi por defecto
-                String customField1Value = "";//Se mantiene asi por defecto
+                String useCustomField1 = "1";  //Se mantiene asi por defecto
+                String customField1Label = "ReferenceNumber";//Se mantiene asi por defecto
+                String customField1Value = transactionDto.getReferenceNumber().length() > 200 ? transactionDto.getReferenceNumber().substring(0, 200) : transactionDto.getReferenceNumber();
                 String useCustomField2 = "0";//Se mantiene asi por defecto
                 String customField2Label = "";//Se mantiene asi por defecto
                 String customField2Value = "";//Se mantiene asi por defecto
