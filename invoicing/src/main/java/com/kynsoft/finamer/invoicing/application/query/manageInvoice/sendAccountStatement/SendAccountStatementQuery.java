@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.payment.application.query.manageInvoice.sendAccountStatement;
+package com.kynsoft.finamer.invoicing.application.query.manageInvoice.sendAccountStatement;
 
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import lombok.AllArgsConstructor;
@@ -13,4 +13,5 @@ import java.util.UUID;
 @AllArgsConstructor
 public class SendAccountStatementQuery implements IQuery {
     private List<UUID> invoiceIds;
+    private UUID employee;
 }

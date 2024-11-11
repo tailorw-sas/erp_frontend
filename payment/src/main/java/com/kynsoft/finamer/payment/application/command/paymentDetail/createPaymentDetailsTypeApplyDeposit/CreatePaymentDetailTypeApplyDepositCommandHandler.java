@@ -1,16 +1,22 @@
 package com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeApplyDeposit;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
+import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,13 +25,16 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
     private final IPaymentDetailService paymentDetailService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IPaymentService paymentService;
+    private final IPaymentCloseOperationService paymentCloseOperationService;
 
     public CreatePaymentDetailTypeApplyDepositCommandHandler(IPaymentDetailService paymentDetailService, 
                                                              IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                                             IPaymentService paymentService) {
+                                                             IPaymentService paymentService,
+                                                             IPaymentCloseOperationService paymentCloseOperationService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
     }
 
     @Override
@@ -40,7 +49,8 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
                 null,
                 null,
                 null,
-                OffsetDateTime.now(ZoneId.of("UTC")),
+                //OffsetDateTime.now(ZoneId.of("UTC")),
+                transactionDate(command.getPayment().getHotel().getId()),
                 null,
                 null,
                 null,
@@ -74,6 +84,15 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
         }
 
         command.setNewDetailDto(newDetailDto);
+    }
+
+    private OffsetDateTime transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(ZoneId.of("UTC"));
+        }
+        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 
     private void calculate(PaymentDto paymentDto, PaymentDetailDto newDetailDto) {

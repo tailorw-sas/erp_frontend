@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.application.query.manageInvoice.search;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -32,6 +33,7 @@ public class ManageInvoiceSearchResponse {
     private String parent;
     private Boolean autoRec;
     private Double originalAmount;
+    private ImportType importType;
 
     public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
         this.id = projection.getId();
@@ -54,6 +56,7 @@ public class ManageInvoiceSearchResponse {
         this.parent = projection.getParent() != null ? projection.getParent().getId().toString() : null;
         this.autoRec = projection.getAutoRec();
         this.originalAmount = projection.getOriginalAmount();
+        this.importType = projection.getImportType();
     }
 
     private String deleteHotelInfo(String input) {
