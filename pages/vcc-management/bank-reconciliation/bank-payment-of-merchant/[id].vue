@@ -411,7 +411,7 @@ async function getStatusList(query: string) {
     }
     const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
     const { data: dataList } = response
-
+    StatusList.value = []
     for (const iterator of dataList) {
       StatusList.value = [...StatusList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
