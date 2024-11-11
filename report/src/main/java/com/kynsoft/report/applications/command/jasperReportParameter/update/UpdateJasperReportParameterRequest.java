@@ -20,4 +20,6 @@ public class UpdateJasperReportParameterRequest {
     private  String label;
     private String componentType;
     private  UUID reportId;
+    private String reportClass;
+    private String reportValidation;
 }
