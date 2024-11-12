@@ -243,13 +243,21 @@ const Fields = ref<FieldDefinitionType[]>([
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     disabled: String(route.query.type) as any === InvoiceType.CREDIT,
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    }).required()
-      .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
+    validation: validateEntityForAgency('agency')
   },
+  // {
+  //   field: 'agency',
+  //   header: 'Agency',
+  //   dataType: 'select',
+  //   class: 'field col-12 md:col-3 required',
+  //   disabled: String(route.query.type) as any === InvoiceType.CREDIT,
+  //   validation: z.object({
+  //     id: z.string(),
+  //     name: z.string(),
+
+  //   }).required()
+  //     .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
+  // },
   {
     field: 'invoiceStatus',
     header: 'Status',
@@ -438,6 +446,12 @@ async function getAgencyList(query = '') {
               logicalOperation: 'AND'
             },
             {
+              key: 'client.status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            },
+            {
               key: 'status',
               operator: 'EQUALS',
               value: 'ACTIVE',
@@ -487,7 +501,8 @@ async function getAgencyList(query = '') {
           name: iterator.name, 
           code: iterator.code, 
           status: iterator.status, 
-          fullName: `${iterator.code} - ${iterator.name}` 
+          fullName: `${iterator.code} - ${iterator.name}`,
+          client: iterator.client
         }
       ]
     }
@@ -1099,7 +1114,8 @@ onMounted(async () => {
             :suggestions="agencyList" 
             @change="($event) => {
               onUpdate('agency', $event)
-            }" @load="($event) => getAgencyList($event)"
+            }" 
+            @load="($event) => getAgencyList($event)"
           >
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
@@ -1144,10 +1160,11 @@ onMounted(async () => {
                     icon="pi pi-save" 
                     :disabled="disableBtnSave()" 
                     :loading="loadingSaveAll" 
-                    @click="() => {
-                        saveItem(props.item.fieldValues)
-                      }"
+                    @click="props.item.submitForm($event)" 
                   />
+                    <!-- @click="() => {
+                        saveItem(props.item.fieldValues)
+                      }" -->
                 </IfCan>
 
                 <Button 
