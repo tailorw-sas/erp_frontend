@@ -211,14 +211,28 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             if (cardnetJobDto == null) {
                 CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
                 if (sessionResponse == null || sessionResponse.getSession() == null) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al generar la sesión.");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating session.");
                 }
                 cardNetSession = sessionResponse.getSession();
                 cardNetSessionKey = sessionResponse.getSessionKey();
                 // Insertar nueva referencia de session.
                 cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), cardNetSession, cardNetSessionKey, Boolean.FALSE, 0);
                 cardNetJobService.create(cardnetJobDto);
-            } else {
+            } else if (transactionDto.getStatus().isDeclinedStatus() && cardnetJobDto.getIsProcessed()) {
+                //  si fue declinada la primera transaccion
+                CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
+                if (sessionResponse == null || sessionResponse.getSession() == null) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating session.");
+                }
+                cardNetSession = sessionResponse.getSession();
+                cardnetJobDto.setSession(sessionResponse.getSession());
+                cardnetJobDto.setSessionKey(sessionResponse.getSessionKey());
+                cardnetJobDto.setIsProcessed(false);
+                cardnetJobDto.setNumberOfAttempts(0);
+                cardNetJobService.update(cardnetJobDto);
+            }
+            else {
+                // Esto es por si es de tipo Link y le da clic varias veces no duplique la session
                 cardNetSession = cardnetJobDto.getSession();
                 cardnetJobDto.setIsProcessed(false);
                 cardnetJobDto.setNumberOfAttempts(0);
