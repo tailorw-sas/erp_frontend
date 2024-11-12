@@ -30,7 +30,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-vcc-transaction-type',
 })
 
@@ -178,7 +178,7 @@ const ENUM_FILTER = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage VCC Transaction Type',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-vcc-transaction-type',
   loading: false,
   actionsAsMenu: false,

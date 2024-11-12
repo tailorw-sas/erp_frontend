@@ -249,7 +249,7 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
     CategoryList.value = []
 
     for (const iterator of dataList) {
-      CategoryList.value = [...CategoryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      CategoryList.value = [...CategoryList.value, { ...iterator, name: `${iterator.code} - ${iterator.name}` }]
     }
     if (isDefault && CategoryList.value.length > 0) {
       item.value.transactionCategory = CategoryList.value[0]

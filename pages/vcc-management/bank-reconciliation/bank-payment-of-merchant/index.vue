@@ -315,7 +315,7 @@ async function createItem(item: { [key: string]: any }) {
         agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
         transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
         transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
-        amount: parseFormattedNumber(elem.amount),
+        amount: parseFormattedNumber(elem.netAmount),
         reservationNumber: elem.reservationNumber,
         referenceNumber: elem.referenceNumber
       }))
@@ -366,20 +366,21 @@ function bindAdjustment(data: any) {
 }
 
 function formatAdjustment(data: any) {
-  data.id = v4() // id temporal para poder eliminar de forma local
-  data.checkIn = dayjs().format('YYYY-MM-DD')
-  subTotals.value.amount += data.amount
-  data.amount = formatNumber(data.amount)
-  data.commission = formatNumber(0)
-  data.netAmount = formatNumber(data.amount)
-  data.adjustment = true
+  const newAdjustment = JSON.parse(JSON.stringify(data))
+  newAdjustment.id = v4() // id temporal para poder eliminar de forma local
+  newAdjustment.checkIn = dayjs().format('YYYY-MM-DD')
+  subTotals.value.amount += data.amount // todo: aqui se debe restar si la subcategoria es negativa
+  newAdjustment.commission = formatNumber(0)
+  newAdjustment.netAmount = formatNumber(data.amount)
+  newAdjustment.amount = data.transactionCategory.onlyApplyNet ? formatNumber(0) : formatNumber(data.amount)
+  newAdjustment.adjustment = true
   if (data.transactionCategory) {
-    data.categoryType = data.transactionCategory
+    newAdjustment.categoryType = data.transactionCategory
   }
   if (data.transactionSubCategory) {
-    data.subCategoryType = data.transactionSubCategory
+    newAdjustment.subCategoryType = data.transactionSubCategory
   }
-  return data
+  return newAdjustment
 }
 
 function bindTransactions(event: any[]) {
