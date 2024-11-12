@@ -771,7 +771,6 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
   
-  
   if (idItem.value) {
     try {
       await updateItem(item)

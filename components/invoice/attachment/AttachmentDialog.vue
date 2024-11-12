@@ -572,8 +572,59 @@ async function saveItem(item: { [key: string]: any }) {
     await getList()
   }
 }
+// function disabledBtnDeleteAttachment() {
+//   return (ListItems.value.length <= 1) || (disableDeleteBtn.value === false ? (!idItem.value || (!props.isCreationDialog && props.selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)) : true)
+// }
+
 function disabledBtnDeleteAttachment() {
-  return (ListItems.value.length <= 1) || (disableDeleteBtn.value === false ? (!idItem.value || (!props.isCreationDialog && props.selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)) : true)
+  // Verifica si la lista de elementos tiene 1 o menos items
+  if (ListItems.value.length <= 1) {
+    return true
+  }
+  // Si disableDeleteBtn está en false, evalúa las condiciones adicionales
+  if (disableDeleteBtn.value === false) {
+    // Verifica si idItem es nulo o undefined
+    if (!idItem.value) {
+      return true
+    }
+    // Si no es un diálogo de creación y el estado de la factura seleccionada es 'RECONCILED', retorna true
+    if (!props.isCreationDialog && props.selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED) {
+      return true
+    }
+    // Si ninguna condición se cumple, retorna false
+    return false
+  }
+  // Si disableDeleteBtn está en true, retorna true
+  return true
+}
+
+function disabledBtnDelete(): boolean {
+  let listTem = []
+  if (props.isCreationDialog) {
+    listTem = JSON.parse(JSON.stringify(listItemsLocal.value))
+  }
+  else {
+    listTem = JSON.parse(JSON.stringify(ListItems.value))
+  }
+
+  const cantItemAttachInvDefault = listTem.filter((attachment: any) => attachment?.type?.attachInvDefault)?.length
+  const idObjSelected = listTem?.find((attachment: any) => attachment?.type?.attachInvDefault)?.id
+
+  if (cantItemAttachInvDefault === 1 && (idItem.value === idObjSelected)) {
+    return true
+  }
+  else if (listTem && listTem.length > 1) {
+    return false
+  }
+  else {
+    return true
+  }
+  // if (props.selectedInvoiceObj && props.selectedInvoiceObj?.invoiceStatus?.processStatus) {
+
+  // }
+  // else {
+  //   return true
+  // }
 }
 
 function requireConfirmationToDelete(event: any) {
@@ -1044,7 +1095,7 @@ onMounted(async () => {
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
                   <Button
                     v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
-                    :disabled="disabledBtnDeleteAttachment()"
+                    :disabled="disabledBtnDelete()"
                     @click="requireConfirmationToDelete"
                   />
                 </IfCan>
