@@ -153,7 +153,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         }else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing transaction date.");
 
     }
-    // Método para crear el AuthHash
+    // Métado para crear el AuthHash
     private String createAuthHash(String data) {
         try {
             javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA512");
@@ -211,14 +211,30 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             if (cardnetJobDto == null) {
                 CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
                 if (sessionResponse == null || sessionResponse.getSession() == null) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al generar la sesión.");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating session.");
                 }
                 cardNetSession = sessionResponse.getSession();
                 cardNetSessionKey = sessionResponse.getSessionKey();
                 // Insertar nueva referencia de session.
                 cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), cardNetSession, cardNetSessionKey, Boolean.FALSE, 0);
+                cardnetJobDto.setCreatedAt(LocalDateTime.now());
                 cardNetJobService.create(cardnetJobDto);
-            } else {
+            } else if ((transactionDto.getStatus().isDeclinedStatus() && cardnetJobDto.getIsProcessed()) || cardnetJobDto.isSessionExpired()) {
+                //  si esta como declinada previamente o expiró el tiempo de validez de la session
+                CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
+                if (sessionResponse == null || sessionResponse.getSession() == null) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating session.");
+                }
+                cardNetSession = sessionResponse.getSession();
+                cardnetJobDto.setSession(sessionResponse.getSession());
+                cardnetJobDto.setSessionKey(sessionResponse.getSessionKey());
+                cardnetJobDto.setCreatedAt(LocalDateTime.now());
+                cardnetJobDto.setIsProcessed(false);
+                cardnetJobDto.setNumberOfAttempts(0);
+                cardNetJobService.update(cardnetJobDto);
+            }
+            else {
+                // Esto es por si es de tipo Link y le da clic varias veces no duplique la session
                 cardNetSession = cardnetJobDto.getSession();
                 cardnetJobDto.setIsProcessed(false);
                 cardnetJobDto.setNumberOfAttempts(0);

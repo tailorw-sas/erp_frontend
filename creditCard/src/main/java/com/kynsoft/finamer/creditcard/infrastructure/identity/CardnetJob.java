@@ -56,11 +56,10 @@ public class CardnetJob implements Serializable {
         this.sessionKey = dto.getSessionKey();
         this.isProcessed = dto.getIsProcessed();
         this.numberOfAttempts = dto.getNumberOfAttempts();
-
     }
     public CardnetJobDto toAggregate(){
         return new CardnetJobDto(
-                id,transactionId, session, sessionKey, isProcessed, numberOfAttempts
+                id,transactionId, session, sessionKey, isProcessed, numberOfAttempts, createdAt
         );
     }
 }
