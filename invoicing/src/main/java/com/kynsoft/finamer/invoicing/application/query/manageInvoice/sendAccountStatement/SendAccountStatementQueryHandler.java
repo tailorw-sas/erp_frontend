@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.application.query.manageInvoice.sendAccountStatement;
 
+import com.kynsoft.finamer.invoicing.infrastructure.services.FileService;
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageEmployeeService;
