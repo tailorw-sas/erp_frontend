@@ -218,7 +218,8 @@ public class TransactionServiceImpl implements ITransactionService {
         // Variables para el template de email
         List<MailJetVar> vars = Arrays.asList(
                 new MailJetVar("payment_link", paymentLink),
-                new MailJetVar("invoice_amount", transactionDto.getAmount().toString())
+                new MailJetVar("invoice_amount", transactionDto.getAmount().toString()),
+                new MailJetVar("reference_number", transactionDto.getReferenceNumber())
         );
         request.setMailJetVars(vars);
 
