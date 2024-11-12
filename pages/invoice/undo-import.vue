@@ -70,6 +70,11 @@ const ENUM_FILTER = [
   { id: 'invoiceId', name: 'Invoice Id' },
 ]
 
+const confApiApplyUndo = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/undo',
+})
+
 const confhotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
@@ -167,8 +172,13 @@ function openUndo() {
   openDialog.value = true
 }
 async function onMultipleSelect(data: any) {
-  selectedElements.value = data
-  console.log(selectedElements.value, 'que hay aqui')
+  const bookingIdsSelected = [...data]
+
+  if (bookingIdsSelected.length > 0) {
+    selectedElements.value = bookinglistItems.value
+      .filter(booking => bookingIdsSelected.includes(booking.id))
+      .map(booking => booking.invoice.id)
+  }
 }
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
@@ -183,8 +193,6 @@ async function getList() {
     const newListItems = []
 
     const response = await GenericService.search('invoicing', 'manage-invoice', payload.value)
-    console.log(response.data)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -531,6 +539,33 @@ function clearFilterToSearch() {
   Pagination.value.totalElements = 0
 }
 
+async function applyUndo() {
+  try {
+    loadingSaveAll.value = true
+    if (selectedElements.value.length > 0) {
+      const payload = {
+        ids: selectedElements.value,
+      }
+      const response = await GenericService.create(confApiApplyUndo.moduleApi, confApiApplyUndo.uriApi, payload)
+      loadingSaveAll.value = false
+      openDialog.value = false
+      if (response) {
+        toast.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Undo Successfully',
+          life: 3000
+        })
+        await searchAndFilter()
+      }
+    }
+  }
+  catch (error) {
+    loadingSaveAll.value = false
+    console.error('Error applying undo:', error)
+  }
+}
+
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criteria && filterToSearch.value.search)
   return false
@@ -710,8 +745,10 @@ onMounted(async () => {
                 <div class="flex justify-content-end mb-0">
                   <Button
                     :disabled="entryCode !== randomCode"
-                    class="mr-2 p-button-primary h-2rem  w-3rem mt-3 " icon="pi pi-save"
-                    @click="handleDialogClose"
+                    class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
+                    icon="pi pi-save"
+                    :loading="loadingSaveAll"
+                    @click="applyUndo"
                   />
 
                   <Button
