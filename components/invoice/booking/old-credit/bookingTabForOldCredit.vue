@@ -101,7 +101,7 @@ const toast = useToast()
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 const ListItems = ref<any[]>([])
-const listItemsLocal = ref<any[]>([...(props.listItems ?? [])])
+// const listItemsLocal = ref<any[]>([props.listItems])
 const formReload = ref(0)
 
 const route = useRoute()
@@ -1138,38 +1138,39 @@ async function GetItemById(id: string) {
     loadingSaveAll.value = true
 
     if (props.isCreationDialog) {
-
-      const element: any = listItemsLocal.value.find((item: any) => item.id === id)
-      item.value.id = element.id
-      item.value.bookingId = element.bookingId
-      idItem.value = element?.id
-      item.value.hotelCreationDate = dayjs(element.hotelCreationDate).startOf('day').toDate()
-      item.value.bookingDate = element.bookingDate ? new Date(element.bookingDate) : new Date()
-      item.value.checkIn = new Date(element.checkIn)
-      item.value.checkOut = new Date(element.checkOut)
-      item.value.hotelBookingNumber = element.hotelBookingNumber
-      item.value.fullName = element.fullName
-      item.value.firstName = element.firstName
-      item.value.lastName = element.lastName
-
-      item.value.invoiceAmount = element.invoiceAmount ? Number(element.invoiceAmount) : 0
-      item.value.roomNumber = element.roomNumber
-      item.value.couponNumber = element.couponNumber
-      item.value.adults = element.adults
-      item.value.children = element.children
-      item.value.rateAdult = element.rateAdult
-      item.value.rateChild = element.rateChild
-      item.value.hotelInvoiceNumber = element.hotelInvoiceNumber
-      item.value.folioNumber = element.folioNumber
-      item.value.hotelAmount = element.hotelAmount ? Number(element?.hotelAmount) : 0
-      item.value.description = element.description
-      item.value.invoice = element.invoice
-      item.value.ratePlan = element.ratePlan?.name == '-' ? null : element.ratePlan
-      item.value.nightType = element.nightType
-      item.value.roomType = element.roomType?.name == '-' ? null : element.roomType
-      item.value.roomCategory = element.roomCategory
-      loadingSaveAll.value = false
-      return formReload.value += 1
+      if (props.listItems && props.listItems.length > 0) {
+        const element: any = props.listItems.find((item: any) => item.id === id)
+        item.value.id = element.id
+        item.value.bookingId = element.bookingId
+        idItem.value = element?.id
+        item.value.hotelCreationDate = dayjs(element.hotelCreationDate).startOf('day').toDate()
+        item.value.bookingDate = element.bookingDate ? new Date(element.bookingDate) : new Date()
+        item.value.checkIn = new Date(element.checkIn)
+        item.value.checkOut = new Date(element.checkOut)
+        item.value.hotelBookingNumber = element.hotelBookingNumber
+        item.value.fullName = element.fullName
+        item.value.firstName = element.firstName
+        item.value.lastName = element.lastName
+  
+        item.value.invoiceAmount = element.invoiceAmount ? Number(element.invoiceAmount) : 0
+        item.value.roomNumber = element.roomNumber
+        item.value.couponNumber = element.couponNumber
+        item.value.adults = element.adults
+        item.value.children = element.children
+        item.value.rateAdult = element.rateAdult
+        item.value.rateChild = element.rateChild
+        item.value.hotelInvoiceNumber = element.hotelInvoiceNumber
+        item.value.folioNumber = element.folioNumber
+        item.value.hotelAmount = element.hotelAmount ? Number(element?.hotelAmount) : 0
+        item.value.description = element.description
+        item.value.invoice = element.invoice
+        item.value.ratePlan = element.ratePlan?.name == '-' ? null : element.ratePlan
+        item.value.nightType = element.nightType
+        item.value.roomType = element.roomType?.name == '-' ? null : element.roomType
+        item.value.roomCategory = element.roomCategory
+        loadingSaveAll.value = false
+        return formReload.value += 1
+      }
     }
 
     try {
@@ -1288,10 +1289,12 @@ async function saveBooking(item: { [key: string]: any }) {
   item.roomType = roomTypeList.value.find((roomType: any) => roomType?.id === item?.roomType?.id)
   item.dueAmount = item.invoiceAmount
   if (props.isCreationDialog) {
-    const invalid: any = listItemsLocal.value.find((booking: any) => booking?.hotelBookingNumber === item?.hotelBookingNumber)
-
-    if (invalid && invalid?.id !== idItem.value) {
-      return toast.add({ severity: 'error', summary: 'Error', detail: 'The field Hotel booking No. is repeated', life: 10000 })
+    if (props.listItems && props.listItems.length > 0) {
+      const invalid: any = props.listItems.find((booking: any) => booking?.hotelBookingNumber === item?.hotelBookingNumber)
+  
+      if (invalid && invalid?.id !== idItem.value) {
+        return toast.add({ severity: 'error', summary: 'Error', detail: 'The field Hotel booking No. is repeated', life: 10000 })
+      }
     }
   }
 
@@ -1432,13 +1435,13 @@ watch(() => props.invoiceAgency?.bookingCouponFormat, () => {
   couponNumberValidation.value = props.invoiceAgency?.bookingCouponFormat
 })
 
-watch(() => listItemsLocal.value, () => {
+watch(() => props.listItems, () => {
   if (props.isCreationDialog) {
     totalHotelAmount.value = 0
     totalInvoiceAmount.value = 0
     totalOriginalAmount.value = 0
     totalDueAmount.value = 0
-    listItemsLocal.value.forEach((itemObj: any) => {
+    props.listItems.forEach((itemObj: any) => {
       totalHotelAmount.value += itemObj?.hotelAmount ? Number(itemObj?.hotelAmount) : 0
       totalInvoiceAmount.value += itemObj?.invoiceAmount ? Number(itemObj?.invoiceAmount) : 0
       totalOriginalAmount.value += itemObj?.originalAmount ? Number(itemObj?.originalAmount) : 0
@@ -1590,10 +1593,8 @@ onMounted(() => {
 
 <template>
   <div>
-    <!-- <pre>{{ listItemsLocal }}</pre>
-    <pre>{{ ListItems }}</pre> -->
     <DynamicTable 
-      :data="isCreationDialog ? listItemsLocal as any : ListItems" 
+      :data="props.isCreationDialog ? props.listItems as any : ListItems" 
       :columns="finalColumns" 
       :options="Options"
       :pagination="Pagination" 
