@@ -102,6 +102,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                 this.manageInvoiceService.update(invoiceDto);
                 this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
             }
+            this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(), command.getEmployeeId());
         } else {
             throw new BusinessException(
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
