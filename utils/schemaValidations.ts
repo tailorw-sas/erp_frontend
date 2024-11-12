@@ -1,3 +1,4 @@
+import { client } from 'node:process'
 import { z } from 'zod'
 
 interface FieldProperty {
@@ -49,6 +50,22 @@ export function validateEntityStatus(fieldName: string) {
     .refine(value => isActive(value), {
       message: `This ${fieldName} is not active`
     })
+}
+
+export function validateEntityForAgency(fieldName: string) {
+  return z.object({
+    id: z.string(),
+    name: z.string(),
+    status: z.enum(['ACTIVE', 'INACTIVE'], { message: `The ${fieldName} must be either ACTIVE or INACTIVE` }),
+    client: z.object({
+      id: z.string(),
+      name: z.string(),
+      status: z.enum(['ACTIVE', 'INACTIVE'], { message: `The client must be either ACTIVE or INACTIVE` })
+    })
+  }).nullable()
+    .refine(value => value && value.id && value.name, { message: `The ${fieldName} field is required` })
+    .refine(value => value?.status === 'ACTIVE', { message: `This ${fieldName} is not active` })
+    .refine(value => value?.client?.status === 'ACTIVE', { message: `The client associated with this ${fieldName} is not active` })
 }
 
 export function validateEntityStatusForNotRequiredField(fieldName: string) {
