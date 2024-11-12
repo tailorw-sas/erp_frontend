@@ -811,6 +811,8 @@ function sortRoomRate(event: any) {
 }
 
 function addBooking(booking: any) {
+  console.log('Sin entro aqui......add booking')
+
   bookingList.value = [...bookingList.value, {
     ...booking,
     checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
