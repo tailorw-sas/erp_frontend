@@ -753,6 +753,8 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  
+  
   if (idItem.value) {
     try {
       await updateItem(item)
@@ -762,18 +764,17 @@ async function saveItem(item: { [key: string]: any }) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
-    idItem.value = ''
   }
-  else {
-    try {
-      await createItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-  }
+  // else {
+  //   try {
+  //     await createItem(item)
+  //     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+  //   }
+  //   catch (error: any) {
+  //     successOperation = false
+  //     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  //   }
+  // }
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()

@@ -1590,6 +1590,8 @@ onMounted(() => {
 
 <template>
   <div>
+    <!-- <pre>{{ listItemsLocal }}</pre>
+    <pre>{{ ListItems }}</pre> -->
     <DynamicTable 
       :data="isCreationDialog ? listItemsLocal as any : ListItems" 
       :columns="finalColumns" 
@@ -1662,8 +1664,6 @@ onMounted(() => {
 
 
     </DynamicTable>
-    <!-- <pre>{{ formatNumber('-32658826265') }}</pre>
-    <pre>{{ listItems }}</pre> -->
   </div>
   <ContextMenu v-if="!isDetailView" ref="bookingContextMenu" :model="menuModel" />
 
