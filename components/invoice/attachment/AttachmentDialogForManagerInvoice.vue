@@ -768,29 +768,24 @@ function disabledBtnCreate(): boolean {
 }
 
 function disabledBtnDelete(): boolean {
-  if (props.selectedInvoiceObj && props.selectedInvoiceObj?.invoiceStatus?.processStatus) {
-    const cantItemAttachInvDefault = ListItems.value?.filter((attachment: any) => attachment?.type?.attachInvDefault).length
-    const idObjSelected = ListItems.value?.find((attachment: any) => attachment?.type?.attachInvDefault)?.id
-    console.log({
-      idItem: idItem.value,
-      idObjSelected,
-      idItemToLoadFirstTime: idItemToLoadFirstTime.value,
-    })
+  const cantItemAttachInvDefault = ListItems.value?.filter((attachment: any) => attachment?.type?.attachInvDefault).length
+  const idObjSelected = ListItems.value?.find((attachment: any) => attachment?.type?.attachInvDefault)?.id
 
-    if (cantItemAttachInvDefault === 1 && (idItem.value === idObjSelected || idItemToLoadFirstTime.value === idObjSelected)) {
-      return true
-    }
-    else
-      if (ListItems.value && ListItems.value.length > 1) {
-        return false
-      }
-      else {
-        return true
-      }
+  if (cantItemAttachInvDefault === 1 && (idItem.value === idObjSelected || idItemToLoadFirstTime.value === idObjSelected)) {
+    return true
+  }
+  else if (ListItems.value && ListItems.value.length > 1) {
+    return false
   }
   else {
     return true
   }
+  // if (props.selectedInvoiceObj && props.selectedInvoiceObj?.invoiceStatus?.processStatus) {
+
+  // }
+  // else {
+  //   return true
+  // }
 }
 
 watch(() => props.selectedInvoiceObj, () => {
