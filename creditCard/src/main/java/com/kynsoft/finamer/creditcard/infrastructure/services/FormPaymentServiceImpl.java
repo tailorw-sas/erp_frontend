@@ -221,6 +221,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 cardNetJobService.create(cardnetJobDto);
             } else if ((transactionDto.getStatus().isDeclinedStatus() && cardnetJobDto.getIsProcessed()) || cardnetJobDto.isSessionExpired()) {
                 //  si esta como declinada previamente o expiró el tiempo de validez de la session
+                // TODO: para este caso lo ideal es crear nuevos cardnetDto, para dejar la traza de las sesiones previas por transaccion. En el get del cardetDto deberia devolver el mas reciente
                 CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
                 if (sessionResponse == null || sessionResponse.getSession() == null) {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating session.");
