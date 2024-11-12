@@ -365,7 +365,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS(1143, Series.DOMAIN_ERROR, "Manage Bank Reconciliation cannot be changed to completed status."),
     MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS(1144, Series.DOMAIN_ERROR, "Manage Bank Reconciliation cannot be changed to cancelled status."),
     MANUAL_TRANSACTION_REFERENCE_NUMBER_CANNOT_BE_EMPTY(1145, Series.DOMAIN_ERROR, "The reference number cannot be empty."),
-    MANAGE_TRANSACTION_RESEND_LINK_INVALID(1146, Series.DOMAIN_ERROR,"Guest name and email are required to send the payment link."),;
+    MANAGE_TRANSACTION_RESEND_LINK_INVALID(1146, Series.DOMAIN_ERROR,"Guest name and email are required to send the payment link."),
+    MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR(1147, Series.DOMAIN_ERROR,"Error generating session on CardNet merchant.");
 
     private static final DomainErrorMessage[] VALUES;
 
