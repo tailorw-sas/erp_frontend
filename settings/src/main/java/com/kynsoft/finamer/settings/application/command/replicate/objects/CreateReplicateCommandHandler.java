@@ -293,7 +293,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_EMPLOYEE -> {//
                     for (ManageEmployeeDto employeeDto : this.manageEmployeeService.findAllToReplicate()) {
-                        this.replicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(employeeDto.getId(), employeeDto.getFirstName(), employeeDto.getLastName(), employeeDto.getEmail()));
+                        this.replicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(employeeDto.getId(), employeeDto.getFirstName(), employeeDto.getLastName(), employeeDto.getEmail(), employeeDto.getPhoneExtension()));
                     }
                 }
                 case MANAGE_ATTACHMENT_STATUS -> {//
