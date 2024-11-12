@@ -24,12 +24,14 @@ public class ManageEmployee implements Serializable {
     private String firstName;
     private String lastName;
     private String email;
+    private String phoneExtension;
 
     public ManageEmployee(ManageEmployeeDto dto) {
         this.id = dto.getId();
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
         this.email = dto.getEmail();
+        this.phoneExtension = dto.getPhoneExtension();
     }
 
     public ManageEmployeeDto toAggregate() {
@@ -37,7 +39,8 @@ public class ManageEmployee implements Serializable {
                 id, 
                 firstName, 
                 lastName, 
-                email
+                email,
+                phoneExtension
         );
     }
 

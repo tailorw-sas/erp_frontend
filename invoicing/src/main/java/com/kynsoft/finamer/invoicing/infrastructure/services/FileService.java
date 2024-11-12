@@ -73,7 +73,7 @@ public class FileService {
 
         //Esto viene del Employee
         XSSFRow rowContactTel = sheet.getRow(9);
-        rowContactTel.getCell(1).setCellValue("1111111111");
+        rowContactTel.getCell(1).setCellValue(employeeDto.getPhoneExtension());
         rowContactTel.getCell(4).setCellValue("Email: " + employeeDto.getEmail());
 
         //Esto viene del Employee

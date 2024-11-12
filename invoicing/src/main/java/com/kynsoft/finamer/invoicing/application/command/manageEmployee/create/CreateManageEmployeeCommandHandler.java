@@ -21,7 +21,8 @@ public class CreateManageEmployeeCommandHandler implements ICommandHandler<Creat
                 command.getId(),
                 command.getFirstName(),
                 command.getLastName(),
-                command.getEmail()
+                command.getEmail(),
+                command.getPhoneExtension()
         ));
 
     }
