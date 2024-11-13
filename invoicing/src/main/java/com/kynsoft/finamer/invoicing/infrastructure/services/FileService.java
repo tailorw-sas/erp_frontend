@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.application.query.manageInvoice.sendAccountStatement;
+package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
@@ -73,13 +73,13 @@ public class FileService {
 
         //Esto viene del Employee
         XSSFRow rowContactTel = sheet.getRow(9);
-        rowContactTel.getCell(1).setCellValue("1111111111");
-        rowContactTel.getCell(4).setCellValue("Email: " + "email@gmail.com");
+        rowContactTel.getCell(1).setCellValue(employeeDto.getPhoneExtension());
+        rowContactTel.getCell(4).setCellValue("Email: " + employeeDto.getEmail());
 
         //Esto viene del Employee
         XSSFRow rowFax = sheet.getRow(10);
         rowFax.getCell(1).setCellValue("N/A");
-        rowFax.getCell(4).setCellValue("Contact Name: " + "Yannier Penna");
+        rowFax.getCell(4).setCellValue("Contact Name: " + employeeDto.getFirstName() + " " + employeeDto.getLastName());
 
         XSSFRow row = sheet.createRow(rowNumber++);
         addBalance(totalBalance, row);

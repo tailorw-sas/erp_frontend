@@ -11,7 +11,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.service.IFtpService;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
-import com.kynsoft.finamer.invoicing.application.query.manageInvoice.sendAccountStatement.FileService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.FileService;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;

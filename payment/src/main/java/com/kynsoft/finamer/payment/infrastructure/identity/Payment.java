@@ -34,7 +34,7 @@ public class Payment implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(columnDefinition = "serial", name = "payment_gen_id")
+    @Column(columnDefinition = "BIGINT", name = "payment_gen_id")
     @Generated(event = EventType.INSERT)
     private Long paymentId;
 

@@ -21,7 +21,13 @@ public class ConsumerUpdateManageEmployeeService {
     @KafkaListener(topics = "finamer-update-manage-employee", groupId = "invoicing-entity-replica")
     public void listen(UpdateManageEmployeeKafka objKafka) {
         try {
-            CreateManageEmployeeCommand command = new CreateManageEmployeeCommand(objKafka.getId(), objKafka.getFirstName(), objKafka.getLastName(), objKafka.getEmail());
+            CreateManageEmployeeCommand command = new CreateManageEmployeeCommand(
+                    objKafka.getId(), 
+                    objKafka.getFirstName(), 
+                    objKafka.getLastName(), 
+                    objKafka.getEmail(), 
+                    objKafka.getPhoneExtension()
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageEmployeeService.class.getName()).log(Level.SEVERE, null, ex);

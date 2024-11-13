@@ -3,6 +3,7 @@ package com.kynsoft.finamer.creditcard.application.command.manageRedirect;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsoft.finamer.creditcard.domain.dto.MerchantRedirectResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
@@ -31,36 +32,21 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
             throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
         }
 
-        command.setResult(formPaymentService.redirectToMerchant(transactionDto, command.getManageMerchantResponse().getMerchantConfigResponse()).getBody());
+        MerchantRedirectResponse merchantRedirectResponse = formPaymentService.redirectToMerchant(transactionDto, command.getManageMerchantResponse().getMerchantConfigResponse());
 
         //Obtener la data que viene del FormServiceImpl y dividirla en merchantRequest([0]) y Map ([1])
-        String[] dataForm = split(command.getResult());
+//        String[] dataForm = split(command.getResult());
         TransactionPaymentLogsDto dto = this.formPaymentService.findByTransactionId(transactionDto.getTransactionUuid());
 
-        if(dto == null ) {
-            if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.AZUL.toString()))
-            {formPaymentService.create(new TransactionPaymentLogsDto(
-                    UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null, false, transactionDto.getId())
-            );}
-            if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.CARDNET.toString())){
-                formPaymentService.create(new TransactionPaymentLogsDto(
-                        UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null, false, transactionDto.getId())
-                );}
+        if (dto == null) {
+            formPaymentService.create(new TransactionPaymentLogsDto(
+                    UUID.randomUUID(), transactionDto.getTransactionUuid(), merchantRedirectResponse.getLogData(), null, false, transactionDto.getId())
+            );
+        } else {
+            dto.setMerchantRequest(merchantRedirectResponse.getLogData());
+            this.formPaymentService.update(dto);
         }
-        else{
-            if(command.getManageMerchantResponse().getMerchantConfigResponse().getMethod().equals(Method.AZUL.toString())) {
-              dto.setMerchantRequest(dataForm[0]);
-              this.formPaymentService.update(dto);}
-            else{
-              dto.setMerchantRequest(dataForm[1]);
-              this.formPaymentService.update(dto);}
-        }
-        command.setResult(dataForm[0]);
-    }
-    public String[] split(String response){
-        String[] spliter = response.split("\\{", 2);
-        spliter[1] = "{"+spliter[1];
-        return spliter;
+        command.setResult(merchantRedirectResponse.getRedirectForm());
     }
 }
 

@@ -47,7 +47,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     public FormPaymentServiceImpl(ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand,
                                   TransactionPaymentLogsReadDataJPARepository repositoryQuery,
                                   ICardNetJobService cardNetJobService, IMerchantLanguageCodeService merchantLanguageCodeService,
-                                  TransactionReadDataJPARepository transactionRepositoryQuery){
+                                  TransactionReadDataJPARepository transactionRepositoryQuery) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.cardNetJobService = cardNetJobService;
@@ -55,105 +55,87 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         this.transactionRepositoryQuery = transactionRepositoryQuery;
     }
 
-    public ResponseEntity<String> redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
-
+    public MerchantRedirectResponse redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
         if (compareDates(transactionDto.getTransactionUuid())) {
-            try {
-                if (merchantConfigDto.getMethod().equals(Method.AZUL.toString())) {
-                    return redirectToAzul(transactionDto, merchantConfigDto);
-                } else {
-                    return redirectToCardNet(transactionDto, merchantConfigDto);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing payment.");
+            if (merchantConfigDto.getMethod().equals(Method.AZUL.toString())) {
+                return redirectToAzul(transactionDto, merchantConfigDto);
+            } else {
+                return redirectToCardNet(transactionDto, merchantConfigDto);
             }
-        }
-        else throw new BusinessException(DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK, DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK.getReasonPhrase());
+        } else
+            throw new BusinessException(DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK, DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK.getReasonPhrase());
 //        else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing transaction date.");
     }
 
-    private ResponseEntity<String> redirectToAzul(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+    private MerchantRedirectResponse redirectToAzul(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+        // Extraer los parámetros del objeto PaymentRequest
+        //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
+        String merchantId = merchantConfigDto.getMerchantNumber(); //Campo merchantNumber de Merchant Config
+        String merchantName = merchantConfigDto.getName(); //Campo name de Merchant Config
+        String merchantType = merchantConfigDto.getMerchantType(); //Campo merchantType de Merchant Config
+        String currencyCode = transactionDto.getMerchantCurrency().getValue(); //Valor $ por ahora
+        String orderNumber = transactionDto.getId().toString(); //Viene en el request
 
-        if (compareDates(transactionDto.getTransactionUuid())) {
-            try {
-                // Extraer los parámetros del objeto PaymentRequest
-                //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
-                String merchantId = merchantConfigDto.getMerchantNumber(); //Campo merchantNumber de Merchant Config
-                String merchantName = merchantConfigDto.getName(); //Campo name de Merchant Config
-                String merchantType = merchantConfigDto.getMerchantType(); //Campo merchantType de Merchant Config
-                String currencyCode = transactionDto.getMerchantCurrency().getValue(); //Valor $ por ahora
-                String orderNumber = transactionDto.getId().toString(); //Viene en el request
+        double amountValue = transactionDto.getAmount() * 100;
+        int intValue = (int) Math.round(amountValue);
+        String amount = Integer.toString(intValue);
 
-                double amountValue = transactionDto.getAmount() * 100;
-                int intValue = (int) Math.round(amountValue);
-                String amount = Integer.toString(intValue);
+        String itbis = "000"; //Valor 000 por defecto
+        String approvedUrl = merchantConfigDto.getSuccessUrl(); //Campo successUrl de Merchant Config
+        String declinedUrl = merchantConfigDto.getDeclinedUrl();//Campo declinedUrl de Merchant Config
+        String cancelUrl = merchantConfigDto.getErrorUrl();//Campo errorUrl de Merchant Config
+        String useCustomField1 = "1";  //Se mantiene asi por defecto
+        String customField1Label = "ReferenceNumber";//Se mantiene asi por defecto
+        String customField1Value = transactionDto.getReferenceNumber().length() > 200 ? transactionDto.getReferenceNumber().substring(0, 200) : transactionDto.getReferenceNumber();
+        String useCustomField2 = "0";//Se mantiene asi por defecto
+        String customField2Label = "";//Se mantiene asi por defecto
+        String customField2Value = "";//Se mantiene asi por defecto
 
-                String itbis = "000"; //Valor 000 por defecto
-                String approvedUrl = merchantConfigDto.getSuccessUrl(); //Campo successUrl de Merchant Config
-                String declinedUrl = merchantConfigDto.getDeclinedUrl();//Campo declinedUrl de Merchant Config
-                String cancelUrl = merchantConfigDto.getErrorUrl();//Campo errorUrl de Merchant Config
-                String useCustomField1 = "1";  //Se mantiene asi por defecto
-                String customField1Label = "ReferenceNumber";//Se mantiene asi por defecto
-                String customField1Value = transactionDto.getReferenceNumber().length() > 200 ? transactionDto.getReferenceNumber().substring(0, 200) : transactionDto.getReferenceNumber();
-                String useCustomField2 = "0";//Se mantiene asi por defecto
-                String customField2Label = "";//Se mantiene asi por defecto
-                String customField2Value = "";//Se mantiene asi por defecto
+        // Construir el hash de autenticación
+        String data = String.join("", merchantId, merchantName, merchantType, currencyCode, orderNumber, amount, itbis, approvedUrl, declinedUrl, cancelUrl,
+                useCustomField1, customField1Label, customField1Value, useCustomField2, customField2Label, customField2Value, privateKey);
+        String authHash = createAuthHash(data);
 
-                // Construir el hash de autenticación
-                String data = String.join("", merchantId, merchantName, merchantType, currencyCode, orderNumber, amount, itbis, approvedUrl, declinedUrl, cancelUrl,
-                        useCustomField1, customField1Label, customField1Value, useCustomField2, customField2Label, customField2Value, privateKey);
-                String authHash = createAuthHash(data);
+        //obtener el language
+        String locale = this.merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(
+                transactionDto.getMerchant().getId(),
+                transactionDto.getLanguage().getId()
+        );
 
-                //obtener el language
-                String locale = this.merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(
-                        transactionDto.getMerchant().getId(),
-                        transactionDto.getLanguage().getId()
-                );
+        // Generar el formulario HTML
+        String htmlForm = "<html lang=\"en\">" +
+                "<head></head>" +
+                "<body>" +
+                "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
+                "<input type=\"hidden\" name=\"MerchantId\" value=\"" + merchantConfigDto.getMerchantNumber() + "\">" +
+                "<input type=\"hidden\" name=\"MerchantName\" value=\"" + merchantConfigDto.getName() + "\">" +
+                "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantConfigDto.getMerchantType() + "\">" +
+                "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
+                "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
+                "<input type=\"hidden\" name=\"Locale\" value=\"" + (locale.isBlank() ? "EN" : locale) + "\">" +
+                "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
+                "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
+                "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + approvedUrl + "\">" +
+                "<input type=\"hidden\" name=\"DeclinedUrl\" value=\"" + declinedUrl + "\">" +
+                "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\">" +
+                "<input type=\"hidden\" name=\"UseCustomField1\" value=\"" + useCustomField1 + "\">" +
+                "<input type=\"hidden\" name=\"CustomField1Label\" value=\"" + customField1Label + "\">" +
+                "<input type=\"hidden\" name=\"CustomField1Value\" value=\"" + customField1Value + "\">" +
+                "<input type=\"hidden\" name=\"UseCustomField2\" value=\"" + useCustomField2 + "\">" +
+                "<input type=\"hidden\" name=\"CustomField2Label\" value=\"" + customField2Label + "\">" +
+                "<input type=\"hidden\" name=\"CustomField2Value\" value=\"" + customField2Value + "\">" +
+                "<input type=\"hidden\" name=\"AuthHash\" value=\"" + authHash + "\">" +
 
-                // Generar el formulario HTML
-                String htmlForm = "<html lang=\"en\">" +
-                        "<head></head>" +
-                        "<body>" +
-                        "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
-                        "<input type=\"hidden\" name=\"MerchantId\" value=\"" + merchantConfigDto.getMerchantNumber() + "\">" +
-                        "<input type=\"hidden\" name=\"MerchantName\" value=\"" + merchantConfigDto.getName() + "\">" +
-                        "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantConfigDto.getMerchantType() + "\">" +
-                        "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
-                        "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
-                        "<input type=\"hidden\" name=\"Locale\" value=\"" + (locale.isBlank() ? "EN" : locale) + "\">" +
-                        "<input type=\"hidden\" name=\"Amount\" value=\"" + amount + "\">" +
-                        "<input type=\"hidden\" name=\"ITBIS\" value=\"" + itbis + "\">" +
-                        "<input type=\"hidden\" name=\"ApprovedUrl\" value=\"" + approvedUrl + "\">" +
-                        "<input type=\"hidden\" name=\"DeclinedUrl\" value=\"" + declinedUrl + "\">" +
-                        "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\">" +
-                        "<input type=\"hidden\" name=\"UseCustomField1\" value=\"" + useCustomField1 + "\">" +
-                        "<input type=\"hidden\" name=\"CustomField1Label\" value=\"" + customField1Label + "\">" +
-                        "<input type=\"hidden\" name=\"CustomField1Value\" value=\"" + customField1Value + "\">" +
-                        "<input type=\"hidden\" name=\"UseCustomField2\" value=\"" + useCustomField2 + "\">" +
-                        "<input type=\"hidden\" name=\"CustomField2Label\" value=\"" + customField2Label + "\">" +
-                        "<input type=\"hidden\" name=\"CustomField2Value\" value=\"" + customField2Value + "\">" +
-                        "<input type=\"hidden\" name=\"AuthHash\" value=\"" + authHash + "\">" +
+                "</form>" +
+                "<script>document.getElementById('paymentForm').submit();</script>" +
+                "</body>" +
+                "</html>";
 
-                        "</form>" +
-                        "<script>document.getElementById('paymentForm').submit();</script>" +
-                        "</body>" +
-                        "</html>";
-
-                // Devolver el formulario HTML como respuesta
-                String concatenatedBody = htmlForm + "{elemento}";
-                return ResponseEntity.ok()
-                        .contentType(MediaType.TEXT_HTML)
-                        .body(concatenatedBody);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing payment.");
-            }
-        }else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing transaction date.");
-
+        // Devolver el formulario HTML como respuesta
+        return new MerchantRedirectResponse(htmlForm, htmlForm);
     }
-    // Método para crear el AuthHash
+
+    // Métado para crear el AuthHash
     private String createAuthHash(String data) {
         try {
             javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA512");
@@ -170,88 +152,94 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         }
     }
 
-    private ResponseEntity<String> redirectToCardNet(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
-        try {
-            // Paso 1: Enviar los datos para generar la sesión
-            String successUrl = merchantConfigDto.getSuccessUrl();
-            String cancelUrl = merchantConfigDto.getErrorUrl();
-            CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
-            String cardNetSession = "";
-            String cardNetSessionKey = "";
+    private MerchantRedirectResponse redirectToCardNet(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+        // Paso 1: Enviar los datos para generar la sesión
+        String successUrl = merchantConfigDto.getSuccessUrl();
+        String cancelUrl = merchantConfigDto.getErrorUrl();
+        CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
+        String cardNetSession = "";
+        String cardNetSessionKey = "";
 
-            Map<String, String> requestData = new HashMap<>();
-            String amountString = BigDecimal.valueOf(transactionDto.getAmount()).multiply(new BigDecimal(100)).stripTrailingZeros()
-                    .toPlainString();
-            //obtener el language
-            String pageLanguaje = this.merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(
-                    transactionDto.getMerchant().getId(),
-                    transactionDto.getLanguage().getId()
-            );
-            String currencyCode = transactionDto.getMerchantCurrency().getValue();
-            String referenceNumberTrunc = transactionDto.getReferenceNumber().length() > 40 ? transactionDto.getReferenceNumber().substring(0, 40) : transactionDto.getReferenceNumber();
+        Map<String, String> requestData = new HashMap<>();
+        String amountString = BigDecimal.valueOf(transactionDto.getAmount()).multiply(new BigDecimal(100)).stripTrailingZeros()
+                .toPlainString();
+        //obtener el language
+        String pageLanguaje = this.merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(
+                transactionDto.getMerchant().getId(),
+                transactionDto.getLanguage().getId()
+        );
+        String currencyCode = transactionDto.getMerchantCurrency().getValue();
+        String referenceNumberTrunc = transactionDto.getReferenceNumber().length() > 40 ? transactionDto.getReferenceNumber().substring(0, 40) : transactionDto.getReferenceNumber();
 
-            requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
-            requestData.put("CurrencyCode", currencyCode); // dejar 214 por ahora que es el peso dominicano. El usd es 840
-            requestData.put("Tax", "0"); // 0 por defecto
-            requestData.put("AcquiringInstitutionCode", merchantConfigDto.getInstitutionCode()); //Campo institutionCode de Merchant Config
-            requestData.put("MerchantType", merchantConfigDto.getMerchantType()); //Campo merchantType de Merchant Config
-            requestData.put("MerchantNumber", merchantConfigDto.getMerchantNumber()); //Campo merchantNumber de Merchant Config
-            requestData.put("MerchantTerminal", merchantConfigDto.getMerchantTerminal()); //Campo merchantTerminal de Merchant Config
+        requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
+        requestData.put("CurrencyCode", currencyCode); // dejar 214 por ahora que es el peso dominicano. El usd es 840
+        requestData.put("Tax", "0"); // 0 por defecto
+        requestData.put("AcquiringInstitutionCode", merchantConfigDto.getInstitutionCode()); //Campo institutionCode de Merchant Config
+        requestData.put("MerchantType", merchantConfigDto.getMerchantType()); //Campo merchantType de Merchant Config
+        requestData.put("MerchantNumber", merchantConfigDto.getMerchantNumber()); //Campo merchantNumber de Merchant Config
+        requestData.put("MerchantTerminal", merchantConfigDto.getMerchantTerminal()); //Campo merchantTerminal de Merchant Config
 //            requestData.put("MerchantTerminal_amex", paymentRequest.getMerchantTerminalAmex()); //No enviar por ahora
-            requestData.put("ReturnUrl", successUrl); //Campo successUrl de Merchant Config
-            requestData.put("CancelUrl", cancelUrl); //Campo errorUrl de Merchant Config
-            requestData.put("PageLanguaje", pageLanguaje.isBlank() ? "ING" : pageLanguaje); //Se envia por ahora ENG
-            requestData.put("TransactionId", referenceNumberTrunc); //Viene en el request
-            requestData.put("OrdenId", transactionDto.getId().toString()); //Viene en el request
-            requestData.put("MerchantName", merchantConfigDto.getName()); //Campo name de Merchant Config
-            requestData.put("IpClient", ""); // Campo ip del b2b partner del merchant
-            requestData.put("Amount", amountString); //Viene en el request
+        requestData.put("ReturnUrl", successUrl); //Campo successUrl de Merchant Config
+        requestData.put("CancelUrl", cancelUrl); //Campo errorUrl de Merchant Config
+        requestData.put("PageLanguaje", pageLanguaje.isBlank() ? "ING" : pageLanguaje); //Se envia por ahora ENG
+        requestData.put("TransactionId", referenceNumberTrunc); //Viene en el request
+        requestData.put("OrdenId", transactionDto.getId().toString()); //Viene en el request
+        requestData.put("MerchantName", merchantConfigDto.getName()); //Campo name de Merchant Config
+        requestData.put("IpClient", ""); // Campo ip del b2b partner del merchant
+        requestData.put("Amount", amountString); //Viene en el request
 
-            // Solo invocar al servicio de obtener sesion si no se ha hecho previamente.
-            if (cardnetJobDto == null) {
-                CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
-                if (sessionResponse == null || sessionResponse.getSession() == null) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al generar la sesión.");
-                }
-                cardNetSession = sessionResponse.getSession();
-                cardNetSessionKey = sessionResponse.getSessionKey();
-                // Insertar nueva referencia de session.
-                cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), cardNetSession, cardNetSessionKey, Boolean.FALSE, 0);
-                cardNetJobService.create(cardnetJobDto);
-            } else {
-                cardNetSession = cardnetJobDto.getSession();
-                cardnetJobDto.setIsProcessed(false);
-                cardnetJobDto.setNumberOfAttempts(0);
-                cardNetJobService.update(cardnetJobDto);
+        // Solo invocar al servicio de obtener sesion si no se ha hecho previamente.
+        if (cardnetJobDto == null) {
+            CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
+            if (sessionResponse == null || sessionResponse.getSession() == null) {
+                throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR, DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR.getReasonPhrase());
             }
-
-            // Paso 2: Generar Formulario
-            String htmlForm = "<html lang=\"en\">" +
-                    "<head></head>" +
-                    "<body>" +
-                    "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
-                    "<input type=\"hidden\" name=\"SESSION\" value=\"" + cardNetSession + "\"/>" +
-                    "<input type=\"hidden\" name=\"ReturnUrl\" value=\"" + successUrl + "\"/>" +
-                    "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\"/>" +
-                    "</form>" +
-                    "<script>document.getElementById('paymentForm').submit();</script>" +
-                    "</body>" +
-                    "</html>";
-
-            String concatenatedBody = htmlForm + requestData;
-            return ResponseEntity.ok()
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(concatenatedBody);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing Cardnet payment.");
+            cardNetSession = sessionResponse.getSession();
+            cardNetSessionKey = sessionResponse.getSessionKey();
+            // Insertar nueva referencia de session.
+            cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), cardNetSession, cardNetSessionKey, Boolean.FALSE, 0);
+            cardnetJobDto.setCreatedAt(LocalDateTime.now());
+            cardNetJobService.create(cardnetJobDto);
+        } else if ((transactionDto.getStatus().isDeclinedStatus() && cardnetJobDto.getIsProcessed()) || cardnetJobDto.isSessionExpired()) {
+            //  si esta como declinada previamente o expiró el tiempo de validez de la session
+            // TODO: para este caso lo ideal es crear nuevos cardnetDto, para dejar la traza de las sesiones previas por transaccion. En el get del cardetDto deberia devolver el mas reciente
+            CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
+            if (sessionResponse == null || sessionResponse.getSession() == null) {
+                throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR, DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR.getReasonPhrase());
+            }
+            cardNetSession = sessionResponse.getSession();
+            cardnetJobDto.setSession(sessionResponse.getSession());
+            cardnetJobDto.setSessionKey(sessionResponse.getSessionKey());
+            cardnetJobDto.setCreatedAt(LocalDateTime.now());
+            cardnetJobDto.setIsProcessed(false);
+            cardnetJobDto.setNumberOfAttempts(0);
+            cardNetJobService.update(cardnetJobDto);
+        } else {
+            // Esto es por si es de tipo Link y le da clic varias veces no duplique la session
+            cardNetSession = cardnetJobDto.getSession();
+            cardnetJobDto.setIsProcessed(false);
+            cardnetJobDto.setNumberOfAttempts(0);
+            cardNetJobService.update(cardnetJobDto);
         }
+
+        // Paso 2: Generar Formulario
+        String htmlForm = "<html lang=\"en\">" +
+                "<head></head>" +
+                "<body>" +
+                "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
+                "<input type=\"hidden\" name=\"SESSION\" value=\"" + cardNetSession + "\"/>" +
+                "<input type=\"hidden\" name=\"ReturnUrl\" value=\"" + successUrl + "\"/>" +
+                "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\"/>" +
+                "</form>" +
+                "<script>document.getElementById('paymentForm').submit();</script>" +
+                "</body>" +
+                "</html>";
+        return new MerchantRedirectResponse(htmlForm, requestData.toString());
     }
 
     private Boolean compareDates(UUID id) {
         Optional<Transaction> transaction = transactionRepositoryQuery.findByTransactionUuid(id);
-        if(transaction.isPresent()) {
+        if (transaction.isPresent()) {
             LocalDateTime date1 = transaction.get().getCreatedAt();
             LocalDateTime currentDate = LocalDateTime.now();
             // Calcular la diferencia en minutos
@@ -287,9 +275,9 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
 
     public TransactionPaymentLogsDto findByTransactionId(UUID id) {
         Optional<TransactionPaymentLogs> optional = this.repositoryQuery.findByTransactionId(id);
-        if(optional.isPresent()){
+        if (optional.isPresent()) {
             return optional.get().toAggregate();
-        }else return null;
+        } else return null;
 
     }
 

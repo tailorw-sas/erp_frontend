@@ -21,6 +21,7 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
         dto.setEmail(command.getEmail());
         dto.setFirstName(command.getFirstName());
         dto.setLastName(command.getLastName());
+        dto.setPhoneExtension(command.getPhoneExtension());
 
         service.update(dto);
     }
