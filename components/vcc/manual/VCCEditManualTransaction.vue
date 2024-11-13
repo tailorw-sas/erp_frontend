@@ -157,7 +157,7 @@ async function save(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   try {
-    payload.checkIn = payload.checkIn ? dayjs(payload.checkIn).format('YYYY-MM-DD') : ''
+    payload.checkIn = payload.checkIn ? `${dayjs(payload.checkIn).format('YYYY-MM-DD')}T00:00:00` : ''
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
     delete payload.event

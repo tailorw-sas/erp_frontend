@@ -266,7 +266,7 @@ async function save(item: { [key: string]: any }) {
   try {
     payload.merchant = typeof payload.merchant === 'object' ? payload.merchant.id : payload.merchant
     payload.amount = Number(payload.amount)
-    payload.checkIn = payload.checkIn ? dayjs(payload.checkIn).format('YYYY-MM-DD') : ''
+    payload.checkIn = payload.checkIn ? `${dayjs(payload.checkIn).format('YYYY-MM-DD')}T00:00:00` : ''
     payload.hotel = typeof payload.hotel === 'object' ? payload.hotel.id : payload.hotel
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
