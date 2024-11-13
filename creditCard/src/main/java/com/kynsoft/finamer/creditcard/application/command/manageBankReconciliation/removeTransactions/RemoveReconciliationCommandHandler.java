@@ -30,13 +30,28 @@ public class RemoveReconciliationCommandHandler implements ICommandHandler<Remov
                         transactionDto.setReconciliation(null);
                         this.transactionService.update(transactionDto);
                         this.transactionService.delete(transactionDto);
-                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getNetAmount());
+                        bankReconciliationDto.setDetailsAmount(
+                                bankReconciliationDto.getTransactions().stream().map(dto ->
+                                    dto.isAdjustment()
+                                        ? dto.getTransactionSubCategory().getNegative()
+                                            ? -dto.getNetAmount()
+                                            : dto.getNetAmount()
+                                        : dto.getNetAmount()
+                        ).reduce(0.0, Double::sum));
                     }
                 } else {
                     if (bankReconciliationDto.getTransactions().remove(transactionDto)){
                         transactionDto.setReconciliation(null);
                         this.transactionService.update(transactionDto);
-                        bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() - transactionDto.getNetAmount());
+                        bankReconciliationDto.setDetailsAmount(
+                                bankReconciliationDto.getTransactions().stream().map(dto ->
+                                    dto.isAdjustment()
+                                        ? dto.getTransactionSubCategory().getNegative()
+                                            ? -dto.getNetAmount()
+                                            : dto.getNetAmount()
+                                        : dto.getNetAmount()
+                                ).reduce(0.0, Double::sum)
+                        );
                     }
                 }
             }

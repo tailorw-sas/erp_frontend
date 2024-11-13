@@ -47,13 +47,24 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
                 transactionList.add(transactionDto);
             }
         }
+
         Double detailsAmount = transactionList.stream().map(TransactionDto::getNetAmount).reduce(0.0, Double::sum);
-        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(command.getAmount(), detailsAmount));
+
         if (command.getAdjustmentTransactions() != null) {
             List<Long> adjustmentIds = this.bankReconciliationAdjustmentService.createAdjustments(command.getAdjustmentTransactions(), transactionList, command.getAmount(), detailsAmount);
             command.setAdjustmentTransactionIds(adjustmentIds);
+        } else {
+            RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(command.getAmount(), detailsAmount));
         }
-        detailsAmount = transactionList.stream().map(TransactionDto::getNetAmount).reduce(0.0, Double::sum);
+
+        detailsAmount = transactionList.stream().map(transactionDto ->
+                transactionDto.isAdjustment()
+                    ? transactionDto.getTransactionSubCategory().getNegative()
+                        ? -transactionDto.getNetAmount()
+                        : transactionDto.getNetAmount()
+                    : transactionDto.getNetAmount()
+        ).reduce(0.0, Double::sum);
+
         //todo: reconcile status
         ManageReconcileTransactionStatusDto reconcileTransactionStatusDto = this.reconcileTransactionStatusService.findByEReconcileTransactionStatus(EReconcileTransactionStatus.CREATED);
 

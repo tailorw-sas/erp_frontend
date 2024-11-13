@@ -4,7 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageBankReconciliationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationListOfAmountDetailsRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
 import com.kynsoft.finamer.creditcard.domain.services.IBankReconciliationAdjustmentService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageBankReconciliationService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
@@ -36,12 +36,11 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
         Set<Long> reconcileTransactions = bankReconciliationDto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet());
 
         //obtener la suma de los amounts si no pertenecen ya a la reconciliacion
-        List<Double> amounts = command.getTransactionIds().stream().map(id -> {
+        Double newDetails = bankReconciliationDto.getDetailsAmount() + command.getTransactionIds().stream().map(id -> {
             if(!reconcileTransactions.contains(id)) {
                 return this.transactionService.findById(id).getNetAmount();
             } return 0.0;
-        }).toList();
-        RulesChecker.checkRule(new BankReconciliationListOfAmountDetailsRule(bankReconciliationDto.getAmount(), bankReconciliationDto.getDetailsAmount(), amounts));
+        }).reduce(0.0, Double::sum);
 
         //comprobar que se inserten nuevos registros
         int cont = 0;
@@ -58,6 +57,8 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
             List<Long> adjustmentIds = this.bankReconciliationAdjustmentService.createAdjustments(command.getAdjustmentRequests(), bankReconciliationDto);
             command.setAdjustmentIds(adjustmentIds);
             cont++;
+        } else {
+            RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(bankReconciliationDto.getAmount(), newDetails));
         }
 
         if (cont > 0) {
