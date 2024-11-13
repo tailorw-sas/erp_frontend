@@ -321,7 +321,7 @@ async function getSubCategoryList(query: string, isDefault: boolean = false) {
     SubCategoryList.value = []
 
     for (const iterator of dataList) {
-      SubCategoryList.value = [...SubCategoryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      SubCategoryList.value = [...SubCategoryList.value, { ...iterator, name: `${iterator.code} - ${iterator.name}` }]
     }
     if (isDefault && SubCategoryList.value.length > 0) {
       item.value.transactionSubCategory = SubCategoryList.value[0]

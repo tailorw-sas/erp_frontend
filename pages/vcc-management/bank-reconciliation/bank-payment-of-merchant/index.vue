@@ -369,7 +369,12 @@ function formatAdjustment(data: any) {
   const newAdjustment = JSON.parse(JSON.stringify(data))
   newAdjustment.id = v4() // id temporal para poder eliminar de forma local
   newAdjustment.checkIn = dayjs().format('YYYY-MM-DD')
-  subTotals.value.amount += data.amount // todo: aqui se debe restar si la subcategoria es negativa
+  if (newAdjustment.transactionSubCategory.negative) {
+    subTotals.value.amount -= data.amount
+  }
+  else {
+    subTotals.value.amount += data.amount
+  }
   newAdjustment.commission = formatNumber(0)
   newAdjustment.netAmount = formatNumber(data.amount)
   newAdjustment.amount = data.transactionCategory.onlyApplyNet ? formatNumber(0) : formatNumber(data.amount)
