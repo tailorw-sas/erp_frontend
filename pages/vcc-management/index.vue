@@ -203,7 +203,7 @@ const columns: IColumn[] = [
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'methodType', header: 'Method Type', type: 'text' },
-  { field: 'referenceNumber', header: 'Reference', type: 'text' },
+  { field: 'referenceNumber', header: 'Reference', type: 'text', width: '220px' },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'netAmount', header: 'T.Amount', type: 'text' },

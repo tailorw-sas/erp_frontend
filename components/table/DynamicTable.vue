@@ -611,7 +611,7 @@ defineExpose({ clearSelectedItems })
             width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
             minWidth: column?.width ? column?.width : 'auto',
             display: column?.hidden ? 'none' : 'table-cell',
-            // maxWidth: column?.width ? column?.width : 'auto',
+            maxWidth: column?.width ? column?.width : 'auto',
           }"
         >
           <!--  :style="{ width: column?.width ? column?.width : '100%', maxWidth: column?.width ? column?.width : '100%' }" -->
