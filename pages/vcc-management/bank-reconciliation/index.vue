@@ -638,104 +638,94 @@ onMounted(() => {
                 </div>
               </div>
             </template>
-            <div class="grid p-0 m-0" style="margin: 0 auto;">
-              <!-- first filter -->
-              <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12">
-                    <div class="flex align-items-center mb-2">
-                      <!-- <pre>{{ filterToSearch }}</pre> -->
-                      <label for="" class="mr-2 font-bold"> Hotel</label>
-                      <div class="w-full">
-                        <DebouncedMultiSelectComponent
-                          v-if="!loadingSaveAll"
-                          id="autocomplete"
-                          field="name"
-                          item-value="id"
-                          :model="filterToSearch.hotel"
-                          :suggestions="hotelList"
-                          :loading="accordionLoading.hotel"
-                          @change="($event) => {
-                            if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                            }
-                            else {
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                            }
-                          }"
-                          @load="($event) => getHotelList($event)"
-                        >
-                          <template #option="props">
-                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                          </template>
-                        </DebouncedMultiSelectComponent>
-                      </div>
+            <div class="grid">
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+                <div class="flex flex-column gap-2 w-full">
+                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                    <label class="filter-label font-bold" for="">Hotel:</label>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :max-selected-labels="3"
+                      :model="filterToSearch.hotel"
+                      :suggestions="hotelList"
+                      :loading="accordionLoading.hotel"
+                      @change="($event) => {
+                        if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getHotelList($event)"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedMultiSelectComponent>
+                  </div>
+                  <div class="flex align-items-center gap-2">
+                    <label class="filter-label font-bold" for="">Bank Account:</label>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.merchantBankAccount"
+                      :suggestions="MerchantBankAccountList"
+                      :loading="accordionLoading.merchantBankAccount"
+                      @change="($event) => {
+                        if (!filterToSearch.merchantBankAccount.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getMerchantBankAccountList($event)"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+                <div class="flex flex-column gap-2 w-full">
+                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                    <label class="filter-label font-bold" for="">From:</label>
+                    <div class="w-full" style=" z-index:5 ">
+                      <Calendar
+                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                        show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                      />
                     </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="mr-2 font-bold"> Bank Account</label>
-                      <DebouncedMultiSelectComponent
-                        v-if="!loadingSaveAll"
-                        id="autocomplete"
-                        field="name"
-                        item-value="id"
-                        :model="filterToSearch.merchantBankAccount"
-                        :suggestions="MerchantBankAccountList"
-                        :loading="accordionLoading.merchantBankAccount"
-                        @change="($event) => {
-                          if (!filterToSearch.merchantBankAccount.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                        @load="($event) => getMerchantBankAccountList($event)"
+                  </div>
+                  <div class="flex align-items-center gap-2">
+                    <label class="filter-label font-bold" for="">To:</label>
+                    <div class="w-full">
+                      <Calendar
+                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
                       />
                     </div>
                   </div>
                 </div>
               </div>
-
-              <!-- third filter From - To -->
-              <div class="col-12 md:col-3 align-items-center my-0 py-0 w-auto">
-                <div class="grid align-items-center justify-content-center p-0 m-0">
-                  <div class="col-12 md:col-10 p-0 m-0 w-auto">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> From</label>
-                      <div class="w-9rem">
-                        <Calendar
-                          v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                          show-icon icon-display="input" class="w-full" :max-date="new Date()"
-                        />
-                      </div>
-                    </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="mr-2 font-bold" style="padding-right: 17px;"> To</label>
-                      <div class="w-9rem">
-                        <Calendar
-                          v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                          icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
-                        />
-                      </div>
+              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+                <div class="flex flex-column gap-2 w-full">
+                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                    <label class="filter-label font-bold" for="">Criteria:</label>
+                    <div class="w-full" style=" z-index:5 ">
+                      <Dropdown
+                        v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
+                        placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
+                      />
                     </div>
                   </div>
-                </div>
-              </div>
-              <!-- fourth filter -->
-              <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> Criteria</label>
-                      <div class="w-full">
-                        <Dropdown
-                          v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
-                          placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
-                        />
-                      </div>
-                    </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="w-4rem font-bold">Search</label>
+                  <div class="flex align-items-center gap-2">
+                    <label class="filter-label font-bold" for="">Search:</label>
+                    <div class="w-full">
                       <IconField icon-position="left">
                         <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                         <InputIcon class="pi pi-search" />
@@ -744,18 +734,18 @@ onMounted(() => {
                   </div>
                 </div>
               </div>
-              <!-- fifth filter -->
-              <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> Status</label>
-                      <div class="w-full">
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+                <div class="flex w-full">
+                  <div class="flex flex-row w-full">
+                    <div class="flex flex-column gap-2 w-full">
+                      <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                        <label class="filter-label font-bold" for="">Status:</label>
                         <DebouncedMultiSelectComponent
                           v-if="!loadingSaveAll"
                           id="autocomplete"
                           field="name"
                           item-value="id"
+                          :max-selected-labels="3"
                           :model="filterToSearch.status"
                           :suggestions="statusList"
                           :loading="accordionLoading.status"
@@ -778,24 +768,28 @@ onMounted(() => {
                   </div>
                 </div>
               </div>
-
-              <!-- Button filter -->
-              <div class="col-12 md:col-1 flex align-items-center my-0 py-0 w-auto justify-content-center">
-                <Button
-                  v-tooltip.top="'Filter'"
-                  label=""
-                  class="p-button-lg w-3rem h-3rem mr-2"
-                  icon="pi pi-search"
-                  @click="searchAndFilter"
-                />
-                <Button
-                  v-tooltip.top="'Clear'"
-                  label=""
-                  outlined
-                  class="p-button-lg w-3rem h-3rem"
-                  icon="pi pi-filter-slash"
-                  @click="clearFilterToSearch"
-                />
+              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+                <div class="flex w-full">
+                  <div class="flex flex-row w-full">
+                    <div class="flex align-items-center ml-2">
+                      <Button
+                        v-tooltip.top="'Filter'"
+                        label=""
+                        class="p-button-lg w-3rem h-3rem mr-2"
+                        icon="pi pi-search"
+                        @click="searchAndFilter"
+                      />
+                      <Button
+                        v-tooltip.top="'Clear'"
+                        label=""
+                        outlined
+                        class="p-button-lg w-3rem h-3rem"
+                        icon="pi pi-filter-slash"
+                        @click="clearFilterToSearch"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </AccordionTab>
@@ -820,9 +814,11 @@ onMounted(() => {
       >
         <template #expansion="{ data: item }">
           <!--          <pre>{{item}}</pre> -->
-          <BankPaymentTransactions :bank-reconciliation-id="item.id" @update:details-amount="($event) => {
-            item.detailsAmount = formatNumber($event)
-          }" />
+          <BankPaymentTransactions
+            :bank-reconciliation-id="item.id" @update:details-amount="($event) => {
+              item.detailsAmount = formatNumber($event)
+            }"
+          />
         </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
@@ -839,3 +835,11 @@ onMounted(() => {
     <ContextMenu ref="contextMenu" :model="menuListItems" />
   </div>
 </template>
+
+<style scoped>
+.filter-label {
+  min-width: 55px;
+  max-width: 55px;
+  text-align: end;
+}
+</style>
