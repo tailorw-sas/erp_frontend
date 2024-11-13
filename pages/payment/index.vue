@@ -43,7 +43,7 @@ const paymentDetailsTypeDepositSelected = ref<any[]>([])
 const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
 
-const checkApplyPayment = ref(false)
+const checkApplyPayment = ref(true)
 const loadAllInvoices = ref(false)
 const idInvoicesSelectedToApplyPayment = ref<string[]>([])
 const idInvoicesSelectedToApplyPaymentForOtherDeduction = ref<string[]>([])
@@ -2390,6 +2390,7 @@ function closeModalApplyPayment() {
   disabledBtnApplyPayment.value = true
   idInvoicesSelectedToApplyPayment.value = []
   paymentDetailsTypeDepositSelected.value = []
+  invoiceAmmountSelected.value = 0
 }
 
 function closeModalApplyPaymentOtherDeductions() {
@@ -2403,6 +2404,7 @@ function closeModalApplyPaymentOtherDeductions() {
 
 async function openModalApplyPayment() {
   openDialogApplyPayment.value = true
+  invoiceAmmountSelected.value = 0
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   paymentBalance.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   applyPaymentGetList()
@@ -3814,7 +3816,6 @@ onMounted(async () => {
               </template>
             </DataTable>
           </BlockUI>
-
           <DynamicTable
             class="card p-0"
             :data="applyPaymentListOfInvoice"
