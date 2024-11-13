@@ -794,8 +794,8 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criterial: ENUM_FILTER[0], // Mantener el primer elemento del enum como valor predeterminado
     search: '', // Dejar el campo de búsqueda en blanco
-    agency: [allDefaultItem], // Restablecer a valor predeterminado
-    hotel: [allDefaultItem], // Restablecer a valor predeterminado
+    agency: [], // Restablecer a valor predeterminado
+    hotel: [], // Restablecer a valor predeterminado
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
   }

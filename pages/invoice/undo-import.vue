@@ -9,7 +9,10 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
 import type { IData } from '~/components/table/interfaces/IModelData'
-
+const multiSelectLoading = ref({
+ 
+  hotel: false,
+})
 const entryCode = ref('')
 const randomCode = ref(generateRandomCode())
 const idItemToLoadFirstTime = ref('')
@@ -27,14 +30,14 @@ const loadingSearch = ref(false)
 
 const loadingSaveAll = ref(false)
 
-const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+//const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 
 const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
   onlyManul: false,
   onlyInssist: false,
-  hotel: [allDefaultItem],
+  hotel: [],
   date: dayjs(new Date()).startOf('month').toDate(),
 
 })
@@ -336,6 +339,7 @@ function handleCheckboxChange(type) {
 
 async function getHotelList(query: string = '') {
   try {
+    multiSelectLoading.value.hotel = true
     const payload = {
       filter: [
         {
@@ -366,13 +370,16 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
+  }
+  finally{
+    multiSelectLoading.value.hotel = false
   }
 }
 
@@ -528,7 +535,7 @@ function clearFilterToSearch() {
     search: '', // Dejar el campo de búsqueda en blanco
     onlyManual: false,
     onlyInssist: false,
-    hotel: [allDefaultItem], // Restablecer a valor predeterminado
+    hotel: [], // Restablecer a valor predeterminado
     date: dayjs(new Date()).startOf('month').toDate(),
 
   }
@@ -601,6 +608,21 @@ onMounted(async () => {
                     class="text-red"
                   >*</span></label>
                   <div class="w-full">
+                    <DebouncedMultiSelectComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="filterToSearch.hotel"
+                :suggestions="hotelList"
+                :loading="multiSelectLoading.hotel"
+                @change="($event) => {
+                 
+                  filterToSearch.hotel = $event
+                }"
+                @load="($event) => getHotelList($event)"
+              />
+                    <!--
                     <DebouncedAutoCompleteComponent
                       v-if="!loadingSaveAll" id="autocomplete"
                       :multiple="true" class="w-full" field="name" item-value="id"
@@ -618,6 +640,7 @@ onMounted(async () => {
                         <span>{{ props.item.code }} - {{ props.item.name }}</span>
                       </template>
                     </DebouncedAutoCompleteComponent>
+                    -->
                   </div>
                 </div>
               </div>
