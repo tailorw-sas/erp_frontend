@@ -3106,7 +3106,7 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
     payloadToApplyPayment.value.booking = event?.id
     payloadToApplyPayment.value.applyPayment = true
     openDialogApplyPayment.value = false
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'The selected payment will be applied once the corresponding detail is created.', life: 3000 })
+    toast.add({ severity: 'success', summary: 'Successful', detail: 'The selected payment will be applied once the corresponding detail is created.', life: 6000 })
   }
   else {
     try {

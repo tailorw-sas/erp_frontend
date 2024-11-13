@@ -590,6 +590,15 @@ const applyPaymentPagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+
+const applyPaymentPaginationTemp = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
 const applyPaymentOnChangePage = ref<PageState>()
 
 const applyPaymentBookingPayload = ref<IQueryRequest>({
@@ -1406,6 +1415,9 @@ async function applyPaymentGetList() {
     return
   }
   try {
+    applyPaymentPagination.value = {
+      ...applyPaymentPaginationTemp.value
+    }
     applyPaymentOptions.value.loading = true
     applyPaymentListOfInvoice.value = []
     const newListItems = []
@@ -2411,6 +2423,7 @@ function closeModalApplyPaymentOtherDeductions() {
   allInvoiceCheckIsChecked.value = false
   loadAllInvoices.value = false
   idInvoicesSelectedToApplyPaymentForOtherDeduction.value = []
+  applyPaymentOnChangePageOtherDeduction.value = undefined
 }
 
 async function openModalApplyPayment() {
@@ -2418,6 +2431,7 @@ async function openModalApplyPayment() {
   invoiceAmmountSelected.value = 0
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   paymentBalance.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
+  applyPaymentOnChangePage.value = undefined
   applyPaymentGetList()
   getListPaymentDetailTypeDeposit()
 }
@@ -3767,146 +3781,148 @@ onMounted(async () => {
     </Dialog>
 
     <!-- Dialog Apply Payment -->
-    <Dialog
-      v-model:visible="openDialogApplyPayment"
-      modal
-      class="mx-3 sm:mx-0"
-      content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '60%' }"
-      :pt="{
-        root: {
-          class: 'custom-dialog-history',
-        },
-        header: {
-          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
-        },
-        // mask: {
-        //   style: 'backdrop-filter: blur(5px)',
-        // },
-      }"
-      @hide="closeModalApplyPayment()"
-    >
-      <template #header>
-        <div class="flex justify-content-between align-items-center w-full">
-          <div>
-            <h5 class="m-0">
-              Select Invoice
-            </h5>
+    <div v-if="openDialogApplyPayment">
+      <Dialog
+        v-model:visible="openDialogApplyPayment"
+        modal
+        class="mx-3 sm:mx-0"
+        content-class="border-round-bottom border-top-1 surface-border"
+        :style="{ width: '60%' }"
+        :pt="{
+          root: {
+            class: 'custom-dialog-history',
+          },
+          header: {
+            style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+          },
+          // mask: {
+          //   style: 'backdrop-filter: blur(5px)',
+          // },
+        }"
+        @hide="closeModalApplyPayment()"
+      >
+        <template #header>
+          <div class="flex justify-content-between align-items-center w-full">
+            <div>
+              <h5 class="m-0">
+                Select Invoice
+              </h5>
+            </div>
+            <div class="font-bold mr-5">
+              <h5 class="m-0">
+                Payment: {{ objItemSelectedForRightClickApplyPayment.paymentId }}
+              </h5>
+            </div>
           </div>
-          <div class="font-bold mr-5">
-            <h5 class="m-0">
-              Payment: {{ objItemSelectedForRightClickApplyPayment.paymentId }}
-            </h5>
-          </div>
-        </div>
-      </template>
-      <template #default>
-        <div class="p-fluid pt-3">
-          <BlockUI v-if="objItemSelectedForRightClickApplyPayment?.hasDetailTypeDeposit" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
-            <DataTable
-              v-model:selection="paymentDetailsTypeDepositSelected"
-              :value="paymentDetailsTypeDepositList"
-              striped-rows
-              show-gridlines
-              :row-class="(row) => isRowSelectable(row) ? 'p-selectable-row' : 'p-disabled p-text-disabled'"
-              data-key="id"
-              selection-mode="multiple"
-              style="background-color: #F5F5F5;"
-              @update:selection="onRowSelectAll"
+        </template>
+        <template #default>
+          <div class="p-fluid pt-3">
+            <BlockUI v-if="objItemSelectedForRightClickApplyPayment?.hasDetailTypeDeposit" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
+              <DataTable
+                v-model:selection="paymentDetailsTypeDepositSelected"
+                :value="paymentDetailsTypeDepositList"
+                striped-rows
+                show-gridlines
+                :row-class="(row) => isRowSelectable(row) ? 'p-selectable-row' : 'p-disabled p-text-disabled'"
+                data-key="id"
+                selection-mode="multiple"
+                style="background-color: #F5F5F5;"
+                @update:selection="onRowSelectAll"
+              >
+                <Column selection-mode="multiple" header-style="width: 3rem" />
+                <Column v-for="column of columnsPaymentDetailTypeDeposit" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                <template #empty>
+                  <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                    <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                      <div class="row">
+                        <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                      </div>
+                      <div class="row">
+                        <p>{{ messageForEmptyTable }}</p>
+                      </div>
+                    </span>
+                    <span v-else class="flex flex-column align-items-center justify-content-center">
+                      <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                    </span>
+                  </div>
+                </template>
+              </DataTable>
+            </BlockUI>
+            <DynamicTable
+              class="card p-0"
+              :data="applyPaymentListOfInvoice"
+              :columns="applyPaymentColumns"
+              :options="applyPaymentOptions"
+              :pagination="applyPaymentPagination"
+              @on-change-pagination="applyPaymentOnChangePage = $event"
+              @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
+              @on-expand-row="onExpandRowApplyPayment($event)"
+              @update:clicked-item="addAmmountsToApplyPayment($event)"
             >
-              <Column selection-mode="multiple" header-style="width: 3rem" />
-              <Column v-for="column of columnsPaymentDetailTypeDeposit" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
-              <template #empty>
-                <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                  <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
-                    <div class="row">
-                      <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
-                    </div>
-                    <div class="row">
-                      <p>{{ messageForEmptyTable }}</p>
-                    </div>
-                  </span>
-                  <span v-else class="flex flex-column align-items-center justify-content-center">
-                    <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-                  </span>
+              <!-- @update:clicked-item="invoiceSelectedListForApplyPayment = $event" -->
+              <template #column-status="{ data: item }">
+                <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
+              </template>
+
+              <template #expansion="{ data: item }">
+                <div class="p-0 m-0">
+                  <DataTable :value="item.bookings" striped-rows>
+                    <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                    <template #empty>
+                      <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                        <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                          <div class="row">
+                            <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                          </div>
+                          <div class="row">
+                            <p>{{ messageForEmptyTable }}</p>
+                          </div>
+                        </span>
+                        <span v-else class="flex flex-column align-items-center justify-content-center">
+                          <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                        </span>
+                      </div>
+                    </template>
+                  </DataTable>
                 </div>
               </template>
-            </DataTable>
-          </BlockUI>
-          <DynamicTable
-            class="card p-0"
-            :data="applyPaymentListOfInvoice"
-            :columns="applyPaymentColumns"
-            :options="applyPaymentOptions"
-            :pagination="applyPaymentPagination"
-            @on-change-pagination="applyPaymentOnChangePage = $event"
-            @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
-            @on-expand-row="onExpandRowApplyPayment($event)"
-            @update:clicked-item="addAmmountsToApplyPayment($event)"
-          >
-            <!-- @update:clicked-item="invoiceSelectedListForApplyPayment = $event" -->
-            <template #column-status="{ data: item }">
-              <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
-            </template>
-
-            <template #expansion="{ data: item }">
-              <div class="p-0 m-0">
-                <DataTable :value="item.bookings" striped-rows>
-                  <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
-                  <template #empty>
-                    <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                      <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
-                        <div class="row">
-                          <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
-                        </div>
-                        <div class="row">
-                          <p>{{ messageForEmptyTable }}</p>
-                        </div>
-                      </span>
-                      <span v-else class="flex flex-column align-items-center justify-content-center">
-                        <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-                      </span>
-                    </div>
-                  </template>
-                </DataTable>
-              </div>
-            </template>
-          </DynamicTable>
-        </div>
-        <div class="flex justify-content-between">
-          <div class="flex align-items-center">
-            <Chip class="bg-primary py-1 font-bold" label="Applied Payment Amount:">
-              Available Payment Amount: ${{ formatNumber(paymentAmmountSelected) }}
-            </Chip>
-            <Chip class="bg-primary py-1 mx-2 font-bold" label="Invoice Amount Selected: $0.00">
-              Invoice Amount Selected: ${{ formatNumber(invoiceAmmountSelected) }}
-            </Chip>
-            <Checkbox
-              id="checkApplyPayment"
-              v-model="checkApplyPayment"
-              :binary="true"
-              @update:model-value="($event) => {
-                changeValueByCheckApplyPaymentBalance($event);
-              }"
-            />
-            <label for="checkApplyPayment" class="ml-2 font-bold">
-              Apply Payment Balance
-            </label>
+            </DynamicTable>
           </div>
-          <div>
-            <Button
-              v-tooltip.top="'Apply Payment'"
-              class="w-3rem mx-1"
-              icon="pi pi-check"
-              :disabled="disabledBtnApplyPayment || (paymentAmmountSelected <= 0 || paymentAmmountSelected === null || paymentAmmountSelected === undefined)"
-              :loading="loadingSaveApplyPayment"
-              @click="saveApplyPayment"
-            />
-            <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
+          <div class="flex justify-content-between">
+            <div class="flex align-items-center">
+              <Chip class="bg-primary py-1 font-bold" label="Applied Payment Amount:">
+                Available Payment Amount: ${{ formatNumber(paymentAmmountSelected) }}
+              </Chip>
+              <Chip class="bg-primary py-1 mx-2 font-bold" label="Invoice Amount Selected: $0.00">
+                Invoice Amount Selected: ${{ formatNumber(invoiceAmmountSelected) }}
+              </Chip>
+              <Checkbox
+                id="checkApplyPayment"
+                v-model="checkApplyPayment"
+                :binary="true"
+                @update:model-value="($event) => {
+                  changeValueByCheckApplyPaymentBalance($event);
+                }"
+              />
+              <label for="checkApplyPayment" class="ml-2 font-bold">
+                Apply Payment Balance
+              </label>
+            </div>
+            <div>
+              <Button
+                v-tooltip.top="'Apply Payment'"
+                class="w-3rem mx-1"
+                icon="pi pi-check"
+                :disabled="disabledBtnApplyPayment || (paymentAmmountSelected <= 0 || paymentAmmountSelected === null || paymentAmmountSelected === undefined)"
+                :loading="loadingSaveApplyPayment"
+                @click="saveApplyPayment"
+              />
+              <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
+            </div>
           </div>
-        </div>
-      </template>
-    </Dialog>
+        </template>
+      </Dialog>
+    </div>
 
     <!-- Dialog Apply Payment Other Deduction -->
     <Dialog
