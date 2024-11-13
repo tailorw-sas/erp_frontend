@@ -9,7 +9,7 @@ import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.Adjustm
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Component
 public class CreateAdjustmentTransactionCommandHandler implements ICommandHandler<CreateAdjustmentTransactionCommand> {
@@ -45,8 +45,6 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
         ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findById(command.getTransactionCategory());
         ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findById(command.getTransactionSubCategory());
 
-
-        LocalDate transactionDate = command.getTransactionDate();
         double amount = transactionCategory.getOnlyApplyNet() ? 0.0 : command.getAmount();
         double netAmount = command.getAmount();
 
@@ -60,9 +58,9 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 command.getReferenceNumber(),
                 transactionStatusDto,
                 0.0,
-                transactionDate,
+                LocalDateTime.now(),
                 netAmount,
-                transactionDate,
+                null,
                 false,
                 true
         ));

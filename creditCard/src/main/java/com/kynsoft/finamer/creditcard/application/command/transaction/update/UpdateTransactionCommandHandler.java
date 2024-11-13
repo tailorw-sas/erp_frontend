@@ -11,7 +11,6 @@ import com.kynsoft.finamer.creditcard.domain.services.IManageLanguageService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -49,7 +48,7 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
         }
     }
 
-    public static void updateLocalDate(Consumer<LocalDate> setter, LocalDate newValue, LocalDate oldValue, Consumer<Integer> update){
+    public static void updateLocalDate(Consumer<LocalDateTime> setter, LocalDateTime newValue, LocalDateTime oldValue, Consumer<Integer> update){
         if(newValue != null && !newValue.equals(oldValue)){
             setter.accept(newValue);
             update.accept(1);

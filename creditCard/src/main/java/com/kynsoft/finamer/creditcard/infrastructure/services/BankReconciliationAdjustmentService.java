@@ -13,7 +13,7 @@ import com.kynsoft.finamer.creditcard.domain.services.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -44,11 +44,21 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
             RulesChecker.checkRule(new AdjustmentTransactionReferenceNumberMustBeNullRule(obj.getReferenceNumber()));
             RulesChecker.checkRule(new AdjustmentTransactionAmountRule(obj.getAmount()));
         });
-        detailsAmount += adjustmentRequest.stream().map(CreateBankReconciliationAdjustmentRequest::getAmount).reduce(0.0, Double::sum);
+
+        detailsAmount += adjustmentRequest.stream().map(obj -> {
+                    ManageVCCTransactionTypeDto subCategory = this.transactionTypeService.findById(obj.getTransactionSubCategory());
+                    if (subCategory.getNegative()) {
+                        return -obj.getAmount();
+                    } else {
+                        return obj.getAmount();
+                    }
+                }
+        ).reduce(0.0, Double::sum);
+
         RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(amount, detailsAmount));
+
         List<Long> ids = new ArrayList<>();
         for (CreateBankReconciliationAdjustmentRequest request : adjustmentRequest) {
-
             ManageAgencyDto agencyDto = this.agencyService.findById(request.getAgency());
             ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.RECEIVE);
             ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findById(request.getTransactionCategory());
@@ -66,9 +76,9 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
                     request.getReferenceNumber(),
                     transactionStatusDto,
                     0.0,
-                    LocalDate.now(),
+                    LocalDateTime.now(),
                     request.getAmount(),
-                    LocalDate.now(),
+                    LocalDateTime.now(),
                     false,
                     true
             ));
@@ -89,8 +99,16 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
         List<Long> ids = new ArrayList<>();
         Set<TransactionDto> adjustmentTransactions = new HashSet<>();
 
-        List<Double> amounts = adjustmentRequest.stream().map(UpdateBankReconciliationAdjustmentRequest::getAmount).toList();
-        RulesChecker.checkRule(new BankReconciliationListOfAmountDetailsRule(reconciliationDto.getAmount(), reconciliationDto.getDetailsAmount(), amounts));
+        Double detailsAmount = reconciliationDto.getDetailsAmount() + adjustmentRequest.stream().map(obj -> {
+                    ManageVCCTransactionTypeDto subCategory = this.transactionTypeService.findById(obj.getTransactionSubCategory());
+                    if (subCategory.getNegative()) {
+                        return -obj.getAmount();
+                    } else {
+                        return obj.getAmount();
+                    }
+                }
+        ).reduce(0.0, Double::sum);
+        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(reconciliationDto.getAmount(), detailsAmount));
 
         for (UpdateBankReconciliationAdjustmentRequest request : adjustmentRequest) {
             ManageAgencyDto agencyDto = this.agencyService.findById(request.getAgency());
@@ -109,15 +127,15 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
                     request.getReferenceNumber(),
                     transactionStatusDto,
                     0.0,
-                    LocalDate.now(),
+                    LocalDateTime.now(),
                     request.getAmount(),
-                    LocalDate.now(),
+                    LocalDateTime.now(),
                     false,
                     true
             ));
             adjustmentTransactions.add(transactionDto);
             ids.add(transactionDto.getId());
-            reconciliationDto.setDetailsAmount(reconciliationDto.getDetailsAmount() + request.getAmount());
+            reconciliationDto.setDetailsAmount(detailsAmount);
         }
         reconciliationDto.getTransactions().addAll(adjustmentTransactions);
         this.bankReconciliationService.update(reconciliationDto);

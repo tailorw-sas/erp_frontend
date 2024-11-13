@@ -24,6 +24,7 @@ public class ManageVCCTransactionType implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
+
     @Column(unique = true)
     private String code;
 
@@ -31,15 +32,29 @@ public class ManageVCCTransactionType implements Serializable {
 
     private String description;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean isActive;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean negative;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean isDefault;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean subcategory;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean onlyApplyNet;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean policyCredit;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean remarkRequired;
+
     private Integer minNumberOfCharacter;
+
     private String defaultRemark;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
@@ -52,7 +67,6 @@ public class ManageVCCTransactionType implements Serializable {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
     public ManageVCCTransactionType(ManageVCCTransactionTypeDto dto) {

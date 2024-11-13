@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,7 +23,7 @@ public class TransactionResponse implements IResponse {
     private ManageAgencyResponse agency;
     private ManageLanguageResponse language;
     private Double amount;
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
     private String reservationNumber;
     private String referenceNumber;
     private String hotelContactEmail;
@@ -36,7 +36,7 @@ public class TransactionResponse implements IResponse {
     private Double commission;
     private ManageTransactionStatusResponse status;
     private TransactionBasicResponse parent;
-    private LocalDate transactionDate;
+    private LocalDateTime transactionDate;
     private ManageVCCTransactionTypeResponse transactionCategory;
     private ManageVCCTransactionTypeResponse transactionSubCategory;
     private Double netAmount;

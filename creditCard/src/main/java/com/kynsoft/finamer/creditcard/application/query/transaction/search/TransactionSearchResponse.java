@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,7 +25,7 @@ public class TransactionSearchResponse implements IResponse {
     private TransactionHotelSearchResponse hotel;
     private CustomCodeDescriptionStatusResponse merchant;
     private Double amount;
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
     private String referenceNumber;
     private String enrolleCode;
     private String cardNumber;

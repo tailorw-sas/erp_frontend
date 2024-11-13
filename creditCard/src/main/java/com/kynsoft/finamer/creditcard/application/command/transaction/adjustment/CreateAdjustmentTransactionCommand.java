@@ -5,7 +5,6 @@ import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
 @Getter
@@ -20,7 +19,6 @@ public class CreateAdjustmentTransactionCommand implements ICommand {
     private Double amount;
     private String reservationNumber;
     private String referenceNumber;
-    private LocalDate transactionDate;
 
     public CreateAdjustmentTransactionCommand(UUID agency, UUID transactionCategory,
                                               UUID transactionSubCategory, Double amount,
@@ -32,7 +30,6 @@ public class CreateAdjustmentTransactionCommand implements ICommand {
         this.amount = amount;
         this.reservationNumber = reservationNumber;
         this.referenceNumber = referenceNumber;
-        this.transactionDate = LocalDate.now();
     }
 
     public static CreateAdjustmentTransactionCommand fromRequest(CreateAdjustmentTransactionRequest request){

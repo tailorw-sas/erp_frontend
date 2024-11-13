@@ -25,7 +25,7 @@ public class TransactionDto {
     private ManageAgencyDto agency;
     private ManageLanguageDto language;
     private Double amount;
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
     private String reservationNumber;
     private String referenceNumber;
     private String hotelContactEmail;
@@ -38,7 +38,7 @@ public class TransactionDto {
     private Double commission;
     private ManageTransactionStatusDto status;
     private TransactionDto parent;
-    private LocalDate transactionDate;
+    private LocalDateTime transactionDate;
     private ManageVCCTransactionTypeDto transactionCategory;
     private ManageVCCTransactionTypeDto transactionSubCategory;
     private Double netAmount;
@@ -51,8 +51,8 @@ public class TransactionDto {
 
     //uso -> toAggregateParent
     public TransactionDto(
-            Long id, UUID transactionUuid, LocalDate checkIn, String reservationNumber,
-            String referenceNumber, LocalDate transactionDate) {
+            Long id, UUID transactionUuid, LocalDateTime checkIn, String reservationNumber,
+            String referenceNumber, LocalDateTime transactionDate) {
 
         this.id = id;
         this.transactionUuid = transactionUuid;
@@ -66,7 +66,7 @@ public class TransactionDto {
     public TransactionDto(
             UUID transactionUuid, ManageMerchantDto merchant, MethodType methodType, ManageHotelDto hotel,
             ManageAgencyDto agency, ManageLanguageDto language, Double amount,
-            LocalDate checkIn, String reservationNumber, String referenceNumber,
+            LocalDateTime checkIn, String reservationNumber, String referenceNumber,
             String hotelContactEmail, String guestName, String email, String enrolleCode,
             String cardNumber, ManageCreditCardTypeDto creditCardType, Double commission,
             ManageTransactionStatusDto status, TransactionDto parent,
@@ -105,8 +105,8 @@ public class TransactionDto {
             UUID transactionUuid, ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
             String reservationNumber, String referenceNumber, ManageTransactionStatusDto status,
-            Double commission, LocalDate checkIn, Double netAmount,
-            LocalDate transactionDate, Boolean permitRefund, boolean adjustment) {
+            Double commission, LocalDateTime checkIn, Double netAmount,
+            LocalDateTime transactionDate, Boolean permitRefund, boolean adjustment) {
         this.transactionUuid = transactionUuid;
         this.agency = agency;
         this.transactionCategory = transactionCategory;

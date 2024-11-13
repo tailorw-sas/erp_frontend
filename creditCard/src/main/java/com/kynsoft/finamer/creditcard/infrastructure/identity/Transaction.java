@@ -54,7 +54,7 @@ public class Transaction implements Serializable {
 
     private Double amount;
 
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
 
     private String reservationNumber;
 
@@ -153,7 +153,7 @@ public class Transaction implements Serializable {
     private TransactionDto toAggregateParent() {
         return new TransactionDto(
                 id,transactionUuid, checkIn, reservationNumber, referenceNumber,
-                createdAt != null ? createdAt.toLocalDate() : null);
+                createdAt != null ? createdAt : null);
     }
 
     public TransactionDto toAggregate(){
@@ -172,7 +172,7 @@ public class Transaction implements Serializable {
                 commission,
                 status != null ? status.toAggregate() : null,
                 parent != null ? parent.toAggregateParent() : null,
-                createdAt != null ? createdAt.toLocalDate() : null,
+                createdAt != null ? createdAt : null,
                 transactionCategory != null ? transactionCategory.toAggregate() : null,
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
                 netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null,
