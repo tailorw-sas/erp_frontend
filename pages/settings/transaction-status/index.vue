@@ -9,7 +9,6 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
-import { ENUM_TRANSACTION_STATUS_NAVIGATE } from '~/utils/Enums'
 import type { IData } from '~/components/table/interfaces/IModelData'
 
 // VARIABLES -----------------------------------------------------------------------------------------
@@ -24,6 +23,7 @@ const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
 const loadingDelete = ref(false)
+const loadingNavigate = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
@@ -252,12 +252,21 @@ async function getList() {
   }
 }
 
-async function getForSelectNavigateList() {
+async function getForSelectNavigateList(query: string = '') {
   try {
-    navigateListItems.value = []
-
+    loadingNavigate.value = true
     const payload = {
       filter: [{
+        key: 'name',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
         key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
@@ -273,7 +282,7 @@ async function getForSelectNavigateList() {
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload)
 
     const { data: dataList } = response
-
+    navigateListItems.value = []
     // Use Map to avoid duplicates
     const uniqueItems = new Map<string, { id: string, name: string, status: string }>()
 
@@ -291,6 +300,9 @@ async function getForSelectNavigateList() {
   }
   catch (error) {
     console.error(error)
+  }
+  finally {
+    loadingNavigate.value = false
   }
 }
 
@@ -618,18 +630,21 @@ onMounted(() => {
             @submit="requireConfirmationToSave($event)"
           >
             <template #field-navigate="{ item: data, onUpdate }">
-              <MultiSelect
-                v-if="!loadingSaveAll" v-model="data.navigate" :options="[...navigateListItems]"
-                option-label="name" autocomplete="off" display="chip" filter @update:model-value="($event) => {
+              <DebouncedMultiSelectComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.navigate"
+                :suggestions="navigateListItems"
+                :loading="loadingNavigate"
+                @change="($event) => {
                   onUpdate('navigate', $event)
+                  data.navigate = $event
                 }"
+                @load="($event) => getForSelectNavigateList($event)"
               >
-                <template #option="slotProps">
-                  <div class="flex align-items-center">
-                    <div>{{ slotProps.option.name }}</div>
-                  </div>
-                </template>
-              </MultiSelect>
+              </DebouncedMultiSelectComponent>
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>

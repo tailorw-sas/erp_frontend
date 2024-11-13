@@ -823,10 +823,7 @@ function findNoCollectionStatusMenuOptions() {
   const noCollectionItems: any[] = allMenuListItems.filter((element: any) => !element.isCollection)
   for (let i = 0; i < noCollectionItems.length; i++) {
     const element = noCollectionItems[i]
-    if (element.type === MenuType.resendLink && data.methodType === 'LINK' && (data.status.isSent || data.status.isDeclined)) {
-      menuListItems.value.push(element)
-    }
-    if (element.type === MenuType.resendPost && data.methodType === 'POST' && (data.status.isSent || data.status.isDeclined)) {
+    if ([MenuType.resendPost, MenuType.resendLink].includes(element.type) && (data.status.isSent || data.status.isDeclined)) {
       menuListItems.value.push(element)
     }
   }
