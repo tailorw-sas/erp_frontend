@@ -15,7 +15,7 @@ import com.kynsoft.finamer.creditcard.domain.rules.refundTransaction.RefundTrans
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Component
@@ -52,14 +52,14 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
 
             UUID parentMerchantId = parentTransaction.getMerchant().getId();
             UUID parentCreditCardTypeId = parentTransaction.getCreditCardType().getId();
-            LocalDate parentCheckIn = parentTransaction.getCheckIn();
+            LocalDateTime parentCheckIn = parentTransaction.getCheckIn();
 
             ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
 
             //si no encuentra la parametrization que agarre 2 decimales por defecto
             int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
 
-            commission = manageMerchantCommissionService.calculateCommission(command.getAmount(), parentMerchantId, parentCreditCardTypeId, parentCheckIn, decimals);
+            commission = manageMerchantCommissionService.calculateCommission(command.getAmount(), parentMerchantId, parentCreditCardTypeId, parentCheckIn.toLocalDate(), decimals);
             //independientemente del valor de la commission el netAmount tiene dos decimales
             netAmount = BankerRounding.round(command.getAmount() - commission, 2);
         }

@@ -76,7 +76,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
 
             double commission= 0.0;
             try {
-                commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn(), decimals);
+                commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn().toLocalDate(), decimals);
             } catch (Exception e) {
                 ProcessErrorLogDto processErrorLogDto = new ProcessErrorLogDto();
                 processErrorLogDto.setSession(cardnetJobDto.getSession());
@@ -103,7 +103,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             transactionDto.setNetAmount(netAmount);
             transactionDto.setPaymentDate(LocalDateTime.now());
             if (transactionStatusDto.isReceivedStatus()){
-                transactionDto.setTransactionDate(LocalDate.now());
+                transactionDto.setTransactionDate(LocalDateTime.now());
             }
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);

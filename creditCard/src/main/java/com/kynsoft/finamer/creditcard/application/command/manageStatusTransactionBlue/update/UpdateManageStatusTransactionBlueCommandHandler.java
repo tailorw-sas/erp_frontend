@@ -9,7 +9,7 @@ import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Component
 public class UpdateManageStatusTransactionBlueCommandHandler implements ICommandHandler<UpdateManageStatusTransactionBlueCommand> {
@@ -48,7 +48,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
 
         double commission= 0.0;
         try {
-            commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn(), decimals);
+            commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn().toLocalDate(), decimals);
         } catch (Exception e) {
             ProcessErrorLogDto processErrorLogDto = new ProcessErrorLogDto();
             processErrorLogDto.setTransactionId(transactionDto.getTransactionUuid());
@@ -67,7 +67,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         transactionDto.setPaymentDate(command.getRequest().getPaymentDate());
         transactionDto.setStatus(transactionStatusDto);
         if (transactionStatusDto.isReceivedStatus()){
-            transactionDto.setTransactionDate(LocalDate.now());
+            transactionDto.setTransactionDate(LocalDateTime.now());
         }
         this.transactionService.update(transactionDto);
 

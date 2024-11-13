@@ -6,7 +6,7 @@ import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -21,7 +21,7 @@ public class CreateManualTransactionCommand implements ICommand {
     private UUID agency;
     private UUID language;
     private Double amount;
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
     private String reservationNumber;
     private String referenceNumber;
     private String hotelContactEmail;
@@ -31,7 +31,7 @@ public class CreateManualTransactionCommand implements ICommand {
 
     public CreateManualTransactionCommand(
             UUID merchant, MethodType methodType, UUID hotel, UUID agency, UUID language,
-            Double amount, LocalDate checkIn, String reservationNumber, String referenceNumber,
+            Double amount, LocalDateTime checkIn, String reservationNumber, String referenceNumber,
             String hotelContactEmail, String guestName, String email, UUID merchantCurrency) {
         this.transactionUuid = UUID.randomUUID();
         this.merchant = merchant;

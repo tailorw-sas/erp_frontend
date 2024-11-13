@@ -6,14 +6,15 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.BusinessRule;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ManualTransactionCheckInBeforeRule extends BusinessRule {
 
     private final LocalDate currentDate;
 
-    private final LocalDate checkInDate;
+    private final LocalDateTime checkInDate;
 
-    public ManualTransactionCheckInBeforeRule(LocalDate checkInDate) {
+    public ManualTransactionCheckInBeforeRule(LocalDateTime checkInDate) {
         super(
                 DomainErrorMessage.VCC_CHECKIN_DATE_IS_BEFORE_CURRENT_DATE,
                 new ErrorField("checkIn", DomainErrorMessage.VCC_CHECKIN_DATE_IS_BEFORE_CURRENT_DATE.getReasonPhrase())
@@ -24,6 +25,6 @@ public class ManualTransactionCheckInBeforeRule extends BusinessRule {
 
     @Override
     public boolean isBroken() {
-        return checkInDate.isAfter(currentDate);
+        return checkInDate.toLocalDate().isAfter(currentDate);
     }
 }

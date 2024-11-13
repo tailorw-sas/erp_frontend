@@ -4,7 +4,7 @@ import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -17,7 +17,7 @@ public class CreateManualTransactionRequest {
     private UUID agency;
     private UUID language;
     private Double amount;
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
     private String reservationNumber;
     private String referenceNumber;
     private String hotelContactEmail;

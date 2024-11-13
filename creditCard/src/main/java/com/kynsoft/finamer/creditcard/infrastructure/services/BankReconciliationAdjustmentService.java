@@ -13,7 +13,7 @@ import com.kynsoft.finamer.creditcard.domain.services.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -66,9 +66,9 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
                     request.getReferenceNumber(),
                     transactionStatusDto,
                     0.0,
-                    LocalDate.now(),
+                    LocalDateTime.now(),
                     request.getAmount(),
-                    LocalDate.now(),
+                    LocalDateTime.now(),
                     false,
                     true
             ));
@@ -109,9 +109,9 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
                     request.getReferenceNumber(),
                     transactionStatusDto,
                     0.0,
-                    LocalDate.now(),
+                    LocalDateTime.now(),
                     request.getAmount(),
-                    LocalDate.now(),
+                    LocalDateTime.now(),
                     false,
                     true
             ));
