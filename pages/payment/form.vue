@@ -978,9 +978,9 @@ function openDialogPaymentDetails(event: any) {
         .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
     },
   )
-
+  const maxAmountTemp = formatNumber(Math.abs(item.value.paymentBalance))
   updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-  updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
+  updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${maxAmountTemp}`)
   onOffDialogPaymentDetail.value = true
 }
 
@@ -1015,6 +1015,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
         itemDetails.value = { ...objToEdit }
         itemDetails.value.paymentDetail = idDetailTemp
 
+        // New Detail
         if (actionOfModal.value === 'new-detail') {
           if (itemDetails.value?.transactionType?.cash === false && itemDetails.value?.transactionType?.deposit === false) {
             const decimalSchema = z.object(
@@ -1036,9 +1037,9 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
                   .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
               },
             )
-
+            const paymentBalanceFormattedForNewDetail = formatNumber(Math.abs(item.value.paymentBalance))
             updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-            updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
+            updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${paymentBalanceFormattedForNewDetail}`)
             // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
             // const decimalSchema = z.object(
             //   {
@@ -1051,12 +1052,14 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
             // updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
           }
         }
+        // Split Deposit
         if (actionOfModal.value === 'split-deposit') {
           const amountString = objToEditTemp.amount
           const sanitizedAmount = amountString.replace(/,/g, '') // Elimina las comas
           const amountTemp = sanitizedAmount ? Math.abs(Number(sanitizedAmount)) : 0
 
           const minValueToApply = (amountTemp - 0.01).toFixed(2)
+          const minValueToApplyFormatted = formatNumber(minValueToApply) // Creada solo para mostrar para que el separador de miles no cause problemas
           const decimalSchema = z.object(
             {
               remark: z.string(),
@@ -1068,8 +1071,9 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
           updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
           // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
           updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${minValueToApply}`)
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${minValueToApplyFormatted}`)
         }
+        // Aplicar depósito
         if (actionOfModal.value === 'apply-deposit') {
           const oldAmount = objToEditTemp.amount ? Math.abs(Number.parseFloat(objToEditTemp.amount.replace(/,/g, ''))) : 0
 
@@ -1078,6 +1082,8 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
           // const minValueToApply = (oldAmount - childrenTotalValue - 0.01).toFixed(2)
           const minValueToApply = (oldAmount - childrenTotalValue).toFixed(2)
 
+          const minValueToApplyFormatted = formatNumber(minValueToApply) // Creada solo para mostrar para que el separador de miles no cause problemas
+          const oldAmountFormatted = formatNumber(oldAmount) // Solo para mostrar
           const decimalSchema = z.object(
             {
               remark: z.string(),
@@ -1089,12 +1095,13 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
           updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
           // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
           updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount to apply: ${Number.parseFloat(minValueToApply)} | Initial amount: ${oldAmount}`)
+          updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount to apply: ${minValueToApplyFormatted} | Initial amount: ${oldAmountFormatted}`)
         }
       }
 
       onOffDialogPaymentDetail.value = true
     }
+    // deposit transfer
     if (actionOfModal.value === 'deposit-transfer') {
       itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
       const decimalSchema = z.object(
@@ -1107,8 +1114,9 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
       )
       // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
       // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', true)
+      const paymentBalanceFormatted = formatNumber(item.value.paymentBalance) // Creada solo para mostrar
       updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-      updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${item.value.paymentBalance}`)
+      updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${paymentBalanceFormatted}`)
     }
   }
 
@@ -2583,8 +2591,8 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
                   iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                   iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
                   iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                  iterator.bookingAmount = iterator.invoiceAmount?.toString()
-                  iterator.bookingBalance = iterator.dueAmount?.toString()
+                  iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
+                  iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
                   // iterator.paymentStatus = iterator.status
 
                   // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
@@ -2649,8 +2657,8 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
                 iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                 iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                iterator.bookingAmount = iterator.invoiceAmount?.toString()
-                iterator.bookingBalance = iterator.dueAmount?.toString()
+                iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
+                iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
                 // iterator.paymentStatus = iterator.status
 
                 // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
@@ -2739,8 +2747,8 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
                 iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                 iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                iterator.bookingAmount = iterator.invoiceAmount?.toString()
-                iterator.bookingBalance = iterator.dueAmount?.toString()
+                iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
+                iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
                 // iterator.paymentStatus = iterator.status
 
                 // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
