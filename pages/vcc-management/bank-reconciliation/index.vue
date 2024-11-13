@@ -30,6 +30,11 @@ const filterToSearch = ref<IData>({
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
+const accordionLoading = ref({
+  hotel: false,
+  merchantBankAccount: false,
+  status: false,
+})
 const contextMenu = ref()
 
 enum MenuType {
@@ -326,12 +331,13 @@ function clearFilterToSearch() {
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
+  filterToSearch.value.criteria = ENUM_FILTER[0]
   searchAndFilter()
 }
 
 async function getHotelList(query: string = '') {
   try {
+    accordionLoading.value.hotel = true
     const payload = {
       filter: [
         {
@@ -376,10 +382,14 @@ async function getHotelList(query: string = '') {
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
+  finally {
+    accordionLoading.value.hotel = false
+  }
 }
 
 async function getStatusList(query: string = '') {
   try {
+    accordionLoading.value.status = true
     const payload = {
       filter: [
         {
@@ -418,10 +428,14 @@ async function getStatusList(query: string = '') {
   catch (error) {
     console.error('Error loading status list:', error)
   }
+  finally {
+    accordionLoading.value.status = false
+  }
 }
 
 async function getMerchantBankAccountList(query: string) {
   try {
+    accordionLoading.value.merchantBankAccount = true
     const payload = {
       filter: [{
         key: 'accountNumber',
@@ -451,6 +465,9 @@ async function getMerchantBankAccountList(query: string) {
   }
   catch (error) {
     console.error('Error loading merchant bank account list:', error)
+  }
+  finally {
+    accordionLoading.value.merchantBankAccount = false
   }
 }
 
@@ -630,11 +647,15 @@ onMounted(() => {
                       <!-- <pre>{{ filterToSearch }}</pre> -->
                       <label for="" class="mr-2 font-bold"> Hotel</label>
                       <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          v-if="!loadingSaveAll" id="autocomplete"
-                          :multiple="true" class="w-full" field="name"
-                          item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
-                          @load="($event) => getHotelList($event)" @change="($event) => {
+                        <DebouncedMultiSelectComponent
+                          v-if="!loadingSaveAll"
+                          id="autocomplete"
+                          field="name"
+                          item-value="id"
+                          :model="filterToSearch.hotel"
+                          :suggestions="hotelList"
+                          :loading="accordionLoading.hotel"
+                          @change="($event) => {
                             if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                               filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
                             }
@@ -642,30 +663,34 @@ onMounted(() => {
                               filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                             }
                           }"
+                          @load="($event) => getHotelList($event)"
                         >
                           <template #option="props">
                             <span>{{ props.item.code }} - {{ props.item.name }}</span>
                           </template>
-                        </DebouncedAutoCompleteComponent>
+                        </DebouncedMultiSelectComponent>
                       </div>
                     </div>
                     <div class="flex align-items-center">
                       <label for="" class="mr-2 font-bold"> Bank Account</label>
-                      <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          v-if="!loadingSaveAll" id="autocomplete"
-                          :multiple="true" class="w-full" field="name"
-                          item-value="id" :model="filterToSearch.merchantBankAccount" :suggestions="MerchantBankAccountList"
-                          @load="($event) => getMerchantBankAccountList($event)" @change="($event) => {
-                            if (!filterToSearch.merchantBankAccount.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                              filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id === 'All')
-                            }
-                            else {
-                              filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id !== 'All')
-                            }
-                          }"
-                        />
-                      </div>
+                      <DebouncedMultiSelectComponent
+                        v-if="!loadingSaveAll"
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.merchantBankAccount"
+                        :suggestions="MerchantBankAccountList"
+                        :loading="accordionLoading.merchantBankAccount"
+                        @change="($event) => {
+                          if (!filterToSearch.merchantBankAccount.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }"
+                        @load="($event) => getMerchantBankAccountList($event)"
+                      />
                     </div>
                   </div>
                 </div>
@@ -724,14 +749,17 @@ onMounted(() => {
                 <div class="grid align-items-center justify-content-center">
                   <div class="col-12">
                     <div class="flex align-items-center mb-2">
-                      <!-- <pre>{{ filterToSearch }}</pre> -->
                       <label for="" class="mr-2 font-bold"> Status</label>
                       <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          v-if="!loadingSaveAll" id="autocomplete"
-                          :multiple="true" class="w-full" field="name"
-                          item-value="id" :model="filterToSearch.status" :suggestions="statusList"
-                          @load="($event) => getStatusList($event)" @change="($event) => {
+                        <DebouncedMultiSelectComponent
+                          v-if="!loadingSaveAll"
+                          id="autocomplete"
+                          field="name"
+                          item-value="id"
+                          :model="filterToSearch.status"
+                          :suggestions="statusList"
+                          :loading="accordionLoading.status"
+                          @change="($event) => {
                             if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                               filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
                             }
@@ -739,11 +767,12 @@ onMounted(() => {
                               filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
                             }
                           }"
+                          @load="($event) => getStatusList($event)"
                         >
                           <template #option="props">
                             <span>{{ props.item.code }} - {{ props.item.name }}</span>
                           </template>
-                        </DebouncedAutoCompleteComponent>
+                        </DebouncedMultiSelectComponent>
                       </div>
                     </div>
                   </div>
