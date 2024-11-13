@@ -27,6 +27,10 @@ const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
 })
+const multiSelectLoading = ref({
+  merchant: false,
+  ccType: false,
+})
 const confApi = reactive({
   moduleApi: 'creditcard',
   uriApi: 'manage-merchant-bank-account',
@@ -425,6 +429,7 @@ async function getBankList(query: string) {
 
 async function getCreditCardTypeList(query: string = '') {
   try {
+    multiSelectLoading.value.ccType = true
     const payload = {
       filter: [
         {
@@ -471,10 +476,14 @@ async function getCreditCardTypeList(query: string = '') {
   catch (error) {
     console.error('Error loading manage credit card type list:', error)
   }
+  finally {
+    multiSelectLoading.value.ccType = false
+  }
 }
 
 async function getMerchantList(query: string) {
   try {
+    multiSelectLoading.value.merchant = true
     const payload = {
       filter: [{
         key: 'description',
@@ -515,6 +524,9 @@ async function getMerchantList(query: string) {
   }
   catch (error) {
     console.error('Error loading merchant list:', error)
+  }
+  finally {
+    multiSelectLoading.value.merchant = false
   }
 }
 
@@ -689,16 +701,17 @@ onMounted(() => {
             @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
           >
             <template #field-managerMerchant="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <DebouncedMultiSelectComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
                 item-value="id"
-                :multiple="true"
                 :model="data.managerMerchant"
                 :suggestions="MerchantList"
+                :loading="multiSelectLoading.merchant"
                 @change="($event) => {
                   onUpdate('managerMerchant', $event)
+                  data.managerMerchant = $event
                 }"
                 @load="($event) => getMerchantList($event)"
               />
@@ -720,37 +733,20 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
             <template #field-creditCardTypes="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <DebouncedMultiSelectComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
                 item-value="id"
                 :model="data.creditCardTypes"
-                :suggestions="[...CreditCardTypeList]"
-                :multiple="true"
+                :suggestions="CreditCardTypeList"
+                :loading="multiSelectLoading.ccType"
                 @change="($event) => {
                   onUpdate('creditCardTypes', $event)
+                  data.creditCardTypes = $event
                 }"
                 @load="($event) => getCreditCardTypeList($event)"
               />
-
-              <!-- <MultiSelect
-                v-if="!loadingSaveAll"
-                v-model="data.creditCardTypes"
-                :options="[...CreditCardTypeList]"
-                option-label="name"
-                autocomplete="off"
-                display="chip"
-                filter @update:model-value="($event) => {
-                  onUpdate('creditCardTypes', $event)
-                }"
-              >
-                <template #option="slotProps">
-                  <div class="flex align-items-center">
-                    <div>{{ slotProps.option.name }}</div>
-                  </div>
-                </template>
-              </MultiSelect> -->
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>
