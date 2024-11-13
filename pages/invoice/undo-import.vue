@@ -535,7 +535,7 @@ function clearFilterToSearch() {
     search: '', // Dejar el campo de búsqueda en blanco
     onlyManual: false,
     onlyInssist: false,
-    hotel: [allDefaultItem], // Restablecer a valor predeterminado
+    hotel: [], // Restablecer a valor predeterminado
     date: dayjs(new Date()).startOf('month').toDate(),
 
   }
