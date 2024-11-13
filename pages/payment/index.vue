@@ -495,8 +495,8 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'dueAmount', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: false, showFilter: false },
 ])
 
@@ -663,8 +663,8 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'reservationNumber', header: 'Reservation No.', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'dueAmount', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
+  { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'dueAmountTemp', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
 ])
 
 const applyPaymentOptionsOtherDeduction = ref({
@@ -1550,8 +1550,8 @@ async function applyPaymentGetList() {
                     booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
                   }
                   // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-                  // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-                  // iterator.bookingBalance = iterator.dueAmount?.toString()
+                  iterator.invoiceAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                  iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                   // iterator.paymentStatus = iterator.status
 
                   iterator.bookingsList = []
@@ -1629,8 +1629,8 @@ async function applyPaymentGetList() {
                   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
                 }
                 // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-                // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-                // iterator.bookingBalance = iterator.dueAmount?.toString()
+                iterator.invoiceAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                 // iterator.paymentStatus = iterator.status
 
                 iterator.bookingsList = []
@@ -1741,8 +1741,8 @@ async function applyPaymentGetList() {
                   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
                 }
                 // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-                // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-                // iterator.bookingBalance = iterator.dueAmount?.toString()
+                iterator.invoiceAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                 // iterator.paymentStatus = iterator.status
 
                 iterator.bookingsList = []
@@ -1807,8 +1807,10 @@ async function applyPaymentBookingGetList(idInvoice: string = '') {
         iterator.invoiceId = iterator.invoice?.invoiceId.toString()
         iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
         iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-        iterator.bookingAmount = iterator.invoiceAmount?.toString()
-        iterator.bookingBalance = iterator.dueAmount?.toString()
+        // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+        // iterator.bookingBalance = iterator.dueAmount?.toString()
+        iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+        iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : '0'
 
         // Verificar si el ID ya existe en la lista
         if (!existingIds.has(iterator.id)) {
@@ -2105,8 +2107,10 @@ async function applyPaymentGetListForOtherDeductions() {
                   iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                   iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
                   iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                  iterator.bookingAmount = iterator.invoiceAmount?.toString()
-                  iterator.bookingBalance = iterator.dueAmount?.toString()
+                  // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+                  // iterator.bookingBalance = iterator.dueAmount?.toString()
+                  iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                  iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                   // for (const booking of iterator.bookings) {
                   //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
                   //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
@@ -2211,8 +2215,12 @@ async function applyPaymentGetListForOtherDeductions() {
                 iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                 iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                iterator.bookingAmount = iterator.invoiceAmount?.toString()
-                iterator.bookingBalance = iterator.dueAmount?.toString()
+                // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+                // iterator.bookingBalance = iterator.dueAmount?.toString()
+
+                iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
                 // for (const booking of iterator.bookings) {
                 //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
                 //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
@@ -2347,8 +2355,11 @@ async function applyPaymentGetListForOtherDeductions() {
                 iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                 iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                iterator.bookingAmount = iterator.invoiceAmount?.toString()
-                iterator.bookingBalance = iterator.dueAmount?.toString()
+                // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+                // iterator.bookingBalance = iterator.dueAmount?.toString()
+                iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
                 // for (const booking of iterator.bookings) {
                 //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
                 //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
@@ -3158,6 +3169,12 @@ watch(applyPaymentOnChangePage, (newValue) => {
   applyPaymentGetList()
 })
 
+watch(applyPaymentOnChangePageOtherDeduction, (newValue) => {
+  applyPaymentPayloadOtherDeduction.value.page = newValue?.page ? newValue?.page : 0
+  applyPaymentPayloadOtherDeduction.value.pageSize = newValue?.rows ? newValue.rows : 10
+  applyPaymentGetListForOtherDeductions()
+})
+
 watch(filterToSearch, (newValue) => {
   if (newValue.status.length > 1 && newValue.status.find((item: { id: string, name: string, status?: string }) => item.id === 'All')) {
     filterToSearch.value.status = newValue.status.filter((item: { id: string, name: string, status?: string }) => item.id !== 'All')
@@ -3859,10 +3876,10 @@ onMounted(async () => {
         <div class="flex justify-content-between">
           <div class="flex align-items-center">
             <Chip class="bg-primary py-1 font-bold" label="Applied Payment Amount:">
-              Available Payment Amount: ${{ paymentAmmountSelected }}
+              Available Payment Amount: ${{ formatNumber(paymentAmmountSelected) }}
             </Chip>
             <Chip class="bg-primary py-1 mx-2 font-bold" label="Invoice Amount Selected: $0.00">
-              Invoice Amount Selected: ${{ invoiceAmmountSelected }}
+              Invoice Amount Selected: ${{ formatNumber(invoiceAmmountSelected) }}
             </Chip>
             <Checkbox
               id="checkApplyPayment"
