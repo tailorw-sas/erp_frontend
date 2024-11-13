@@ -20,9 +20,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "manage_adjustment")
+@Table(name = "adjustment")
 @EntityListeners(AuditEntityListener.class)
-@RemoteAudit(name = "manage_adjustment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@RemoteAudit(name = "adjustment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageAdjustment {
 
     @Id

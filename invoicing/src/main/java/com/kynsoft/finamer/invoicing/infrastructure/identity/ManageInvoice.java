@@ -29,9 +29,9 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
-@Table(name = "manage_invoice")
+@Table(name = "invoice")
 @EntityListeners(AuditEntityListener.class)
-@RemoteAudit(name = "manage_invoice",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@RemoteAudit(name = "invoice",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageInvoice {
 
     @Id

@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
-@Table(name = "manage_invoice")
+@Table(name = "invoice")
 public class ManageInvoice {
 
     @Id
