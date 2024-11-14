@@ -28,7 +28,7 @@ public class CardnetJob implements Serializable {
     @Column(name = "id", unique = true)
     private UUID id;
 
-    @Column(name = "transaction_id", unique = true)
+    @Column(name = "transaction_id")
     private UUID transactionId;
 
     private String session;
