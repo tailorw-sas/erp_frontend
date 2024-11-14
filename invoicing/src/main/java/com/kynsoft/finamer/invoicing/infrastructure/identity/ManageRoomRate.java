@@ -23,9 +23,9 @@ import org.hibernate.generator.EventType;
 @Getter
 @Setter
 @Entity
-@Table(name = "manage_room_rate")
+@Table(name = "room_rate")
 @EntityListeners(AuditEntityListener.class)
-@RemoteAudit(name = "manage_room_rate",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@RemoteAudit(name = "room_rate",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageRoomRate {
 
     @Id
@@ -48,7 +48,7 @@ public class ManageRoomRate {
     private String remark;
     private Long nights;
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "manage_booking")
+    @JoinColumn(name = "booking")
     private ManageBooking booking;
 
     @Column(nullable = true)
