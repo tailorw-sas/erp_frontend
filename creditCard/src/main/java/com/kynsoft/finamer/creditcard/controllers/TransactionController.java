@@ -38,6 +38,7 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMer
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.getById.FindTransactionByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.GetSearchTransactionQuery;
+import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionResumeResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.PaymentRequestDto;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -88,7 +89,7 @@ public class TransactionController {
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
         GetSearchTransactionQuery query = new GetSearchTransactionQuery(pageable, request.getFilter(), request.getQuery());
-        PaginatedResponse response = mediator.send(query);
+        TransactionResumeResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }

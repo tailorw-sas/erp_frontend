@@ -34,7 +34,7 @@ public class Payment implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(columnDefinition = "BIGINT", name = "payment_gen_id")
+    @Column(columnDefinition = "serial", name = "payment_gen_id")
     @Generated(event = EventType.INSERT)
     private Long paymentId;
 
@@ -163,7 +163,7 @@ public class Payment implements Serializable {
     public PaymentDto toAggregate() {
         return new PaymentDto(
                 id,
-                paymentId,
+                paymentId != null ? paymentId : null,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
                 reference,
@@ -202,7 +202,7 @@ public class Payment implements Serializable {
     public PaymentDto toAggregateWihtDetails() {
         return new PaymentDto(
                 id,
-                paymentId,
+                paymentId != null ? paymentId : null,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
                 reference,

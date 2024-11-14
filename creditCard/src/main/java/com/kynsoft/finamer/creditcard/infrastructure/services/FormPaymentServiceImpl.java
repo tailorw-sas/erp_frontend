@@ -196,10 +196,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             }
             cardNetSession = sessionResponse.getSession();
             cardNetSessionKey = sessionResponse.getSessionKey();
-            // Insertar nueva referencia de session.
-            cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionDto.getTransactionUuid(), cardNetSession, cardNetSessionKey, Boolean.FALSE, 0);
-            cardnetJobDto.setCreatedAt(LocalDateTime.now());
-            cardNetJobService.create(cardnetJobDto);
+            createCardNetJob(cardNetSession, cardNetSessionKey, transactionDto.getTransactionUuid());
         } else if ((transactionDto.getStatus().isDeclinedStatus() && cardnetJobDto.getIsProcessed()) || cardnetJobDto.isSessionExpired()) {
             //  si esta como declinada previamente o expiró el tiempo de validez de la session
             // TODO: para este caso lo ideal es crear nuevos cardnetDto, para dejar la traza de las sesiones previas por transaccion. En el get del cardetDto deberia devolver el mas reciente
@@ -208,12 +205,10 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR, DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR.getReasonPhrase());
             }
             cardNetSession = sessionResponse.getSession();
-            cardnetJobDto.setSession(sessionResponse.getSession());
-            cardnetJobDto.setSessionKey(sessionResponse.getSessionKey());
-            cardnetJobDto.setCreatedAt(LocalDateTime.now());
-            cardnetJobDto.setIsProcessed(false);
-            cardnetJobDto.setNumberOfAttempts(0);
+            cardNetSessionKey = sessionResponse.getSessionKey();
+            cardnetJobDto.setIsProcessed(true);
             cardNetJobService.update(cardnetJobDto);
+            createCardNetJob(cardNetSession, cardNetSessionKey, transactionDto.getTransactionUuid());
         } else {
             // Esto es por si es de tipo Link y le da clic varias veces no duplique la session
             cardNetSession = cardnetJobDto.getSession();
@@ -279,6 +274,13 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
             return optional.get().toAggregate();
         } else return null;
 
+    }
+
+    private void createCardNetJob(String cardNetSession, String cardNetSessionKey, UUID transactionUuid) {
+        // Insertar nueva referencia de session.
+        CardnetJobDto cardnetJobDto = new CardnetJobDto(UUID.randomUUID(), transactionUuid, cardNetSession, cardNetSessionKey, Boolean.FALSE, 0);
+        cardnetJobDto.setCreatedAt(LocalDateTime.now());
+        cardNetJobService.create(cardnetJobDto);
     }
 
 }
