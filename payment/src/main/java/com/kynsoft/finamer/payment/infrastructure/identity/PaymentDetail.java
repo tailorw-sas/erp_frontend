@@ -34,7 +34,7 @@ public class PaymentDetail implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(columnDefinition="BIGINT", name = "payment_detail_gen_id")
+    @Column(columnDefinition="serial", name = "payment_detail_gen_id")
     @Generated(event = EventType.INSERT)
     private Long paymentDetailId;
 
