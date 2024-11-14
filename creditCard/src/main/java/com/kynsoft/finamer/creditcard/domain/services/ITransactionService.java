@@ -2,6 +2,7 @@ package com.kynsoft.finamer.creditcard.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionTotalResume;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import org.springframework.data.domain.Pageable;
 
@@ -33,4 +34,5 @@ public interface ITransactionService {
     void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto);
 
     void sendTransactionPaymentLinkEmail(TransactionDto transactionDto, String paymentLink);
+    TransactionTotalResume searchTotal(List<FilterCriteria> filterCriteria);
 }
