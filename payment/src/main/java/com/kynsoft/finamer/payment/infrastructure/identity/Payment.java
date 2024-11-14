@@ -163,7 +163,7 @@ public class Payment implements Serializable {
     public PaymentDto toAggregate() {
         return new PaymentDto(
                 id,
-                paymentId,
+                paymentId != null ? paymentId : null,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
                 reference,
@@ -202,7 +202,7 @@ public class Payment implements Serializable {
     public PaymentDto toAggregateWihtDetails() {
         return new PaymentDto(
                 id,
-                paymentId,
+                paymentId != null ? paymentId : null,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
                 reference,
