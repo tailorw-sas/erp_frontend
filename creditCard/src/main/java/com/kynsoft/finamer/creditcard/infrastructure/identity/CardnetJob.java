@@ -1,10 +1,9 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
 import com.kynsoft.finamer.creditcard.domain.dto.CardnetJobDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +21,8 @@ import java.util.UUID;
 @Entity
 
 @Table(name = "vcc_cardnet_job")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "vcc_cardnet_job",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class CardnetJob implements Serializable {
 
     @Id

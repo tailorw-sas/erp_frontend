@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.TemplateDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,6 +19,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "template_entity")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "template_entity",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class TemplateEntity {
 
     @Id
