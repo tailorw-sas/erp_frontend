@@ -9,8 +9,9 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
 import type { IData } from '~/components/table/interfaces/IModelData'
+
 const multiSelectLoading = ref({
- 
+
   hotel: false,
 })
 const entryCode = ref('')
@@ -30,7 +31,7 @@ const loadingSearch = ref(false)
 
 const loadingSaveAll = ref(false)
 
-//const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+// const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -106,8 +107,8 @@ const columns: IColumn[] = [
   { field: 'roomType', header: 'Room Type', type: 'text', width: '11%' },
   { field: 'nights', header: 'Nights', type: 'text', width: '7%' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'text', width: '10%' },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', width: '11%' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '12%' },
+  { field: 'hotelAmountTemp', header: 'Hotel Amount', type: 'text', width: '11%' },
+  { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '12%' },
   { field: 'status', header: 'Reverse Status', width: '12%', frozen: true, showFilter: false, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -257,12 +258,12 @@ async function getBookingList(clearFilter: boolean = false) {
         value: dayjs(filterToSearch.value.date).startOf('day').format('YYYY-MM-DD'),
         logicalOperation: 'AND'
       },
-      // {
-      //   key: 'invoice.importType',
-      //   operator: 'NOT_EQUALS',
-      //   value: 'NONE',
-      //   logicalOperation: 'AND'
-      // },
+      {
+        key: 'invoice.deleteInvoice',
+        operator: 'EQUALS',
+        value: false,
+        logicalOperation: 'AND'
+      },
       // {
       //   key: 'invoice.hotel.id',
       //   operator: 'IN',
@@ -306,11 +307,12 @@ async function getBookingList(clearFilter: boolean = false) {
         loadingEdit: false,
         loadingDelete: false,
         bookingId: '',
-        hotelAmount: iterator.hotelAmount,
+        hotelAmountTemp: iterator.hotelAmount ? formatNumber(iterator.hotelAmount) : 0,
         ratePlan: iterator.ratePlan?.name || '',
         roomType: iterator.roomType?.name || '',
         agency: iterator?.invoice?.agency,
         invoiceAmount: iterator.invoiceAmount,
+        invoiceAmountTemp: iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount) : 0,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
@@ -378,7 +380,7 @@ async function getHotelList(query: string = '') {
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
-  finally{
+  finally {
     multiSelectLoading.value.hotel = false
   }
 }
@@ -609,19 +611,19 @@ onMounted(async () => {
                   >*</span></label>
                   <div class="w-full">
                     <DebouncedMultiSelectComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="filterToSearch.hotel"
-                :suggestions="hotelList"
-                :loading="multiSelectLoading.hotel"
-                @change="($event) => {
-                 
-                  filterToSearch.hotel = $event
-                }"
-                @load="($event) => getHotelList($event)"
-              />
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.hotel"
+                      :suggestions="hotelList"
+                      :loading="multiSelectLoading.hotel"
+                      @change="($event) => {
+
+                        filterToSearch.hotel = $event
+                      }"
+                      @load="($event) => getHotelList($event)"
+                    />
                     <!--
                     <DebouncedAutoCompleteComponent
                       v-if="!loadingSaveAll" id="autocomplete"
@@ -716,8 +718,8 @@ onMounted(async () => {
                     footer="Totals:" :colspan="9"
                     footer-style="text-align:right; font-weight: 700"
                   />
-                  <Column :footer="totalHotelAmount" :colspan="1" />
-                  <Column :footer="totalInvoiceAmount" :colspan="1" />
+                  <Column :footer="totalHotelAmount ? formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100) : ''" :colspan="1" />
+                  <Column :footer="totalInvoiceAmount ? formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100) : ''" :colspan="1" />
                   <Column :colspan="1" />
                 </Row>
               </ColumnGroup>
