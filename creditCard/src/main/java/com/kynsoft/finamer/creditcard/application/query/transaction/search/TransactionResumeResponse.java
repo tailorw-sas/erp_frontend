@@ -6,12 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @AllArgsConstructor
 @Getter
 @Setter
-public class TransactionResume implements IResponse {
+public class TransactionResumeResponse implements IResponse {
     private PaginatedResponse transactionSearchResponse;
     private TransactionTotalResume transactionTotalResume;
 }

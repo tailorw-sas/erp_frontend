@@ -6,7 +6,7 @@ import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GetSearchTransactionQueryHandler implements IQueryHandler<GetSearchTransactionQuery, TransactionResume> {
+public class GetSearchTransactionQueryHandler implements IQueryHandler<GetSearchTransactionQuery, TransactionResumeResponse> {
 
     private final ITransactionService service;
 
@@ -15,10 +15,10 @@ public class GetSearchTransactionQueryHandler implements IQueryHandler<GetSearch
     }
 
     @Override
-    public TransactionResume handle(GetSearchTransactionQuery query) {
+    public TransactionResumeResponse handle(GetSearchTransactionQuery query) {
         TransactionTotalResume transactionTotalResume = service.searchTotal(query.getFilter());
         PaginatedResponse paginatedResponse = service.search(query.getPageable(), query.getFilter());
 
-        return new TransactionResume(paginatedResponse, transactionTotalResume);
+        return new TransactionResumeResponse(paginatedResponse, transactionTotalResume);
     }
 }
