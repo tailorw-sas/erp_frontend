@@ -32,6 +32,14 @@ const confApi = reactive({
   moduleApi: 'creditcard',
   uriApi: 'manage-transaction-status',
 })
+const selectedOption = ref('')
+const radioOptions = [
+  { label: 'Sent', value: 'sent' },
+  { label: 'Refund', value: 'refund' },
+  { label: 'Received', value: 'received' },
+  { label: 'Declined', value: 'declined' },
+  { label: 'Cancelled', value: 'cancelled' },
+]
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -71,36 +79,12 @@ const fields: Array<FieldDefinitionType> = [
     field: 'visible',
     header: 'Visible',
     dataType: 'check',
-    class: 'field col-12',
+    class: 'field col-12 mb-3',
   },
   {
-    field: 'sentStatus',
-    header: 'Sent Status',
-    dataType: 'check',
-    class: 'field col-12',
-  },
-  {
-    field: 'refundStatus',
-    header: 'Refund Status',
-    dataType: 'check',
-    class: 'field col-12',
-  },
-  {
-    field: 'receivedStatus',
-    header: 'Received Status',
-    dataType: 'check',
-    class: 'field col-12',
-  },
-  {
-    field: 'declinedStatus',
-    header: 'Declined Status',
-    dataType: 'check',
-    class: 'field col-12',
-  },
-  {
-    field: 'cancelledStatus',
-    header: 'Cancelled Status',
-    dataType: 'check',
+    field: 'isStatus',
+    header: 'Is Status',
+    dataType: 'text',
     class: 'field col-12 mb-3',
   },
   {
@@ -126,11 +110,13 @@ const item = ref<GenericObject>({
   enablePayment: false,
   navigate: [],
   visible: false,
-  sentStatus: false,
-  refundStatus: false,
-  receivedStatus: false,
-  declinedStatus: false,
-  cancelledStatus: false,
+  isStatus: {
+    sent: false,
+    refund: false,
+    received: false,
+    declined: false,
+    cancelled: false,
+  },
   description: '',
   status: true
 })
@@ -142,11 +128,13 @@ const itemTemp = ref<GenericObject>({
   enablePayment: false,
   navigate: [],
   visible: false,
-  sentStatus: false,
-  refundStatus: false,
-  receivedStatus: false,
-  declinedStatus: false,
-  cancelledStatus: false,
+  isStatus: {
+    sent: false,
+    refund: false,
+    received: false,
+    declined: false,
+    cancelled: false,
+  },
   status: true
 })
 
@@ -200,6 +188,7 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
   fields[0].disabled = false
+  selectedOption.value = ''
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
 }
@@ -333,7 +322,9 @@ async function resetListItems() {
 }
 
 async function getItemById(id: string) {
-  if (!id) { return }
+  if (!id) {
+    return
+  }
 
   idItem.value = id
   loadingSaveAll.value = true
@@ -355,17 +346,21 @@ async function getItemById(id: string) {
         code,
         enablePayment,
         visible,
-        sentStatus,
-        refundStatus,
-        receivedStatus,
-        declinedStatus,
-        cancelledStatus,
+        isStatus: {
+          sent: sentStatus,
+          refund: refundStatus,
+          received: receivedStatus,
+          declined: declinedStatus,
+          cancelled: cancelledStatus,
+        },
         navigate: navigate
           .map((nav: any) => navigateListItems.value.find((item: any) => item.id === nav?.id))
           .filter((nav: any) => nav !== null)
           .map((nav: any) => ({ id: nav.id, name: nav.name, status: nav.status }))
       }
 
+      selectedOption.value = ''
+      findSelectedOption()
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
@@ -380,12 +375,31 @@ async function getItemById(id: string) {
   }
 }
 
+function findSelectedOption() {
+  for (const key in item.value.isStatus) {
+    if (item.value.isStatus[key]) {
+      const option = radioOptions.find(opt => opt.value === key)
+      if (option) {
+        selectedOption.value = key
+        break
+      }
+    }
+  }
+}
+
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
+    payload.sentStatus = item.isStatus.sent
+    payload.refundStatus = item.isStatus.refund
+    payload.receivedStatus = item.isStatus.received
+    payload.declinedStatus = item.isStatus.declined
+    payload.cancelledStatus = item.isStatus.cancelled
     payload.navigate = payload.navigate.map((p: any) => p.id)
+    delete payload.event
+    delete payload.isStatus
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
@@ -394,7 +408,14 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
+  payload.sentStatus = item.isStatus.sent
+  payload.refundStatus = item.isStatus.refund
+  payload.receivedStatus = item.isStatus.received
+  payload.declinedStatus = item.isStatus.declined
+  payload.cancelledStatus = item.isStatus.cancelled
   payload.navigate = payload.navigate.map((p: any) => p.id)
+  delete payload.event
+  delete payload.isStatus
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -504,6 +525,27 @@ function onSortField(event: any) {
   }
 }
 
+function updateStatusItem(selectedValue: any) {
+  console.log(selectedValue)
+  const tempStatus = {
+    sent: false,
+    refund: false,
+    received: false,
+    declined: false,
+    cancelled: false,
+  }
+  // Resetear los campos a `false`
+  if (item.value.isStatus[selectedValue]) {
+    selectedOption.value = ''
+    tempStatus[selectedValue] = false
+  }
+  else {
+    tempStatus[selectedValue] = true
+  }
+  item.value.isStatus = tempStatus
+  return tempStatus
+}
+
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criterial && filterToSearch.value.search)
   return false
@@ -598,7 +640,6 @@ onMounted(() => {
         </Accordion>
       </div>
       <DynamicTable
-
         :data="listItems"
         :columns="columns"
         :options="options"
@@ -611,6 +652,7 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
       />
+
     </div>
 
     <div class="col-12 order-1 md:order-0 md:col-6 xl:col-3">
@@ -643,8 +685,26 @@ onMounted(() => {
                   data.navigate = $event
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
-              >
-              </DebouncedMultiSelectComponent>
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-isStatus="{ item: data, onUpdate }">
+              <div v-if="!loadingSaveAll" class="flex flex-wrap gap-3 mt-1">
+                <div v-for="(option, index) in radioOptions" :key="index" class="flex align-items-center">
+                  <RadioButton
+                    v-model="selectedOption"
+                    :input-id="`option${index}`"
+                    name="status"
+                    :value="option.value"
+                    @click="() => {
+                      const result = updateStatusItem(option.value)
+                      onUpdate('isStatus', result)
+                      data.isStatus = result
+                    }"
+                  />
+                  <label :for="`option${index}`" class="ml-2">{{ option.label }}</label>
+                </div>
+              </div>
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>
