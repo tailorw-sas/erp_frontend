@@ -10,6 +10,7 @@ import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ParameterizationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.refundTransaction.RefundTransactionCompareParentAmountRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
@@ -29,11 +30,14 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
 
     private final IManageMerchantCommissionService manageMerchantCommissionService;
 
-    public CreateRefundTransactionCommandHandler(ITransactionService service, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService, IManageMerchantCommissionService manageMerchantCommissionService) {
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+
+    public CreateRefundTransactionCommandHandler(ITransactionService service, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService, IManageMerchantCommissionService manageMerchantCommissionService, ITransactionStatusHistoryService transactionStatusHistoryService) {
         this.service = service;
         this.parameterizationService = parameterizationService;
         this.transactionStatusService = transactionStatusService;
         this.manageMerchantCommissionService = manageMerchantCommissionService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -98,5 +102,13 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
             parentTransaction.setPermitRefund(false);
             this.service.update(parentTransaction);
         }
+        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                UUID.randomUUID(),
+                transactionDto,
+                "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                null,
+                command.getEmployee(),
+                transactionStatusDto
+        ));
     }
 }

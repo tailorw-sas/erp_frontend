@@ -9,7 +9,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.ManageB2BPartnerTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.services.IManageB2BPartnerTypeService;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerB2BPartnerService;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManagerB2BPartnerDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;

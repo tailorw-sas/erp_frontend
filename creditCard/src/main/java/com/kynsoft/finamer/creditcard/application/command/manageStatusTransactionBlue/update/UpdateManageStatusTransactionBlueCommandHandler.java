@@ -6,10 +6,12 @@ import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
 import com.kynsoft.finamer.creditcard.domain.services.IProcessErrorLogService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
+import com.kynsoft.finamer.creditcard.domain.services.ITransactionStatusHistoryService;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Component
 public class UpdateManageStatusTransactionBlueCommandHandler implements ICommandHandler<UpdateManageStatusTransactionBlueCommand> {
@@ -21,11 +23,12 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
     private final ManageMerchantCommissionServiceImpl merchantCommissionService;
     private final IParameterizationService parameterizationService;
     private final IProcessErrorLogService processErrorLogService;
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
 
     public UpdateManageStatusTransactionBlueCommandHandler(ITransactionService transactionService, ManageCreditCardTypeServiceImpl creditCardTypeService,
                                                            ManageTransactionStatusServiceImpl transactionStatusService,
                                                            TransactionPaymentLogsService transactionPaymentLogsService,
-                                                           ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService) {
+                                                           ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService) {
         this.transactionService = transactionService;
         this.creditCardTypeService = creditCardTypeService;
         this.transactionStatusService = transactionStatusService;
@@ -33,6 +36,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         this.merchantCommissionService = merchantCommissionService;
         this.parameterizationService = parameterizationService;
         this.processErrorLogService = processErrorLogService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -70,7 +74,14 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
             transactionDto.setTransactionDate(LocalDateTime.now());
         }
         this.transactionService.update(transactionDto);
-
+        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                UUID.randomUUID(),
+                transactionDto,
+                "The transaction change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                null,
+                null,
+                transactionStatusDto
+        ));
         //3- Actualizar vcc_transaction_payment_logs columna merchant_respose en vcc_transaction
         transactionPaymentLogsDto.setMerchantResponse(command.getRequest().getMerchantResponse());
         transactionPaymentLogsDto.setIsProcessed(true);

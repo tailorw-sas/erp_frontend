@@ -2,6 +2,7 @@ package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

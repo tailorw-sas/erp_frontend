@@ -13,6 +13,8 @@ import com.kynsoft.finamer.creditcard.domain.services.*;
 import com.kynsoft.finamer.creditcard.infrastructure.services.TokenService;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class CreateManualTransactionCommandHandler implements ICommandHandler<CreateManualTransactionCommand> {
 
@@ -40,6 +42,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
 
     private final IManagerMerchantCurrencyService merchantCurrencyService;
 
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+
     public CreateManualTransactionCommandHandler(
             ITransactionService transactionService,
             IManageMerchantService merchantService,
@@ -52,7 +56,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
             ICreditCardCloseOperationService closeOperationService,
             TokenService tokenService,
             IManageMerchantConfigService merchantConfigService,
-            IManagerMerchantCurrencyService merchantCurrencyService) {
+            IManagerMerchantCurrencyService merchantCurrencyService, ITransactionStatusHistoryService transactionStatusHistoryService) {
 
         this.transactionService = transactionService;
         this.merchantService = merchantService;
@@ -66,6 +70,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         this.tokenService = tokenService;
         this.merchantConfigService = merchantConfigService;
         this.merchantCurrencyService = merchantCurrencyService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -141,6 +146,14 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 transactionService.sendTransactionPaymentLinkEmail(newTransaction, paymentLink);
             }
         }
+        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                UUID.randomUUID(),
+                transactionDto,
+                "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                null,
+                command.getEmployee(),
+                transactionStatusDto
+        ));
     }
 
 }

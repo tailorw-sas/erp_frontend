@@ -15,4 +15,5 @@ public class CreateAdjustmentTransactionRequest {
     private Double amount;
     private String reservationNumber;
     private String referenceNumber;
+    private String employee;
 }
