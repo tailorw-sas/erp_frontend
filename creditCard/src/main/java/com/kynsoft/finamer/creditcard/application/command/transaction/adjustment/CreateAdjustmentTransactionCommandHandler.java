@@ -10,6 +10,7 @@ import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Component
 public class CreateAdjustmentTransactionCommandHandler implements ICommandHandler<CreateAdjustmentTransactionCommand> {
@@ -22,11 +23,14 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
 
     private final IManageTransactionStatusService transactionStatusService;
 
-    public CreateAdjustmentTransactionCommandHandler(ITransactionService service, IManageAgencyService agencyService, IManageVCCTransactionTypeService transactionTypeService, IManageTransactionStatusService transactionStatusService) {
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+
+    public CreateAdjustmentTransactionCommandHandler(ITransactionService service, IManageAgencyService agencyService, IManageVCCTransactionTypeService transactionTypeService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService) {
         this.service = service;
         this.agencyService = agencyService;
         this.transactionTypeService = transactionTypeService;
         this.transactionStatusService = transactionStatusService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -65,5 +69,13 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 true
         ));
         command.setId(transactionDto.getId());
+        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                UUID.randomUUID(),
+                transactionDto,
+                "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                null,
+                command.getEmployee(),
+                transactionStatusDto
+        ));
     }
 }

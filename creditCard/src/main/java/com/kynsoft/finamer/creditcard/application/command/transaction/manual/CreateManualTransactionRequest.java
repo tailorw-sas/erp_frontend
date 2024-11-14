@@ -24,4 +24,5 @@ public class CreateManualTransactionRequest {
     private String guestName;
     private String email;
     private UUID merchantCurrency;
+    private String employee;
 }
