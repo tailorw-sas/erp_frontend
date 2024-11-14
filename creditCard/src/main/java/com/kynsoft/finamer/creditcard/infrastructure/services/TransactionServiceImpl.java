@@ -14,6 +14,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionSearchResponse;
+import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionTotalResume;
 import com.kynsoft.finamer.creditcard.domain.dto.TemplateDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
@@ -33,26 +34,21 @@ import java.util.*;
 
 @Service
 public class TransactionServiceImpl implements ITransactionService {
-    
-    @Autowired
+
     private final TransactionWriteDataJPARepository repositoryCommand;
-    
-    @Autowired
+
     private final TransactionReadDataJPARepository repositoryQuery;
 
-    @Autowired
-    private final ManageTransactionStatusServiceImpl statusService;
-
-    @Autowired
     private final MailService mailService;
 
-    @Autowired
     private final TemplateEntityServiceImpl templateEntityService;
 
-    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand, TransactionReadDataJPARepository repositoryQuery, ManageTransactionStatusServiceImpl statusService, MailService mailService, TemplateEntityServiceImpl templateEntityService) {
+    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand,
+                                  TransactionReadDataJPARepository repositoryQuery,
+                                   MailService mailService,
+                                  TemplateEntityServiceImpl templateEntityService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
-        this.statusService = statusService;
         this.mailService = mailService;
         this.templateEntityService = templateEntityService;
     }
@@ -105,6 +101,25 @@ public class TransactionServiceImpl implements ITransactionService {
         Page<Transaction> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedSearchResponse(data);
+    }
+
+    @Override
+    public TransactionTotalResume searchTotal(List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+        GenericSpecificationsBuilder<Transaction> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        double totalAmount = 0.0;
+        double commission = 0.0;
+        double netAmount = 0.0;
+
+        for (Transaction transaction : repositoryQuery.findAll(specifications)) {
+            if (transaction.getAmount() != null) {
+                totalAmount += transaction.getAmount();
+                commission += transaction.getCommission();
+                netAmount += transaction.getNetAmount();
+            }
+        }
+
+        return new TransactionTotalResume(totalAmount, commission, netAmount);
     }
 
     @Override
