@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
