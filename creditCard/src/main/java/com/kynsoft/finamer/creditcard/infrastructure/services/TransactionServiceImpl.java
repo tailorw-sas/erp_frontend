@@ -12,6 +12,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionSearchResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionTotalResume;
@@ -119,7 +120,8 @@ public class TransactionServiceImpl implements ITransactionService {
             }
         }
 
-        return new TransactionTotalResume(totalAmount, commission, netAmount);
+        return new TransactionTotalResume(BankerRounding.round(totalAmount,2),
+                BankerRounding.round(commission,2), BankerRounding.round(netAmount,2));
     }
 
     @Override
