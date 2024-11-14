@@ -141,6 +141,7 @@ const options = ref({
   uriApi: 'transactions',
   loading: false,
   actionsAsMenu: false,
+  showFilters: false,
   messageToDelete: 'Do you want to save the change?',
 })
 const payload = ref<IQueryRequest>({

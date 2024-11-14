@@ -164,7 +164,8 @@ async function getList() {
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const { transactionSearchResponse, transactionTotalResume } = response
+    const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
     pagination.value.page = page
     pagination.value.limit = size
