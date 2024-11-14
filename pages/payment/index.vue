@@ -1949,8 +1949,6 @@ async function getListPaymentDetailTypeDeposit() {
 }
 
 async function applyPaymentGetListForOtherDeductions() {
-  console.log(objItemSelectedForRightClickApplyPayment.value)
-
   if (applyPaymentOptionsOtherDeduction.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -2652,7 +2650,7 @@ async function selectRowsOfInvoiceOfOtherDeduction(event: any) {
 async function onCellEditCompleteApplyPaymentOtherDeduction(event: any) {
   const { data, newValue, field } = event
   switch (field) {
-    case 'dueAmount':
+    case 'dueAmountTemp':
       if (newValue > 0 && newValue <= data[field]) {
         data[field] = newValue
       }
@@ -2748,7 +2746,7 @@ async function saveApplyPaymentOtherDeduction() {
       .filter(item => idInvoicesSelectedToApplyPaymentForOtherDeduction.value.includes(item.id)).map((item) => {
         return {
           bookingId: item.id,
-          bookingBalance: typeof item.dueAmount !== 'number' ? Number.parseFloat(item.dueAmount.replace(/,/g, '')) : item.dueAmount
+          bookingBalance: typeof item.dueAmountTemp !== 'number' ? Number.parseFloat(item.dueAmountTemp.replace(/,/g, '')) : item.dueAmountTemp
         }
       })
 
