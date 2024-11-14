@@ -1949,6 +1949,8 @@ async function getListPaymentDetailTypeDeposit() {
 }
 
 async function applyPaymentGetListForOtherDeductions() {
+  console.log(objItemSelectedForRightClickApplyPayment.value)
+
   if (applyPaymentOptionsOtherDeduction.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -2007,7 +2009,7 @@ async function applyPaymentGetListForOtherDeductions() {
 
         // Validacion para bucsar por los hoteles
         if (objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel && objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.id) {
-          if (objItemSelectedForRightClickApplyPayment.value?.hotel.status === 'ACTIVE') {
+          if (objItemSelectedForRightClickApplyPayment.value?.hotel?.status === 'ACTIVE') {
             if (objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.applyByTradingCompany) {
               // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
               const filter: FilterCriteria[] = [
@@ -2492,7 +2494,6 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    objItemSelectedForRightClickApplyPayment.value = {}
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
       menuItemApplayPayment.disabled = true
