@@ -27,6 +27,7 @@ const StatusList = ref<any[]>([])
 const BindTransactionList = ref<any[]>([])
 const collectionStatusRefundReceivedList = ref<any[]>([])
 const loadingSaveAll = ref(false)
+const loadingStatusNavigateOptions = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
@@ -36,6 +37,7 @@ const idItem = ref('')
 const newAdjustmentTransactionDialogVisible = ref(false)
 const contextMenu = ref()
 const contextMenuTransaction = ref()
+const currentSavedPaymentStatus = ref() // Guardar estado actual en backend para listar las opciones de posibles estados a seleccionar
 
 const menuListItems = [
   {
@@ -245,6 +247,9 @@ async function getItemById(id: string) {
           item.value.hotel = response.hotel
           HotelList.value = [response.hotel]
         }
+        currentSavedPaymentStatus.value = response.reconcileStatus
+        StatusList.value = []
+        getCurrentStatusNavigateList() // Cargar los estados que permite el navigate
         if (response.reconcileStatus) {
           response.reconcileStatus.name = `${response.reconcileStatus.code} - ${response.reconcileStatus.name}`
           response.reconcileStatus.status = 'ACTIVE'
@@ -280,7 +285,8 @@ async function getList() {
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const { transactionSearchResponse, transactionTotalResume } = response
+    const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -421,6 +427,32 @@ async function getStatusList(query: string) {
   }
 }
 
+async function getCurrentStatusNavigateList() {
+  if (StatusList.value.length > 0) {
+    return
+  }
+  try {
+    loadingStatusNavigateOptions.value = true
+    const response = await GenericService.getById(confApi.moduleApi, 'manage-reconcile-transaction-status', currentSavedPaymentStatus.value.id)
+    if (response) {
+      const dataList = response.navigate
+      StatusList.value = []
+      for (const iterator of dataList) {
+        StatusList.value = [...StatusList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      }
+    }
+    if (!StatusList.value.includes((e: any) => e.id === currentSavedPaymentStatus.value.id)) {
+      StatusList.value.unshift(currentSavedPaymentStatus.value)
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
+  }
+  finally {
+    loadingStatusNavigateOptions.value = false
+  }
+}
+
 async function getMerchantBankAccountList(query: string) {
   try {
     const payload = {
@@ -554,6 +586,7 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   try {
     await updateItem(item)
+    await getItemById(idItem.value)
   }
   catch (error: any) {
     loadingSaveAll.value = false
@@ -703,7 +736,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-reconcileStatus="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
+          <!--          <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
@@ -715,6 +748,19 @@ onMounted(async () => {
               item.reconcileStatus = $event
             }"
             @load="($event) => getStatusList($event)"
+          /> -->
+          <Dropdown
+            v-if="!loadingSaveAll"
+            v-model="data.reconcileStatus"
+            :options="StatusList"
+            :loading="loadingStatusNavigateOptions"
+            option-label="name"
+            return-object
+            class="align-items-center"
+            @update:model-value="($event) => {
+              onUpdate('reconcileStatus', $event)
+              data.reconcileStatus = $event
+            }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
