@@ -48,6 +48,10 @@ public class PaymentController {
         CreatePaymentCommand createCommand = CreatePaymentCommand.fromRequest(request);
         CreatePaymentMessage response = mediator.send(createCommand);
 
+        FindPaymentByIdQuery query = new FindPaymentByIdQuery(response.getPayment().getId());
+        PaymentResponse paymentResponse = mediator.send(query);
+
+        response.setPayment(paymentResponse);
         return ResponseEntity.ok(response);
     }
 

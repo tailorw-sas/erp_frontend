@@ -17,8 +17,10 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@Transactional
 public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymentCommand> {
 
     private final IManagePaymentSourceService sourceService;
@@ -73,6 +75,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     }
 
     @Override
+    @Transactional
     public void handle(CreatePaymentCommand command) {
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPaymentSource(), "paymentSource", "Payment Source ID cannot be null."));

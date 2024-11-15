@@ -26,6 +26,7 @@ public class CreateManageInvoiceStatusCommand implements ICommand {
     private List<UUID> navigate;
 
     private Boolean showClone;
+    private boolean waitingStatus;
 
     public CreateManageInvoiceStatusCommand(String code, String description, Status status,
                                             String name, Boolean enabledToPrint,

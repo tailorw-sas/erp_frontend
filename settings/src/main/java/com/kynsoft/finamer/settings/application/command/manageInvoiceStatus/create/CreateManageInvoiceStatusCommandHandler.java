@@ -45,7 +45,8 @@ public class CreateManageInvoiceStatusCommandHandler implements ICommandHandler<
                 command.getEnabledToPolicy(),
                 command.getProcessStatus(),
                 manageInvoiceStatusDtoList,
-                command.getShowClone()
+                command.getShowClone(),
+                command.isWaitingStatus()
         ));
 
         this.producerReplicateManageInvoiceStatusService.create(new ReplicateManageInvoiceStatusKafka(
