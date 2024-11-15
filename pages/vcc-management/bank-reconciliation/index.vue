@@ -3,21 +3,16 @@ import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
-import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 // VARIABLES -----------------------------------------------------------------------------------------
-const toast = useToast()
-const authStore = useAuthStore()
-const { status, data } = useAuth()
-const isAdmin = (data.value?.user as any)?.isAdmin === true
-
 const listItems = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
+const bankReconciliationHistoryDialogVisible = ref<boolean>(false)
 const contextMenuTransaction = ref()
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
@@ -37,32 +32,15 @@ const accordionLoading = ref({
 })
 const contextMenu = ref()
 
-enum MenuType {
-  refund, resendEmail
-}
-
-const allMenuListItems = [
+const menuListItems = [
   {
-    type: MenuType.refund,
-    label: 'Refund',
-    icon: 'pi pi-dollar',
-    command: () => {},
+    label: 'Status History',
+    icon: 'pi pi-history',
+    command: () => { bankReconciliationHistoryDialogVisible.value = true },
     disabled: false,
-    isCollection: true // que pertenecen a un status en el collection status
-  },
-  {
-    type: MenuType.resendEmail,
-    label: 'Resend Payment Link',
-    icon: 'pi pi-send',
-    command: () => resendPaymentLink(),
-    disabled: false,
-    isCollection: false
-  },
+  }
 ]
 
-const menuListItems = ref<any[]>([])
-
-const collectionStatusList = ref<any[]>([])
 const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
@@ -526,65 +504,10 @@ function onSortField(event: any) {
   }
 }
 
-async function resendPaymentLink() {
-  try {
-    if (contextMenuTransaction.value.id) {
-      options.value.loading = true
-      await GenericService.create('creditcard', 'transactions/resend-payment-link', { id: contextMenuTransaction.value.id })
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-  }
-  catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-  }
-  finally {
-    options.value.loading = false
-  }
-}
-
-async function findCollectionStatusMenuOptions(status: string) {
-  const collection: any = collectionStatusList.value.find(item => item?.name.toLowerCase() === status.toLowerCase())
-  if (collection) {
-    const navigateOptions = collection.navigate.map((n: any) => n.name.toLowerCase())
-    // se agregan los elementos que pertenecen al navigate de dicho status
-    menuListItems.value = allMenuListItems.filter((element: any) => element.isCollection && navigateOptions.includes(element.label.toLowerCase()))
-  }
-}
-
-function findNoCollectionStatusMenuOptions() {
-  const noCollectionItems: any[] = allMenuListItems.filter((element: any) => !element.isCollection)
-  for (let i = 0; i < noCollectionItems.length; i++) {
-    const element = noCollectionItems[i]
-    if (element.type === MenuType.resendEmail && contextMenuTransaction.value.methodType === 'LINK') {
-      menuListItems.value.push(element)
-    }
-  }
-}
-
 async function onRowRightClick(event: any) {
-  // console.log(event.data)
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
-  menuListItems.value = [] // Elementos que se van a mostrar en el menu
-  // Agrega a la lista las opciones que estan presentes en el navigate para el collection status del estado del elemento seleccionado
-  await findCollectionStatusMenuOptions(contextMenuTransaction.value.status)
-  if (menuListItems.value.length > 0) {
-    const enableManualTransaction = (status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
-    // aqui se valida que hayan fondos disponibles para la devolucion
-    setRefundAvailable(enableManualTransaction ? contextMenuTransaction.value.permitRefund : false)
-  }
-  // Agregar opciones que no son tipo coleccion:
-  findNoCollectionStatusMenuOptions()
-  if (menuListItems.value.length > 0) {
-    contextMenu.value.show(event.originalEvent)
-  }
-}
-
-function setRefundAvailable(isAvailable: boolean) {
-  const menuItem = menuListItems.value.find((item: any) => item.label === 'Refund')
-  if (menuItem) {
-    menuItem.disabled = !isAvailable
-  }
+  contextMenu.value.show(event.originalEvent)
 }
 
 function goToBankPaymentInNewTab(itemId?: string) {
@@ -833,6 +756,9 @@ onMounted(() => {
       </DynamicTable>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
+    <div v-if="bankReconciliationHistoryDialogVisible">
+      <BankReconciliationStatusHistoryDialog :close-dialog="() => { bankReconciliationHistoryDialogVisible = false }" :open-dialog="bankReconciliationHistoryDialogVisible" :selected-bank-reconciliation="contextMenuTransaction" :s-class-map="sClassMap" />
+    </div>
   </div>
 </template>
 
