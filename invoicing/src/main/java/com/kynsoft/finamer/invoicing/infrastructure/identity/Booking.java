@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Table(name = "booking")
 @EntityListeners(AuditEntityListener.class)
 @RemoteAudit(name = "booking",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
-public class ManageBooking {
+public class Booking {
     @Id
     @Column(name = "id")
     private UUID id;
@@ -64,7 +64,7 @@ public class ManageBooking {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_invoice", nullable = true)
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_rate_plan", nullable = true)
@@ -99,7 +99,7 @@ public class ManageBooking {
     private LocalDateTime deletedAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private ManageBooking parent;
+    private Booking parent;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "manageBooking")
     private List<PaymentDetail> paymentDetails;
@@ -109,7 +109,7 @@ public class ManageBooking {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean deleteInvoice;
 
-    public ManageBooking(ManageBookingDto dto) {
+    public Booking(ManageBookingDto dto) {
         this.id = dto.getId();
         this.hotelCreationDate = dto.getHotelCreationDate();
         this.bookingDate = dto.getBookingDate();
@@ -130,7 +130,7 @@ public class ManageBooking {
         this.folioNumber = dto.getFolioNumber();
         this.hotelAmount = dto.getHotelAmount();
         this.description = dto.getDescription();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
         this.ratePlan = dto.getRatePlan() != null ? new ManageRatePlan(dto.getRatePlan()) : null;
         this.nightType = dto.getNightType() != null ? new ManageNightType(dto.getNightType()) : null;
         this.roomType = dto.getRoomType() != null ? new ManageRoomType(dto.getRoomType()) : null;
@@ -145,7 +145,7 @@ public class ManageBooking {
 
         this.nights = dto.getCheckIn() != null && dto.getCheckOut() !=null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
         this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
-        this.parent = dto.getParent() != null ? new ManageBooking(dto.getParent()) : null;
+        this.parent = dto.getParent() != null ? new Booking(dto.getParent()) : null;
         this.contract = dto.getContract();
         this.deleteInvoice = dto.isDeleteInvoice();
     }

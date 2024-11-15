@@ -33,7 +33,7 @@ public class AttachmentStatusHistory implements Serializable {
     private Long attachmentId;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
     private String employee;
 
@@ -50,7 +50,7 @@ public class AttachmentStatusHistory implements Serializable {
         this.id = dto.getId();
         this.description = dto.getDescription();
         this.attachmentId = dto.getAttachmentId();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
         this.employee = dto.getEmployee();
         this.employeeId = dto.getEmployeeId();
     }

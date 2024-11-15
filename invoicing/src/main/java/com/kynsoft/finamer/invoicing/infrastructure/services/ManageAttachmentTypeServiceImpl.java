@@ -14,7 +14,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAttachmentType;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ResourceType;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageResourceType;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageAttachmentTypeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageAttachmentTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
