@@ -72,7 +72,7 @@ public class Payment implements Serializable {
     //TODO: este invoice es para relacionar el Payment con el CREDIT padre en el proceso automatico. HU 154
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "invoice_id")
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bank_account_id")
@@ -151,7 +151,7 @@ public class Payment implements Serializable {
         this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied());
         this.applied = ScaleAmount.scaleAmount(dto.getApplied());
         this.remark = dto.getRemark();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
         this.eAttachment = dto.getEAttachment();
         this.applyPayment = dto.isApplyPayment();
         this.paymentSupport = dto.isPaymentSupport();

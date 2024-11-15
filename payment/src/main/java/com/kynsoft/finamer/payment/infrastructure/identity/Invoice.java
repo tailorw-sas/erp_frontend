@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "invoice")
-public class ManageInvoice {
+public class Invoice {
 
     @Id
     @Column(name = "id")
@@ -35,13 +35,13 @@ public class ManageInvoice {
     private Boolean hasAttachment;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private ManageInvoice parent;
+    private Invoice parent;
 
     @Enumerated(EnumType.STRING)
     private EInvoiceType invoiceType;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
-    private List<ManageBooking> bookings;
+    private List<Booking> bookings;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_hotel")
@@ -53,20 +53,20 @@ public class ManageInvoice {
 
     private Boolean autoRec;
 
-    public ManageInvoice(ManageInvoiceDto dto) {
+    public Invoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceId = dto.getInvoiceId();
         this.invoiceNumber = dto.getInvoiceNumber();
         this.invoiceType = dto.getInvoiceType();
         this.invoiceAmount = dto.getInvoiceAmount();
         this.bookings = dto.getBookings() != null ? dto.getBookings().stream().map(_booking -> {
-            ManageBooking booking = new ManageBooking(_booking);
+            Booking booking = new Booking(_booking);
             booking.setInvoice(this);
             return booking;
         }).collect(Collectors.toList()) : null;
         this.invoiceNo = dto.getInvoiceNo();
         this.hasAttachment = dto.getHasAttachment();
-        this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
+        this.parent = dto.getParent() != null ? new Invoice(dto.getParent()) : null;
         this.invoiceDate = dto.getInvoiceDate();
         this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
         this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;

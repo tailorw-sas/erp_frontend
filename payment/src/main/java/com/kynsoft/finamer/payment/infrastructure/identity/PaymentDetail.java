@@ -50,7 +50,7 @@ public class PaymentDetail implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_booking_id")
-    private ManageBooking manageBooking;
+    private Booking manageBooking;
 
     private Long reverseFrom;
 
@@ -125,7 +125,7 @@ public class PaymentDetail implements Serializable {
         this.childrens = dto.getChildrens() != null ? dto.getChildrens() : null;
         this.parentId = dto.getParentId() != null ? dto.getParentId() : null;
         this.applyDepositValue = dto.getApplyDepositValue() != null ? ScaleAmount.scaleAmount(dto.getApplyDepositValue()) : null;
-        this.manageBooking = dto.getManageBooking() != null ? new ManageBooking(dto.getManageBooking()) : null;
+        this.manageBooking = dto.getManageBooking() != null ? new Booking(dto.getManageBooking()) : null;
         this.applayPayment = dto.getApplayPayment();
         this.reverseFrom = dto.getReverseFrom();
         this.reverseFromParentId = dto.getReverseFromParentId();

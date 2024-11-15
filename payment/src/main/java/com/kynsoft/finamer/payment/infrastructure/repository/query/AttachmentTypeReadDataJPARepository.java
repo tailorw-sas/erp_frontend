@@ -19,13 +19,13 @@ public interface AttachmentTypeReadDataJPARepository extends JpaRepository<Manag
 
     Page<ManageAttachmentType> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM AttachmentType b WHERE b.code = :code AND b.id <> :id")
+    @Query("SELECT COUNT(b) FROM ManageAttachmentType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
-    @Query("SELECT COUNT(b) FROM AttachmentType b WHERE b.defaults = true AND b.id <> :id")
+    @Query("SELECT COUNT(b) FROM ManageAttachmentType b WHERE b.defaults = true AND b.id <> :id")
     Long countByDefaultAndNotId(@Param("id") UUID id);
 
-    @Query("SELECT COUNT(b) FROM AttachmentType b WHERE b.antiToIncomeImport = true AND b.id <> :id")
+    @Query("SELECT COUNT(b) FROM ManageAttachmentType b WHERE b.antiToIncomeImport = true AND b.id <> :id")
     Long countByAntiToIncomeImportAndNotId(@Param("id") UUID id);
 
     Optional<ManageAttachmentType> findByCode(String code);
