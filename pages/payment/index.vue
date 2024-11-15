@@ -1888,7 +1888,7 @@ async function getListPaymentDetailTypeDeposit() {
     const objFilterForCancelTransaction = payloadpaymentDetailForTypeDeposit.value.filter.find(item => item.key === 'canceledTransaction')
 
     if (objFilterForCancelTransaction) {
-      objFilterForCancelTransaction.value = true
+      objFilterForCancelTransaction.value = false
     }
     else {
       payloadpaymentDetailForTypeDeposit.value.filter.push({
