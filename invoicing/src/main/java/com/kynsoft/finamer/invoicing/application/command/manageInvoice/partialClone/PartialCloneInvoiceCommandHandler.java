@@ -13,7 +13,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import java.time.LocalDateTime;
@@ -84,7 +84,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
             ManageBookingDto newBooking = new ManageBookingDto(invoiceToClone.getBookings().get(i));
 
-            List<ManageRoomRate> roomRates = this.rateService.findByBooking(new ManageBooking(invoiceToClone.getBookings().get(i)));
+            List<ManageRoomRate> roomRates = this.rateService.findByBooking(new Booking(invoiceToClone.getBookings().get(i)));
 
             for (ManageRoomRate roomRate : roomRates) {
 

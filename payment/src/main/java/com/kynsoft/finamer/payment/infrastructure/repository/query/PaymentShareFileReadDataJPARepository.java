@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.query;
 
-import com.kynsoft.finamer.payment.infrastructure.identity.AttachmentType;
+import com.kynsoft.finamer.payment.infrastructure.identity.ManageAttachmentType;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentShareFile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

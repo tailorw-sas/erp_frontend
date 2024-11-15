@@ -16,7 +16,7 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "booking")
-public class ManageBooking {
+public class Booking {
 
     @Id
     @Column(name = "id")
@@ -37,14 +37,14 @@ public class ManageBooking {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_invoice", nullable = true)
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private ManageBooking parent;
+    private Booking parent;
 
     private LocalDateTime bookingDate;
 
-    public ManageBooking(ManageBookingDto dto) {
+    public Booking(ManageBookingDto dto) {
         this.id = dto.getId();
         this.bookingId = dto.getBookingId();
         this.reservationNumber = dto.getReservationNumber();
@@ -58,8 +58,8 @@ public class ManageBooking {
         this.children = dto.getChildren();
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
-        this.parent = dto.getParent() != null ? new ManageBooking(dto.getParent()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
+        this.parent = dto.getParent() != null ? new Booking(dto.getParent()) : null;
         this.bookingDate = dto.getBookingDate() != null ? dto.getBookingDate() : null;
     }
 

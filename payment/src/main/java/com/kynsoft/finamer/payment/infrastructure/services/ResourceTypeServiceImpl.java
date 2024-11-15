@@ -11,7 +11,7 @@ import com.kynsoft.finamer.payment.application.query.objectResponse.ResourceType
 import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
-import com.kynsoft.finamer.payment.infrastructure.identity.ResourceType;
+import com.kynsoft.finamer.payment.infrastructure.identity.MaganeResourceType;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageResourceTypeWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ResourceTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,13 +36,13 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
     @Override
     public UUID create(ResourceTypeDto dto) {
-        ResourceType data = new ResourceType(dto);
+        MaganeResourceType data = new MaganeResourceType(dto);
         return this.repositoryCommand.save(data).getId();
     }
 
     @Override
     public void update(ResourceTypeDto dto) {
-        ResourceType update = new ResourceType(dto);
+        MaganeResourceType update = new MaganeResourceType(dto);
 
         update.setUpdatedAt(LocalDateTime.now());
 
@@ -60,7 +60,7 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
     @Override
     public ResourceTypeDto findById(UUID id) {
-        Optional<ResourceType> userSystem = this.repositoryQuery.findById(id);
+        Optional<MaganeResourceType> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -69,7 +69,7 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
     @Override
     public ResourceTypeDto findByCode(String code) {
-        Optional<ResourceType> resourceType = this.repositoryQuery.findResourceTypeByCodeAndStatus(code,Status.ACTIVE);
+        Optional<MaganeResourceType> resourceType = this.repositoryQuery.findResourceTypeByCodeAndStatus(code,Status.ACTIVE);
         if (resourceType.isPresent()) {
             return resourceType.get().toAggregate();
         }
@@ -80,8 +80,8 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<ResourceType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ResourceType> data = this.repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<MaganeResourceType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<MaganeResourceType> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -100,9 +100,9 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ResourceType> data) {
+    private PaginatedResponse getPaginatedResponse(Page<MaganeResourceType> data) {
         List<ResourceTypeResponse> responses = new ArrayList<>();
-        for (ResourceType p : data.getContent()) {
+        for (MaganeResourceType p : data.getContent()) {
             responses.add(new ResourceTypeResponse(p.toAggregate()));
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
@@ -122,10 +122,10 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
      @Override
     public List<ResourceTypeDto> findAllToReplicate() {
-        List<ResourceType> objects = this.repositoryQuery.findAll();
+        List<MaganeResourceType> objects = this.repositoryQuery.findAll();
         List<ResourceTypeDto> objectDtos = new ArrayList<>();
 
-        for (ResourceType object : objects) {
+        for (MaganeResourceType object : objects) {
             objectDtos.add(object.toAggregate());
         }
 

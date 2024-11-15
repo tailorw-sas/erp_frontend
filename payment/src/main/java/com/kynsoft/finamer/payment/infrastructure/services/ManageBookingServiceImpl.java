@@ -11,7 +11,7 @@ import com.kynsoft.finamer.payment.application.query.objectResponse.ManageBookin
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManageBooking;
+import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageBookingWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageBookingReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,17 +35,17 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
     @Override
     public void create(ManageBookingDto dto) {
-        this.repositoryCommand.save(new ManageBooking(dto));
+        this.repositoryCommand.save(new Booking(dto));
     }
 
     @Override
     public void update(ManageBookingDto dto) {
-        this.repositoryCommand.save(new ManageBooking(dto));
+        this.repositoryCommand.save(new Booking(dto));
     }
 
     @Override
     public ManageBookingDto findById(UUID id) {
-        Optional<ManageBooking> userSystem = this.repositoryQuery.findById(id);
+        Optional<Booking> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -54,7 +54,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
     @Override
     public ManageBookingDto findByGenId(long id) {
-        Optional<ManageBooking> booking = this.repositoryQuery.findManageBookingByBookingId(id);
+        Optional<Booking> booking = this.repositoryQuery.findManageBookingByBookingId(id);
         if (booking.isPresent()) {
             return booking.get().toAggregate();
         }
@@ -65,8 +65,8 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<ManageBooking> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageBooking> data = this.repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<Booking> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<Booking> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -89,9 +89,9 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManageBooking> data) {
+    private PaginatedResponse getPaginatedResponse(Page<Booking> data) {
         List<ManageBookingResponse> responses = new ArrayList<>();
-        for (ManageBooking p : data.getContent()) {
+        for (Booking p : data.getContent()) {
             responses.add(new ManageBookingResponse(p.toAggregate()));
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),

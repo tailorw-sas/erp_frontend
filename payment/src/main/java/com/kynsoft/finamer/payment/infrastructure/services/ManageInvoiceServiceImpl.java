@@ -11,7 +11,7 @@ import com.kynsoft.finamer.payment.application.query.objectResponse.ManageInvoic
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManageInvoice;
+import com.kynsoft.finamer.payment.infrastructure.identity.Invoice;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,17 +35,17 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public void create(ManageInvoiceDto dto) {
-        this.repositoryCommand.save(new ManageInvoice(dto));
+        this.repositoryCommand.save(new Invoice(dto));
     }
 
     @Override
     public void update(ManageInvoiceDto dto) {
-        this.repositoryCommand.save(new ManageInvoice(dto));
+        this.repositoryCommand.save(new Invoice(dto));
     }
 
     @Override
     public ManageInvoiceDto findById(UUID id) {
-        Optional<ManageInvoice> userSystem = this.repositoryQuery.findById(id);
+        Optional<Invoice> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -56,8 +56,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageInvoice> data = this.repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<Invoice> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -75,9 +75,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManageInvoice> data) {
+    private PaginatedResponse getPaginatedResponse(Page<Invoice> data) {
         List<ManageInvoiceResponse> responses = new ArrayList<>();
-        for (ManageInvoice p : data.getContent()) {
+        for (Invoice p : data.getContent()) {
             responses.add(new ManageInvoiceResponse(p.toAggregate()));
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),

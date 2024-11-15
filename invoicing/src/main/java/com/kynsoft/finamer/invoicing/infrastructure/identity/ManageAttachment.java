@@ -48,11 +48,11 @@ public class ManageAttachment {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_invoice")
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = true)
     @JoinColumn(name = "resource_type", nullable = true)
-    private ResourceType paymentResourceType;
+    private ManageResourceType paymentResourceType;
 
     @Column(nullable = true)
     private Boolean deleted = false;
@@ -74,14 +74,14 @@ public class ManageAttachment {
 
         this.id = dto.getId();
         this.attachmentId = dto.getAttachmentId();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
         this.filename = dto.getFilename();
         this.file = dto.getFile();
         this.remark = dto.getRemark();
         this.type = dto.getType() != null ? new ManageAttachmentType(dto.getType()) : null;
         this.employee = dto.getEmployee();
         this.employeeId = dto.getEmployeeId();
-        this.paymentResourceType = dto.getPaymentResourceType() != null ? new ResourceType(dto.getPaymentResourceType()) : null;
+        this.paymentResourceType = dto.getPaymentResourceType() != null ? new ManageResourceType(dto.getPaymentResourceType()) : null;
         this.deleteInvoice = dto.isDeleteInvoice();
     }
 

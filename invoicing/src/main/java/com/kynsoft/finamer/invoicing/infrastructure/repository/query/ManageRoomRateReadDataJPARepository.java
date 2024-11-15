@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.repository.query;
 
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +21,7 @@ public interface ManageRoomRateReadDataJPARepository extends JpaRepository<Manag
 
     Page<ManageRoomRate> findAll(Specification specification, Pageable pageable);
 
-   List<ManageRoomRate> findByBooking(ManageBooking booking);
+   List<ManageRoomRate> findByBooking(Booking booking);
 
 
 }
