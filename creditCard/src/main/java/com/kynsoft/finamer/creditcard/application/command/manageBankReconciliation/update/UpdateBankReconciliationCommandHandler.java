@@ -98,45 +98,54 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
     }
 
     private void updateStatus(ManageBankReconciliationDto dto, ManageReconcileTransactionStatusDto transactionStatusDto, String employee){
-        if (!transactionStatusDto.isCreated() && !dto.getReconcileStatus().isCancelled()){
-            if (transactionStatusDto.isCompleted()){
-                if (dto.getAmount().equals(dto.getDetailsAmount())){
-                    this.transactionService.changeAllTransactionStatus(dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.RECONCILED, employee);
-                    dto.setReconcileStatus(transactionStatusDto);
-                    this.bankReconciliationService.update(dto);
-                    this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
-                            UUID.randomUUID(),
-                            dto,
-                            "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
-                            null,
-                            employee,
-                            transactionStatusDto
-                    ));
-                } else {
-                    throw new BusinessException(
-                            DomainErrorMessage.MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS,
-                            DomainErrorMessage.MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS.getReasonPhrase()
-                    );
-                }
-            } else if (transactionStatusDto.isCancelled()){
-                if (dto.getTransactions().isEmpty() && !dto.getReconcileStatus().isCompleted()) {
-                    dto.setReconcileStatus(transactionStatusDto);
-                    this.bankReconciliationService.update(dto);
-                    this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
-                            UUID.randomUUID(),
-                            dto,
-                            "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
-                            null,
-                            null,
-                            transactionStatusDto
-                    ));
-                } else {
-                    throw new BusinessException(
-                            DomainErrorMessage.MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS,
-                            DomainErrorMessage.MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS.getReasonPhrase()
-                    );
-                }
+        if (transactionStatusDto.isCompleted()){
+            if (dto.getAmount().equals(dto.getDetailsAmount())){
+                this.transactionService.changeAllTransactionStatus(dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.RECONCILED, employee);
+                dto.setReconcileStatus(transactionStatusDto);
+                this.bankReconciliationService.update(dto);
+                this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
+                        UUID.randomUUID(),
+                        dto,
+                        "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
+                        null,
+                        employee,
+                        transactionStatusDto
+                ));
+            } else {
+                throw new BusinessException(
+                        DomainErrorMessage.MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS,
+                        DomainErrorMessage.MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS.getReasonPhrase()
+                );
             }
+        } else if (transactionStatusDto.isCancelled()){
+            if (dto.getTransactions().isEmpty() && !dto.getReconcileStatus().isCompleted()) {
+                dto.setReconcileStatus(transactionStatusDto);
+                this.bankReconciliationService.update(dto);
+                this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
+                        UUID.randomUUID(),
+                        dto,
+                        "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
+                        null,
+                        null,
+                        transactionStatusDto
+                ));
+            } else {
+                throw new BusinessException(
+                        DomainErrorMessage.MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS,
+                        DomainErrorMessage.MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS.getReasonPhrase()
+                );
+            }
+        } else if (transactionStatusDto.isCreated()){
+            dto.setReconcileStatus(transactionStatusDto);
+            this.bankReconciliationService.update(dto);
+            this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
+                    UUID.randomUUID(),
+                    dto,
+                    "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
+                    null,
+                    null,
+                    transactionStatusDto
+            ));
         }
     }
 
