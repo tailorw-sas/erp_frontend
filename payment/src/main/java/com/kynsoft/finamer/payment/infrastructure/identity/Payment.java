@@ -194,6 +194,39 @@ public class Payment implements Serializable {
         );
     }
 
+    public PaymentDto toAggregateBasicPayment() {
+        return new PaymentDto(
+                id,
+                status,
+                paymentSource != null ? paymentSource.toAggregate() : null,
+                reference,
+                transactionDate,
+                paymentStatus != null ? paymentStatus.toAggregate() : null,
+                client != null ? client.toAggregate() : null,
+                agency != null ? agency.toAggregate() : null,
+                hotel != null ? hotel.toAggregate() : null,
+                bankAccount != null ? bankAccount.toAggregate() : null,
+                attachmentStatus != null ? attachmentStatus.toAggregate() : null,
+                paymentAmount,
+                paymentBalance,
+                depositAmount,
+                depositBalance,
+                otherDeductions,
+                identified,
+                notIdentified,
+                notApplied,
+                applied,
+                remark,
+                invoice != null ? invoice.toAggregate() : null,
+                attachments != null ? attachments.stream().map(b -> {
+                            return b.toAggregateSimple();
+                        }).collect(Collectors.toList()) : null,
+                createdAt,
+                eAttachment != null ? eAttachment : EAttachment.NONE,
+                dateTime
+        );
+    }
+
     /**
      * Con este metodo se puede obtener un Payment y sus Detalles.
      *
