@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type {IColumn, IPagination, IStatusClass} from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 
 const props = defineProps({
@@ -136,13 +136,12 @@ onMounted(() => {
 <template>
   <Dialog
     v-model:visible="dialogVisible" modal
-    :header="options.tableName"
-    :style="{ width: '55%' }"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
-    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    class="mx-3 sm:mx-0"
+    content-class="border-round-bottom border-top-1 surface-border"
+    :style="{ width: '60%' }"
     :pt="{
       root: {
-        class: 'custom-dialog',
+        class: 'custom-dialog-history',
       },
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
@@ -150,8 +149,15 @@ onMounted(() => {
     }"
     @hide="closeDialog"
   >
-    <div class=" h-fit overflow-hidden mt-4">
-      <div class="flex flex-row align-items-center">
+    <template #header>
+      <div class="flex justify-content-between">
+        <h5 class="m-0">
+          {{ options.tableName }}
+        </h5>
+      </div>
+    </template>
+    <template #default>
+      <div class="p-fluid pt-3">
         <div class="flex flex-column" style="width: 100%;overflow: auto;">
           <DynamicTable
             :data="ListItems" :columns="Columns"
@@ -168,6 +174,6 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+    </template>
   </Dialog>
 </template>
