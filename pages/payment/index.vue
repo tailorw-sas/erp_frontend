@@ -1894,7 +1894,7 @@ async function getListPaymentDetailTypeDeposit() {
       payloadpaymentDetailForTypeDeposit.value.filter.push({
         key: 'canceledTransaction',
         operator: 'EQUALS',
-        value: true,
+        value: false,
         logicalOperation: 'AND'
       })
     }
