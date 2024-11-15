@@ -16,20 +16,17 @@ import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionSearchResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionTotalResume;
-import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TemplateDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
+import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
+import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionStatusHistoryService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.TransactionWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionReadDataJPARepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -54,16 +51,19 @@ public class TransactionServiceImpl implements ITransactionService {
 
     private final ITransactionStatusHistoryService transactionStatusHistoryService;
 
+    private final IParameterizationService parameterizationService;
+
     public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand,
                                   TransactionReadDataJPARepository repositoryQuery,
                                   MailService mailService,
-                                  TemplateEntityServiceImpl templateEntityService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService) {
+                                  TemplateEntityServiceImpl templateEntityService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService, IParameterizationService parameterizationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.mailService = mailService;
         this.templateEntityService = templateEntityService;
         this.transactionStatusService = transactionStatusService;
         this.transactionStatusHistoryService = transactionStatusHistoryService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -131,9 +131,13 @@ public class TransactionServiceImpl implements ITransactionService {
                 netAmount += transaction.getNetAmount();
             }
         }
+        ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
 
-        return new TransactionTotalResume(BankerRounding.round(totalAmount,2),
-                BankerRounding.round(commission,2), BankerRounding.round(netAmount,2));
+        //si no encuentra la parametrization que agarre 2 decimales por defecto
+        int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
+
+        return new TransactionTotalResume(BankerRounding.round(totalAmount, decimals),
+                BankerRounding.round(commission, decimals), BankerRounding.round(netAmount, decimals));
     }
 
     @Override
