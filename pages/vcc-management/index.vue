@@ -20,6 +20,7 @@ const listItems = ref<any[]>([])
 const newManualTransactionDialogVisible = ref(false)
 const editManualTransactionDialogVisible = ref(false)
 const newAdjustmentTransactionDialogVisible = ref(false)
+const transactionHistoryDialogVisible = ref<boolean>(false)
 const newRefundDialogVisible = ref(false)
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
@@ -50,6 +51,14 @@ enum MenuType {
 }
 
 const allMenuListItems = [
+  {
+    index: 0,
+    label: 'Status History',
+    icon: 'pi pi-history',
+    command: () => { transactionHistoryDialogVisible.value = true },
+    default: true,
+    disabled: false,
+  },
   {
     index: 1,
     type: MenuType.document,
@@ -1115,6 +1124,9 @@ onMounted(() => {
     <VCCNewAdjustmentTransaction :open-dialog="newAdjustmentTransactionDialogVisible" @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" />
     <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog($event)" />
     <VCCEditManualTransaction :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="onCloseEditManualTransactionDialog($event)" />
+    <div v-if="transactionHistoryDialogVisible">
+      <TransactionStatusHistoryDialog :close-dialog="() => { transactionHistoryDialogVisible = false }" :open-dialog="transactionHistoryDialogVisible" :selected-transaction="contextMenuTransaction" :s-class-map="sClassMap" />
+    </div>
   </div>
 </template>
 

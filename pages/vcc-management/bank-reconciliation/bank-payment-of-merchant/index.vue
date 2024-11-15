@@ -298,7 +298,7 @@ function unbindTransactions() {
   const transactionId = String(contextMenuTransaction.value.id)
   LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
   selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
-  subTotals.value.amount -= parseFormattedNumber(contextMenuTransaction.value.amount)
+  subTotals.value.amount -= parseFormattedNumber(contextMenuTransaction.value.netAmount)
 }
 
 async function createItem(item: { [key: string]: any }) {
@@ -393,7 +393,7 @@ function bindTransactions(event: any[]) {
   removeUnbindSelectedTransactions(event)
   const adjustmentList = [...LocalBindTransactionList.value].filter((item: any) => item.adjustment)
   LocalBindTransactionList.value = [...event, ...adjustmentList]
-  const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
+  const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.netAmount), 0)
   subTotals.value.amount = totalAmount
 }
 
