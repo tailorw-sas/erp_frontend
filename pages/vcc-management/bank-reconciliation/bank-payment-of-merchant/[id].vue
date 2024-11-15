@@ -31,7 +31,7 @@ const loadingStatusNavigateOptions = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
-const subTotals: any = ref({ amount: 0 })
+const totals: any = ref({ amount: 0, commission: 0, paymentDetails: 0 })
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
 const newAdjustmentTransactionDialogVisible = ref(false)
@@ -259,7 +259,7 @@ async function getItemById(id: string) {
         item.value.amount = response.amount
         item.value.paidDate = response.paidDate ? dayjs(response.paidDate).toDate() : null
         item.value.remark = response.remark
-        subTotals.value.amount = response.detailsAmount
+        totals.value.paymentDetails = response.detailsAmount
       }
       formReload.value += 1
     }
@@ -285,8 +285,12 @@ async function getList() {
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { transactionSearchResponse, transactionTotalResume } = response
+    const { transactionSearchResponse } = response
+    const transactionTotalResume: any = response.transactionTotalResume
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
+
+    totals.value.amount = transactionTotalResume.totalAmount
+    totals.value.commission = transactionTotalResume.commission
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -508,7 +512,7 @@ async function bindTransactions(transactions: any[]) {
     const response: any = await GenericService.create(confApi.moduleApi, `${confApi.uriApi}/add-transactions`, payload)
     if (response) {
       if (response.detailsAmount) {
-        subTotals.value.amount = response.detailsAmount
+        totals.value.paymentDetails = response.detailsAmount
       }
       // Guarda el id del elemento creado
       const newIds = [...response.adjustmentIds || [], ...response.transactionIds || []]
@@ -543,7 +547,7 @@ async function unbindTransactions() {
 
     const response: any = await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
     if (response && response.detailsAmount) {
-      subTotals.value.amount = response.detailsAmount
+      totals.value.paymentDetails = response.detailsAmount
     }
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     selectedElements.value = selectedElements.value.filter((item: any) => item.id !== String(contextMenuTransaction.value.id))
@@ -578,7 +582,7 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if (subTotals.value.amount > item.amount) {
+  if (totals.value.paymentDetails > item.amount) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
     return
   }
@@ -612,7 +616,7 @@ function bindAdjustment(data: any) {
 function formatAdjustment(data: any) {
   data.id = v4() // id temporal para poder eliminar de forma local
   data.checkIn = dayjs().format('YYYY-MM-DD')
-  subTotals.value.amount += data.amount
+  totals.value.paymentDetails += data.amount
   data.amount = formatNumber(data.amount)
   data.adjustment = true
   return data
@@ -799,8 +803,10 @@ onMounted(async () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
-            <Column :footer="formatNumber(subTotals.amount)" />
+            <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
+            <Column :footer="formatNumber(totals.amount)" />
+            <Column :footer="formatNumber(totals.commission)" />
+            <Column :footer="formatNumber(totals.paymentDetails)" />
           </Row>
         </ColumnGroup>
       </template>
