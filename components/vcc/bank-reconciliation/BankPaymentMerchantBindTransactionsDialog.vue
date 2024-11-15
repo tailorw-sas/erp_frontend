@@ -37,7 +37,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:listItems', 'update:statusList'])
 
-const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
+const totals: any = ref({ amount: 0, commission: 0, net: 0 })
 const BindTransactionList = ref<any[]>([])
 const collectionStatusRefundReceivedList = ref<any[]>([])
 const loadingSaveAll = ref(false)
@@ -151,8 +151,6 @@ async function getCollectionStatusList() {
 }
 
 async function getList() {
-  const count = { amount: 0, commission: 0, net: 0 }
-  subTotals.value = { ...count }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -164,8 +162,13 @@ async function getList() {
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { transactionSearchResponse, transactionTotalResume } = response
+    const { transactionSearchResponse } = response
+    const transactionTotalResume: any = response.transactionTotalResume
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
+
+    totals.value.amount = transactionTotalResume.totalAmount
+    totals.value.commission = transactionTotalResume.commission
+    totals.value.net = transactionTotalResume.netAmount
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -195,15 +198,12 @@ async function getList() {
         iterator.referenceId = String(iterator.id)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
-        count.amount += iterator.amount
         iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
-        count.commission += iterator.commission
         iterator.commission = formatNumber(iterator.commission)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
-        count.net += iterator.netAmount
         iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
@@ -220,7 +220,6 @@ async function getList() {
   }
   finally {
     options.value.loading = false
-    subTotals.value = { ...count }
   }
 }
 
@@ -326,7 +325,7 @@ onMounted(async () => {
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     :pt="{
       root: {
-        class: 'custom-dialog',
+        class: 'custom-dialog-history',
       },
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
@@ -517,8 +516,10 @@ onMounted(async () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
-            <Column :footer="formatNumber(subTotals.amount)" />
+            <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
+            <Column :footer="formatNumber(totals.amount)" />
+            <Column :footer="formatNumber(totals.commission)" />
+            <Column :footer="formatNumber(totals.net)" />
             <Column :colspan="1" />
           </Row>
         </ColumnGroup>

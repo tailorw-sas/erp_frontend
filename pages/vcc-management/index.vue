@@ -220,7 +220,7 @@ const columns: IColumn[] = [
   { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status' }, sortable: true },
 ]
 
-const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
+const totals: any = ref({ amount: 0, commission: 0, net: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
   { id: 'id', name: 'Id' },
@@ -255,8 +255,6 @@ const pagination = ref<IPagination>({
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
-  const count = { amount: 0, commission: 0, net: 0 }
-  subTotals.value = { ...count }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -269,8 +267,13 @@ async function getList() {
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { transactionSearchResponse, transactionTotalResume } = response
+    const { transactionSearchResponse } = response
+    const transactionTotalResume: any = response.transactionTotalResume
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
+
+    totals.value.amount = transactionTotalResume.totalAmount
+    totals.value.commission = transactionTotalResume.commission
+    totals.value.net = transactionTotalResume.netAmount
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -299,15 +302,12 @@ async function getList() {
         iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
-        count.amount += iterator.amount
         iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
-        count.commission += iterator.commission
         iterator.commission = formatNumber(iterator.commission)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
-        count.net += iterator.netAmount
         iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
@@ -324,7 +324,6 @@ async function getList() {
   }
   finally {
     options.value.loading = false
-    subTotals.value = { ...count }
   }
 }
 
@@ -1110,9 +1109,9 @@ onMounted(() => {
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
               <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
-              <Column :footer="formatNumber(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)" />
-              <Column :footer="formatNumber(Math.round((subTotals.commission + Number.EPSILON) * 100) / 100)" />
-              <Column :footer="formatNumber(Math.round((subTotals.net + Number.EPSILON) * 100) / 100)" />
+              <Column :footer="formatNumber(totals.amount)" />
+              <Column :footer="formatNumber(totals.commission)" />
+              <Column :footer="formatNumber(totals.net)" />
               <Column :colspan="2" />
             </Row>
           </ColumnGroup>
