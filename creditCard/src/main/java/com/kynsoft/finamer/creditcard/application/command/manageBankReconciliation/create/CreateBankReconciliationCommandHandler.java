@@ -23,16 +23,18 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
     private final IManageReconcileTransactionStatusService reconcileTransactionStatusService;
 
-
     private final IBankReconciliationAdjustmentService bankReconciliationAdjustmentService;
 
-    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService) {
+    private final IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService;
+
+    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService) {
         this.bankReconciliationService = bankReconciliationService;
         this.merchantBankAccountService = merchantBankAccountService;
         this.hotelService = hotelService;
         this.transactionService = transactionService;
         this.reconcileTransactionStatusService = reconcileTransactionStatusService;
         this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
+        this.bankReconciliationStatusHistoryService = bankReconciliationStatusHistoryService;
     }
 
     @Override
@@ -83,6 +85,14 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
         ManageBankReconciliationDto created = this.bankReconciliationService.create(bankReconciliationDto);
         command.setReconciliationId(created.getReconciliationId());
+        this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
+                UUID.randomUUID(),
+                created,
+                "The reconcile status is "+reconcileTransactionStatusDto.getCode()+"-"+reconcileTransactionStatusDto.getName()+".",
+                null,
+                null,
+                reconcileTransactionStatusDto
+        ));
     }
 
 }
