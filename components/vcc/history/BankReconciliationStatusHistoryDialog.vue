@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type {IColumn, IPagination, IStatusClass} from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 
 const props = defineProps({
@@ -13,7 +13,7 @@ const props = defineProps({
     type: Function as any,
     required: true
   },
-  selectedTransaction: {
+  selectedBankReconciliation: {
     type: Object,
     required: true
   },
@@ -24,7 +24,7 @@ const props = defineProps({
 })
 
 const Columns: IColumn[] = [
-  { field: 'transactionId', header: 'Id', type: 'text', width: '70px' },
+  { field: 'bankReconciliationId', header: 'Id', type: 'text', width: '70px' },
   { field: 'createdAt', header: 'Date', type: 'datetime', width: '100px' },
   // { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
   { field: 'description', header: 'Remark', type: 'text', width: '200px' },
@@ -33,9 +33,9 @@ const Columns: IColumn[] = [
 
 const dialogVisible = ref(props.openDialog)
 const options = ref({
-  tableName: 'Transactions Status History',
+  tableName: 'Bank Reconciliation Status History',
   moduleApi: 'creditcard',
-  uriApi: 'transaction-status-history',
+  uriApi: 'bank-reconciliation-status-history',
   loading: false,
   showDelete: false,
   showFilters: false,
@@ -79,10 +79,10 @@ function OnSortField(event: any) {
 function getSortField(field: any) {
   switch (field) {
     case 'statusName':
-      return 'transactionStatus.name'
+      return 'reconcileStatus.name'
 
-    case 'transactionId':
-      return 'transaction.id'
+    case 'bankReconciliationId':
+      return 'bankReconciliation.reconciliationId'
 
     default: return field
   }
@@ -104,7 +104,7 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, transactionId: iterator?.transaction?.id, statusName: iterator?.transactionStatus?.name }]
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, bankReconciliationId: iterator?.bankReconciliation?.reconciliationId, statusName: iterator?.reconcileStatus?.name }]
     }
   }
   catch (error) {
@@ -121,11 +121,11 @@ async function ParseDataTableFilter(payloadFilter: any) {
 }
 
 onMounted(() => {
-  if (props.selectedTransaction) {
+  if (props.selectedBankReconciliation) {
     Payload.value.filter = [{
-      key: 'transaction.id',
+      key: 'bankReconciliation.id',
       operator: 'EQUALS',
-      value: props.selectedTransaction.id,
+      value: props.selectedBankReconciliation.id,
       logicalOperation: 'AND'
     }]
   }
