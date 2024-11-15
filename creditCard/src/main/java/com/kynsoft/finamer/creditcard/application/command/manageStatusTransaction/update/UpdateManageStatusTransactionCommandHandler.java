@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -28,10 +29,11 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
     private final ManageMerchantCommissionServiceImpl merchantCommissionService;
     private final IParameterizationService parameterizationService;
     private final IProcessErrorLogService processErrorLogService;
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
 
     public UpdateManageStatusTransactionCommandHandler(ITransactionService transactionService, IManageStatusTransactionService statusTransactionService, IManageMerchantConfigService merchantConfigService,
                                                        ManageCreditCardTypeServiceImpl creditCardTypeService, ManageTransactionStatusServiceImpl transactionStatusService, CardNetJobServiceImpl cardnetJobService,
-                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService) {
+                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService) {
 
         this.transactionService = transactionService;
         this.statusTransactionService = statusTransactionService;
@@ -43,6 +45,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
         this.merchantCommissionService = merchantCommissionService;
         this.parameterizationService = parameterizationService;
         this.processErrorLogService = processErrorLogService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -107,6 +110,14 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             }
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);
+            this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                    UUID.randomUUID(),
+                    transactionDto,
+                    "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                    null,
+                    null,
+                    transactionStatusDto
+            ));
 
             // 2- Actualizar data en vcc_cardnet_job
             cardnetJobDto.setIsProcessed(true);

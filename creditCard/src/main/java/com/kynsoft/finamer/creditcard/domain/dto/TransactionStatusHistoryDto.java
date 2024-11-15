@@ -1,22 +1,23 @@
 package com.kynsoft.finamer.creditcard.domain.dto;
 
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManageMerchantDto {
+public class TransactionStatusHistoryDto {
+
     private UUID id;
-    private String code;
+    private TransactionDto transaction;
     private String description;
-    private ManagerB2BPartnerDto b2bPartner;
-    private Boolean defaultm;
-    private Status status;
+    private LocalDateTime createdAt;
+    private String employee;
+    private ManageTransactionStatusDto transactionStatus;
 }

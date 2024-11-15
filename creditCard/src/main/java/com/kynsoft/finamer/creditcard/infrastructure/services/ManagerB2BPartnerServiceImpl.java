@@ -11,7 +11,7 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManagerB2
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerB2BPartnerService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageB2BPartner;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManagerB2BPartnerDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManagerB2BPartnerWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManagerB2BPartnerReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;

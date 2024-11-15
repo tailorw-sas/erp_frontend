@@ -1,13 +1,10 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageB2BPartnerTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manage_b2b_partner_type")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_b2b_partner_type",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageB2BPartnerType implements Serializable {
 
     @Id

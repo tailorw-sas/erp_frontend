@@ -10,4 +10,5 @@ public class CreateRefundTransactionRequest {
     private Long parentId;
     private Boolean hasCommission;
     private Double amount;
+    private String employee;
 }

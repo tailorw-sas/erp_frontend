@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageReconcileTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "manage_reconcile_transaction_status")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_reconcile_transaction_status",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageReconcileTransactionStatus implements Serializable {
 
     @Id

@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.ProcessErrorLogDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,6 +21,8 @@ import java.util.UUID;
 @Entity
 
 @Table(name = "vcc_process_error_logs")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "vcc_process_error_logs",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ProcessErrorLog implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

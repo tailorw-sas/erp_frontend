@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,6 +19,8 @@ public interface TransactionReadDataJPARepository extends JpaRepository<Transact
         JpaSpecificationExecutor<Transaction> {
 
     Page<Transaction> findAll(Specification specification, Pageable pageable);
+
+    List<Transaction> findAll(Specification specification);
     Optional<Transaction> findByTransactionUuid(UUID uuid);
 
    /* Page<TransactionSearchResponse> findAll(Specification specification, Pageable pageable);*/
