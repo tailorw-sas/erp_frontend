@@ -1885,6 +1885,19 @@ async function getListPaymentDetailTypeDeposit() {
       })
     }
 
+    const objFilterForCancelTransaction = payloadpaymentDetailForTypeDeposit.value.filter.find(item => item.key === 'canceledTransaction')
+
+    if (objFilterForCancelTransaction) {
+      objFilterForCancelTransaction.value = true
+    }
+    else {
+      payloadpaymentDetailForTypeDeposit.value.filter.push({
+        key: 'canceledTransaction',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      })
+    }
     const response = await GenericService.search('payment', 'payment-detail', payloadpaymentDetailForTypeDeposit.value)
 
     const { data: dataList } = response
