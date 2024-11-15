@@ -19,7 +19,7 @@ public interface ResourceTypeReadDataJPARepository extends JpaRepository<ManageR
 
     Page<ManageResourceType> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ResourceType b WHERE b.code = :code AND b.id <> :id")
+    @Query("SELECT COUNT(b) FROM ManageResourceType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
     Optional<ManageResourceType> findResourceTypeByCode(String code);

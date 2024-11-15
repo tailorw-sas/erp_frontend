@@ -21,13 +21,13 @@ public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Invoic
 
     Page<Invoice> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT m FROM ManageInvoice m")
+    @Query("SELECT m FROM Invoice m")
     Page<ManageInvoiceSimpleProjection> findAllSimple(Specification<Invoice> specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManageInvoice b WHERE b.invoiceNumber LIKE %:invoiceNumber%")
+    @Query("SELECT COUNT(b) FROM Invoice b WHERE b.invoiceNumber LIKE %:invoiceNumber%")
     Long findByInvoiceNumber( @Param("invoiceNumber") String invoiceNumber);
 
-    @Query("SELECT SUM(t.invoiceAmount) FROM ManageInvoice t WHERE t.parent IS NOT NULL AND t.parent.id = :parentId AND t.invoiceType = 'CREDIT'")
+    @Query("SELECT SUM(t.invoiceAmount) FROM Invoice t WHERE t.parent IS NOT NULL AND t.parent.id = :parentId AND t.invoiceType = 'CREDIT'")
     Optional<Double> findSumOfAmountByParentId(@Param("parentId") UUID parentId);
 
     Optional<Invoice> findByInvoiceId(long invoiceId);
