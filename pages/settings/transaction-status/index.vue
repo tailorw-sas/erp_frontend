@@ -39,6 +39,7 @@ const radioOptions = [
   { label: 'Received', value: 'received' },
   { label: 'Declined', value: 'declined' },
   { label: 'Cancelled', value: 'cancelled' },
+  { label: 'Reconciled', value: 'reconciled' },
 ]
 
 const fields: Array<FieldDefinitionType> = [
@@ -116,6 +117,7 @@ const item = ref<GenericObject>({
     received: false,
     declined: false,
     cancelled: false,
+    reconciled: false,
   },
   description: '',
   status: true
@@ -134,6 +136,7 @@ const itemTemp = ref<GenericObject>({
     received: false,
     declined: false,
     cancelled: false,
+    reconciled: false,
   },
   status: true
 })
@@ -335,7 +338,7 @@ async function getItemById(id: string) {
   try {
     const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
     if (response) {
-      const { id, name, description, status, code, enablePayment, visible, navigate, sentStatus, refundStatus, receivedStatus, declinedStatus, cancelledStatus } = response
+      const { id, name, description, status, code, enablePayment, visible, navigate, sentStatus, refundStatus, receivedStatus, declinedStatus, cancelledStatus, reconciledStatus } = response
 
       item.value = {
         ...item.value,
@@ -352,6 +355,7 @@ async function getItemById(id: string) {
           received: receivedStatus,
           declined: declinedStatus,
           cancelled: cancelledStatus,
+          reconciled: reconciledStatus,
         },
         navigate: navigate
           .map((nav: any) => navigateListItems.value.find((item: any) => item.id === nav?.id))
@@ -397,6 +401,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.receivedStatus = item.isStatus.received
     payload.declinedStatus = item.isStatus.declined
     payload.cancelledStatus = item.isStatus.cancelled
+    payload.reconciledStatus = item.isStatus.reconciled
     payload.navigate = payload.navigate.map((p: any) => p.id)
     delete payload.event
     delete payload.isStatus
@@ -413,6 +418,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.receivedStatus = item.isStatus.received
   payload.declinedStatus = item.isStatus.declined
   payload.cancelledStatus = item.isStatus.cancelled
+  payload.reconciledStatus = item.isStatus.reconciled
   payload.navigate = payload.navigate.map((p: any) => p.id)
   delete payload.event
   delete payload.isStatus
@@ -533,6 +539,7 @@ function updateStatusItem(selectedValue: any) {
     received: false,
     declined: false,
     cancelled: false,
+    reconciled: false,
   }
   // Resetear los campos a `false`
   if (item.value.isStatus[selectedValue]) {
